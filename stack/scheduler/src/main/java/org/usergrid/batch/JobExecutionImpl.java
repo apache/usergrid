@@ -78,8 +78,7 @@ public class JobExecutionImpl implements JobExecution, JobRuntime {
   }
 
   public void start(int maxFailures) {
-    Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),
-        "Attempted to start job in progress");
+    Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),"Attempted to start job in progress");
     this.status = Status.IN_PROGRESS;
 
     stats.incrementRuns();

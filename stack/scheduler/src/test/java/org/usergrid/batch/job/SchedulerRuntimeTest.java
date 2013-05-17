@@ -157,23 +157,28 @@ public class SchedulerRuntimeTest {
   public void failureCausesJobDeath() throws Exception {
 
     int failCount = Integer.parseInt(props.getProperty(FAIL_PROP));
+    long sleepTime = Long.parseLong(props.getProperty(TIMEOUT_PROP));
 
     FailureJobExceuction job = CassandraRunner.getBean("failureJobExceuction", FailureJobExceuction.class);
 
-    job.setLatch(failCount + 1);
+    job.setLatch(failCount+1);
 
     JobData returned = scheduler.createJob("failureJobExceuction", System.currentTimeMillis(), new JobData());
 
     // sleep until the job should have failed. We sleep 1 extra cycle just to
     // make sure we're not racing the test
-    boolean waited = job.waitForCount(60, TimeUnit.SECONDS);
+    boolean waited = job.waitForCount((failCount+2)*sleepTime, TimeUnit.MILLISECONDS);
 
-    assertTrue("Job ran to failure", waited);
-
+    //we shouldn't trip the latch.  It should fail failCount times, and not run again
+    assertFalse("Job ran to failure", waited);
+    
+    //we shouldn't have run the last time
+    assertEquals(1, job.getLatchCount());
+    
     JobStat stat = scheduler.getStatsForJob(returned.getJobName(), returned.getUuid());
 
     // we should have only marked this as run fail+1 times
-    assertEquals(failCount + 1, stat.getTotalAttempts());
+    assertEquals(failCount+1, stat.getTotalAttempts());
     assertEquals(failCount+1, stat.getRunCount());
     assertEquals(0, stat.getDelayCount());
     
