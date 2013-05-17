@@ -278,6 +278,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
       // we're done. Mark the transaction as complete and delete the job info
       if (jobStatus == Status.COMPLETED) {
+        logger.info("Job {} is complete", data.getJobName());
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
         em.delete(data);
       }
@@ -285,6 +286,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
       // the job failed too many times. Delete the transaction to prevent it
       // running again and save it for querying later
       else if (jobStatus == Status.DEAD) {
+        logger.warn("Job {} is dead.  Removing", data.getJobName());
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
         em.update(data);
       }
@@ -293,6 +295,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
       else {
         em.update(data);
       }
+      
+      logger.info("Updating stats for job {}", data.getJobName());
       
       em.update(stat);
       
