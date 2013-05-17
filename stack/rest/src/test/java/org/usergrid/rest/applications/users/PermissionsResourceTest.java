@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.java.client.entities.Group;
 import org.usergrid.management.ApplicationInfo;
@@ -544,7 +545,96 @@ public class PermissionsResourceTest extends AbstractRestTest {
     logNode(node);
 
   }
+  /**
+   * Tests the scenario where we have role declaration such as:
+   * <ul>
+   *  <li>POST /users/[star]/following/users/${user}" a user can add himself to any other user following list"</li>
+   * </ul>
+   *
+   * Scenario is as follows:
+   * Create an application
+   *
+   * Add two application users
+   * - examplepatient
+   * - exampledoctor
+   *
+   * examplepatient add himself to exampledoctor following list
+   *
+   *
+   * @throws Exception
+   */
+  @Test
+  @Ignore
+  public void wildcardFollowingPermission() throws Exception {
+	  UUID id = UUIDUtils.newTimeUUID();
 
+	    String applicationName = "test";
+	    String orgname = "followingpermissions";
+	    String username = "permissionadmin" + id;
+	    String password = "password";
+	    String email = String.format("email%s@usergrid.com", id);
+    
+    OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname,
+            username, "noname", email,
+            password, true, false);
+
+        // create the app
+    ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), applicationName);
+    assertNotNull(appInfo);
+
+    String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+
+    JsonNode node = resource().path(String.format("/%s/%s/roles/default", orgname, applicationName))
+               .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+               .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+    Map<String, String> data = hashMap("name", "patient");
+
+    node = resource().path(String.format("/%s/%s/roles", orgname, applicationName))
+        .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+    assertNull(getError(node));
+    //allow patients to add doctors as their followers
+    addPermission(orgname,
+            applicationName,
+            adminToken,
+            "patient",
+            "delete,post:/users/*/following/users/${user}");
+
+    assertNull(getError(node));
+    // create examplepatient
+    UUID patientId = createRoleUser(orgs.getOrganization().getUuid(),
+            appInfo.getId(), adminToken,
+            "examplepatient",
+            "examplepatient@apigee.com" );
+    assertNotNull(patientId);
+
+    // create exampledoctor
+    UUID doctorId = createRoleUser(orgs.getOrganization().getUuid(),
+                appInfo.getId(), adminToken,
+                "exampledoctor",
+                "exampledoctor@apigee.com" );
+    assertNotNull(doctorId);
+
+
+    // assign examplepatient the patient role
+    node = resource().path(String.format("/%s/%s/users/%s/roles/patient", orgname,
+            applicationName, patientId.toString()))
+                .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+    String patientToken = managementService.getAccessTokenForAppUser(appInfo.getId(), patientId, 0);
+        
+    node =  resource().path(String.format("/%s/%s/users/%s/following/users/%s",
+            orgname,
+            applicationName,"exampledoctor",
+            "examplepatient"))
+            .queryParam("access_token", patientToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+    logNode(node);
+    
+
+  }
+  
   private Map<String,String> buildOrgAppParams() {
     UUID id = UUIDUtils.newTimeUUID();
     Map<String,String> props = hashMap("username","wcpermadmin")
