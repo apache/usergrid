@@ -134,6 +134,8 @@ public class OwnershipResourceTest extends RestContextTest {
     // create our connection
     data = context.application().users().user("me").connection("likes").collection("restaurants").entity("4peaks")
         .post();
+    
+    String peaksId = getEntity(data, 0).get("uuid").asText();
 
     // anonymous user
     context.clearUser();
@@ -147,16 +149,27 @@ public class OwnershipResourceTest extends RestContextTest {
     data = context.application().users().user("me").connection("likes").collection("restaurants")
         .entity("arrogantbutcher").post();
 
+    String arrogantButcherId = getEntity(data, 0).get("uuid").asText();
+    
     // now query on user 1.
 
     CustomCollection likeRestaurants = context.withUser(user1).application().users().user("me").connection("likes").collection("restaurants");
 
+    //check we can get it via id
+    data = likeRestaurants.entity(peaksId).get();
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+    
+    //check we can get it by name
     data = likeRestaurants.entity("4peaks").get();
     assertNotNull(data);
     assertEquals("4peaks", getEntity(data, 0).get("name").asText());
 
-    // check we can't see arrogantbutcher
+    // check we can't see arrogantbutcher by name or id
     data = likeRestaurants.entity("arrogantbutcher").get();
+    assertNull(data);
+    
+    data = likeRestaurants.entity(arrogantButcherId).get();
     assertNull(data);
 
     // do a collection load, make sure we're not entities we shouldn't see
@@ -168,12 +181,19 @@ public class OwnershipResourceTest extends RestContextTest {
     // log in as user 2 and check it
     likeRestaurants = context.withUser(user2).application().users().user("me").connection("likes").collection("restaurants");
 
+    data = likeRestaurants.entity(arrogantButcherId).get();
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+    
     data = likeRestaurants.entity("arrogantbutcher").get();
     assertNotNull(data);
     assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
 
     // check we can't see 4peaks
     data = likeRestaurants.entity("4peaks").get();
+    assertNull(data);
+    
+    data = likeRestaurants.entity(peaksId).get();
     assertNull(data);
 
     // do a collection load, make sure we're not loading device 1

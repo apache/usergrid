@@ -124,6 +124,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
@@ -2919,8 +2920,18 @@ public class EntityManagerImpl implements EntityManager {
    * @see org.usergrid.persistence.EntityManager#isOwner(org.usergrid.persistence.EntityRef, org.usergrid.persistence.EntityRef)
    */
   @Override
-  public boolean isOwner(EntityRef owner, String collectionName,EntityRef entity) throws Exception {
-    return getRelationManager(owner).isOwner(collectionName, entity);
+  public boolean isCollectionMember(EntityRef owner, String collectionName,EntityRef entity) throws Exception {
+    return getRelationManager(owner).isCollectionMember(collectionName, entity);
+  }
+  
+  
+
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.EntityManager#isConnectionMember(org.usergrid.persistence.EntityRef, java.lang.String, org.usergrid.persistence.EntityRef)
+   */
+  @Override
+  public boolean isConnectionMember(EntityRef owner, String connectionName, EntityRef entity) throws Exception {
+    return getRelationManager(owner).isConnectionMember(connectionName, entity);
   }
 
   @Override
@@ -3088,7 +3099,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	@Override
 	public Results getConnectedEntities(UUID entityId, String connectionType,
-			String connectedEntityType, Level resultsLevel) throws Exception {
+			String connectedEntityType, Level resultsLevel) throws Exception {	  
 		return getRelationManager(ref(entityId)).getConnectedEntities(
 				connectionType, connectedEntityType, resultsLevel);
 	}

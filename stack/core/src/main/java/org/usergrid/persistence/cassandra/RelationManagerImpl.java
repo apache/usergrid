@@ -2261,7 +2261,7 @@ public class RelationManagerImpl implements RelationManager {
     @SuppressWarnings("unchecked")
     @Override
     @Metered(group="core", name="RelationManager_isOwner")
-    public boolean isOwner(String collectionName, EntityRef entity) throws Exception{
+    public boolean isCollectionMember(String collectionName, EntityRef entity) throws Exception{
      
       Keyspace ko = cass.getApplicationKeyspace(applicationId);
     
@@ -2278,6 +2278,22 @@ public class RelationManagerImpl implements RelationManager {
       
       return result != null;
 
+    }
+    
+    /**
+     * @param c
+     * @param entity 
+     * @return
+     * @throws Exception 
+     */
+    public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
+      Keyspace ko = cass.getApplicationKeyspace(applicationId);
+      
+      ConnectionRefImpl ref = new ConnectionRefImpl(this.headEntity, connectionName, entity);
+
+      HColumn<String, UUID> col = cass.getColumn(ko, ENTITY_CONNECTIONS, ref.getUuid(), ConnectionRefImpl.CONNECTED_ENTITY_ID, se, ue);
+      
+      return col != null && entity.getUuid().equals(col.getValue());
     }
 
     @Override
@@ -2885,14 +2901,15 @@ public class RelationManagerImpl implements RelationManager {
             String connectedEntityType, Results.Level resultsLevel)
             throws Exception {
 
-        List<ConnectionRefImpl> connections = getConnections(
-                new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(
-                        NULL_ID), new ConnectedEntityRefImpl(connectionType,
-                        connectedEntityType, null)), false);
-
-        Results results = Results.fromConnections(connections);
-        results = em.loadEntities(results, resultsLevel, 0);
-        return results;
+      ConnectionRefImpl ref = new ConnectionRefImpl(headEntity.getType(),
+         headEntity.getUuid(), connectionType,
+          connectedEntityType,null); 
+      
+      List<ConnectionRefImpl> connections = getConnections(ref, false);
+      
+      Results results = Results.fromConnections(connections);
+      results = em.loadEntities(results, resultsLevel, 0);
+      return results;
     }
 
     @Override
@@ -3349,5 +3366,7 @@ public class RelationManagerImpl implements RelationManager {
         // todo: What do I do here?
       }
     }
+
+   
 
 }

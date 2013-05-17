@@ -29,13 +29,22 @@ public interface RelationManager {
 	
 
   /**
-   * Returns true if the owner ref for the current relation manager is an owner of the specified entity
+   * Returns true if the entity ref if a member of the owner ref for the current relation manager
    * @param owner
    * @param entity
    * @throws Exception 
    */
-  public boolean isOwner(String collectionName, EntityRef entity) throws Exception;
+  public boolean isCollectionMember(String collectionName, EntityRef entity) throws Exception;
 
+  /**
+   * Returns true if the target entity is currently connected to the owner ref of this relation manager
+   * @param connectionName
+   * @param entity
+   * @return
+   * @throws Exception 
+   */
+  public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception;
+  
 	public Set<String> getCollections() throws Exception;
 
 	public Results getCollection(String collectionName, UUID startResult,

@@ -573,10 +573,10 @@ public class EntityManagerTest extends AbstractPersistenceTest {
         //now load it within the context of the user, it should load.
         
         //first user is an owner
-        assertTrue(em.isOwner(createdUser, "devices", createdDevice));
+        assertTrue(em.isCollectionMember(createdUser, "devices", createdDevice));
         
         //Not an owner
-        assertFalse(em.isOwner(createdUser2, "devices", createdDevice));
+        assertFalse(em.isCollectionMember(createdUser2, "devices", createdDevice));
       
         
         

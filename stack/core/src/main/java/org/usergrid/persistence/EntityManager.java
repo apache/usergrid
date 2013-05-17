@@ -393,7 +393,18 @@ public interface EntityManager {
      * @return
      * @throws Exception 
      */
-    public boolean isOwner(EntityRef owner, String collectionName, EntityRef entity) throws Exception;
+    public boolean isCollectionMember(EntityRef owner, String collectionName, EntityRef entity) throws Exception;
+    
+    /**
+     * Return true if the owner entity ref is an owner of the entity;
+     * @param owner The owner of the collection
+     * @param collectionName The collection name
+     * @param entity The entity in the collection
+     * @return
+     * @throws Exception 
+     */
+    public boolean isConnectionMember(EntityRef owner, String connectionName, EntityRef entity) throws Exception;
+
 
     /**
      * Gets the collections for the specified entity. Collection for a given

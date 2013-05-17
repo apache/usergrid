@@ -112,7 +112,7 @@ public class AbstractCollectionService extends AbstractService {
     
     // the context of the entity they're trying to load isn't owned by the owner
     // in the path, don't return it
-    if (!em.isOwner(context.getOwner(), context.getCollectionName(), entity)) {
+    if (!em.isCollectionMember(context.getOwner(), context.getCollectionName(), entity)) {
       logger.info("Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
           getEntityType(), id, context.getOwner() });
       throw new ServiceResourceNotFoundException(context);
@@ -148,7 +148,7 @@ public class AbstractCollectionService extends AbstractService {
 
     // the context of the entity they're trying to load isn't owned by the owner
     // in the path, don't return it
-    if (!em.isOwner(context.getOwner(), context.getCollectionName(), entity)) {
+    if (!em.isCollectionMember(context.getOwner(), context.getCollectionName(), entity)) {
       logger.info("Someone tried to GET entity {} they don't own. Entity name {} with owner {}", new Object[] {
           getEntityType(), name, context.getOwner() });
       throw new ServiceResourceNotFoundException(context);
