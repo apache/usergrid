@@ -384,6 +384,27 @@ public interface EntityManager {
      */
     public Map<String, Map<UUID, Set<String>>> getOwners(EntityRef entityRef)
             throws Exception;
+    
+    /**
+     * Return true if the owner entity ref is an owner of the entity;
+     * @param owner The owner of the collection
+     * @param collectionName The collection name
+     * @param entity The entity in the collection
+     * @return
+     * @throws Exception 
+     */
+    public boolean isCollectionMember(EntityRef owner, String collectionName, EntityRef entity) throws Exception;
+    
+    /**
+     * Return true if the owner entity ref is an owner of the entity;
+     * @param owner The owner of the collection
+     * @param collectionName The collection name
+     * @param entity The entity in the collection
+     * @return
+     * @throws Exception 
+     */
+    public boolean isConnectionMember(EntityRef owner, String connectionName, EntityRef entity) throws Exception;
+
 
     /**
      * Gets the collections for the specified entity. Collection for a given
@@ -463,6 +484,15 @@ public interface EntityManager {
     public Entity addToCollections(List<EntityRef> ownerEntities,
             String collectionName, EntityRef itemRef) throws Exception;
 
+    /**
+     * Create the item in a sub collection
+     * @param entityRef The owning entity
+     * @param collectionName The name of the collection
+     * @param itemType The type of the item
+     * @param properties The properties for the item
+     * @return
+     * @throws Exception
+     */
     public Entity createItemInCollection(EntityRef entityRef,
             String collectionName, String itemType,
             Map<String, Object> properties) throws Exception;

@@ -18,8 +18,10 @@ package org.usergrid.rest.test.resource.app;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.RootResource;
+import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
 import org.usergrid.rest.test.resource.app.queue.QueuesCollection;
 
 
@@ -63,12 +65,14 @@ public class Application extends NamedResource {
    */
   public String token(String username, String password){
 
-      JsonNode node = resource().path(url()).queryParam("grant_type","password").queryParam("username",username).queryParam("password",password)
+      String url = String.format("%s/token", url());
+      
+      JsonNode node = resource().path(url).queryParam("grant_type","password").queryParam("username",username).queryParam("password",password)
           .accept(MediaType.APPLICATION_JSON)
           .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
     
     
-      return node.get("token").asText();
+      return node.get("access_token").asText();
   }
 
   public UsersCollection users() {
@@ -78,5 +82,13 @@ public class Application extends NamedResource {
   public QueuesCollection queues() {
     return new QueuesCollection(this);
   }
+  
+  public DevicesCollection devices() {
+    return new DevicesCollection(this);
+  }
 
+  public CustomCollection collection(String name){
+    return new CustomCollection(name, this);
+  }
+  
 }

@@ -15,49 +15,42 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.app;
 
-import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
-import org.usergrid.rest.test.resource.CollectionResource;
+import org.usergrid.rest.test.resource.EntityResource;
 import org.usergrid.rest.test.resource.NamedResource;
-import org.usergrid.utils.MapUtils;
+
 
 /**
- * @author tnine
+ * A resource for testing queues
  * 
+ * @author tnine
+ *
  */
-public class UsersCollection extends CollectionResource {
+public class Device extends EntityResource {
 
- 
-  public UsersCollection(NamedResource parent) {
-    super("users", parent);
-  }
-
- 
-  public User user(String username){
-    return new User(username, this);
-  }
-  
-  public User user(UUID id){
-    return new User(id, this);
-  }
-  
   /**
-   * Create the user
-   * @param username
-   * @param email
-   * @param password
-   * @return
+   * @param entityId
+   * @param parent
    */
-  public JsonNode create(String username, String email, String password){
-    Map<String, String> data = MapUtils.hashMap("username", username).map("email", email).map("password", password);
-    
-    JsonNode response = this.postInternal(data);
-    
-    return getEntity(response, 0);
-    
+  public Device(UUID entityId, NamedResource parent) {
+    super(entityId, parent);
   }
+
+  /**
+   * @param entityName
+   * @param parent
+   */
+  public Device(String entityName, NamedResource parent) {
+    super(entityName, parent);
+  }
+  
+
+  
+  
+  
+
+  
   
   
 }

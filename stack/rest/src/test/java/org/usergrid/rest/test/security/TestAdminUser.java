@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.test.security;
 
+import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.TestContext;
 
 
@@ -37,8 +38,16 @@ public class TestAdminUser extends TestUser{
    * @see org.usergrid.rest.test.security.TestUser#getToken(java.lang.String, java.lang.String, org.usergrid.rest.test.resource.TestContext)
    */
   @Override
-  protected String getToken(String username, String password, TestContext context) {
-    return context.managment().token(username, password);
+  protected String getToken(TestContext context) {
+    return context.managment().token(user, password);
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.rest.test.security.TestUser#create(org.usergrid.rest.test.resource.TestContext)
+   */
+  @Override
+  protected JsonNode createInternal(TestContext context) {
+    return context.application().users().create(user, email, password);
   }
 
  
