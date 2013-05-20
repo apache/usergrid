@@ -14,6 +14,7 @@
 
 @interface PartiesViewController ()
 @property (nonatomic, strong) NSDictionary *content;
+@property (nonatomic, strong) NSArray *partiesByStartDate;
 @property (nonatomic, strong) NSMutableDictionary *images;
 @end
 
@@ -26,6 +27,35 @@
         self.images = [NSMutableDictionary dictionary];
     }
     return self;
+}
+
+- (void) setContent:(NSDictionary *)content
+{
+    _content = content;
+    
+    NSMutableDictionary *partiesByStartDateDictionary = [NSMutableDictionary dictionary];
+    for (NSDictionary *party in self.content[@"entities"]) {
+        NSString *startDate = [party objectForKey:@"startDate"];
+        NSArray *parts = [startDate componentsSeparatedByString:@" "];
+        NSString *datePart = [parts objectAtIndex:0];
+        NSMutableArray *arrayOfParties = [partiesByStartDateDictionary objectForKey:datePart];
+        if (!arrayOfParties) {
+            arrayOfParties = [NSMutableArray array];
+            [partiesByStartDateDictionary setObject:arrayOfParties forKey:datePart];
+        }
+        [arrayOfParties addObject:party];
+    }
+    NSArray *keys = [[partiesByStartDateDictionary allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return [obj1 compare:obj2];
+    }];
+    NSMutableArray *partiesByStartDate = [NSMutableArray array];
+    for (NSString *key in keys) {
+        [partiesByStartDate addObject:
+         @{@"date":key,
+         @"parties":[partiesByStartDateDictionary objectForKey:key]}];
+    }
+    self.partiesByStartDate = partiesByStartDate;
+    // NSLog(@"%@", self.partiesByStartDate);
 }
 
 - (void) fetchAssetForParty:(NSString *) partyName atIndexPath:(NSIndexPath *) indexPath
@@ -127,12 +157,18 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 1;
+    return [self.partiesByStartDate count];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return self.content ? [self.content[@"entities"] count] : 0;
+    if (self.content) {
+        NSDictionary *sectionInfo = [self.partiesByStartDate objectAtIndex:section];
+        NSArray *parties = [sectionInfo objectForKey:@"parties"];
+        return [parties count];
+    } else {
+        return 0;
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -145,9 +181,15 @@
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
     if (self.content) {
-        id entity = self.content[@"entities"][[indexPath row]];
+        
+        NSDictionary *sectionInfo = [self.partiesByStartDate objectAtIndex:[indexPath section]];
+        NSArray *parties = [sectionInfo objectForKey:@"parties"];
+        
+        id entity = parties[[indexPath row]];
         cell.textLabel.text = entity[@"title"];
-        cell.detailTextLabel.text = entity[@"venue"];
+        cell.textLabel.numberOfLines = 0;
+        cell.detailTextLabel.text = [NSString stringWithFormat:@"%@ %@", entity[@"venue"], entity[@"partytime"]];
+        cell.detailTextLabel.numberOfLines = 0;
         
         NSString *partyName = [entity objectForKey:@"name"];
         UIImage *image = [self.images objectForKey:partyName];
@@ -164,11 +206,19 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     if (self.content) {
-        id entity = self.content[@"entities"][[indexPath row]];
+        NSDictionary *sectionInfo = [self.partiesByStartDate objectAtIndex:[indexPath section]];
+        NSArray *parties = [sectionInfo objectForKey:@"parties"];
+        id entity = [parties objectAtIndex:[indexPath row]];
         PartyViewController *partyViewController = [[PartyViewController alloc] init];
         partyViewController.content = entity;
         [self.navigationController pushViewController:partyViewController animated:YES];
     }
+}
+
+- (NSString *) tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    NSDictionary *sectionInfo = [self.partiesByStartDate objectAtIndex:section];
+    return [sectionInfo objectForKey:@"date"];
 }
 
 @end
