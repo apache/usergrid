@@ -50,6 +50,7 @@ public class PingIdentityProvider extends AbstractProvider {
       Map<String, Object> properties = new LinkedHashMap<String, Object>();
       properties.putAll(pingUser);
       properties.put("activated", true);
+      properties.put("confirmed",true);
       try {
         user = entityManager.create("user", User.class, properties);
       } catch (Exception ex) {
@@ -108,6 +109,7 @@ public class PingIdentityProvider extends AbstractProvider {
     Map<String,Object> userMap = new HashMap<String, Object>();
     userMap.put("expiration", node.get("expires_in").getLongValue());
     userMap.put("username", pingUsernameFrom(rawEmail));
+    userMap.put("name","pinguser");
     userMap.put("email", rawEmail);
 
     return userMap;
