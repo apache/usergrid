@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
+import org.usergrid.rest.test.resource.Me;
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.utils.MapUtils;
 
@@ -59,5 +60,8 @@ public class UsersCollection extends CollectionResource {
     
   }
   
+  public Me me(){
+    return new Me(this);
+  }
   
 }
