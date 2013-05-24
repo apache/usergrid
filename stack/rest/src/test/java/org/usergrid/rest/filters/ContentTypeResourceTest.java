@@ -33,6 +33,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -42,6 +43,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.RestContextTest;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -51,7 +53,7 @@ import org.usergrid.utils.UUIDUtils;
  */
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not using grizzly to test")
-public class ContentTypeResourceTest extends AbstractRestTest {
+public class ContentTypeResourceTest extends RestContextTest {
 
     /**
      * Creates a simple entity of type game. Does not set the content type. The
@@ -62,6 +64,8 @@ public class ContentTypeResourceTest extends AbstractRestTest {
      */
     @Test
     public void correctHeaders() throws Exception {
+      
+      
         Map<String, String> data = hashMap("name", "Solitaire1");
 
         String json = JsonUtils.mapToFormattedJsonString(data);
@@ -71,9 +75,9 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
                 .getBaseURI().getPort());
 
-        HttpPost post = new HttpPost("/test-organization/test-app/games");
+        HttpPost post = new HttpPost(String.format("/%s/%s/games", context.getOrgUuid(), context.getAppUuid()));
         post.setEntity(new StringEntity(json));
-        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + access_token);
+        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
         post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
         post.setHeader(HttpHeaders.CONTENT_TYPE, "*/*");
 
@@ -82,7 +86,14 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         printResponse(rsp);
 
         assertEquals(200, rsp.getStatusLine().getStatusCode());
-
+        
+        Header[] headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
+        
+        
     }
 
     /**
@@ -103,9 +114,9 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
                 .getBaseURI().getPort());
 
-        HttpPost post = new HttpPost("/test-organization/test-app/games");
+        HttpPost post = new HttpPost(String.format("/%s/%s/games", context.getOrgUuid(), context.getAppUuid()));
         post.setEntity(new StringEntity(json));
-        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + access_token);
+        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
         post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
         post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
 
@@ -113,8 +124,13 @@ public class ContentTypeResourceTest extends AbstractRestTest {
 
         printResponse(rsp);
 
-        // should be an error, no content type was set
         assertEquals(200, rsp.getStatusLine().getStatusCode());
+        
+        Header[] headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
 
     }
 
@@ -145,7 +161,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
 
         HttpPost post = new HttpPost("/management/orgs");
         post.setEntity(entity);
-        // post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + access_token);
+        // post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
 
         post.setHeader(HttpHeaders.CONTENT_TYPE,
                 MediaType.APPLICATION_FORM_URLENCODED);
@@ -156,6 +172,12 @@ public class ContentTypeResourceTest extends AbstractRestTest {
 
         // should be an error, no content type was set
         assertEquals(200, rsp.getStatusLine().getStatusCode());
+        
+        Header[] headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
 
     }
 
@@ -192,8 +214,13 @@ public class ContentTypeResourceTest extends AbstractRestTest {
 
         printResponse(rsp);
 
-        // should be an error, no content type was set
         assertEquals(200, rsp.getStatusLine().getStatusCode());
+        
+        Header[] headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
 
     }
 
@@ -216,17 +243,80 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
                 .getBaseURI().getPort());
 
-        HttpPost post = new HttpPost("/test-organization/test-app/games");
+        HttpPost post = new HttpPost(String.format("/%s/%s/games", context.getOrgUuid(), context.getAppUuid()));
         post.setEntity(new StringEntity(json));
-        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + access_token);
+        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
 
         HttpResponse rsp = client.execute(host, post);
 
         printResponse(rsp);
 
         assertEquals(200, rsp.getStatusLine().getStatusCode());
+        
+        Header[] headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
 
     }
+    
+    /**
+     * Creates a simple entity of type game. Does not set the content type. The
+     * type should be set to json to match the body.  Then does a get without Accept type, it should return
+     * application/json, not text/csv
+     * 
+     * @throws
+     * @throws Exception
+     */
+    @Test
+    public void noAcceptGet() throws Exception {
+        Map<String, String> data = hashMap("name", "bar");
+
+        String json = JsonUtils.mapToFormattedJsonString(data);
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
+                .getBaseURI().getPort());
+
+        HttpPost post = new HttpPost(String.format("/%s/%s/games", context.getOrgUuid(), context.getAppUuid()));
+        post.setEntity(new StringEntity(json));
+        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
+        post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        post.setHeader(HttpHeaders.CONTENT_TYPE, "*/*");
+
+        HttpResponse rsp = client.execute(host, post);
+
+        printResponse(rsp);
+
+        assertEquals(200, rsp.getStatusLine().getStatusCode());
+        
+        Header[] headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
+
+        //do the get with no content type, it should get set to application/json
+        HttpGet get = new HttpGet(String.format("/%s/%s/games", context.getOrgUuid(), context.getAppUuid()));
+        get.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken());
+        
+        rsp = client.execute(host, get);
+
+        printResponse(rsp);
+
+        assertEquals(200, rsp.getStatusLine().getStatusCode());
+        
+        headers = rsp.getHeaders(HttpHeaders.CONTENT_TYPE);
+        
+        assertEquals(1, headers.length);
+        
+        assertEquals(MediaType.APPLICATION_JSON, headers[0].getValue());
+        
+        
+    }
+
 
     private void printResponse(HttpResponse rsp) throws ParseException,
             IOException {
