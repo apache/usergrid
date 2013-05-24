@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 using RestSharp;
 using Usergrid.Sdk.Model;
@@ -7,20 +8,21 @@ namespace Usergrid.Sdk
 {
     public class Client
     {
+        private const string UserGridEndPoint = "https://api.usergrid.com";
         private readonly AuthType _authType;
         private readonly IUsergridRequest _request;
 
         public Client(string organization, string application, AuthType authType)
-            : this(organization, application, authType, "https://api.usergrid.com", new UsergridRequest("https://api.usergrid.com", organization, application))
+            : this(organization, application, authType, UserGridEndPoint, new UsergridRequest(UserGridEndPoint, organization, application))
         {
         }
 
-        public Client(string organization, string application, AuthType authType, string uri = "https://api.usergrid.com")
+        public Client(string organization, string application, AuthType authType, string uri = UserGridEndPoint)
             : this(organization, application, authType, uri, new UsergridRequest(uri, organization, application))
         {
         }
 
-        internal Client(string organization, string application, AuthType authType, string uri = "https://api.usergrid.com", IUsergridRequest request = null)
+        internal Client(string organization, string application, AuthType authType, string uri = UserGridEndPoint, IUsergridRequest request = null)
         {
             _authType = authType;
             _request = request ?? new UsergridRequest(uri, organization, application);
@@ -43,6 +45,17 @@ namespace Usergrid.Sdk
 
             AccessToken = response.Data.AccessToken;
         }
+
+        public T GetEntity<T>(string collection, string name)
+        {
+            var response = _request.Execute(string.Format("/{0}/{1}", collection, name), Method.GET, accessToken: AccessToken);
+            ValidateResponse(response);
+
+            var entity = JsonConvert.DeserializeObject<UsergridGetResponse<T>>(response.Content);
+
+            return entity.Entities.FirstOrDefault();
+        }
+
 
         private object GetLoginBody(string loginId, string secret)
         {

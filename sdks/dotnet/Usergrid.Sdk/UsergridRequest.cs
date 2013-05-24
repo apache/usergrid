@@ -35,6 +35,7 @@ namespace Usergrid.Sdk
                 {
                     RequestFormat = DataFormat.Json
                 };
+            request.JsonSerializer = new RestSharpJsonDeserializer();
             AddAuthorizationHeader(accessToken, request);
             if (body != null)
                 request.AddBody(body);

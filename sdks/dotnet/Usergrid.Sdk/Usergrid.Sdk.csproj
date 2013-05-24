@@ -52,8 +52,10 @@
     <Compile Include="Model\ClientIdLoginPayload.cs" />
     <Compile Include="Model\LoginResponse.cs" />
     <Compile Include="Model\UsergridError.cs" />
+    <Compile Include="Model\UsergridGetResponse.cs" />
     <Compile Include="Model\UserLoginPayload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RestSharpJsonDeserializer.cs" />
     <Compile Include="UsergridException.cs" />
     <Compile Include="UsergridRequest.cs" />
   </ItemGroup>
