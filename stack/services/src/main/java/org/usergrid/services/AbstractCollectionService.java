@@ -421,7 +421,7 @@ public class AbstractCollectionService extends AbstractService {
     return true;
   }
 
-  protected void checkDeleteAllowed(ServiceContext context, Entity entity) {
+  protected void prepareToDelete(ServiceContext context, Entity entity) {
     if (!isDeleteAllowed(context, entity)) {
       throw new ForbiddenServiceOperationException(context);
     }
@@ -445,7 +445,7 @@ public class AbstractCollectionService extends AbstractService {
 
     item = importEntity(context, item);
 
-    checkDeleteAllowed(context, item);
+    prepareToDelete(context, item);
 
     em.removeFromCollection(context.getOwner(), context.getCollectionName(), item);
 
@@ -472,7 +472,7 @@ public class AbstractCollectionService extends AbstractService {
 
     checkPermissionsForEntity(context, entity);
 
-    checkDeleteAllowed(context, entity);
+    prepareToDelete(context, entity);
 
     em.removeFromCollection(context.getOwner(), context.getCollectionName(), entity);
 
@@ -505,7 +505,7 @@ public class AbstractCollectionService extends AbstractService {
     importEntities(context, r);
 
     for (Entity entity : r) {
-      checkDeleteAllowed(context, entity);
+      prepareToDelete(context, entity);
     }
 
     for (Entity entity : r) {

@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import com.sun.jersey.api.client.WebResource;
 import org.codehaus.jackson.JsonNode;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -346,5 +347,23 @@ public abstract class AbstractRestTest extends JerseyTest {
    */
   protected JsonNode getError(JsonNode response) {
     return response.get("error");
+  }
+
+  /** convenience to return a ready WebResource.Builder in a single call */
+  protected WebResource.Builder appPath(String path) {
+    return resource()
+        .path("/test-organization/test-app/" + path)
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE);
+  }
+
+  /** convenience to return a ready WebResource.Builder in a single call */
+  protected WebResource.Builder path(String path) {
+    return resource()
+        .path(path)
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE);
   }
 }
