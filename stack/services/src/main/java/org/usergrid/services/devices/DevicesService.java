@@ -20,6 +20,7 @@ import java.util.UUID;
 import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.entities.Device;
 import org.usergrid.services.AbstractCollectionService;
@@ -75,7 +76,15 @@ public class DevicesService extends AbstractCollectionService {
 		}
 	}
 
-	@Override
+  @Override
+  protected void prepareToDelete(ServiceContext context, Entity entity) {
+    super.prepareToDelete(context, entity);
+    synchronized (deviceCache) {
+      deviceCache.remove(entity.getUuid());
+    }
+  }
+
+  @Override
 	public ServiceResults postItemById(ServiceContext context, UUID id)
 			throws Exception {
 		logger.info("Attempting to connect an entity to device {}", id);
