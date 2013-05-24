@@ -1,8 +1,6 @@
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.HashMap;
@@ -21,7 +19,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author zznate
  * @author tnine
  */
-public class CollectionsResouceTest extends AbstractRestTest {
+public class CollectionsResourceTest extends AbstractRestTest {
 
     @Test
     public void postToBadPath() {
@@ -48,7 +46,7 @@ public class CollectionsResouceTest extends AbstractRestTest {
     }
 
 
-    /**
+  /**
      * emails with "me" in them are causing errors. Test we can post to a
      * colleciton after creating a user with this email
      *
