@@ -55,6 +55,7 @@ public class ContentTypeFilter implements Filter {
 
     private static final Logger logger = LoggerFactory
             .getLogger(ContentTypeFilter.class);
+    
 
     /*
      * (non-Javadoc)
@@ -123,8 +124,16 @@ public class ContentTypeFilter implements Filter {
          * 
          */
         private void adapt() throws IOException {
-            // TODO T.N. This is a temp hack, remove this once our deployments
-            // are fixed
+           
+            //check if the accept header was set
+            @SuppressWarnings("rawtypes")
+            Enumeration contentType = origRequest.getHeaders(HttpHeaders.ACCEPT);
+            
+            if(!contentType.hasMoreElements()){
+              setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+            }
+  
+            
             String path = origRequest.getRequestURI();
 
             logger.debug("Content path is '{}'", path);
@@ -132,7 +141,8 @@ public class ContentTypeFilter implements Filter {
             int initial = inputStream.read();
 
             String method = origRequest.getMethod();
-
+            
+           
             // nothing to read, check if it's a put or a post. If so set the
             // content type to json to create an empty json request
             if (initial == -1) {

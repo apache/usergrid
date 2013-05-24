@@ -46,16 +46,6 @@ public class EntityResource extends ValueResource {
   }
 
 
-  /**
-   * Get the connection
-   * @param name
-   * @return
-   */
-  public ConnectionResource connetion(String name){
-    return new ConnectionResource(name, this);
-  }
-
-
   /* (non-Javadoc)
    * @see org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuffer)
    */
