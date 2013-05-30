@@ -131,6 +131,7 @@ import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
@@ -164,7 +165,7 @@ public class RelationManagerImpl implements RelationManager {
     private static final UUID NULL_ID = new UUID(0, 0);
 
     
-    private static final int GEO_MAX = 10000;
+    private static final int GEO_MAX = 1000;
     
     
     public RelationManagerImpl() {
@@ -3236,12 +3237,15 @@ public class RelationManagerImpl implements RelationManager {
          */
         @Override
         public void visit(WithinNode node) throws Exception {
+          
+          //if we're the root operand, just use the limit specified in the query
+            int limit = queryProcessor.getFirstNode() == node ? query.getLimit() : GEO_MAX;
 
             Results r = em.getGeoIndexManager().proximitySearchCollection(
                     headEntity, collection.getName(),
                     node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
-                    node.getDistance(), null, GEO_MAX, false,
+                    node.getDistance(), null, limit, false,
                     query.getResultsLevel());
 
             results.push(r);
@@ -3351,11 +3355,14 @@ public class RelationManagerImpl implements RelationManager {
          */
         @Override
         public void visit(WithinNode node) throws Exception {
+          
+          int limit = queryProcessor.getFirstNode() == node ? query.getLimit() : GEO_MAX;
+
 
             Results r = em.getGeoIndexManager().proximitySearchConnections(
                     connection.getIndexId(), node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
-                    node.getDistance(), null, GEO_MAX, false,
+                    node.getDistance(), null, limit, false,
                     query.getResultsLevel());
 
             results.push(r);
