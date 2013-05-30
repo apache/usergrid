@@ -575,11 +575,11 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     Entity returned = r.getEntities().get(0);
 
-    assertEquals(game1.getUuid(), returned.getUuid());
+    assertEquals(game2.getUuid(), returned.getUuid());
 
     returned = r.getEntities().get(1);
 
-    assertEquals(game2.getUuid(), returned.getUuid());
+    assertEquals(game1.getUuid(), returned.getUuid());
 
     query = Query.fromQL("select * where( keywords contains 'Random' OR keywords contains 'Game')");
 
@@ -589,11 +589,11 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     returned = r.getEntities().get(0);
 
-    assertEquals(game1.getUuid(), returned.getUuid());
+    assertEquals(game2.getUuid(), returned.getUuid());
 
     returned = r.getEntities().get(1);
 
-    assertEquals(game2.getUuid(), returned.getUuid());
+    assertEquals(game1.getUuid(), returned.getUuid());
 
     // field order shouldn't matter USERGRID-375
     query = Query.fromQL("select * where keywords contains 'blah' OR title contains 'blah'");

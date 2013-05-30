@@ -2670,13 +2670,6 @@ public class RelationManagerImpl implements RelationManager {
 
       // check if we have sub keys for equality clauses at this node
       // level. If so we can just use them as a row key for faster seek
-
-      Results results = null;
-
-      int limit = query.getLimit() + 1;
-
-      Level resultsLevel = query.getResultsLevel();
-
       Object subKey = getCFKeyForSubkey(collection, node);
 
       IntersectionIterator intersection = new IntersectionIterator(PAGE_SIZE);

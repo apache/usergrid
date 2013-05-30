@@ -59,9 +59,12 @@ public abstract class SearchVisitor implements NodeVisitor {
     ResultIterator right = results.pop();
     ResultIterator left = results.pop();
 
+    /**
+     * NOTE: TN We should always maintain post order traversal of the tree.  It is required for sorting to work correctly 
+     */
     IntersectionIterator intersection = new IntersectionIterator(RelationManagerImpl.PAGE_SIZE);
-    intersection.addIterator(right);
     intersection.addIterator(left);
+    intersection.addIterator(right);
     
     results.push(intersection);
   }

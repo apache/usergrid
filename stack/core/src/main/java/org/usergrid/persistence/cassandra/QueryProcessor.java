@@ -105,14 +105,22 @@ public class QueryProcessor {
       rootOperand.visit(visitor);
 
       rootNode = visitor.getRootNode();
-
-      return;
     }
 
     // see if we have sorts, if so, we can add them all as a single node at
     // the root
     if (sorts.size() > 0) {
-      rootNode = generateSorts();
+      
+      SliceNode sorts = generateSorts();
+      
+      if(rootNode != null){
+        AndNode and = new AndNode(sorts, rootNode);
+        rootNode = and;
+      }else{
+        rootNode = sorts;
+      }
+     
+      
     }
 
   }
@@ -719,7 +727,7 @@ public class QueryProcessor {
    * 
    * @return
    */
-  public SliceNode generateSorts() {
+  private SliceNode generateSorts() {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called

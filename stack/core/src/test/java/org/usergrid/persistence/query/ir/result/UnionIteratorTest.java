@@ -130,6 +130,39 @@ public class UnionIteratorTest {
 
     assertFalse(union.hasNext());
   }
+  
+  
+  @Test
+  public void testEmptyFirstIterator() {
+
+    UUID id1 = UUIDUtils.minTimeUUID(1);
+    UUID id2 = UUIDUtils.minTimeUUID(2);
+    UUID id3 = UUIDUtils.minTimeUUID(3);
+    UUID id4 = UUIDUtils.minTimeUUID(4);
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator first = new InOrderIterator(100);
+   
+    InOrderIterator second = new InOrderIterator(100);
+    second.add(id1);
+    second.add(id2);
+    second.add(id3);
+    second.add(id4);
+
+    UnionIterator union = new UnionIterator(100);
+    union.addIterator(first);
+    union.addIterator(second);
+
+    Set<UUID> ids = union.next();
+
+    // now make sure it's right, only 1, 3 and 8 intersect
+    assertTrue(ids.contains(id1));
+    assertTrue(ids.contains(id2));
+    assertTrue(ids.contains(id3));
+    assertTrue(ids.contains(id4));
+
+    assertFalse(union.hasNext());
+  }
 
   @Test
   public void testNoIterator() {

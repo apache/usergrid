@@ -36,7 +36,7 @@ public class UnionIterator extends MultiIterator {
    */
   private Set<UUID> remainderResults;
 
-  private int currentIndex;
+  private int currentIndex = -1;
 
   /**
    * @param pageSize
@@ -52,7 +52,10 @@ public class UnionIterator extends MultiIterator {
    */
   @Override
   protected Set<UUID> advance() {
-    if(iterators.size() == 0){
+    
+    int size = iterators.size();
+    
+    if(size == 0){
       return null;
     }
 
@@ -69,19 +72,23 @@ public class UnionIterator extends MultiIterator {
      * We have results from a previous merge
      */
 
-    boolean unioned = true;
-    
-    while (resultSet.size() < pageSize && unioned) {
-      unioned = false;
+   
+    int complete = 0;
+        
+    while (resultSet.size() < pageSize && complete < size) {
+      
+      currentIndex = (currentIndex + 1) % iterators.size();
       
       ResultIterator itr = iterators.get(currentIndex);
 
-      if (itr.hasNext()) {
-        resultSet = Sets.union(resultSet, itr.next());
-        unioned = true;
+      if (!itr.hasNext()) {
+        complete++;
+        continue;
       }
-
-      currentIndex = (currentIndex + 1) % iterators.size();
+      
+      resultSet = Sets.union(resultSet, itr.next());
+       
+      
     }
 
     // now check if we need to split our results if they went over the page size
