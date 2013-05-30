@@ -19,8 +19,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.usergrid.utils.UUIDUtils;
-
 import com.google.common.collect.Sets;
 
 /**
@@ -30,17 +28,14 @@ import com.google.common.collect.Sets;
  * @author tnine
  * 
  */
-public class IntersectionIterator extends MergeIterator {
+public class IntersectionIterator extends MultiIterator {
 
-  private Set<UUID> intersection;
-
-  private int pageSize;
 
   /**
    * 
    */
   public IntersectionIterator(int pageSize) {
-    this.pageSize = pageSize;
+   super(pageSize);
   }
 
   /*
@@ -50,6 +45,9 @@ public class IntersectionIterator extends MergeIterator {
    */
   @Override
   public void reset() {
+    for(ResultIterator itr: iterators){
+      itr.reset();
+    }
   }
 
   /*
@@ -121,7 +119,7 @@ public class IntersectionIterator extends MergeIterator {
       
     }
 
-    return results.size() == 0 ? null : results;
+    return results;
 
   }
 

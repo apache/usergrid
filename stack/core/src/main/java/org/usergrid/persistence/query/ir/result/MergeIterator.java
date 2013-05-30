@@ -15,13 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import org.usergrid.persistence.cassandra.CursorCache;
 
 /**
  * @author tnine
@@ -29,26 +25,23 @@ import org.usergrid.persistence.cassandra.CursorCache;
  */
 public abstract class MergeIterator implements ResultIterator {
 
-  protected List<ResultIterator> iterators = new ArrayList<ResultIterator>();
-
   
   //kept private on purpose so advance must return the correct value
   private Set<UUID> next;
   
   /**
+   * The size of the pages
+   */
+  protected int pageSize;
+  
+  /**
    * 
    */
-  public MergeIterator() {
+  public MergeIterator(int pageSize) {
+    this.pageSize = pageSize;
   }
 
-  /**
-   * Add an iterator for our sub results
-   * 
-   * @param iterator
-   */
-  public void addIterator(ResultIterator iterator) {
-    iterators.add(iterator);
-  }
+
   
   /*
    * (non-Javadoc)
@@ -72,7 +65,7 @@ public abstract class MergeIterator implements ResultIterator {
       next = advance();
     }
 
-    return next != null;
+    return next != null && next.size() > 0;
   }
 
   /*
@@ -103,22 +96,8 @@ public abstract class MergeIterator implements ResultIterator {
     throw new UnsupportedOperationException("You can't remove from a union iterator");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-   * org.usergrid.persistence.cassandra.CursorCache)
-   */
-  @Override
-  public void finalizeCursor(CursorCache cache) {
-    for (ResultIterator current : iterators) {
-      current.finalizeCursor(cache);
-    }
-  }
-  
   /**
-   * Advance the iterator to the next value
+   * Advance the iterator to the next value.  Can return an empty set with signals no values
    */
   protected abstract Set<UUID> advance();
 

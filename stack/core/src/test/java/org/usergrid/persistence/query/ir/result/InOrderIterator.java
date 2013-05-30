@@ -104,7 +104,7 @@ public class InOrderIterator implements ResultIterator {
      * @see org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(org.usergrid.persistence.cassandra.CursorCache)
      */
     @Override
-    public void finalizeCursor(CursorCache cache) {
+    public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
       
     }
 

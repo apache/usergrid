@@ -191,41 +191,39 @@ public class QueryProcessor {
 
     ResultIterator itr = visitor.getResults();
 
-    List<Entity> results = null;
+    List<Entity> results = loadEntities(em, itr, size);
 
     // load our results a page at a time and sort them in memory
-    if (sorts.size() > 0) {
+//    if (sorts.size() > 0) {
       // Performing in memory sort
-      logger.info("Performing in-memory sort of entities");
-      ComparatorChain chain = new ComparatorChain();
-      for (SortPredicate sort : sorts) {
-        chain.addComparator(new EntityPropertyComparator(sort.getPropertyName()),
-            sort.getDirection() == SortDirection.DESCENDING);
-      }
+//      logger.info("Performing in-memory sort of entities");
+//      ComparatorChain chain = new ComparatorChain();
+//      for (SortPredicate sort : sorts) {
+//        chain.addComparator(new EntityPropertyComparator(sort.getPropertyName()),
+//            sort.getDirection() == SortDirection.DESCENDING);
+//      }
+//
+//      results = new ArrayList<Entity>(RelationManagerImpl.PAGE_SIZE * 2);
+//      
+//
+//      for (int i = 0; i < RelationManagerImpl.MAX_LOAD / RelationManagerImpl.PAGE_SIZE; i++) {
+//
+//        results.addAll(loadEntities(em, itr, RelationManagerImpl.PAGE_SIZE));
+//
+//        Collections.sort(results, chain);
+//
+//        //clear the elements at size to the end for the next iteration so we don't hold too much in memory at any one time 
+//        if(results.size() > size){
+//          results.subList(size, results.size()).clear();
+//        }
+//      }
+//      
+//      //now set our cursor page to the last value
 
-      results = new ArrayList<Entity>(RelationManagerImpl.PAGE_SIZE * 2);
-      
-
-      for (int i = 0; i < RelationManagerImpl.MAX_LOAD / RelationManagerImpl.PAGE_SIZE; i++) {
-
-        results.addAll(loadEntities(em, itr, RelationManagerImpl.PAGE_SIZE));
-
-        Collections.sort(results, chain);
-
-        //clear the elements at size to the end for the next iteration so we don't hold too much in memory at any one time 
-        if(results.size() > size){
-          results.subList(size, results.size()).clear();
-        }
-      }
-      
-      //now set our cursor page to the last value
-
-    }
+//    }
 
     //no sorting, so we won't load the results and sort them in memory, just do a direct load
-    else{
-      results = loadEntities(em, itr, size);
-    }
+   
     
     return results;
 
@@ -244,8 +242,8 @@ public class QueryProcessor {
 
     List<Entity> results = new ArrayList<Entity>(size);
 
-    for (int i = 0; i < size && itr.hasNext(); i++) {
-      results.add(em.get(itr.next()));
+    while (results.size() < size && itr.hasNext()) {
+      results.addAll(em.get(itr.next()).getEntities());
     }
 
     return results;

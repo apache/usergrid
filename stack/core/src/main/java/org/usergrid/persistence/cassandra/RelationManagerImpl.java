@@ -94,6 +94,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -165,11 +166,6 @@ public class RelationManagerImpl implements RelationManager {
    * Max page size when scanning indexes to load at a time
    */
   public static final int PAGE_SIZE = Query.MAX_LIMIT;
-
-  /**
-   * The maximum number of possible elements to
-   */
-  public static final int MAX_LOAD = PAGE_SIZE * 10;
 
   public RelationManagerImpl() {
   }
@@ -1639,74 +1635,81 @@ public class RelationManagerImpl implements RelationManager {
 
     int last = maxResults + 1;
 
-    Iterator<HColumn<ByteBuffer, ByteBuffer>> cols = scanner.iterator();
+    Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> pages = scanner.iterator();
+    
+    while(pages.hasNext() && (refs.size() < last || ids.size() < last)){
+      Iterator<HColumn<ByteBuffer, ByteBuffer>> cols = pages.next().iterator();
 
-    for (int i = 0; i < last && cols.hasNext(); i++) {
-
-      HColumn<ByteBuffer, ByteBuffer> result = cols.next();
-
-      UUID connectedEntityId = null;
-      String cType = connectionType;
-      String eType = entityType;
-      UUID associatedEntityId = null;
-
-      if (compositeResults) {
-        List<Object> objects = DynamicComposite.fromByteBuffer(result.getName().duplicate());
-        connectedEntityId = (UUID) objects.get(2);
-        if (refs != null) {
-          if ((connectionType == null) || (entityType == null)) {
-            if (connectionType != null) {
-              eType = StringUtils.ifString(objects.get(3));
-            } else if (entityType != null) {
-              cType = StringUtils.ifString(objects.get(3));
-            } else {
-              cType = StringUtils.ifString(objects.get(3));
-              eType = StringUtils.ifString(objects.get(4));
+      for (int i = 0; i < last && cols.hasNext(); i++) {
+  
+        HColumn<ByteBuffer, ByteBuffer> result = cols.next();
+  
+        UUID connectedEntityId = null;
+        String cType = connectionType;
+        String eType = entityType;
+        UUID associatedEntityId = null;
+  
+        if (compositeResults) {
+          List<Object> objects = DynamicComposite.fromByteBuffer(result.getName().duplicate());
+          connectedEntityId = (UUID) objects.get(2);
+          if (refs != null) {
+            if ((connectionType == null) || (entityType == null)) {
+              if (connectionType != null) {
+                eType = StringUtils.ifString(objects.get(3));
+              } else if (entityType != null) {
+                cType = StringUtils.ifString(objects.get(3));
+              } else {
+                cType = StringUtils.ifString(objects.get(3));
+                eType = StringUtils.ifString(objects.get(4));
+              }
             }
           }
-        }
-      } else {
-        connectedEntityId = uuid(result.getName());
-      }
-
-      ByteBuffer v = result.getValue();
-      if ((v != null) && (v.remaining() >= 16)) {
-        associatedEntityId = uuid(result.getValue());
-      }
-
-      if ((refs != null) && (eType != null)) {
-        if (!idSet.contains(connectedEntityId)) {
-          refs.add(new SimpleEntityRef(eType, connectedEntityId));
-          idSet.add(connectedEntityId);
         } else {
-          logger.error("Duplicate entity uuid (" + connectedEntityId
-              + ") found in index results, discarding but index appears inconsistent...");
+          connectedEntityId = uuid(result.getName());
         }
-      }
-
-      if (ids != null) {
-        if (!idSet.contains(connectedEntityId)) {
-          ids.add(connectedEntityId);
-          idSet.add(connectedEntityId);
-        } else {
-          logger.error(
-              "Duplicate entity uuid ({}) found in index results, discarding but index appears inconsistent...",
-              connectedEntityId);
+  
+        ByteBuffer v = result.getValue();
+        if ((v != null) && (v.remaining() >= 16)) {
+          associatedEntityId = uuid(result.getValue());
         }
+  
+        if ((refs != null) && (eType != null)) {
+          if (!idSet.contains(connectedEntityId)) {
+            refs.add(new SimpleEntityRef(eType, connectedEntityId));
+            idSet.add(connectedEntityId);
+          } else {
+            logger.error("Duplicate entity uuid (" + connectedEntityId
+                + ") found in index results, discarding but index appears inconsistent...");
+          }
+        }
+  
+        if (ids != null) {
+          if (!idSet.contains(connectedEntityId)) {
+            ids.add(connectedEntityId);
+            idSet.add(connectedEntityId);
+          } else {
+            logger.error(
+                "Duplicate entity uuid ({}) found in index results, discarding but index appears inconsistent...",
+                connectedEntityId);
+          }
+        }
+  
+        if (cType != null) {
+          MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CONNECTION, cType);
+        }
+  
+        String cursor = encodeBase64URLSafeString(bytes(result.getName()));
+        if (cursor != null) {
+          MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CURSOR, cursor);
+        }
+  
+        if (associatedEntityId != null) {
+          MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_ASSOCIATED, associatedEntityId);
+        }
+  
       }
-
-      if (cType != null) {
-        MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CONNECTION, cType);
-      }
-
-      String cursor = encodeBase64URLSafeString(bytes(result.getName()));
-      if (cursor != null) {
-        MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CURSOR, cursor);
-      }
-
-      if (associatedEntityId != null) {
-        MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_ASSOCIATED, associatedEntityId);
-      }
+      
+    
 
     }
 
@@ -1861,7 +1864,7 @@ public class RelationManagerImpl implements RelationManager {
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
-        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), PAGE_SIZE, MAX_LOAD,
+        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), Math.min(10,PAGE_SIZE),
         slice.getPropertyName());
 
     return scanner;
@@ -1893,7 +1896,7 @@ public class RelationManagerImpl implements RelationManager {
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
-        IndexType.COLLECTION, keyPrefix, start, finish, slice.isReversed(), PAGE_SIZE, MAX_LOAD, collectionName);
+        IndexType.COLLECTION, keyPrefix, start, finish, slice.isReversed(), PAGE_SIZE, collectionName);
 
     return scanner;
 
@@ -2332,11 +2335,11 @@ public class RelationManagerImpl implements RelationManager {
     SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, null, UUID_PARSER);
 
     List<UUID> ids = new ArrayList<UUID>(size);
-
-    for (int i = 0; i < size && iter.hasNext(); i++) {
-      ids.add(iter.next());
+    
+    while(iter.hasNext() && ids.size() < size){
+      ids.addAll(iter.next());
     }
-
+    
     return ids;
   }
 
@@ -2676,7 +2679,7 @@ public class RelationManagerImpl implements RelationManager {
 
       Object subKey = getCFKeyForSubkey(collection, node);
 
-      IntersectionIterator intersection = new IntersectionIterator();
+      IntersectionIterator intersection = new IntersectionIterator(PAGE_SIZE);
 
       for (QuerySlice slice : node.getAllSlices()) {
 
@@ -2775,7 +2778,7 @@ public class RelationManagerImpl implements RelationManager {
 
       Level resultsLevel = query.getResultsLevel();
 
-      IntersectionIterator intersection = new IntersectionIterator();
+      IntersectionIterator intersection = new IntersectionIterator(PAGE_SIZE);
 
       for (QuerySlice slice : node.getAllSlices()) {
 

@@ -20,12 +20,10 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
-import org.apache.cassandra.utils.ByteBufferUtil;
 import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.query.ir.SliceNode;
@@ -133,8 +131,11 @@ public class SliceIterator<T> implements ResultIterator {
    * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
    */
   @Override
-  public void finalizeCursor(CursorCache cache) {
+  public void finalizeCursor(CursorCache cache,UUID lastLoaded) {
 
+    int cursorId = slice.hashCode();
+   
+    //TODO finish cursors
     // ByteBuffer bytes = ByteBufferUtil.EMPTY_BYTE_BUFFER;
     //
     // if (hasNext()) {

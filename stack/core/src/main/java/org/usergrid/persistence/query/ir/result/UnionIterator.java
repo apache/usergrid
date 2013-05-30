@@ -15,14 +15,12 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
-import org.usergrid.utils.UUIDUtils;
-
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * Simple iterator to perform Unions
@@ -30,10 +28,22 @@ import com.google.common.collect.Multimap;
  * @author tnine
  * 
  */
-public class UnionIterator extends MergeIterator {
-  
-    private TreeMap<UUID, ResultIterator> minMax = new TreeMap<UUID, ResultIterator>();
-    private boolean initialized = false;
+public class UnionIterator extends MultiIterator {
+
+  /**
+   * results that were left from our previous union. These are kept and returned
+   * before advancing iterators
+   */
+  private Set<UUID> remainderResults;
+
+  private int currentIndex;
+
+  /**
+   * @param pageSize
+   */
+  public UnionIterator(int pageSize) {
+    super(pageSize);
+  }
 
   /*
    * (non-Javadoc)
@@ -41,58 +51,60 @@ public class UnionIterator extends MergeIterator {
    * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
    */
   @Override
-  protected UUID advance() {
-    if (!initialized) {
-      for (int i = 0; i < iterators.size(); i++) {
-        addNext(iterators.get(i));
-      }
-
-    }
-
-    //get the first entry, since it will be the min value
-    Entry<UUID, ResultIterator> entry = minMax.firstEntry();
-
-    if (entry == null) {
+  protected Set<UUID> advance() {
+    if(iterators.size() == 0){
       return null;
     }
 
-    //remove the entry
-    minMax.remove(entry.getKey());
+    Set<UUID> resultSet = null;
 
-    //advance the iterator
-    addNext(entry.getValue());
-
-    return entry.getKey();
-
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
-   */
-  @Override
-  public void reset() {
-  }
-
-  
-  /**
-   * Add the next value, advancing if this key already exists to avoid duplicates
-   * @param itr
-   */
-  private void addNext(ResultIterator itr){
-    //nothing to do
-    if(!itr.hasNext()){
-      return;
+    if (remainderResults != null) {
+      resultSet = remainderResults;
+      remainderResults = null;
+    } else {
+      resultSet = new LinkedHashSet<UUID>();
     }
+
+    /**
+     * We have results from a previous merge
+     */
+
+    boolean unioned = true;
     
-    UUID next = itr.next();
-    
-    //we already have the entry via another iterator, we need to advance, or our entry is smaller than the first entry in the map
-    while(minMax.containsKey(next)  && itr.hasNext()){
-      next = itr.next();
+    while (resultSet.size() < pageSize && unioned) {
+      unioned = false;
+      
+      ResultIterator itr = iterators.get(currentIndex);
+
+      if (itr.hasNext()) {
+        resultSet = Sets.union(resultSet, itr.next());
+        unioned = true;
+      }
+
+      currentIndex = (currentIndex + 1) % iterators.size();
     }
-    
-    minMax.put(next, itr);
-    
+
+    // now check if we need to split our results if they went over the page size
+    if (resultSet.size() > pageSize) {
+      Set<UUID> returnSet = new LinkedHashSet<UUID>(pageSize);
+
+      Iterator<UUID> itr = resultSet.iterator();
+
+      for (int i = 0; i < pageSize && itr.hasNext(); i++) {
+        returnSet.add(itr.next());
+      }
+
+      remainderResults = new LinkedHashSet<UUID>(pageSize);
+      
+      while(itr.hasNext()){
+        remainderResults.add(itr.next());
+      }
+      
+      resultSet = returnSet;
+    }
+
+    return resultSet;
+
   }
 
 }

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -39,30 +40,31 @@ public class SubtractionIteratorTest {
     UUID id5 = UUIDUtils.minTimeUUID(5);
 
     // we should get intersection on 1, 3, and 8
-    InOrderIterator keep = new InOrderIterator(100);
+    InOrderIterator keep = new InOrderIterator(2);
     keep.add(id1);
     keep.add(id2);
     keep.add(id3);
     keep.add(id4);
     keep.add(id5);
 
-    InOrderIterator subtract = new InOrderIterator(100);
+    InOrderIterator subtract = new InOrderIterator(2);
     subtract.add(id1);
     subtract.add(id3);
     subtract.add(id5);
 
-    SubtractionIterator sub = new SubtractionIterator();
+    SubtractionIterator sub = new SubtractionIterator(100);
     sub.setKeepIterator(keep);
     sub.setSubtractIterator(subtract);
 
     // now make sure it's right, only 2 and 8 aren't intersected
-    assertTrue(sub.hasNext());
-    assertEquals(id2, sub.next());
-
-    assertTrue(sub.hasNext());
-    assertEquals(id4, sub.next());
-
-    assertFalse(sub.hasNext());
+    Set<UUID> page = sub.next();
+    
+    assertTrue(page.contains(id2));
+    assertTrue(page.contains(id4));
+    
+    assertEquals(2, page.size());
+    
+    
   }
 
   @Test
@@ -89,16 +91,52 @@ public class SubtractionIteratorTest {
     subtract.add(id5);
     subtract.add(id6);
 
-    SubtractionIterator sub = new SubtractionIterator();
+    SubtractionIterator sub = new SubtractionIterator(100);
     sub.setKeepIterator(keep);
     sub.setSubtractIterator(subtract);
 
     // now make sure it's right, only 2 and 8 aren't intersected
-    assertTrue(sub.hasNext());
-    assertEquals(id2, sub.next());
+    
+    Set<UUID> page = sub.next();
+    
+    assertTrue(page.contains(id2));
+    
+    assertEquals(1, page.size());
+  }
+  
+  @Test
+  public void smallerKeepRemoveAll() {
 
+    UUID id1 = UUIDUtils.minTimeUUID(1);
+    UUID id2 = UUIDUtils.minTimeUUID(2);
+    UUID id3 = UUIDUtils.minTimeUUID(3);
+    UUID id4 = UUIDUtils.minTimeUUID(4);
+    UUID id5 = UUIDUtils.minTimeUUID(5);
+    UUID id6 = UUIDUtils.minTimeUUID(6);
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator keep = new InOrderIterator(100);
+    keep.add(id1);
+    keep.add(id3);
+    keep.add(id4);
+
+    InOrderIterator subtract = new InOrderIterator(100);
+    subtract.add(id1);
+    subtract.add(id2);
+    subtract.add(id3);
+    subtract.add(id4);
+    subtract.add(id5);
+    subtract.add(id6);
+
+    SubtractionIterator sub = new SubtractionIterator(100);
+    sub.setKeepIterator(keep);
+    sub.setSubtractIterator(subtract);
+
+    // now make sure it's right, only 2 and 8 aren't intersected
+    
     assertFalse(sub.hasNext());
   }
+  
   
   @Test
   public void noKeep(){
@@ -110,7 +148,7 @@ public class SubtractionIteratorTest {
     InOrderIterator subtract = new InOrderIterator(100);
     subtract.add(id1);
 
-    SubtractionIterator sub = new SubtractionIterator();
+    SubtractionIterator sub = new SubtractionIterator(100);
     sub.setKeepIterator(keep);
     sub.setSubtractIterator(subtract);
     
@@ -121,20 +159,22 @@ public class SubtractionIteratorTest {
   public void noSubtract(){
     UUID id1 = UUIDUtils.minTimeUUID(1);
 
-    // we should get intersection on 1, 3, and 8
+    //keep only id 1
     InOrderIterator keep = new InOrderIterator(100);
     keep.add(id1);
 
     InOrderIterator subtract = new InOrderIterator(100);
    
 
-    SubtractionIterator sub = new SubtractionIterator();
+    SubtractionIterator sub = new SubtractionIterator(100);
     sub.setKeepIterator(keep);
     sub.setSubtractIterator(subtract);
     
     assertTrue(sub.hasNext());
-    assertEquals(id1, sub.next());
-    assertFalse(sub.hasNext());
+    Set<UUID> page = sub.next();
+    
+    assertTrue(page.contains(id1));
+    assertEquals(1, page.size());
   }
 
 }

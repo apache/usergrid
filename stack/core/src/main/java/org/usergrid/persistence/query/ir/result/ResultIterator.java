@@ -39,8 +39,8 @@ public interface ResultIterator extends Iterable<Set<UUID>>, Iterator<Set<UUID>>
   public void reset();
   
   /**
-   * Finalize the cursor for this results
+   * Finalize the cursor for this results.  Pass in the uuid of the last entity loaded.
    */
-  public void finalizeCursor(CursorCache cache);
+  public void finalizeCursor(CursorCache cache, UUID lastValue);
 
 }

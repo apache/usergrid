@@ -37,6 +37,7 @@ import static org.usergrid.utils.MapUtils.filter;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -576,7 +577,7 @@ public class CassandraService {
    * @throws Exception
    *           the exception
    */
-  public <K, N, V> Rows<K, N, V> getRows(Keyspace ko, Object columnFamily, List<K> keys, Serializer<K> keySerializer,
+  public <K, N, V> Rows<K, N, V> getRows(Keyspace ko, Object columnFamily, Collection<K> keys, Serializer<K> keySerializer,
       Serializer<N> nameSerializer, Serializer<V> valueSerializer) throws Exception {
 
     if (db_logger.isDebugEnabled()) {
@@ -1051,7 +1052,7 @@ public class CassandraService {
 
     IndexScanner scanner = new IndexBucketScanner(this, locator,
         ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key,
-        start, finish, reversed, count, count*10, collectionName);
+        start, finish, reversed, Math.min(count*10, 1000), collectionName);
 
     return scanner;
 

@@ -19,6 +19,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -32,7 +37,7 @@ public class UnionIteratorTest {
 
   @Test
   public void testMutipleIterators() {
-    
+
     UUID id1 = UUIDUtils.minTimeUUID(1);
     UUID id2 = UUIDUtils.minTimeUUID(2);
     UUID id3 = UUIDUtils.minTimeUUID(3);
@@ -43,17 +48,15 @@ public class UnionIteratorTest {
     UUID id8 = UUIDUtils.minTimeUUID(8);
     UUID id9 = UUIDUtils.minTimeUUID(9);
     UUID id10 = UUIDUtils.minTimeUUID(10);
-    
-    
-    //we should get intersection on 1, 3, and 8
+
+    // we should get intersection on 1, 3, and 8
     InOrderIterator first = new InOrderIterator(100);
     first.add(id1);
     first.add(id2);
     first.add(id3);
     first.add(id8);
     first.add(id9);
- 
-    
+
     InOrderIterator second = new InOrderIterator(100);
     second.add(id1);
     second.add(id2);
@@ -61,7 +64,7 @@ public class UnionIteratorTest {
     second.add(id4);
     second.add(id8);
     second.add(id10);
-    
+
     InOrderIterator third = new InOrderIterator(100);
     third.add(id1);
     third.add(id3);
@@ -69,7 +72,6 @@ public class UnionIteratorTest {
     third.add(id6);
     third.add(id7);
     third.add(id8);
-    
 
     InOrderIterator fourth = new InOrderIterator(100);
     fourth.add(id1);
@@ -78,95 +80,146 @@ public class UnionIteratorTest {
     fourth.add(id6);
     fourth.add(id8);
     fourth.add(id9);
-    
-    UnionIterator union = new UnionIterator();
-    union.addIterator(first);
-    union.addIterator(second);
-    union.addIterator(third);
-    union.addIterator(fourth);
-    
-    //now make sure it's right, only 1, 3 and 8 intersect
-    assertTrue(union.hasNext());
-    assertEquals(id1, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id2, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id3, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id4, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id5, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id6, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id7, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id8, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id9, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id10, union.next());
-    
-    assertFalse(union.hasNext());
+
+    UnionIterator iter = new UnionIterator(100);
+    iter.addIterator(first);
+    iter.addIterator(second);
+    iter.addIterator(third);
+    iter.addIterator(fourth);
+
+    Set<UUID> union = iter.next();
+
+    // now make sure it's right, only 1, 3 and 8 intersect
+    assertTrue(union.contains(id1));
+    assertTrue(union.contains(id2));
+    assertTrue(union.contains(id3));
+    assertTrue(union.contains(id4));
+    assertTrue(union.contains(id5));
+    assertTrue(union.contains(id6));
+    assertTrue(union.contains(id7));
+    assertTrue(union.contains(id8));
+    assertTrue(union.contains(id9));
+    assertTrue(union.contains(id10));
   }
-  
+
   @Test
   public void testOneIterator() {
-    
+
     UUID id1 = UUIDUtils.minTimeUUID(1);
     UUID id2 = UUIDUtils.minTimeUUID(2);
     UUID id3 = UUIDUtils.minTimeUUID(3);
     UUID id4 = UUIDUtils.minTimeUUID(4);
-    
-    
-    //we should get intersection on 1, 3, and 8
+
+    // we should get intersection on 1, 3, and 8
     InOrderIterator first = new InOrderIterator(100);
     first.add(id1);
     first.add(id2);
     first.add(id3);
     first.add(id4);
-    
-    
-    UnionIterator union = new UnionIterator();
+
+    UnionIterator union = new UnionIterator(100);
     union.addIterator(first);
-    
-    //now make sure it's right, only 1, 3 and 8 intersect
-    assertTrue(union.hasNext());
-    assertEquals(id1, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id2, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id3, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id4, union.next());
-    
+
+    Set<UUID> ids = union.next();
+
+    // now make sure it's right, only 1, 3 and 8 intersect
+    assertTrue(ids.contains(id1));
+    assertTrue(ids.contains(id2));
+    assertTrue(ids.contains(id3));
+    assertTrue(ids.contains(id4));
+
     assertFalse(union.hasNext());
   }
-  
+
   @Test
   public void testNoIterator() {
-    
-    
-    
-    UnionIterator union = new UnionIterator();
-    
-    
-    //now make sure it's right, only 1, 3 and 8 intersect
+
+    UnionIterator union = new UnionIterator(100);
+
+    // now make sure it's right, only 1, 3 and 8 intersect
     assertFalse(union.hasNext());
   }
 
+  @Test
+  public void largeUnionTest() {
 
-  
+    int size = 10000;
+    int firstIntersection = 100;
+    int secondIntersection = 200;
+
+    int pageSize = 100;
+    int pageCount = size / pageSize;
+
+    UUID[] firstSet = new UUID[size];
+    UUID[] secondSet = new UUID[size];
+    UUID[] thirdSet = new UUID[size];
+
+    InOrderIterator first = new InOrderIterator(60);
+    InOrderIterator second = new InOrderIterator(60);
+    InOrderIterator third = new InOrderIterator(60);
+
+    Set<UUID> results = new LinkedHashSet<UUID>(size / secondIntersection);
+
+    for (int i = 0; i < size; i++) {
+      firstSet[i] = UUIDUtils.newTimeUUID();
+      // every 100 elements, set the element equal to the first set. This way we
+      // have intersection
+
+      results.add(firstSet[i]);
+
+      if (i % firstIntersection == 0) {
+        secondSet[i] = firstSet[i];
+      } else {
+        secondSet[i] = UUIDUtils.newTimeUUID();
+        results.add(secondSet[i]);
+      }
+
+      if (i % secondIntersection == 0) {
+        thirdSet[i] = firstSet[i];
+
+      }
+
+      else {
+        thirdSet[i] = UUIDUtils.newTimeUUID();
+        results.add(thirdSet[i]);
+      }
+    }
+
+    first.add(firstSet);
+
+    reverse(secondSet);
+    // reverse the second
+    second.add(secondSet);
+    third.add(thirdSet);
+
+    // now intersect them and make sure we get all results in a small set
+    UnionIterator union = new UnionIterator(pageSize);
+    union.addIterator(first);
+    union.addIterator(second);
+    union.addIterator(third);
+
+
+    while(union.hasNext()) {
+
+      // now get the 2nd page
+      Set<UUID> resultSet = union.next();
+
+      results.removeAll(resultSet);  
+    }
+    
+    assertTrue(results.isEmpty());
+    assertFalse(union.hasNext());
+  }
+
+  private void reverse(UUID[] array) {
+
+    UUID temp = null;
+
+    for (int i = 0; i < array.length / 2; i++) {
+      temp = array[i];
+      array[i] = array[array.length - i - 1];
+      array[array.length - i - 1] = temp;
+    }
+  }
+
 }

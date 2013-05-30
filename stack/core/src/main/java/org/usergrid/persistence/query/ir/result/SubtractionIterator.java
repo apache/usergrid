@@ -15,14 +15,13 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
-import org.usergrid.utils.UUIDUtils;
+import org.usergrid.persistence.cassandra.CursorCache;
 
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * Simple iterator to perform Unions
@@ -35,8 +34,9 @@ public class SubtractionIterator extends MergeIterator {
   private ResultIterator keepIterator;
   private ResultIterator subtractIterator;
 
-  private UUID lastKeep;
-  private UUID lastSubtract;
+  public SubtractionIterator(int pageSize) {
+    super(pageSize);
+  }
 
   /**
    * @param subtractIterator
@@ -53,14 +53,16 @@ public class SubtractionIterator extends MergeIterator {
   public void setKeepIterator(ResultIterator keepIterator) {
     this.keepIterator = keepIterator;
   }
-  
-  
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
    */
   @Override
   public void reset() {
+    keepIterator.reset();
+    subtractIterator.reset();
   }
 
   /*
@@ -69,67 +71,36 @@ public class SubtractionIterator extends MergeIterator {
    * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
    */
   @Override
-  protected UUID advance() {
+  protected Set<UUID> advance() {
     if (!keepIterator.hasNext()) {
       return null;
     }
 
-    lastKeep = keepIterator.next();
+    Set<UUID> results = new LinkedHashSet<UUID>(pageSize);
 
-    //nothing to subtract
-    if (lastSubtract == null && !subtractIterator.hasNext()){
-       return lastKeep;
-    }
-    
-    lastSubtract = subtractIterator.next();
+    while (keepIterator.hasNext() && results.size() < pageSize) {
 
-    int compare = UUIDUtils.compare(lastSubtract, lastKeep);
+      Set<UUID> keepPage = keepIterator.next();
 
-    // the next uuid to remove is smaller than our current keep uuid, advance
-    // our remove until it's >= to the current keep
-    while (compare < 0) {
-      if(!subtractIterator.hasNext()){
-        break;
+      while (subtractIterator.hasNext() && keepPage.size() > 0) {
+        keepPage = Sets.difference(keepPage, subtractIterator.next());
       }
       
-      lastSubtract = subtractIterator.next();
-      compare = UUIDUtils.compare(lastSubtract, lastKeep);
-    }
-
-    // they're the same, advance them both since we skip this value
-    while (compare == 0) {
-      // nothing left to keep return
-      if (!keepIterator.hasNext()) {
-        return null;
-      }
+      subtractIterator.reset();
       
-      lastKeep = keepIterator.next();
-
-      if(!subtractIterator.hasNext()){
-       return lastKeep;
-      }
-    
-      lastSubtract = subtractIterator.next();
-
-      compare = UUIDUtils.compare(lastSubtract, lastKeep);
+      results.addAll(keepPage);
     }
 
-   
-
-    UUID next = null;
-    
-    if (compare > 0) {
-      next = lastKeep;
-      
-      if(keepIterator.hasNext()){
-        lastKeep = keepIterator.next();
-      }
-     
-    }
-
-    return next;
+    return results;
   }
 
-
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(org.usergrid.persistence.cassandra.CursorCache)
+   */
+  @Override
+  public void finalizeCursor(CursorCache cache,UUID lastLoaded) {
+    keepIterator.finalizeCursor(cache, lastLoaded);
+    subtractIterator.finalizeCursor(cache, lastLoaded);
+  }
 
 }

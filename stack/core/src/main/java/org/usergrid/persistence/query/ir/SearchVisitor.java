@@ -4,6 +4,7 @@ import java.util.Stack;
 
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.cassandra.QueryProcessor;
+import org.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.usergrid.persistence.query.ir.result.IntersectionIterator;
 import org.usergrid.persistence.query.ir.result.ResultIterator;
 import org.usergrid.persistence.query.ir.result.SubtractionIterator;
@@ -58,7 +59,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     ResultIterator right = results.pop();
     ResultIterator left = results.pop();
 
-    IntersectionIterator intersection = new IntersectionIterator();
+    IntersectionIterator intersection = new IntersectionIterator(RelationManagerImpl.PAGE_SIZE);
     intersection.addIterator(right);
     intersection.addIterator(left);
     
@@ -79,7 +80,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     node.getAllNode().visit(this);
     ResultIterator keep = results.pop();
     
-    SubtractionIterator subtraction = new SubtractionIterator();
+    SubtractionIterator subtraction = new SubtractionIterator(RelationManagerImpl.PAGE_SIZE);
     subtraction.setSubtractIterator(not);
     subtraction.setKeepIterator(keep);
 
@@ -100,7 +101,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     ResultIterator right = results.pop();
     ResultIterator left = results.pop();
 
-    UnionIterator union = new UnionIterator();
+    UnionIterator union = new UnionIterator(RelationManagerImpl.PAGE_SIZE);
 
     if (left != null) {
       union.addIterator(left);

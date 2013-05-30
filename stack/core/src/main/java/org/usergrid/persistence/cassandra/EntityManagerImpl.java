@@ -1448,7 +1448,7 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
   @Metered(group="core", name="EntityManager_getEntities")
-	public <A extends Entity> List<A> getEntities(List<UUID> entityIds,
+	public <A extends Entity> List<A> getEntities(Collection<UUID> entityIds,
 			String entityType, Class<A> entityClass) throws Exception {
 
 		List<A> entities = new ArrayList<A>();
@@ -2225,21 +2225,31 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	@Override
-	public Results get(List<UUID> entityIds, Results.Level resultsLevel)
+	public Results get(Collection<UUID> entityIds, Results.Level resultsLevel)
 			throws Exception {
 		List<? extends Entity> results = getEntities(entityIds, null, null);
 		return Results.fromEntities(results);
 	}
+	
+	
 
-	@Override
-	public Results get(List<UUID> entityIds,
+	/* (non-Javadoc)
+   * @see org.usergrid.persistence.EntityManager#get(java.util.Collection)
+   */
+  @Override
+  public Results get(Collection<UUID> entityIds) throws Exception {
+    return fromEntities(getEntities(entityIds, null, null));
+  }
+
+  @Override
+	public Results get(Collection<UUID> entityIds,
 			Class<? extends Entity> entityClass, Results.Level resultsLevel)
 			throws Exception {
 		return fromEntities(getEntities(entityIds, null, entityClass));
 	}
 
 	@Override
-	public Results get(List<UUID> entityIds, String entityType,
+	public Results get(Collection<UUID> entityIds, String entityType,
 			Class<? extends Entity> entityClass, Results.Level resultsLevel)
 			throws Exception {
 		return fromEntities(getEntities(entityIds, entityType, entityClass));
