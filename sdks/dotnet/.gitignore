@@ -5,6 +5,7 @@
 *.suo
 *.user
 *.sln.docstates
+MySettings.config
 
 # Build results
 
