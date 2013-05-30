@@ -86,21 +86,6 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path("hello")
-    public JSONWithPadding hello(@Context UriInfo ui,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
-        logger.info("Saying hello");
-
-        ApiResponse response = createApiResponse();
-        response.setAction("Greetings Professor Falken");
-        response.setSuccess();
-
-        return new JSONWithPadding(response, callback);
-    }
-
-    @RequireSystemAccess
-    @GET
     @Path("superuser/setup")
     public JSONWithPadding getSetupSuperuser(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
