@@ -29,9 +29,9 @@ namespace Usergrid.Sdk.Tests
             return restResponse;
         }
 
-		public static IUsergridRequest InitializeUserGridRequestWithAccessToken()
+		public static IUsergridRequest InitializeUserGridRequestWithAccessToken(string accessToken)
 		{
-			var loginResponse = SetUpRestResponseWithData(HttpStatusCode.OK, new LoginResponse {AccessToken = "access_token"});
+			var loginResponse = SetUpRestResponseWithData(HttpStatusCode.OK, new LoginResponse {AccessToken = accessToken});
 
             var request = Substitute.For<IUsergridRequest>();
 			request

@@ -3,23 +3,13 @@
 namespace Usergrid.Sdk.IntegrationTests
 {
     [TestFixture]
-    public class LoginTests
+    public class LoginTests : BaseTest
     {
-        //Organization API Credentials
-        private const string ClientId = "__YOUR_CLIENT_ID_HERE__";
-        private const string ClientSecret = "__YOUR_CLIENT_SECRET_HERE__";
-        //User Login Credentials
-        private const string UserLoginId = "__USER_NAME_HERE__";
-        private const string UserSecret = "__USER_PASSWORD_HERE__";
-        //Organization and Application Details
-        private const string Organization = "__ORGANIZATION_NAME_HERE__";
-        private const string Application = "__APPLICATION_NAME_HERE__";
-
         [Test]
         public void ShouldLoginWithClientCredentialsAndSetTheAccessToken()
         {
-            var client = new Client(Organization, Application, AuthType.ClientId);
-            client.Login(ClientId, ClientSecret);
+            var client = new Client(Organization, Application);
+            client.Login(ClientId, ClientSecret, AuthType.ClientId);
 
             Assert.IsFalse(string.IsNullOrEmpty(client.AccessToken));
         }
@@ -27,8 +17,8 @@ namespace Usergrid.Sdk.IntegrationTests
         [Test]
         public void ShouldLoginWithUserCredentialsAndSetTheAccessToken()
         {
-            var client = new Client(Organization, Application, AuthType.User);
-            client.Login(UserLoginId, UserSecret);
+            var client = new Client(Organization, Application);
+            client.Login(UserId, UserSecret, AuthType.User);
 
             Assert.IsFalse(string.IsNullOrEmpty(client.AccessToken));
         }
@@ -36,11 +26,11 @@ namespace Usergrid.Sdk.IntegrationTests
         [Test]
         public void ShouldThrowWithInvalidUserCredentials()
         {
-            var client = new Client(Organization, Application, AuthType.User);
+            var client = new Client(Organization, Application);
 
             try
             {
-                client.Login("Invalid_User_Name", "Invalid_Password");
+                client.Login("Invalid_User_Name", "Invalid_Password", AuthType.User);
                 Assert.True(true, "Was expecting login to throw UserGridException");
             }
             catch (UsergridException e)

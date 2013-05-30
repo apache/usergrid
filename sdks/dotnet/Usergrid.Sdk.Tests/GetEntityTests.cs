@@ -10,16 +10,10 @@ namespace Usergrid.Sdk.Tests
     [TestFixture]
     public class GetEntityTests
     {
-        public class Friend
-        {
-            public string Name { get; set; }
-            public int Age { get; set; }
-        }
-
         [Test]
         public void ShouldGetToCorrectEndPoint()
         {
-            var restResponseContent = new UsergridGetResponse<Friend> {Entities = new List<Friend>(), Cursor = ""};
+            var restResponseContent = new UsergridGetResponse<Friend> { Entities = new List<Friend>(), Cursor = "" };
             IRestResponse<UsergridGetResponse<Friend>> restResponse = Helpers.SetUpRestResponseWithContent<UsergridGetResponse<Friend>>(HttpStatusCode.OK, restResponseContent);
 
             var request = Substitute.For<IUsergridRequest>();
@@ -30,7 +24,7 @@ namespace Usergrid.Sdk.Tests
             const string collectionName = "collection";
             const string entityName = "entity";
 
-            var client = new Client(null, null, AuthType.ClientId, request: request);
+            var client = new Client(null, null, request: request);
             client.GetEntity<Friend>(collectionName, entityName);
 
             request.Received(1).Execute(
@@ -43,9 +37,10 @@ namespace Usergrid.Sdk.Tests
         [Test]
         public void ShouldPassCorrectAccessToken()
         {
-            IUsergridRequest request = Helpers.InitializeUserGridRequestWithAccessToken();
+            const string accessToken = "access_token";
+            IUsergridRequest request = Helpers.InitializeUserGridRequestWithAccessToken(accessToken);
 
-            var restResponseContent = new UsergridGetResponse<Friend> {Entities = new List<Friend>(), Cursor = ""};
+            var restResponseContent = new UsergridGetResponse<Friend> { Entities = new List<Friend>(), Cursor = "" };
             IRestResponse<UsergridGetResponse<Friend>> restResponse = Helpers.SetUpRestResponseWithContent<UsergridGetResponse<Friend>>(HttpStatusCode.OK, restResponseContent);
 
             request
@@ -55,8 +50,8 @@ namespace Usergrid.Sdk.Tests
             const string collectionName = "collection";
             const string entityName = "entity";
 
-            var client = new Client(null, null, AuthType.ClientId, request: request);
-            client.Login(null, null);
+            var client = new Client(null, null, request: request);
+            client.Login(null, null, AuthType.ClientId);
             var friend = client.GetEntity<Friend>(collectionName, entityName);
             Assert.IsNull(friend);
 
@@ -64,15 +59,15 @@ namespace Usergrid.Sdk.Tests
                 Arg.Is(string.Format("/{0}/{1}", collectionName, entityName)),
                 Arg.Is(Method.GET),
                 Arg.Any<object>(),
-                "access_token");
+                accessToken);
         }
 
         [Test]
         public void ShouldReturnEntityCorrectly()
         {
-            var friend = new Friend {Name = "name", Age = 1};
+            var friend = new Friend { Name = "name", Age = 1 };
 
-            var restResponseContent = new UsergridGetResponse<Friend> {Entities = new List<Friend> {friend}, Cursor = "cursor"};
+            var restResponseContent = new UsergridGetResponse<Friend> { Entities = new List<Friend> { friend }, Cursor = "cursor" };
             IRestResponse<UsergridGetResponse<Friend>> restResponse = Helpers.SetUpRestResponseWithContent<UsergridGetResponse<Friend>>(HttpStatusCode.OK, restResponseContent);
 
             var request = Substitute.For<IUsergridRequest>();
@@ -83,7 +78,7 @@ namespace Usergrid.Sdk.Tests
             const string collectionName = "collection";
             const string entityName = "entity";
 
-            var client = new Client(null, null, AuthType.ClientId, request: request);
+            var client = new Client(null, null, request: request);
             var returnedFriend = client.GetEntity<Friend>(collectionName, entityName);
 
             Assert.IsNotNull(returnedFriend);
@@ -94,11 +89,11 @@ namespace Usergrid.Sdk.Tests
         [Test]
         public void ShouldReturnFirstEntityInListCorrectly()
         {
-            var friend1 = new Friend {Name = "name1", Age = 1};
-            var friend2 = new Friend {Name = "name2", Age = 2};
+            var friend1 = new Friend { Name = "name1", Age = 1 };
+            var friend2 = new Friend { Name = "name2", Age = 2 };
 
-            var entities = new List<Friend> {friend1, friend2};
-            var restResponseContent = new UsergridGetResponse<Friend> {Entities = entities, Cursor = "cursor"};
+            var entities = new List<Friend> { friend1, friend2 };
+            var restResponseContent = new UsergridGetResponse<Friend> { Entities = entities, Cursor = "cursor" };
 
             IRestResponse<UsergridGetResponse<Friend>> restResponse = Helpers.SetUpRestResponseWithContent<UsergridGetResponse<Friend>>(HttpStatusCode.OK, restResponseContent);
 
@@ -110,7 +105,7 @@ namespace Usergrid.Sdk.Tests
             const string collectionName = "collection";
             const string entityName = "entity";
 
-            var client = new Client(null, null, AuthType.ClientId, request: request);
+            var client = new Client(null, null, request: request);
             var returnedFriend = client.GetEntity<Friend>(collectionName, entityName);
 
             Assert.IsNotNull(returnedFriend);
@@ -121,9 +116,9 @@ namespace Usergrid.Sdk.Tests
         [Test]
         public void ShouldReturnNullEntityCorrectly()
         {
-            var entities = new List<Friend> {null};
+            var entities = new List<Friend> { null };
 
-            var restResponseContent = new UsergridGetResponse<Friend> {Entities = entities, Cursor = "cursor"};
+            var restResponseContent = new UsergridGetResponse<Friend> { Entities = entities, Cursor = "cursor" };
             IRestResponse<UsergridGetResponse<Friend>> restResponse = Helpers.SetUpRestResponseWithContent<UsergridGetResponse<Friend>>(HttpStatusCode.OK, restResponseContent);
 
             var request = Substitute.For<IUsergridRequest>();
@@ -134,10 +129,16 @@ namespace Usergrid.Sdk.Tests
             const string collectionName = "collection";
             const string entityName = "entity";
 
-            var client = new Client(null, null, AuthType.ClientId, request: request);
+            var client = new Client(null, null, request: request);
             var returnedFriend = client.GetEntity<Friend>(collectionName, entityName);
 
             Assert.IsNull(returnedFriend);
         }
+    }
+
+    public class Friend
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
     }
 }
