@@ -401,19 +401,8 @@ class Client {
   }
 
   public function createNewNotifierApple($name, $environment, $p12Certificate_path){
-  	/*
-  	$fred = strpos($p12Certificate_path,'@');
-  	$barney = strpos($p12Certificate_path,'/');
 
-  	if (strpos($p12Certificate_path,'@') === FALSE) {
-  		if (strpos($p12Certificate_path,'/') === 0) {
-  			$cert_path = '@'.$p12Certificate_path;
-			}else {
-  			$cert_path = '@/'.$p12Certificate_path;
-			}
-		}
-		*/
-		$endpoint = "notifiers";
+    $endpoint = "notifiers";
     $data = array(
 			"name"=>$name,
       "environment"=>$environment,
