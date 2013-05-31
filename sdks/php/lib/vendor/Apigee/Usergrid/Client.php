@@ -95,8 +95,8 @@ class Client {
   }
 
   public function enable_exceptions($bool = TRUE){
-		$this->use_exceptions = (bool)$bool;
-	}
+    $this->use_exceptions = (bool)$bool;
+  }
 
   public function set_log_callback($callback = NULL) {
     if (!empty($callback) && !is_callable($callback)) {
@@ -149,9 +149,9 @@ class Client {
       */
     }
     foreach($query_string_array as $key => $value) {
-    	$query_string_array[$key] = urlencode($value);
-		}
-		$query_string = http_build_query($query_string_array);
+      $query_string_array[$key] = urlencode($value);
+    }
+    $query_string = http_build_query($query_string_array);
     $url = '';
     if ($request->get_management_query()){
       $url = $this->url.'/'.$endpoint;
@@ -193,36 +193,36 @@ class Client {
     $response_obj->set_data($response_array);
 
     if ($meta['http_code'] != 200)   {
-    	//there was an api error
-    	$error_code = $response_array['error'];
-    	$description = isset($response_array['error_description'])?$response_array['error_description']:'';
-    	$description = isset($response_array['exception'])?$response_array['exception']:$description;
+     //there was an api error
+     $error_code = $response_array['error'];
+     $description = isset($response_array['error_description'])?$response_array['error_description']:'';
+     $description = isset($response_array['exception'])?$response_array['exception']:$description;
       $this->write_log('Error: '.$meta['http_code'].' error:'.$description);
-			$response_obj->set_error(true);
-			$response_obj->set_error_code($error_code);
-    	$response_obj->set_error_message($description);
+      $response_obj->set_error(true);
+      $response_obj->set_error_code($error_code);
+      $response_obj->set_error_message($description);
 
-			if ($this->use_exceptions) {
-				switch ($meta['http_code']) {
-			    case 400:
-			      throw new UG_400_BadRequest($error, $meta['http_code']);
-			      break;
-			    case 401:
-			      throw new UG_401_Unauthorized($error, $meta['http_code']);
-			      break;
-			    case 403:
-			      throw new UG_403_Forbidden($error, $meta['http_code']);
-			      break;
-			    case 404:
-			      throw new UG_404_NotFound($error, $meta['http_code']);
-			      break;
-			    case 500:
-			      throw new UG_500_ServerError($error, $meta['http_code']);
-			      break;
-			    default:
-						throw new UGException($error, $meta['http_code']);
-				}
-			}
+      if ($this->use_exceptions) {
+        switch ($meta['http_code']) {
+          case 400:
+            throw new UG_400_BadRequest($error, $meta['http_code']);
+            break;
+          case 401:
+            throw new UG_401_Unauthorized($error, $meta['http_code']);
+            break;
+          case 403:
+            throw new UG_403_Forbidden($error, $meta['http_code']);
+            break;
+          case 404:
+            throw new UG_404_NotFound($error, $meta['http_code']);
+            break;
+          case 500:
+            throw new UG_500_ServerError($error, $meta['http_code']);
+            break;
+          default:
+            throw new UGException($error, $meta['http_code']);
+        }
+      }
 
     } else {
       $response_obj->set_error(false);
@@ -352,7 +352,7 @@ class Client {
       }
     }
     else {
-    	$response_data = $response->get_data();
+      $response_data = $response->get_data();
       $user = new Entity($this, $response_data['user']);
       $this->set_oauth_token($response_data['access_token']);
     }
@@ -374,14 +374,14 @@ class Client {
  * @params {string} name
  * @return {object} entity
  */
-	public function signup($username, $password, $email, $name) {
-		$data = array('type' => 'users', 'username' => $username, 'password'=>$password, 'email'=>$email, 'name'=>$name);
-		return $this->create_entity($data);
-	}
+  public function signup($username, $password, $email, $name) {
+    $data = array('type' => 'users', 'username' => $username, 'password'=>$password, 'email'=>$email, 'name'=>$name);
+    return $this->create_entity($data);
+  }
 
   public function get_logged_in_user() {
-		$data = array('username' => 'me', 'type' => 'users');
-		return $this->get_entity($data);
+    $data = array('username' => 'me', 'type' => 'users');
+    return $this->get_entity($data);
   }
 
   public function is_logged_in() {
@@ -404,7 +404,7 @@ class Client {
 
     $endpoint = "notifiers";
     $data = array(
-			"name"=>$name,
+      "name"=>$name,
       "environment"=>$environment,
       "p12Certificat"=>$p12Certificate_path,
       "provider"=>"apple"
@@ -413,9 +413,9 @@ class Client {
   }
 
   public function createNewNotifierAndroid($name, $apiKey){
-		$endpoint = "notifiers";
+    $endpoint = "notifiers";
     $data = array(
-    	"name"=>$name,
+      "name"=>$name,
       "apiKey"=>$apiKey,
       "provider"=>"google"
     );
@@ -423,20 +423,20 @@ class Client {
   }
 
   public function createNotification(){
-		return new Notification();
-	}
+    return new Notification();
+  }
   public function scheduleNotification($notification){
-		$notifier_name = $notification->get_notifier_name();
-		$message = $notification->get_message();
-		$delivery_time = $notification->get_delivery_time();
-		$recipients_list = $notification->get_recipients_list();
-	  $recipeint_type = $notification->get_recipeint_type();
+    $notifier_name = $notification->get_notifier_name();
+    $message = $notification->get_message();
+    $delivery_time = $notification->get_delivery_time();
+    $recipients_list = $notification->get_recipients_list();
+    $recipeint_type = $notification->get_recipeint_type();
 
     //we are trying to make this (where notifierName is the name of the notifier:
     // { "payloads": { notifierName: "msg" }, "deliver":timestamp }
     $body = array("payloads"=>array($notifier_name=>$message, "deliver"=>$delivery_time));
 
-		$type = DEVICES;
+    $type = DEVICES;
     if ($recipeint_type == GROUPS) {
       $type = 'groups/';
     } else if ($recipeint_type == USERS) {
@@ -444,7 +444,7 @@ class Client {
     } else if ($recipeint_type == DEVICES) {
       $type = 'devices/';
     } else {
-    	//send to all devices
+      //send to all devices
       // /users;ql=/notifications
       $type = DEVICES;
       $recipients_list = array(0=>';ql=');
@@ -454,10 +454,10 @@ class Client {
     if (count($recipients_list) > 0) {
       foreach ($recipients_list as $recipient) {
         $endpoint = $type . $recipient . '/notifications';
-				$result = $this->post($endpoint, array(), $body);
-				if ($result->get_error()){
-					$notification->log_error($result->get_error());
-				}
+        $result = $this->post($endpoint, array(), $body);
+        if ($result->get_error()){
+          $notification->log_error($result->get_error());
+        }
       }
     }
     return $notification;
