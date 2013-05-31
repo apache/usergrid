@@ -10,6 +10,10 @@
 
 namespace Apigee\Usergrid;
 
+define('AUTH_CLIENT_ID', 'CLIENT_ID');
+define('AUTH_APP_USER', 'APP_USER');
+define('AUTH_NONE', 'NONE');
+
 class Client {
 
   const SDK_VERSION = '0.1';
@@ -67,6 +71,18 @@ class Client {
    */
   private $oauth_token;
 
+  /**
+   * @var string
+   */
+  private $client_id;
+
+  /**
+   * @var string
+   */
+  private $client_secret;
+
+
+  private $auth_type = AUTH_APP_USER;
 
   /**
    * Object constructor
@@ -87,6 +103,34 @@ class Client {
     $this->oauth_token = $token;
   }
 
+  public function get_auth_type() {
+    return $this->auth_type;
+  }
+  public function set_auth_type($auth_type) {
+    if ($auth_type == AUTH_APP_USER || $auth_type == AUTH_CLIENT_ID  || $auth_type == AUTH_NONE ) {
+      $this->auth_type = $auth_type;
+    } else {
+      $this->auth_type = AUTH_APP_USER;
+      if ($this->use_exceptions) {
+        throw new UGException('Auth type is not valid');
+      }
+    }
+  }
+
+  public function get_client_id() {
+    return $this->client_id;
+  }
+  public function set_client_id($id) {
+    $this->client_id = $id;
+  }
+
+  public function get_client_secret() {
+    return $this->client_secret;
+  }
+  public function set_client_secret($secret) {
+    $this->client_secret = $secret;
+  }
+
   public function enable_build_curl($bool = TRUE) {
     $this->build_curl = (bool)$bool;
   }
@@ -99,7 +143,7 @@ class Client {
   }
 
   public function set_log_callback($callback = NULL) {
-    if (!empty($callback) && !is_callable($callback)) {
+    if (!empty($callback) && !is_callable($callback) && $this->use_exceptions) {
       throw new UGException('Log Callback is not callable.');
     }
     $this->log_callback = $callback;
@@ -111,13 +155,13 @@ class Client {
     return $this->call_timeout / 1000;
   }
   public function set_call_timeout_callback($callback = NULL) {
-    if (isset($callback) && !is_callable($callback)) {
+    if (isset($callback) && !is_callable($callback) && $this->use_exceptions) {
       throw new UGException('Call Timeout Callback is not callable.');
     }
     $this->call_timeout_callback = $callback;
   }
   public function set_logout_callback($callback = NULL) {
-    if (isset($callback) && !is_callable($callback)) {
+    if (isset($callback) && !is_callable($callback) && $this->use_exceptions) {
       throw new UGException('Logout Callback is not callable.');
     }
     $this->logout_callback = $callback;
@@ -141,13 +185,15 @@ class Client {
     $endpoint = $request->get_endpoint();
     $body = $request->get_body();
     $query_string_array = $request->get_query_string_array();
-    if ($this->get_oauth_token()) {
+
+    if ($this->get_auth_type() == AUTH_APP_USER && $this->get_oauth_token()) {
       $query_string_array['access_token'] = $this->get_oauth_token();
-      /* //could also use headers for the token
-      xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
-      xhr.withCredentials = true;
-      */
+    } else if ($this->get_auth_type() == AUTH_APP_USER  ) {
+      $query_string_array['client_id'] = $this->get_client_id();
+      $query_string_array['client_secret'] = $this->get_client_secret();
     }
+
+
     foreach($query_string_array as $key => $value) {
       $query_string_array[$key] = urlencode($value);
     }
