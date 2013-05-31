@@ -25,6 +25,7 @@ include 'entity.php';
 include 'collection.php';
 include 'user.php';
 include 'push.php';
+include 'client_auth.php';
 
 
 //--------------------------------------------------------------
