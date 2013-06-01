@@ -6,7 +6,7 @@ The file is located in this repository:
 	http://github.com/apigee/usergrid-php-sdk/examples/quick_start/index.php
 	
 
-```php
+```html
 <?php
 //include autoloader to make sure all files are included
 include '../autoloader.inc.php';
@@ -331,6 +331,17 @@ PUT:
 	
 DELETE:
 
+	 $endpoint = 'users/idontexist';
+	 $query_string = array();
+	 try {
+	 	$result =  $client->delete($endpoint, $query_string);
+	 } catch (Exception $e) {
+	 	//entity didn't exist on the server, so UG_404_NotFound is thrown
+	 }
+	 
+	 ?>
+	 
+	 ?>
 	 $endpoint = 'users/fred';
 	 $query_string = array();
 	 $result =  $client->delete($endpoint, $query_string);
@@ -343,6 +354,24 @@ DELETE:
 
 You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life easier as they take care of much of the heavy lifting.
 
+#Authentication
+By default, every App Services account comes with an app called "Sandbox".  While using the Sandbox app for testing, you will not need to worry about authentication as it has all permissions enabled for unauthenticated users.  However, when you are ready to create your own secured app, there are two authentication methods you will use: app user credentials, where your users sign in to get a token, and system level credentials (a client id / client secret combo).
+
+#App user credentials
+To get an Oauth token, users will sign into their accounts with a username and password.  See the "Modeling users with the Entity object" section above for details on how to use the login method.  Once logged in, the user's Oauth token is stored and used for all subsequent calls.
+
+The SDK uses app level credentials by default.
+
+
+#System level credentials (client id / client secret combo)
+If your app needs an elevated level of permissions, then you can use the client id / client secret combo. This is useful if you need to update permissions, do user manipulation, etc. Since the PHP sdk is running server-side, it is safe for you to use the client id / client secret combo on your API calls.  Keep in mind that if you are making API calls on behalf of your application user, say to get resources only they should have access to, such as a feed, it may be more appropriate to use the app user credentials described above.
+
+To use make calls using system level credentials, simply set the auth type and specify your client id and client secret:
+
+	 $testname = 'Use Client Auth type - ';
+	 $client->set_auth_type(AUTH_CLIENT_ID);
+	 $client->set_client_id('YXA6Us6Rg0b0EeKuRALoGsWhew');
+	 $client->set_client_secret('YXA6OYsTy6ENwwnbvjtvsbLpjw5mF40');
 
 
 ## Contributing
