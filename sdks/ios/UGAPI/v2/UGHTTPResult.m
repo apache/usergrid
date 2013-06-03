@@ -13,7 +13,8 @@
 - (id) object {
     if (!_object && !_error) {
         NSError *error;
-        _object = [NSJSONSerialization JSONObjectWithData:_data options:NSJSONReadingMutableLeaves error:&error];
+        // NSLog(@"JSON %@", [[NSString alloc] initWithData:_data encoding:NSUTF8StringEncoding]);
+        _object = [NSJSONSerialization JSONObjectWithData:_data options:0 error:&error];
         _error = error;
         if (_error) {
             NSLog(@"JSON ERROR: %@", [error description]);
