@@ -99,8 +99,8 @@ public class SubtractionIterator extends MergeIterator {
    */
   @Override
   public void finalizeCursor(CursorCache cache,UUID lastLoaded) {
+    //we can only keep a cursor on our keep result set, we must subtract from every page of keep when loading results
     keepIterator.finalizeCursor(cache, lastLoaded);
-    subtractIterator.finalizeCursor(cache, lastLoaded);
   }
 
 }

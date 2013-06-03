@@ -16,9 +16,10 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.NavigableSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,7 +27,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 
 import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
-import org.usergrid.persistence.query.ir.SliceNode;
+import org.usergrid.persistence.query.ir.QuerySlice;
 
 /**
  * An iterator that will take all slices and order them correctly
@@ -36,18 +37,28 @@ import org.usergrid.persistence.query.ir.SliceNode;
  */
 public class SliceIterator<T> implements ResultIterator {
 
-  private LinkedHashSet<UUID> lastResult;
-  private SliceNode slice;
-  private SliceParser<T> parser;
-  private IndexScanner scanner;
+  private final LinkedHashMap<UUID, Integer> idOrder;
+  private final List<ByteBuffer> cols;
+  private final QuerySlice slice;
+  private final SliceParser<T> parser;
+  private final IndexScanner scanner;
+  private final int pageSize;
+
+  /**
+   * Pointer to the uuid set until it's returned
+   */
+  private Set<UUID> lastResult;
 
   /**
    * 
    */
-  public SliceIterator(IndexScanner scanner, SliceNode slice, SliceParser<T> parser) {
+  public SliceIterator(IndexScanner scanner, QuerySlice slice, SliceParser<T> parser) {
     this.slice = slice;
     this.parser = parser;
     this.scanner = scanner;
+    this.pageSize = scanner.getPageSize();
+    this.idOrder = new LinkedHashMap<UUID, Integer>(this.pageSize);
+    this.cols = new ArrayList<ByteBuffer>(this.pageSize);
   }
 
   /*
@@ -79,15 +90,23 @@ public class SliceIterator<T> implements ResultIterator {
       return false;
     }
 
-    NavigableSet<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next();
+    Iterator<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next().iterator();
 
-    LinkedHashSet<UUID> ids = new LinkedHashSet<UUID>();
+    idOrder.clear();
+    cols.clear();
 
-    for (HColumn<ByteBuffer, ByteBuffer> col : results) {
-      ids.add(parser.getUUID(parser.parse(col.getName())));
+    for (int i = 0; results.hasNext(); i++) {
+
+      ByteBuffer colName = results.next().getName().duplicate();
+
+      UUID id = parser.getUUID(parser.parse(colName));
+
+      idOrder.put(id, i);
+
+      cols.add(i, colName);
     }
 
-    lastResult = ids;
+    lastResult = idOrder.keySet();
 
     return lastResult != null && lastResult.size() > 0;
   }
@@ -131,19 +150,37 @@ public class SliceIterator<T> implements ResultIterator {
    * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
    */
   @Override
-  public void finalizeCursor(CursorCache cache,UUID lastLoaded) {
+  public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
+    int sliceHash = slice.hashCode();
 
-    int cursorId = slice.hashCode();
+    // if nothing was loaded we still want to set the cursor to empty
+    Integer loadedIndex = idOrder.get(lastLoaded);
+
+
    
-    //TODO finish cursors
-    // ByteBuffer bytes = ByteBufferUtil.EMPTY_BYTE_BUFFER;
-    //
-    // if (hasNext()) {
-    // bytes = parser.serialize(idIterator.next());
-    // }
-    //
-    // // otherwise it's an empty buffer
-    // cache.setNextCursor(slice.hashCode(), bytes);
+    //the id did not come from this iterator, it's a no-op
+    if (loadedIndex == null) {
+     return;
+    }
+
+    ByteBuffer bytes = null;
+    
+    // edge case where the uuid is the last one loaded. In this case we need to
+    // advance to the next page, then finalize our cursor
+    if (loadedIndex == pageSize - 1) {
+      load();
+      finalizeCursor(cache, lastLoaded);
+      return;
+    }
+    // last one we loaded, but not a full page. This slice is complete
+    else if (loadedIndex == idOrder.size() - 1) {
+      bytes = ByteBuffer.allocate(0);
+    } else {
+      bytes = cols.get(loadedIndex + 1);
+    }
+
+    cache.setNextCursor(sliceHash, bytes);
+
   }
 
 }

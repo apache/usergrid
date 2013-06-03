@@ -79,6 +79,7 @@ public class IndexBucketScanner implements IndexScanner {
    * True if our last load loaded a full page size.
    */
   private boolean hasMore = true;
+  
 
   public IndexBucketScanner(CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
       UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish, boolean reversed,
@@ -133,9 +134,13 @@ public class IndexBucketScanner implements IndexScanner {
     for (String bucket : keys) {
       cassKeys.add(key(keyPrefix, bucket));
     }
+    
+    //if we skip the first we need to set the load to page size +2, since we'll discard the first
+    //and start paging at the next entity, otherwise we'll just load the page size we need 
+    int selectSize = pageSize+1;
 
     Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = cass.multiGetColumns(
-        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, pageSize + 1, reversed);
+        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, selectSize, reversed);
 
     final Comparator<ByteBuffer> comparator = reversed ? new DynamicCompositeReverseComparator(columnFamily)
         : new DynamicCompositeForwardComparator(columnFamily);
@@ -157,23 +162,25 @@ public class IndexBucketScanner implements IndexScanner {
         resultsTree.add(col);
 
         // trim if we're over size
-        if (resultsTree.size() > pageSize) {
+        if (resultsTree.size() > selectSize) {
           resultsTree.remove(resultsTree.last());
         }
       }
 
     }
     // we loaded a full page, there might be more
-    if (resultsTree.size() == pageSize) {
+    if (resultsTree.size() == selectSize) {
       hasMore = true;
 
       // set the bytebuffer for the next pass
       start = resultsTree.last().getName();
+      
+      resultsTree.remove(resultsTree.last());
 
     } else {
       hasMore = false;
     }
-
+    
     lastResults = resultsTree;
 
     return lastResults != null && lastResults.size() > 0;
@@ -181,9 +188,9 @@ public class IndexBucketScanner implements IndexScanner {
   }
 
   private static abstract class DynamicCompositeComparator implements Comparator<ByteBuffer> {
+    @SuppressWarnings("rawtypes")
     protected final AbstractType dynamicComposite;
 
-    @SuppressWarnings("unchecked")
     protected DynamicCompositeComparator(ApplicationCF cf) {
       // should never happen, this will blow up during development if this fails
       try {
@@ -203,6 +210,7 @@ public class IndexBucketScanner implements IndexScanner {
       super(cf);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public int compare(ByteBuffer o1, ByteBuffer o2) {
       return dynamicComposite.compare(o1, o2);
@@ -217,6 +225,7 @@ public class IndexBucketScanner implements IndexScanner {
       super(cf);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public int compare(ByteBuffer o1, ByteBuffer o2) {
       return dynamicComposite.compare(o2, o1);
@@ -279,5 +288,13 @@ public class IndexBucketScanner implements IndexScanner {
   @Override
   public void remove() {
     throw new UnsupportedOperationException("You can't remove from a result set, only advance");
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.cassandra.index.IndexScanner#getPageSize()
+   */
+  @Override
+  public int getPageSize() {
+    return pageSize;
   }
 }

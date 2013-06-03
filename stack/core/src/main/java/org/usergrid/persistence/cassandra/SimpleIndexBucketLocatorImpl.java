@@ -15,8 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static org.usergrid.utils.ConversionUtils.*;
-import static org.apache.commons.codec.digest.DigestUtils.*;
+import static org.apache.commons.codec.digest.DigestUtils.md5;
+import static org.usergrid.utils.ConversionUtils.bytes;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;

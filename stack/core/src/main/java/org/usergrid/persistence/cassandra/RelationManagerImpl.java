@@ -119,14 +119,28 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.usergrid.persistence.*;
+import org.usergrid.persistence.AssociatedEntityRef;
+import org.usergrid.persistence.CollectionRef;
+import org.usergrid.persistence.ConnectedEntityRef;
+import org.usergrid.persistence.ConnectionRef;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.RelationManager;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.RoleRef;
+import org.usergrid.persistence.Schema;
+import org.usergrid.persistence.SimpleCollectionRef;
+import org.usergrid.persistence.SimpleEntityRef;
+import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
-import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.query.ir.AllNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
@@ -134,17 +148,15 @@ import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
 import org.usergrid.persistence.query.ir.result.IntersectionIterator;
-import org.usergrid.persistence.query.ir.result.ResultIterator;
 import org.usergrid.persistence.query.ir.result.SliceIterator;
 import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.UnionIterator;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
-import com.beoui.geocell.model.Point;
 import com.yammer.metrics.annotation.Metered;
 
 public class RelationManagerImpl implements RelationManager {
@@ -217,6 +229,7 @@ public class RelationManagerImpl implements RelationManager {
    * @throws Exception
    *           the exception
    */
+  @SuppressWarnings("deprecation")
   public List<ConnectionRefImpl> getConnections(ConnectionRefImpl connection, boolean includeConnectionEntities)
       throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
@@ -248,6 +261,7 @@ public class RelationManagerImpl implements RelationManager {
     return connections;
   }
 
+  @SuppressWarnings("deprecation")
   public List<ConnectionRefImpl> getConnectionsWithEntity(UUID participatingEntityId) throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
@@ -2313,22 +2327,7 @@ public class RelationManagerImpl implements RelationManager {
     QueryProcessor qp = new QueryProcessor(query, collection);
     SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
 
-    List<Entity> searchEntities = qp.getEntities(em, visitor);
-
-    Results results = Results.fromEntities(searchEntities);
-
-    if (results == null) {
-      return null;
-    }
-
-    // now we need to set the cursor from our tree evaluation for return
-    results.setCursor(qp.getCursor());
-
-    results.setQuery(query);
-
-    logger.debug("Query cursor: {}", results.getCursor());
-
-    return results;
+    return qp.getResults(em, visitor, new EntityResultsLoader(em));
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
@@ -2558,22 +2557,9 @@ public class RelationManagerImpl implements RelationManager {
     QueryProcessor qp = new QueryProcessor(query, null);
     SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
 
-    List<Entity> searchEntities = qp.getEntities(em, visitor);
-
-    Results results = Results.fromEntities(searchEntities);
-
-    if (results == null) {
-      return null;
-    }
-
-    results.setQuery(query);
-
-    results.setCursor(qp.getCursor());
-
-    return results;
+    return qp.getResults(em, visitor, new EntityResultsLoader(em));
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   @Metered(group = "core", name = "RelationManager_searchConnections")
   public List<ConnectionRef> searchConnections(Query query) throws Exception {
@@ -2583,8 +2569,6 @@ public class RelationManagerImpl implements RelationManager {
     }
 
     headEntity = em.validate(headEntity);
-
-    Results results = null;
 
     if (!query.hasQueryPredicates()) {
       return null;
@@ -2597,17 +2581,9 @@ public class RelationManagerImpl implements RelationManager {
 
     SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
 
-    qp.getFirstNode().visit(visitor);
-
-    // TODO TN. Don't forget to repair this.
-    // results = visitor.getResults();
-    //
-    //
-    //
-    //
-    // return (List) getConnections(results.getIds());
-
+    
     return null;
+//  TODO T.N. Query  return qp.getResults(em, visitor);
 
   }
 
@@ -2697,7 +2673,7 @@ public class RelationManagerImpl implements RelationManager {
           columns = searchIndexBuckets(indexKey, slice, collection.getName());
         }
 
-        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, node, COLLECTION_PARSER));
+        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
 
       }
 
@@ -2764,13 +2740,6 @@ public class RelationManagerImpl implements RelationManager {
      */
     @Override
     public void visit(SliceNode node) throws Exception {
-
-      Results results = null;
-
-      int limit = query.getLimit() + 1;
-
-      Level resultsLevel = query.getResultsLevel();
-
       IntersectionIterator intersection = new IntersectionIterator(PAGE_SIZE);
 
       for (QuerySlice slice : node.getAllSlices()) {
@@ -2781,7 +2750,7 @@ public class RelationManagerImpl implements RelationManager {
 
         IndexScanner columns = searchIndex(key(connection.getIndexId(), INDEX_CONNECTIONS), slice);
 
-        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, node, COLLECTION_PARSER));
+        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
         //
         // Results r = getIndexResults(columns, true,
         // connection.getConnectionType(), connection.getConnectedEntityType(),

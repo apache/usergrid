@@ -41,7 +41,7 @@ public class CollectionIndexSliceParser implements SliceParser<DynamicComposite>
    */
   @Override
   public DynamicComposite parse(ByteBuffer buff) {
-    return DynamicComposite.fromByteBuffer(buff);
+    return DynamicComposite.fromByteBuffer(buff.duplicate());
   }
 
   /* (non-Javadoc)

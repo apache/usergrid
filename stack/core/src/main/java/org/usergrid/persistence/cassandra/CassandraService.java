@@ -29,8 +29,6 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batch
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.buildSetIdListMutator;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytebuffers;
-import static org.usergrid.utils.ConversionUtils.string;
-import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.asMap;
 import static org.usergrid.utils.MapUtils.filter;
@@ -71,7 +69,6 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
-import me.prettyprint.hector.api.ddl.ColumnDefinition;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -90,8 +87,6 @@ import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
-import org.usergrid.persistence.query.ir.result.ResultIterator;
-import org.usergrid.utils.JsonUtils;
 
 public class CassandraService {
 

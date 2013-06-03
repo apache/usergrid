@@ -17,7 +17,6 @@ package org.usergrid.persistence.cassandra.index;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NavigableSet;
 
 import me.prettyprint.hector.api.beans.HColumn;
@@ -73,6 +72,14 @@ public class NoOpIndexScanner implements IndexScanner{
   @Override
   public void remove() {
     throw new UnsupportedOperationException("Remove is not supported");
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.cassandra.index.IndexScanner#getPageSize()
+   */
+  @Override
+  public int getPageSize() {
+    return 0;
   }
 
 }

@@ -57,18 +57,5 @@ public abstract class MultiIterator extends MergeIterator {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-   * org.usergrid.persistence.cassandra.CursorCache)
-   */
-  @Override
-  public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
-    for (ResultIterator current : iterators) {
-      current.finalizeCursor(cache, lastLoaded);
-    }
-  }
 
 }

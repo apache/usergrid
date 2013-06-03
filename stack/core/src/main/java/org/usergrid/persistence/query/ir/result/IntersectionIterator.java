@@ -19,6 +19,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.usergrid.persistence.cassandra.CursorCache;
+
 import com.google.common.collect.Sets;
 
 /**
@@ -139,6 +141,24 @@ public class IntersectionIterator extends MultiIterator {
 
     return results;
 
+  }
+  
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
+   * org.usergrid.persistence.cassandra.CursorCache)
+   */
+  @Override
+  public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
+    ResultIterator itr = iterators.get(0);
+    
+    //We can only create a cursor on our root level value in the intersection iterator.
+    if(itr != null){
+      itr.finalizeCursor(cache, lastLoaded);
+    }
   }
 
 }

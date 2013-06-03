@@ -20,6 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.usergrid.persistence.cassandra.CursorCache;
+
 import com.google.common.collect.Sets;
 
 /**
@@ -112,6 +114,22 @@ public class UnionIterator extends MultiIterator {
 
     return resultSet;
 
+  }
+  
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
+   * org.usergrid.persistence.cassandra.CursorCache)
+   */
+  @Override
+  public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
+    //we can create a cursor for every iterator in our union
+    for (ResultIterator current : iterators) {
+      current.finalizeCursor(cache, lastLoaded);
+    }
   }
 
 }

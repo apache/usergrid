@@ -46,7 +46,7 @@ public class UUIDIndexSliceParser implements SliceParser<UUID> {
    */
   @Override
   public UUID parse(ByteBuffer buff) {
-    return SERIALIZER.fromByteBuffer(buff);
+    return SERIALIZER.fromByteBuffer(buff.duplicate());
   }
 
   /* (non-Javadoc)

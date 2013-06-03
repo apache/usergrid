@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.cassandra.index;
+package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.NavigableSet;
+import java.util.List;
+import java.util.UUID;
 
-import me.prettyprint.hector.api.beans.HColumn;
+import org.usergrid.persistence.Results;
 
 /**
- * Interface for scanning all index buckets.  
  * @author tnine
  *
  */
-public interface IndexScanner extends Iterable<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> {
+public interface ResultsLoader  {
 
   /**
-   * Reset the scanner back to the start
-   *
+   * Load results from the list of uuids.  Should return a Results entity where the 
+   * query cursor can be set
+   * 
+   * @param entityIds
+   * @return
+   * @throws Exception 
    */
-  public void reset();
-  
-  public int getPageSize();
+  public Results getResults(List<UUID> entityIds) throws Exception;
 }

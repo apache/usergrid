@@ -35,17 +35,6 @@ public class QuerySlice {
     private boolean reversed;
     private int nodeId;
 
-//    public QuerySlice(String propertyName, Object value, RangeValue start,
-//            RangeValue finish, ByteBuffer cursor, boolean reversed, int nodeId) {
-//        this.propertyName = propertyName;
-//        // this.value = value;
-//        this.start = start;
-//        this.finish = finish;
-//        this.cursor = cursor;
-//        this.reversed = reversed;
-//        this.nodeId = nodeId;
-//    }
-
     /**
      * @param propertyName
      * @param nodeId
@@ -93,6 +82,14 @@ public class QuerySlice {
 
     public void setCursor(ByteBuffer cursor) {
         this.cursor = cursor;
+    }
+    
+    /**
+     * True if a cursor has been set
+     * @return
+     */
+    public boolean hasCursor(){
+      return this.cursor != null;
     }
 
     public boolean isReversed() {

@@ -75,10 +75,6 @@ public abstract class MergeIterator implements ResultIterator {
    */
   @Override
   public Set<UUID> next() {
-    if(next == null){
-     hasNext();
-    }
-    
     Set<UUID> returnVal = next;
 
     next = null;

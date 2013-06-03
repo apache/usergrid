@@ -906,13 +906,6 @@ public class CollectionTest extends AbstractPersistenceTest {
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      for (Entry<UUID, Map<String, Object>> entry : r.metadata.entrySet()) {
-        Map<String, Object> map = entry.getValue();
-        if (map != null) {
-          assertFalse(map.containsKey(Schema.PROPERTY_CURSOR));
-        }
-      }
-
       logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());

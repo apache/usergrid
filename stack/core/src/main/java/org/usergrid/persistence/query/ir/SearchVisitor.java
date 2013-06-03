@@ -22,11 +22,11 @@ import org.usergrid.persistence.query.ir.result.UnionIterator;
  */
 public abstract class SearchVisitor implements NodeVisitor {
 
-  protected Query query;
+  protected final Query query;
 
-  protected QueryProcessor queryProcessor;
+  protected final QueryProcessor queryProcessor;
 
-  protected Stack<ResultIterator> results = new Stack<ResultIterator>();
+  protected final Stack<ResultIterator> results = new Stack<ResultIterator>();
 
   /**
    * @param query
