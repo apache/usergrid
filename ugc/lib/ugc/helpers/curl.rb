@@ -17,5 +17,5 @@ def puts_curl(command, resource, payload=nil, file=nil)
   else
     curl = %Q[#{curl} -d '#{payload}'] if (payload)
   end
-  puts "#{curl} #{resource.url}"
+  puts "#{curl} '#{resource.url}'"
 end
