@@ -178,6 +178,10 @@ If you specify column names in your query, you will be unable to reference the r
 
 ## Release notes
 
+### 0.9.6
+* Bug Fixes
+  1. url encode url for curl
+
 ### 0.9.5
 * Bug Fixes
   1. Allow for complex matrixed queries including spaces
