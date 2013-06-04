@@ -1,9 +1,14 @@
-def multipart_upload(resource, payload, file, method=:post, additional_headers = {})
+def multipart_payload(payload, file)
   payload = payload.is_a?(Hash) ? payload : MultiJson.load(payload)
   filename = 'file'
   filename, file = file.split '=' if file.is_a?(String)
   file = file[1..-1] if file.start_with? '@' # be kind to curl users
   payload[filename] = file.is_a?(File) ? file : File.new(file, 'rb')
+  payload
+end
+
+def multipart_upload(resource, payload, file, method=:post, additional_headers = {})
+  payload = multipart_payload payload, file
   payload[:multipart] = true
   headers = (resource.options[:headers] || {}).merge(additional_headers)
   response = RestClient::Request.execute(resource.options.merge(

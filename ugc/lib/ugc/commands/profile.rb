@@ -1,4 +1,4 @@
-desc 'set the current profile'
+desc "set the current profile (creates if it doesn't exist)"
 arg_name 'profile name'
 
 command :profile,:profiles do |c|

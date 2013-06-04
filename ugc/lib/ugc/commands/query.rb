@@ -1,5 +1,5 @@
-desc 'query'
-long_desc 'note: query may contain a "from" clause instead of specifying collection_name'
+desc 'query (uses sql-like syntax)'
+long_desc 'query may contain "from" clause instead of specifying collection_name'
 arg_name '[collection_name] query'
 
 command :query do |c|
@@ -30,10 +30,15 @@ command :query do |c|
       params[:limit] = limit
     end
 
-    response = $application[type].query query, params
-
-    format_collection response.collection, parsed_query['select']
-    save_response response
+    resource = $application[type]
+    if $settings.show_curl?
+      options = options.merge({ql: query}) if query
+      puts_curl(:get, resource)
+    else
+      response = resource.query query, params
+      format_collection response.collection, parsed_query['select']
+      save_response response
+    end
   end
 
 end

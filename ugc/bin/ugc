@@ -18,9 +18,12 @@ switch [:v,:verbose], negatable: false
 desc 'management'
 switch [:m,:management], negatable: false
 
+desc 'show curl equivalent (does not execute)'
+switch [:c,:curl], negatable: false
+
 desc 'draw table border'
 default_value true
-switch [:b,:border]
+switch [:border]
 
 desc 'settings directory'
 arg_name 'settings directory'

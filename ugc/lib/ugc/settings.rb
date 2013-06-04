@@ -5,6 +5,7 @@ module Ugc
 
     def initialize(global_options)
       @draw_table_border = global_options[:border]
+      @show_curl = global_options[:curl]
       @settings_file = File.join global_options[:settings], SETTINGS_FILE
       @settings = YAML.load_file(@settings_file) rescue default_settings
     end
@@ -74,6 +75,10 @@ module Ugc
 
     def table_border?
       !!@draw_table_border
+    end
+
+    def show_curl?
+      !!@show_curl
     end
 
     def logged_in?

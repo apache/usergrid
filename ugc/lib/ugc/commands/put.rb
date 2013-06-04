@@ -1,4 +1,4 @@
-desc 'idempotent create or update (usually an update)'
+desc 'idempotent create or update (put is usually an update)'
 arg_name 'url [data]'
 
 command :put,:update do |c|
@@ -10,10 +10,14 @@ command :put,:update do |c|
 
     resource = $context[args[0]]
     payload = parse_data(options[:data] || args[1])
-    if options[:file]
-      format_response multipart_upload resource, payload, options[:file], :put
+    if $settings.show_curl?
+      puts_curl(:put, resource, payload, options[:file])
     else
-      format_response resource.put payload
+      if options[:file]
+        format_response multipart_upload resource, payload, options[:file], :put
+      else
+        format_response resource.put payload
+      end
     end
   end
 

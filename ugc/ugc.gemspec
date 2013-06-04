@@ -18,8 +18,8 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('aruba')
-  s.add_runtime_dependency('gli','2.5.0')
-  s.add_runtime_dependency('usergrid_iron','>= 0.0.9')
+  s.add_runtime_dependency('gli')
+  s.add_runtime_dependency('usergrid_iron','>= 0.9.1')
   s.add_runtime_dependency('highline')
   s.add_runtime_dependency('command_line_reporter')
 end

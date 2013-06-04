@@ -1,4 +1,4 @@
-desc 'set the base url, org, and app'
+desc 'set the base url, org, and app for the current profile'
 
 command :target do |c|
 

@@ -1,4 +1,4 @@
-desc 'non-idempotent create or update (usually create)'
+desc 'non-idempotent create or update (post is usually create)'
 arg_name 'url [data]'
 
 command :post,:create do |c|
@@ -10,10 +10,14 @@ command :post,:create do |c|
 
     resource = $context[args[0]]
     payload = parse_data(options[:data] || args[1])
-    if options[:file]
-      format_response multipart_upload resource, payload, options[:file]
+    if $settings.show_curl?
+      puts_curl(:post, resource, payload, options[:file])
     else
-      format_response resource.post payload
+      if options[:file]
+        format_response multipart_upload resource, payload, options[:file]
+      else
+        format_response resource.post payload
+      end
     end
   end
 

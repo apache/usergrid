@@ -1,6 +1,6 @@
 require 'io/console'
 
-desc 'Describe login here'
+desc 'Performs a login to the current profile'
 arg_name 'username'
 
 command :login do |c|

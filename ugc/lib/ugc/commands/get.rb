@@ -1,4 +1,4 @@
-desc 'retrieve a collection or entity'
+desc 'retrieve and display a collection or entity'
 
 command :get,:show,:ls,:list do |c|
 
@@ -8,7 +8,12 @@ command :get,:show,:ls,:list do |c|
     c2.action do |global_options,options,args|
       help_now! unless args[0]
 
-      format_response $context[args[0]].get
+      resource = $context[args[0]]
+      if $settings.show_curl?
+        puts_curl(:get, resource)
+      else
+        format_response resource.get
+      end
     end
   end
 

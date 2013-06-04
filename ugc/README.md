@@ -15,6 +15,7 @@ ugc enables convenient terminal access to Apigee's App Services (aka Usergrid).
 * Can optionally emits raw output (--verbose switch)
 * Extended SQL syntax (adds 'from' and 'limit' clauses to standard Usergrid syntax)
 * File upload (-f or --file option) on PUT and POST
+* Emit curl equivalent for all REST commands
 
 ## Installation
 
@@ -33,14 +34,14 @@ If necessary, install a new version of Ruby. [RVM](https://rvm.io) is recommende
 ### Commands
 
     delete              - delete an entity
-    get, show, ls, list - retrieve a collection or entity
+    get, show, ls, list - retrieve and display a collection or entity
     help                - Shows a list of commands or help for one command
-    login               - Describe login here
-    post, create        - non-idempotent create or update (usually create)
-    profile, profiles   - set the current profile
-    put, update         - idempotent create or update (usually an update)
-    query               - query
-    target              - set the base url, org, and app
+    login               - Performs a login to the current profile
+    post, create        - non-idempotent create or update (post is usually create)
+    profile, profiles   - set the current profile (creates if it doesn't exist)
+    put, update         - idempotent create or update (put is usually an update)
+    query               - query (uses sql-like syntax)
+    target              - set the base url, org, and app for the current profile
 
 ### Setup
 
@@ -176,6 +177,11 @@ Note: with ugc, you can also use extended sql syntax...
 If you specify column names in your query, you will be unable to reference the returned rows by @1 reference in later commands. (The current Usergrid implementation doesn't return any metadata for the entries.) In addition, for your safety the history will be cleared so that you don't inadvertently reference entities from a previous list.
 
 ## Release notes
+
+### 0.9.4
+* New features
+  1. Emit curl equivalent commands with -c (--curl) switch
+    * eg. `$ ugc -c get something`
 
 ### 0.9.3
 * New features
