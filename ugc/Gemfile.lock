@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ugc (0.9.4)
+    ugc (0.9.5)
       command_line_reporter
       gli
       highline
@@ -33,7 +33,7 @@ GEM
     highline (1.6.19)
     json (1.8.0)
     mime-types (1.23)
-    multi_json (1.7.5)
+    multi_json (1.7.6)
     rake (10.0.4)
     rdoc (4.0.1)
       json (~> 1.4)
