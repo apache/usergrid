@@ -23,7 +23,7 @@ module Ugc
 
     def [](uri)
       uri = perform_substitutions uri
-      if URI.parse(uri).host
+      if (URI.parse(uri).host rescue nil)
         Usergrid::Resource.new(uri, nil, $application.options) # absolute
       else
         super # relative
