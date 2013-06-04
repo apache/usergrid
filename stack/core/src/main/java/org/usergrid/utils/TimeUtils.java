@@ -55,6 +55,7 @@ public class TimeUtils {
   /**
    * Jira-style duration parser. Supported duration strings are:
    * <ul>
+   *   <li>'S': milliseconds</li>
    *   <li>'s': seconds</li>
    *   <li>'m': minutes</li>
    *   <li>'h': hours</li>
@@ -64,6 +65,8 @@ public class TimeUtils {
    * Durations can be compound statements in any order as long as they are
    * separated by a ',' (comma). Eg. "1d,14h,3s" to get the millisecond
    * equivalent of one day, fourteen hours and 3 seconds.
+   *
+   * Numbers with no durations will be treated as raw millisecond values
    *
    * @param durationStr
    * @return the number of milliseconds representing the duration
@@ -84,6 +87,7 @@ public class TimeUtils {
   }
 
   private enum MultiplierToken {
+    MILSEC_TOKEN('S',1L),
     SEC_TOKEN('s',1000L),
     MIN_TOKEN('m',60000L),
     HOUR_TOKEN('h',3600000L),
@@ -103,8 +107,12 @@ public class TimeUtils {
         case 'm': return MIN_TOKEN;
         case 'h': return HOUR_TOKEN;
         case 'd': return DAY_TOKEN;
+        case 'S': return MILSEC_TOKEN;
       }
-      throw new IllegalArgumentException("Duration token was not on of [s,m,h,d] but was " + c);
+      if ( CharMatcher.DIGIT.matches(c)) {
+        return MILSEC_TOKEN;
+      }
+      throw new IllegalArgumentException("Duration token was not on of [S,s,m,h,d] but was " + c);
     }
   }
 
