@@ -15,10 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.rest.RestContextTest;
@@ -28,10 +24,34 @@ import org.usergrid.rest.test.security.TestAppUser;
 import org.usergrid.rest.test.security.TestUser;
 import org.usergrid.utils.MapUtils;
 
+import static org.junit.Assert.*;
+
 /**
  * 
  */
 public class OwnershipResourceTest extends RestContextTest {
+
+  @Test
+  public void meVerify() throws Exception {
+    context.clearUser();
+    TestUser user1 = new TestAppUser("testuser1@usergrid.org", "password", "testuser1@usergrid.org").create(context)
+            .login(context).makeActive(context);
+    String token = user1.getToken();
+    JsonNode userNode = context.application().users().user("me").get();
+    assertNotNull(userNode);
+    String uuid = userNode.get("entities").get(0).get("uuid").getTextValue();
+    assertNotNull(uuid);
+    managementService.revokeAccessTokenForAppUser(token);
+
+    try {
+      context.application().users().user("me").get();
+      fail();
+    } catch(Exception ex) {
+      ex.printStackTrace();
+      assertTrue(ex.getMessage().contains("401"));
+    }
+
+  }
 
   @Test
   public void contextualPathOwnership() {
