@@ -11,10 +11,13 @@ import java.util.Map;
 import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
 
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.representation.Form;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestTest;
 
 /**
@@ -105,4 +108,36 @@ public class MUUserResourceTest extends AbstractRestTest {
                 .map("organization", String.format("%s-%s-org",className, caller));
         return payload;
     }
+
+  @Test
+  public void checkPasswordReset() throws Exception {
+
+    String email = "test@usergrid.com";
+    UserInfo userInfo = managementService.getAdminUserByEmail(email);
+    String resetToken = managementService.getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+
+    assert(managementService.checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+
+    Form formData = new Form();
+    formData.add("token", resetToken);
+    formData.add("password1", "sesame");
+    formData.add("password2", "sesame");
+
+    String html = resource()
+        .path("/management/users/" + userInfo.getUsername() + "/resetpw")
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .post(String.class, formData);
+
+    assert(html.contains("password set"));
+
+    assertFalse(managementService.checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+
+    html = resource()
+        .path("/management/users/" + userInfo.getUsername() + "/resetpw")
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .post(String.class, formData);
+
+    assert(html.contains("invalid token"));
+  }
+
 }

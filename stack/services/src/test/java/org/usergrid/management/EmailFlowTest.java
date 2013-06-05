@@ -342,6 +342,9 @@ public class EmailFlowTest {
 		logger.info(token);
 	    assertTrue(management.checkPasswordResetTokenForAppUser(appInfo.getId(), user.getUuid(), token));
 
+      // ensure revoke works
+      management.revokeAccessTokenForAppUser(token);
+      assertFalse(management.checkPasswordResetTokenForAppUser(appInfo.getId(), user.getUuid(), token));
     }
 
     @Test
