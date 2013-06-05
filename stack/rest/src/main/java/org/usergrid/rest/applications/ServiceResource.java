@@ -355,61 +355,62 @@ public class ServiceResource extends AbstractContextResource {
         return new JSONWithPadding(response, callback);
     }
 
-    @Produces("text/csv")
-    @GET
-    @RequireApplicationAccess
-    @Consumes("text/csv")
-    public String executeGetCsv(@Context UriInfo ui,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-                    throws Exception {
-        ui.getQueryParameters().putSingle("pad", "true");
-        JSONWithPadding jsonp = executeGet(ui, callback);
-
-        StringBuilder builder = new StringBuilder();
-        if ((jsonp != null) && (jsonp.getJsonSource() instanceof ApiResponse)) {
-            ApiResponse apiResponse = (ApiResponse) jsonp.getJsonSource();
-            if ((apiResponse.getCounters() != null)
-                    && (apiResponse.getCounters().size() > 0)) {
-                List<AggregateCounterSet> counters = apiResponse.getCounters();
-                int size = counters.get(0).getValues().size();
-                List<AggregateCounter> firstCounterList = counters.get(0)
-                        .getValues();
-                if (size > 0) {
-                    builder.append("timestamp");
-                    for (AggregateCounterSet counterSet : counters) {
-                        builder.append(",");
-                        builder.append(counterSet.getName());
-                    }
-                    builder.append("\n");
-                    SimpleDateFormat formatter = new SimpleDateFormat(
-                            "yyyy-MM-dd HH:mm:ss.SSS");
-                    for (int i = 0; i < size; i++) {
-                        // yyyy-mm-dd hh:mm:ss.000
-                        builder.append(formatter.format(new Date(
-                                firstCounterList.get(i).getTimestamp())));
-                        for (AggregateCounterSet counterSet : counters) {
-                            List<AggregateCounter> counterList = counterSet
-                                    .getValues();
-                            builder.append(",");
-                            builder.append(counterList.get(i).getValue());
-                        }
-                        builder.append("\n");
-                    }
-                }
-            } else if ((apiResponse.getEntities() != null)
-                    && (apiResponse.getEntities().size() > 0)) {
-                for (Entity entity : apiResponse.getEntities()) {
-                    builder.append(entity.getUuid());
-                    builder.append(",");
-                    builder.append(entity.getType());
-                    builder.append(",");
-                    builder.append(mapToJsonString(entity));
-                }
-
-            }
-        }
-        return builder.toString();
-    }
+//    TODO Temporarily removed until we test further
+//    @Produces("text/csv")
+//    @GET
+//    @RequireApplicationAccess
+//    @Consumes("text/csv")
+//    public String executeGetCsv(@Context UriInfo ui,
+//            @QueryParam("callback") @DefaultValue("callback") String callback)
+//                    throws Exception {
+//        ui.getQueryParameters().putSingle("pad", "true");
+//        JSONWithPadding jsonp = executeGet(ui, callback);
+//
+//        StringBuilder builder = new StringBuilder();
+//        if ((jsonp != null) && (jsonp.getJsonSource() instanceof ApiResponse)) {
+//            ApiResponse apiResponse = (ApiResponse) jsonp.getJsonSource();
+//            if ((apiResponse.getCounters() != null)
+//                    && (apiResponse.getCounters().size() > 0)) {
+//                List<AggregateCounterSet> counters = apiResponse.getCounters();
+//                int size = counters.get(0).getValues().size();
+//                List<AggregateCounter> firstCounterList = counters.get(0)
+//                        .getValues();
+//                if (size > 0) {
+//                    builder.append("timestamp");
+//                    for (AggregateCounterSet counterSet : counters) {
+//                        builder.append(",");
+//                        builder.append(counterSet.getName());
+//                    }
+//                    builder.append("\n");
+//                    SimpleDateFormat formatter = new SimpleDateFormat(
+//                            "yyyy-MM-dd HH:mm:ss.SSS");
+//                    for (int i = 0; i < size; i++) {
+//                        // yyyy-mm-dd hh:mm:ss.000
+//                        builder.append(formatter.format(new Date(
+//                                firstCounterList.get(i).getTimestamp())));
+//                        for (AggregateCounterSet counterSet : counters) {
+//                            List<AggregateCounter> counterList = counterSet
+//                                    .getValues();
+//                            builder.append(",");
+//                            builder.append(counterList.get(i).getValue());
+//                        }
+//                        builder.append("\n");
+//                    }
+//                }
+//            } else if ((apiResponse.getEntities() != null)
+//                    && (apiResponse.getEntities().size() > 0)) {
+//                for (Entity entity : apiResponse.getEntities()) {
+//                    builder.append(entity.getUuid());
+//                    builder.append(",");
+//                    builder.append(entity.getType());
+//                    builder.append(",");
+//                    builder.append(mapToJsonString(entity));
+//                }
+//
+//            }
+//        }
+//        return builder.toString();
+//    }
 
     public static String wrapWithCallback(AccessInfo accessInfo,
             String callback) {
