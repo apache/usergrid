@@ -116,6 +116,11 @@ public class QueryProcessor {
       
     }
 
+    
+    //if we still don't have a root node, no query nor order by was specified, just use the all node
+    if(rootNode == null){
+      rootNode = new AllNode(0);
+    }
   }
 
   public QueryNode getFirstNode() {
@@ -319,7 +324,7 @@ public class QueryProcessor {
       createNewSlice(child);
       child.visit(this);
 
-      nodes.push(new NotNode(nodes.pop(), new AllNode()));
+      nodes.push(new NotNode(nodes.pop(), new AllNode(++contextCount)));
     }
 
     /*

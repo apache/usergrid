@@ -77,10 +77,10 @@ public abstract class SearchVisitor implements NodeVisitor {
    */
   @Override
   public void visit(NotNode node) throws Exception {
-    node.getChild().visit(this);
+    node.getSubtractNode().visit(this);
     ResultIterator not = results.pop();
 
-    node.getAllNode().visit(this);
+    node.getKeepNode().visit(this);
     ResultIterator keep = results.pop();
     
     SubtractionIterator subtraction = new SubtractionIterator(RelationManagerImpl.PAGE_SIZE);

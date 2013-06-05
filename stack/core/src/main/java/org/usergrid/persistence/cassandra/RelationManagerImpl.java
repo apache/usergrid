@@ -2295,32 +2295,7 @@ public class RelationManagerImpl implements RelationManager {
 
     query.setEntityType(collection.getType());
 
-    boolean reversed = query.isReversed();
-
-    // nothing to search for or sort, just grab ids
-    if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
-      List<UUID> ids = query.getUuidIdentifiers();
-   
-
-      if (ids == null) {
-
-        IndexScanner scanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-            key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
-            query.getLimit() + 1, reversed, indexBucketLocator, applicationId, collectionName);
-
-        ids = getUUIDListFromIdIndex(scanner, query.getLimit());
-
-      }
-
-      Results results = Results.fromIdList(ids, collection.getType());
-
-      if (results != null) {
-        results.setQuery(query);
-      }
-
-      return em.loadEntities(results, query.getResultsLevel(), query.getLimit());
-    }
-
+     
     // we have something to search with, visit our tree and evaluate the
     // results
 
@@ -2689,7 +2664,7 @@ public class RelationManagerImpl implements RelationManager {
           key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
           query.getLimit() + 1, query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
-      this.results.push(new SliceIterator<UUID>(results, null, UUID_PARSER));
+      this.results.push(new SliceIterator<UUID>(results, node.getSlice(), UUID_PARSER));
     }
 
     /*
@@ -2820,7 +2795,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     public void visit(AllNode node) throws Exception {
-      // todo: What do I do here?
+     //TODO read connections and do paging
     }
   }
 
