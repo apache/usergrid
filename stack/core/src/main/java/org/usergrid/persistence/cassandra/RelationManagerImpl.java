@@ -2659,10 +2659,21 @@ public class RelationManagerImpl implements RelationManager {
     public void visit(AllNode node) throws Exception {
 
       String collectionName = collection.getName();
+      
+      
+      QuerySlice slice = node.getSlice();
+      
+      queryProcessor.applyCursorAndSort(slice);
+      
+      UUID startId = null;
+      
+      if(slice.hasCursor()){
+        startId = UUIDSerializer.get().fromByteBuffer(slice.getCursor());
+      }
 
       IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
-          query.getLimit() + 1, query.isReversed(), indexBucketLocator, applicationId, collectionName);
+          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
+          query.getLimit(), query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
       this.results.push(new SliceIterator<UUID>(results, node.getSlice(), UUID_PARSER));
     }

@@ -876,15 +876,6 @@ public class Query {
     }
 
     public void setCursor(String cursor) {
-        if (cursor != null) {
-            if (cursor.length() == 22) {
-                byte[] cursorBytes = decodeBase64(cursor);
-                if ((cursorBytes != null) && (cursorBytes.length == 16)) {
-                    startResult = uuid(cursorBytes);
-                    cursor = null;
-                }
-            }
-        }
         this.cursor = cursor;
     }
 
