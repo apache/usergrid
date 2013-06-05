@@ -358,6 +358,7 @@ public class ServiceResource extends AbstractContextResource {
     @Produces("text/csv")
     @GET
     @RequireApplicationAccess
+    @Consumes("text/csv")
     public String executeGetCsv(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
