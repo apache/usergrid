@@ -92,7 +92,7 @@ public interface ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization(
    			String organizationName, String username, String name,
    			String email, String password, boolean activated, boolean disabled,
-            Map<String,Object> userProperties) throws Exception;
+        Map<String,Object> userProperties, Map<String,Object> customProperties) throws Exception;
 
 	/**
 	 * Deactivate the user and return it's current state

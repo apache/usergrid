@@ -10,15 +10,18 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_A
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
 
+import junit.framework.Assert;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -50,11 +53,15 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
-        Map<String, String> payload = hashMap("email",
+        Map<String, Object> customProperties = new HashMap<String,Object>();
+        customProperties.put("securityLevel", 5);
+
+        Map payload = hashMap("email",
                 "test-user-1@mockserver.com").map("username", "test-user-1")
                 .map("name", "Test User").map("password", "password")
                 .map("organization", "test-org-1")
                 .map("company","Apigee");
+        payload.put(OrganizationsResource.CUSTOM_PROPERTIES, customProperties);
 
         JsonNode node = resource().path("/management/organizations")
                 .accept(MediaType.APPLICATION_JSON)
@@ -81,9 +88,24 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         User user = em.get(ui.getUuid(), User.class);
         assertEquals("Test User", user.getName());
         assertEquals("Apigee",(String)user.getProperty("company"));
-        // assertTrue(user.activated());
-        // assertFalse(user.disabled());
-        // assertTrue(user.confirmed());
+
+        OrganizationInfo orgInfo = managementService.getOrganizationByName("test-org-1");
+        assertEquals(5L, orgInfo.getCustomProperties().get("securityLevel"));
+
+        node = resource().path("/management/organizations/test-org-1")
+          .queryParam("access_token", superAdminToken())
+          .accept(MediaType.APPLICATION_JSON)
+          .type(MediaType.APPLICATION_JSON_TYPE)
+          .get(JsonNode.class);
+        logNode(node);
+        Assert.assertEquals(5, node.get("organization").get("customProperties").get("securityLevel").asInt());
+
+        node = resource().path("/management/organizations/test-org-1")
+            .queryParam("access_token", superAdminToken())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(JsonNode.class);
+        Assert.assertEquals(5, node.get("organization").get("customProperties").get("securityLevel").asInt());
     }
 
     @Test
