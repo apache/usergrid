@@ -365,13 +365,14 @@ public class UserResource extends ServiceResource {
                     if ((password1 != null) && password1.equals(password2)) {
                         management.setAppUserPassword(getApplicationId(),
                                 getUser().getUuid(), password1);
+                        management.revokeAccessTokenForAppUser(token);
                         return handleViewable("resetpw_set_success", this);
                     } else {
                         errorMsg = "Passwords didn't match, let's try again...";
                         return handleViewable("resetpw_set_form", this);
                     }
                 } else {
-                    errorMsg = "Something odd happened, let's try again...";
+                    errorMsg = "Sorry, you have an invalid token. Let's try again...";
                     return handleViewable("resetpw_email_form", this);
                 }
             }

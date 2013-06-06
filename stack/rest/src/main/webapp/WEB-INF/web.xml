@@ -89,7 +89,7 @@
 		</init-param>
 		<init-param>
 			<param-name>com.sun.jersey.config.property.MediaTypeMappings</param-name>
-			<param-value>json:application/json,js:application/javascript,csv:text/csv</param-value>
+			<param-value>json:application/json,js:application/javascript<!-- Temporarily removed until more testing can occur,csv:text/csv --></param-value>
 		</init-param>
 	</filter>
 	<filter-mapping>

@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.security.shiro.filters;
 
-import static org.usergrid.rest.exceptions.AuthErrorInfo.BAD_ACCESS_TOKEN_ERROR;
+import static org.usergrid.rest.exceptions.AuthErrorInfo.*;
 import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +43,8 @@ import org.usergrid.security.tokens.exceptions.BadTokenException;
 
 import com.sun.jersey.api.container.MappableContainerException;
 import com.sun.jersey.spi.container.ContainerRequest;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
+import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 
 @Component
 public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
@@ -85,9 +87,13 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 					TokenInfo tokenInfo = tokens.getTokenInfo(accessToken);
 					principal = tokenInfo.getPrincipal();
 				} catch (BadTokenException e1) {
-					logger.error("bad token", e1);
+          throw mappableSecurityException(BAD_ACCESS_TOKEN_ERROR);
+        } catch(ExpiredTokenException ete) {
+          throw mappableSecurityException(EXPIRED_ACCESS_TOKEN_ERROR);
+        } catch(InvalidTokenException ite) {
+          throw mappableSecurityException(INVALID_AUTH_ERROR);
 				} catch (Exception e) {
-					logger.error("excpetion", e);
+					throw mappableSecurityException(UNVERIFIED_OAUTH_ERROR);
 				}
 
 				if (principal == null) {

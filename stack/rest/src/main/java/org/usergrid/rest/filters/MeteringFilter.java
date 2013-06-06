@@ -47,6 +47,7 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 import com.sun.jersey.spi.container.ContainerResponseWriter;
+import org.usergrid.system.UsergridSystemMonitor;
 
 @Component
 public class MeteringFilter implements ContainerRequestFilter,
@@ -59,6 +60,7 @@ public class MeteringFilter implements ContainerRequestFilter,
 	ServiceManagerFactory smf;
 	Properties properties;
 	ManagementService management;
+  UsergridSystemMonitor usergridSystemMonitor;
   final Counter activeRequests;
   final Timer requestTimer;
 
@@ -93,7 +95,12 @@ public class MeteringFilter implements ContainerRequestFilter,
 		this.management = management;
 	}
 
-	@Override
+  @Autowired
+  public void setUsergridSystemMonitor(UsergridSystemMonitor usergridSystemMonitor) {
+    this.usergridSystemMonitor = usergridSystemMonitor;
+  }
+
+  @Override
 	public ContainerRequest filter(ContainerRequest request) {
 
 		try {
@@ -114,15 +121,23 @@ public class MeteringFilter implements ContainerRequestFilter,
 		try {
 			UUID applicationId = (UUID) httpServletRequest
 					.getAttribute("applicationId");
+      Long timestamp = (Long) httpServletRequest
+      						.getAttribute("application.request.timetamp");
+      long time;
+      if ((timestamp != null) && (timestamp > 0)) {
+        time = System.currentTimeMillis() - timestamp;
+      } else {
+        time = -1;
+      }
+      usergridSystemMonitor.maybeLogPayload(time,
+              "path", httpServletRequest.getRequestURI(),
+              "applicationId", applicationId);
 			if (applicationId != null) {
 
 				Map<String, Long> counters = new HashMap<String, Long>();
 
-				Long timestamp = (Long) httpServletRequest
-						.getAttribute("application.request.timetamp");
 
-				if ((timestamp != null) && (timestamp > 0)) {
-					long time = System.currentTimeMillis() - timestamp;
+				if (time > 0) {
 					logger.info("Application: {}, spent {} milliseconds of CPU time", applicationId, time);
 					counters.put("application.request.time", time);
 				}
