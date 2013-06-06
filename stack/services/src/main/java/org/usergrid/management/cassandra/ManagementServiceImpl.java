@@ -1790,12 +1790,19 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public void startAdminUserPasswordResetFlow(UserInfo user) throws Exception {
     String token = getPasswordResetTokenForAdminUser(user.getUuid(), 0);
+
     String reset_url = String.format(properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL), user.getUuid().toString())
         + "?token=" + token;
 
+    Map<String,String> pageContext = hashMap("reset_url", reset_url)
+            .map("reset_url_base",properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL))
+            .map("user_uuid", user.getUuid().toString())
+            .map("raw_token", token);
+
+
     sendHtmlMail(properties, user.getDisplayEmailAddress(), properties.getProperty(PROPERTIES_MAILER_EMAIL),
         "Password Reset",
-        appendEmailFooter(emailMsg(hashMap("reset_url", reset_url), PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET)));
+        appendEmailFooter(emailMsg(pageContext, PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET)));
 
   }
 
@@ -2137,6 +2144,11 @@ public class ManagementServiceImpl implements ManagementService {
   public void startAppUserPasswordResetFlow(UUID applicationId, User user) throws Exception {
     String token = getPasswordResetTokenForAppUser(applicationId, user.getUuid());
     String reset_url = buildUserAppUrl(applicationId, properties.getProperty(PROPERTIES_USER_RESETPW_URL), user, token);
+    Map<String,String> pageContext = hashMap("reset_url", reset_url)
+            .map("reset_url_base",properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL))
+            .map("user_uuid", user.getUuid().toString())
+            .map("raw_token", token)
+            .map("application_id", applicationId.toString());
     /*
      * String reset_url = String.format(
      * properties.getProperty(PROPERTIES_USER_RESETPW_URL), oi.getName(),
@@ -2144,7 +2156,7 @@ public class ManagementServiceImpl implements ManagementService {
      */
     sendHtmlMail(properties, user.getDisplayEmailAddress(), properties.getProperty(PROPERTIES_MAILER_EMAIL),
         "Password Reset",
-        appendEmailFooter(emailMsg(hashMap("reset_url", reset_url), PROPERTIES_EMAIL_USER_PASSWORD_RESET)));
+        appendEmailFooter(emailMsg(pageContext, PROPERTIES_EMAIL_USER_PASSWORD_RESET)));
 
   }
 
