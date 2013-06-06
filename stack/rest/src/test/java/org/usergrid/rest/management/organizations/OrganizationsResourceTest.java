@@ -36,7 +36,6 @@ import com.sun.jersey.api.representation.Form;
 /**
  * @author zznate
  */
-//@Ignore
 public class OrganizationsResourceTest extends AbstractRestTest {
 
 
@@ -53,15 +52,15 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
-        Map<String, Object> customProperties = new HashMap<String,Object>();
-        customProperties.put("securityLevel", 5);
+        Map<String, Object> organizationProperties = new HashMap<String,Object>();
+        organizationProperties.put("securityLevel", 5);
 
         Map payload = hashMap("email",
                 "test-user-1@mockserver.com").map("username", "test-user-1")
                 .map("name", "Test User").map("password", "password")
                 .map("organization", "test-org-1")
                 .map("company","Apigee");
-        payload.put(OrganizationsResource.CUSTOM_PROPERTIES, customProperties);
+        payload.put(OrganizationsResource.ORGANIZATION_PROPERTIES, organizationProperties);
 
         JsonNode node = resource().path("/management/organizations")
                 .accept(MediaType.APPLICATION_JSON)
@@ -90,7 +89,7 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         assertEquals("Apigee",(String)user.getProperty("company"));
 
         OrganizationInfo orgInfo = managementService.getOrganizationByName("test-org-1");
-        assertEquals(5L, orgInfo.getCustomProperties().get("securityLevel"));
+        assertEquals(5L, orgInfo.getProperties().get("securityLevel"));
 
         node = resource().path("/management/organizations/test-org-1")
           .queryParam("access_token", superAdminToken())
@@ -98,14 +97,14 @@ public class OrganizationsResourceTest extends AbstractRestTest {
           .type(MediaType.APPLICATION_JSON_TYPE)
           .get(JsonNode.class);
         logNode(node);
-        Assert.assertEquals(5, node.get("organization").get("customProperties").get("securityLevel").asInt());
+        Assert.assertEquals(5, node.get("organization").get(OrganizationsResource.ORGANIZATION_PROPERTIES).get("securityLevel").asInt());
 
         node = resource().path("/management/organizations/test-org-1")
             .queryParam("access_token", superAdminToken())
             .accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .get(JsonNode.class);
-        Assert.assertEquals(5, node.get("organization").get("customProperties").get("securityLevel").asInt());
+        Assert.assertEquals(5, node.get("organization").get(OrganizationsResource.ORGANIZATION_PROPERTIES).get("securityLevel").asInt());
     }
 
     @Test

@@ -204,7 +204,7 @@ public class ManagementServiceImpl implements ManagementService {
 
   public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
-  private static final String CUSTOM_PROPERTIES_DICTIONARY = "customProperties";
+  private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
 
   protected ServiceManagerFactory smf;
 
@@ -423,7 +423,7 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public OrganizationOwnerInfo createOwnerAndOrganization(String organizationName, String username, String name,
       String email, String password, boolean activated, boolean disabled, Map<String, Object> userProperties,
-      Map<String, Object> customProperties) throws Exception {
+      Map<String, Object> organizationProperties) throws Exception {
 
     /**
      * Only lock on the target values. We don't want lock contention if another
@@ -456,7 +456,7 @@ public class ManagementServiceImpl implements ManagementService {
         user = createAdminUserInternal(username, name, email, password, activated, disabled, userProperties);
       }
 
-      organization = createOrganizationInternal(organizationName, user, true, customProperties);
+      organization = createOrganizationInternal(organizationName, user, true, organizationProperties);
 
     } finally {
       emailLock.unlock();
@@ -477,7 +477,7 @@ public class ManagementServiceImpl implements ManagementService {
   private OrganizationInfo createOrganizationInternal(String organizationName,
                                                       UserInfo user,
                                                       boolean activated,
-                                                      Map<String,Object> customProperties) throws Exception {
+                                                      Map<String,Object> properties) throws Exception {
     if ((organizationName == null) || (user == null)) {
       return null;
     }
@@ -487,18 +487,14 @@ public class ManagementServiceImpl implements ManagementService {
     Group organizationEntity = new Group();
     organizationEntity.setPath(organizationName);
     organizationEntity = em.create(organizationEntity);
-    if (customProperties != null) {
-      for (Map.Entry<String,Object> entry : customProperties.entrySet()) {
-        em.addToDictionary(organizationEntity, CUSTOM_PROPERTIES_DICTIONARY, entry.getKey(), entry.getValue());
-      }
-    }
 
     em.addToCollection(organizationEntity, "users", new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
 
     writeUserToken(MANAGEMENT_APPLICATION_ID, organizationEntity, encryptionService.plainTextCredentials(
         generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
-    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName, customProperties);
+    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName, properties);
+    updateOrganization(organization);
 
     logger.info("createOrganizationInternal: {}", organizationName);
     postOrganizationActivity(organization.getUuid(), user, "create", organizationEntity, "Organization",
@@ -529,6 +525,23 @@ public class ManagementServiceImpl implements ManagementService {
       groupLock.unlock();
     }
 
+  }
+
+  /** currently only affects properties */
+  public void updateOrganization(OrganizationInfo organizationInfo) throws Exception {
+    Map<String,Object> properties = organizationInfo.getProperties();
+    if (properties != null) {
+      EntityRef organizationEntity = new SimpleEntityRef(organizationInfo.getUuid());
+      EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+      for (Map.Entry<String,Object> entry : properties.entrySet()) {
+        if ("".equals(entry.getValue())) {
+          properties.remove(entry.getKey());
+          em.removeFromDictionary(organizationEntity, ORGANIZATION_PROPERTIES_DICTIONARY, entry.getKey());
+        } else {
+          em.addToDictionary(organizationEntity, ORGANIZATION_PROPERTIES_DICTIONARY, entry.getKey(), entry.getValue());
+        }
+      }
+    }
   }
 
   @Override
@@ -678,9 +691,9 @@ public class ManagementServiceImpl implements ManagementService {
     if (entity == null) {
       return null;
     }
-    Map customProperties = em.getDictionaryAsMap(entity, CUSTOM_PROPERTIES_DICTIONARY);
+    Map properties = em.getDictionaryAsMap(entity, ORGANIZATION_PROPERTIES_DICTIONARY);
     OrganizationInfo orgInfo = new OrganizationInfo(entity.getProperties());
-    orgInfo.setCustomProperties(customProperties);
+    orgInfo.setProperties(properties);
     return orgInfo;
   }
 
