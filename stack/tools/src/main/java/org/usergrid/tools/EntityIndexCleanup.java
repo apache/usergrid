@@ -50,11 +50,12 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
+import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.query.ir.result.SliceIterator;
+import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.usergrid.persistence.schema.CollectionInfo;
 
 /**
@@ -104,10 +105,10 @@ public class EntityIndexCleanup extends ToolBase {
 
     logger.info("Starting entity cleanup");
 
-    List<UUID> ids = null;
-    Query query = new Query();
-    query.setLimit(PAGE_SIZE);
-    String lastCursor = null;
+//    List<UUID> ids = null;
+//    Query query = new Query();
+//    query.setLimit(PAGE_SIZE);
+//    String lastCursor = null;
 
     for (Entry<String, UUID> app : emf.getApplications().entrySet()) {
 
@@ -137,25 +138,22 @@ public class EntityIndexCleanup extends ToolBase {
       // go through each collection and audit the values
       for (String collectionName : collectionNames) {
 
+
+        IndexScanner scanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
+            key(applicationId, DICTIONARY_COLLECTIONS, collectionName), null, null,
+            PAGE_SIZE, false, indexBucketLocator, applicationId, collectionName);
+        
+        SliceIterator<UUID> itr = new SliceIterator<UUID>(scanner, null, new UUIDIndexSliceParser());
+        
        
-        do {
+        
+        while(itr.hasNext()) {
 
-          query.setCursor(lastCursor);
-          // load all entity ids from the index itself.
-
-          ids = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-              key(applicationId, DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
-              query.getLimit() + 1, false, indexBucketLocator, applicationId, collectionName);
-
-
+          Set<UUID> ids = itr.next();
+          
           CollectionInfo collection = getDefaultSchema().getCollection("application", collectionName);
           
 
-          //trim to set our cursor for next time around
-          Results tempResults = Results.fromIdList(ids);
-          tempResults.trim(query.getLimit());
-          lastCursor = tempResults.getCursor();
-          
           //We shouldn't have to do this, but otherwise the cursor won't work
           Set<String> indexed = collection.getPropertiesIndexed();
 
@@ -237,15 +235,10 @@ public class EntityIndexCleanup extends ToolBase {
               //now execute the cleanup. This way if the above update fails, we still have enough data to run again later
               m.execute();
             }
-          
-
-
-          }
-          
          
-
-          
-        } while (ids.size() == PAGE_SIZE);
+          }
+                   
+        }
       }
 
     }
