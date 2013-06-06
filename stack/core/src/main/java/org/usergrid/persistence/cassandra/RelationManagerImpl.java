@@ -149,6 +149,7 @@ import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
 import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
+import org.usergrid.persistence.query.ir.result.GeoIterator;
 import org.usergrid.persistence.query.ir.result.IntersectionIterator;
 import org.usergrid.persistence.query.ir.result.SliceIterator;
 import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
@@ -157,6 +158,7 @@ import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
+import com.beoui.geocell.model.Point;
 import com.yammer.metrics.annotation.Metered;
 
 public class RelationManagerImpl implements RelationManager {
@@ -1650,19 +1652,19 @@ public class RelationManagerImpl implements RelationManager {
     int last = maxResults + 1;
 
     Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> pages = scanner.iterator();
-    
-    while(pages.hasNext() && (refs.size() < last || ids.size() < last)){
+
+    while (pages.hasNext() && (refs.size() < last || ids.size() < last)) {
       Iterator<HColumn<ByteBuffer, ByteBuffer>> cols = pages.next().iterator();
 
       for (int i = 0; i < last && cols.hasNext(); i++) {
-  
+
         HColumn<ByteBuffer, ByteBuffer> result = cols.next();
-  
+
         UUID connectedEntityId = null;
         String cType = connectionType;
         String eType = entityType;
         UUID associatedEntityId = null;
-  
+
         if (compositeResults) {
           List<Object> objects = DynamicComposite.fromByteBuffer(result.getName().duplicate());
           connectedEntityId = (UUID) objects.get(2);
@@ -1681,12 +1683,12 @@ public class RelationManagerImpl implements RelationManager {
         } else {
           connectedEntityId = uuid(result.getName());
         }
-  
+
         ByteBuffer v = result.getValue();
         if ((v != null) && (v.remaining() >= 16)) {
           associatedEntityId = uuid(result.getValue());
         }
-  
+
         if ((refs != null) && (eType != null)) {
           if (!idSet.contains(connectedEntityId)) {
             refs.add(new SimpleEntityRef(eType, connectedEntityId));
@@ -1696,7 +1698,7 @@ public class RelationManagerImpl implements RelationManager {
                 + ") found in index results, discarding but index appears inconsistent...");
           }
         }
-  
+
         if (ids != null) {
           if (!idSet.contains(connectedEntityId)) {
             ids.add(connectedEntityId);
@@ -1707,23 +1709,21 @@ public class RelationManagerImpl implements RelationManager {
                 connectedEntityId);
           }
         }
-  
+
         if (cType != null) {
           MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CONNECTION, cType);
         }
-  
+
         String cursor = encodeBase64URLSafeString(bytes(result.getName()));
         if (cursor != null) {
           MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CURSOR, cursor);
         }
-  
+
         if (associatedEntityId != null) {
           MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_ASSOCIATED, associatedEntityId);
         }
-  
+
       }
-      
-    
 
     }
 
@@ -1878,7 +1878,7 @@ public class RelationManagerImpl implements RelationManager {
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
-        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), Math.min(10,PAGE_SIZE),
+        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), Math.min(10, PAGE_SIZE),
         slice.getPropertyName());
 
     return scanner;
@@ -1982,11 +1982,10 @@ public class RelationManagerImpl implements RelationManager {
         key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startResult, null, count + 1, reversed,
         indexBucketLocator, applicationId, collectionName);
 
-    
     List<UUID> ids = getUUIDListFromIdIndex(scanner, count);
-    
+
     Results results = null;
-    
+
     if (resultsLevel == Results.Level.IDS) {
       results = Results.fromIdList(ids);
     } else {
@@ -2295,7 +2294,6 @@ public class RelationManagerImpl implements RelationManager {
 
     query.setEntityType(collection.getType());
 
-     
     // we have something to search with, visit our tree and evaluate the
     // results
 
@@ -2309,11 +2307,11 @@ public class RelationManagerImpl implements RelationManager {
     SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, null, UUID_PARSER);
 
     List<UUID> ids = new ArrayList<UUID>(size);
-    
-    while(iter.hasNext() && ids.size() < size){
+
+    while (iter.hasNext() && ids.size() < size) {
       ids.addAll(iter.next());
     }
-    
+
     return ids;
   }
 
@@ -2556,9 +2554,8 @@ public class RelationManagerImpl implements RelationManager {
 
     SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
 
-    
     return null;
-//  TODO T.N. Query  return qp.getResults(em, visitor);
+    // TODO T.N. Query return qp.getResults(em, visitor);
 
   }
 
@@ -2659,21 +2656,20 @@ public class RelationManagerImpl implements RelationManager {
     public void visit(AllNode node) throws Exception {
 
       String collectionName = collection.getName();
-      
-      
+
       QuerySlice slice = node.getSlice();
-      
+
       queryProcessor.applyCursorAndSort(slice);
-      
+
       UUID startId = null;
-      
-      if(slice.hasCursor()){
+
+      if (slice.hasCursor()) {
         startId = UUIDSerializer.get().fromByteBuffer(slice.getCursor());
       }
 
       IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
-          query.getLimit(), query.isReversed(), indexBucketLocator, applicationId, collectionName);
+          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null, query.getLimit(),
+          query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
       this.results.push(new SliceIterator<UUID>(results, node.getSlice(), UUID_PARSER));
     }
@@ -2687,14 +2683,14 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
-      // Results r =
-      // em.getGeoIndexManager().proximitySearchCollection(headEntity,
-      // collection.getName(),
-      // node.getPropertyName(), new Point(node.getLattitude(),
-      // node.getLongitude()), node.getDistance(), null,
-      // MAX_LOAD, false, query.getResultsLevel());
-      //
-      // results.push(r);
+      List<EntityLocationRef> locations = em.getGeoIndexManager().proximitySearchCollection(headEntity,
+          collection.getName(), node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()),
+          node.getDistance(), null, PAGE_SIZE, false, query.getResultsLevel());
+
+      // now wrap the results in a results iterator
+      GeoIterator itr = new GeoIterator(locations, PAGE_SIZE);
+
+      results.push(itr);
     }
 
   }
@@ -2794,19 +2790,20 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
-      // Results r =
-      // em.getGeoIndexManager().proximitySearchConnections(connection.getIndexId(),
-      // node.getPropertyName(),
-      // new Point(node.getLattitude(), node.getLongitude()),
-      // node.getDistance(), null, MAX_LOAD, false,
-      // query.getResultsLevel());
-      //
-      // results.push(r);
+      List<EntityLocationRef> locations = em.getGeoIndexManager().proximitySearchConnections(connection.getIndexId(),
+          node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance(), null,
+          PAGE_SIZE, false, query.getResultsLevel());
+
+      // now wrap the results in a results iterator
+      GeoIterator itr = new GeoIterator(locations, PAGE_SIZE);
+
+      results.push(itr);
+
     }
 
     @Override
     public void visit(AllNode node) throws Exception {
-     //TODO read connections and do paging
+      // TODO read connections and do paging
     }
   }
 

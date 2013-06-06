@@ -18,10 +18,8 @@ package org.usergrid.persistence;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.usergrid.persistence.SimpleEntityRef.ref;
 import static org.usergrid.utils.ClassUtils.cast;
-import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytes;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,25 +27,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
-
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
 @XmlRootElement
 public class Results implements Iterable<Entity> {
 
-    private static final String EMPTY = "";
 
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
@@ -1101,30 +1094,14 @@ public class Results implements Iterable<Entity> {
         return cursor;
     }
 
-//    public void setCursorToLastResult() {
-//        List<UUID> ids = getIds();
-//        if ((ids != null) && (metadata != null) && (ids.size() > 0)) {
-//            UUID lastId = ids.get(ids.size() - 1);
-//            cursor = StringUtils.toString(MapUtils.getMapMap(metadata, lastId,
-//                    "cursor"));
-//        }
-//    }
-//
-//    /**
-//     * Set the cursor to the empty value.  This signifies that no more results can be found for this range
-//     */
-//    public void setCursorMax() {
-//        cursor = EMPTY;
-//    }
-//
     public void setCursor(String cursor) {
         this.cursor = cursor;
     }
-//
-//    public Results withCursor(String cursor) {
-//        this.cursor = cursor;
-//        return this;
-//    }
+
+    public Results withCursor(String cursor) {
+        this.cursor = cursor;
+        return this;
+    }
 
     public void setMetadata(UUID id, String name, Object value) {
         if (metadata == null) {

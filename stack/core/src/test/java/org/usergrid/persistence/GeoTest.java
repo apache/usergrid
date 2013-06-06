@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.usergrid.persistence.Results.Level.ALL_PROPERTIES;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -64,53 +65,53 @@ public class GeoTest extends AbstractPersistenceTest {
 				"location.coordinates", loc);
 
 		Point center = new Point(37.774277, -122.404744);
-		Results results = geo.proximitySearchCollection(em.getApplicationRef(),
+		List<EntityLocationRef> listResults = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 200, null, 10, false,
 				ALL_PROPERTIES);
 
-		assertEquals(0, results.size());
+		assertEquals(0, listResults.size());
 
-		results = geo.proximitySearchCollection(em.getApplicationRef(),
+		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 400, null, 10, false,
 				ALL_PROPERTIES);
 
-		this.dump(results.getEntities());
+		this.dump(listResults);
 
-		assertEquals(1, results.size());
+		assertEquals(1, listResults.size());
 
 		geo.removeLocationFromCollectionIndex(em.getApplicationRef(), "users",
 				"location.coordinates", loc);
 
-		results = geo.proximitySearchCollection(em.getApplicationRef(),
+		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 400, null, 10, false,
 				ALL_PROPERTIES);
 
-		this.dump(results.getEntities());
+		this.dump(listResults);
 
-		assertEquals(0, results.size());
+		assertEquals(0, listResults.size());
 
 		updatePos(em, user, 37.426373, -122.14108);
 
 		center = new Point(37.774277, -122.404744);
-		results = geo.proximitySearchCollection(em.getApplicationRef(),
+		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 200, null, 10, false,
 				ALL_PROPERTIES);
 
-		assertEquals(0, results.size());
+		assertEquals(0, listResults.size());
 
 		updatePos(em, user, 37.774277, -122.404744);
 
 		center = new Point(37.776753, -122.407846);
-		results = geo.proximitySearchCollection(em.getApplicationRef(),
+		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 1000, null, 10, false,
 				ALL_PROPERTIES);
 
-		assertEquals(1, results.size());
+		assertEquals(1, listResults.size());
 
     // check at globally large distance
-    results = geo.proximitySearchCollection(em.getApplicationRef(),
+    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
         "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
-    assertEquals(1, results.size());
+    assertEquals(1, listResults.size());
 
     // create a new entity so we have 2
     LinkedHashMap<String, Object> properties2 = new LinkedHashMap<String, Object>();
@@ -122,37 +123,37 @@ public class GeoTest extends AbstractPersistenceTest {
     geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user2.getUuid(), "location.coordinates", loc2);
 
     // check at 10000m distance
-    results = geo.proximitySearchCollection(em.getApplicationRef(),
+    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
         "users", "location.coordinates", center, 10000, null, 10, false, ALL_PROPERTIES);
-    assertEquals(1, results.size());
+    assertEquals(1, listResults.size());
 
     // check at globally large distance
-    results = geo.proximitySearchCollection(em.getApplicationRef(),
+    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
         "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
-    assertEquals(2, results.size());
+    assertEquals(2, listResults.size());
 
     // check at globally large distance (center point close to other entity)
     center = new Point(31.14, 121.27);
-    results = geo.proximitySearchCollection(em.getApplicationRef(),
+    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
         "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
-    assertEquals(2, results.size());
+    assertEquals(2, listResults.size());
 
-    results = em.searchCollection(em.getApplicationRef(), "users",
+    Results searchResults = em.searchCollection(em.getApplicationRef(), "users",
 				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
-		assertEquals(1, results.size());
+		assertEquals(1, searchResults.size());
 
 		updatePos(em, user, 37.776753, -122.407846);
 
 		center = new Point(37.428526, -122.140916);
-		results = geo.proximitySearchCollection(em.getApplicationRef(),
+		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 1000, null, 10, false,
 				ALL_PROPERTIES);
 
-		assertEquals(0, results.size());
+		assertEquals(0, listResults.size());
 
-		results = em.searchCollection(em.getApplicationRef(), "users",
+		searchResults = em.searchCollection(em.getApplicationRef(), "users",
 				Query.fromQL("location within 1000 of 37.428526, -122.140916"));
-		assertEquals(0, results.size());
+		assertEquals(0, searchResults.size());
 
 		properties = new LinkedHashMap<String, Object>();
 		properties.put("name", "Brickhouse");
@@ -164,13 +165,13 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		em.createConnection(user, "likes", restaurant);
 
-		results = em.searchConnectedEntities(user,
+		searchResults = em.searchConnectedEntities(user,
 				Query.fromQL("location within 2000 of 37.776753, -122.407846"));
-		assertEquals(1, results.size());
+		assertEquals(1, searchResults.size());
 
-		results = em.searchConnectedEntities(user,
+		searchResults = em.searchConnectedEntities(user,
 				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
-		assertEquals(0, results.size());
+		assertEquals(0, searchResults.size());
 
 	}
 
