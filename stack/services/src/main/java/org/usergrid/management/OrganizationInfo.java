@@ -29,6 +29,7 @@ public class OrganizationInfo {
 
 	private UUID id;
 	private String name;
+  private Map<String,Object> properties;
 
 	public OrganizationInfo() {
 	}
@@ -43,7 +44,12 @@ public class OrganizationInfo {
 		name = (String) properties.get(PROPERTY_PATH);
 	}
 
-	public UUID getUuid() {
+  public OrganizationInfo(UUID id, String name, Map<String,Object> properties) {
+    this(id, name);
+    this.properties = properties;
+  }
+
+  public UUID getUuid() {
 		return id;
 	}
 	
@@ -129,4 +135,11 @@ public class OrganizationInfo {
 		return true;
 	}
 
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+  }
 }

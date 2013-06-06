@@ -40,7 +40,6 @@ import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
-import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -57,6 +56,8 @@ public class OrganizationsResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory
             .getLogger(OrganizationsResource.class);
+
+    public static final String ORGANIZATION_PROPERTIES = "properties";
 
     @Autowired
     private ApplicationCreator applicationCreator;
@@ -106,9 +107,10 @@ public class OrganizationsResource extends AbstractContextResource {
         String name = (String) json.remove("name");
         String email = (String) json.remove("email");
         String password = (String) json.remove("password");
+        Map<String,Object> properties = (Map<String,Object>) json.remove(ORGANIZATION_PROPERTIES);
 
         return newOrganization(ui, organizationName, username, name, email,
-                password, json, callback);
+                password, json, properties, callback);
     }
 
     @POST
@@ -135,7 +137,7 @@ public class OrganizationsResource extends AbstractContextResource {
         String password = passwordForm != null ? passwordForm : passwordQuery;
 
         return newOrganization(ui, organizationName, username, name, email,
-                password, null, callback);
+                password, null, null, callback);
 
     }
 
@@ -155,6 +157,7 @@ public class OrganizationsResource extends AbstractContextResource {
     private JSONWithPadding newOrganization(@Context UriInfo ui,
             String organizationName, String username, String name,
             String email, String password, Map<String,Object> userProperties,
+            Map<String,Object> properties,
             String callback) throws Exception {
         Preconditions.checkArgument(StringUtils.isNotBlank(organizationName),
                 "The organization parameter was missing");
@@ -166,7 +169,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
         OrganizationOwnerInfo organizationOwner = management
                 .createOwnerAndOrganization(organizationName, username, name,
-                        email, password, false, false, userProperties);
+                        email, password, false, false, userProperties, properties);
 
         if (organizationOwner == null) {
             logger.info("organizationOwner is null, returning. organization: {}", organizationName);

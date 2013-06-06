@@ -62,7 +62,6 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFI
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.usergrid.persistence.Schema.PROPERTY_MODIFIED;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.usergrid.persistence.Schema.PROPERTY_SECRET;
@@ -100,15 +99,12 @@ import static org.usergrid.utils.PasswordUtils.mongoPassword;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -138,7 +134,6 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
-import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
@@ -162,7 +157,6 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
-import org.usergrid.security.tokens.exceptions.BadTokenException;
 import org.usergrid.security.tokens.exceptions.TokenException;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -173,11 +167,6 @@ import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -214,6 +203,8 @@ public class ManagementServiceImpl implements ManagementService {
   private static final Logger logger = LoggerFactory.getLogger(ManagementServiceImpl.class);
 
   public static final String OAUTH_SECRET_SALT = "super secret oauth value";
+
+  private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
 
   protected ServiceManagerFactory smf;
 
@@ -419,20 +410,20 @@ public class ManagementServiceImpl implements ManagementService {
     boolean disabled = newAdminUsersRequireConfirmation();
     // if we are active and enabled, skip the send email step
 
-    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null);
+    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null, null);
 
   }
 
   @Override
   public OrganizationOwnerInfo createOwnerAndOrganization(String organizationName, String username, String name,
       String email, String password, boolean activated, boolean disabled) throws Exception {
-    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null);
+    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null, null);
   }
 
   @Override
   public OrganizationOwnerInfo createOwnerAndOrganization(String organizationName, String username, String name,
-      String email, String password, boolean activated, boolean disabled, Map<String, Object> userProperties)
-      throws Exception {
+      String email, String password, boolean activated, boolean disabled, Map<String, Object> userProperties,
+      Map<String, Object> organizationProperties) throws Exception {
 
     /**
      * Only lock on the target values. We don't want lock contention if another
@@ -465,7 +456,7 @@ public class ManagementServiceImpl implements ManagementService {
         user = createAdminUserInternal(username, name, email, password, activated, disabled, userProperties);
       }
 
-      organization = createOrganizationInternal(organizationName, user, true);
+      organization = createOrganizationInternal(organizationName, user, true, organizationProperties);
 
     } finally {
       emailLock.unlock();
@@ -477,8 +468,16 @@ public class ManagementServiceImpl implements ManagementService {
 
   }
 
-  private OrganizationInfo createOrganizationInternal(String organizationName, UserInfo user, boolean activated)
-      throws Exception {
+  private OrganizationInfo createOrganizationInternal(String organizationName,
+                                                      UserInfo user,
+                                                      boolean activated) throws Exception {
+    return createOrganizationInternal(organizationName, user, activated, null);
+  }
+
+  private OrganizationInfo createOrganizationInternal(String organizationName,
+                                                      UserInfo user,
+                                                      boolean activated,
+                                                      Map<String,Object> properties) throws Exception {
     if ((organizationName == null) || (user == null)) {
       return null;
     }
@@ -494,7 +493,8 @@ public class ManagementServiceImpl implements ManagementService {
     writeUserToken(MANAGEMENT_APPLICATION_ID, organizationEntity, encryptionService.plainTextCredentials(
         generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
-    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName);
+    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName, properties);
+    updateOrganization(organization);
 
     logger.info("createOrganizationInternal: {}", organizationName);
     postOrganizationActivity(organization.getUuid(), user, "create", organizationEntity, "Organization",
@@ -525,6 +525,23 @@ public class ManagementServiceImpl implements ManagementService {
       groupLock.unlock();
     }
 
+  }
+
+  /** currently only affects properties */
+  public void updateOrganization(OrganizationInfo organizationInfo) throws Exception {
+    Map<String,Object> properties = organizationInfo.getProperties();
+    if (properties != null) {
+      EntityRef organizationEntity = new SimpleEntityRef(organizationInfo.getUuid());
+      EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+      for (Map.Entry<String,Object> entry : properties.entrySet()) {
+        if ("".equals(entry.getValue())) {
+          properties.remove(entry.getKey());
+          em.removeFromDictionary(organizationEntity, ORGANIZATION_PROPERTIES_DICTIONARY, entry.getKey());
+        } else {
+          em.addToDictionary(organizationEntity, ORGANIZATION_PROPERTIES_DICTIONARY, entry.getKey(), entry.getValue());
+        }
+      }
+    }
   }
 
   @Override
@@ -674,7 +691,10 @@ public class ManagementServiceImpl implements ManagementService {
     if (entity == null) {
       return null;
     }
-    return new OrganizationInfo(entity.getProperties());
+    Map properties = em.getDictionaryAsMap(entity, ORGANIZATION_PROPERTIES_DICTIONARY);
+    OrganizationInfo orgInfo = new OrganizationInfo(entity.getProperties());
+    orgInfo.setProperties(properties);
+    return orgInfo;
   }
 
   @Override

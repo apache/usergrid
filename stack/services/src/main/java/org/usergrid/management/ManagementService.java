@@ -92,15 +92,17 @@ public interface ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization(
    			String organizationName, String username, String name,
    			String email, String password, boolean activated, boolean disabled,
-            Map<String,Object> userProperties) throws Exception;
+        Map<String,Object> userProperties, Map<String,Object> properties) throws Exception;
 
-	/**
-	 * Deactivate the user and return it's current state
-	 * @param applicationId
-	 * @param userId
-	 * @return
-	 * @throws Exception
-	 */
+  public void updateOrganization(OrganizationInfo organizationInfo) throws Exception;
+
+    /**
+     * Deactivate the user and return it's current state
+     * @param applicationId
+     * @param userId
+     * @return
+     * @throws Exception
+     */
 	public User deactivateUser(UUID applicationId, UUID userId) throws Exception;
 
 	public void deactivateOrganization(UUID organizationId) throws Exception;

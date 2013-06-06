@@ -15,18 +15,11 @@
  ******************************************************************************/
 package org.usergrid.rest.management.organizations;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -38,7 +31,6 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.applications.ApplicationsResource;
 import org.usergrid.rest.management.organizations.users.UsersResource;
-import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 import org.usergrid.security.tokens.exceptions.TokenException;
@@ -46,6 +38,8 @@ import org.usergrid.services.ServiceResults;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
+
+import java.util.Map;
 
 @Component("org.usergrid.rest.management.organizations.OrganizationResource")
 @Scope("prototype")
@@ -200,4 +194,24 @@ public class OrganizationResource extends AbstractContextResource {
         return organization;
     }
 
+  @RequireOrganizationAccess
+  @Consumes(MediaType.APPLICATION_JSON)
+  @PUT
+  public JSONWithPadding executePut(@Context UriInfo ui,
+                                    Map<String, Object> json,
+                                    @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
+
+    logger.debug("OrganizationResource.executePut");
+
+    ApiResponse response = createApiResponse();
+    response.setAction("put");
+
+    response.setParams(ui.getQueryParameters());
+
+    Map customProperties = (Map)json.get(OrganizationsResource.ORGANIZATION_PROPERTIES);
+    organization.setProperties(customProperties);
+    management.updateOrganization(organization);
+
+    return new JSONWithPadding(response, callback);
+  }
 }
