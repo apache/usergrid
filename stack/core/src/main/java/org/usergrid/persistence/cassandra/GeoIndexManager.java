@@ -61,6 +61,7 @@ import org.usergrid.utils.UUIDUtils;
 
 import com.beoui.geocell.GeocellManager;
 import com.beoui.geocell.GeocellQueryEngine;
+import com.beoui.geocell.SearchResults;
 import com.beoui.geocell.annotations.Latitude;
 import com.beoui.geocell.annotations.Longitude;
 import com.beoui.geocell.model.GeocellQuery;
@@ -269,33 +270,6 @@ public class GeoIndexManager {
     }
   }
 
-  // TODO filtering out dups is not the job of our seek, but rather the update
-  // logic
-  // public static List<EntityLocationRef> mergeLocationEntries(
-  // List<EntityLocationRef> list, List<EntityLocationRef>... lists) {
-  // if ((lists == null) || (lists.length == 0)) {
-  // return list;
-  // }
-  // LinkedHashMap<UUID, EntityLocationRef> merge = new LinkedHashMap<UUID,
-  // EntityLocationRef>();
-  // for (EntityLocationRef loc : list) {
-  // merge.put(loc.getUuid(), loc);
-  // }
-  // for (List<EntityLocationRef> l : lists) {
-  // for (EntityLocationRef loc : l) {
-  // if (merge.containsKey(loc.getUuid())) {
-  // if (UUIDUtils.compare(loc.getTimestampUuid(),
-  // merge.get(loc.getUuid()).getTimestampUuid()) > 0) {
-  // merge.put(loc.getUuid(), loc);
-  // }
-  // } else {
-  // merge.put(loc.getUuid(), loc);
-  // }
-  // }
-  // }
-  // return new ArrayList<EntityLocationRef>(merge.values());
-  // }
-
   public ArrayList<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, UUID startResult, int count,
       boolean reversed) throws Exception {
 
@@ -326,9 +300,9 @@ public class GeoIndexManager {
     
   }
 
-  public List<EntityLocationRef> proximitySearchCollection(final EntityRef headEntity, final String collectionName,
-      final String propertyName, Point center, double maxDistance, final UUID startResult, final int count,
-      final boolean reversed, Level level) throws Exception {
+  public SearchResults<EntityLocationRef> proximitySearchCollection(final EntityRef headEntity, final String collectionName,
+      final String propertyName, Point center, double maxDistance, final UUID startResult, final String startCell, final int count,
+      final boolean reversed) throws Exception {
 
     GeocellQueryEngine gqe = new GeocellQueryEngine() {
       @SuppressWarnings("unchecked")
@@ -343,11 +317,11 @@ public class GeoIndexManager {
       }
     };
 
-    return doSearch(center, maxDistance, gqe, count, level);
+    return doSearch(center, maxDistance, gqe, count, startCell);
   }
 
-  public List<EntityLocationRef> proximitySearchConnections(final UUID connectionIndexId, final String propertyName,
-      Point center, double maxDistance, final UUID startResult, final int count, final boolean reversed, Level level)
+  public SearchResults<EntityLocationRef> proximitySearchConnections(final UUID connectionIndexId, final String propertyName,
+      Point center, double maxDistance, final UUID startResult, final String startCell, final int count, final boolean reversed)
       throws Exception {
 
     GeocellQueryEngine gqe = new GeocellQueryEngine() {
@@ -363,14 +337,13 @@ public class GeoIndexManager {
       }
     };
 
-    return doSearch(center, maxDistance, gqe, count, level);
+    return doSearch(center, maxDistance, gqe, count, startCell);
   }
 
-  private List<EntityLocationRef> doSearch(Point center, double maxDistance, GeocellQueryEngine gqe, int count,
-      Level level) throws Exception {
-    List<EntityLocationRef> locations = null;
+  private SearchResults<EntityLocationRef> doSearch(Point center, double maxDistance, GeocellQueryEngine gqe, int count, String startCell) throws Exception {
+    SearchResults<EntityLocationRef> locations = null;
 
-    GeocellQuery baseQuery = new GeocellQuery();
+    GeocellQuery baseQuery = new GeocellQuery().withStartCell(startCell);
 
     locations = GeocellManager.proximitySearch(center, count, maxDistance, EntityLocationRef.class, baseQuery, gqe,
         MAX_RESOLUTION);

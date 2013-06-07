@@ -17,8 +17,8 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.usergrid.persistence.Results.Level.ALL_PROPERTIES;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,90 +27,100 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
+import org.usergrid.utils.MapUtils;
 
+import com.beoui.geocell.SearchResults;
 import com.beoui.geocell.model.Point;
 
 public class GeoTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(GeoTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(GeoTest.class);
 
-	public GeoTest() {
-		super();
-	}
+  public GeoTest() {
+    super();
+  }
 
-	@Test
-	public void testGeo() throws Exception {
-		logger.info("GeoTest.testGeo");
+  @Test
+  public void testGeo() throws Exception {
+    logger.info("GeoTest.testGeo");
 
-		UUID applicationId = createApplication("testOrganization","testGeo");
-		assertNotNull(applicationId);
+    UUID applicationId = createApplication("testOrganization", "testGeo");
+    assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "edanuff");
+    properties.put("email", "ed@anuff.com");
 
-		Entity user = em.create("user", properties);
-		assertNotNull(user);
+    Entity user = em.create("user", properties);
+    assertNotNull(user);
 
-		EntityLocationRef loc = new EntityLocationRef(user, 37.776753,
-				-122.407846);
-		GeoIndexManager geo = em.getGeoIndexManager();
-		geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user.getUuid(),
-				"location.coordinates", loc);
+    EntityLocationRef loc = new EntityLocationRef(user, 37.776753, -122.407846);
+    GeoIndexManager geo = em.getGeoIndexManager();
+    geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user.getUuid(), "location.coordinates", loc);
 
-		Point center = new Point(37.774277, -122.404744);
-		List<EntityLocationRef> listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location.coordinates", center, 200, null, 10, false,
-				ALL_PROPERTIES);
+    Point center = new Point(37.774277, -122.404744);
+    SearchResults<EntityLocationRef> searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users",
+        "location.coordinates", center, 200, null, null, 10, false);
 
-		assertEquals(0, listResults.size());
+    List<EntityLocationRef> listResults = searchResults.getResults();
 
-		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location.coordinates", center, 400, null, 10, false,
-				ALL_PROPERTIES);
+    assertEquals(0, listResults.size());
 
-		this.dump(listResults);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 400,
+        null, null, 10, false);
 
-		assertEquals(1, listResults.size());
+    listResults = searchResults.getResults();
 
-		geo.removeLocationFromCollectionIndex(em.getApplicationRef(), "users",
-				"location.coordinates", loc);
+    this.dump(listResults);
 
-		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location.coordinates", center, 400, null, 10, false,
-				ALL_PROPERTIES);
+    assertEquals(1, listResults.size());
 
-		this.dump(listResults);
+    assertEquals("", searchResults.getLastSearchedTile());
 
-		assertEquals(0, listResults.size());
+    geo.removeLocationFromCollectionIndex(em.getApplicationRef(), "users", "location.coordinates", loc);
 
-		updatePos(em, user, 37.426373, -122.14108);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 400,
+        null, null, 10, false);
 
-		center = new Point(37.774277, -122.404744);
-		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location.coordinates", center, 200, null, 10, false,
-				ALL_PROPERTIES);
+    listResults = searchResults.getResults();
 
-		assertEquals(0, listResults.size());
+    this.dump(listResults);
 
-		updatePos(em, user, 37.774277, -122.404744);
+    assertEquals(0, listResults.size());
 
-		center = new Point(37.776753, -122.407846);
-		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location.coordinates", center, 1000, null, 10, false,
-				ALL_PROPERTIES);
+    updatePos(em, user, 37.426373, -122.14108);
 
-		assertEquals(1, listResults.size());
+    center = new Point(37.774277, -122.404744);
+
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 200,
+        null, null, 10, false);
+
+    listResults = searchResults.getResults();
+
+    assertEquals(0, listResults.size());
+
+    updatePos(em, user, 37.774277, -122.404744);
+
+    center = new Point(37.776753, -122.407846);
+
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
+        1000, null, null, 10, false);
+
+    listResults = searchResults.getResults();
+
+    assertEquals(1, listResults.size());
 
     // check at globally large distance
-    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-        "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
+        Integer.MAX_VALUE, null, null, 10, false);
+
+    listResults = searchResults.getResults();
+
     assertEquals(1, listResults.size());
 
     // create a new entity so we have 2
@@ -123,72 +133,134 @@ public class GeoTest extends AbstractPersistenceTest {
     geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user2.getUuid(), "location.coordinates", loc2);
 
     // check at 10000m distance
-    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-        "users", "location.coordinates", center, 10000, null, 10, false, ALL_PROPERTIES);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
+        10000, null, null, 10, false);
+
+    listResults = searchResults.getResults();
+
     assertEquals(1, listResults.size());
 
     // check at globally large distance
-    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-        "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
+        Integer.MAX_VALUE, null, null, 10, false);
+
+    listResults = searchResults.getResults();
     assertEquals(2, listResults.size());
 
     // check at globally large distance (center point close to other entity)
     center = new Point(31.14, 121.27);
-    listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-        "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
+
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
+        Integer.MAX_VALUE, null, null, 10, false);
+
+    listResults = searchResults.getResults();
+
     assertEquals(2, listResults.size());
 
-    Results searchResults = em.searchCollection(em.getApplicationRef(), "users",
-				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
-		assertEquals(1, searchResults.size());
+    Results emSearchResults = em.searchCollection(em.getApplicationRef(), "users",
+        Query.fromQL("location within 1000 of 37.776753, -122.407846"));
+    assertEquals(1, emSearchResults.size());
 
-		updatePos(em, user, 37.776753, -122.407846);
+    updatePos(em, user, 37.776753, -122.407846);
 
-		center = new Point(37.428526, -122.140916);
-		listResults = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location.coordinates", center, 1000, null, 10, false,
-				ALL_PROPERTIES);
+    center = new Point(37.428526, -122.140916);
 
-		assertEquals(0, listResults.size());
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
+        1000, null, null, 10, false);
 
-		searchResults = em.searchCollection(em.getApplicationRef(), "users",
-				Query.fromQL("location within 1000 of 37.428526, -122.140916"));
-		assertEquals(0, searchResults.size());
+    listResults = searchResults.getResults();
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "Brickhouse");
-		properties.put("address", "426 Brannan Street");
-		properties.put("location", getLocation(37.779632, -122.395131));
+    assertEquals(0, listResults.size());
 
-		Entity restaurant = em.create("restaurant", properties);
-		assertNotNull(restaurant);
+    emSearchResults = em.searchCollection(em.getApplicationRef(), "users",
+        Query.fromQL("location within 1000 of 37.428526, -122.140916"));
+    assertEquals(0, emSearchResults.size());
 
-		em.createConnection(user, "likes", restaurant);
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("name", "Brickhouse");
+    properties.put("address", "426 Brannan Street");
+    properties.put("location", getLocation(37.779632, -122.395131));
 
-		searchResults = em.searchConnectedEntities(user,
-				Query.fromQL("location within 2000 of 37.776753, -122.407846"));
-		assertEquals(1, searchResults.size());
+    Entity restaurant = em.create("restaurant", properties);
+    assertNotNull(restaurant);
 
-		searchResults = em.searchConnectedEntities(user,
-				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
-		assertEquals(0, searchResults.size());
+    em.createConnection(user, "likes", restaurant);
 
-	}
+    emSearchResults = em.searchConnectedEntities(user, Query.fromQL("location within 2000 of 37.776753, -122.407846"));
+    assertEquals(1, emSearchResults.size());
 
-	public Map<String, Object> getLocation(double latitude, double longitude)
-			throws Exception {
-		Map<String, Object> latlong = new LinkedHashMap<String, Object>();
-		latlong.put("latitude", latitude);
-		latlong.put("longitude", longitude);
-		return latlong;
-	}
+    emSearchResults = em.searchConnectedEntities(user, Query.fromQL("location within 1000 of 37.776753, -122.407846"));
+    assertEquals(0, emSearchResults.size());
 
-	public void updatePos(EntityManager em, EntityRef entity, double latitude,
-			double longitude) throws Exception {
-		Map<String, Object> latlong = new LinkedHashMap<String, Object>();
-		latlong.put("latitude", latitude);
-		latlong.put("longitude", longitude);
+  }
 
-		em.setProperty(entity, "location", latlong);
-	}
+  @Test
+  public void testPointPaging() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testPointPaging");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    // save objects in a diagonal line from -90 -180 to 90 180
+
+    int numEntities = 500;
+
+    float minLattitude = -90;
+    float maxLattitude = 90;
+    float minLongitude = -180;
+    float maxLongitude = 180;
+
+    float lattitudeDelta = (maxLattitude - minLattitude) / numEntities;
+
+    float longitudeDelta = (maxLongitude - minLongitude) / numEntities;
+
+    for (int i = 0; i < numEntities; i++) {
+      float lattitude =  minLattitude + lattitudeDelta * i;
+      float longitude = minLongitude + longitudeDelta * i; 
+      
+      Map<String, Float> location = MapUtils.hashMap("latitude",lattitude).map("longitude",longitude);
+
+      Map<String, Object> data = new HashMap<String, Object>(2);
+      data.put("name", String.valueOf(i));
+      data.put("location", location);
+
+      em.create("store", data);
+    }
+
+    Query query = new Query();
+    query.addFilter("location within 1000000 of -90, -180");
+    query.setLimit(100);
+
+    int count = 0;
+    
+    do {
+      Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
+      
+      for(Entity entity: results.getEntities()){
+        assertEquals(String.valueOf(count), entity.getName());
+        count++;
+      }
+      
+    } while (query.getCursor() != null);
+    
+    //check we got back all 500 entities
+    assertEquals(numEntities, count);
+  }
+
+  public Map<String, Object> getLocation(double latitude, double longitude) throws Exception {
+    Map<String, Object> latlong = new LinkedHashMap<String, Object>();
+    latlong.put("latitude", latitude);
+    latlong.put("longitude", longitude);
+    return latlong;
+  }
+
+  public void updatePos(EntityManager em, EntityRef entity, double latitude, double longitude) throws Exception {
+    Map<String, Object> latlong = new LinkedHashMap<String, Object>();
+    latlong.put("latitude", latitude);
+    latlong.put("longitude", longitude);
+
+    em.setProperty(entity, "location", latlong);
+  }
 }

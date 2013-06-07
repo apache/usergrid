@@ -267,7 +267,7 @@
 			<dependency>
 				<groupId>com.ganyo</groupId>
 				<artifactId>geocell</artifactId>
-				<version>0.0.10</version>
+				<version>0.0.11-SNAPSHOT</version>
 			</dependency>
 			<!-- TODO T.N. try and remove this -->
 			<dependency>

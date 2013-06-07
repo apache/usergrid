@@ -158,6 +158,7 @@ import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
+import com.beoui.geocell.SearchResults;
 import com.beoui.geocell.model.Point;
 import com.yammer.metrics.annotation.Metered;
 
@@ -2683,12 +2684,9 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
-      List<EntityLocationRef> locations = em.getGeoIndexManager().proximitySearchCollection(headEntity,
-          collection.getName(), node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()),
-          node.getDistance(), null, PAGE_SIZE, false, query.getResultsLevel());
-
-      // now wrap the results in a results iterator
-      GeoIterator itr = new GeoIterator(locations, PAGE_SIZE);
+      GeoIterator itr = new GeoIterator(new GeoIterator.CollectionGeoSearch(em.getGeoIndexManager(), headEntity,
+          collection.getName(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
+          node.getDistance()), query.getLimit());
 
       results.push(itr);
     }
@@ -2733,50 +2731,8 @@ public class RelationManagerImpl implements RelationManager {
         IndexScanner columns = searchIndex(key(connection.getIndexId(), INDEX_CONNECTIONS), slice);
 
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
-        //
-        // Results r = getIndexResults(columns, true,
-        // connection.getConnectionType(), connection.getConnectedEntityType(),
-        // resultsLevel, Integer.MAX_VALUE);
-        //
-        // if (r.size() > query.getLimit()) {
-        // r.setCursorToLastResult();
-        // }
-        //
-        // if (r.getCursor() != null) {
-        // // TODO Todd finish this
-        // // queryProcessor.updateCursor(slice, r.getCursor());
-        // }
-        //
-        // r = r.excludeCursorMetadataAttribute();
-        //
-        // if (results != null) {
-        // results.and(r);
-        // } else {
-        // results = r;
-        // }
       }
-      //
-      // String prop = f.getPropertyName();
-      // Object startValue = f.getStartValue();
-      // Object finishValue = f.getFinishValue();
-      //
-      // Results r = searchConnections(
-      // new ConnectionRefImpl(
-      // headEntity,
-      // new ConnectedEntityRefImpl(
-      // ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE,
-      // ConnectionRefImpl.CONNECTION_ENTITY_TYPE,
-      // null)), prop, startValue, finishValue,
-      // query.getStartResult(), f.getCursor(), search_count,
-      // query.isReversed(), Level.IDS);
-      //
-      // if (results != null) {
-      // results.and(r);
-      // } else {
-      // results = r;
-      // }
-      // }
-
+      
       this.results.push(intersection);
 
     }
@@ -2790,15 +2746,11 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
-      List<EntityLocationRef> locations = em.getGeoIndexManager().proximitySearchConnections(connection.getIndexId(),
-          node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance(), null,
-          PAGE_SIZE, false, query.getResultsLevel());
-
-      // now wrap the results in a results iterator
-      GeoIterator itr = new GeoIterator(locations, PAGE_SIZE);
+      GeoIterator itr = new GeoIterator(new GeoIterator.ConnectionGeoSearch(em.getGeoIndexManager(),
+          connection.getIndexId(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
+          node.getDistance()) , query.getLimit());
 
       results.push(itr);
-
     }
 
     @Override
