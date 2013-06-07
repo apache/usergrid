@@ -230,7 +230,65 @@ public class GeoTest extends AbstractPersistenceTest {
     }
 
     Query query = new Query();
-    query.addFilter("location within 1000000 of -90, -180");
+    //earth's circumference is 40,075 kilometers.  Up it to 50,000kilometers just to be save
+    query.addFilter("location within 50000000 of -90, -180");
+    query.setLimit(100);
+
+    int count = 0;
+    
+    do {
+      Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
+      
+      for(Entity entity: results.getEntities()){
+        assertEquals(String.valueOf(count), entity.getName());
+        count++;
+      }
+      
+    } while (query.getCursor() != null);
+    
+    //check we got back all 500 entities
+    assertEquals(numEntities, count);
+  }
+  
+  
+  @Test
+  public void testDistanceByLimit() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testDistanceByLimit");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    // save objects in a diagonal line from -90 -180 to 90 180
+
+    int numEntities = 100;
+
+    float minLattitude = -90;
+    float maxLattitude = 90;
+    float minLongitude = -180;
+    float maxLongitude = 180;
+
+    float lattitudeDelta = (maxLattitude - minLattitude) / numEntities;
+
+    float longitudeDelta = (maxLongitude - minLongitude) / numEntities;
+
+    for (int i = 0; i < numEntities; i++) {
+      float lattitude =  minLattitude + lattitudeDelta * i;
+      float longitude = minLongitude + longitudeDelta * i; 
+      
+      Map<String, Float> location = MapUtils.hashMap("latitude",lattitude).map("longitude",longitude);
+
+      Map<String, Object> data = new HashMap<String, Object>(2);
+      data.put("name", String.valueOf(i));
+      data.put("location", location);
+
+      em.create("store", data);
+    }
+
+    Query query = new Query();
+    //earth's circumference is 40,075 kilometers.  Up it to 50,000kilometers just to be save
+    query.addFilter("location within 0 of -90, -180");
     query.setLimit(100);
 
     int count = 0;
