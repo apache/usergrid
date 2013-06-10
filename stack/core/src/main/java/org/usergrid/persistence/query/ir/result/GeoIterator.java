@@ -16,6 +16,7 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -31,6 +32,7 @@ import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.utils.UUIDUtils;
 
 import com.beoui.geocell.SearchResults;
 import com.beoui.geocell.model.Point;
@@ -62,8 +64,13 @@ public class GeoIterator implements ResultIterator {
   private boolean done = false;
 
   private List<Double> distances;
+  
+  /**
+   * Moved and used as part of cursors
+   */
   private int nextResolution = GeoIndexManager.MAX_RESOLUTION;
   private UUID startId;
+  private double cursorDistance;
 
   /**
    * 
@@ -106,45 +113,74 @@ public class GeoIterator implements ResultIterator {
 
     double nextDistance = 0;
 
-    if (distances != null && distances.size() > 0) {
-      nextDistance = distances.get(distances.size() - 1);
-    }
-
-    SearchResults<EntityLocationRef> results;
-
-    try {
-      results = searcher.doSearch(nextDistance, nextResolution, resultSize);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-
     idOrder.clear();
+    distances = new ArrayList<Double>(resultSize);
 
+    int count = 0;
+    
     /**
-     * we have to do some screwy logic for paging since it's distance based.  A point could be the same
-     * distance, and then get cut off by a page.  We need to discard results the have the same distance as
-     * the last one and an id <= to the last uuid 
+     * we have to do some screwy logic for paging since it's distance based. A
+     * point could be the same distance, and then get cut off by a page. We need
+     * to discard results the have the same distance as the last one and an id
+     * <= to the last uuid
      */
     while (!done && idOrder.size() < resultSize) {
+      
+      SearchResults<EntityLocationRef> results;
+      
+      int queriedSize = resultSize - idOrder.size();
+
+      if (distances != null && distances.size() > 0) {
+        nextDistance = distances.get(distances.size() - 1);
+      }else if (cursorDistance > 0){
+        nextDistance = cursorDistance;
+      }
+
+      try {
+        results = searcher.doSearch(nextDistance, nextResolution, queriedSize);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+      
       List<EntityLocationRef> locations = results.getResults();
-
-      for (int i = 0; i < locations.size(); i++) {
-        idOrder.put(locations.get(i).getUuid(), i);
-      }
-
-      if (idOrder.size() > 0) {
-        toReturn = idOrder.keySet();
-      }
-
-      distances = results.getDistances();
+      
+      List<Double> resultDistances = results.getDistances();
+      
       nextResolution = results.getLastResolution();
+            
+      for (int i = 0; i < locations.size(); i++) {
 
-      if (idOrder.size() < resultSize) {
+        EntityLocationRef location = locations.get(i);
+        double distance = resultDistances.get(i);
+
+        /**
+         *  same distance, compare uuids.  If it's less than our start, skip it. Note that we can't do this via cass seeks, b/c the returned results
+         *  at the geo index are ordered by uuid, not by the distance from the point.  We must let the library load and sort them in memory by distance
+         *  then drop them.
+         */
+        if (startId != null && cursorDistance == distance && UUIDUtils.compare(location.getUuid(), startId) < 1) {
+          continue;
+        }
+
+        
+        idOrder.put(location.getUuid(), count);
+        distances.add(distance);
+        
+        count++;
+      }
+
+
+     
+      if (locations.size() < queriedSize) {
         done = true;
       }
 
     }
 
+
+    if (idOrder.size() > 0) {
+      toReturn = idOrder.keySet();
+    }
   }
 
   /*
@@ -245,7 +281,7 @@ public class GeoIterator implements ResultIterator {
 
     // parse the double
     startId = UUID.fromString(parts[0]);
-    distances = Collections.singletonList(Double.parseDouble(parts[1]));
+    cursorDistance = Double.parseDouble(parts[1]);
     nextResolution = Integer.parseInt(parts[2]);
   }
 
