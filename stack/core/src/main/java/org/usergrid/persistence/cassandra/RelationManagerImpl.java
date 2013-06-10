@@ -158,7 +158,6 @@ import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
-import com.beoui.geocell.SearchResults;
 import com.beoui.geocell.model.Point;
 import com.yammer.metrics.annotation.Metered;
 
@@ -2662,17 +2661,13 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      UUID startId = null;
-
-      if (slice.hasCursor()) {
-        startId = UUIDSerializer.get().fromByteBuffer(slice.getCursor());
-      }
+      UUID startId = node.getCursor();
 
       IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
           key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null, query.getLimit(),
           query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
-      this.results.push(new SliceIterator<UUID>(results, node.getSlice(), UUID_PARSER));
+      this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER));
     }
 
     /*
@@ -2684,9 +2679,13 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
+      QuerySlice slice = node.getSlice();
+
+      queryProcessor.applyCursorAndSort(slice);
+
       GeoIterator itr = new GeoIterator(new GeoIterator.CollectionGeoSearch(em.getGeoIndexManager(), headEntity,
           collection.getName(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
-          node.getDistance()), query.getLimit());
+          node.getDistance()), query.getLimit(), slice);
 
       results.push(itr);
     }
@@ -2732,7 +2731,7 @@ public class RelationManagerImpl implements RelationManager {
 
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
       }
-      
+
       this.results.push(intersection);
 
     }
@@ -2746,9 +2745,13 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
+      QuerySlice slice = node.getSlice();
+
+      queryProcessor.applyCursorAndSort(slice);
+
       GeoIterator itr = new GeoIterator(new GeoIterator.ConnectionGeoSearch(em.getGeoIndexManager(),
           connection.getIndexId(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
-          node.getDistance()) , query.getLimit());
+          node.getDistance()), query.getLimit(), slice);
 
       results.push(itr);
     }

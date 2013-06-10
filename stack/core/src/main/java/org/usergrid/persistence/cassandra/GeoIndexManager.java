@@ -79,7 +79,7 @@ public class GeoIndexManager {
    * 90 deg => 0.0000000209547 deg = .2cm and 45 deg => 0.00000001047735 deg =
    * .1 cm
    */
-  private static final int MAX_RESOLUTION = 9;
+  public static final int MAX_RESOLUTION = 9;
 
   public static class EntityLocationRef implements EntityRef {
 
@@ -270,8 +270,7 @@ public class GeoIndexManager {
     }
   }
 
-  public ArrayList<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, UUID startResult, int count,
-      boolean reversed) throws Exception {
+  public ArrayList<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, int count) throws Exception {
 
     Set<EntityLocationRef> locations = new LinkedHashSet<EntityLocationRef>();
 
@@ -290,7 +289,7 @@ public class GeoIndexManager {
     }
 
     Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass.multiGetColumns(
-        cass.getApplicationKeyspace(em.getApplicationId()), ENTITY_INDEX, keys, startResult, null, count, reversed);
+        cass.getApplicationKeyspace(em.getApplicationId()), ENTITY_INDEX, keys, null, null, count, false);
 
     for (List<HColumn<ByteBuffer, ByteBuffer>> columns : rows.values()) {
       addLocationIndexEntries(columns, locations);
@@ -301,8 +300,7 @@ public class GeoIndexManager {
   }
 
   public SearchResults<EntityLocationRef> proximitySearchCollection(final EntityRef headEntity, final String collectionName,
-      final String propertyName, Point center, double maxDistance, final UUID startResult, final String startCell, final int count,
-      final boolean reversed) throws Exception {
+      final String propertyName, Point center, double minDistance, double maxDistance,  final int resolution, final int count) throws Exception {
 
     GeocellQueryEngine gqe = new GeocellQueryEngine() {
       @SuppressWarnings("unchecked")
@@ -310,18 +308,18 @@ public class GeoIndexManager {
       public <T> List<T> query(GeocellQuery baseQuery, List<String> curGeocellsUnique, Class<T> entityClass) {
         try {
           return (List<T>) GeoIndexManager.this.query(key(headEntity.getUuid(), collectionName, propertyName),
-              curGeocellsUnique, startResult, count, reversed);
+              curGeocellsUnique, count);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
       }
     };
 
-    return doSearch(center, maxDistance, gqe, count, startCell);
+    return doSearch(center, minDistance, maxDistance, gqe, count, resolution);
   }
 
   public SearchResults<EntityLocationRef> proximitySearchConnections(final UUID connectionIndexId, final String propertyName,
-      Point center, double maxDistance, final UUID startResult, final String startCell, final int count, final boolean reversed)
+      Point center,  double minDistance, double maxDistance,  final int resolution, final int count )
       throws Exception {
 
     GeocellQueryEngine gqe = new GeocellQueryEngine() {
@@ -330,23 +328,22 @@ public class GeoIndexManager {
       public <T> List<T> query(GeocellQuery baseQuery, List<String> curGeocellsUnique, Class<T> entityClass) {
         try {
           return (List<T>) GeoIndexManager.this.query(key(connectionIndexId, INDEX_CONNECTIONS, propertyName),
-              curGeocellsUnique, startResult, count, reversed);
+              curGeocellsUnique, count);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
       }
     };
 
-    return doSearch(center, maxDistance, gqe, count, startCell);
+    return doSearch(center, minDistance, maxDistance, gqe, count, resolution) ;
   }
 
-  private SearchResults<EntityLocationRef> doSearch(Point center, double maxDistance, GeocellQueryEngine gqe, int count, String startCell) throws Exception {
+  private SearchResults<EntityLocationRef> doSearch(Point center, double minDistance, double maxDistance, GeocellQueryEngine gqe, int count, int resolution) throws Exception {
     SearchResults<EntityLocationRef> locations = null;
 
-    GeocellQuery baseQuery = new GeocellQuery().withStartCell(startCell);
+    GeocellQuery baseQuery = new GeocellQuery();
 
-    locations = GeocellManager.proximitySearch(center, count, maxDistance, EntityLocationRef.class, baseQuery, gqe,
-        MAX_RESOLUTION);
+    locations = GeocellManager.proximitySearch(center, count, minDistance,  maxDistance, EntityLocationRef.class, baseQuery, gqe,resolution);
 
     return locations;
   }

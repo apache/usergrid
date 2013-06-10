@@ -23,10 +23,11 @@ package org.usergrid.persistence.query.ir;
  */
 public class WithinNode extends QueryNode {
 
-	private String propertyName;
-	private float distance;
-	private float lattitude;
-	private float longitude;
+	private final String propertyName;
+	private final float distance;
+	private final float lattitude;
+	private final float longitude;
+	private final QuerySlice slice;
 
 	/**
 	 * @param propertyName
@@ -35,11 +36,12 @@ public class WithinNode extends QueryNode {
 	 * @param longitude
 	 */
 	public WithinNode(String propertyName, float distance, float lattitude,
-			float longitude) {
+			float longitude, int nodeId) {
 		this.propertyName = propertyName;
 		this.distance = distance;
 		this.lattitude = lattitude;
 		this.longitude = longitude;
+		this.slice = new QuerySlice("location", nodeId);
 	}
 
 	/**
@@ -70,7 +72,15 @@ public class WithinNode extends QueryNode {
 		return longitude;
 	}
 
-	/*
+	
+	/**
+   * @return the slice
+   */
+  public QuerySlice getSlice() {
+    return slice;
+  }
+
+  /*
 	 * (non-Javadoc)
 	 * 
 	 * @see

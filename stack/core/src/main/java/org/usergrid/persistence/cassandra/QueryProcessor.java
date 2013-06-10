@@ -375,7 +375,7 @@ public class QueryProcessor {
 
       // change the property name to coordinates
       nodes.push(new WithinNode(op.getProperty().getIndexedName(), op.getDistance().getFloatValue(), op.getLattitude()
-          .getFloatValue(), op.getLongitude().getFloatValue()));
+          .getFloatValue(), op.getLongitude().getFloatValue(), ++contextCount));
 
     }
 

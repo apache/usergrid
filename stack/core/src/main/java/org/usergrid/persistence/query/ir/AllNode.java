@@ -1,5 +1,9 @@
 package org.usergrid.persistence.query.ir;
 
+import java.util.UUID;
+
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+
 /**
  * Used to represent a "select all".  This will iterate over the entities by UUID
  * @author tnine
@@ -37,5 +41,19 @@ public class AllNode extends QueryNode {
    */
   public QuerySlice getSlice() {
     return slice;
+  }
+  
+  /**
+   * Return the cursor for this slice, could return null
+   * @return
+   */
+  public UUID getCursor(){
+    UUID startId = null;
+
+    if (slice.hasCursor()) {
+      startId = UUIDSerializer.get().fromByteBuffer(slice.getCursor());
+    }
+    
+    return startId;
   }
 }

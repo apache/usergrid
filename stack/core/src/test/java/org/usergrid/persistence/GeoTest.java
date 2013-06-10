@@ -65,14 +65,14 @@ public class GeoTest extends AbstractPersistenceTest {
 
     Point center = new Point(37.774277, -122.404744);
     SearchResults<EntityLocationRef> searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users",
-        "location.coordinates", center, 200, null, null, 10, false);
+        "location.coordinates", center, 0, 200, GeoIndexManager.MAX_RESOLUTION, 10);
 
     List<EntityLocationRef> listResults = searchResults.getResults();
 
     assertEquals(0, listResults.size());
 
-    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 400,
-        null, null, 10, false);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
+        400, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -80,12 +80,10 @@ public class GeoTest extends AbstractPersistenceTest {
 
     assertEquals(1, listResults.size());
 
-    assertEquals("", searchResults.getLastSearchedTile());
-
     geo.removeLocationFromCollectionIndex(em.getApplicationRef(), "users", "location.coordinates", loc);
 
-    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 400,
-        null, null, 10, false);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
+        400, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -97,8 +95,8 @@ public class GeoTest extends AbstractPersistenceTest {
 
     center = new Point(37.774277, -122.404744);
 
-    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 200,
-        null, null, 10, false);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
+        200, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -108,8 +106,8 @@ public class GeoTest extends AbstractPersistenceTest {
 
     center = new Point(37.776753, -122.407846);
 
-    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        1000, null, null, 10, false);
+    searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
+        1000, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -117,7 +115,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     // check at globally large distance
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        Integer.MAX_VALUE, null, null, 10, false);
+        0, Integer.MAX_VALUE, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -134,7 +132,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     // check at 10000m distance
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        10000, null, null, 10, false);
+        0, 10000, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -142,7 +140,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     // check at globally large distance
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        Integer.MAX_VALUE, null, null, 10, false);
+        0, Integer.MAX_VALUE, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
     assertEquals(2, listResults.size());
@@ -151,7 +149,7 @@ public class GeoTest extends AbstractPersistenceTest {
     center = new Point(31.14, 121.27);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        Integer.MAX_VALUE, null, null, 10, false);
+        0, Integer.MAX_VALUE, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -166,7 +164,7 @@ public class GeoTest extends AbstractPersistenceTest {
     center = new Point(37.428526, -122.140916);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        1000, null, null, 10, false);
+        0, 1000, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -217,10 +215,10 @@ public class GeoTest extends AbstractPersistenceTest {
     float longitudeDelta = (maxLongitude - minLongitude) / numEntities;
 
     for (int i = 0; i < numEntities; i++) {
-      float lattitude =  minLattitude + lattitudeDelta * i;
-      float longitude = minLongitude + longitudeDelta * i; 
-      
-      Map<String, Float> location = MapUtils.hashMap("latitude",lattitude).map("longitude",longitude);
+      float lattitude = minLattitude + lattitudeDelta * i;
+      float longitude = minLongitude + longitudeDelta * i;
+
+      Map<String, Float> location = MapUtils.hashMap("latitude", lattitude).map("longitude", longitude);
 
       Map<String, Object> data = new HashMap<String, Object>(2);
       data.put("name", String.valueOf(i));
@@ -230,27 +228,30 @@ public class GeoTest extends AbstractPersistenceTest {
     }
 
     Query query = new Query();
-    //earth's circumference is 40,075 kilometers.  Up it to 50,000kilometers just to be save
+    // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+    // just to be save
     query.addFilter("location within 50000000 of -90, -180");
     query.setLimit(100);
 
     int count = 0;
+    Results results;
     
     do {
-      Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
-      
-      for(Entity entity: results.getEntities()){
+      results = em.searchCollection(em.getApplicationRef(), "stores", query);
+
+      for (Entity entity : results.getEntities()) {
         assertEquals(String.valueOf(count), entity.getName());
         count++;
       }
-      
-    } while (query.getCursor() != null);
-    
-    //check we got back all 500 entities
+
+      //set for the next "page"
+      query.setCursor(results.getCursor());
+    } while (results.getCursor() != null);
+
+    // check we got back all 500 entities
     assertEquals(numEntities, count);
   }
-  
-  
+
   @Test
   public void testDistanceByLimit() throws Exception {
 
@@ -274,10 +275,10 @@ public class GeoTest extends AbstractPersistenceTest {
     float longitudeDelta = (maxLongitude - minLongitude) / numEntities;
 
     for (int i = 0; i < numEntities; i++) {
-      float lattitude =  minLattitude + lattitudeDelta * i;
-      float longitude = minLongitude + longitudeDelta * i; 
-      
-      Map<String, Float> location = MapUtils.hashMap("latitude",lattitude).map("longitude",longitude);
+      float lattitude = minLattitude + lattitudeDelta * i;
+      float longitude = minLongitude + longitudeDelta * i;
+
+      Map<String, Float> location = MapUtils.hashMap("latitude", lattitude).map("longitude", longitude);
 
       Map<String, Object> data = new HashMap<String, Object>(2);
       data.put("name", String.valueOf(i));
@@ -287,23 +288,24 @@ public class GeoTest extends AbstractPersistenceTest {
     }
 
     Query query = new Query();
-    //earth's circumference is 40,075 kilometers.  Up it to 50,000kilometers just to be save
+    // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+    // just to be save
     query.addFilter("location within 0 of -90, -180");
     query.setLimit(100);
 
     int count = 0;
-    
+
     do {
       Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
-      
-      for(Entity entity: results.getEntities()){
+
+      for (Entity entity : results.getEntities()) {
         assertEquals(String.valueOf(count), entity.getName());
         count++;
       }
-      
+
     } while (query.getCursor() != null);
-    
-    //check we got back all 500 entities
+
+    // check we got back all 500 entities
     assertEquals(numEntities, count);
   }
 
