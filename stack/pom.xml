@@ -265,7 +265,7 @@
 				<version>1.1.2</version>
 			</dependency>
 			<dependency>
-				<groupId>com.ganyo</groupId>
+				<groupId>org.usergrid</groupId>
 				<artifactId>geocell</artifactId>
 				<version>0.0.11-SNAPSHOT</version>
 			</dependency>

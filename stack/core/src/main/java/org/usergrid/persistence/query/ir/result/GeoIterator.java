@@ -111,8 +111,6 @@ public class GeoIterator implements ResultIterator {
       return;
     }
 
-    double nextDistance = 0;
-
     idOrder.clear();
     distances = new ArrayList<Double>(resultSize);
 
@@ -129,15 +127,14 @@ public class GeoIterator implements ResultIterator {
       SearchResults<EntityLocationRef> results;
       
       int queriedSize = resultSize - idOrder.size();
-
-      if (distances != null && distances.size() > 0) {
-        nextDistance = distances.get(distances.size() - 1);
-      }else if (cursorDistance > 0){
-        nextDistance = cursorDistance;
+      
+      //ask for 1 more record since we're going to discard the first one
+      if(startId != null){
+        queriedSize++;
       }
 
       try {
-        results = searcher.doSearch(nextDistance, nextResolution, queriedSize);
+        results = searcher.doSearch(cursorDistance, startId, nextResolution, queriedSize);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -147,34 +144,34 @@ public class GeoIterator implements ResultIterator {
       List<Double> resultDistances = results.getDistances();
       
       nextResolution = results.getLastResolution();
+      
+      if(startId != null && locations.size() > 0 && startId.equals(locations.get(0).getUuid())){
+        locations.remove(0);
+        resultDistances.remove(0);
+      }
             
       for (int i = 0; i < locations.size(); i++) {
 
         EntityLocationRef location = locations.get(i);
         double distance = resultDistances.get(i);
-
-        /**
-         *  same distance, compare uuids.  If it's less than our start, skip it. Note that we can't do this via cass seeks, b/c the returned results
-         *  at the geo index are ordered by uuid, not by the distance from the point.  We must let the library load and sort them in memory by distance
-         *  then drop them.
-         */
-        if (startId != null && cursorDistance == distance && UUIDUtils.compare(location.getUuid(), startId) < 1) {
-          continue;
-        }
-
+        UUID id = location.getUuid();
         
-        idOrder.put(location.getUuid(), count);
+
+        idOrder.put(id, count);
         distances.add(distance);
+        
+        startId = id;
+        cursorDistance = distance;
         
         count++;
       }
-
 
      
       if (locations.size() < queriedSize) {
         done = true;
       }
 
+      
     }
 
 
@@ -307,7 +304,7 @@ public class GeoIterator implements ResultIterator {
       this.distance = distance;
     }
 
-    abstract SearchResults<EntityLocationRef> doSearch(double minDistance, int resolution, int pageSize)
+    abstract SearchResults<EntityLocationRef> doSearch(double minDistance, UUID startId, int resolution, int pageSize)
         throws Exception;
   }
 
@@ -337,9 +334,9 @@ public class GeoIterator implements ResultIterator {
      * #doSearch()
      */
     @Override
-    public SearchResults<EntityLocationRef> doSearch(double minDistance, int resolution, int pageSize) throws Exception {
+    public SearchResults<EntityLocationRef> doSearch(double minDistance, UUID startId, int resolution, int pageSize) throws Exception {
       return geoIndexManager.proximitySearchCollection(headEntity, collectionName, propertyName, searchPoint,
-          minDistance, distance, resolution, pageSize);
+          minDistance, distance, startId, resolution, pageSize);
 
     }
 
@@ -370,9 +367,9 @@ public class GeoIterator implements ResultIterator {
      * #doSearch()
      */
     @Override
-    public SearchResults<EntityLocationRef> doSearch(double minDistance, int resolution, int pageSize) throws Exception {
+    public SearchResults<EntityLocationRef> doSearch(double minDistance,UUID startId, int resolution, int pageSize) throws Exception {
       return geoIndexManager.proximitySearchConnections(connectionId, propertyName, searchPoint, minDistance, distance,
-          resolution, pageSize);
+          startId, resolution, pageSize);
 
     }
 

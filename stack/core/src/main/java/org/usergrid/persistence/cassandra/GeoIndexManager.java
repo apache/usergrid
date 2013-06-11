@@ -270,7 +270,7 @@ public class GeoIndexManager {
     }
   }
 
-  public ArrayList<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, int count) throws Exception {
+  public ArrayList<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, UUID startId, int count) throws Exception {
 
     Set<EntityLocationRef> locations = new LinkedHashSet<EntityLocationRef>();
 
@@ -287,9 +287,12 @@ public class GeoIndexManager {
         keys.add(key(key, DICTIONARY_GEOCELL, geoCell, indexBucket));
       }
     }
+    
+    
+    DynamicComposite composite = startId == null ? null : new DynamicComposite(startId);
 
     Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass.multiGetColumns(
-        cass.getApplicationKeyspace(em.getApplicationId()), ENTITY_INDEX, keys, null, null, count, false);
+        cass.getApplicationKeyspace(em.getApplicationId()), ENTITY_INDEX, keys, composite, null, count, false);
 
     for (List<HColumn<ByteBuffer, ByteBuffer>> columns : rows.values()) {
       addLocationIndexEntries(columns, locations);
@@ -300,7 +303,7 @@ public class GeoIndexManager {
   }
 
   public SearchResults<EntityLocationRef> proximitySearchCollection(final EntityRef headEntity, final String collectionName,
-      final String propertyName, Point center, double minDistance, double maxDistance,  final int resolution, final int count) throws Exception {
+      final String propertyName, Point center, double minDistance, double maxDistance,  final UUID startId, final int resolution, final int count) throws Exception {
 
     GeocellQueryEngine gqe = new GeocellQueryEngine() {
       @SuppressWarnings("unchecked")
@@ -308,7 +311,7 @@ public class GeoIndexManager {
       public <T> List<T> query(GeocellQuery baseQuery, List<String> curGeocellsUnique, Class<T> entityClass) {
         try {
           return (List<T>) GeoIndexManager.this.query(key(headEntity.getUuid(), collectionName, propertyName),
-              curGeocellsUnique, count);
+              curGeocellsUnique, startId, count);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
@@ -319,7 +322,7 @@ public class GeoIndexManager {
   }
 
   public SearchResults<EntityLocationRef> proximitySearchConnections(final UUID connectionIndexId, final String propertyName,
-      Point center,  double minDistance, double maxDistance,  final int resolution, final int count )
+      Point center,  double minDistance, double maxDistance,  final UUID startId, final int resolution, final int count )
       throws Exception {
 
     GeocellQueryEngine gqe = new GeocellQueryEngine() {
@@ -328,7 +331,7 @@ public class GeoIndexManager {
       public <T> List<T> query(GeocellQuery baseQuery, List<String> curGeocellsUnique, Class<T> entityClass) {
         try {
           return (List<T>) GeoIndexManager.this.query(key(connectionIndexId, INDEX_CONNECTIONS, propertyName),
-              curGeocellsUnique, count);
+              curGeocellsUnique, startId, count);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }

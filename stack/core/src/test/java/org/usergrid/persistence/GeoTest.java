@@ -65,14 +65,14 @@ public class GeoTest extends AbstractPersistenceTest {
 
     Point center = new Point(37.774277, -122.404744);
     SearchResults<EntityLocationRef> searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users",
-        "location.coordinates", center, 0, 200, GeoIndexManager.MAX_RESOLUTION, 10);
+        "location.coordinates", center, 0, 200, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     List<EntityLocationRef> listResults = searchResults.getResults();
 
     assertEquals(0, listResults.size());
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
-        400, GeoIndexManager.MAX_RESOLUTION, 10);
+        400, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -83,7 +83,7 @@ public class GeoTest extends AbstractPersistenceTest {
     geo.removeLocationFromCollectionIndex(em.getApplicationRef(), "users", "location.coordinates", loc);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
-        400, GeoIndexManager.MAX_RESOLUTION, 10);
+        400, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -96,7 +96,7 @@ public class GeoTest extends AbstractPersistenceTest {
     center = new Point(37.774277, -122.404744);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
-        200, GeoIndexManager.MAX_RESOLUTION, 10);
+        200, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -107,7 +107,7 @@ public class GeoTest extends AbstractPersistenceTest {
     center = new Point(37.776753, -122.407846);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center, 0,
-        1000, GeoIndexManager.MAX_RESOLUTION, 10);
+        1000, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -115,7 +115,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     // check at globally large distance
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        0, Integer.MAX_VALUE, GeoIndexManager.MAX_RESOLUTION, 10);
+        0, Integer.MAX_VALUE, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -132,7 +132,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     // check at 10000m distance
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        0, 10000, GeoIndexManager.MAX_RESOLUTION, 10);
+        0, 10000, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -140,7 +140,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     // check at globally large distance
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        0, Integer.MAX_VALUE, GeoIndexManager.MAX_RESOLUTION, 10);
+        0, Integer.MAX_VALUE, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
     assertEquals(2, listResults.size());
@@ -149,7 +149,7 @@ public class GeoTest extends AbstractPersistenceTest {
     center = new Point(31.14, 121.27);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        0, Integer.MAX_VALUE, GeoIndexManager.MAX_RESOLUTION, 10);
+        0, Integer.MAX_VALUE, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 
@@ -164,7 +164,7 @@ public class GeoTest extends AbstractPersistenceTest {
     center = new Point(37.428526, -122.140916);
 
     searchResults = geo.proximitySearchCollection(em.getApplicationRef(), "users", "location.coordinates", center,
-        0, 1000, GeoIndexManager.MAX_RESOLUTION, 10);
+        0, 1000, null, GeoIndexManager.MAX_RESOLUTION, 10);
 
     listResults = searchResults.getResults();
 

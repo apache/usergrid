@@ -302,7 +302,7 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.ganyo</groupId>
+			<groupId>org.usergrid</groupId>
 			<artifactId>geocell</artifactId>
 		</dependency>
 		<dependency>
