@@ -15,10 +15,7 @@
  ******************************************************************************/
 package org.usergrid.management;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,8 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.cassandra.ManagementServiceImpl;
+import org.usergrid.management.exceptions.RecentlyUsedPasswordException;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.test.ShiroHelperRunner;
+
+import static org.junit.Assert.*;
 
 @RunWith(ShiroHelperRunner.class)
 public class OrganizationTest {
@@ -109,5 +109,71 @@ public class OrganizationTest {
 		management.addAdminUserToOrganization(new_user, organization2, false);
 
 	}
+
+  @Test
+  public void testPasswordHistoryCheck() throws Exception {
+
+    String[] passwords = new String[] {"password1", "password2", "password3"};
+
+    UserInfo user = management.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
+    assertNotNull(user);
+
+    OrganizationInfo organization = management.createOrganization("ed-organization", user, true);
+    assertNotNull(organization);
+
+    // no history
+    management.setAdminUserPassword(user.getUuid(), passwords[1]);
+    management.setAdminUserPassword(user.getUuid(), passwords[0]);
+
+    // set history to 2
+    Map<String,Object> props = new HashMap<String,Object>();
+    props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 2);
+    organization.setProperties(props);
+    management.updateOrganization(organization);
+
+    // check the history
+    management.setAdminUserPassword(user.getUuid(), passwords[1]); // ok
+    management.setAdminUserPassword(user.getUuid(), passwords[2]); // ok
+    try {
+      management.setAdminUserPassword(user.getUuid(), passwords[0]);
+      fail("No!");
+    } catch (RecentlyUsedPasswordException e) {
+      // yup
+    }
+    try {
+      management.setAdminUserPassword(user.getUuid(), passwords[1]);
+      fail("No!");
+    } catch (RecentlyUsedPasswordException e) {
+      // yup
+    }
+    management.setAdminUserPassword(user.getUuid(), passwords[2]);
+    management.setAdminUserPassword(user.getUuid(), passwords[0]);
+    try {
+      management.setAdminUserPassword(user.getUuid(), passwords[1]);
+      fail("No!");
+    } catch (RecentlyUsedPasswordException e) {
+      // yup
+    }
+
+//    // reduce the history
+//    Map<String,Object> props = new HashMap<String,Object>();
+//    props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 1);
+//    organization.setProperties(props);
+//    management.updateOrganization(organization);
+//
+//    // test history add
+//    // test history truncate
+//    // test history size w/ 2 orgs
+//    // test history size decrease
+//
+//    OrganizationInfo organization2 = management.createOrganization("ed-organization2", user, false);
+//    assertNotNull(organization);
+//
+//    Map<UUID, String> userOrganizations = management.getOrganizationsForAdminUser(user.getUuid());
+//    assertEquals("wrong number of organizations", 2, userOrganizations.size());
+//
+//    boolean verified = management.verifyAdminUserPassword(user.getUuid(), passwords[0]);
+//    assertTrue(verified);
+  }
 
 }
