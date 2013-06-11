@@ -912,8 +912,13 @@ public class Query {
 
     public void setLimit(int limit) {
        
+//      TODO tnine.  After users have had time to change their query limits, this needs to be uncommented and enforced.  
+//        if(limit > MAX_LIMIT){
+//          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));
+//        }
+      
         if(limit > MAX_LIMIT){
-          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));
+          limit = MAX_LIMIT;
         }
         
         limitSet = true;
