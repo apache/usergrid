@@ -190,13 +190,14 @@ public class AbstractCollectionService extends AbstractService {
       }
     }
 
-		query = new Query(query);
-		query.setResultsLevel(level);
-		query.setLimit(query.getLimit(count));
-		if (!query.isReversedSet()) {
-			query.setReversed(isCollectionReversed(context));
+	
+    if(!query.isReversedSet()){
+      query.setReversed(isCollectionReversed(context));
 		}
-		query.addSort(getCollectionSort(context));
+    
+    if(!query.isSortSet()){
+      query.addSort(getCollectionSort(context));
+    }
 		/*
 		 * if (count > 0) { query.setMaxResults(count); }
 		 */
@@ -306,13 +307,12 @@ public class AbstractCollectionService extends AbstractService {
 			return getItemsByQuery(context, query);
 		}
 
-		query = new Query(query);
-		query.setResultsLevel(Level.ALL_PROPERTIES);
-		query.setLimit(1000);
 		if (!query.isReversedSet()) {
 			query.setReversed(isCollectionReversed(context));
 		}
-		query.addSort(getCollectionSort(context));
+		if(!query.isSortSet()){
+		  query.addSort(getCollectionSort(context));
+		}
 
 		Results r = em.searchCollection(context.getOwner(),
 				context.getCollectionName(), query);
@@ -513,13 +513,13 @@ public class AbstractCollectionService extends AbstractService {
 			return getItemsByQuery(context, query);
 		}
 
-		query = new Query(query);
-		query.setResultsLevel(Level.ALL_PROPERTIES);
-		query.setLimit(1000);
+	
 		if (!query.isReversedSet()) {
 			query.setReversed(isCollectionReversed(context));
 		}
-		query.addSort(getCollectionSort(context));
+		if(!query.isSortSet()){
+		  query.addSort(getCollectionSort(context));
+		}
 
 		Results r = em.searchCollection(context.getOwner(),
 				context.getCollectionName(), query);

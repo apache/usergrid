@@ -75,7 +75,7 @@ public class Query {
     private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
     public static final int DEFAULT_LIMIT = 10;
-    public static final int MAX_LIMIT = 1000;
+    public static final int MAX_LIMIT = 100;
 
     protected String type;
     protected List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
@@ -94,6 +94,7 @@ public class Query {
     protected List<String> permissions;
     protected boolean reversed;
     protected boolean reversedSet = false;
+    protected boolean sortSet = false;
     protected Long startTime;
     protected Long finishTime;
     protected boolean pad;
@@ -652,6 +653,7 @@ public class Query {
             }
         }
         sortPredicates.add(new SortPredicate(propertyName, direction));
+        sortSet = true;
         return this;
     }
 
@@ -659,6 +661,7 @@ public class Query {
         if (sort == null) {
             return this;
         }
+        
         for (SortPredicate s : sortPredicates) {
             if (s.getPropertyName().equals(sort.getPropertyName())) {
                 logger.error("Attempted to set sort order for "
@@ -667,7 +670,15 @@ public class Query {
             }
         }
         sortPredicates.add(sort);
+        sortSet = true;
         return this;
+    }
+
+    /**
+     * @return the sortSet
+     */
+    public boolean isSortSet() {
+      return sortSet;
     }
 
     public List<SortPredicate> getSortPredicates() {

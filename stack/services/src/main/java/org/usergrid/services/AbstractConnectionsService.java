@@ -250,7 +250,7 @@ public class AbstractConnectionsService extends AbstractService {
 		int count = query.getLimit();
 		Results.Level level = Results.Level.REFS;
 		if (!context.moreParameters()) {
-			count = 1000;
+			count = Query.MAX_LIMIT;
 			level = Level.ALL_PROPERTIES;
 		}
 
@@ -388,10 +388,7 @@ public class AbstractConnectionsService extends AbstractService {
 			return getItemsByQuery(context, query);
 		}
 
-		query = new Query(query);
-		query.setResultsLevel(Level.ALL_PROPERTIES);
-		query.setLimit(1000);
-
+		
 		Results r = em.searchConnectedEntities(context.getOwner(), query);
 		if (r.isEmpty()) {
 			throw new ServiceResourceNotFoundException(context);
