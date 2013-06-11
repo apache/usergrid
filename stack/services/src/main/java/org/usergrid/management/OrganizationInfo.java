@@ -27,6 +27,8 @@ import java.util.UUID;
 
 public class OrganizationInfo {
 
+  public static final String PASSWORD_HISTORY_SIZE_KEY = "passwordHistorySize";
+
 	private UUID id;
 	private String name;
   private Map<String,Object> properties;
@@ -64,6 +66,21 @@ public class OrganizationInfo {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+  public int getPasswordHistorySize() {
+    int size = 0;
+    if (properties != null) {
+      Object sizeValue = properties.get(PASSWORD_HISTORY_SIZE_KEY);
+      if (sizeValue instanceof Number) {
+        size = ((Number)sizeValue).intValue();
+      } else if (sizeValue instanceof String) {
+        try {
+          size = Integer.parseInt((String)sizeValue);
+        } catch (NumberFormatException e) { /* ignore */ }
+      }
+    }
+    return size;
+  }
 
 	public static List<OrganizationInfo> fromNameIdMap(Map<String, UUID> map) {
 		List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
