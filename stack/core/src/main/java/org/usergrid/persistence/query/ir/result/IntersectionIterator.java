@@ -98,9 +98,9 @@ public class IntersectionIterator extends MultiIterator {
       return null;
     }
     
-    // we start at the next index"
 
-    while (rootIterator.hasNext() && results.size() < pageSize) {
+    //purposely check size first, that way we avoid another round trip if we can
+    while (results.size() < pageSize && rootIterator.hasNext() ) {
 
       Set<UUID> intersection = rootIterator.next();
 

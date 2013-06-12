@@ -156,21 +156,24 @@ public class SliceIterator<T> implements ResultIterator {
     // if nothing was loaded we still want to set the cursor to empty
     Integer loadedIndex = idOrder.get(lastLoaded);
 
-
-   
-    //the id did not come from this iterator, it's a no-op
+    // the id did not come from this iterator, it's a no-op
     if (loadedIndex == null) {
-     return;
+      return;
     }
 
     ByteBuffer bytes = null;
-    
+
     // edge case where the uuid is the last one loaded. In this case we need to
     // advance to the next page, then finalize our cursor
     if (loadedIndex == pageSize - 1) {
-      load();
-      finalizeCursor(cache, lastLoaded);
-      return;
+      // couldn't load the next page, nothing to page next time
+      if (!load()) {
+        bytes = ByteBuffer.allocate(0);
+      }
+      // set it to our first uuid from the new set
+      else{
+        bytes = cols.get(0);
+      }
     }
     // last one we loaded, but not a full page. This slice is complete
     else if (loadedIndex == idOrder.size() - 1) {
