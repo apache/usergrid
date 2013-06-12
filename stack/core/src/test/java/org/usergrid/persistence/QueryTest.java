@@ -15,6 +15,11 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,6 +207,30 @@ public class QueryTest {
 
         assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
 
+    }
+    
+    @Test
+    public void testTruncation(){
+      
+      Query query = new Query();
+      query.setLimit(Query.MAX_LIMIT*2);
+      
+      assertEquals(Query.MAX_LIMIT, query.getLimit());
+      
+    }
+    
+    
+    @Test
+    public void testTruncationFromParams() throws QueryParseException{
+      
+      HashMap<String, List<String>> params = new HashMap<String, List<String>>();
+      
+      params.put("limit", Collections.singletonList("2000"));
+      
+      Query query = Query.fromQueryParams(params);
+      
+      assertEquals(Query.MAX_LIMIT, query.getLimit());
+      
     }
 
 }
