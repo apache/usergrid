@@ -50,6 +50,13 @@ public class SliceIterator<T> implements ResultIterator {
   private Set<UUID> lastResult;
 
   /**
+   *  counter that's incremented as we load pages. If pages loaded = 1 when
+   *  reset, we don't have to reload from cass
+   */
+ 
+  private int pagesLoaded = 0;
+
+  /**
    * 
    */
   public SliceIterator(IndexScanner scanner, QuerySlice slice, SliceParser<T> parser) {
@@ -84,6 +91,7 @@ public class SliceIterator<T> implements ResultIterator {
 
     return true;
   }
+  
 
   private boolean load() {
     if (!scanner.hasNext()) {
@@ -107,6 +115,8 @@ public class SliceIterator<T> implements ResultIterator {
     }
 
     lastResult = idOrder.keySet();
+    
+    pagesLoaded++;
 
     return lastResult != null && lastResult.size() > 0;
   }
@@ -140,6 +150,11 @@ public class SliceIterator<T> implements ResultIterator {
    */
   @Override
   public void reset() {
+    //Do nothing, we'll just return the first page again
+    if(pagesLoaded == 1){
+      lastResult = idOrder.keySet();
+      return;
+    }
     scanner.reset();
   }
 
@@ -171,7 +186,7 @@ public class SliceIterator<T> implements ResultIterator {
         bytes = ByteBuffer.allocate(0);
       }
       // set it to our first uuid from the new set
-      else{
+      else {
         bytes = cols.get(0);
       }
     }

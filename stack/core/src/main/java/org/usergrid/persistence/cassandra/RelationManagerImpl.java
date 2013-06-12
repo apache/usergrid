@@ -176,10 +176,6 @@ public class RelationManagerImpl implements RelationManager {
   public static final UUIDSerializer ue = new UUIDSerializer();
   public static final LongSerializer le = new LongSerializer();
   private static final UUID NULL_ID = new UUID(0, 0);
-  /**
-   * Max page size when scanning indexes to load at a time
-   */
-  public static final int PAGE_SIZE = Query.MAX_LIMIT;
 
   public RelationManagerImpl() {
   }
@@ -1863,7 +1859,7 @@ public class RelationManagerImpl implements RelationManager {
     return results;
   }
 
-  private IndexScanner searchIndex(Object indexKey, QuerySlice slice) throws Exception {
+  private IndexScanner searchIndex(Object indexKey, QuerySlice slice, int pageSize) throws Exception {
 
     DynamicComposite start = getStart(slice);
 
@@ -1878,7 +1874,7 @@ public class RelationManagerImpl implements RelationManager {
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
-        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), Math.min(10, PAGE_SIZE),
+        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), pageSize,
         slice.getPropertyName());
 
     return scanner;
@@ -1895,7 +1891,7 @@ public class RelationManagerImpl implements RelationManager {
    * @return
    * @throws Exception
    */
-  private IndexScanner searchIndexBuckets(Object indexKey, QuerySlice slice, String collectionName) throws Exception {
+  private IndexScanner searchIndexBuckets(Object indexKey, QuerySlice slice, String collectionName, int pageSize) throws Exception {
 
     DynamicComposite start = getStart(slice);
 
@@ -1910,7 +1906,7 @@ public class RelationManagerImpl implements RelationManager {
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
-        IndexType.COLLECTION, keyPrefix, start, finish, slice.isReversed(), PAGE_SIZE, collectionName);
+        IndexType.COLLECTION, keyPrefix, start, finish, slice.isReversed(), pageSize, collectionName);
 
     return scanner;
 
@@ -2620,7 +2616,7 @@ public class RelationManagerImpl implements RelationManager {
       // level. If so we can just use them as a row key for faster seek
       Object subKey = getCFKeyForSubkey(collection, node);
 
-      IntersectionIterator intersection = new IntersectionIterator(PAGE_SIZE);
+      IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
 
       for (QuerySlice slice : node.getAllSlices()) {
 
@@ -2642,7 +2638,7 @@ public class RelationManagerImpl implements RelationManager {
         }
         // perform the search
         else {
-          columns = searchIndexBuckets(indexKey, slice, collection.getName());
+          columns = searchIndexBuckets(indexKey, slice, collection.getName(), queryProcessor.getPageSizeHint(node));
         }
 
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
@@ -2719,7 +2715,7 @@ public class RelationManagerImpl implements RelationManager {
      */
     @Override
     public void visit(SliceNode node) throws Exception {
-      IntersectionIterator intersection = new IntersectionIterator(PAGE_SIZE);
+      IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
 
       for (QuerySlice slice : node.getAllSlices()) {
 
@@ -2727,7 +2723,7 @@ public class RelationManagerImpl implements RelationManager {
         // operation
         queryProcessor.applyCursorAndSort(slice);
 
-        IndexScanner columns = searchIndex(key(connection.getIndexId(), INDEX_CONNECTIONS), slice);
+        IndexScanner columns = searchIndex(key(connection.getIndexId(), INDEX_CONNECTIONS), slice, queryProcessor.getPageSizeHint(node));
 
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
       }

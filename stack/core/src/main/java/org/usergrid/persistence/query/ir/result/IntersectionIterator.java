@@ -118,7 +118,6 @@ public class IntersectionIterator extends MultiIterator {
       
       //now add the intermediate results and continue
       results.addAll(intersection);
-      
     }
 
     return results;

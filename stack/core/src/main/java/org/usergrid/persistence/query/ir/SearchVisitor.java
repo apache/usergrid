@@ -62,7 +62,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     /**
      * NOTE: TN We should always maintain post order traversal of the tree.  It is required for sorting to work correctly 
      */
-    IntersectionIterator intersection = new IntersectionIterator(RelationManagerImpl.PAGE_SIZE);
+    IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
     intersection.addIterator(left);
     intersection.addIterator(right);
     
@@ -83,7 +83,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     node.getKeepNode().visit(this);
     ResultIterator keep = results.pop();
     
-    SubtractionIterator subtraction = new SubtractionIterator(RelationManagerImpl.PAGE_SIZE);
+    SubtractionIterator subtraction = new SubtractionIterator(queryProcessor.getPageSizeHint(node));
     subtraction.setSubtractIterator(not);
     subtraction.setKeepIterator(keep);
 
@@ -104,7 +104,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     ResultIterator right = results.pop();
     ResultIterator left = results.pop();
 
-    UnionIterator union = new UnionIterator(RelationManagerImpl.PAGE_SIZE);
+    UnionIterator union = new UnionIterator(queryProcessor.getPageSizeHint(node));
 
     if (left != null) {
       union.addIterator(left);

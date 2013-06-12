@@ -19,6 +19,7 @@ import static org.usergrid.persistence.Schema.getDefaultSchema;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
@@ -65,7 +66,7 @@ import org.usergrid.persistence.schema.CollectionInfo;
 
 public class QueryProcessor {
 
-  private static final Logger logger = LoggerFactory.getLogger(QueryProcessor.class);
+  private static final int PAGE_SIZE = 1000;
 
   private Operand rootOperand;
   private List<SortPredicate> sorts;
@@ -75,6 +76,7 @@ public class QueryProcessor {
   private CollectionInfo collectionInfo;
   private int size;
   private Query query;
+  private int pageSizeHint;
 
   public QueryProcessor(Query query, CollectionInfo collectionInfo) throws PersistenceException {
     this.sorts = query.getSortPredicates();
@@ -89,6 +91,8 @@ public class QueryProcessor {
 
   private void process() throws PersistenceException {
 
+    int opCount = 0;
+    
     // no operand. Check for sorts
     if (rootOperand != null) {
       // visit the tree
@@ -98,6 +102,8 @@ public class QueryProcessor {
       rootOperand.visit(visitor);
 
       rootNode = visitor.getRootNode();
+      
+      opCount = visitor.getSliceCount();
     }
 
     // see if we have sorts, if so, we can add them all as a single node at
@@ -105,6 +111,8 @@ public class QueryProcessor {
     if (sorts.size() > 0) {
       
       SliceNode sorts = generateSorts();
+      
+      opCount += sorts.getAllSlices().size();
       
       if(rootNode != null){
         AndNode and = new AndNode(sorts, rootNode);
@@ -115,11 +123,19 @@ public class QueryProcessor {
      
       
     }
+    
+    
 
     
     //if we still don't have a root node, no query nor order by was specified, just use the all node
     if(rootNode == null){
       rootNode = new AllNode(0);
+    }
+    
+    if(opCount > 1){
+      pageSizeHint = PAGE_SIZE;
+    }else{
+      pageSizeHint = size;
     }
   }
 
@@ -224,7 +240,7 @@ public class QueryProcessor {
 
     // stack for nodes that will be used to construct the tree and create
     // objects
-    private Stack<QueryNode> nodes = new Stack<QueryNode>();
+    private CountingStack<QueryNode> nodes = new CountingStack<QueryNode>();
 
     private Schema schema = getDefaultSchema();
 
@@ -534,10 +550,73 @@ public class QueryProcessor {
         throw new NoIndexException(entityType, propertyName);
       }
     }
+    
+    public int getSliceCount(){
+      return nodes.getSliceCount();
+    }
 
   }
+  
+  
+  private static class CountingStack<T> extends Stack<T>{
+
+    private int count = 0;
+    
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /* (non-Javadoc)
+     * @see java.util.Stack#pop()
+     */
+    @Override
+    public synchronized T pop() {
+      T entry = super.pop();
+      
+      if(entry instanceof SliceNode){
+        count += ((SliceNode)entry).getAllSlices().size();
+      }
+      
+      return entry;
+    }
+    
+    
+    public int getSliceCount(){
+      
+      Iterator<T> itr = this.iterator();
+      
+      T entry;
+      
+      while(itr.hasNext()){
+        entry = itr.next();
+        
+        if(entry instanceof SliceNode){
+          count += ((SliceNode)entry).getAllSlices().size();
+        }
+      }
+      
+      return count;
+      
+    }
+    
+    
+    
+  }
+  
 
   
+
+  /**
+   * @return the pageSizeHint
+   */
+  public int getPageSizeHint(QueryNode node) {
+    if(node == rootNode){
+      return size;
+    }
+    
+    return pageSizeHint;
+  }
 
   /**
    * Generate a slice node with scan ranges for all the properties in our sort

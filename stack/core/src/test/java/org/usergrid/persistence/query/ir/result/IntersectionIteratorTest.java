@@ -231,6 +231,64 @@ public class IntersectionIteratorTest {
     assertFalse(intersection.hasNext());
     assertFalse(expected.hasNext());
   }
+  
+  
+  /**
+   * Tests that when there are multiple iterators, and one in the "middle" of the list returns no results, it will short circuit since no results will be 
+   * possible
+   */
+  @Test
+  public void mutipleIteratorsNoIntersection() {
+
+    UUID id1 = UUIDUtils.minTimeUUID(1);
+    UUID id2 = UUIDUtils.minTimeUUID(2);
+    UUID id3 = UUIDUtils.minTimeUUID(3);
+    UUID id4 = UUIDUtils.minTimeUUID(4);
+    UUID id5 = UUIDUtils.minTimeUUID(5);
+    UUID id6 = UUIDUtils.minTimeUUID(6);
+    UUID id7 = UUIDUtils.minTimeUUID(7);
+    UUID id8 = UUIDUtils.minTimeUUID(8);
+    UUID id9 = UUIDUtils.minTimeUUID(9);
+    UUID id10 = UUIDUtils.minTimeUUID(10);
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator first = new InOrderIterator(100);
+    first.add(id1);
+    first.add(id2);
+    first.add(id3);
+    first.add(id8);
+    first.add(id9);
+
+    InOrderIterator second = new InOrderIterator(100);
+    second.add(id1);
+    second.add(id2);
+    second.add(id3);
+    second.add(id4);
+    second.add(id8);
+    second.add(id10);
+
+    InOrderIterator third = new InOrderIterator(100);
+
+    InOrderIterator fourth = new InOrderIterator(100);
+    fourth.add(id1);
+    fourth.add(id2);
+    fourth.add(id3);
+    fourth.add(id6);
+    fourth.add(id8);
+    fourth.add(id10);
+
+    IntersectionIterator intersection = new IntersectionIterator(100);
+    intersection.addIterator(first);
+    intersection.addIterator(second);
+    intersection.addIterator(third);
+    intersection.addIterator(fourth);
+    
+    Iterator<UUID> union = intersection.next().iterator();
+
+    // now make sure it's right, only 1, 3 and 8 intersect
+    assertFalse(union.hasNext());
+  }
+
 
   private void reverse(UUID[] array){
     
