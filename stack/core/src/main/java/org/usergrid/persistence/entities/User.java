@@ -105,6 +105,17 @@ public class User extends TypedEntity {
 	@EntityCollection(type = "role", linkedCollection = "users", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
+  @EntityDictionary(keyType = String.class, valueType = CredentialsInfo.class)
+  protected Map<String, CredentialsInfo> credentialsHistory;
+
+  public Map<String, CredentialsInfo> getCredentialsHistory() {
+    return credentialsHistory;
+  }
+
+  public void setCredentialsHistory(Map<String, CredentialsInfo> credentialsHistory) {
+    this.credentialsHistory = credentialsHistory;
+  }
+
   public User() {
 		// id = UUIDUtils.newTimeUUID();
 	}

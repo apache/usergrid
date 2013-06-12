@@ -61,11 +61,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIV
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.usergrid.persistence.Schema.PROPERTY_SECRET;
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.usergrid.persistence.Schema.*;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
@@ -90,6 +86,7 @@ import static org.usergrid.security.tokens.TokenCategory.EMAIL;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.services.ServiceResults.genericServiceResults;
+import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
@@ -97,16 +94,11 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import static org.usergrid.utils.PasswordUtils.mongoPassword;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
@@ -121,13 +113,7 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.DisabledAppUserException;
-import org.usergrid.management.exceptions.IncorrectPasswordException;
-import org.usergrid.management.exceptions.ManagementException;
-import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
-import org.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.usergrid.management.exceptions.UnactivatedAppUserException;
+import org.usergrid.management.exceptions.*;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
@@ -189,6 +175,8 @@ public class ManagementServiceImpl implements ManagementService {
    * Key for the user's password
    */
   protected static final String USER_PASSWORD = "password";
+
+  protected static final String USER_PASSWORD_HISTORY = "password_history";
 
   private static final String TOKEN_TYPE_ACTIVATION = "activate";
 
@@ -1053,22 +1041,79 @@ public class ManagementServiceImpl implements ManagementService {
     setAdminUserPassword(userId, newPassword);
   }
 
+  private static final String CREDENTIALS_HISTORY = "credentialsHistory";
+
   @Override
   public void setAdminUserPassword(UUID userId, String newPassword) throws Exception {
 
-    if ((userId == null) || (newPassword == null)) {
-      return;
+    if ((userId == null) || (newPassword == null)) { return; }
+
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    User user = em.get(userId, User.class);
+
+    CredentialsInfo newCredentials =
+        encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), MANAGEMENT_APPLICATION_ID);
+
+    int passwordHistorySize = calculatePasswordHistorySizeForUser(user.getUuid());
+    Map<String,CredentialsInfo> credsMap = cast(em.getDictionaryAsMap(user, CREDENTIALS_HISTORY));
+
+    CredentialsInfo currentCredentials = null;
+    if (passwordHistorySize > 0) {
+      ArrayList<CredentialsInfo> oldCreds = new ArrayList<CredentialsInfo>(credsMap.values());
+      Collections.sort(oldCreds);
+
+      currentCredentials = readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, user.getUuid());
+
+      // check credential history
+      if (encryptionService.verify(newPassword, currentCredentials, userId, MANAGEMENT_APPLICATION_ID)) {
+        throw new RecentlyUsedPasswordException();
+      }
+      for (int i = 0; i < oldCreds.size() && i < passwordHistorySize; i++) {
+        CredentialsInfo ci = oldCreds.get(i);
+        if (encryptionService.verify(newPassword, ci, userId, MANAGEMENT_APPLICATION_ID)) {
+          throw new RecentlyUsedPasswordException();
+        }
+      }
     }
 
-    User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
+    // remove excess history
+    ArrayList<UUID> oldUUIDs = new ArrayList<UUID>(credsMap.size());
+    for (String uuid : credsMap.keySet()) { oldUUIDs.add(UUID.fromString(uuid)); }
+    Collections.sort(oldUUIDs);
+    for (int i = passwordHistorySize; i < oldUUIDs.size(); i++) {
+      em.removeFromDictionary(user, CREDENTIALS_HISTORY, oldUUIDs.get(i).toString());
+    }
 
-    writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-        encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), MANAGEMENT_APPLICATION_ID));
+    if (passwordHistorySize > 0) {
+      UUID uuid = UUIDUtils.generator.generate();
+      em.addToDictionary(user, CREDENTIALS_HISTORY, uuid.toString(), currentCredentials);
+    }
+
+    writeUserPassword(MANAGEMENT_APPLICATION_ID, user, newCredentials);
     writeUserMongoPassword(
-        MANAGEMENT_APPLICATION_ID,
-        user,
-        encryptionService.plainTextCredentials(mongoPassword((String) user.getProperty("username"), newPassword),
+        MANAGEMENT_APPLICATION_ID, user,
+        encryptionService.plainTextCredentials(
+            mongoPassword((String) user.getProperty("username"), newPassword),
             user.getUuid(), MANAGEMENT_APPLICATION_ID));
+
+  }
+
+  public int calculatePasswordHistorySizeForUser(UUID userId) throws Exception {
+
+    int size = 0;
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+    Results orgResults = em.getCollection(new SimpleEntityRef(User.ENTITY_TYPE, userId),
+        "groups", null, 10000, Level.REFS, false);
+
+    for (EntityRef orgRef: orgResults.getRefs()) {
+      Map properties = em.getDictionaryAsMap(orgRef, ORGANIZATION_PROPERTIES_DICTIONARY);
+      if (properties != null) {
+        size = Math.max(new OrganizationInfo(null, null, properties).getPasswordHistorySize(), size);
+      }
+    }
+
+    return size;
   }
 
   @Override
@@ -2585,6 +2630,12 @@ public class ManagementServiceImpl implements ManagementService {
     EntityManager em = emf.getEntityManager(appId);
     Entity owner = em.get(ownerId);
     return (CredentialsInfo) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, key);
+  }
+
+  private Set<CredentialsInfo> readUserPasswordHistory(UUID appId, UUID ownerId) throws Exception {
+    EntityManager em = emf.getEntityManager(appId);
+    Entity owner = em.get(ownerId);
+    return (Set<CredentialsInfo>) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY);
   }
 
   @Override
