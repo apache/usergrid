@@ -105,6 +105,7 @@ public class User extends TypedEntity {
 	@EntityCollection(type = "role", linkedCollection = "users", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
+  @JsonIgnore
   @EntityDictionary(keyType = String.class, valueType = CredentialsInfo.class)
   protected Map<String, CredentialsInfo> credentialsHistory;
 

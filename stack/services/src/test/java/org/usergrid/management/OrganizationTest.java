@@ -116,10 +116,10 @@ public class OrganizationTest {
 
     String[] passwords = new String[] {"password1", "password2", "password3", "password4"};
 
-    UserInfo user = management.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
+    UserInfo user = management.createAdminUser("edanuff2", "Ed Anuff", "ed2@anuff.com", passwords[0], true, false);
     assertNotNull(user);
 
-    OrganizationInfo organization = management.createOrganization("ed-organization", user, true);
+    OrganizationInfo organization = management.createOrganization("ed-organization2", user, true);
     assertNotNull(organization);
 
     // no history, no problem
@@ -138,21 +138,21 @@ public class OrganizationTest {
     management.setAdminUserPassword(user.getUuid(), passwords[2]); // ok
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[0]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[1]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[2]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
     management.setAdminUserPassword(user.getUuid(), passwords[3]); // ok
     management.setAdminUserPassword(user.getUuid(), passwords[0]); // ok
@@ -166,14 +166,14 @@ public class OrganizationTest {
     management.setAdminUserPassword(user.getUuid(), passwords[1]); // ok
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[0]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
 
     // test history size w/ user belonging to 2 orgs
 
-    OrganizationInfo organization2 = management.createOrganization("ed-organization2", user, false);
+    OrganizationInfo organization2 = management.createOrganization("ed-organization3", user, false);
     assertNotNull(organization);
 
     Map<UUID, String> userOrganizations = management.getOrganizationsForAdminUser(user.getUuid());
@@ -186,28 +186,28 @@ public class OrganizationTest {
 
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[1]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[0]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
     management.setAdminUserPassword(user.getUuid(), passwords[2]);
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[0]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
     try {
       management.setAdminUserPassword(user.getUuid(), passwords[1]);
-      fail("No!");
+      fail("password change should fail");
     } catch (RecentlyUsedPasswordException e) {
-      // yup
+      // ok
     }
   }
 

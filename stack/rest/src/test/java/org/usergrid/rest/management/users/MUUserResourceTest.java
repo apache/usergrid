@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,12 +14,14 @@ import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestTest;
 
@@ -112,7 +115,7 @@ public class MUUserResourceTest extends AbstractRestTest {
     }
 
   @Test
-  @Ignore("Scott, doens't run in maven build env.  Need to resolve jstl classloading issue")
+  @Ignore("Doesn't run in maven build env.  Need to resolve jstl classloading issue")
   public void checkPasswordReset() throws Exception {
 
     String email = "test@usergrid.com";
@@ -143,4 +146,58 @@ public class MUUserResourceTest extends AbstractRestTest {
     assertTrue(html.contains("invalid token"));
   }
 
+  @Test
+  public void checkPasswordHistoryConflict() throws Exception {
+
+    String[] passwords = new String[] {"password1", "password2", "password3", "password4"};
+
+    UserInfo user = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
+    assertNotNull(user);
+
+    OrganizationInfo organization = managementService.createOrganization("ed-organization", user, true);
+    assertNotNull(organization);
+
+    // set history to 1
+    Map<String,Object> props = new HashMap<String,Object>();
+    props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 1);
+    organization.setProperties(props);
+    managementService.updateOrganization(organization);
+
+    UserInfo userInfo = managementService.getAdminUserByEmail("ed@anuff.com");
+
+    Map<String, String> payload =
+        hashMap("oldpassword", passwords[0])
+           .map("newpassword", passwords[0]); // fail
+
+    try {
+      JsonNode node = resource()
+          .path("/management/users/edanuff/password")
+          .accept(MediaType.APPLICATION_JSON)
+          .type(MediaType.APPLICATION_JSON_TYPE)
+          .post(JsonNode.class, payload);
+      fail("should fail with conflict");
+    } catch (UniformInterfaceException e) {
+      assertEquals(409, e.getResponse().getStatus());
+    }
+
+    payload.put("newpassword", passwords[1]); // ok
+    JsonNode node = resource()
+        .path("/management/users/edanuff/password")
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .post(JsonNode.class, payload);
+    payload.put("oldpassword", passwords[1]);
+
+    payload.put("newpassword", passwords[0]); // fail
+    try {
+      node = resource()
+          .path("/management/users/edanuff/password")
+          .accept(MediaType.APPLICATION_JSON)
+          .type(MediaType.APPLICATION_JSON_TYPE)
+          .post(JsonNode.class, payload);
+      fail("should fail with conflict");
+    } catch (UniformInterfaceException e) {
+      assertEquals(409, e.getResponse().getStatus());
+    }
+  }
 }
