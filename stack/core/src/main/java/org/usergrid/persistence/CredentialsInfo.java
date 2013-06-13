@@ -26,7 +26,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 @XmlRootElement
-public class CredentialsInfo {
+public class CredentialsInfo implements Comparable<CredentialsInfo> {
 
   boolean recoverable;
   boolean encrypted;
@@ -34,6 +34,7 @@ public class CredentialsInfo {
   String key;
   String secret;
   String hashType;
+  Long created;
 
   /**
    * A list of crypto algorithms to apply to unecrypted input for comparison.
@@ -44,6 +45,7 @@ public class CredentialsInfo {
   protected Map<String, Object> properties = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
 
   public CredentialsInfo() {
+    created = System.currentTimeMillis();
   }
 
   
@@ -108,7 +110,7 @@ public class CredentialsInfo {
     properties.put(key, value);
   }
 
-  
+
   public Object getProperty(String key) {
     return properties.get(key);
   }
@@ -146,4 +148,18 @@ public class CredentialsInfo {
     this.cryptoChain = cryptoChain;
   }
 
+  public Long getCreated() {
+    return created;
+  }
+
+  @Override
+  public int compareTo(CredentialsInfo o) {
+    if (created == o.created) {
+      return 0;
+    }
+    if (o.created == null) {
+      return 1;
+    }
+    return o.created.compareTo(created);
+  }
 }

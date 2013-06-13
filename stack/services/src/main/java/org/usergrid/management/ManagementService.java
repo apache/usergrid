@@ -319,6 +319,8 @@ public interface ManagementService {
 	public String getAccessTokenForAppUser(UUID applicationId, UUID userId, long duration)
 			throws Exception;
 
+  public Long getLastAdminPasswordChange(UUID userId) throws Exception;
+
 	/**
      * Revoke all active access tokens for this admin user
      * @param userId

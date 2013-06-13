@@ -35,6 +35,7 @@ public class AccessInfo {
 	String refreshToken;
 	String scope;
 	String state;
+  Long passwordChanged;
 
 	protected Map<String, Object> properties = new TreeMap<String, Object>(
 			String.CASE_INSENSITIVE_ORDER);
@@ -148,5 +149,15 @@ public class AccessInfo {
 		properties.put(key, value);
 		return this;
 	}
+
+  @JsonSerialize(include = Inclusion.NON_NULL)
+  public Long getPasswordChanged() {
+    return passwordChanged;
+  }
+
+  public AccessInfo withPasswordChanged(Long lastPasswordChange) {
+    this.passwordChanged = lastPasswordChange;
+    return this;
+  }
 
 }
