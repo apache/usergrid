@@ -98,7 +98,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
@@ -1332,11 +1331,21 @@ public class ManagementServiceImpl implements ManagementService {
   }
 
   @Override
+  public Long getLastAdminPasswordChange(UUID userId) throws Exception {
+    CredentialsInfo ci = readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId);
+    return ci.getCreated();
+  }
+
+  @Override
   public Map<String, Object> getAdminUserOrganizationData(UserInfo user) throws Exception {
 
     Map<String, Object> json = new HashMap<String, Object>();
 
     json.putAll(JsonUtils.toJsonMap(user));
+
+//    CredentialsInfo ci = readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, user.getUuid());
+//    json.put("passwordChanged", ci.getCreated());
+
     // json.put(PROPERTY_UUID, user.getUuid());
     // json.put(PROPERTY_NAME, user.getName());
     // json.put(PROPERTY_EMAIL, user.getEmail());
@@ -1706,7 +1715,8 @@ public class ManagementServiceImpl implements ManagementService {
         OrganizationInfo organization = getOrganizationByUuid(uuid);
         access_info = new AccessInfo().withExpiresIn(3600)
             .withAccessToken(getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
-            .withProperty("organization", getOrganizationData(organization));
+            .withProperty("organization", getOrganizationData(organization))
+            .withPasswordChanged(getLastAdminPasswordChange(uuid));
       }
     }
     return access_info;

@@ -200,4 +200,64 @@ public class MUUserResourceTest extends AbstractRestTest {
       assertEquals(409, e.getResponse().getStatus());
     }
   }
+
+  @Test
+//  @Ignore("because of that jstl classloader error thing")
+  public void checkPasswordChangeTime() throws Exception {
+
+    String email = "test@usergrid.com";
+    UserInfo userInfo = managementService.getAdminUserByEmail(email);
+    String resetToken = managementService.getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+
+    Form formData = new Form();
+    formData.add("token", resetToken);
+    formData.add("password1", "sesame");
+    formData.add("password2", "sesame");
+
+    String html = resource()
+        .path("/management/users/" + userInfo.getUsername() + "/resetpw")
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .post(String.class, formData);
+    assertTrue(html.contains("password set"));
+
+    JsonNode node = resource().path("/management/token")
+        .queryParam("grant_type", "password")
+        .queryParam("username", email)
+        .queryParam("password", "sesame")
+        .accept(MediaType.APPLICATION_JSON)
+        .get(JsonNode.class);
+
+    Long changeTime = node.get("passwordChanged").getLongValue();
+    assertTrue(System.currentTimeMillis() - changeTime < 2000);
+
+    Map<String, String> payload =
+        hashMap("oldpassword", "sesame")
+            .map("newpassword", "test");
+    node = resource()
+        .path("/management/users/" + userInfo.getUsername() + "/password")
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .post(JsonNode.class, payload);
+
+    node = resource().path("/management/token")
+        .queryParam("grant_type", "password")
+        .queryParam("username", email)
+        .queryParam("password", "test")
+        .accept(MediaType.APPLICATION_JSON)
+        .get(JsonNode.class);
+
+    Long changeTime2 = node.get("passwordChanged").getLongValue();
+    assertTrue(changeTime < changeTime2);
+    assertTrue(System.currentTimeMillis() - changeTime2 < 2000);
+
+    node = resource().path("/management/me")
+        .queryParam("grant_type", "password")
+        .queryParam("username", email)
+        .queryParam("password", "test")
+        .accept(MediaType.APPLICATION_JSON)
+        .get(JsonNode.class);
+
+    Long changeTime3 = node.get("passwordChanged").getLongValue();
+    assertEquals(changeTime2, changeTime3);
+  }
 }
