@@ -202,7 +202,7 @@ public class MUUserResourceTest extends AbstractRestTest {
   }
 
   @Test
-//  @Ignore("because of that jstl classloader error thing")
+  @Ignore("because of that jstl classloader error thing")
   public void checkPasswordChangeTime() throws Exception {
 
     String email = "test@usergrid.com";
