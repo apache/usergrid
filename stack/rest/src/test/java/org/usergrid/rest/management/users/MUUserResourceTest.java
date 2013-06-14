@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.management.organizations.OrganizationsResource;
 
 /**
  * @author zznate
@@ -75,7 +76,34 @@ public class MUUserResourceTest extends AbstractRestTest {
         logNode(node);
     }
 
-    @Test
+  @Test
+  public void getUser() throws Exception {
+
+    // set an organization property
+    HashMap<String,Object> payload = new HashMap<String,Object>();
+    Map<String, Object> properties = new HashMap<String,Object>();
+    properties.put("securityLevel", 5);
+    payload.put(OrganizationsResource.ORGANIZATION_PROPERTIES, properties);
+    JsonNode node = resource().path("/management/organizations/test-organization")
+        .queryParam("access_token", superAdminToken())
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .put(JsonNode.class, payload);
+
+    // ensure the organization property is included
+    node = resource().path("/management/users/test@usergrid.com")
+        .queryParam("access_token",adminAccessToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    logNode(node);
+
+    JsonNode securityLevel = node.findValue("securityLevel");
+    assertNotNull(securityLevel);
+    assertEquals(5L, securityLevel.asLong());
+  }
+
+  @Test
     public void reactivateMultipleSend() throws Exception {
 
         JsonNode node = resource().path("/management/organizations")
