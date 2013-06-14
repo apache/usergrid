@@ -1343,14 +1343,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     json.putAll(JsonUtils.toJsonMap(user));
 
-//    CredentialsInfo ci = readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, user.getUuid());
-//    json.put("passwordChanged", ci.getCreated());
-
-    // json.put(PROPERTY_UUID, user.getUuid());
-    // json.put(PROPERTY_NAME, user.getName());
-    // json.put(PROPERTY_EMAIL, user.getEmail());
-    // json.put(PROPERTY_USERNAME, user.getUsername());
-
     Map<String, Map<String, Object>> jsonOrganizations = new HashMap<String, Map<String, Object>>();
     json.put("organizations", jsonOrganizations);
 
@@ -1371,6 +1363,7 @@ public class ManagementServiceImpl implements ManagementService {
 
       jsonOrganization.put(PROPERTY_NAME, organization.getValue());
       jsonOrganization.put(PROPERTY_UUID, organization.getKey());
+      jsonOrganization.put("properties", getOrganizationByUuid(organization.getKey()).getProperties());
 
       BiMap<UUID, String> applications = getApplicationsForOrganization(organization.getKey());
       jsonOrganization.put("applications", applications.inverse());

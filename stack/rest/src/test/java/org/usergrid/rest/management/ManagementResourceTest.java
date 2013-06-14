@@ -35,6 +35,7 @@ import org.usergrid.rest.AbstractRestTest;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import org.usergrid.rest.management.organizations.OrganizationsResource;
 
 /**
  * @author tnine
@@ -143,7 +144,7 @@ public class ManagementResourceTest extends AbstractRestTest {
     public void crossOrgsNotViewable() throws Exception {
 
         OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("crossOrgsNotViewable",
-                "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
+            "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
 
         // check that the test admin cannot access the new org info
 
@@ -277,7 +278,38 @@ public class ManagementResourceTest extends AbstractRestTest {
 
     }
 
-    @Test
+  @Test
+  public void token() throws Exception {
+    JsonNode node = resource().path("/management/token").queryParam("grant_type", "password")
+        .queryParam("username", "test@usergrid.com").queryParam("password", "test")
+        .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+    logNode(node);
+    String token = node.get("access_token").getTextValue();
+    assertNotNull(token);
+
+    // set an organization property
+    HashMap<String,Object> payload = new HashMap<String,Object>();
+    Map<String, Object> properties = new HashMap<String,Object>();
+    properties.put("securityLevel", 5);
+    payload.put(OrganizationsResource.ORGANIZATION_PROPERTIES, properties);
+    node = resource().path("/management/organizations/test-organization")
+        .queryParam("access_token", superAdminToken())
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .put(JsonNode.class, payload);
+
+    // ensure the organization property is included
+    node = resource().path("/management/token").queryParam("access_token", token)
+        .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+    logNode(node);
+
+    JsonNode securityLevel = node.findValue("securityLevel");
+    assertNotNull(securityLevel);
+    assertEquals(5L, securityLevel.asLong());
+  }
+
+  @Test
     public void meToken() throws Exception {
       JsonNode node = resource().path("/management/me").queryParam("grant_type", "password")
               .queryParam("username", "test@usergrid.com").queryParam("password", "test")
