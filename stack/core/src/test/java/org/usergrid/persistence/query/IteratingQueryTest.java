@@ -57,6 +57,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int queryLimit = Query.MAX_LIMIT;
 
     long start = System.currentTimeMillis();
+    
+    logger.info("Writing {} entities.", size);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -114,6 +116,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int intersectIncrement = 5;
 
     long start = System.currentTimeMillis();
+    
+    logger.info("Writing {} entities.", size);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -172,7 +176,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     EntityManager em = emf.getEntityManager(applicationId);
     assertNotNull(em);
 
-    int size = 2000;
+    int size = 20000;
     int queryLimit = Query.MAX_LIMIT;
 
     // the number of entities that should be written including an intersection
@@ -181,9 +185,9 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     long start = System.currentTimeMillis();
     
-    int maxPossibleResults = size / secondIncrement;
+    logger.info("Writing {} entities.", size);
     
-    List<String> expectedResults = new ArrayList<String>(maxPossibleResults);
+    List<String> expectedResults = new ArrayList<String>(size/secondIncrement);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -238,7 +242,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     logger.info("Query took {} ms", stop - start);
 
-    assertEquals(maxPossibleResults, count);
+    assertEquals(expectedResults.size(), count);
   }
   
   @Test
@@ -256,6 +260,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
+    
+    logger.info("Writing {} entities.", size);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -292,6 +298,80 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     assertEquals(0, results.size());
   }
   
+  
+  @Test
+  public void singleOrderByComplexUnion() throws Exception {
+    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByComplexUnion");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    int size = 200;
+    int queryLimit = Query.MAX_LIMIT;
+
+    // the number of entities that should be written including an intersection
+    int intersectIncrement = 5;
+    int secondIncrement = 9;
+
+    long start = System.currentTimeMillis();
+    
+    logger.info("Writing {} entities.", size);
+    
+    List<String> expectedResults = new ArrayList<String>(size/secondIncrement);
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> entity = new HashMap<String, Object>();
+      
+      String name =  String.valueOf(i);
+      boolean intersect1 =  i % intersectIncrement == 0;
+      boolean intersect2 = i % secondIncrement == 0;
+      entity.put("name",name);
+      // if we hit the increment, set this to true
+      
+      entity.put("intersect", intersect1);
+      entity.put("intersect2", intersect2);
+      em.create("test", entity);
+      
+      if(intersect1 || intersect2){
+        expectedResults.add(name);
+      }
+
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL("select * where intersect = true AND intersect2 = true order by created");
+    query.setLimit(queryLimit);
+
+    int count = 0;
+
+    Results results;
+
+    start = System.currentTimeMillis();
+
+    do {
+
+      // now do simple ordering, should be returned in order
+      results = em.searchCollection(em.getApplicationRef(), "tests", query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expectedResults.get(count), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.getCursor() != null);
+
+    stop = System.currentTimeMillis();
+
+    logger.info("Query took {} ms", stop - start);
+
+    assertEquals(expectedResults.size(), count);
+  }
   
   
 

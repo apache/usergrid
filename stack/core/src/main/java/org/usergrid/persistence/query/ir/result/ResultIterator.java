@@ -24,13 +24,15 @@ import org.usergrid.persistence.cassandra.CursorCache;
 /**
  * Interface for iterating slice results per node.  This is to be used to iterate and join or intersect values
  * Each iterator element is a set.  Each set size is determined by the underlying implementation.  When no sets of uuids are left
- * the iterator should fail the next statement 
+ * the iterator should fail the next statement.  Note that you should not rely on the returned set being exactly the same size as the 
+ * specified page size.  Valid sets can be returned with size >= that of the set value in the underlying implementation
  * 
  * 
  * @author tnine
  *
  */
 public interface ResultIterator extends Iterable<Set<UUID>>, Iterator<Set<UUID>> {
+  
   
   
   /**
