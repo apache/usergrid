@@ -343,7 +343,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     logger.info("Writes took {} ms", stop - start);
 
-    Query query = Query.fromQL("select * where intersect = true AND intersect2 = true order by created");
+    Query query = Query.fromQL("select * where intersect = true OR intersect2 = true order by created");
     query.setLimit(queryLimit);
 
     int count = 0;
