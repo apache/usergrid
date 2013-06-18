@@ -216,7 +216,10 @@ public class QueryProcessor {
     if(entityIds.size() > 0){
       int resultSize = Math.min(entityIds.size(), size);
       entityIds = entityIds.subList(0, resultSize);
-      itr.finalizeCursor(resultsCursor, entityIds.get(resultSize-1));
+      
+      if(resultSize == size){
+        itr.finalizeCursor(resultsCursor, entityIds.get(resultSize-1));
+      }
     }
     
     Results results = loader.getResults(entityIds);

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -58,7 +59,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int queryLimit = Query.MAX_LIMIT;
 
     long start = System.currentTimeMillis();
-    
+
     logger.info("Writing {} entities.", size);
 
     for (int i = 0; i < size; i++) {
@@ -117,24 +118,24 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int intersectIncrement = 5;
 
     long start = System.currentTimeMillis();
-    
-    List<String> expected = new ArrayList<String>(size/intersectIncrement);
-    
+
+    List<String> expected = new ArrayList<String>(size / intersectIncrement);
+
     logger.info("Writing {} entities.", size);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
-      
+
       String name = String.valueOf(i);
-      
+
       boolean intersect = i % intersectIncrement == 0;
-      
+
       entity.put("name", String.valueOf(i));
       // if we hit the increment, set this to true
-      entity.put("intersect", intersect );
+      entity.put("intersect", intersect);
       em.create("test", entity);
-      
-      if(intersect){
+
+      if (intersect) {
         expected.add(name);
       }
 
@@ -150,7 +151,6 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     query.setLimit(queryLimit);
 
     int count = 0;
-
 
     Results results;
 
@@ -193,25 +193,25 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
-    
+
     logger.info("Writing {} entities.", size);
-    
-    List<String> expectedResults = new ArrayList<String>(size/secondIncrement);
+
+    List<String> expectedResults = new ArrayList<String>(size / secondIncrement);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
-      
-      String name =  String.valueOf(i);
-      boolean intersect1 =  i % intersectIncrement == 0;
+
+      String name = String.valueOf(i);
+      boolean intersect1 = i % intersectIncrement == 0;
       boolean intersect2 = i % secondIncrement == 0;
-      entity.put("name",name);
+      entity.put("name", name);
       // if we hit the increment, set this to true
-      
+
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
       em.create("test", entity);
-      
-      if(intersect1 && intersect2){
+
+      if (intersect1 && intersect2) {
         expectedResults.add(name);
       }
 
@@ -253,7 +253,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-  
+
   @Test
   public void singleOrderByNoIntersection() throws Exception {
     UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByNoIntersection");
@@ -269,7 +269,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
-    
+
     logger.info("Writing {} entities.", size);
 
     for (int i = 0; i < size; i++) {
@@ -288,26 +288,24 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     Query query = new Query();
     query.addSort("created");
-    //nothing will ever match this, the search should short circuit
+    // nothing will ever match this, the search should short circuit
     query.addEqualityFilter("intersect", true);
     query.addEqualityFilter("intersect2", true);
     query.setLimit(queryLimit);
 
     start = System.currentTimeMillis();
-    
-    Results  results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
+    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
-      // now do simple ordering, should be returned in order
-   
+    // now do simple ordering, should be returned in order
+
     stop = System.currentTimeMillis();
 
     logger.info("Query took {} ms to return {} entities", stop - start, 0);
 
     assertEquals(0, results.size());
   }
-  
-  
+
   @Test
   public void singleOrderByComplexUnion() throws Exception {
     UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByComplexUnion");
@@ -324,25 +322,25 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
-    
+
     logger.info("Writing {} entities.", size);
-    
-    List<String> expectedResults = new ArrayList<String>(size/secondIncrement);
+
+    List<String> expectedResults = new ArrayList<String>(size / secondIncrement);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
-      
-      String name =  String.valueOf(i);
-      boolean intersect1 =  i % intersectIncrement == 0;
+
+      String name = String.valueOf(i);
+      boolean intersect1 = i % intersectIncrement == 0;
       boolean intersect2 = i % secondIncrement == 0;
-      entity.put("name",name);
+      entity.put("name", name);
       // if we hit the increment, set this to true
-      
+
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
       em.create("test", entity);
-      
-      if(intersect1 || intersect2){
+
+      if (intersect1 || intersect2) {
         expectedResults.add(name);
       }
 
@@ -381,9 +379,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-  
-  
-  
+
   @Test
   public void singleOrderByNot() throws Exception {
     UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByNot");
@@ -400,25 +396,25 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
-    
+
     logger.info("Writing {} entities.", size);
-    
-    List<String> expectedResults = new ArrayList<String>(size/secondIncrement);
+
+    List<String> expectedResults = new ArrayList<String>(size / secondIncrement);
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
-      
-      String name =  String.valueOf(i);
-      boolean intersect1 =  i % intersectIncrement == 0;
+
+      String name = String.valueOf(i);
+      boolean intersect1 = i % intersectIncrement == 0;
       boolean intersect2 = i % secondIncrement == 0;
-      entity.put("name",name);
+      entity.put("name", name);
       // if we hit the increment, set this to true
-      
+
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
       em.create("test", entity);
-      
-      if(!(intersect1 && intersect2)){
+
+      if (!(intersect1 && intersect2)) {
         expectedResults.add(name);
       }
 
@@ -457,6 +453,71 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-  
+
+  @Test
+  public void singleOrderByLessThanLimit() throws Exception {
+
+    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByLessThanLimit");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    int size = 500;
+    int queryLimit = Query.MAX_LIMIT;
+
+    int matchMax = queryLimit - 1;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(matchMax);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+      boolean searched = i < matchMax;
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("searched", searched);
+      em.create("test", entity);
+
+      if (searched) {
+        expected.add(name);
+      }
+
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = new Query();
+    query.addSort("created");
+    query.setLimit(queryLimit);
+    query.addEqualityFilter("searched", true);
+
+    int count = 0;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
+
+    for (int i = 0; i < results.size(); i++) {
+      assertEquals(expected.get(count), results.getEntities().get(i).getName());
+      count++;
+    }
+
+    assertTrue(results.getCursor() == null);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+    assertEquals(expected.size(), count);
+
+  }
 
 }
