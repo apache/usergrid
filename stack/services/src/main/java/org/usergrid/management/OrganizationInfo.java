@@ -27,8 +27,11 @@ import java.util.UUID;
 
 public class OrganizationInfo {
 
+  public static final String PASSWORD_HISTORY_SIZE_KEY = "passwordHistorySize";
+
 	private UUID id;
 	private String name;
+  private Map<String,Object> properties;
 
 	public OrganizationInfo() {
 	}
@@ -43,7 +46,12 @@ public class OrganizationInfo {
 		name = (String) properties.get(PROPERTY_PATH);
 	}
 
-	public UUID getUuid() {
+  public OrganizationInfo(UUID id, String name, Map<String,Object> properties) {
+    this(id, name);
+    this.properties = properties;
+  }
+
+  public UUID getUuid() {
 		return id;
 	}
 	
@@ -58,6 +66,21 @@ public class OrganizationInfo {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+  public int getPasswordHistorySize() {
+    int size = 0;
+    if (properties != null) {
+      Object sizeValue = properties.get(PASSWORD_HISTORY_SIZE_KEY);
+      if (sizeValue instanceof Number) {
+        size = ((Number)sizeValue).intValue();
+      } else if (sizeValue instanceof String) {
+        try {
+          size = Integer.parseInt((String)sizeValue);
+        } catch (NumberFormatException e) { /* ignore */ }
+      }
+    }
+    return size;
+  }
 
 	public static List<OrganizationInfo> fromNameIdMap(Map<String, UUID> map) {
 		List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
@@ -129,4 +152,11 @@ public class OrganizationInfo {
 		return true;
 	}
 
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+  }
 }

@@ -61,12 +61,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIV
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.usergrid.persistence.Schema.PROPERTY_SECRET;
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.usergrid.persistence.Schema.*;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
@@ -91,6 +86,7 @@ import static org.usergrid.security.tokens.TokenCategory.EMAIL;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.services.ServiceResults.genericServiceResults;
+import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
@@ -98,17 +94,8 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import static org.usergrid.utils.PasswordUtils.mongoPassword;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -125,20 +112,13 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.DisabledAppUserException;
-import org.usergrid.management.exceptions.IncorrectPasswordException;
-import org.usergrid.management.exceptions.ManagementException;
-import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
-import org.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.usergrid.management.exceptions.UnactivatedAppUserException;
+import org.usergrid.management.exceptions.*;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
-import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
@@ -162,7 +142,6 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
-import org.usergrid.security.tokens.exceptions.BadTokenException;
 import org.usergrid.security.tokens.exceptions.TokenException;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -173,11 +152,6 @@ import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -201,6 +175,8 @@ public class ManagementServiceImpl implements ManagementService {
    */
   protected static final String USER_PASSWORD = "password";
 
+  protected static final String USER_PASSWORD_HISTORY = "password_history";
+
   private static final String TOKEN_TYPE_ACTIVATION = "activate";
 
   private static final String TOKEN_TYPE_PASSWORD_RESET = "resetpw";
@@ -214,6 +190,8 @@ public class ManagementServiceImpl implements ManagementService {
   private static final Logger logger = LoggerFactory.getLogger(ManagementServiceImpl.class);
 
   public static final String OAUTH_SECRET_SALT = "super secret oauth value";
+
+  private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
 
   protected ServiceManagerFactory smf;
 
@@ -419,20 +397,20 @@ public class ManagementServiceImpl implements ManagementService {
     boolean disabled = newAdminUsersRequireConfirmation();
     // if we are active and enabled, skip the send email step
 
-    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null);
+    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null, null);
 
   }
 
   @Override
   public OrganizationOwnerInfo createOwnerAndOrganization(String organizationName, String username, String name,
       String email, String password, boolean activated, boolean disabled) throws Exception {
-    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null);
+    return createOwnerAndOrganization(organizationName, username, name, email, password, activated, disabled, null, null);
   }
 
   @Override
   public OrganizationOwnerInfo createOwnerAndOrganization(String organizationName, String username, String name,
-      String email, String password, boolean activated, boolean disabled, Map<String, Object> userProperties)
-      throws Exception {
+      String email, String password, boolean activated, boolean disabled, Map<String, Object> userProperties,
+      Map<String, Object> organizationProperties) throws Exception {
 
     /**
      * Only lock on the target values. We don't want lock contention if another
@@ -465,7 +443,7 @@ public class ManagementServiceImpl implements ManagementService {
         user = createAdminUserInternal(username, name, email, password, activated, disabled, userProperties);
       }
 
-      organization = createOrganizationInternal(organizationName, user, true);
+      organization = createOrganizationInternal(organizationName, user, true, organizationProperties);
 
     } finally {
       emailLock.unlock();
@@ -477,8 +455,16 @@ public class ManagementServiceImpl implements ManagementService {
 
   }
 
-  private OrganizationInfo createOrganizationInternal(String organizationName, UserInfo user, boolean activated)
-      throws Exception {
+  private OrganizationInfo createOrganizationInternal(String organizationName,
+                                                      UserInfo user,
+                                                      boolean activated) throws Exception {
+    return createOrganizationInternal(organizationName, user, activated, null);
+  }
+
+  private OrganizationInfo createOrganizationInternal(String organizationName,
+                                                      UserInfo user,
+                                                      boolean activated,
+                                                      Map<String,Object> properties) throws Exception {
     if ((organizationName == null) || (user == null)) {
       return null;
     }
@@ -494,7 +480,8 @@ public class ManagementServiceImpl implements ManagementService {
     writeUserToken(MANAGEMENT_APPLICATION_ID, organizationEntity, encryptionService.plainTextCredentials(
         generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
-    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName);
+    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName, properties);
+    updateOrganization(organization);
 
     logger.info("createOrganizationInternal: {}", organizationName);
     postOrganizationActivity(organization.getUuid(), user, "create", organizationEntity, "Organization",
@@ -525,6 +512,23 @@ public class ManagementServiceImpl implements ManagementService {
       groupLock.unlock();
     }
 
+  }
+
+  /** currently only affects properties */
+  public void updateOrganization(OrganizationInfo organizationInfo) throws Exception {
+    Map<String,Object> properties = organizationInfo.getProperties();
+    if (properties != null) {
+      EntityRef organizationEntity = new SimpleEntityRef(organizationInfo.getUuid());
+      EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+      for (Map.Entry<String,Object> entry : properties.entrySet()) {
+        if ("".equals(entry.getValue())) {
+          properties.remove(entry.getKey());
+          em.removeFromDictionary(organizationEntity, ORGANIZATION_PROPERTIES_DICTIONARY, entry.getKey());
+        } else {
+          em.addToDictionary(organizationEntity, ORGANIZATION_PROPERTIES_DICTIONARY, entry.getKey(), entry.getValue());
+        }
+      }
+    }
   }
 
   @Override
@@ -674,7 +678,10 @@ public class ManagementServiceImpl implements ManagementService {
     if (entity == null) {
       return null;
     }
-    return new OrganizationInfo(entity.getProperties());
+    Map properties = em.getDictionaryAsMap(entity, ORGANIZATION_PROPERTIES_DICTIONARY);
+    OrganizationInfo orgInfo = new OrganizationInfo(entity.getProperties());
+    orgInfo.setProperties(properties);
+    return orgInfo;
   }
 
   @Override
@@ -1033,22 +1040,79 @@ public class ManagementServiceImpl implements ManagementService {
     setAdminUserPassword(userId, newPassword);
   }
 
+  private static final String CREDENTIALS_HISTORY = "credentialsHistory";
+
   @Override
   public void setAdminUserPassword(UUID userId, String newPassword) throws Exception {
 
-    if ((userId == null) || (newPassword == null)) {
-      return;
+    if ((userId == null) || (newPassword == null)) { return; }
+
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    User user = em.get(userId, User.class);
+
+    CredentialsInfo newCredentials =
+        encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), MANAGEMENT_APPLICATION_ID);
+
+    int passwordHistorySize = calculatePasswordHistorySizeForUser(user.getUuid());
+    Map<String,CredentialsInfo> credsMap = cast(em.getDictionaryAsMap(user, CREDENTIALS_HISTORY));
+
+    CredentialsInfo currentCredentials = null;
+    if (passwordHistorySize > 0) {
+      ArrayList<CredentialsInfo> oldCreds = new ArrayList<CredentialsInfo>(credsMap.values());
+      Collections.sort(oldCreds);
+
+      currentCredentials = readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, user.getUuid());
+
+      // check credential history
+      if (encryptionService.verify(newPassword, currentCredentials, userId, MANAGEMENT_APPLICATION_ID)) {
+        throw new RecentlyUsedPasswordException();
+      }
+      for (int i = 0; i < oldCreds.size() && i < passwordHistorySize; i++) {
+        CredentialsInfo ci = oldCreds.get(i);
+        if (encryptionService.verify(newPassword, ci, userId, MANAGEMENT_APPLICATION_ID)) {
+          throw new RecentlyUsedPasswordException();
+        }
+      }
     }
 
-    User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
+    // remove excess history
+    ArrayList<UUID> oldUUIDs = new ArrayList<UUID>(credsMap.size());
+    for (String uuid : credsMap.keySet()) { oldUUIDs.add(UUID.fromString(uuid)); }
+    Collections.sort(oldUUIDs);
+    for (int i = passwordHistorySize; i < oldUUIDs.size(); i++) {
+      em.removeFromDictionary(user, CREDENTIALS_HISTORY, oldUUIDs.get(i).toString());
+    }
 
-    writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-        encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), MANAGEMENT_APPLICATION_ID));
+    if (passwordHistorySize > 0) {
+      UUID uuid = UUIDUtils.generator.generate();
+      em.addToDictionary(user, CREDENTIALS_HISTORY, uuid.toString(), currentCredentials);
+    }
+
+    writeUserPassword(MANAGEMENT_APPLICATION_ID, user, newCredentials);
     writeUserMongoPassword(
-        MANAGEMENT_APPLICATION_ID,
-        user,
-        encryptionService.plainTextCredentials(mongoPassword((String) user.getProperty("username"), newPassword),
+        MANAGEMENT_APPLICATION_ID, user,
+        encryptionService.plainTextCredentials(
+            mongoPassword((String) user.getProperty("username"), newPassword),
             user.getUuid(), MANAGEMENT_APPLICATION_ID));
+
+  }
+
+  public int calculatePasswordHistorySizeForUser(UUID userId) throws Exception {
+
+    int size = 0;
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+    Results orgResults = em.getCollection(new SimpleEntityRef(User.ENTITY_TYPE, userId),
+        "groups", null, 10000, Level.REFS, false);
+
+    for (EntityRef orgRef: orgResults.getRefs()) {
+      Map properties = em.getDictionaryAsMap(orgRef, ORGANIZATION_PROPERTIES_DICTIONARY);
+      if (properties != null) {
+        size = Math.max(new OrganizationInfo(null, null, properties).getPasswordHistorySize(), size);
+      }
+    }
+
+    return size;
   }
 
   @Override
@@ -1267,15 +1331,17 @@ public class ManagementServiceImpl implements ManagementService {
   }
 
   @Override
+  public Long getLastAdminPasswordChange(UUID userId) throws Exception {
+    CredentialsInfo ci = readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId);
+    return ci.getCreated();
+  }
+
+  @Override
   public Map<String, Object> getAdminUserOrganizationData(UserInfo user) throws Exception {
 
     Map<String, Object> json = new HashMap<String, Object>();
 
     json.putAll(JsonUtils.toJsonMap(user));
-    // json.put(PROPERTY_UUID, user.getUuid());
-    // json.put(PROPERTY_NAME, user.getName());
-    // json.put(PROPERTY_EMAIL, user.getEmail());
-    // json.put(PROPERTY_USERNAME, user.getUsername());
 
     Map<String, Map<String, Object>> jsonOrganizations = new HashMap<String, Map<String, Object>>();
     json.put("organizations", jsonOrganizations);
@@ -1297,6 +1363,7 @@ public class ManagementServiceImpl implements ManagementService {
 
       jsonOrganization.put(PROPERTY_NAME, organization.getValue());
       jsonOrganization.put(PROPERTY_UUID, organization.getKey());
+      jsonOrganization.put("properties", getOrganizationByUuid(organization.getKey()).getProperties());
 
       BiMap<UUID, String> applications = getApplicationsForOrganization(organization.getKey());
       jsonOrganization.put("applications", applications.inverse());
@@ -1641,7 +1708,8 @@ public class ManagementServiceImpl implements ManagementService {
         OrganizationInfo organization = getOrganizationByUuid(uuid);
         access_info = new AccessInfo().withExpiresIn(3600)
             .withAccessToken(getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
-            .withProperty("organization", getOrganizationData(organization));
+            .withProperty("organization", getOrganizationData(organization))
+            .withPasswordChanged(getLastAdminPasswordChange(uuid));
       }
     }
     return access_info;
@@ -1790,12 +1858,19 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public void startAdminUserPasswordResetFlow(UserInfo user) throws Exception {
     String token = getPasswordResetTokenForAdminUser(user.getUuid(), 0);
+
     String reset_url = String.format(properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL), user.getUuid().toString())
         + "?token=" + token;
 
+    Map<String,String> pageContext = hashMap("reset_url", reset_url)
+            .map("reset_url_base",properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL))
+            .map("user_uuid", user.getUuid().toString())
+            .map("raw_token", token);
+
+
     sendHtmlMail(properties, user.getDisplayEmailAddress(), properties.getProperty(PROPERTIES_MAILER_EMAIL),
         "Password Reset",
-        appendEmailFooter(emailMsg(hashMap("reset_url", reset_url), PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET)));
+        appendEmailFooter(emailMsg(pageContext, PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET)));
 
   }
 
@@ -2137,6 +2212,11 @@ public class ManagementServiceImpl implements ManagementService {
   public void startAppUserPasswordResetFlow(UUID applicationId, User user) throws Exception {
     String token = getPasswordResetTokenForAppUser(applicationId, user.getUuid());
     String reset_url = buildUserAppUrl(applicationId, properties.getProperty(PROPERTIES_USER_RESETPW_URL), user, token);
+    Map<String,String> pageContext = hashMap("reset_url", reset_url)
+            .map("reset_url_base",properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL))
+            .map("user_uuid", user.getUuid().toString())
+            .map("raw_token", token)
+            .map("application_id", applicationId.toString());
     /*
      * String reset_url = String.format(
      * properties.getProperty(PROPERTIES_USER_RESETPW_URL), oi.getName(),
@@ -2144,7 +2224,7 @@ public class ManagementServiceImpl implements ManagementService {
      */
     sendHtmlMail(properties, user.getDisplayEmailAddress(), properties.getProperty(PROPERTIES_MAILER_EMAIL),
         "Password Reset",
-        appendEmailFooter(emailMsg(hashMap("reset_url", reset_url), PROPERTIES_EMAIL_USER_PASSWORD_RESET)));
+        appendEmailFooter(emailMsg(pageContext, PROPERTIES_EMAIL_USER_PASSWORD_RESET)));
 
   }
 
@@ -2409,172 +2489,6 @@ public class ManagementServiceImpl implements ManagementService {
 
   }
 
-  @Override
-  public User getOrCreateUserForFacebookAccessToken(UUID applicationId, String fb_access_token) throws Exception {
-
-    ClientConfig clientConfig = new DefaultClientConfig();
-    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-    Client client = Client.create(clientConfig);
-    WebResource web_resource = client.resource("https://graph.facebook.com/me");
-    @SuppressWarnings("unchecked")
-    Map<String, Object> fb_user = web_resource.queryParam("access_token", fb_access_token)
-        .accept(MediaType.APPLICATION_JSON).get(Map.class);
-    String fb_user_id = (String) fb_user.get("id");
-    String fb_user_name = (String) fb_user.get("name");
-    String fb_user_username = (String) fb_user.get("username");
-    String fb_user_email = (String) fb_user.get("email");
-    if (logger.isDebugEnabled()) {
-      logger.debug(JsonUtils.mapToFormattedJsonString(fb_user));
-    }
-    if (applicationId == null) {
-      return null;
-    }
-
-    User user = null;
-
-    if ((fb_user != null) && !anyNull(fb_user_id, fb_user_name)) {
-      EntityManager em = emf.getEntityManager(applicationId);
-      Results r = em
-          .searchCollection(em.getApplicationRef(), "users", Query.findForProperty("facebook.id", fb_user_id));
-
-      if (r.size() > 1) {
-        logger.error("Multiple users for FB ID: " + fb_user_id);
-        throw new BadTokenException("multiple users with same Facebook ID");
-      }
-
-      if (r.size() < 1) {
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
-        properties.put("facebook", fb_user);
-        properties.put("username", "fb_" + fb_user_id);
-        properties.put("name", fb_user_name);
-        properties.put("picture", "http://graph.facebook.com/" + fb_user_id + "/picture");
-
-        if (fb_user_email != null) {
-          user = getAppUserByIdentifier(applicationId, Identifier.fromEmail(fb_user_email));
-          // if we found the user by email, unbind the properties from above
-          // that will conflict
-          // then update the user
-          if (user != null) {
-            properties.remove("username");
-            properties.remove("name");
-            em.updateProperties(user, properties);
-            user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
-          } else {
-            properties.put("email", fb_user_email);
-          }
-        }
-        if (user == null) {
-          properties.put("activated", true);
-          user = em.create("user", User.class, properties);
-        }
-      } else {
-        user = (User) r.getEntity().toTypedEntity();
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
-        properties.put("facebook", fb_user);
-        properties.put("picture", "http://graph.facebook.com/" + fb_user_id + "/picture");
-        em.updateProperties(user, properties);
-        user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
-        user.setProperty("facebook", fb_user);
-        user.setProperty("picture", "http://graph.facebook.com/" + fb_user_id + "/picture");
-      }
-    } else {
-      throw new BadTokenException("Unable to confirm Facebook access token");
-    }
-
-    return user;
-
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public User getOrCreateUserForFoursquareAccessToken(UUID applicationId, String fq_access_token) throws Exception {
-
-    ClientConfig clientConfig = new DefaultClientConfig();
-    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-    Client client = Client.create(clientConfig);
-    WebResource web_resource = client.resource("https://api.foursquare.com/v2/users/self");
-    Map<String, Object> body = web_resource.queryParam("oauth_token", fq_access_token).queryParam("v", "20120623")
-        .accept(MediaType.APPLICATION_JSON).get(Map.class);
-
-    Map<String, Object> fq_user = (Map<String, Object>) ((Map<?, ?>) body.get("response")).get("user");
-
-    String fq_user_id = (String) fq_user.get("id");
-    String fq_user_username = (String) fq_user.get("id");
-    String fq_user_email = (String) ((Map<?, ?>) fq_user.get("contact")).get("email");
-    String fq_user_picture = (String) ((Map<?, ?>) fq_user.get("photo")).get("suffix");
-    String fq_user_name = new String("");
-
-    // Grab the last check-in so we can store that as the user location
-    Map<String, Object> fq_location = (Map<String, Object>) ((Map<?, ?>) ((Map<?, ?>) ((ArrayList<?>) ((Map<?, ?>) fq_user
-        .get("checkins")).get("items")).get(0)).get("venue")).get("location");
-
-    Map<String, Double> location = new LinkedHashMap<String, Double>();
-    location.put("latitude", (Double) fq_location.get("lat"));
-    location.put("longitude", (Double) fq_location.get("lng"));
-
-    System.out.println(JsonUtils.mapToFormattedJsonString(location));
-
-    // Only the first name is guaranteed to be here
-    try {
-      fq_user_name = (String) fq_user.get("firstName") + " " + (String) fq_user.get("lastName");
-    } catch (NullPointerException e) {
-      fq_user_name = (String) fq_user.get("firstName");
-    }
-
-    // System.out.println(JsonUtils.mapToFormattedJsonString(fq_user));
-
-    if (applicationId == null) {
-      return null;
-    }
-
-    User user = null;
-
-    if ((fq_user != null) && !anyNull(fq_user_id, fq_user_name)) {
-      EntityManager em = emf.getEntityManager(applicationId);
-      Results r = em.searchCollection(em.getApplicationRef(), "users",
-          Query.findForProperty("foursquare.id", fq_user_id));
-
-      if (r.size() > 1) {
-        logger.error("Multiple users for FQ ID: " + fq_user_id);
-        throw new BadTokenException("multiple users with same Foursquare ID");
-      }
-
-      if (r.size() < 1) {
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
-        properties.put("foursquare", fq_user);
-        properties.put("username", fq_user_username != null ? fq_user_username : "fq_" + fq_user_id);
-        properties.put("name", fq_user_name);
-        if (fq_user_email != null) {
-          properties.put("email", fq_user_email);
-        }
-        properties.put("picture", "https://is0.4sqi.net/userpix_thumbs" + fq_user_picture);
-        properties.put("activated", true);
-        properties.put("location", location);
-
-        user = em.create("user", User.class, properties);
-      } else {
-        user = (User) r.getEntity().toTypedEntity();
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
-        properties.put("foursquare", fq_user);
-        properties.put("picture", "https://is0.4sqi.net/userpix_thumbs" + fq_user_picture);
-        properties.put("location", location);
-        em.updateProperties(user, properties);
-
-        user.setProperty("foursquare", fq_user);
-        user.setProperty("picture", "https://is0.4sqi.net/userpix_thumbs" + fq_user_picture);
-        user.setProperty("location", location);
-      }
-    } else {
-      throw new BadTokenException("Unable to confirm Foursquare access token");
-    }
-
-    return user;
-
-  }
 
   /*
    * (non-Javadoc)
@@ -2719,6 +2633,12 @@ public class ManagementServiceImpl implements ManagementService {
     EntityManager em = emf.getEntityManager(appId);
     Entity owner = em.get(ownerId);
     return (CredentialsInfo) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, key);
+  }
+
+  private Set<CredentialsInfo> readUserPasswordHistory(UUID appId, UUID ownerId) throws Exception {
+    EntityManager em = emf.getEntityManager(appId);
+    Entity owner = em.get(ownerId);
+    return (Set<CredentialsInfo>) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY);
   }
 
   @Override

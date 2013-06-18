@@ -15,15 +15,21 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
+import org.usergrid.rest.test.resource.app.CustomEntity;
 
 /**
  * @author tnine
  * 
  */
-public class ConnectionResource extends SetResource {
+public class CustomCollection extends ValueResource {
 
-  public ConnectionResource(String connectionName, NamedResource parent) {
-    super(connectionName, parent);
+ 
+  public CustomCollection(String name, NamedResource parent) {
+    super(name, parent);
   }
 
+ 
+  public CustomEntity entity(String name){
+    return new CustomEntity(name, this);
+  }
 }

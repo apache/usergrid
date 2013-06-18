@@ -341,6 +341,7 @@ public class GeoIndexManager {
     return doSearch(center, minDistance, maxDistance, gqe, count, resolution) ;
   }
 
+
   private SearchResults<EntityLocationRef> doSearch(Point center, double minDistance, double maxDistance, GeocellQueryEngine gqe, int count, int resolution) throws Exception {
     SearchResults<EntityLocationRef> locations = null;
 

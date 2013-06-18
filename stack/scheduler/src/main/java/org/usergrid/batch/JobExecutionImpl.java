@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import org.usergrid.batch.repository.JobDescriptor;
 import org.usergrid.batch.service.JobRuntimeService;
-import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.JobStat;
 
@@ -17,7 +16,7 @@ import com.google.common.base.Preconditions;
  * @author zznate
  * @author tnine
  */
-public class JobExecutionImpl implements JobExecution {
+public class JobExecutionImpl implements JobExecution, JobRuntime {
 
   private final UUID jobId;
   private final UUID runId;
@@ -79,8 +78,7 @@ public class JobExecutionImpl implements JobExecution {
   }
 
   public void start(int maxFailures) {
-    Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),
-        "Attempted to start job in progress");
+    Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),"Attempted to start job in progress");
     this.status = Status.IN_PROGRESS;
 
     stats.incrementRuns();
@@ -151,6 +149,16 @@ public class JobExecutionImpl implements JobExecution {
     runtime.heartbeat(this);
   }
 
+  /* (non-Javadoc)
+   * @see org.usergrid.batch.JobExecution#heartbeat(long)
+   */
+  @Override
+  public void heartbeat(long milliseconds) {
+    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to heartbeat job not in progress");
+    runtime.heartbeat(this, milliseconds);
+    this.delay = milliseconds;
+  }
+
   /**
    * @return the startTime
    */
@@ -181,6 +189,14 @@ public class JobExecutionImpl implements JobExecution {
    */
   public String getJobName() {
     return jobName;
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.batch.JobRuntime#getExecution()
+   */
+  @Override
+  public JobExecution getExecution() {
+    return this;
   }
 
 }

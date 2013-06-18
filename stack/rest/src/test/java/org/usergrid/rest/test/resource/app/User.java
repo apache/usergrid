@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import org.usergrid.rest.test.resource.EntityResource;
 import org.usergrid.rest.test.resource.NamedResource;
+import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
 
 
 /**
@@ -44,7 +45,10 @@ public class User extends EntityResource {
   public User(String entityName, NamedResource parent) {
     super(entityName, parent);
   }
-
+  
+  public DevicesCollection devices(){
+    return new DevicesCollection(this);
+  }
   
   
   

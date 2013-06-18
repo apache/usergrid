@@ -35,11 +35,6 @@
 	<bean id="mongoServer" class="org.usergrid.mongo.MongoServer"
 		init-method="startServer" destroy-method="stopServer" />
 
-	<bean id="usergridSystemMonitor" class="org.usergrid.system.UsergridSystemMonitor">
-		<constructor-arg value="${usergrid.version.build}" />
-		<constructor-arg ref="cassandraCluster" />
-	</bean>
-
 	<!-- override the security manager -->
 	<bean id="securityManager" class="org.usergrid.rest.security.shiro.RestSecurityManager">
 		<property name="cacheManager" ref="cacheManager" />

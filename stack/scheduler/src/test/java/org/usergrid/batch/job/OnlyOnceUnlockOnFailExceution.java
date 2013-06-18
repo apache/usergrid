@@ -40,6 +40,7 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob {
 
   private CountDownLatch latch = null;
   private CountDownLatch exception = new CountDownLatch(1);
+  private CountDownLatch completed = new CountDownLatch(1);
   private long timeout;
   private boolean slept = false;
   private long delay;
@@ -59,9 +60,10 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob {
   @Override
   protected void doJob(JobExecution execution) throws Exception {
     logger.info("Running only once execution");
+    
 
     latch.countDown();
-    
+
     if (!slept) {
       logger.info("Sleeping in only once execution");
       Thread.sleep(timeout);
@@ -69,7 +71,8 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob {
       exception.countDown();
       throw new RuntimeException("I failed to run correctly, I should be retried");
     }
-
+    
+    completed.countDown();
    
 
   }
@@ -96,6 +99,10 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob {
   
   public boolean waitForException(long timeout, TimeUnit unit) throws InterruptedException{
     return exception.await(timeout, unit);
+  }
+  
+  public boolean waitForCompletion(long timeout, TimeUnit unit) throws InterruptedException{
+    return completed.await(timeout, unit);
   }
 
   /**

@@ -92,15 +92,17 @@ public interface ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization(
    			String organizationName, String username, String name,
    			String email, String password, boolean activated, boolean disabled,
-            Map<String,Object> userProperties) throws Exception;
+        Map<String,Object> userProperties, Map<String,Object> properties) throws Exception;
 
-	/**
-	 * Deactivate the user and return it's current state
-	 * @param applicationId
-	 * @param userId
-	 * @return
-	 * @throws Exception
-	 */
+  public void updateOrganization(OrganizationInfo organizationInfo) throws Exception;
+
+    /**
+     * Deactivate the user and return it's current state
+     * @param applicationId
+     * @param userId
+     * @return
+     * @throws Exception
+     */
 	public User deactivateUser(UUID applicationId, UUID userId) throws Exception;
 
 	public void deactivateOrganization(UUID organizationId) throws Exception;
@@ -317,6 +319,8 @@ public interface ManagementService {
 	public String getAccessTokenForAppUser(UUID applicationId, UUID userId, long duration)
 			throws Exception;
 
+  public Long getLastAdminPasswordChange(UUID userId) throws Exception;
+
 	/**
      * Revoke all active access tokens for this admin user
      * @param userId
@@ -372,12 +376,6 @@ public interface ManagementService {
 
 	public boolean newAppUsersRequireConfirmation(UUID applicationId)
 			throws Exception;
-
-	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
-			String fb_access_token) throws Exception;
-
-	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
-			String fq_access_token) throws Exception;
 
   public abstract void provisionSuperuser() throws Exception;
 

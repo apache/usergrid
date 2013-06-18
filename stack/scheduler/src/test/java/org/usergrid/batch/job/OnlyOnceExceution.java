@@ -39,6 +39,7 @@ public class OnlyOnceExceution extends OnlyOnceJob {
   private static final Logger logger = LoggerFactory.getLogger(OnlyOnceExceution.class);
 
   private CountDownLatch latch = null;
+  private CountDownLatch sleptLatch = new CountDownLatch(1);
   private long timeout;
   private boolean slept = false;
   private long delay;
@@ -61,12 +62,16 @@ public class OnlyOnceExceution extends OnlyOnceJob {
 
     latch.countDown();
     
+    
     if (!slept) {
       logger.info("Sleeping in only once execution");
       Thread.sleep(timeout);
       slept = true;
+      sleptLatch.countDown();
     }
 
+
+ 
    
 
   }
@@ -91,6 +96,9 @@ public class OnlyOnceExceution extends OnlyOnceJob {
     return latch.await(timeout, unit);
   }
 
+  public boolean waitForSleep(long timeout, TimeUnit unit) throws InterruptedException{
+    return sleptLatch.await(timeout, unit);
+  }
   /**
    * @return the timeout
    */

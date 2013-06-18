@@ -207,6 +207,16 @@ public class AbstractConnectionsService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 
+		checkPermissionsForEntity(context, entity);
+		
+	  // the context of the entity they're trying to load isn't owned by the owner
+    // in the path, don't return it
+    if (!em.isConnectionMember(context.getOwner(), context.getCollectionName(), entity)) {
+      logger.info("Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
+          getEntityType(), id, context.getOwner() });
+      throw new ServiceResourceNotFoundException(context);
+    }
+    
 		// TODO check that entity is in fact connected
 
 		List<ServiceRequest> nextRequests = context
@@ -216,7 +226,26 @@ public class AbstractConnectionsService extends AbstractService {
 				Results.fromRef(entity), null, nextRequests);
 	}
 
-	@Override
+	/* (non-Javadoc)
+   * @see org.usergrid.services.AbstractService#getItemByName(org.usergrid.services.ServiceContext, java.lang.String)
+   */
+  @Override
+  public ServiceResults getItemByName(ServiceContext context, String name) throws Exception {
+    
+    ServiceResults results =  getItemsByQuery(context, context.getQuery());
+    
+    if(results.size() == 0){
+      throw new ServiceResourceNotFoundException(context);
+    }
+    
+    if(results.size() == 1 && !em.isConnectionMember(context.getOwner(), context.getCollectionName(), results.getEntity())){
+      throw new ServiceResourceNotFoundException(context);
+    }
+    
+    return results;
+  }
+
+  @Override
 	public ServiceResults getItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
 

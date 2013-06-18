@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecution.Status;
-import org.usergrid.batch.JobExecutionImpl;
+import org.usergrid.batch.JobRuntime;
 import org.usergrid.batch.JobRuntimeException;
 import org.usergrid.batch.repository.JobAccessor;
 import org.usergrid.batch.repository.JobDescriptor;
@@ -227,24 +227,25 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     return results;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.batch.service.SchedulerService#heartbeat(org.usergrid.batch
-   * .JobExecution)
-   */
   @Override
-  public void heartbeat(JobExecutionImpl execution) {
+  public void heartbeat(JobRuntime execution, long delay) {
     try {
       UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(),
-          new QueueQuery().withTimeout(jobTimeout));
+          new QueueQuery().withTimeout(delay));
 
       execution.setTransactionId(newId);
     } catch (TransactionNotFoundException e) {
       logger.error("Could not renew transaction", e);
       throw new JobRuntimeException("Could not renew transaction during heartbeat", e);
     }
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.batch.service.JobRuntimeService#heartbeat(org.usergrid.batch.JobRuntime)
+   */
+  @Override
+  public void heartbeat(JobRuntime execution) {
+    heartbeat(execution, jobTimeout);
   }
 
   /*
@@ -254,10 +255,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
    * JobExecutionImpl)
    */
   @Override
-  public void delay(JobExecutionImpl execution) {
-
-    delayRetry(execution, execution.getDelay());
-
+  public void delay(JobRuntime execution) {
+    delayRetry(execution.getExecution(), execution.getDelay());
   }
 
   /*
@@ -279,6 +278,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
       // we're done. Mark the transaction as complete and delete the job info
       if (jobStatus == Status.COMPLETED) {
+        logger.info("Job {} is complete", data.getJobName());
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
         em.delete(data);
       }
@@ -286,6 +286,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
       // the job failed too many times. Delete the transaction to prevent it
       // running again and save it for querying later
       else if (jobStatus == Status.DEAD) {
+        logger.warn("Job {} is dead.  Removing", data.getJobName());
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
         em.update(data);
       }
@@ -294,6 +295,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
       else {
         em.update(data);
       }
+      
+      logger.info("Updating stats for job {}", data.getJobName());
       
       em.update(stat);
       

@@ -198,6 +198,7 @@ public class AbstractCollectionService extends AbstractService {
     if(!query.isSortSet()){
       query.addSort(getCollectionSort(context));
     }
+    
 		/*
 		 * if (count > 0) { query.setMaxResults(count); }
 		 */
@@ -436,6 +437,12 @@ public class AbstractCollectionService extends AbstractService {
 
   protected boolean isDeleteAllowed(ServiceContext context, Entity entity) {
     return true;
+  }
+  
+  protected void prepareToDelete(ServiceContext context, Entity entity) {
+    if (!isDeleteAllowed(context, entity)) {
+      throw new ForbiddenServiceOperationException(context);
+    }
   }
 
   protected void checkDeleteAllowed(ServiceContext context, Entity entity) {

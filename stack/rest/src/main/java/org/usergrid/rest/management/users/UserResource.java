@@ -237,13 +237,14 @@ public class UserResource extends AbstractContextResource {
 					if ((password1 != null) && password1.equals(password2)) {
 						management.setAdminUserPassword(user.getUuid(),
 								password1);
+            management.revokeAccessTokenForAdminUser(user.getUuid(), token);
 						return handleViewable("resetpw_set_success", this);
 					} else {
 						errorMsg = "Passwords didn't match, let's try again...";
 						return handleViewable("resetpw_set_form", this);
 					}
 				} else {
-					errorMsg = "Something odd happened, let's try again...";
+          errorMsg = "Sorry, you have an invalid token. Let's try again...";
 					return handleViewable("resetpw_email_form", this);
 				}
 			}

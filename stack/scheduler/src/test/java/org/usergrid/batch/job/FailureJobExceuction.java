@@ -60,6 +60,10 @@ public class FailureJobExceuction implements Job {
   public boolean waitForCount(long timeout, TimeUnit unit) throws InterruptedException {
     return latch.await(timeout, unit);
   }
+  
+  public long getLatchCount(){
+    return latch.getCount();
+  }
 
  
   

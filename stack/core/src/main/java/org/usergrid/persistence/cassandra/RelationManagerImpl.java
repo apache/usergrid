@@ -102,16 +102,19 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
+import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
+import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
@@ -259,12 +262,14 @@ public class RelationManagerImpl implements RelationManager {
     return connections;
   }
 
+
   @SuppressWarnings("deprecation")
   public List<ConnectionRefImpl> getConnectionsWithEntity(UUID participatingEntityId) throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
     List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
     List<String> idColumns = ConnectionRefImpl.getIdColumnNames();
+
 
     for (String idColumn : idColumns) {
       IndexedSlicesQuery<UUID, String, ByteBuffer> q = createIndexedSlicesQuery(ko, ue, se, be);
@@ -1928,7 +1933,7 @@ public class RelationManagerImpl implements RelationManager {
         setEqualityFlag((DynamicComposite) start, ComponentEquality.GREATER_THAN_EQUAL);
       }
     }
-
+    
     return start;
   }
 
@@ -1944,6 +1949,48 @@ public class RelationManagerImpl implements RelationManager {
 
     return finish;
   }
+  
+
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  @Metered(group="core", name="RelationManager_isOwner")
+  public boolean isCollectionMember(String collectionName, EntityRef entity) throws Exception{
+   
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+  
+    ByteBuffer col = DynamicComposite.toByteBuffer(asList(this.headEntity.getType(), collectionName, headEntity.getUuid()));
+    
+    HColumn<ByteBuffer, ByteBuffer> result = cass
+            .getColumn(
+                    ko,
+                    ENTITY_COMPOSITE_DICTIONARIES,
+                    key(entity.getUuid(),
+                            Schema.DICTIONARY_CONTAINER_ENTITIES), col, be, be
+                    );
+    
+    
+    return result != null;
+
+  }
+  
+  /**
+   * @param c
+   * @param entity 
+   * @return
+   * @throws Exception 
+   */
+  public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    
+    ConnectionRefImpl ref = new ConnectionRefImpl(this.headEntity, connectionName, entity);
+
+    HColumn<String, UUID> col = cass.getColumn(ko, ENTITY_CONNECTIONS, ref.getUuid(), ConnectionRefImpl.CONNECTED_ENTITY_ID, se, ue);
+    
+    return col != null && entity.getUuid().equals(col.getValue());
+  }
+
+
 
   @Override
   @Metered(group = "core", name = "RelationManager_getOwners")
@@ -2431,6 +2478,7 @@ public class RelationManagerImpl implements RelationManager {
     return connection_types;
   }
 
+//<<<<<<< HEAD
   @Override
   public Set<String> getConnectionTypes() throws Exception {
     return getConnectionTypes(false);
@@ -2693,6 +2741,7 @@ public class RelationManagerImpl implements RelationManager {
 
   }
 
+
   /**
    * Simple search visitor that performs all the joining
    * 
@@ -2700,6 +2749,7 @@ public class RelationManagerImpl implements RelationManager {
    * 
    */
   private class SearchConnectionVisitor extends SearchVisitor {
+
 
     private final ConnectionRefImpl connection;
 
@@ -2754,13 +2804,17 @@ public class RelationManagerImpl implements RelationManager {
           connection.getIndexId(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
           node.getDistance()), query.getLimit(), slice);
 
+
       results.push(itr);
     }
+
 
     @Override
     public void visit(AllNode node) throws Exception {
       // TODO read connections and do paging
     }
   }
+
+   
 
 }

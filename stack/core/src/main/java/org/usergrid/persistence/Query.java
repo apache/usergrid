@@ -75,7 +75,8 @@ public class Query {
     private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
     public static final int DEFAULT_LIMIT = 10;
-    public static final int MAX_LIMIT = 100;
+    
+    public static final int MAX_LIMIT = 1000;
 
     protected String type;
     protected List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();

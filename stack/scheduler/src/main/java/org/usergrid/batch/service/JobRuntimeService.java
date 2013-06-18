@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.batch.service;
 
-import org.usergrid.batch.JobExecutionImpl;
+import org.usergrid.batch.JobRuntime;
 
 /**
  * Methods to allow job executions to interact with the distributed runtime
@@ -27,15 +27,23 @@ public interface JobRuntimeService {
   
   /**
    * Perform any heartbeat operations required.  Update jobExecution with the appropriate data
-   * @param execution
+   * @param execution The job execution to update
+   * @param delay The delay 
+   * 
    * @throws JobExecutionException 
    */
-  public void heartbeat(JobExecutionImpl execution);
+  public void heartbeat(JobRuntime execution, long delay);
+  
+  /**
+   * Heartbeat with the system defaults.  Update jobExecution with the appropriate data
+   * @param execution The execution
+   */
+  public void heartbeat(JobRuntime execution);
   
   /**
    * Delay this exeuction
    * @param execution
    */
-  public void delay(JobExecutionImpl execution);
+  public void delay(JobRuntime execution);
 
 }

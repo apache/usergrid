@@ -15,12 +15,16 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.mgmt;
 
+import java.util.Map;
+
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.usergrid.rest.test.resource.Me;
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.RootResource;
 import org.usergrid.rest.test.resource.app.UsersCollection;
+import org.usergrid.utils.MapUtils;
 
 /**
  * @author tnine
@@ -51,29 +55,48 @@ public class Management extends NamedResource {
   public UsersCollection users() {
     return new UsersCollection(this);
   }
-  
-  public OrganizationsCollection orgs(){
+
+  public OrganizationsCollection orgs() {
     return new OrganizationsCollection(this);
   }
-  
+
   /**
    * Get the token from management for this username and password
+   * 
    * @param username
    * @param password
    * @return
    */
-  public String token(String username, String password){
+  public String tokenGet(String username, String password) {
 
-      JsonNode node = resource().path(String.format("%s/token", url())).queryParam("grant_type","password").queryParam("username",username).queryParam("password",password)
-          .accept(MediaType.APPLICATION_JSON)
-          .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-    
-    
-      return node.get("access_token").asText();
+    JsonNode node = resource().path(String.format("%s/token", url())).queryParam("grant_type", "password")
+        .queryParam("username", username).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+    return node.get("access_token").asText();
   }
-  
 
-//  public 
+  /**
+   * Get the token from management for this username and password
+   * 
+   * @param username
+   * @param password
+   * @return
+   */
+  public String tokenPost(String username, String password) {
 
+    Map<String, String> payload = MapUtils.hashMap("grant_type", "password").map("username", username)
+        .map("password", password);
+
+    JsonNode node = resource().path(String.format("%s/token", url())).accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+
+    return node.get("access_token").asText();
+  }
+
+ 
+  public Me me(){
+    return new Me(this);
+  }
 
 }

@@ -144,6 +144,11 @@ public class JobSchedulerService extends AbstractScheduledService {
           execution.start(maxFailCount);
           
           jobAccessor.save(execution);
+          
+          //this job is dead, treat it as such
+          if(execution.getStatus() == Status.DEAD){
+            return null;
+          }
 
           // TODO wrap and throw specifically typed exception for onFailure,
           // needs jobId
@@ -169,7 +174,7 @@ public class JobSchedulerService extends AbstractScheduledService {
 
         @Override
         public void onFailure(Throwable throwable) {
-          logger.error("Failed execution for bulkJob {}", throwable);
+          logger.error("Failed execution for bulkJob", throwable);
           // mark it as failed
           if (execution.getStatus() == Status.IN_PROGRESS) {
             execution.failed();

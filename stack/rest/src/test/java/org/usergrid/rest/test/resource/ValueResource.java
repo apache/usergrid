@@ -50,6 +50,15 @@ public abstract class ValueResource extends NamedResource {
   }
 
   /**
+   * Create a new entity with the specified data
+   * @param entity
+   * @return
+   */
+  public JsonNode create(Map<String, ? > entity){
+    return postInternal(entity);
+  }
+  
+  /**
    * post to the entity set
    * 
    * @param entity
@@ -84,6 +93,14 @@ public abstract class ValueResource extends NamedResource {
     return jsonMedia(withParams(withToken(resource())))
         .put(JsonNode.class, entity);
   }
+  
+  /**
+   * Get the data
+   * @return
+   */
+  public JsonNode get(){
+    return getInternal();
+  }
 
   /**
    * Get a list of entities
@@ -112,5 +129,6 @@ public abstract class ValueResource extends NamedResource {
 
     return jsonMedia(resource).get(JsonNode.class);
   }
+  
 
 }
