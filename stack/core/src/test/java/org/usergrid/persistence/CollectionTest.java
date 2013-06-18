@@ -916,7 +916,12 @@ public class CollectionTest extends AbstractPersistenceTest {
 
       query.setCursor(r.getCursor());
     }
+    
+    //check our last search
+    r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
+    assertEquals(0, r.size());
+    
     assertNull(r.getCursor());
 
   }
@@ -965,6 +970,10 @@ public class CollectionTest extends AbstractPersistenceTest {
       query.setCursor(r.getCursor());
     }
 
+    r = em.searchCollection(em.getApplicationRef(), "pages", query);
+    
+    assertEquals(0, r.size());
+    
     assertNull(r.getCursor());
 
   }
@@ -1013,6 +1022,11 @@ public class CollectionTest extends AbstractPersistenceTest {
 
       query.setCursor(r.getCursor());
     }
+    
+    r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+    assertEquals(0, r.size());
+    
     assertNull(r.getCursor());
 
   }
