@@ -96,7 +96,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     } while (results.getCursor() != null);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms", stop - start);
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
 
     assertEquals(size, count);
 
@@ -172,7 +172,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms", stop - start);
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
 
     assertEquals(expected.size(), count);
   }
@@ -249,7 +249,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms", stop - start);
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
 
     assertEquals(expectedResults.size(), count);
   }
@@ -302,7 +302,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
    
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms", stop - start);
+    logger.info("Query took {} ms to return {} entities", stop - start, 0);
 
     assertEquals(0, results.size());
   }
@@ -377,7 +377,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms", stop - start);
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
 
     assertEquals(expectedResults.size(), count);
   }
@@ -453,7 +453,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms", stop - start);
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
 
     assertEquals(expectedResults.size(), count);
   }
