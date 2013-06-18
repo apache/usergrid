@@ -1904,6 +1904,11 @@ public class RelationManagerImpl implements RelationManager {
     }
 
     Object keyPrefix = key(indexKey, slice.getPropertyName());
+    
+    //we have a cursor, so the first record should be discarded
+    if(slice.hasCursor()){
+      pageSize++;
+    }
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
         IndexType.COLLECTION, keyPrefix, start, finish, slice.isReversed(), pageSize, collectionName);
@@ -2300,7 +2305,7 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
-    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, null, UUID_PARSER);
+    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, new QuerySlice("uuid", -1), UUID_PARSER);
 
     List<UUID> ids = new ArrayList<UUID>(size);
 

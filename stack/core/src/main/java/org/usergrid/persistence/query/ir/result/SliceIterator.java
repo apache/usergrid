@@ -37,12 +37,12 @@ import org.usergrid.persistence.query.ir.QuerySlice;
  */
 public class SliceIterator<T> implements ResultIterator {
 
-  private final LinkedHashMap<UUID, Integer> idOrder;
-  private final List<ByteBuffer> cols;
+  private final LinkedHashMap<UUID, ByteBuffer> cols;
   private final QuerySlice slice;
   private final SliceParser<T> parser;
   private final IndexScanner scanner;
   private final int pageSize;
+  private final boolean skipFirst;
 
   /**
    * Pointer to the uuid set until it's returned
@@ -50,22 +50,31 @@ public class SliceIterator<T> implements ResultIterator {
   private Set<UUID> lastResult;
 
   /**
-   *  counter that's incremented as we load pages. If pages loaded = 1 when
-   *  reset, we don't have to reload from cass
+   * Pointer to the lastId we loaded
    */
- 
+  private UUID lastId;
+
+  /**
+   * counter that's incremented as we load pages. If pages loaded = 1 when
+   * reset, we don't have to reload from cass
+   */
+
   private int pagesLoaded = 0;
 
   /**
    * 
+   * @param scanner The scanner to use to read the cols
+   * @param slice The slice used in the scanner
+   * @param parser The parser for the scanner results
+   * @param skipFirst True if the first record should be skipped, used with cursors
    */
   public SliceIterator(IndexScanner scanner, QuerySlice slice, SliceParser<T> parser) {
     this.slice = slice;
     this.parser = parser;
     this.scanner = scanner;
+    this.skipFirst = slice.hasCursor();
     this.pageSize = scanner.getPageSize();
-    this.idOrder = new LinkedHashMap<UUID, Integer>(this.pageSize);
-    this.cols = new ArrayList<ByteBuffer>(this.pageSize);
+    this.cols = new LinkedHashMap<UUID, ByteBuffer>(this.pageSize);
   }
 
   /*
@@ -91,7 +100,6 @@ public class SliceIterator<T> implements ResultIterator {
 
     return true;
   }
-  
 
   private boolean load() {
     if (!scanner.hasNext()) {
@@ -100,22 +108,28 @@ public class SliceIterator<T> implements ResultIterator {
 
     Iterator<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next().iterator();
 
-    idOrder.clear();
     cols.clear();
 
-    for (int i = 0; results.hasNext(); i++) {
+    /**
+     * Skip the first value, it's from the previous cursor
+     */
+    if(skipFirst && pagesLoaded == 0  && results.hasNext()){
+      results.next();
+    }
+    
+    while (results.hasNext()) {
 
-      ByteBuffer colName = results.next().getName().duplicate();
-
+      ByteBuffer colName = results.next().getName().duplicate();  
+    
       UUID id = parser.getUUID(parser.parse(colName));
 
-      idOrder.put(id, i);
-
-      cols.add(i, colName);
+      cols.put(id, colName);
+      
+      lastId = id;
     }
 
-    lastResult = idOrder.keySet();
-    
+    lastResult = cols.keySet();
+
     pagesLoaded++;
 
     return lastResult != null && lastResult.size() > 0;
@@ -150,9 +164,9 @@ public class SliceIterator<T> implements ResultIterator {
    */
   @Override
   public void reset() {
-    //Do nothing, we'll just return the first page again
-    if(pagesLoaded == 1){
-      lastResult = idOrder.keySet();
+    // Do nothing, we'll just return the first page again
+    if (pagesLoaded == 1) {
+      lastResult = cols.keySet();
       return;
     }
     scanner.reset();
@@ -168,35 +182,12 @@ public class SliceIterator<T> implements ResultIterator {
   public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
     int sliceHash = slice.hashCode();
 
-    // if nothing was loaded we still want to set the cursor to empty
-    Integer loadedIndex = idOrder.get(lastLoaded);
+    ByteBuffer bytes = cols.get(lastLoaded);
 
-    // the id did not come from this iterator, it's a no-op
-    if (loadedIndex == null) {
+    if (bytes == null) {
       return;
     }
-
-    ByteBuffer bytes = null;
-
-    // edge case where the uuid is the last one loaded. In this case we need to
-    // advance to the next page, then finalize our cursor
-    if (loadedIndex == pageSize - 1) {
-      // couldn't load the next page, nothing to page next time
-      if (!load()) {
-        bytes = ByteBuffer.allocate(0);
-      }
-      // set it to our first uuid from the new set
-      else {
-        bytes = cols.get(0);
-      }
-    }
-    // last one we loaded, but not a full page. This slice is complete
-    else if (loadedIndex == idOrder.size() - 1) {
-      bytes = ByteBuffer.allocate(0);
-    } else {
-      bytes = cols.get(loadedIndex + 1);
-    }
-
+    
     cache.setNextCursor(sliceHash, bytes);
 
   }
