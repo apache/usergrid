@@ -26,13 +26,22 @@ import java.util.UUID;
 public abstract class MergeIterator implements ResultIterator {
 
   
-  //kept private on purpose so advance must return the correct value
+  /**
+   * kept private on purpose so advance must return the correct value
+   */
   private Set<UUID> next;
   
+  /**
+   * Pointer to the last set.  Equal to "next" when returned.  Used to retain results
+   * after "next" is set to null 
+   */
+  private Set<UUID> last;
   /**
    * The size of the pages
    */
   protected int pageSize;
+  
+  int loadCount = 0;
   
   /**
    * 
@@ -65,7 +74,14 @@ public abstract class MergeIterator implements ResultIterator {
       doAdvance();
     }
 
-    return next != null && next.size() > 0;
+    boolean results =  next != null && next.size() > 0;
+    
+    if(results){
+      last = next;
+      loadCount++;
+    }
+    
+    return results;
   }
   
   /**
@@ -103,10 +119,33 @@ public abstract class MergeIterator implements ResultIterator {
     throw new UnsupportedOperationException("You can't remove from a union iterator");
   }
 
+  
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
+   */
+  @Override
+  public void reset() {
+    if(loadCount == 1 && last != null){
+      next = last;
+      return;
+    }
+    //clean up the last pointer
+    last = null;
+    //reset in the child iterators
+    doReset();
+  }
+
+
+
   /**
    * Advance the iterator to the next value.  Can return an empty set with signals no values
    */
   protected abstract Set<UUID> advance();
+  
+  /**
+   * Perform the reset if required
+   */
+  protected abstract void doReset();
 
 
 }

@@ -46,7 +46,7 @@ public class IntersectionIterator extends MultiIterator {
    * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
    */
   @Override
-  public void reset() {
+  public void doReset() {
     for(ResultIterator itr: iterators){
       itr.reset();
     }
