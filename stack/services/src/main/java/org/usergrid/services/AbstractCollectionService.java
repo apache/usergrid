@@ -108,7 +108,13 @@ public class AbstractCollectionService extends AbstractService {
       checkPermissionsForEntity(context, entity);
     }
 
-    // TODO check that entity is in fact in the collection
+    // the context of the entity they're trying to load isn't owned by the owner
+    // in the path, don't return it
+    if (!em.isCollectionMember(context.getOwner(), context.getCollectionName(), entity)) {
+      logger.info("Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
+          getEntityType(), id, context.getOwner() });
+      throw new ServiceResourceNotFoundException(context);
+    }
 
     List<ServiceRequest> nextRequests = context
             .getNextServiceRequests(entity);
@@ -146,6 +152,14 @@ public class AbstractCollectionService extends AbstractService {
 		}
 
 		checkPermissionsForEntity(context, entity);
+		
+	// the context of the entity they're trying to load isn't owned by the owner
+		// in the path, don't return it
+    if (!em.isCollectionMember(context.getOwner(), context.getCollectionName(), entity)) {
+      logger.info("Someone tried to GET entity {} they don't own. Entity name {} with owner {}", new Object[] {
+          getEntityType(), name, context.getOwner() });
+      throw new ServiceResourceNotFoundException(context);
+    }
 
 		/*
 		 * Results.Level level = Results.Level.REFS; if (isEmpty(parameters)) {

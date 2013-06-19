@@ -177,7 +177,7 @@ import com.yammer.metrics.annotation.Metered;
  * Cassandra-specific implementation of Datastore
  *
  * @author edanuff
- *
+ * @author tnine
  */
 public class EntityManagerImpl implements EntityManager {
 
