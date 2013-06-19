@@ -323,7 +323,6 @@ public class IndexTest extends AbstractPersistenceTest {
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
 
     
-    em.searchConnections(entity2Ref, query);
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(1, r.size());
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
@@ -340,7 +339,6 @@ public class IndexTest extends AbstractPersistenceTest {
     assertEquals(0, r.size());
     
     //search connections
-    em.searchConnections(entity2Ref, query);
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(0, r.size());
 
@@ -355,7 +353,6 @@ public class IndexTest extends AbstractPersistenceTest {
     
     
     //search connections
-    em.searchConnections(entity2Ref, query);
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(1, r.size());
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
@@ -399,7 +396,6 @@ public class IndexTest extends AbstractPersistenceTest {
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
 
     
-    em.searchConnections(entity2Ref, query);
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(1, r.size());
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
@@ -416,7 +412,6 @@ public class IndexTest extends AbstractPersistenceTest {
     assertEquals(0, r.size());
     
     //search connections
-    em.searchConnections(entity2Ref, query);
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(0, r.size());
 
@@ -431,7 +426,6 @@ public class IndexTest extends AbstractPersistenceTest {
     
     
     //search connections
-    em.searchConnections(entity2Ref, query);
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(1, r.size());
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());

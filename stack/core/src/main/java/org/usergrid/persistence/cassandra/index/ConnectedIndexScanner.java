@@ -30,6 +30,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.ConnectionRefImpl;
+import org.usergrid.utils.UUIDUtils;
 
 import com.yammer.metrics.annotation.Metered;
 
@@ -45,12 +46,13 @@ public class ConnectedIndexScanner implements IndexScanner {
   private final int pageSize;
   private final String dictionaryType;
   private final ConnectionRefImpl connection;
-
+  private final ByteBuffer last;
   /**
    * Pointer to our next start read
    */
   private ByteBuffer start;
 
+  
   /**
    * Set to the original value to start scanning from
    */
@@ -74,6 +76,8 @@ public class ConnectedIndexScanner implements IndexScanner {
     if (start != null) {
       startBytes = new DynamicComposite(start).serialize();
     }
+    
+    this.last = new DynamicComposite(UUIDUtils.MAX_TIME_UUID, connection.getConnectedEntityType()).serialize();
 
     this.cass = cass;
     this.applicationId = applicationId;
@@ -125,7 +129,7 @@ public class ConnectedIndexScanner implements IndexScanner {
     Object key = key(connection.getConnectingEntityId(), dictionaryType, connection.getConnectionType());
 
     List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(cass.getApplicationKeyspace(applicationId),
-        ENTITY_COMPOSITE_DICTIONARIES, key, start, null, selectSize, reversed);
+        ENTITY_COMPOSITE_DICTIONARIES, key, start, last, selectSize, reversed);
 
     // we loaded a full page, there might be more
     if (results.size() == selectSize) {

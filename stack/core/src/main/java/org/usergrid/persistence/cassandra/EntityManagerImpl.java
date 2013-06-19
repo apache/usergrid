@@ -3170,11 +3170,6 @@ public class EntityManagerImpl implements EntityManager {
 				associatedEntityRef, propertyName, propertyValue);
 	}
 
-	@Override
-	public List<ConnectionRef> searchConnections(EntityRef connectingEntity,
-			Query query) throws Exception {
-		return getRelationManager(connectingEntity).searchConnections(query);
-	}
 
 	@Override
 	public Set<String> getConnectionIndexes(EntityRef entity,

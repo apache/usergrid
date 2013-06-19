@@ -767,10 +767,7 @@ public interface EntityManager {
     public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
             String propertyName, Object propertyValue) throws Exception;
 
-    public List<ConnectionRef> searchConnections(EntityRef connectingEntity,
-            Query query) throws Exception;
-
-    // Application roles
+   // Application roles
 
     public Set<String> getConnectionIndexes(EntityRef entity,
             String connectionType) throws Exception;
