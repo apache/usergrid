@@ -5,9 +5,10 @@ Detailed instructions follow but if you just want a quick example of how to get 
 <!DOCTYPE html>
 <html>
 	<head>
-		<!-- Don't forget to download and include the SDK -->
-		<!-- It’s available at the root of github.com/apigee/usergrid-javascript-sdk -->
-		<script src="path/to/usergrid.js"></script>
+		<!-- Don't forget to include the SDK -->
+		<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.5.js"></script>
+		<!-- If you prefer a local copy, you can find the file at the root the SDK’s github repo
+		     github.com/apigee/usergrid-javascript-sdk -->
 
 		<script type="text/javascript">
 		
