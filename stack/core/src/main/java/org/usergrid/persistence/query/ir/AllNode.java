@@ -42,18 +42,5 @@ public class AllNode extends QueryNode {
   public QuerySlice getSlice() {
     return slice;
   }
-  
-  /**
-   * Return the cursor for this slice, could return null
-   * @return
-   */
-  public UUID getCursor(){
-    UUID startId = null;
 
-    if (slice.hasCursor()) {
-      startId = UUIDSerializer.get().fromByteBuffer(slice.getCursor());
-    }
-    
-    return startId;
-  }
 }

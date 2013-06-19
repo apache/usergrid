@@ -1047,7 +1047,7 @@ public class CassandraService {
 
     IndexScanner scanner = new IndexBucketScanner(this, locator,
         ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key,
-        start, finish, reversed, Math.min(count*10, 1000), collectionName);
+        start, finish, reversed, count, collectionName);
 
     return scanner;
 

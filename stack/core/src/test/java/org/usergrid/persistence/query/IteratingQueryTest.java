@@ -15,9 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence.query;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,18 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.AbstractPersistenceTest;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
-
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
 
 /**
  * @author tnine
@@ -47,13 +43,18 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   private static final Logger logger = LoggerFactory.getLogger(IteratingQueryTest.class);
 
   @Test
-  public void singleOrderByMaxLimit() throws Exception {
+  public void singleOrderByMaxLimitCollection() throws Exception {
+    singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
+  }
 
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByMaxLimit");
-    assertNotNull(applicationId);
+  @Test
+  public void singleOrderByMaxLimitConnection() throws Exception {
+    singleOrderByMaxLimit(new ConnectionHelper("singleOrderByMaxLimitConnection"));
+  }
 
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
+  public void singleOrderByMaxLimit(IoHelper io) throws Exception {
+
+    io.doSetup();
 
     int size = 500;
     int queryLimit = Query.MAX_LIMIT;
@@ -65,7 +66,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
       entity.put("name", String.valueOf(i));
-      em.create("test", entity);
+
+      io.writeEntity("test", entity);
     }
 
     long stop = System.currentTimeMillis();
@@ -85,7 +87,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = em.searchCollection(em.getApplicationRef(), "tests", query);
+      results = io.getResults(query, "tests");
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(String.valueOf(count), results.getEntities().get(i).getName());
@@ -104,13 +106,21 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   }
 
   @Test
-  public void singleOrderByIntersection() throws Exception {
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByIntersection");
-    assertNotNull(applicationId);
-
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
-
+  public void singleOrderByIntersectionCollection() throws Exception{
+    singleOrderByIntersection(new CollectionIoHelper("singleOrderByIntersectionCollection"));
+  }
+  
+  @Test
+  public void singleOrderByIntersectionConnection() throws Exception {
+    singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionCollection"));
+  }
+  
+  
+  
+  private void singleOrderByIntersection(IoHelper io) throws Exception {
+   
+    io.doSetup();
+    
     int size = 700;
     int queryLimit = Query.MAX_LIMIT;
 
@@ -133,7 +143,9 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       entity.put("name", String.valueOf(i));
       // if we hit the increment, set this to true
       entity.put("intersect", intersect);
-      em.create("test", entity);
+      
+      io.writeEntity("test", entity);
+      
 
       if (intersect) {
         expected.add(name);
@@ -159,7 +171,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = em.searchCollection(em.getApplicationRef(), "tests", query);
+      results = io.getResults(query, "tests");
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expected.get(count), results.getEntities().get(i).getName());
@@ -178,13 +190,17 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   }
 
   @Test
-  public void singleOrderByComplexIntersection() throws Exception {
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByComplexIntersection");
-    assertNotNull(applicationId);
+  public void singleOrderByComplexIntersectionCollection() throws Exception {
+    singleOrderByComplexIntersection(new CollectionIoHelper("singleOrderByComplexIntersectionCollection"));
+  }
 
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
-
+  @Test
+  public void singleOrderByComplexIntersectionConnection() throws Exception {
+    singleOrderByComplexIntersection(new ConnectionHelper("singleOrderByComplexIntersectionConnection"));
+  }
+  
+  private void singleOrderByComplexIntersection(IoHelper io) throws Exception {
+   
     int size = 10000;
     int queryLimit = Query.MAX_LIMIT;
 
@@ -193,6 +209,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
+    
+    io.doSetup();
 
     logger.info("Writing {} entities.", size);
 
@@ -209,7 +227,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      em.create("test", entity);
+      io.writeEntity("test", entity);
 
       if (intersect1 && intersect2) {
         expectedResults.add(name);
@@ -236,7 +254,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = em.searchCollection(em.getApplicationRef(), "tests", query);
+      results = io.getResults(query, "tests");
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expectedResults.get(count), results.getEntities().get(i).getName());
@@ -253,14 +271,20 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-
+  
   @Test
-  public void singleOrderByNoIntersection() throws Exception {
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByNoIntersection");
-    assertNotNull(applicationId);
+  public void singleOrderByNoIntersectionCollection() throws Exception {
+    singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionCollection"));
+  }
+  
+  @Test
+  public void singleOrderByNoIntersectionConnection() throws Exception {
+    singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionConnection"));
+  }
 
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
+  
+  private void singleOrderByNoIntersection(IoHelper io) throws Exception {
+    io.doSetup();
 
     int size = 2000;
     int queryLimit = Query.MAX_LIMIT;
@@ -278,7 +302,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       // if we hit the increment, set this to true
       entity.put("intersect", false);
       entity.put("intersect2", i % secondIncrement == 0);
-      em.create("test", entity);
+      io.writeEntity("test", entity);
 
     }
 
@@ -295,7 +319,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     start = System.currentTimeMillis();
 
-    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
+    Results results = io.getResults(query, "tests");
 
     // now do simple ordering, should be returned in order
 
@@ -305,15 +329,22 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(0, results.size());
   }
-
+  
   @Test
-  public void singleOrderByComplexUnion() throws Exception {
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByComplexUnion");
-    assertNotNull(applicationId);
+  public void singleOrderByComplexUnionCollection() throws Exception {
+    singleOrderByComplexUnion(new CollectionIoHelper("singleOrderByComplexUnionCollection"));
+  }
+  
+  @Test
+  public void singleOrderByComplexUnionConnection() throws Exception {
+    singleOrderByComplexUnion(new ConnectionHelper("singleOrderByComplexUnionConnection"));
+  }
 
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
-
+ 
+  private void singleOrderByComplexUnion(IoHelper io) throws Exception {
+  
+    io.doSetup();
+    
     int size = 2000;
     int queryLimit = Query.MAX_LIMIT;
 
@@ -338,7 +369,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      em.create("test", entity);
+      io.writeEntity("test", entity);
 
       if (intersect1 || intersect2) {
         expectedResults.add(name);
@@ -362,7 +393,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = em.searchCollection(em.getApplicationRef(), "tests", query);
+      results = io.getResults(query, "tests");
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expectedResults.get(count), results.getEntities().get(i).getName());
@@ -379,9 +410,19 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-
+  
   @Test
-  public void singleOrderByNot() throws Exception {
+  public void singleOrderByNotCollection() throws Exception {
+    singleOrderByNot(new CollectionIoHelper("singleOrderByNotCollection"));
+  }
+  
+  @Test
+  public void singleOrderByNotConnection() throws Exception {
+    singleOrderByNot(new ConnectionHelper("singleOrderByNotConnection"));
+  }
+
+  
+  private void singleOrderByNot(IoHelper helper) throws Exception {
     UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByNot");
     assertNotNull(applicationId);
 
@@ -455,13 +496,18 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   }
 
   @Test
-  public void singleOrderByLessThanLimit() throws Exception {
+  public void singleOrderByLessThanLimitCollection() throws Exception {
+    singleOrderByLessThanLimit(new CollectionIoHelper("singleOrderByLessThanLimitCollection"));
+  }
+  
+  @Test
+  public void singleOrderByLessThanLimitConnection() throws Exception {
+    singleOrderByLessThanLimit(new ConnectionHelper("singleOrderByLessThanLimitConnection"));
+  }
+  
+  public void singleOrderByLessThanLimit(IoHelper io) throws Exception {
 
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByLessThanLimit");
-    assertNotNull(applicationId);
-
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
+    io.doSetup();
 
     int size = 500;
     int queryLimit = Query.MAX_LIMIT;
@@ -482,7 +528,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("name", name);
       entity.put("searched", searched);
-      em.create("test", entity);
+      io.writeEntity("test", entity);
 
       if (searched) {
         expected.add(name);
@@ -504,7 +550,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
+    Results results = io.getResults(query, "tests");
 
     for (int i = 0; i < results.size(); i++) {
       assertEquals(expected.get(count), results.getEntities().get(i).getName());
@@ -519,5 +565,236 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     assertEquals(expected.size(), count);
 
   }
+  
+  
+  @Test
+  public void allInCollection() throws Exception {
+    allIn(new CollectionIoHelper("allInCollection"));
+  }
 
+  @Test
+  public void allInConnection() throws Exception {
+    allIn(new ConnectionHelper("allInConnection"));
+  }
+
+  /**
+   * Tests that when an empty query is issued, we page through all entities correctly
+   * @param io
+   * @throws Exception
+   */
+  public void allIn(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 300;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> entity = new HashMap<String, Object>();
+      entity.put("name", String.valueOf(i));
+
+      io.writeEntity("test", entity);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = new Query();
+    query.setLimit(100);
+
+    int count = 0;
+
+    Results results;
+
+    start = System.currentTimeMillis();
+
+    do {
+
+      // now do simple ordering, should be returned in order
+      results = io.getResults(query, "tests");
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(String.valueOf(count), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.getCursor() != null);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+    assertEquals(size, count);
+
+  }
+
+  /**
+   * Interface to abstract actually doing I/O targets. The same test logic can
+   * be applied to both collections and connections
+   * 
+   * @author tnine
+   * 
+   */
+  private interface IoHelper {
+
+    /**
+     * Sets the entity manager to user
+     * 
+     * @param em
+     */
+    public void setEntityManager(EntityManager em);
+
+
+    /**
+     * Perform any setup required
+     * 
+     * @throws Exception
+     */
+    public void doSetup() throws Exception;
+
+    /**
+     * Write the entity to the data store
+     * 
+     * @param entity
+     * @throws Exception
+     */
+    public Entity writeEntity(String type, Map<String, Object> entity) throws Exception;
+
+    /**
+     * Get the results for the query
+     * 
+     * @param query
+     * @return
+     * @throws Exception
+     */
+    public Results getResults(Query query, String collectionName) throws Exception;
+
+  }
+
+  private class CollectionIoHelper implements IoHelper {
+
+    protected EntityManager em;
+    private String appName;
+
+    private CollectionIoHelper(String appName) {
+      this.appName = appName;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IoHelper2#setEntityManager(org.usergrid
+     * .persistence.EntityManager)
+     */
+    @Override
+    public void setEntityManager(EntityManager em) {
+      this.em = em;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.usergrid.persistence.query.IoHelper2#doSetup()
+     */
+    @Override
+    public void doSetup() throws Exception {
+      UUID applicationId = createApplication("IteratingQueryTest", appName);
+      assertNotNull(applicationId);
+
+      em = emf.getEntityManager(applicationId);
+      assertNotNull(em);
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IoHelper2#writeEntity(java.lang.String,
+     * java.util.Map)
+     */
+    @Override
+    public Entity writeEntity(String type, Map<String, Object> entity) throws Exception {
+      return em.create(type, entity);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IoHelper2#getResults(org.usergrid.persistence
+     * .Query)
+     */
+    @Override
+    public Results getResults(Query query, String collectionName) throws Exception {
+      return em.searchCollection(em.getApplicationRef(), collectionName, query);
+    }
+  }
+
+  private class ConnectionHelper extends CollectionIoHelper {
+
+    /**
+     * 
+     */
+    private static final String CONNECTION = "connection";
+    private Entity rootEntity;
+
+    private ConnectionHelper(String name) {
+      super(name);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IteratingQueryTest.CollectionIoHelper#
+     * writeEntity(java.lang.String, java.util.Map)
+     */
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IteratingQueryTest.CollectionIoHelper#
+     * doSetup()
+     */
+    @Override
+    public void doSetup() throws Exception {
+      super.doSetup();
+
+      Map<String, Object> data = new HashMap<String, Object>();
+      data.put("name", "rootentity");
+      rootEntity = em.create("root", data);
+    }
+
+    @Override
+    public Entity writeEntity(String type, Map<String, Object> entity) throws Exception {
+      // write to the collection
+      Entity created = super.writeEntity(type, entity);
+
+      em.createConnection(rootEntity, CONNECTION, created);
+
+      return created;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IteratingQueryTest.CollectionIoHelper#
+     * getResults(org.usergrid.persistence.Query)
+     */
+    @Override
+    public Results getResults(Query query, String collectionName) throws Exception {
+      query.setConnectionType(CONNECTION);
+      query.setEntityType(collectionName);
+      return em.searchConnectedEntities(rootEntity, query);
+    }
+
+  }
 }

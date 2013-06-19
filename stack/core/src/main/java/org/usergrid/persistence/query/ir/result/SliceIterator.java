@@ -16,10 +16,8 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,11 +46,6 @@ public class SliceIterator<T> implements ResultIterator {
    * Pointer to the uuid set until it's returned
    */
   private Set<UUID> lastResult;
-
-  /**
-   * Pointer to the lastId we loaded
-   */
-  private UUID lastId;
 
   /**
    * counter that's incremented as we load pages. If pages loaded = 1 when
@@ -124,8 +117,6 @@ public class SliceIterator<T> implements ResultIterator {
       UUID id = parser.getUUID(parser.parse(colName));
 
       cols.put(id, colName);
-      
-      lastId = id;
     }
 
     lastResult = cols.keySet();

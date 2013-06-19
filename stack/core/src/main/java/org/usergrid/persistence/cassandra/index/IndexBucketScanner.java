@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -238,7 +239,7 @@ public class IndexBucketScanner implements IndexScanner {
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
+  public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
     return this;
   }
 

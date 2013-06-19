@@ -141,6 +141,7 @@ import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
+import org.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
@@ -151,6 +152,7 @@ import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
 import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
 import org.usergrid.persistence.query.ir.result.GeoIterator;
 import org.usergrid.persistence.query.ir.result.IntersectionIterator;
@@ -1652,7 +1654,7 @@ public class RelationManagerImpl implements RelationManager {
 
     int last = maxResults + 1;
 
-    Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> pages = scanner.iterator();
+    Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> pages = scanner.iterator();
 
     while (pages.hasNext() && (refs.size() < last || ids.size() < last)) {
       Iterator<HColumn<ByteBuffer, ByteBuffer>> cols = pages.next().iterator();
@@ -2561,18 +2563,6 @@ public class RelationManagerImpl implements RelationManager {
 
     headEntity = em.validate(headEntity);
 
-    if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
-      List<ConnectionRefImpl> connections = getConnections(new ConnectionRefImpl(headEntity,
-          new ConnectedEntityRefImpl(NULL_ID), new ConnectedEntityRefImpl(connectionType, connectedEntityType, null)),
-          false);
-
-      Results results = Results.fromConnections(connections);
-      results = em.loadEntities(results, query.getResultsLevel(), query.getLimit());
-
-      return results;
-
-    }
-
     ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(connectionType,
         connectedEntityType, null));
 
@@ -2634,6 +2624,9 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   private static final CollectionIndexSliceParser COLLECTION_PARSER = new CollectionIndexSliceParser();
+  
+  
+  private static final ConnectionIndexSliceParser CONNECTION_PARSER = new ConnectionIndexSliceParser();
 
   private static final UUIDIndexSliceParser UUID_PARSER = new UUIDIndexSliceParser();
 
@@ -2710,10 +2703,14 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      UUID startId = node.getCursor();
+      UUID startId = null;
+
+      if (slice.hasCursor()) {
+        startId = UUID_PARSER.parse(slice.getCursor());
+      }
 
       IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null, query.getLimit(),
+          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null, queryProcessor.getPageSizeHint(node),
           query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
       this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER));
@@ -2811,7 +2808,28 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     public void visit(AllNode node) throws Exception {
-      // TODO read connections and do paging
+      QuerySlice slice = node.getSlice();
+
+      queryProcessor.applyCursorAndSort(slice);
+
+      int size = queryProcessor.getPageSizeHint(node);
+      
+      UUID startId = null;
+
+      if (slice.hasCursor()) {
+        startId = CONNECTION_PARSER.getUUID(CONNECTION_PARSER.parse(slice.getCursor()));
+      }
+      
+      //we'll discard the first match, increase the size
+      if(startId != null){
+        size++;
+      }
+      
+      IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId, connection, startId, slice.isReversed(), size);
+      
+      this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, CONNECTION_PARSER));
+      
+
     }
   }
 
