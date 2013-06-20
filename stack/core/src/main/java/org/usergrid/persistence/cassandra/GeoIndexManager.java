@@ -375,23 +375,23 @@ public class GeoIndexManager {
     // entity_id,prop_name
     Object property_index_key = key(index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, propertyName,
         DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.ALL], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL], geoCell));
 
     // entity_id,entity_type,prop_name
     Object entity_type_prop_index_key = key(index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS,
         propertyName, DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], geoCell));
 
     // entity_id,connection_type,prop_name
     Object connection_type_prop_index_key = key(index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS,
         propertyName, DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], geoCell));
 
     // entity_id,connection_type,entity_type,prop_name
     Object connection_type_and_entity_type_prop_index_key = key(
         index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName,
         DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell));
 
     // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
     addInsertToMutator(m, ENTITY_INDEX, property_index_key, columnName, columnValue, timestamp);
@@ -445,23 +445,23 @@ public class GeoIndexManager {
     // entity_id,prop_name
     Object property_index_key = key(index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, propertyName,
         DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.ALL], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL], geoCell));
 
     // entity_id,entity_type,prop_name
     Object entity_type_prop_index_key = key(index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS,
         propertyName, DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], geoCell));
 
     // entity_id,connection_type,prop_name
     Object connection_type_prop_index_key = key(index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS,
         propertyName, DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], geoCell));
 
     // entity_id,connection_type,entity_type,prop_name
     Object connection_type_and_entity_type_prop_index_key = key(
         index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName,
         DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.GEO, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell));
 
     // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
     m.addDeletion(bytebuffer(property_index_key), ENTITY_INDEX.toString(), columnName, ByteBufferSerializer.get(),

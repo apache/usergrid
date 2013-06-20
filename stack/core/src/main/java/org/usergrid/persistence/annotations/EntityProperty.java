@@ -32,8 +32,6 @@ public @interface EntityProperty {
 
 	boolean required() default false;
 
-	boolean indexedInConnections() default false;
-
 	boolean mutable() default true;
 
 	boolean unique() default false;

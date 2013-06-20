@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -52,7 +53,6 @@ public class ConnectedIndexScanner implements IndexScanner {
    */
   private ByteBuffer start;
 
-  
   /**
    * Set to the original value to start scanning from
    */
@@ -71,20 +71,21 @@ public class ConnectedIndexScanner implements IndexScanner {
   public ConnectedIndexScanner(CassandraService cass, String dictionaryType, UUID applicationId,
       ConnectionRefImpl connection, UUID start, boolean reversed, int pageSize) {
 
-    ByteBuffer startBytes = null;
+    String connectedType = connection.getConnectedEntityType();
 
-    if (start != null) {
-      startBytes = new DynamicComposite(start).serialize();
+    if (start == null) {
+      start = UUIDUtils.MIN_TIME_UUID;
     }
-    
-    this.last = new DynamicComposite(UUIDUtils.MAX_TIME_UUID, connection.getConnectedEntityType()).serialize();
+
+    //create our start and end ranges
+    this.scanStart = new DynamicComposite(start, connectedType).serialize();
+    this.last = new DynamicComposite(UUIDUtils.MAX_TIME_UUID, connectedType).serialize();
 
     this.cass = cass;
     this.applicationId = applicationId;
-    this.start = startBytes;
+    this.start = scanStart;
     this.reversed = reversed;
     this.pageSize = pageSize;
-    this.scanStart = startBytes;
     this.connection = connection;
     this.dictionaryType = dictionaryType;
 

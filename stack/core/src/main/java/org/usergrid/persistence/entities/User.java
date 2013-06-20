@@ -51,7 +51,7 @@ public class User extends TypedEntity {
 
 	public static final String HASHTYPE_MD5 = "md5";
 
-	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
+	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, aliasProperty = true, unique = true, basic = true)
 	protected String username;
 
 	@EntityProperty(indexed = true, unique = true, basic = true)

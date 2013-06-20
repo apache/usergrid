@@ -131,7 +131,6 @@ public interface RelationManager {
 
 	public Results searchConnectedEntities(Query query) throws Exception;
 
-	public List<ConnectionRef> searchConnections(Query query) throws Exception;
 
 	public Set<String> getConnectionIndexes(String connectionType)
 			throws Exception;

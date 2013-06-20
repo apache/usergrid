@@ -67,7 +67,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       Map<String, Object> entity = new HashMap<String, Object>();
       entity.put("name", String.valueOf(i));
 
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
     }
 
     long stop = System.currentTimeMillis();
@@ -87,7 +87,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = io.getResults(query, "tests");
+      results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(String.valueOf(count), results.getEntities().get(i).getName());
@@ -112,7 +112,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   
   @Test
   public void singleOrderByIntersectionConnection() throws Exception {
-    singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionCollection"));
+    singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionConnection"));
   }
   
   
@@ -144,7 +144,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       // if we hit the increment, set this to true
       entity.put("intersect", intersect);
       
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
       
 
       if (intersect) {
@@ -171,7 +171,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = io.getResults(query, "tests");
+      results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expected.get(count), results.getEntities().get(i).getName());
@@ -201,7 +201,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   
   private void singleOrderByComplexIntersection(IoHelper io) throws Exception {
    
-    int size = 10000;
+    int size = 5000;
     int queryLimit = Query.MAX_LIMIT;
 
     // the number of entities that should be written including an intersection
@@ -227,7 +227,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
 
       if (intersect1 && intersect2) {
         expectedResults.add(name);
@@ -254,7 +254,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = io.getResults(query, "tests");
+      results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expectedResults.get(count), results.getEntities().get(i).getName());
@@ -302,7 +302,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       // if we hit the increment, set this to true
       entity.put("intersect", false);
       entity.put("intersect2", i % secondIncrement == 0);
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
 
     }
 
@@ -319,7 +319,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     start = System.currentTimeMillis();
 
-    Results results = io.getResults(query, "tests");
+    Results results = io.getResults(query);
 
     // now do simple ordering, should be returned in order
 
@@ -369,7 +369,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
 
       if (intersect1 || intersect2) {
         expectedResults.add(name);
@@ -393,7 +393,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = io.getResults(query, "tests");
+      results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expectedResults.get(count), results.getEntities().get(i).getName());
@@ -422,12 +422,9 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   }
 
   
-  private void singleOrderByNot(IoHelper helper) throws Exception {
-    UUID applicationId = createApplication("IteratingQueryTest", "singleOrderByNot");
-    assertNotNull(applicationId);
-
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
+  private void singleOrderByNot(IoHelper io) throws Exception {
+  
+    io.doSetup();
 
     int size = 2000;
     int queryLimit = Query.MAX_LIMIT;
@@ -453,7 +450,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      em.create("test", entity);
+      io.writeEntity(entity);
 
       if (!(intersect1 && intersect2)) {
         expectedResults.add(name);
@@ -477,7 +474,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = em.searchCollection(em.getApplicationRef(), "tests", query);
+      results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(expectedResults.get(count), results.getEntities().get(i).getName());
@@ -528,7 +525,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("name", name);
       entity.put("searched", searched);
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
 
       if (searched) {
         expected.add(name);
@@ -550,7 +547,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = io.getResults(query, "tests");
+    Results results = io.getResults(query);
 
     for (int i = 0; i < results.size(); i++) {
       assertEquals(expected.get(count), results.getEntities().get(i).getName());
@@ -596,7 +593,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       Map<String, Object> entity = new HashMap<String, Object>();
       entity.put("name", String.valueOf(i));
 
-      io.writeEntity("test", entity);
+      io.writeEntity( entity);
     }
 
     long stop = System.currentTimeMillis();
@@ -615,7 +612,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     do {
 
       // now do simple ordering, should be returned in order
-      results = io.getResults(query, "tests");
+      results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
         assertEquals(String.valueOf(count), results.getEntities().get(i).getName());
@@ -663,7 +660,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * @param entity
      * @throws Exception
      */
-    public Entity writeEntity(String type, Map<String, Object> entity) throws Exception;
+    public Entity writeEntity(Map<String, Object> entity) throws Exception;
 
     /**
      * Get the results for the query
@@ -672,7 +669,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * @return
      * @throws Exception
      */
-    public Results getResults(Query query, String collectionName) throws Exception;
+    public Results getResults(Query query) throws Exception;
 
   }
 
@@ -720,8 +717,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * java.util.Map)
      */
     @Override
-    public Entity writeEntity(String type, Map<String, Object> entity) throws Exception {
-      return em.create(type, entity);
+    public Entity writeEntity(Map<String, Object> entity) throws Exception {
+      return em.create("test", entity);
     }
 
     /*
@@ -732,8 +729,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * .Query)
      */
     @Override
-    public Results getResults(Query query, String collectionName) throws Exception {
-      return em.searchCollection(em.getApplicationRef(), collectionName, query);
+    public Results getResults(Query query) throws Exception {
+      return em.searchCollection(em.getApplicationRef(), "tests", query);
     }
   }
 
@@ -773,9 +770,9 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     }
 
     @Override
-    public Entity writeEntity(String type, Map<String, Object> entity) throws Exception {
+    public Entity writeEntity(Map<String, Object> entity) throws Exception {
       // write to the collection
-      Entity created = super.writeEntity(type, entity);
+      Entity created = super.writeEntity(entity);
 
       em.createConnection(rootEntity, CONNECTION, created);
 
@@ -790,9 +787,9 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * getResults(org.usergrid.persistence.Query)
      */
     @Override
-    public Results getResults(Query query, String collectionName) throws Exception {
+    public Results getResults(Query query) throws Exception {
       query.setConnectionType(CONNECTION);
-      query.setEntityType(collectionName);
+      query.setEntityType("test");
       return em.searchConnectedEntities(rootEntity, query);
     }
 

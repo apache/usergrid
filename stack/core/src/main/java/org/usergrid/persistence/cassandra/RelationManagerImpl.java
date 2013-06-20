@@ -94,7 +94,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -102,19 +101,16 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
-import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
-import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
@@ -1125,7 +1121,7 @@ public class RelationManagerImpl implements RelationManager {
     boolean entitySchemaHasProperty = indexUpdate.isSchemaHasProperty();
 
     if (entitySchemaHasProperty) {
-      if (!getDefaultSchema().isPropertyIndexedInConnections(indexUpdate.getEntity().getType(),
+      if (!getDefaultSchema().isPropertyIndexed(indexUpdate.getEntity().getType(),
           indexUpdate.getEntryName())) {
         return indexUpdate;
       }
@@ -1195,8 +1191,10 @@ public class RelationManagerImpl implements RelationManager {
       ConnectionRefImpl connection, UUID timestampUuid) throws Exception {
 
     long timestamp = getTimestampInMicros(timestampUuid);
-
-    Entity connectedEntity = em.loadPartialEntity(connection.getConnectedEntityId());
+        
+    
+    Entity connectedEntity =  em.get(connection.getConnectedEntityId());
+    
     if (connectedEntity == null) {
       return batch;
     }
@@ -1281,7 +1279,7 @@ public class RelationManagerImpl implements RelationManager {
 
       boolean indexed = schema.isPropertyIndexed(connectedEntity.getType(), propertyName);
 
-      boolean connection_indexes_property = schema.isPropertyIndexedInConnections(connectedEntity.getType(),
+      boolean connection_indexes_property = schema.isPropertyIndexed(connectedEntity.getType(),
           propertyName);
       boolean item_schema_has_property = schema.hasProperty(connectedEntity.getType(), propertyName);
       boolean fulltext_indexed = schema.isPropertyFulltextIndexed(connectedEntity.getType(), propertyName);
@@ -2531,24 +2529,6 @@ public class RelationManagerImpl implements RelationManager {
     return null;
   }
 
-  // @Override
-  // public Results searchConnectedEntitiesForProperty(String connectionType,
-  // String connectedEntityType, String propertyName,
-  // Object searchStartValue, Object searchFinishValue,
-  // UUID startResult, int count, boolean reversed, Level resultsLevel)
-  // throws Exception {
-  //
-  // Query query = new Query();
-  // query.
-  //
-  // Results r = searchConnections(new ConnectionRefImpl(headEntity,
-  // new ConnectedEntityRefImpl(connectionType, connectedEntityType,
-  // null)), propertyName, searchStartValue,
-  // searchFinishValue, startResult, null, count + 1, reversed,
-  // resultsLevel);
-  //
-  // return em.loadEntities(r, resultsLevel, count);
-  // }
 
   @Override
   @Metered(group = "core", name = "RelationManager_searchConnectedEntities")
@@ -2572,31 +2552,6 @@ public class RelationManagerImpl implements RelationManager {
     return qp.getResults(em, visitor, new EntityResultsLoader(em));
   }
 
-  @Override
-  @Metered(group = "core", name = "RelationManager_searchConnections")
-  public List<ConnectionRef> searchConnections(Query query) throws Exception {
-
-    if (query == null) {
-      return null;
-    }
-
-    headEntity = em.validate(headEntity);
-
-    if (!query.hasQueryPredicates()) {
-      return null;
-    }
-
-    QueryProcessor qp = new QueryProcessor(query, null);
-
-    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(
-        ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE, ConnectionRefImpl.CONNECTION_ENTITY_TYPE, null));
-
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
-
-    return null;
-    // TODO T.N. Query return qp.getResults(em, visitor);
-
-  }
 
   @Override
   public Set<String> getConnectionIndexes(String connectionType) throws Exception {
@@ -2767,15 +2722,32 @@ public class RelationManagerImpl implements RelationManager {
      */
     @Override
     public void visit(SliceNode node) throws Exception {
-      IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
+
+      int size = queryProcessor.getPageSizeHint(node);
+
+      IntersectionIterator intersection = new IntersectionIterator(size);
 
       for (QuerySlice slice : node.getAllSlices()) {
+
+        // Object connection_type_and_entity_type_prop_index_key = key(
+        // index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
+        // INDEX_CONNECTIONS, entry.getPath(),
+        // indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION,
+        // index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
+        // entry.getPath()));
+
+
+
+        UUID id = ConnectionRefImpl.getIndexId(ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity, connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0]);
+        
+
+        Object key = key(id, INDEX_CONNECTIONS);
 
         // update the cursor and order before we perform the slice
         // operation
         queryProcessor.applyCursorAndSort(slice);
 
-        IndexScanner columns = searchIndex(key(connection.getIndexId(), INDEX_CONNECTIONS), slice, queryProcessor.getPageSizeHint(node));
+        IndexScanner columns = searchIndex(key, slice, size);
 
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
       }

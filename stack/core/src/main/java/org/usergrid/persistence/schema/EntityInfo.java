@@ -37,8 +37,6 @@ public class EntityInfo {
 			String.CASE_INSENSITIVE_ORDER);
 	private final Set<String> required = new TreeSet<String>(
 			String.CASE_INSENSITIVE_ORDER);
-	private final Set<String> indexedInConnections = new TreeSet<String>(
-			String.CASE_INSENSITIVE_ORDER);
 	private Map<String, DictionaryInfo> dictionaries = new TreeMap<String, DictionaryInfo>(
 			String.CASE_INSENSITIVE_ORDER);
 	private Map<String, CollectionInfo> collections = new TreeMap<String, CollectionInfo>(
@@ -98,9 +96,6 @@ public class EntityInfo {
 				basic.add(key);
 			}
 
-			if (property.isIndexedInConnections()) {
-				indexedInConnections.add(key);
-			}
 
 			if (property.isFulltextIndexed()) {
 				fulltextIndexed.add(key);
@@ -154,14 +149,6 @@ public class EntityInfo {
 
 	public Set<String> getRequiredProperties() {
 		return required;
-	}
-
-	public boolean isPropertyIndexedInConnections(String propertyName) {
-		return indexedInConnections.contains(propertyName);
-	}
-
-	public Set<String> getPropertiesIndexedInConnections() {
-		return indexedInConnections;
 	}
 
 	public boolean isPropertyBasic(String propertyName) {
@@ -277,8 +264,7 @@ public class EntityInfo {
 	public String toString() {
 		return "Entity [type=" + type + ", aliasProperty=" + aliasProperty
 				+ ", properties=" + properties + ", indexed=" + indexed
-				+ ", required=" + required + ", indexedInConnections="
-				+ indexedInConnections + ", sets=" + dictionaries
+				+ ", required=" + required + ", sets=" + dictionaries
 				+ ", collections=" + collections + ", fulltextIndexed="
 				+ fulltextIndexed + ", publicVisible=" + publicVisible + "]";
 	}
