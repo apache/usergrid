@@ -3,8 +3,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
-		<spring-java-version>1.0.1.RELEASE</spring-java-version>
-		<jackson-version>2.1.1</jackson-version>
+		<org.springframework.version>3.1.2.RELEASE</org.springframework.version>
+		<jackson-version>2.2.0</jackson-version>
 	</properties>
 	
 	<parent>
@@ -62,14 +62,9 @@
 			<version>${jackson-version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.android</groupId>
-			<artifactId>spring-android-rest-template</artifactId>
-			<version>${spring-java-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.android</groupId>
-			<artifactId>spring-android-core</artifactId>
-			<version>${spring-java-version}</version>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>${org.springframework.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

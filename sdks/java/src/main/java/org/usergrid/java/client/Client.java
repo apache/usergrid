@@ -69,7 +69,7 @@ public class Client {
 
     private String currentOrganization = null;
 
-    static RestTemplate restTemplate = new RestTemplate(true);
+    static RestTemplate restTemplate = new RestTemplate();
 
     /**
      * Default constructor for instantiating a client.
