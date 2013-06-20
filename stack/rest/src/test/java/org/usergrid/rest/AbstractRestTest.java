@@ -30,7 +30,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.WebResource;
-import org.codehaus.jackson.JsonNode;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.AfterClass;

@@ -31,9 +31,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.usergrid.utils.UUIDUtils;
 
 public class Queue {

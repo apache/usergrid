@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Map.Entry;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

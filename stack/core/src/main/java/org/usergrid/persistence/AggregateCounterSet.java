@@ -18,9 +18,6 @@ package org.usergrid.persistence;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
 public class AggregateCounterSet {
 	private String name;
 	private UUID user;
