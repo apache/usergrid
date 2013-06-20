@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -66,6 +67,9 @@ public class Application extends TypedEntity {
 
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> counters;
+
+    @EntityDictionary(keyType = java.lang.String.class, valueType = JsonNode.class)
+    protected Map<String, JsonNode> schemas;
 
 	@EntityProperty(indexed = false)
 	protected Boolean activated;

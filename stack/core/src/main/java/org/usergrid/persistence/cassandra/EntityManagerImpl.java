@@ -32,6 +32,7 @@ import static org.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
 import static org.usergrid.persistence.Schema.DICTIONARY_PROPERTIES;
 import static org.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
 import static org.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
+import static org.usergrid.persistence.Schema.DICTIONARY_SCHEMAS;
 import static org.usergrid.persistence.Schema.DICTIONARY_SETS;
 import static org.usergrid.persistence.Schema.PROPERTY_ASSOCIATED;
 import static org.usergrid.persistence.Schema.PROPERTY_CREATED;
@@ -170,6 +171,8 @@ import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
 import org.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
@@ -211,6 +214,8 @@ public class EntityManagerImpl implements EntityManager {
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 	public static final LongSerializer le = new LongSerializer();
+	
+	final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
 
 	public EntityManagerImpl() {
 	}
@@ -1046,6 +1051,11 @@ public class EntityManagerImpl implements EntityManager {
 					}
 				}
 			}
+		}
+		
+		JsonNode jsonSchema = this.getSchemaForEntityType(eType);
+		if (jsonSchema != null) {
+		    jsonSchemaFactory.getJsonSchema(jsonSchema);
 		}
 
 		// Create collection name based on entity: i.e. "users"
@@ -3279,5 +3289,22 @@ public class EntityManagerImpl implements EntityManager {
     permission = permission.toLowerCase();
     removeFromDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
   }
+
+@Override
+public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception {
+    entityType = Schema.normalizeEntityType(entityType);
+    if (entityType != null) {
+        addToDictionary(application, DICTIONARY_SCHEMAS, entityType, schema);
+    }
+    else {
+        removeFromDictionary(application, DICTIONARY_SCHEMAS, entityType);
+    }
+}
+
+@Override
+public JsonNode getSchemaForEntityType(String entityType) throws Exception {
+    entityType = Schema.normalizeEntityType(entityType);
+    return (JsonNode) getDictionaryElementValue(application, DICTIONARY_SCHEMAS, entityType);
+}
 
 }

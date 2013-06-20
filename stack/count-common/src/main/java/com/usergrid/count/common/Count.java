@@ -21,21 +21,20 @@ import me.prettyprint.cassandra.serializers.TypeInferringSerializer;
 import me.prettyprint.hector.api.Serializer;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JacksonInject;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.nio.ByteBuffer;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.*;
 
 /**
  * Loosely models a 'count' of things to
  * @author zznate
  */
-@JsonAutoDetect(creatorVisibility = Visibility.PUBLIC_ONLY)
+@JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class Count<K,C> {
     private static final StringSerializer se = StringSerializer.get();
 
