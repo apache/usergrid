@@ -1053,10 +1053,12 @@ public class EntityManagerImpl implements EntityManager {
 			}
 		}
 		
-		JsonNode jsonSchema = this.getSchemaForEntityType(eType);
+		/*
+		JsonNode jsonSchema = this.getSchemaForEntityType(entityType);
 		if (jsonSchema != null) {
 		    jsonSchemaFactory.getJsonSchema(jsonSchema);
 		}
+		*/
 
 		// Create collection name based on entity: i.e. "users"
 		String collection_name = Schema.defaultCollectionName(eType);
