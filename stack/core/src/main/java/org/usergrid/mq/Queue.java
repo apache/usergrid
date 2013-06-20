@@ -33,6 +33,10 @@ import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Queue {
 
 	public static final String QUEUE_ID = "uuid";

@@ -1,7 +1,7 @@
 package org.usergrid.rest.management.organizations;
 
 import junit.framework.Assert;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.OrganizationInfo;

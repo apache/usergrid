@@ -80,6 +80,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.core.provider.EntityHolder;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
@@ -310,7 +311,7 @@ public class UserResource extends ServiceResource {
         response.setAction("set user pin");
 
         if (getUser() != null) {
-            String pin = json.path("pin").getTextValue();
+            String pin = json.path("pin").textValue();
             management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
         } else {
             response.setError("User not found");

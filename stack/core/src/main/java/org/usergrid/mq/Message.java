@@ -49,6 +49,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 import com.fasterxml.uuid.UUIDComparator;
 
 @XmlRootElement

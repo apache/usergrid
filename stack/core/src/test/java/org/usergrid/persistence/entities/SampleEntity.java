@@ -23,6 +23,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityDictionary;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 @XmlRootElement
 public class SampleEntity extends TypedEntity {
 

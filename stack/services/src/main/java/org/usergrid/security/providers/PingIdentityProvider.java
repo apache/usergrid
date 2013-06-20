@@ -1,7 +1,7 @@
 package org.usergrid.security.providers;
 
 import com.sun.jersey.api.client.WebResource;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.ManagementService;
@@ -104,10 +104,10 @@ public class PingIdentityProvider extends AbstractProvider {
     // {"token_type":"urn:pingidentity.com:oauth2:validated_token","expires_in":5383,
     // "client_id":"dev.app.appservices","access_token":{"subject":"svccastiron@burberry.com","client_id":"dev.app.appservices"}}
 
-    String rawEmail = node.get("access_token").get("subject").getTextValue();
+    String rawEmail = node.get("access_token").get("subject").textValue();
 
     Map<String,Object> userMap = new HashMap<String, Object>();
-    userMap.put("expiration", node.get("expires_in").getLongValue());
+    userMap.put("expiration", node.get("expires_in").longValue());
     userMap.put("username", pingUsernameFrom(rawEmail));
     userMap.put("name","pinguser");
     userMap.put("email", rawEmail);

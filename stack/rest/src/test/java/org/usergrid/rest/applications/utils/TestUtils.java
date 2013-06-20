@@ -17,7 +17,7 @@ package org.usergrid.rest.applications.utils;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.usergrid.utils.UUIDUtils;
 

@@ -24,6 +24,9 @@ import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityCollection;
 import org.usergrid.persistence.annotations.EntityProperty;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 /**
  * The Device entity class for representing devices in the service.
  */

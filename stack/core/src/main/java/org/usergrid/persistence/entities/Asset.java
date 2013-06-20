@@ -24,6 +24,9 @@ import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityProperty;
 import org.usergrid.persistence.annotations.EntityDictionary;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 /**
  * Asset entity for representing file-like objects.
  */

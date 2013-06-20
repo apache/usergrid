@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.mq.QueuePosition;
@@ -912,7 +912,7 @@ public class QueueResourceTest extends RestContextTest {
      * 
      * @see
      * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
-     * #response(org.codehaus.jackson.JsonNode)
+     * #response(com.fasterxml.jackson.databind.JsonNode)
      */
     @Override
     public void response(JsonNode node) {
@@ -954,7 +954,7 @@ public class QueueResourceTest extends RestContextTest {
      * 
      * @see
      * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
-     * #response(org.codehaus.jackson.JsonNode)
+     * #response(com.fasterxml.jackson.databind.JsonNode)
      */
     @Override
     public void response(JsonNode node) {
@@ -998,7 +998,7 @@ public class QueueResourceTest extends RestContextTest {
      * 
      * @see
      * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
-     * #response(org.codehaus.jackson.JsonNode)
+     * #response(com.fasterxml.jackson.databind.JsonNode)
      */
     @Override
     public void response(JsonNode node) {
@@ -1041,7 +1041,7 @@ public class QueueResourceTest extends RestContextTest {
      * 
      * @see
      * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
-     * #response(org.codehaus.jackson.JsonNode)
+     * #response(com.fasterxml.jackson.databind.JsonNode)
      */
     @Override
     public void response(JsonNode node) {
@@ -1080,7 +1080,7 @@ public class QueueResourceTest extends RestContextTest {
      * 
      * @see
      * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
-     * #response(org.codehaus.jackson.JsonNode)
+     * #response(com.fasterxml.jackson.databind.JsonNode)
      */
     @Override
     public void response(JsonNode node) {
@@ -1151,7 +1151,7 @@ public class QueueResourceTest extends RestContextTest {
      * 
      * @see
      * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
-     * #response(org.codehaus.jackson.JsonNode)
+     * #response(com.fasterxml.jackson.databind.JsonNode)
      */
     @Override
     public void response(JsonNode node) {

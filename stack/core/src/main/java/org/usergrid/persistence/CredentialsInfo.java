@@ -20,6 +20,11 @@ import java.util.TreeMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 @XmlRootElement
 public class CredentialsInfo implements Comparable<CredentialsInfo> {
 

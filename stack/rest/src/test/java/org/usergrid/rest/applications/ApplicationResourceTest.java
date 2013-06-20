@@ -25,7 +25,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.shiro.codec.Base64;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jclouds.json.Json;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -127,7 +127,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
 		// ensure the URI uses the properties file as a base
-		assertEquals(node.get("uri").getTextValue(),
+		assertEquals(node.get("uri").textValue(),
 				"http://sometestvalue/test-organization/test-app");
 
 		node = getEntity(node, 0);
@@ -148,7 +148,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 		JsonNode node = resource().path("/test-organization/test-app/credentials")
 				.queryParam("access_token", mgmtToken).accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-		assertEquals("ok", node.get("status").getTextValue());
+		assertEquals("ok", node.get("status").textValue());
 		logNode(node);
 	}
 
@@ -204,11 +204,11 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
 		long startTime = System.currentTimeMillis();
 
-		String token = node.get("access_token").getTextValue();
+		String token = node.get("access_token").textValue();
 
 		assertNotNull(token);
 
-		long expires_in = node.get("expires_in").getLongValue();
+		long expires_in = node.get("expires_in").longValue();
 		assertEquals(ttl, expires_in * 1000);
 
 		JsonNode userdata = resource().path("/test-organization/test-app/users/ed@anuff.com")
@@ -258,11 +258,11 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
 
-		String token = node.get("access_token").getTextValue();
+		String token = node.get("access_token").textValue();
 		logNode(node);
 		assertNotNull(token);
 
-		long expires_in = node.get("expires_in").getLongValue();
+		long expires_in = node.get("expires_in").longValue();
 		assertEquals(604800, expires_in);
 
 
@@ -279,7 +279,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.queryParam("username", "ed@anuff.com").queryParam("password", "sesame")
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
-		assertEquals(31536000, node.get("expires_in").getLongValue());
+		assertEquals(31536000, node.get("expires_in").longValue());
 		logNode(node);
 	}
 
@@ -352,8 +352,8 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.post(JsonNode.class, payload);
 
-		assertNotNull("It has access_token.", node.get("access_token").getTextValue());
-		assertNotNull("It has expires_in.", node.get("expires_in").getIntValue());
+		assertNotNull("It has access_token.", node.get("access_token").textValue());
+		assertNotNull("It has expires_in.", node.get("expires_in").intValue());
 	}
 
 	@Test
@@ -372,8 +372,8 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.post(JsonNode.class, payload);
 
-		assertNotNull("It has access_token.", node.get("access_token").getTextValue());
-		assertNotNull("It has expires_in.", node.get("expires_in").getIntValue());
+		assertNotNull("It has access_token.", node.get("access_token").textValue());
+		assertNotNull("It has expires_in.", node.get("expires_in").intValue());
 	}
 
 	@Test
@@ -393,8 +393,8 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.post(JsonNode.class, payload);
 
-		assertNotNull("It has access_token.", node.get("access_token").getTextValue());
-		assertNotNull("It has expires_in.", node.get("expires_in").getIntValue());
+		assertNotNull("It has access_token.", node.get("access_token").textValue());
+		assertNotNull("It has expires_in.", node.get("expires_in").intValue());
 	}
 
 	@Test

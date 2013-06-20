@@ -18,7 +18,7 @@ package org.usergrid.rest.test.resource.app;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.Me;
 import org.usergrid.rest.test.resource.NamedResource;

@@ -24,6 +24,9 @@ import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityDictionary;
 import org.usergrid.persistence.annotations.EntityProperty;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 /**
  * A generic Message type for message queue type operations. For status updates
  * and other social actions, use Activity instead.

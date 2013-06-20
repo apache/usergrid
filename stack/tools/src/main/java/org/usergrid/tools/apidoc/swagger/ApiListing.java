@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.tools.apidoc.swagger;
 
-import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
+import static com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion.NON_NULL;
 
 import java.util.List;
 import java.util.Map;
@@ -24,11 +24,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.usergrid.utils.JsonUtils;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class ApiListing {
 	String basePath;

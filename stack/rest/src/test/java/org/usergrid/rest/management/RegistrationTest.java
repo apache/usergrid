@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
@@ -65,7 +65,7 @@ public class RegistrationTest extends AbstractRestTest {
                 "Test User", "test-user-1@mockserver.com", "testpassword");
 
         UUID owner_uuid = UUID.fromString(node.findPath("data")
-                .findPath("owner").findPath("uuid").getTextValue());
+                .findPath("owner").findPath("uuid").textValue());
 
         List<Message> inbox = org.jvnet.mock_javamail.Mailbox
                 .get("test-user-1@mockserver.com");
@@ -91,7 +91,7 @@ public class RegistrationTest extends AbstractRestTest {
         } catch(UniformInterfaceException uie) {
             ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
             JsonNode body = uie.getResponse().getEntity(JsonNode.class);
-            assertEquals("user disabled", body.findPath("error_description").getTextValue());
+            assertEquals("user disabled", body.findPath("error_description").textValue());
         }
 
 
@@ -106,7 +106,7 @@ public class RegistrationTest extends AbstractRestTest {
         } catch(UniformInterfaceException uie) {
             ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
             JsonNode body = uie.getResponse().getEntity(JsonNode.class);
-            assertEquals("user not activated", body.findPath("error_description").getTextValue());
+            assertEquals("user not activated", body.findPath("error_description").textValue());
         }
 
 
@@ -239,7 +239,7 @@ public class RegistrationTest extends AbstractRestTest {
         // and "User Invited To Organization" email
     	String adminToken = adminToken();
         JsonNode node = postAddAdminToOrg("test-organization", "test-admin-nopwd@mockserver.com","", adminToken);
-        String uuid = node.get("data").get("user").get("uuid").getTextValue();
+        String uuid = node.get("data").get("user").get("uuid").textValue();
         UUID userId = UUID.fromString(uuid);
 
         String subject = "Password Reset";
@@ -290,7 +290,7 @@ public class RegistrationTest extends AbstractRestTest {
 		// only "User Invited To Organization" email
     	String adminToken = adminToken();
         JsonNode node = postAddAdminToOrg("test-organization", "AdminUserFromOtherOrg@otherorg.com", "password1", adminToken);
-        String uuid = node.get("data").get("user").get("uuid").getTextValue();
+        String uuid = node.get("data").get("user").get("uuid").textValue();
         UUID userId = UUID.fromString(uuid);
 
         assertEquals(adminUser.getUuid(), userId);

@@ -38,6 +38,13 @@ import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.InflectionUtils;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 @JsonPropertyOrder({ "action", "application", "params", "path", "query", "uri",
 		"status", "error", "applications", "entity", "entities", "list",
 		"data", "next", "timestamp", "duration" })

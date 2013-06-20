@@ -29,7 +29,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.codehaus.jackson.JsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Query;
@@ -43,6 +42,8 @@ import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.HttpUtils;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
+
+import com.fasterxml.jackson.core.JsonFactory;
 
 public class Cli extends ToolBase {
 
