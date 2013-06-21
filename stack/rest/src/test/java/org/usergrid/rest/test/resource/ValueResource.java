@@ -136,6 +136,22 @@ public abstract class ValueResource extends NamedResource {
 
     return jsonMedia(resource).get(JsonNode.class);
   }
-  
 
+  /*created so a limit could be easily added. Consider merging with getInternal(query,cursor)
+  as those are the only two query input parameters.
+   */
+  public JsonNode query(String query,String addition,int numAddition){
+    return getInternal(query,addition,numAddition);
+  }
+
+  protected JsonNode getInternal(String query,String addition,int numAddition)
+  {
+    WebResource resource = withParams(withToken(resource())).queryParam("ql", query);
+
+    if (addition != null) {
+      resource = resource.queryParam(addition, Integer.toString(numAddition));
+    }
+
+    return jsonMedia(resource).get(JsonNode.class);
+  }
 }
