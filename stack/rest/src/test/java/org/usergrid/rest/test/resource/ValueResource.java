@@ -112,6 +112,13 @@ public abstract class ValueResource extends NamedResource {
   }
 
   /**
+   * Query this resource.
+   */
+  public JsonNode query(String query) {
+    return getInternal(query, null);
+  }
+
+  /**
    * Get entities in this collection. Cursor is optional
    * 
    * @param query

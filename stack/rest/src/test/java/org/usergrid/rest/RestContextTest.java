@@ -16,7 +16,9 @@
 package org.usergrid.rest;
 
 import org.junit.runner.RunWith;
+import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.TestContext;
+import org.usergrid.rest.test.resource.app.Application;
 import org.usergrid.rest.test.util.Context;
 import org.usergrid.rest.test.util.RestRunner;
 
@@ -39,6 +41,14 @@ public abstract class RestContextTest extends AbstractRestTest {
    * @throws TestContainerException
    */
   public RestContextTest() throws TestContainerException {
+  }
+
+  protected Application application() {
+    return context.application();
+  }
+
+  protected CustomCollection collection(String name) {
+    return application().collection(name);
   }
 
 }
