@@ -30,63 +30,21 @@ import org.usergrid.services.ServiceResults.Type;
 
 public class DevicesService extends AbstractCollectionService {
 
-	// registering devices can hit the DB hard, since badly-behaved apps can
-	// call it very frequently. We need to maintain a simple LRU cache to
-	// avoid this
-
-	public static final int DEVICE_CACHE_COUNT = 10000;
-	public static final long MAX_DEVICE_CACHE_AGE = 10 * 60 * 1000;
-
-	private static final Logger logger = LoggerFactory
-			.getLogger(DevicesService.class);
-
-	private static final LRUMap deviceCache = new LRUMap(DEVICE_CACHE_COUNT);
+	private static final Logger logger = LoggerFactory.getLogger(DevicesService.class);
 
 	public DevicesService() {
 		super();
 		logger.info("/devices");
 	}
 
-	static boolean deviceInCache(UUID deviceId) {
-		synchronized (deviceCache) {
-			Long timestamp = (Long) deviceCache.put(deviceId,
-					System.currentTimeMillis());
-			if (timestamp == null) {
-				return false;
-			}
-			if ((timestamp - System.currentTimeMillis()) > MAX_DEVICE_CACHE_AGE) {
-				deviceCache.remove(deviceId);
-				return false;
-			}
-			return true;
-		}
-	}
-
 	@Override
-	public ServiceResults putItemById(ServiceContext context, UUID id)
-			throws Exception {
+	public ServiceResults putItemById(ServiceContext context, UUID id) throws Exception {
 		logger.info("Registering device {}", id);
-		if (deviceInCache(id)) {
-			logger.info("Device {} in cache, skipping...", id);
-			return new ServiceResults(this, context, Type.COLLECTION,
-					Results.fromEntity(new Device(id)), null, null);
-		} else {
-			logger.info("Device {} not in cache, storing...", id);
-			return super.putItemById(context, id);
-		}
+		return super.putItemById(context, id);
 	}
 
   @Override
-  protected void prepareToDelete(ServiceContext context, Entity entity) {
-    super.prepareToDelete(context, entity);
-    synchronized (deviceCache) {
-      deviceCache.remove(entity.getUuid());
-    }
-  }
-
-  @Override
-	public ServiceResults postItemById(ServiceContext context, UUID id)
-			throws Exception {
+	public ServiceResults postItemById(ServiceContext context, UUID id) throws Exception {
 		logger.info("Attempting to connect an entity to device {}", id);
 		return super.postItemById(context, id);
 	}
