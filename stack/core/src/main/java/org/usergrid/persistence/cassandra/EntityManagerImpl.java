@@ -71,7 +71,6 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.toSto
 import static org.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.getLong;
 import static org.usergrid.utils.ConversionUtils.object;
 import static org.usergrid.utils.ConversionUtils.string;
@@ -97,7 +96,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -121,11 +121,9 @@ import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
@@ -169,15 +167,16 @@ import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
+import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.github.fge.jsonschema.report.ProcessingReport;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
-
-import javax.annotation.Resource;
 
 /**
  * Cassandra-specific implementation of Datastore
@@ -1053,12 +1052,14 @@ public class EntityManagerImpl implements EntityManager {
 			}
 		}
 		
-		/*
-		JsonNode jsonSchema = this.getSchemaForEntityType(entityType);
-		if (jsonSchema != null) {
-		    jsonSchemaFactory.getJsonSchema(jsonSchema);
+		JsonNode jsonSchemaData = this.getSchemaForEntityType(entityType);
+		if (jsonSchemaData != null) {
+		    JsonSchema jsonSchema = jsonSchemaFactory.getJsonSchema(jsonSchemaData);
+		    if (jsonSchema != null) {
+		        ProcessingReport report = jsonSchema.validate(JsonUtils.toJsonNode(properties));
+		        logger.info("Schema validated", report);
+		    }
 		}
-		*/
 
 		// Create collection name based on entity: i.e. "users"
 		String collection_name = Schema.defaultCollectionName(eType);
@@ -3306,7 +3307,7 @@ public void setSchemaForEntityType(String entityType, JsonNode schema) throws Ex
 @Override
 public JsonNode getSchemaForEntityType(String entityType) throws Exception {
     entityType = Schema.normalizeEntityType(entityType);
-    return (JsonNode) getDictionaryElementValue(application, DICTIONARY_SCHEMAS, entityType);
+    return (JsonNode) getDictionaryElementValue(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
 }
 
 }
