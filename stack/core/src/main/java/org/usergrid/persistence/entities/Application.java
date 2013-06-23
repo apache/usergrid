@@ -357,6 +357,15 @@ public class Application extends TypedEntity {
 		this.oauthproviders = oauthproviders;
 	}
 	
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, JsonNode> getSchemas() {
+        return schemas;
+    }
+
+    public void setSchemas(Map<String, JsonNode> schemas) {
+        this.schemas = schemas;
+    }
+    
 	/**
 	 * Get the organization name of this app
 	 * @return
