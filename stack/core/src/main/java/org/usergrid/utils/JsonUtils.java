@@ -115,6 +115,19 @@ public class JsonUtils {
 		return null;
 	}
 
+    public static JsonNode parseToNode(String json) {
+        try {
+            return mapper.readValue(json, JsonNode.class);
+        } catch (JsonParseException e) {
+            logger.error("Unable to parse:", e);
+        } catch (JsonMappingException e) {
+            logger.error("Unable to parse:", e);
+        } catch (IOException e) {
+            logger.error("Unable to parse:", e);
+        }
+        return null;
+    }
+
 	public static JsonNode getJsonSchemaNode(Class<?> cls) {
 		JsonNode schemaRootNode = null;
 		JsonSchema jsonSchema = getJsonSchema(cls);
@@ -243,7 +256,7 @@ public class JsonUtils {
 				if (uuid != null) {
 					l.set(i, uuid);
 				} else if ((o instanceof Map) || (o instanceof List)) {
-					normalizeJsonTree(o);
+					l.set(i, normalizeJsonTree(o));
 				} else if (o instanceof Integer) {
 					l.set(i, ((Integer) o).longValue());
 				} else if (o instanceof BigInteger) {
@@ -260,7 +273,9 @@ public class JsonUtils {
 		} else if (obj instanceof BigInteger) {
 			return ((BigInteger) obj).longValue();
 		} else if (obj instanceof JsonNode) {
-			return mapper.convertValue(obj, Object.class);
+			Object o = mapper.convertValue(obj, Object.class);
+			o = normalizeJsonTree(o);
+			obj = mapper.convertValue(obj, JsonNode.class);
 		}
 		return obj;
 	}
