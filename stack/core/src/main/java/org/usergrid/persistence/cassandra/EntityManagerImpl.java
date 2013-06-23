@@ -1057,7 +1057,13 @@ public class EntityManagerImpl implements EntityManager {
 		    JsonSchema jsonSchema = jsonSchemaFactory.getJsonSchema(jsonSchemaData);
 		    if (jsonSchema != null) {
 		        ProcessingReport report = jsonSchema.validate(JsonUtils.toJsonNode(properties));
-		        logger.info("Schema validated", report);
+		        if (report.isSuccess()) {
+		            logger.info("JSON validated");
+		        }
+		        else {
+                    logger.error("JSON did not validate!");
+		            logger.error(report.toString());
+		        }
 		    }
 		}
 
@@ -3297,10 +3303,10 @@ public class EntityManagerImpl implements EntityManager {
 public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception {
     entityType = Schema.normalizeEntityType(entityType);
     if (entityType != null) {
-        addToDictionary(application, DICTIONARY_SCHEMAS, entityType, schema);
+        addToDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType, schema);
     }
     else {
-        removeFromDictionary(application, DICTIONARY_SCHEMAS, entityType);
+        removeFromDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
     }
 }
 
