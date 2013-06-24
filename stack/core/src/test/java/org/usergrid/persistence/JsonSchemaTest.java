@@ -2,13 +2,8 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.usergrid.utils.JsonUtils.loadJsonFromResourceFile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,13 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.exceptions.EntityValidationException;
 import org.usergrid.persistence.exceptions.InvalidEntitySchemaSyntaxException;
-import org.usergrid.utils.JsonUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JacksonUtils;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
 public class JsonSchemaTest extends AbstractPersistenceTest {
 
@@ -46,14 +36,14 @@ public class JsonSchemaTest extends AbstractPersistenceTest {
         Entity cat = em.create("cat", properties);
         assertNotNull(cat);
 
-        JsonNode bad_schema = readSchema("bad-schema.json");
+        JsonNode bad_schema = loadJsonFromResourceFile(JsonSchemaTest.class, JsonNode.class, "bad-schema.json");
         try {
             em.setSchemaForEntityType("cat", bad_schema);
             fail("Schema should have failed");
         } catch (InvalidEntitySchemaSyntaxException e) {
         }
 
-        JsonNode cat_schema = readSchema("cat-schema.json");
+        JsonNode cat_schema = loadJsonFromResourceFile(JsonSchemaTest.class, JsonNode.class, "cat-schema.json");
 
         em.setSchemaForEntityType("cat", cat_schema);
 
@@ -72,10 +62,4 @@ public class JsonSchemaTest extends AbstractPersistenceTest {
 
     }
 
-    JsonNode readSchema(String filename) throws JsonProcessingException,
-            FileNotFoundException, IOException, URISyntaxException {
-        return JacksonUtils.getReader().readTree(
-                new FileReader(new File(JsonSchemaTest.class.getResource(
-                        filename).toURI())));
-    }
 }

@@ -1,18 +1,23 @@
 package org.usergrid.rest.applications.collections;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.usergrid.utils.JsonUtils.loadJsonFromResourceFile;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.Assert;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
@@ -84,4 +89,48 @@ public class CollectionsResourceTest extends AbstractRestTest {
 
         assertEquals(1, queryResponse.get("entities").size());
     }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testCollectionSchema() throws Exception {
+      Map<String, Object> payload = loadJsonFromResourceFile(CollectionsResourceTest.class, Map.class, "cat-schema.json");
+
+      JsonNode node = resource().path("/test-organization/test-app/cats/schema").queryParam("access_token", access_token)
+          .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
+
+      try {
+        payload = loadJsonFromResourceFile(CollectionsResourceTest.class, Map.class, "bad-schema.json");
+        
+        node = resource().path("/test-organization/test-app/cats/schema").queryParam("access_token", access_token)
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
+
+        Assert.fail();
+      } catch (UniformInterfaceException iae) {
+        // ok
+      }
+
+      try {
+        payload = new LinkedHashMap<String, Object>();
+        properties.put("name", "Tom");
+
+        node = resource().path("/test-organization/test-app/cats").queryParam("access_token", access_token)
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
+        Assert.fail();
+      } catch (UniformInterfaceException iae) {
+        // ok
+      }
+
+      payload = new LinkedHashMap<String, Object>();
+      payload.put("name", "Tom");
+      payload.put("color", "tabby");
+
+      node = resource().path("/test-organization/test-app/cats").queryParam("access_token", access_token)
+          .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
+      assertNotNull(node);
+
+    }
+    
+    
+    
+    
 }

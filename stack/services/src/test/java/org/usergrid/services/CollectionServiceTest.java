@@ -19,12 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.usergrid.utils.JsonUtils.loadJsonFromResourceFile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -34,7 +30,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.JsonSchemaTest;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.EntityValidationException;
 import org.usergrid.persistence.exceptions.InvalidEntitySchemaSyntaxException;
@@ -42,11 +37,6 @@ import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
-import org.usergrid.utils.JsonUtils;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JacksonUtils;
 
 public class CollectionServiceTest extends AbstractServiceTest {
 
@@ -329,6 +319,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void testCollectionSchema() throws Exception {
     UUID applicationId = createApplication("testOrganization",
@@ -336,13 +327,12 @@ public class CollectionServiceTest extends AbstractServiceTest {
 
     ServiceManager sm = smf.getServiceManager(applicationId);
 
-    Map<String, Object> properties = JsonUtils
-        .toJsonMap(readSchema("cat-schema.json"));
+    Map<String, Object> properties = loadJsonFromResourceFile(CollectionServiceTest.class, Map.class, "cat-schema.json");
 
     testDataRequest(sm, ServiceAction.PUT, properties, "cats", "schema");
 
     try {
-      properties = JsonUtils.toJsonMap(readSchema("bad-schema.json"));
+      properties = loadJsonFromResourceFile(CollectionServiceTest.class, Map.class, "bad-schema.json");
 
       testDataRequest(sm, ServiceAction.PUT, properties, "dogs", "schema");
       Assert.fail();
@@ -369,13 +359,6 @@ public class CollectionServiceTest extends AbstractServiceTest {
         .getEntity();
     assertNotNull(cat);
 
-  }
-
-  JsonNode readSchema(String filename) throws JsonProcessingException,
-      FileNotFoundException, IOException, URISyntaxException {
-    return JacksonUtils.getReader().readTree(
-        new FileReader(new File(JsonSchemaTest.class.getResource(filename)
-            .toURI())));
   }
 
 }

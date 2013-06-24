@@ -29,12 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 
-import com.fasterxml.jackson.core.JsonFactory.Feature;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
@@ -347,18 +345,23 @@ public class JsonUtils {
 		return obj;
 	}
 
-	public static Object loadFromResourceFile(String file) {
-		Object json = null;
-		try {
-			URL resource = JsonUtils.class.getResource(file);
-			json = mapper.readValue(resource, Object.class);
-		} catch (Exception e) {
-			logger.error("Error loading JSON", e);
-		}
-		return json;
+	public static Object loadJsonFromResourceFile(String file) {
+		return loadJsonFromResourceFile(JsonUtils.class, Object.class, file);
 	}
+	
+  public static <C> C loadJsonFromResourceFile(Class<?> resource_class, Class<C> target_class, String file) {
+    C json = null;
+    try {
+      URL resource = resource_class.getResource(file);
+      json = mapper.readValue(resource, target_class);
+    } catch (Exception e) {
+      logger.error("Error loading JSON", e);
+    }
+    return json;
+  }
+  
 
-	public static Object loadFromFilesystem(String filename) {
+	public static Object loadJsonFromFilesystem(String filename) {
 		Object json = null;
 		try {
 			File file = new File(filename);
@@ -369,7 +372,7 @@ public class JsonUtils {
 		return json;
 	}
 
-	public static Object loadFromUrl(String urlStr) {
+	public static Object loadJsonFromUrl(String urlStr) {
 		Object json = null;
 		try {
 			URL url = new URL(urlStr);
@@ -380,7 +383,7 @@ public class JsonUtils {
 		return json;
 	}
 
-	public static Object loadFromUrl(URL url) {
+	public static Object loadJsonFromUrl(URL url) {
 		Object json = null;
 		try {
 			json = mapper.readValue(url, Object.class);

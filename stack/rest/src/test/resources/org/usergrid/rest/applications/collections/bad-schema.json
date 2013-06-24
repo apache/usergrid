@@ -1,0 +1,13 @@
+{
+	"type": "object",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"properties": {
+		"color": {
+			"type": "foo"
+		},
+		"name": {
+			"type": "string"
+		}
+	},
+	"required": ["name", "color"]
+}

@@ -34,6 +34,7 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.services.ServiceResults.Type;
 import org.usergrid.services.exceptions.ForbiddenServiceOperationException;
+import org.usergrid.services.exceptions.ServiceInvocationException;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.usergrid.utils.JsonUtils;
 
@@ -620,6 +621,9 @@ public class AbstractCollectionService extends AbstractService {
                         context.getRequest().getPath() + "/schema"),
                         context.getPreviousResults(), context.getChildPath(),
                         Type.GENERIC, Results.fromData(schema), null, null);
+            }
+            else {
+              throw new ServiceInvocationException(context, "Bad schema payload");
             }
         }
 
