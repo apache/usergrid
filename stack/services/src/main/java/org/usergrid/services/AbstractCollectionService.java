@@ -596,8 +596,7 @@ public class AbstractCollectionService extends AbstractService {
                     context.getPreviousResults(), context.getChildPath(),
                     Type.GENERIC, Results.fromData(indexes), null, null);
         } else if ("schema".equals(metadataType)) {
-            JsonNode schema = em.getSchemaForEntityType(context
-                    .getCollectionName());
+            JsonNode schema = em.getSchemaForEntityType(getEntityType());
             if (schema == null)
                 schema = JacksonUtils.nodeFactory().objectNode();
             return new ServiceResults(this, context.getRequest().withPath(
@@ -616,7 +615,7 @@ public class AbstractCollectionService extends AbstractService {
         if ("schema".equals(metadataType)) {
             JsonNode schema = JsonUtils.toJsonNode(payload.getProperties());
             if (schema != null) {
-                em.setSchemaForEntityType(context.getCollectionName(), schema);
+                em.setSchemaForEntityType(getEntityType(), schema);
                 return new ServiceResults(this, context.getRequest().withPath(
                         context.getRequest().getPath() + "/schema"),
                         context.getPreviousResults(), context.getChildPath(),
