@@ -3,10 +3,12 @@ package org.usergrid.rest.exceptions;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
 import org.usergrid.persistence.exceptions.JsonSchemaValidatorException;
 import org.usergrid.rest.ApiResponse;
 
+@Provider
 public class JsonSchemaValidatorExceptionMapper extends
         AbstractExceptionMapper<JsonSchemaValidatorException> {
 
