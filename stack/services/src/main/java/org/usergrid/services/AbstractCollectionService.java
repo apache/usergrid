@@ -595,7 +595,7 @@ public class AbstractCollectionService extends AbstractService {
                     context.getRequest().getPath() + "/indexes"),
                     context.getPreviousResults(), context.getChildPath(),
                     Type.GENERIC, Results.fromData(indexes), null, null);
-        } else if ("schema".equals(metadataType)) {
+        } else if (this.isRootService() && "schema".equals(metadataType)) {
             JsonNode schema = em.getSchemaForEntityType(getEntityType());
             if (schema == null)
                 schema = JacksonUtils.nodeFactory().objectNode();
@@ -612,7 +612,7 @@ public class AbstractCollectionService extends AbstractService {
     public ServiceResults putServiceMetadata(ServiceContext context,
             String metadataType, ServicePayload payload) throws Exception {
 
-        if ("schema".equals(metadataType)) {
+        if (this.isRootService() && "schema".equals(metadataType)) {
             JsonNode schema = JsonUtils.toJsonNode(payload.getProperties());
             if (schema != null) {
                 em.setSchemaForEntityType(getEntityType(), schema);
