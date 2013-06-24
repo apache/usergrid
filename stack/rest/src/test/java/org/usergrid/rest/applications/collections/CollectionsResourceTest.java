@@ -1,4 +1,4 @@
-package org.usergrid.rest.applications.users;
+package org.usergrid.rest.applications.collections;
 
 import static org.junit.Assert.*;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -44,55 +44,6 @@ public class CollectionsResourceTest extends AbstractRestTest {
         assertNull(getEntity(node, 0));
         assertNull(node.get("count"));
     }
-
-
-  /**
-     * emails with "me" in them are causing errors. Test we can post to a
-     * colleciton after creating a user with this email
-     *
-     * USERGRID-689
-     *
-     * @throws Exception
-     */
-    @Test
-    public void permissionWithMeInString() throws Exception {
-        // user is created get a token
-        createUser("sumeet.agarwal@usergrid.com", "sumeet.agarwal@usergrid.com", "secret", "Sumeet Agarwal");
-
-        String token = userToken("sumeet.agarwal@usergrid.com", "secret");
-
-
-        //create a permission with the path "me" in it
-        Map<String, String> data = new HashMap<String, String>();
-
-        data.put("permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**");
-
-        JsonNode posted = resource().path("/test-organization/test-app/users/sumeet.agarwal@usergrid.com/permissions").queryParam("access_token", token)
-                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
-
-
-        //now post data
-        data = new HashMap<String, String>();
-
-        data.put("name", "profile-sumeet");
-        data.put("firstname", "sumeet");
-        data.put("lastname", "agarwal");
-        data.put("mobile", "122");
-
-
-
-        posted = resource().path("/test-organization/test-app/nestprofiles").queryParam("access_token", token)
-                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
-
-        JsonNode response = resource().path("/test-organization/test-app/nestprofiles")
-                .queryParam("access_token", token).accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-
-        assertNotNull(getEntity(response, 0));
-        assertNotNull(response.get("count"));
-
-    }
-
 
 
     @Test
