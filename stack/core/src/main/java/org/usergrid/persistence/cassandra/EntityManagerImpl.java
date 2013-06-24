@@ -162,6 +162,8 @@ import org.usergrid.persistence.entities.Role;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.usergrid.persistence.exceptions.EntityValidationException;
+import org.usergrid.persistence.exceptions.InvalidEntitySchemaSyntaxException;
 import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
@@ -171,8 +173,10 @@ import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.cfg.ValidationConfiguration;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.github.fge.jsonschema.processors.syntax.SyntaxValidator;
 import com.github.fge.jsonschema.report.ProcessingReport;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -215,6 +219,7 @@ public class EntityManagerImpl implements EntityManager {
 	public static final LongSerializer le = new LongSerializer();
 	
 	final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
+	final SyntaxValidator jsonSchemaSyntaxValidator = new SyntaxValidator(ValidationConfiguration.byDefault());
 
 	public EntityManagerImpl() {
 	}
@@ -1061,8 +1066,7 @@ public class EntityManagerImpl implements EntityManager {
 		            logger.info("JSON validated");
 		        }
 		        else {
-                    logger.error("JSON did not validate!");
-		            logger.error(report.toString());
+		            throw new EntityValidationException(entityType, report);
 		        }
 		    }
 		}
@@ -3302,6 +3306,10 @@ public class EntityManagerImpl implements EntityManager {
 @Override
 public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception {
     entityType = Schema.normalizeEntityType(entityType);
+    ProcessingReport report = jsonSchemaSyntaxValidator.validateSchema(schema);
+    if (!report.isSuccess()) {
+        throw new InvalidEntitySchemaSyntaxException(entityType, report);
+    }
     if (entityType != null) {
         addToDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType, schema);
     }
