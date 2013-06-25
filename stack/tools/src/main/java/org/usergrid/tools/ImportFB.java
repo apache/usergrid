@@ -62,7 +62,7 @@ public class ImportFB extends ToolBase {
 
 		logger.info("Importing fbusers.json");
 
-		Object json = JsonUtils.loadFromFilesystem(input);
+		Object json = JsonUtils.loadJsonFromFilesystem(input);
 		Map<String, Object> map = (Map<String, Object>) json;
 		List<Map<String, Object>> fbusers = (List<Map<String, Object>>) map
 				.get("data");

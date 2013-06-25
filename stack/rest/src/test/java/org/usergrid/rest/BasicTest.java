@@ -26,7 +26,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public class BasicTest extends AbstractRestTest {
 
 		assertEquals("Test User",
 				node.get("data").get("organizations").get("test-organization")
-						.get("users").get("test").get("name").getTextValue());
+						.get("users").get("test").get("name").textValue());
 
 
 		// test login user with incorrect password
@@ -130,7 +130,7 @@ public class BasicTest extends AbstractRestTest {
 
 		logNode(node);
 
-		String user_access_token = node.get("access_token").getTextValue();
+		String user_access_token = node.get("access_token").textValue();
 		assertTrue(isNotBlank(user_access_token));
 
 		// test get app user collection with insufficient permissions
@@ -195,7 +195,7 @@ public class BasicTest extends AbstractRestTest {
 
 		logNode(node);
 
-		user_access_token = node.get("access_token").getTextValue();
+		user_access_token = node.get("access_token").textValue();
 		assertTrue(isNotBlank(user_access_token));
 
 		// test set app user pin
@@ -215,7 +215,7 @@ public class BasicTest extends AbstractRestTest {
 
 		logNode(node);
 
-		user_access_token = node.get("access_token").getTextValue();
+		user_access_token = node.get("access_token").textValue();
 		assertTrue(isNotBlank(user_access_token));
 
 		// test user test extension resource
@@ -238,7 +238,7 @@ public class BasicTest extends AbstractRestTest {
 		logNode(node);
 
 		assertEquals("ed.anuff", node.get("entities").get(0).get("username")
-				.getTextValue());
+				.textValue());
 
 		// test create device with guest permissions (no token)
 

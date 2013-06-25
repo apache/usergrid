@@ -22,13 +22,15 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityCollection;
 import org.usergrid.persistence.annotations.EntityDictionary;
 import org.usergrid.persistence.annotations.EntityProperty;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 /**
  * Applications represent the topmost container for all entities.
@@ -66,6 +68,9 @@ public class Application extends TypedEntity {
 
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> counters;
+
+    @EntityDictionary(keyType = java.lang.String.class, valueType = JsonNode.class)
+    protected Map<String, JsonNode> schemas;
 
 	@EntityProperty(indexed = false)
 	protected Boolean activated;
@@ -352,6 +357,15 @@ public class Application extends TypedEntity {
 		this.oauthproviders = oauthproviders;
 	}
 	
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, JsonNode> getSchemas() {
+        return schemas;
+    }
+
+    public void setSchemas(Map<String, JsonNode> schemas) {
+        this.schemas = schemas;
+    }
+    
 	/**
 	 * Get the organization name of this app
 	 * @return

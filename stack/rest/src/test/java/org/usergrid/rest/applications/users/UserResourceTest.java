@@ -33,7 +33,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -187,7 +187,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         JsonNode actor = getActor(entity);
 
-        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").textValue());
 
         assertEquals(userId, actorId);
 
@@ -227,7 +227,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         JsonNode actor = getActor(entity);
 
-        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").textValue());
 
         assertEquals(userId, actorId);
 
@@ -273,7 +273,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         JsonNode actor = getActor(entity);
 
-        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").textValue());
 
         assertEquals(testUUID, actorId);
 
@@ -813,7 +813,7 @@ public class UserResourceTest extends AbstractRestTest {
      * @return
      */
     public JsonNode getActor(Entity entity) {
-        return entity.getProperties().get("actor");
+        return (JsonNode)((Object)entity.getProperties().get("actor"));
     }
 
     @Test
@@ -892,12 +892,12 @@ public class UserResourceTest extends AbstractRestTest {
         JsonNode node = resource().path("/test-organization/test-app/users").queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+        String uuid = node.get("entities").get(0).get("uuid").textValue();
 
         node = resource().path("/test-organization/test-app/users/" + uuid).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         logNode(node);
-        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email").getTextValue());
+        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email").textValue());
     }
 
     @Test
@@ -1227,7 +1227,7 @@ public class UserResourceTest extends AbstractRestTest {
         } catch(UniformInterfaceException uie){
             status = uie.getResponse().getClientResponseStatus();
             JsonNode body = uie.getResponse().getEntity(JsonNode.class);
-            assertEquals("user not activated", body.findPath("error_description").getTextValue());
+            assertEquals("user not activated", body.findPath("error_description").textValue());
         }
     }
 
@@ -1262,6 +1262,55 @@ public class UserResourceTest extends AbstractRestTest {
         assertNotNull(getEntity(response, 0));
         logNode(response);
     }
+
+    /**
+     * emails with "me" in them are causing errors. Test we can post to a
+     * colleciton after creating a user with this email
+     *
+     * USERGRID-689
+     *
+     * @throws Exception
+     */
+    @Test
+    public void permissionWithMeInString() throws Exception {
+        // user is created get a token
+        createUser("sumeet.agarwal@usergrid.com", "sumeet.agarwal@usergrid.com", "secret", "Sumeet Agarwal");
+
+        String token = userToken("sumeet.agarwal@usergrid.com", "secret");
+
+
+        //create a permission with the path "me" in it
+        Map<String, String> data = new HashMap<String, String>();
+
+        data.put("permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**");
+
+        JsonNode posted = resource().path("/test-organization/test-app/users/sumeet.agarwal@usergrid.com/permissions").queryParam("access_token", token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+
+
+        //now post data
+        data = new HashMap<String, String>();
+
+        data.put("name", "profile-sumeet");
+        data.put("firstname", "sumeet");
+        data.put("lastname", "agarwal");
+        data.put("mobile", "122");
+
+
+
+        posted = resource().path("/test-organization/test-app/nestprofiles").queryParam("access_token", token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+
+        JsonNode response = resource().path("/test-organization/test-app/nestprofiles")
+                .queryParam("access_token", token).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertNotNull(getEntity(response, 0));
+        assertNotNull(response.get("count"));
+
+    }
+
+
 
 
 }

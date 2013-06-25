@@ -27,7 +27,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
@@ -235,7 +235,7 @@ public class ManagementResourceTest extends AbstractRestTest {
 
         assertEquals("test-organization", appdata.get("organization").asText());
         assertEquals("mgmt-org-app", appdata.get("applicationName").asText());
-        assertEquals("http://sometestvalue/test-organization/mgmt-org-app", appdata.get("uri").getTextValue());
+        assertEquals("http://sometestvalue/test-organization/mgmt-org-app", appdata.get("uri").textValue());
         appdata = getEntity(appdata, 0);
 
         assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());
@@ -254,7 +254,7 @@ public class ManagementResourceTest extends AbstractRestTest {
 
         long startTime = System.currentTimeMillis();
 
-        String token = node.get("access_token").getTextValue();
+        String token = node.get("access_token").textValue();
 
         assertNotNull(token);
 
@@ -285,7 +285,7 @@ public class ManagementResourceTest extends AbstractRestTest {
         .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
     logNode(node);
-    String token = node.get("access_token").getTextValue();
+    String token = node.get("access_token").textValue();
     assertNotNull(token);
 
     // set an organization property
@@ -316,7 +316,7 @@ public class ManagementResourceTest extends AbstractRestTest {
               .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
       logNode(node);
-      String token = node.get("access_token").getTextValue();
+      String token = node.get("access_token").textValue();
 
       assertNotNull(token);
 
@@ -335,7 +335,7 @@ public class ManagementResourceTest extends AbstractRestTest {
                     .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
 
     logNode(node);
-    String token = node.get("access_token").getTextValue();
+    String token = node.get("access_token").textValue();
 
     assertNotNull(token);
 
@@ -353,7 +353,7 @@ public class ManagementResourceTest extends AbstractRestTest {
             .post(JsonNode.class);
 
     logNode(node);
-    String token = node.get("access_token").getTextValue();
+    String token = node.get("access_token").textValue();
 
     assertNotNull(token);
 

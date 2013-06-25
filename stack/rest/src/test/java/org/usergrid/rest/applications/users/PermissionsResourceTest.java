@@ -27,8 +27,9 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.java.client.entities.Group;
@@ -471,8 +472,8 @@ public class PermissionsResourceTest extends AbstractRestTest {
             .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, book);
 
     logNode(node);
-    assertEquals("Ready Player One", getEntity(node,0).get("title").getTextValue());
-    String bookId = getEntity(node,0).get("uuid").getTextValue();
+    assertEquals("Ready Player One", getEntity(node,0).get("title").textValue());
+    String bookId = getEntity(node,0).get("uuid").textValue();
 
     String userOneToken = managementService.getAccessTokenForAppUser(appInfo.getId(), userOneId, 0);
     // post a review of the book as user1
@@ -482,7 +483,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
     node = resource().path(String.format("/%s/%s/reviews", params.get("orgName"), params.get("appName")))
                 .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, review);
-    String reviewId = getEntity(node,0).get("uuid").getTextValue();
+    String reviewId = getEntity(node,0).get("uuid").textValue();
 
     // POST https://api.usergrid.com/my-org/my-app/users/me/wrote/review/${reviewId}
     node =  resource().path(String.format("/%s/%s/users/me/wrote/review/%s",
@@ -702,7 +703,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
     ArrayNode data = (ArrayNode) node.get("data");
 
-    Iterator<JsonNode> iterator = data.getElements();
+    Iterator<JsonNode> iterator = data.elements();
 
     while (iterator.hasNext()) {
       if (grant.equals(iterator.next().asText())) {
@@ -736,7 +737,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
     ArrayNode data = (ArrayNode) node.get("data");
 
-    Iterator<JsonNode> iterator = data.getElements();
+    Iterator<JsonNode> iterator = data.elements();
 
     while (iterator.hasNext()) {
       if (grant.equals(iterator.next().asText())) {

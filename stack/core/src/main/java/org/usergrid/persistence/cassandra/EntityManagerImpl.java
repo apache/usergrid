@@ -32,6 +32,7 @@ import static org.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
 import static org.usergrid.persistence.Schema.DICTIONARY_PROPERTIES;
 import static org.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
 import static org.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
+import static org.usergrid.persistence.Schema.DICTIONARY_SCHEMAS;
 import static org.usergrid.persistence.Schema.DICTIONARY_SETS;
 import static org.usergrid.persistence.Schema.PROPERTY_ASSOCIATED;
 import static org.usergrid.persistence.Schema.PROPERTY_CREATED;
@@ -70,7 +71,6 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.toSto
 import static org.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.getLong;
 import static org.usergrid.utils.ConversionUtils.object;
 import static org.usergrid.utils.ConversionUtils.string;
@@ -96,7 +96,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -120,11 +121,9 @@ import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
@@ -163,18 +162,25 @@ import org.usergrid.persistence.entities.Role;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.usergrid.persistence.exceptions.EntityValidationException;
+import org.usergrid.persistence.exceptions.InvalidEntitySchemaSyntaxException;
 import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
+import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.cfg.ValidationConfiguration;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.github.fge.jsonschema.processors.syntax.SyntaxValidator;
+import com.github.fge.jsonschema.report.ProcessingReport;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
-
-import javax.annotation.Resource;
 
 /**
  * Cassandra-specific implementation of Datastore
@@ -211,6 +217,9 @@ public class EntityManagerImpl implements EntityManager {
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 	public static final LongSerializer le = new LongSerializer();
+	
+	final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
+	final SyntaxValidator jsonSchemaSyntaxValidator = new SyntaxValidator(ValidationConfiguration.byDefault());
 
 	public EntityManagerImpl() {
 	}
@@ -319,6 +328,28 @@ public class EntityManagerImpl implements EntityManager {
 
 		propertyValue = getDefaultSchema().validateEntityPropertyValue(
 				entity.getType(), propertyName, propertyValue);
+		
+		if (!force && !noRead) {
+	    JsonNode jsonSchemaData = this.getSchemaForEntityType(entity.getType());
+	    if (jsonSchemaData != null) {
+	        Map<String, Object> properties = this.getProperties(entity);
+	        if (properties != null) {
+  	        properties.put(propertyName, propertyValue);
+  	        for (String p : Schema.DEFAULT_PROPERTIES) properties.remove(p);
+  	        JsonSchema jsonSchema = jsonSchemaFactory.getJsonSchema(jsonSchemaData);
+  	        if (jsonSchema != null) {
+  	            ProcessingReport report = jsonSchema.validate(JsonUtils.toJsonNode(properties));
+  	            if (report.isSuccess()) {
+  	                logger.info("JSON validated");
+  	            }
+  	            else {
+  	                throw new EntityValidationException(entity.getType(), report);
+  	            }
+  	        }
+	        }
+	    }
+		  
+		}
 
 		Schema defaultSchema = Schema.getDefaultSchema();
 
@@ -1046,6 +1077,20 @@ public class EntityManagerImpl implements EntityManager {
 					}
 				}
 			}
+		}
+		
+		JsonNode jsonSchemaData = this.getSchemaForEntityType(entityType);
+		if (jsonSchemaData != null) {
+		    JsonSchema jsonSchema = jsonSchemaFactory.getJsonSchema(jsonSchemaData);
+		    if (jsonSchema != null) {
+		        ProcessingReport report = jsonSchema.validate(JsonUtils.toJsonNode(properties));
+		        if (report.isSuccess()) {
+		            logger.info("JSON validated");
+		        }
+		        else {
+		            throw new EntityValidationException(entityType, report);
+		        }
+		    }
 		}
 
 		// Create collection name based on entity: i.e. "users"
@@ -3279,5 +3324,31 @@ public class EntityManagerImpl implements EntityManager {
     permission = permission.toLowerCase();
     removeFromDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
   }
+
+  @Override
+  public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception {
+      entityType = Schema.normalizeEntityType(entityType);
+      ProcessingReport report = jsonSchemaSyntaxValidator.validateSchema(schema);
+      if (!report.isSuccess()) {
+          throw new InvalidEntitySchemaSyntaxException(entityType, report);
+      }
+      if (entityType != null) {
+          addToDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType, schema);
+      }
+      else {
+          removeFromDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
+      }
+  }
+  
+  @Override
+  public void deleteSchemaForEntityType(String entityType)  throws Exception {
+    removeFromDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
+  }
+  
+  @Override
+  public JsonNode getSchemaForEntityType(String entityType) throws Exception {
+      entityType = Schema.normalizeEntityType(entityType);
+      return (JsonNode) getDictionaryElementValue(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
+}
 
 }

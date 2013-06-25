@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -255,7 +255,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         .accept(MediaType.APPLICATION_JSON)
         .get(JsonNode.class);
 
-    Long changeTime = node.get("passwordChanged").getLongValue();
+    Long changeTime = node.get("passwordChanged").longValue();
     assertTrue(System.currentTimeMillis() - changeTime < 2000);
 
     Map<String, String> payload =
@@ -274,7 +274,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         .accept(MediaType.APPLICATION_JSON)
         .get(JsonNode.class);
 
-    Long changeTime2 = node.get("passwordChanged").getLongValue();
+    Long changeTime2 = node.get("passwordChanged").longValue();
     assertTrue(changeTime < changeTime2);
     assertTrue(System.currentTimeMillis() - changeTime2 < 2000);
 
@@ -285,7 +285,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         .accept(MediaType.APPLICATION_JSON)
         .get(JsonNode.class);
 
-    Long changeTime3 = node.get("passwordChanged").getLongValue();
+    Long changeTime3 = node.get("passwordChanged").longValue();
     assertEquals(changeTime2, changeTime3);
   }
 }

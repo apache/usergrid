@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.app.queue;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
 

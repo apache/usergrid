@@ -62,10 +62,11 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.IndexType;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.utils.JsonUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * @author edanuff
@@ -390,14 +391,14 @@ public class CassandraPersistenceUtils {
 		JsonNode json = toJsonNode(obj);
 		if ((json != null) && json.isValueNode()) {
 			if (json.isBigInteger()) {
-				return json.getBigIntegerValue();
+				return json.bigIntegerValue();
 			} else if (json.isNumber() || json.isBoolean()) {
-				return BigInteger.valueOf(json.getValueAsLong());
+				return BigInteger.valueOf(json.longValue());
 			} else if (json.isTextual()) {
-				return json.getTextValue();
+				return json.textValue();
 			} else if (json.isBinary()) {
 				try {
-					return wrap(json.getBinaryValue());
+					return wrap(json.binaryValue());
 				} catch (IOException e) {
 				}
 			}

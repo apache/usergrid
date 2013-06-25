@@ -33,8 +33,7 @@ import java.util.UUID;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import org.codehaus.jackson.JsonNode;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.uuid.UUIDComparator;
 
 public class QueueIndexUpdate {
@@ -239,14 +238,14 @@ public class QueueIndexUpdate {
 		JsonNode json = toJsonNode(obj);
 		if ((json != null) && json.isValueNode()) {
 			if (json.isBigInteger()) {
-				return json.getBigIntegerValue();
+				return json.bigIntegerValue();
 			} else if (json.isNumber() || json.isBoolean()) {
-				return BigInteger.valueOf(json.getValueAsLong());
+				return BigInteger.valueOf(json.longValue());
 			} else if (json.isTextual()) {
-				return prepStringForIndex(json.getTextValue());
+				return prepStringForIndex(json.textValue());
 			} else if (json.isBinary()) {
 				try {
-					return wrap(json.getBinaryValue());
+					return wrap(json.binaryValue());
 				} catch (IOException e) {
 				}
 			}
