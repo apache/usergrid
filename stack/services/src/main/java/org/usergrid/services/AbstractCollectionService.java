@@ -597,6 +597,7 @@ public class AbstractCollectionService extends AbstractService {
                     context.getPreviousResults(), context.getChildPath(),
                     Type.GENERIC, Results.fromData(indexes), null, null);
         } else if (this.isRootService() && "schema".equals(metadataType)) {
+            checkPermissionsForSubPath(context, "schema");
             JsonNode schema = em.getSchemaForEntityType(getEntityType());
             if (schema == null)
                 schema = JacksonUtils.nodeFactory().objectNode();
@@ -616,6 +617,7 @@ public class AbstractCollectionService extends AbstractService {
         if (this.isRootService() && "schema".equals(metadataType)) {
             JsonNode schema = JsonUtils.toJsonNode(payload.getProperties());
             if (schema != null) {
+                checkPermissionsForSubPath(context, "schema");
                 em.setSchemaForEntityType(getEntityType(), schema);
                 return new ServiceResults(this, context.getRequest().withPath(
                         context.getRequest().getPath() + "/schema"),
@@ -635,6 +637,7 @@ public class AbstractCollectionService extends AbstractService {
     public ServiceResults deleteServiceMetadata(ServiceContext context,
         String metadataType) throws Exception {
       if (this.isRootService() && "schema".equals(metadataType)) {
+        checkPermissionsForSubPath(context, "schema");
         JsonNode schema = em.getSchemaForEntityType(getEntityType());
         if (schema == null)
             schema = JacksonUtils.nodeFactory().objectNode();
