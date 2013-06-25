@@ -335,6 +335,7 @@ public class EntityManagerImpl implements EntityManager {
 	        Map<String, Object> properties = this.getProperties(entity);
 	        if (properties != null) {
   	        properties.put(propertyName, propertyValue);
+  	        for (String p : Schema.DEFAULT_PROPERTIES) properties.remove(p);
   	        JsonSchema jsonSchema = jsonSchemaFactory.getJsonSchema(jsonSchemaData);
   	        if (jsonSchema != null) {
   	            ProcessingReport report = jsonSchema.validate(JsonUtils.toJsonNode(properties));
