@@ -225,8 +225,12 @@ public class JsonUtils {
 		}
 		return null;
 	}
+	
+  public static Object normalizeJsonTree(Object obj) {
+    return normalizeJsonTree(obj, false);
+  }
 
-	public static Object normalizeJsonTree(Object obj) {
+	public static Object normalizeJsonTree(Object obj, boolean preserve_json_nodes) {
 		if (obj instanceof Map) {
 			@SuppressWarnings("unchecked")
 			Map<Object, Object> m = (Map<Object, Object>) obj;
@@ -254,7 +258,7 @@ public class JsonUtils {
 				if (uuid != null) {
 					l.set(i, uuid);
 				} else if ((o instanceof Map) || (o instanceof List)) {
-					l.set(i, normalizeJsonTree(o));
+					l.set(i, normalizeJsonTree(o, preserve_json_nodes));
 				} else if (o instanceof Integer) {
 					l.set(i, ((Integer) o).longValue());
 				} else if (o instanceof BigInteger) {
@@ -272,8 +276,13 @@ public class JsonUtils {
 			return ((BigInteger) obj).longValue();
 		} else if (obj instanceof JsonNode) {
 			Object o = mapper.convertValue(obj, Object.class);
-			o = normalizeJsonTree(o);
-			obj = mapper.convertValue(obj, JsonNode.class);
+			o = normalizeJsonTree(o, preserve_json_nodes);
+			if (preserve_json_nodes) {
+			  obj = mapper.convertValue(obj, JsonNode.class);
+			}
+			else {
+			  obj = o;
+			}
 		}
 		return obj;
 	}

@@ -1936,7 +1936,7 @@ public class Schema {
     public static Object deserializePropertyValueFromJsonBinary(
             ByteBuffer bytes, Class<?> classType) {
         return JsonUtils.normalizeJsonTree(JsonUtils.fromByteBuffer(bytes,
-                classType));
+                classType), true);
     }
 
   public boolean isPropertyEncrypted(String entityType, String propertyName) {
