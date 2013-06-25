@@ -157,6 +157,15 @@ public class CollectionsResourceTest extends AbstractRestTest {
         .type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
     assertNotNull(node);
 
+    node = resource().path("/test-organization/test-app/cats/schema")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+    assertNotNull(node);
+    assertEquals("http://json-schema.org/draft-04/schema#", node.get("data").get("$schema").asText());
+    assertEquals("object", node.get("data").get("type").asText());
+    logger.info("\n" + JsonUtils.mapToFormattedJsonString(node));
+
   }
 
 }
