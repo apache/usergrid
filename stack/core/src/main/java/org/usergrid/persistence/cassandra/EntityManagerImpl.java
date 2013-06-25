@@ -3303,25 +3303,30 @@ public class EntityManagerImpl implements EntityManager {
     removeFromDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
   }
 
-@Override
-public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception {
-    entityType = Schema.normalizeEntityType(entityType);
-    ProcessingReport report = jsonSchemaSyntaxValidator.validateSchema(schema);
-    if (!report.isSuccess()) {
-        throw new InvalidEntitySchemaSyntaxException(entityType, report);
-    }
-    if (entityType != null) {
-        addToDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType, schema);
-    }
-    else {
-        removeFromDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
-    }
-}
-
-@Override
-public JsonNode getSchemaForEntityType(String entityType) throws Exception {
-    entityType = Schema.normalizeEntityType(entityType);
-    return (JsonNode) getDictionaryElementValue(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
+  @Override
+  public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception {
+      entityType = Schema.normalizeEntityType(entityType);
+      ProcessingReport report = jsonSchemaSyntaxValidator.validateSchema(schema);
+      if (!report.isSuccess()) {
+          throw new InvalidEntitySchemaSyntaxException(entityType, report);
+      }
+      if (entityType != null) {
+          addToDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType, schema);
+      }
+      else {
+          removeFromDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
+      }
+  }
+  
+  @Override
+  public void deleteSchemaForEntityType(String entityType)  throws Exception {
+    removeFromDictionary(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
+  }
+  
+  @Override
+  public JsonNode getSchemaForEntityType(String entityType) throws Exception {
+      entityType = Schema.normalizeEntityType(entityType);
+      return (JsonNode) getDictionaryElementValue(getApplicationRef(), DICTIONARY_SCHEMAS, entityType);
 }
 
 }

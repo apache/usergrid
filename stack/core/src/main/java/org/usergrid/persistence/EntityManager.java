@@ -913,4 +913,6 @@ public interface EntityManager {
     
     public JsonNode getSchemaForEntityType(String entityType) throws Exception;
 
+    public void deleteSchemaForEntityType(String entityType) throws Exception;
+
 }

@@ -631,6 +631,22 @@ public class AbstractCollectionService extends AbstractService {
 
     }
 
+    @Override
+    public ServiceResults deleteServiceMetadata(ServiceContext context,
+        String metadataType) throws Exception {
+      if (this.isRootService() && "schema".equals(metadataType)) {
+        JsonNode schema = em.getSchemaForEntityType(getEntityType());
+        if (schema == null)
+            schema = JacksonUtils.nodeFactory().objectNode();
+        em.deleteSchemaForEntityType(getEntityType());
+        return new ServiceResults(this, context.getRequest().withPath(
+                context.getRequest().getPath() + "/schema"),
+                context.getPreviousResults(), context.getChildPath(),
+                Type.GENERIC, Results.fromData(schema), null, null);
+      }
+      return super.deleteServiceMetadata(context, metadataType);
+    }
+
     private void validateEntityType(EntityRef item, UUID id)
             throws UnexpectedEntityTypeException {
         if (!getEntityType().equalsIgnoreCase(item.getType())) {
