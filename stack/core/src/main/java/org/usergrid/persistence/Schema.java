@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.string;
@@ -31,6 +32,7 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -158,9 +160,12 @@ public class Schema {
     public static final String DICTIONARY_COUNTERS = "counters";
     public static final String DICTIONARY_GEOCELL = "geocell";
     public static final String DICTIONARY_SCHEMAS = "schemas";
+    
+    public static final Set<String> DEFAULT_PROPERTIES = new LinkedHashSet<String>(asList(
+        PROPERTY_UUID, PROPERTY_TYPE, PROPERTY_CREATED, PROPERTY_MODIFIED));
 
     private static List<String> entitiesPackage = new ArrayList<String>();
-	private static List<String> entitiesScanPath = new ArrayList<String>();
+	  private static List<String> entitiesScanPath = new ArrayList<String>();
 	
     @SuppressWarnings("rawtypes")
     public static Map<String, Class> DEFAULT_DICTIONARIES = hashMap(
