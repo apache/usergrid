@@ -137,10 +137,12 @@ Usergrid.Client.prototype.request = function (options, callback) {
         console.log('Error ('+ xhr.status +')(' + error + '): ' + error_description )
       }
       if ( (error == "auth_expired_session_token") ||
-           (error == "unauthorized")   ||
-           (error == "auth_missing_credentials")   ||
-           (error == "auth_invalid")) {
-        //this error type means the user is not authorized. If a logout function is defined, call it
+          (error == "auth_missing_credentials")   ||
+          (error == "auth_unverified_oath")       ||
+          (error == "expired_token")              ||
+          (error == "unauthorized")               ||
+          (error == "auth_invalid")) {
+        //these errors mean the user is not authorized for whatever reason. If a logout function is defined, call it
         //if the user has specified a logout callback:
         if (typeof(self.logoutCallback) === 'function') {
           return self.logoutCallback(true, response);
