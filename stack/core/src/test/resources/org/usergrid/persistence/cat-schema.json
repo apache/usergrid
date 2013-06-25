@@ -3,11 +3,12 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"properties": {
 		"color": {
-			"type": "string"
+			"enum": ["orange", "black", "grey", "white"]
 		},
 		"name": {
 			"type": "string"
 		}
 	},
-	"required": ["name", "color"]
+	"required": ["name", "color"],
+	"additionalProperties": false
 }

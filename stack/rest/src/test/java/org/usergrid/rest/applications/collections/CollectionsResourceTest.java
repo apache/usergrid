@@ -106,6 +106,7 @@ public class CollectionsResourceTest extends AbstractRestTest {
   public void testCollectionSchema() throws Exception {
     Map<String, Object> payload = loadJsonFromResourceFile(
         CollectionsResourceTest.class, Map.class, "cat-schema.json");
+    assertNotNull(payload);
 
     JsonNode node = resource().path("/test-organization/test-app/cats/schema")
         .queryParam("access_token", access_token)
@@ -115,6 +116,7 @@ public class CollectionsResourceTest extends AbstractRestTest {
     try {
       payload = loadJsonFromResourceFile(CollectionsResourceTest.class,
           Map.class, "bad-schema.json");
+      assertNotNull(payload);
 
       node = resource().path("/test-organization/test-app/cats/schema")
           .queryParam("access_token", access_token)

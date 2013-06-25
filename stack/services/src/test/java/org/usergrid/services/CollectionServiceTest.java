@@ -328,11 +328,13 @@ public class CollectionServiceTest extends AbstractServiceTest {
     ServiceManager sm = smf.getServiceManager(applicationId);
 
     Map<String, Object> properties = loadJsonFromResourceFile(CollectionServiceTest.class, Map.class, "cat-schema.json");
+    assertNotNull(properties);
 
     testDataRequest(sm, ServiceAction.PUT, properties, "cats", "schema");
 
     try {
       properties = loadJsonFromResourceFile(CollectionServiceTest.class, Map.class, "bad-schema.json");
+      assertNotNull(properties);
 
       testDataRequest(sm, ServiceAction.PUT, properties, "dogs", "schema");
       Assert.fail();
