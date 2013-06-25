@@ -328,6 +328,27 @@ public class EntityManagerImpl implements EntityManager {
 
 		propertyValue = getDefaultSchema().validateEntityPropertyValue(
 				entity.getType(), propertyName, propertyValue);
+		
+		if (!force && !noRead) {
+	    JsonNode jsonSchemaData = this.getSchemaForEntityType(entity.getType());
+	    if (jsonSchemaData != null) {
+	        Map<String, Object> properties = this.getProperties(entity);
+	        if (properties != null) {
+  	        properties.put(propertyName, propertyValue);
+  	        JsonSchema jsonSchema = jsonSchemaFactory.getJsonSchema(jsonSchemaData);
+  	        if (jsonSchema != null) {
+  	            ProcessingReport report = jsonSchema.validate(JsonUtils.toJsonNode(properties));
+  	            if (report.isSuccess()) {
+  	                logger.info("JSON validated");
+  	            }
+  	            else {
+  	                throw new EntityValidationException(entity.getType(), report);
+  	            }
+  	        }
+	        }
+	    }
+		  
+		}
 
 		Schema defaultSchema = Schema.getDefaultSchema();
 
