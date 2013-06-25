@@ -15,17 +15,23 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.NULL_ID;
+
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
+import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.cassandra.ConnectedEntityRefImpl;
+import org.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.usergrid.persistence.cassandra.CursorCache;
-import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * An iterator that will take all slices and order them correctly
@@ -33,41 +39,35 @@ import org.usergrid.persistence.query.ir.QuerySlice;
  * @author tnine
  * 
  */
-public class SliceIterator<T> implements ResultIterator {
+public class ConnectionIterator implements ResultIterator {
 
-  private final LinkedHashMap<UUID, ByteBuffer> cols;
+  private static final UUIDSerializer UUID_SER = UUIDSerializer.get();
+
   private final QuerySlice slice;
-  private final SliceParser<T> parser;
-  private final IndexScanner scanner;
-  private final int pageSize;
-  private final boolean skipFirst;
+  private final UUID cursorUUUID;
+  private final RelationManagerImpl impl;
+  private final EntityRef headEntity;
 
   /**
    * Pointer to the uuid set until it's returned
    */
   private Set<UUID> lastResult;
 
-  /**
-   * counter that's incremented as we load pages. If pages loaded = 1 when
-   * reset, we don't have to reload from cass
-   */
 
-  private int pagesLoaded = 0;
 
   /**
    * 
-   * @param scanner The scanner to use to read the cols
-   * @param slice The slice used in the scanner
-   * @param parser The parser for the scanner results
-   * @param skipFirst True if the first record should be skipped, used with cursors
+   * @param scanner
+   *          The scanner to use to read the cols
+   * @param slice
+   *          The slice to use for cursors
    */
-  public SliceIterator(IndexScanner scanner, QuerySlice slice, SliceParser<T> parser) {
+  public ConnectionIterator(EntityRef headEntity, QuerySlice slice, RelationManagerImpl impl) {
     this.slice = slice;
-    this.parser = parser;
-    this.scanner = scanner;
-    this.skipFirst = slice.hasCursor();
-    this.pageSize = scanner.getPageSize();
-    this.cols = new LinkedHashMap<UUID, ByteBuffer>(this.pageSize);
+    this.impl = impl;
+    this.cursorUUUID = slice.hasCursor() ? UUID_SER.fromByteBuffer(slice.getCursor()) : null;
+    this.headEntity = headEntity;
+
   }
 
   /*
@@ -91,46 +91,40 @@ public class SliceIterator<T> implements ResultIterator {
       return load();
     }
 
-    return true;
+    // we can only ever load once with the reverse index
+    return false;
   }
 
   private boolean load() {
-    if (!scanner.hasNext()) {
+
+    List<ConnectionRefImpl> refs = null;
+
+    try {
+      refs = impl.getConnections(new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(NULL_ID),
+          new ConnectedEntityRefImpl(null, null, null)), false);
+    } catch (Exception e) {
+      throw new RuntimeException("Error in loading connections", e);
+    }
+
+    if (refs == null) {
       return false;
     }
 
-    Iterator<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next().iterator();
+    lastResult = new LinkedHashSet<UUID>(refs.size());
 
-    cols.clear();
+    for (ConnectionRefImpl ref : refs) {
+      UUID connectedId = ref.getConnectedEntityId();
 
-    /**
-     * Skip the first value, it's from the previous cursor
-     */
-    if(skipFirst && pagesLoaded == 0  && results.hasNext()){
-      results.next();
-    }
-    
-    while (results.hasNext()) {
-
-      ByteBuffer colName = results.next().getName().duplicate();  
-    
-      T parsed = parser.parse(colName);
-      
-      //skip this value, the parser has discarded it
-      if(parsed == null){
+      if (cursorUUUID != null && UUIDUtils.compare(cursorUUUID, connectedId) <= 0) {
         continue;
       }
-          
-      UUID id = parser.getUUID(parsed);
 
-      cols.put(id, colName);
+      lastResult.add(ref.getConnectedEntityId());
+
     }
 
-    lastResult = cols.keySet();
+    return lastResult.size() > 0;
 
-    pagesLoaded++;
-
-    return lastResult != null && lastResult.size() > 0;
   }
 
   /*
@@ -140,9 +134,7 @@ public class SliceIterator<T> implements ResultIterator {
    */
   @Override
   public Set<UUID> next() {
-    Set<UUID> temp = lastResult;
-    lastResult = null;
-    return temp;
+    return lastResult;
   }
 
   /*
@@ -163,11 +155,6 @@ public class SliceIterator<T> implements ResultIterator {
   @Override
   public void reset() {
     // Do nothing, we'll just return the first page again
-    if (pagesLoaded == 1) {
-      lastResult = cols.keySet();
-      return;
-    }
-    scanner.reset();
   }
 
   /*
@@ -179,14 +166,7 @@ public class SliceIterator<T> implements ResultIterator {
   @Override
   public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
     int sliceHash = slice.hashCode();
-
-    ByteBuffer bytes = cols.get(lastLoaded);
-
-    if (bytes == null) {
-      return;
-    }
-    
-    cache.setNextCursor(sliceHash, bytes);
+    cache.setNextCursor(sliceHash, UUID_SER.toByteBuffer(lastLoaded));
 
   }
 

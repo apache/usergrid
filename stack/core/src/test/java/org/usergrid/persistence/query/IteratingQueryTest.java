@@ -573,6 +573,11 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   public void allInConnection() throws Exception {
     allIn(new ConnectionHelper("allInConnection"));
   }
+  
+  @Test
+  public void allInConnectionNoType() throws Exception {
+    allIn(new ConnectionNoTypeHelper("allInConnectionNoType"));
+  }
 
   /**
    * Tests that when an empty query is issued, we page through all entities correctly
@@ -739,8 +744,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     /**
      * 
      */
-    private static final String CONNECTION = "connection";
-    private Entity rootEntity;
+    protected static final String CONNECTION = "connection";
+    protected Entity rootEntity;
 
     private ConnectionHelper(String name) {
       super(name);
@@ -793,5 +798,26 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       return em.searchConnectedEntities(rootEntity, query);
     }
 
+  }
+  
+  private class ConnectionNoTypeHelper extends ConnectionHelper {
+    
+    private ConnectionNoTypeHelper(String name) {
+      super(name);
+    }
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.IteratingQueryTest.ConnectionHelper#getResults(org.usergrid.persistence.Query)
+     */
+    @Override
+    public Results getResults(Query query) throws Exception {
+      query.setConnectionType(CONNECTION);
+      //don't set it on purpose
+      query.setEntityType(null);
+      return em.searchConnectedEntities(rootEntity, query);
+      
+    }
+    
+  
   }
 }

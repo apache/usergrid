@@ -18,6 +18,8 @@ package org.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.usergrid.persistence.Schema;
+
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
 /**
@@ -27,6 +29,14 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
  *
  */
 public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite> {
+
+  private final String connectedEntityType;
+  /**
+   * @param connectedEntityType
+   */
+  public ConnectionIndexSliceParser(String connectedEntityType) {
+    this.connectedEntityType = connectedEntityType;
+  }
 
   /* (non-Javadoc)
    * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
@@ -41,7 +51,24 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
    */
   @Override
   public DynamicComposite parse(ByteBuffer buff) {
-    return DynamicComposite.fromByteBuffer(buff.duplicate());
+    DynamicComposite composite = DynamicComposite.fromByteBuffer(buff.duplicate());
+    
+    String connectedType = (String) composite.get(1);
+    
+    
+    //connection type has been defined and it doesn't match, skip it
+    if(connectedEntityType != null &&  !connectedEntityType.equals(connectedType)){
+      return null;
+    }
+    
+    //we're checking a loopback, skip it
+    if(Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
+      return null;
+    }
+    
+    
+    
+    return composite;
   }
 
   /* (non-Javadoc)

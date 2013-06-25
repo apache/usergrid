@@ -149,6 +149,7 @@ import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
 import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.ConnectionIterator;
 import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
 import org.usergrid.persistence.query.ir.result.GeoIterator;
 import org.usergrid.persistence.query.ir.result.IntersectionIterator;
@@ -260,14 +261,12 @@ public class RelationManagerImpl implements RelationManager {
     return connections;
   }
 
-
   @SuppressWarnings("deprecation")
   public List<ConnectionRefImpl> getConnectionsWithEntity(UUID participatingEntityId) throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
     List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
     List<String> idColumns = ConnectionRefImpl.getIdColumnNames();
-
 
     for (String idColumn : idColumns) {
       IndexedSlicesQuery<UUID, String, ByteBuffer> q = createIndexedSlicesQuery(ko, ue, se, be);
@@ -1121,8 +1120,7 @@ public class RelationManagerImpl implements RelationManager {
     boolean entitySchemaHasProperty = indexUpdate.isSchemaHasProperty();
 
     if (entitySchemaHasProperty) {
-      if (!getDefaultSchema().isPropertyIndexed(indexUpdate.getEntity().getType(),
-          indexUpdate.getEntryName())) {
+      if (!getDefaultSchema().isPropertyIndexed(indexUpdate.getEntity().getType(), indexUpdate.getEntryName())) {
         return indexUpdate;
       }
     }
@@ -1191,10 +1189,9 @@ public class RelationManagerImpl implements RelationManager {
       ConnectionRefImpl connection, UUID timestampUuid) throws Exception {
 
     long timestamp = getTimestampInMicros(timestampUuid);
-        
-    
-    Entity connectedEntity =  em.get(connection.getConnectedEntityId());
-    
+
+    Entity connectedEntity = em.get(connection.getConnectedEntityId());
+
     if (connectedEntity == null) {
       return batch;
     }
@@ -1279,8 +1276,7 @@ public class RelationManagerImpl implements RelationManager {
 
       boolean indexed = schema.isPropertyIndexed(connectedEntity.getType(), propertyName);
 
-      boolean connection_indexes_property = schema.isPropertyIndexed(connectedEntity.getType(),
-          propertyName);
+      boolean connection_indexes_property = schema.isPropertyIndexed(connectedEntity.getType(), propertyName);
       boolean item_schema_has_property = schema.hasProperty(connectedEntity.getType(), propertyName);
       boolean fulltext_indexed = schema.isPropertyFulltextIndexed(connectedEntity.getType(), propertyName);
       // For each property, if the schema says it's indexed, update its
@@ -1879,8 +1875,7 @@ public class RelationManagerImpl implements RelationManager {
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
-        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), pageSize,
-        slice.getPropertyName());
+        IndexType.CONNECTION, keyPrefix, start, finish, slice.isReversed(), pageSize, slice.getPropertyName());
 
     return scanner;
 
@@ -1896,7 +1891,8 @@ public class RelationManagerImpl implements RelationManager {
    * @return
    * @throws Exception
    */
-  private IndexScanner searchIndexBuckets(Object indexKey, QuerySlice slice, String collectionName, int pageSize) throws Exception {
+  private IndexScanner searchIndexBuckets(Object indexKey, QuerySlice slice, String collectionName, int pageSize)
+      throws Exception {
 
     DynamicComposite start = getStart(slice);
 
@@ -1909,9 +1905,9 @@ public class RelationManagerImpl implements RelationManager {
     }
 
     Object keyPrefix = key(indexKey, slice.getPropertyName());
-    
-    //we have a cursor, so the first record should be discarded
-    if(slice.hasCursor()){
+
+    // we have a cursor, so the first record should be discarded
+    if (slice.hasCursor()) {
       pageSize++;
     }
 
@@ -1933,7 +1929,7 @@ public class RelationManagerImpl implements RelationManager {
         setEqualityFlag((DynamicComposite) start, ComponentEquality.GREATER_THAN_EQUAL);
       }
     }
-    
+
     return start;
   }
 
@@ -1949,48 +1945,40 @@ public class RelationManagerImpl implements RelationManager {
 
     return finish;
   }
-  
 
-  
   @SuppressWarnings("unchecked")
   @Override
-  @Metered(group="core", name="RelationManager_isOwner")
-  public boolean isCollectionMember(String collectionName, EntityRef entity) throws Exception{
-   
+  @Metered(group = "core", name = "RelationManager_isOwner")
+  public boolean isCollectionMember(String collectionName, EntityRef entity) throws Exception {
+
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
-  
-    ByteBuffer col = DynamicComposite.toByteBuffer(asList(this.headEntity.getType(), collectionName, headEntity.getUuid()));
-    
-    HColumn<ByteBuffer, ByteBuffer> result = cass
-            .getColumn(
-                    ko,
-                    ENTITY_COMPOSITE_DICTIONARIES,
-                    key(entity.getUuid(),
-                            Schema.DICTIONARY_CONTAINER_ENTITIES), col, be, be
-                    );
-    
-    
+
+    ByteBuffer col = DynamicComposite.toByteBuffer(asList(this.headEntity.getType(), collectionName,
+        headEntity.getUuid()));
+
+    HColumn<ByteBuffer, ByteBuffer> result = cass.getColumn(ko, ENTITY_COMPOSITE_DICTIONARIES,
+        key(entity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES), col, be, be);
+
     return result != null;
 
   }
-  
+
   /**
    * @param c
-   * @param entity 
+   * @param entity
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
-    
+
     ConnectionRefImpl ref = new ConnectionRefImpl(this.headEntity, connectionName, entity);
 
-    HColumn<String, UUID> col = cass.getColumn(ko, ENTITY_CONNECTIONS, ref.getUuid(), ConnectionRefImpl.CONNECTED_ENTITY_ID, se, ue);
-    
+    HColumn<String, UUID> col = cass.getColumn(ko, ENTITY_CONNECTIONS, ref.getUuid(),
+        ConnectionRefImpl.CONNECTED_ENTITY_ID, se, ue);
+
     return col != null && entity.getUuid().equals(col.getValue());
   }
-
-
 
   @Override
   @Metered(group = "core", name = "RelationManager_getOwners")
@@ -2478,7 +2466,7 @@ public class RelationManagerImpl implements RelationManager {
     return connection_types;
   }
 
-//<<<<<<< HEAD
+  // <<<<<<< HEAD
   @Override
   public Set<String> getConnectionTypes() throws Exception {
     return getConnectionTypes(false);
@@ -2529,7 +2517,6 @@ public class RelationManagerImpl implements RelationManager {
     return null;
   }
 
-
   @Override
   @Metered(group = "core", name = "RelationManager_searchConnectedEntities")
   public Results searchConnectedEntities(Query query) throws Exception {
@@ -2551,7 +2538,6 @@ public class RelationManagerImpl implements RelationManager {
 
     return qp.getResults(em, visitor, new EntityResultsLoader(em));
   }
-
 
   @Override
   public Set<String> getConnectionIndexes(String connectionType) throws Exception {
@@ -2579,9 +2565,6 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   private static final CollectionIndexSliceParser COLLECTION_PARSER = new CollectionIndexSliceParser();
-  
-  
-  private static final ConnectionIndexSliceParser CONNECTION_PARSER = new ConnectionIndexSliceParser();
 
   private static final UUIDIndexSliceParser UUID_PARSER = new UUIDIndexSliceParser();
 
@@ -2665,8 +2648,8 @@ public class RelationManagerImpl implements RelationManager {
       }
 
       IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null, queryProcessor.getPageSizeHint(node),
-          query.isReversed(), indexBucketLocator, applicationId, collectionName);
+          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
+          queryProcessor.getPageSizeHint(node), query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
       this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER));
     }
@@ -2693,7 +2676,6 @@ public class RelationManagerImpl implements RelationManager {
 
   }
 
-
   /**
    * Simple search visitor that performs all the joining
    * 
@@ -2701,7 +2683,6 @@ public class RelationManagerImpl implements RelationManager {
    * 
    */
   private class SearchConnectionVisitor extends SearchVisitor {
-
 
     private final ConnectionRefImpl connection;
 
@@ -2736,10 +2717,8 @@ public class RelationManagerImpl implements RelationManager {
         // index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
         // entry.getPath()));
 
-
-
-        UUID id = ConnectionRefImpl.getIndexId(ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity, connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0]);
-        
+        UUID id = ConnectionRefImpl.getIndexId(ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
+            connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0]);
 
         Object key = key(id, INDEX_CONNECTIONS);
 
@@ -2773,10 +2752,8 @@ public class RelationManagerImpl implements RelationManager {
           connection.getIndexId(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
           node.getDistance()), query.getLimit(), slice);
 
-
       results.push(itr);
     }
-
 
     @Override
     public void visit(AllNode node) throws Exception {
@@ -2785,26 +2762,34 @@ public class RelationManagerImpl implements RelationManager {
       queryProcessor.applyCursorAndSort(slice);
 
       int size = queryProcessor.getPageSizeHint(node);
-      
-      UUID startId = null;
+
+      ByteBuffer start = null;
 
       if (slice.hasCursor()) {
-        startId = CONNECTION_PARSER.getUUID(CONNECTION_PARSER.parse(slice.getCursor()));
+        start = slice.getCursor();
       }
-      
-      //we'll discard the first match, increase the size
-      if(startId != null){
+
+      // we'll discard the first match, increase the size
+      if (start != null) {
         size++;
       }
+
+      if (connection.getConnectionType() != null) {
+        ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
+            connection.getConnectedEntityType());
+
+        IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
+            connection, start, slice.isReversed(), size);
+
+        this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, connectionParser));
+      }
       
-      IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId, connection, startId, slice.isReversed(), size);
-      
-      this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, CONNECTION_PARSER));
-      
+      //no connection type defined, get all connections
+      else{
+        this.results.push(new ConnectionIterator(headEntity, slice, RelationManagerImpl.this)); 
+      }
 
     }
   }
-
-   
 
 }

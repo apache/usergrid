@@ -25,13 +25,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import me.prettyprint.cassandra.utils.TimeUUIDUtils;
-import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.usergrid.utils.UUIDUtils;
 
 import com.yammer.metrics.annotation.Metered;
 
@@ -47,7 +44,6 @@ public class ConnectedIndexScanner implements IndexScanner {
   private final int pageSize;
   private final String dictionaryType;
   private final ConnectionRefImpl connection;
-  private final ByteBuffer last;
   /**
    * Pointer to our next start read
    */
@@ -69,18 +65,10 @@ public class ConnectedIndexScanner implements IndexScanner {
   private boolean hasMore = true;
 
   public ConnectedIndexScanner(CassandraService cass, String dictionaryType, UUID applicationId,
-      ConnectionRefImpl connection, UUID start, boolean reversed, int pageSize) {
+      ConnectionRefImpl connection, ByteBuffer start, boolean reversed, int pageSize) {
 
-    String connectedType = connection.getConnectedEntityType();
-
-    if (start == null) {
-      start = UUIDUtils.MIN_TIME_UUID;
-    }
-
-    //create our start and end ranges
-    this.scanStart = new DynamicComposite(start, connectedType).serialize();
-    this.last = new DynamicComposite(UUIDUtils.MAX_TIME_UUID, connectedType).serialize();
-
+    // create our start and end ranges
+    this.scanStart = start;
     this.cass = cass;
     this.applicationId = applicationId;
     this.start = scanStart;
@@ -126,11 +114,18 @@ public class ConnectedIndexScanner implements IndexScanner {
     // and start paging at the next entity, otherwise we'll just load the page
     // size we need
     int selectSize = pageSize + 1;
+    //
+    // addInsertToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
+    // key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
+    // connection.getConnectionType(), connection.getConnectedEntityType()),
+    //
+    Object key = null;
 
-    Object key = key(connection.getConnectingEntityId(), dictionaryType, connection.getConnectionType());
+    key = key(connection.getConnectingEntityId(), dictionaryType, connection.getConnectionType());
+    
 
     List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(cass.getApplicationKeyspace(applicationId),
-        ENTITY_COMPOSITE_DICTIONARIES, key, start, last, selectSize, reversed);
+        ENTITY_COMPOSITE_DICTIONARIES, key, start, null, selectSize, reversed);
 
     // we loaded a full page, there might be more
     if (results.size() == selectSize) {

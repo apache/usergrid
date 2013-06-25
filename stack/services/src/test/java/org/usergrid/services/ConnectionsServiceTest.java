@@ -37,7 +37,7 @@ public class ConnectionsServiceTest extends AbstractServiceTest {
 	@Test
 	public void testUserConnections() throws Exception {
 		UUID applicationId = createApplication("testOrganization",
-				"testConnections");
+				"testUserConnections");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 
