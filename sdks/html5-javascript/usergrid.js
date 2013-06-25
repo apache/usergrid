@@ -100,6 +100,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
   //add content type = json if there is a json payload
   if (body) {
     xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Accept", "application/json");
   }
 
   // Handle response.
