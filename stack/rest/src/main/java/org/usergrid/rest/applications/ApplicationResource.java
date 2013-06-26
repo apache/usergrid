@@ -282,7 +282,7 @@ public class ApplicationResource extends ServiceResource {
 					services.getApplicationId(), user.getUuid(), ttl);
 
 			AccessInfo access_info = new AccessInfo()
-			.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+			.withExpiresIn(tokens.getMaxTokenAgeInSeconds(token))
 			.withAccessToken(token).withProperty("user", user);
 
 			return Response.status(SC_OK).type(jsonMediaType(callback))

@@ -1699,17 +1699,20 @@ public class ManagementServiceImpl implements ManagementService {
     }
     AccessInfo access_info = null;
     if (clientSecret.equals(getSecret(MANAGEMENT_APPLICATION_ID, type, uuid))) {
+      
+      String token = getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl);
+      
+      long duration = tokens.getMaxTokenAgeInSeconds(token);
+      
+      access_info = new AccessInfo().withExpiresIn(duration).withAccessToken(token);
+      
       if (type.equals(AuthPrincipalType.APPLICATION)) {
         ApplicationInfo app = getApplicationInfo(uuid);
-        access_info = new AccessInfo().withExpiresIn(3600)
-            .withAccessToken(getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
-            .withProperty("application", app.getId());
+        access_info = access_info.withProperty("application", app.getId());
       } else if (type.equals(AuthPrincipalType.ORGANIZATION)) {
         OrganizationInfo organization = getOrganizationByUuid(uuid);
-        access_info = new AccessInfo().withExpiresIn(3600)
-            .withAccessToken(getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
-            .withProperty("organization", getOrganizationData(organization))
-            .withPasswordChanged(getLastAdminPasswordChange(uuid));
+        access_info = access_info
+            .withProperty("organization", getOrganizationData(organization));
       }
     }
     return access_info;
