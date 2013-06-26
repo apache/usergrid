@@ -1702,9 +1702,9 @@ public class ManagementServiceImpl implements ManagementService {
       
       String token = getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl);
       
-      TokenInfo tokenInfo = tokens.getTokenInfo(token);
+      long duration = tokens.getMaxTokenAgeInSeconds(token);
       
-      access_info = new AccessInfo().withExpiresIn(tokenInfo.getDuration()/1000).withAccessToken(token);
+      access_info = new AccessInfo().withExpiresIn(duration).withAccessToken(token);
       
       if (type.equals(AuthPrincipalType.APPLICATION)) {
         ApplicationInfo app = getApplicationInfo(uuid);

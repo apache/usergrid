@@ -542,6 +542,14 @@ public class TokenServiceImpl implements TokenService {
         return Long.MAX_VALUE;
     }
 
+    /* (non-Javadoc)
+     * @see org.usergrid.security.tokens.TokenService#getMaxTokenAgeInSeconds(java.lang.String)
+     */
+    @Override
+    public long getMaxTokenAgeInSeconds(String token) {
+      return getMaxTokenAge(token)/1000;
+    }
+
     /**
      * The maximum age a token can be saved for
      *
