@@ -33,20 +33,10 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-<<<<<<< HEAD
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-=======
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
-
-import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
->>>>>>> origin/master
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 @XmlRootElement
 public class Results implements Iterable<Entity> {
