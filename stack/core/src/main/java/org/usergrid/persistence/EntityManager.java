@@ -25,6 +25,8 @@ import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.Role;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * The interface class for the data access object for Applications. Each
  * application contains a set of users as well as a hierarchy of groups. A
@@ -923,5 +925,11 @@ public interface EntityManager {
     public void grantGroupPermission(UUID groupId, String permission) throws Exception;
 
     public void revokeGroupPermission(UUID groupId, String permission) throws Exception;
+    
+    public void setSchemaForEntityType(String entityType, JsonNode schema) throws Exception;
+    
+    public JsonNode getSchemaForEntityType(String entityType) throws Exception;
+
+    public void deleteSchemaForEntityType(String entityType) throws Exception;
 
 }

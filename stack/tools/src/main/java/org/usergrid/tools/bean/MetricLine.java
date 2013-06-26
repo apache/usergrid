@@ -3,8 +3,6 @@ package org.usergrid.tools.bean;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.usergrid.persistence.AggregateCounter;
 
 import java.io.IOException;

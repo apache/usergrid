@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.string;
@@ -31,6 +32,7 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -44,18 +46,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.smile.SmileFactory;
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -75,14 +76,15 @@ import org.usergrid.utils.InflectionUtils;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.MapUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * The controller class for determining Entity relationships as well as
@@ -157,9 +159,13 @@ public class Schema {
     public static final String DICTIONARY_ID_SETS = "id_sets";
     public static final String DICTIONARY_COUNTERS = "counters";
     public static final String DICTIONARY_GEOCELL = "geocell";
+    public static final String DICTIONARY_SCHEMAS = "schemas";
+    
+    public static final Set<String> DEFAULT_PROPERTIES = new LinkedHashSet<String>(asList(
+        PROPERTY_UUID, PROPERTY_TYPE, PROPERTY_CREATED, PROPERTY_MODIFIED));
 
     private static List<String> entitiesPackage = new ArrayList<String>();
-	private static List<String> entitiesScanPath = new ArrayList<String>();
+	  private static List<String> entitiesScanPath = new ArrayList<String>();
 	
     @SuppressWarnings("rawtypes")
     public static Map<String, Class> DEFAULT_DICTIONARIES = hashMap(
@@ -253,7 +259,7 @@ public class Schema {
     public Schema() {
         setDefaultSchema(this);
 
-        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
                 false);
     }
 
@@ -565,7 +571,7 @@ public class Schema {
                 JsonNode properties = schemaNode.get("properties");
                 if (properties instanceof ObjectNode) {
                     Set<String> fieldsToRemove = new LinkedHashSet<String>();
-                    Iterator<String> i = properties.getFieldNames();
+                    Iterator<String> i = properties.fieldNames();
                     while (i.hasNext()) {
                         String propertyName = i.next();
                         if (!hasProperty(entityType, propertyName)) {
@@ -1891,7 +1897,7 @@ public class Schema {
     public static Object deserializePropertyValueFromJsonBinary(
             ByteBuffer bytes, Class<?> classType) {
         return JsonUtils.normalizeJsonTree(JsonUtils.fromByteBuffer(bytes,
-                classType));
+                classType), true);
     }
 
   public boolean isPropertyEncrypted(String entityType, String propertyName) {

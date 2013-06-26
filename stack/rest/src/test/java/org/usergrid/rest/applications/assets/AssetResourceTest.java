@@ -11,7 +11,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +41,8 @@ public class AssetResourceTest extends AbstractRestTest {
             .type(MediaType.APPLICATION_JSON_TYPE)
             .post(JsonNode.class, payload);
     JsonNode idNode = node.get("entities").get(0).get("uuid");
-    UUID id = UUID.fromString(idNode.getTextValue());
-    assertNotNull(idNode.getTextValue());
+    UUID id = UUID.fromString(idNode.textValue());
+    assertNotNull(idNode.textValue());
     logNode(node);
 
     byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
@@ -64,7 +64,7 @@ public class AssetResourceTest extends AbstractRestTest {
                         .get(JsonNode.class);
 
     idNode = node.get("entities").get(0).get("uuid");
-    assertEquals(id.toString(), idNode.getTextValue());
+    assertEquals(id.toString(), idNode.textValue());
   }
 
 

@@ -29,19 +29,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.beanutils.PropertyUtils;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.io.JsonStringEncoder;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.schema.JsonSchema;
-import org.codehaus.jackson.smile.SmileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 /**
  * @author edanuff
@@ -61,7 +61,7 @@ public class JsonUtils {
     private static ObjectMapper indentObjectMapper = new ObjectMapper();
 
     static {
-        indentObjectMapper.getSerializationConfig().set(Feature.INDENT_OUTPUT, true);
+        indentObjectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
     }
 
 	/**
@@ -112,6 +112,19 @@ public class JsonUtils {
 		}
 		return null;
 	}
+
+    public static JsonNode parseToNode(String json) {
+        try {
+            return mapper.readValue(json, JsonNode.class);
+        } catch (JsonParseException e) {
+            logger.error("Unable to parse:", e);
+        } catch (JsonMappingException e) {
+            logger.error("Unable to parse:", e);
+        } catch (IOException e) {
+            logger.error("Unable to parse:", e);
+        }
+        return null;
+    }
 
 	public static JsonNode getJsonSchemaNode(Class<?> cls) {
 		JsonNode schemaRootNode = null;
@@ -212,8 +225,12 @@ public class JsonUtils {
 		}
 		return null;
 	}
+	
+  public static Object normalizeJsonTree(Object obj) {
+    return normalizeJsonTree(obj, false);
+  }
 
-	public static Object normalizeJsonTree(Object obj) {
+	public static Object normalizeJsonTree(Object obj, boolean preserve_json_nodes) {
 		if (obj instanceof Map) {
 			@SuppressWarnings("unchecked")
 			Map<Object, Object> m = (Map<Object, Object>) obj;
@@ -241,7 +258,7 @@ public class JsonUtils {
 				if (uuid != null) {
 					l.set(i, uuid);
 				} else if ((o instanceof Map) || (o instanceof List)) {
-					normalizeJsonTree(o);
+					l.set(i, normalizeJsonTree(o, preserve_json_nodes));
 				} else if (o instanceof Integer) {
 					l.set(i, ((Integer) o).longValue());
 				} else if (o instanceof BigInteger) {
@@ -258,7 +275,14 @@ public class JsonUtils {
 		} else if (obj instanceof BigInteger) {
 			return ((BigInteger) obj).longValue();
 		} else if (obj instanceof JsonNode) {
-			return mapper.convertValue(obj, Object.class);
+			Object o = mapper.convertValue(obj, Object.class);
+			o = normalizeJsonTree(o, preserve_json_nodes);
+			if (preserve_json_nodes) {
+			  obj = mapper.convertValue(obj, JsonNode.class);
+			}
+			else {
+			  obj = o;
+			}
 		}
 		return obj;
 	}
@@ -330,18 +354,23 @@ public class JsonUtils {
 		return obj;
 	}
 
-	public static Object loadFromResourceFile(String file) {
-		Object json = null;
-		try {
-			URL resource = JsonUtils.class.getResource(file);
-			json = mapper.readValue(resource, Object.class);
-		} catch (Exception e) {
-			logger.error("Error loading JSON", e);
-		}
-		return json;
+	public static Object loadJsonFromResourceFile(String file) {
+		return loadJsonFromResourceFile(JsonUtils.class, Object.class, file);
 	}
+	
+  public static <C> C loadJsonFromResourceFile(Class<?> resource_class, Class<C> target_class, String file) {
+    C json = null;
+    try {
+      URL resource = resource_class.getResource(file);
+      json = mapper.readValue(resource, target_class);
+    } catch (Exception e) {
+      logger.error("Error loading JSON", e);
+    }
+    return json;
+  }
+  
 
-	public static Object loadFromFilesystem(String filename) {
+	public static Object loadJsonFromFilesystem(String filename) {
 		Object json = null;
 		try {
 			File file = new File(filename);
@@ -352,7 +381,7 @@ public class JsonUtils {
 		return json;
 	}
 
-	public static Object loadFromUrl(String urlStr) {
+	public static Object loadJsonFromUrl(String urlStr) {
 		Object json = null;
 		try {
 			URL url = new URL(urlStr);
@@ -363,7 +392,7 @@ public class JsonUtils {
 		return json;
 	}
 
-	public static Object loadFromUrl(URL url) {
+	public static Object loadJsonFromUrl(URL url) {
 		Object json = null;
 		try {
 			json = mapper.readValue(url, Object.class);

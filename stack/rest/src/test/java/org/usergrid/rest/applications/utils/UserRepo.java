@@ -8,7 +8,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.WebResource;

@@ -1108,6 +1108,11 @@ public abstract class AbstractService implements Service {
     checkPermissionsForPath(context, path);
   }
 
+  public void checkPermissionsForSubPath(ServiceContext context, String subPath) {
+    String path = context.getPath(subPath);
+    checkPermissionsForPath(context, path);
+  }
+
   public void checkPermissionsForPath(ServiceContext context, String path) {
     Subject currentUser = SubjectUtils.getSubject();
     if (currentUser == null) {

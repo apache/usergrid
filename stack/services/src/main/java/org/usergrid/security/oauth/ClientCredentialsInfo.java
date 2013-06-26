@@ -17,10 +17,11 @@ package org.usergrid.security.oauth;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.utils.UUIDUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ClientCredentialsInfo {
 
