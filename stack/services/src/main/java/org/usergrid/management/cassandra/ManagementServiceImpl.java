@@ -1076,15 +1076,17 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     // remove excess history
-    ArrayList<UUID> oldUUIDs = new ArrayList<UUID>(credsMap.size());
-    for (String uuid : credsMap.keySet()) { oldUUIDs.add(UUID.fromString(uuid)); }
-    Collections.sort(oldUUIDs);
-    for (int i = passwordHistorySize; i < oldUUIDs.size(); i++) {
-      em.removeFromDictionary(user, CREDENTIALS_HISTORY, oldUUIDs.get(i).toString());
+    if (credsMap.size() > passwordHistorySize) {
+      ArrayList<UUID> oldUUIDs = new ArrayList<UUID>(credsMap.size());
+      for (String uuid : credsMap.keySet()) { oldUUIDs.add(UUID.fromString(uuid)); }
+      UUIDUtils.sort(oldUUIDs);
+      for (int i = 0; i < oldUUIDs.size() - passwordHistorySize; i++) {
+        em.removeFromDictionary(user, CREDENTIALS_HISTORY, oldUUIDs.get(i).toString());
+      }
     }
 
     if (passwordHistorySize > 0) {
-      UUID uuid = UUIDUtils.generator.generate();
+      UUID uuid = UUIDUtils.newTimeUUID();
       em.addToDictionary(user, CREDENTIALS_HISTORY, uuid.toString(), currentCredentials);
     }
 
