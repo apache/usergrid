@@ -31,6 +31,6 @@ public class TraceTagUnitTest {
         taggedOpTimer.stop(timedOpTag,"op-tag-name",true);
         assertTrue(timedOpTag.getElapsed() >= 500);
         assertEquals(timedOpTag, traceTag.iterator().next());
-
+        traceTagManager.detach();
     }
 }
