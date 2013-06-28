@@ -86,8 +86,7 @@
 		<module>count-inserter</module>
 		<module>test-utils</module>
 		<module>scheduler</module>
-        	<!--Temporarily removed.  This breaks master build 
-		<module>query-validator</module> -->
+		<!--Temporarily removed. This breaks master build <module>query-validator</module> -->
 	</modules>
 
 
@@ -403,18 +402,18 @@
 				<version>3.4.5</version>
 			</dependency>
 			<dependency>
-			    <groupId>com.fasterxml.jackson.core</groupId>
-			    <artifactId>jackson-annotations</artifactId>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
 				<version>${jackson-version}</version>
 			</dependency>
 			<dependency>
-			    <groupId>com.fasterxml.jackson.core</groupId>
-			    <artifactId>jackson-core</artifactId>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
 				<version>${jackson-version}</version>
 			</dependency>
 			<dependency>
-			    <groupId>com.fasterxml.jackson.core</groupId>
-			    <artifactId>jackson-databind</artifactId>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
 				<version>${jackson-version}</version>
 			</dependency>
 			<dependency>
@@ -574,7 +573,7 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-			<!--  always build test-jars if we have them -->
+			<!-- always build test-jars if we have them -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -586,46 +585,28 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.15</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>2.5.2</version>
+				<configuration>
+					<formats>
+						<format>xml</format>
+						<format>html</format>
+					</formats>
+					<aggregate>true</aggregate>
+					<maxmem>2G</maxmem>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
-	<profiles>
-		<!-- Jenkins by default defines a property BUILD_NUMBER which is used to 
-			enable the profile. -->
-		<profile>
-			<id>jenkins</id>
-			<activation>
-				<property>
-					<name>env.BUILD_NUMBER</name>
-				</property>
-			</activation>
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>cobertura-maven-plugin</artifactId>
-							<version>2.5.1</version>
-							<configuration>
-								<formats>
-									<format>xml</format>
-									<format>html</format>
-								</formats>
-							</configuration>
-							<executions>
-								<execution>
-									<phase>package</phase>
-									<goals>
-										<goal>cobertura</goal>
-									</goals>
-								</execution>
-							</executions>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-	</profiles>
 
 	<reporting>
 		<plugins>

@@ -1076,15 +1076,17 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     // remove excess history
-    ArrayList<UUID> oldUUIDs = new ArrayList<UUID>(credsMap.size());
-    for (String uuid : credsMap.keySet()) { oldUUIDs.add(UUID.fromString(uuid)); }
-    Collections.sort(oldUUIDs);
-    for (int i = passwordHistorySize; i < oldUUIDs.size(); i++) {
-      em.removeFromDictionary(user, CREDENTIALS_HISTORY, oldUUIDs.get(i).toString());
+    if (credsMap.size() > passwordHistorySize) {
+      ArrayList<UUID> oldUUIDs = new ArrayList<UUID>(credsMap.size());
+      for (String uuid : credsMap.keySet()) { oldUUIDs.add(UUID.fromString(uuid)); }
+      UUIDUtils.sort(oldUUIDs);
+      for (int i = 0; i < oldUUIDs.size() - passwordHistorySize; i++) {
+        em.removeFromDictionary(user, CREDENTIALS_HISTORY, oldUUIDs.get(i).toString());
+      }
     }
 
     if (passwordHistorySize > 0) {
-      UUID uuid = UUIDUtils.generator.generate();
+      UUID uuid = UUIDUtils.newTimeUUID();
       em.addToDictionary(user, CREDENTIALS_HISTORY, uuid.toString(), currentCredentials);
     }
 
@@ -1699,17 +1701,20 @@ public class ManagementServiceImpl implements ManagementService {
     }
     AccessInfo access_info = null;
     if (clientSecret.equals(getSecret(MANAGEMENT_APPLICATION_ID, type, uuid))) {
+      
+      String token = getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl);
+      
+      long duration = tokens.getMaxTokenAgeInSeconds(token);
+      
+      access_info = new AccessInfo().withExpiresIn(duration).withAccessToken(token);
+      
       if (type.equals(AuthPrincipalType.APPLICATION)) {
         ApplicationInfo app = getApplicationInfo(uuid);
-        access_info = new AccessInfo().withExpiresIn(3600)
-            .withAccessToken(getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
-            .withProperty("application", app.getId());
+        access_info = access_info.withProperty("application", app.getId());
       } else if (type.equals(AuthPrincipalType.ORGANIZATION)) {
         OrganizationInfo organization = getOrganizationByUuid(uuid);
-        access_info = new AccessInfo().withExpiresIn(3600)
-            .withAccessToken(getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
-            .withProperty("organization", getOrganizationData(organization))
-            .withPasswordChanged(getLastAdminPasswordChange(uuid));
+        access_info = access_info
+            .withProperty("organization", getOrganizationData(organization));
       }
     }
     return access_info;
