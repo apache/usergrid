@@ -74,22 +74,23 @@ class Entity {
     }
 
     if ($method == 'PUT') {
-			$response = $this->client->put($type, array(), $data);
-		} else {
-			$response = $this->client->post($type, array(), $data);
-		}
+      $response = $this->client->put($type, array(), $data);
+    }
+    else {
+      $response = $this->client->post($type, array(), $data);
+    }
 
     if ($response->get_error()) {
       $this->client->write_log('Could not save entity.');
     }
     else {
-    	$response_data = $response->get_data();
+      $response_data = $response->get_data();
       if (!empty($response_data['entities'])) {
         $this->set($response_data['entities'][0]);
       }
       $need_password_change = (
         ($this->get('type') == 'user' || $this->get('type') == 'users')
-      	&& !empty($entity_data['oldpassword'])
+        && !empty($entity_data['oldpassword'])
         && !empty($entity_data['newpassword'])
       );
       if ($need_password_change) {
@@ -109,7 +110,7 @@ class Entity {
   }
 
   public function fetch() {
-  	$response = new Response();
+    $response = new Response();
     $type = $this->get('type');
     $uuid = $this->get('uuid'); // may be NULL
     if (!empty($uuid)) {
@@ -160,7 +161,7 @@ class Entity {
   }
 
   public function destroy() {
-  	$response = new Response();
+    $response = new Response();
     $type = $this->get('type');
     $uuid = $this->get('uuid');
     if (Client::is_uuid($uuid)) {
