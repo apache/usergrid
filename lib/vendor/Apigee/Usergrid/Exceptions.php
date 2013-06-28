@@ -12,7 +12,7 @@
 namespace Apigee\Usergrid;
 
 
-class UGException extends Exception { }
+class UGException extends \Exception { }
 class UG_400_BadRequest extends UGException {}
 class UG_401_Unauthorized extends UGException {}
 class UG_403_Forbidden extends UGException {}

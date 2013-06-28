@@ -60,5 +60,3 @@ class Response extends Request{
     return $this->error_message;
   }
 }
-
-?>
