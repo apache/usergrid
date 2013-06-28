@@ -422,7 +422,7 @@ public class GeoIndexManager {
       batchAddConnectionIndexEntries(m, locator, appId, propertyName, cell, index_keys, columnName, columnValue, ts);
     }
 
-    logger.info("Geocells to be saved for Point(" + location.latitude + "," + location.longitude + ") are: " + cells);
+    logger.info("Geocells to be saved for Point({} , {} ) are: {}", new Object[]{location.latitude, location.longitude, cells});
   }
 
   private static Mutator<ByteBuffer> addLocationEntryDeletionToMutator(Mutator<ByteBuffer> m, Object key,
@@ -497,7 +497,7 @@ public class GeoIndexManager {
       batchDeleteConnectionIndexEntries(m, locator, appId, propertyName, cell, index_keys, columnName, ts);
     }
 
-    logger.info("Geocells to be saved for Point(" + location.latitude + "," + location.longitude + ") are: " + cells);
+    logger.info("Geocells to be saved for Point({} , {} ) are: {}", new Object[]{location.latitude, location.longitude, cells});
   }
 
   public static void batchStoreLocationInCollectionIndex(Mutator<ByteBuffer> m, IndexBucketLocator locator, UUID appId,
@@ -550,7 +550,10 @@ public class GeoIndexManager {
       }
     }
 
-    logger.info("Geocells to be deleted for Point(" + location.latitude + "," + location.longitude + ") are: " + cells);
+    if(logger.isInfoEnabled()){
+      logger.info("Geocells to be deleted for Point({},{}) are: {}", new Object[] { location.latitude,
+          location.longitude, cells });
+    }
   }
 
   public void removeLocationFromCollectionIndex(EntityRef owner, String collectionName, String propertyName,
