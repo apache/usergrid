@@ -49,6 +49,11 @@ public abstract class ValueResource extends NamedResource {
     buffer.append(name);
   }
 
+  public void addToUrlEnd(StringBuilder buffer) {
+    buffer.append(SLASH);
+    buffer.append(buffer);
+  }
+
   /**
    * Create a new entity with the specified data
    * @param entity
@@ -81,9 +86,14 @@ public abstract class ValueResource extends NamedResource {
     return jsonMedia(withParams(withToken(resource())))
         .post(JsonNode.class, entity);
   }
-  
+
+  public JsonNode put (Map<String,?> entity) {
+
+    return putInternal(entity);
+  }
+
   /**
-   * post to the entity set
+   * put to the entity set
    * 
    * @param entity
    * @return
@@ -140,16 +150,16 @@ public abstract class ValueResource extends NamedResource {
   /*created so a limit could be easily added. Consider merging with getInternal(query,cursor)
   as those are the only two query input parameters.
    */
-  public JsonNode query(String query,String addition,int numAddition){
+  public JsonNode query(String query,String addition,String numAddition){
     return getInternal(query,addition,numAddition);
   }
 
-  protected JsonNode getInternal(String query,String addition,int numAddition)
+  protected JsonNode getInternal(String query,String addition, String numAddition)
   {
     WebResource resource = withParams(withToken(resource())).queryParam("ql", query);
 
     if (addition != null) {
-      resource = resource.queryParam(addition, Integer.toString(numAddition));
+      resource = resource.queryParam(addition, numAddition);
     }
 
     return jsonMedia(resource).get(JsonNode.class);
