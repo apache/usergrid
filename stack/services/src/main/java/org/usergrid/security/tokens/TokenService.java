@@ -30,8 +30,20 @@ public interface TokenService {
 
 	public String refreshToken(String token) throws Exception;
 
+	/**
+	 * Get the max token age in milliseconds
+	 * @param token
+	 * @return
+	 */
 	public long getMaxTokenAge(String token);
 	
+	
+	/**
+	 * Get the max token age in seconds
+	 * @param token
+	 * @return
+	 */
+	public long getMaxTokenAgeInSeconds(String token);
 	/**
 	 * Expire the token.  If the token does not exist, this operation will not throw an error.  Implementations
 	 * should always delete this token, regardless of state.

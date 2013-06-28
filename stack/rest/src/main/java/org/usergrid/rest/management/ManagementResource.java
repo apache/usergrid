@@ -209,13 +209,13 @@ public class ManagementResource extends AbstractContextResource {
         Long passwordChanged = management.getLastAdminPasswordChange(user.getUuid());
         AccessInfo access_info;
         if ( loadAdminData ) {
-          access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+          access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAgeInSeconds(token))
                   .withAccessToken(token)
                   .withProperty("user", management.getAdminUserOrganizationData(user.getUuid()))
                   .withPasswordChanged(passwordChanged);
 
         } else {
-          access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+          access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAgeInSeconds(token))
                   .withAccessToken(token)
                   .withPasswordChanged(passwordChanged);
         }
