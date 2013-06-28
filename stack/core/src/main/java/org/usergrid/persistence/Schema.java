@@ -857,39 +857,6 @@ public class Schema {
     }
 
     /**
-     * @param entityType
-     * @return value
-     */
-    public Set<String> getPropertiesIndexedInConnections(String entityType) {
-        EntityInfo entity = getEntityInfo(entityType);
-        if (entity == null) {
-            return null;
-        }
-        return entity.getPropertiesIndexedInConnections();
-    }
-
-    /**
-     * @param entityType
-     * @param propertyName
-     * @return value
-     */
-    public boolean isPropertyIndexedInConnections(String entityType,
-            String propertyName) {
-
-        EntityInfo entity = getEntityInfo(entityType);
-        if (entity == null) {
-            return false;
-        }
-
-        PropertyInfo property = entity.getProperty(propertyName);
-        if (property == null) {
-            return false;
-        }
-
-        return property.isIndexedInConnections();
-    }
-
-    /**
      * @param containerType
      * @param collectionName
      * @param propertyName
@@ -923,14 +890,7 @@ public class Schema {
         return collection.isSubkeyProperty(propertyName);
     }
 
-    public Set<String> getBasicProperties(String entityType) {
-        EntityInfo entity = getEntityInfo(entityType);
-        if (entity == null) {
-            return null;
-        }
-        return entity.getPropertiesIndexedInConnections();
-    }
-
+  
     /**
      * @param entityType
      * @return value
@@ -1503,7 +1463,6 @@ public class Schema {
         property.setMutable(false);
         property.setAliasProperty(true);
         property.setIndexed(true);
-        property.setIndexedInConnections(true);
         property.setBasic(true);
         property.setUnique(true);
         properties.put(PROPERTY_NAME, property);
@@ -1530,7 +1489,6 @@ public class Schema {
         property.setMutable(false);
         property.setAliasProperty(false);
         property.setIndexed(false);
-        property.setIndexedInConnections(false);
         properties.put(PROPERTY_ITEM, property);
 
         property = new PropertyInfo();
@@ -1540,7 +1498,6 @@ public class Schema {
         property.setMutable(false);
         property.setAliasProperty(false);
         property.setIndexed(false);
-        property.setIndexedInConnections(false);
         properties.put(PROPERTY_ITEM_TYPE, property);
 
         property = new PropertyInfo();
@@ -1550,7 +1507,6 @@ public class Schema {
         property.setMutable(false);
         property.setAliasProperty(false);
         property.setIndexed(false);
-        property.setIndexedInConnections(false);
         properties.put(PROPERTY_COLLECTION_NAME, property);
 
         entity.setProperties(properties);

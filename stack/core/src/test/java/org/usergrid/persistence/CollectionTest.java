@@ -22,14 +22,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,8 +44,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void testCollection() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "testCollection");
+    UUID applicationId = createApplication("testOrganization", "testCollection");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -86,10 +84,12 @@ public class CollectionTest extends AbstractPersistenceTest {
     // test queries on the collection
 
     properties = new LinkedHashMap<String, Object>();
-    properties.put("actor", new LinkedHashMap<String, Object>() {{
+    properties.put("actor", new LinkedHashMap<String, Object>() {
+      {
         put("displayName", "Ed Anuff");
         put("objectType", "person");
-      }});
+      }
+    });
     properties.put("verb", "tweet2");
     properties.put("content", "I ate a pickle");
     properties.put("ordinal", 2);
@@ -98,10 +98,12 @@ public class CollectionTest extends AbstractPersistenceTest {
     em.addToCollection(user, "activities", activity2);
 
     properties = new LinkedHashMap<String, Object>();
-    properties.put("actor", new LinkedHashMap<String, Object>() {{
-      put("displayName", "Ed Anuff");
-      put("objectType", "person");
-    }});
+    properties.put("actor", new LinkedHashMap<String, Object>() {
+      {
+        put("displayName", "Ed Anuff");
+        put("objectType", "person");
+      }
+    });
     properties.put("verb", "tweet2");
     properties.put("content", "I ate an apple");
     properties.put("ordinal", 1);
@@ -178,8 +180,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void userFirstNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "testFirstName");
+    UUID applicationId = createApplication("testOrganization", "testFirstName");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -239,8 +240,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void userMiddleNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "testMiddleName");
+    UUID applicationId = createApplication("testOrganization", "testMiddleName");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -272,8 +272,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void userLastNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "testLastName");
+    UUID applicationId = createApplication("testOrganization", "testLastName");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -335,12 +334,10 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     properties = new LinkedHashMap<String, Object>();
     properties.put("nickname", "ed");
-    em.updateProperties(new SimpleCollectionRef(group, "users", user1),
-            properties);
+    em.updateProperties(new SimpleCollectionRef(group, "users", user1), properties);
 
-    Results r = em.searchCollection(group, "users",
-            new Query().addEqualityFilter("member.nickname", "ed")
-                    .withResultsLevel(Results.Level.LINKED_PROPERTIES));
+    Results r = em.searchCollection(group, "users", new Query().addEqualityFilter("member.nickname", "ed")
+        .withResultsLevel(Results.Level.LINKED_PROPERTIES));
     logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(1, r.size());
 
@@ -350,8 +347,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void groupNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "groupNameSearch");
+    UUID applicationId = createApplication("testOrganization", "groupNameSearch");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -371,8 +367,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     Query query = new Query();
     query.addEqualityFilter("name", groupName);
 
-    Results r = em
-            .searchCollection(em.getApplicationRef(), "groups", query);
+    Results r = em.searchCollection(em.getApplicationRef(), "groups", query);
 
     assertTrue(r.size() > 0);
 
@@ -384,8 +379,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void groupTitleSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "groupTitleSearch");
+    UUID applicationId = createApplication("testOrganization", "groupTitleSearch");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -405,8 +399,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     Query query = new Query();
     query.addEqualityFilter("title", titleName);
 
-    Results r = em
-            .searchCollection(em.getApplicationRef(), "groups", query);
+    Results r = em.searchCollection(em.getApplicationRef(), "groups", query);
 
     assertTrue(r.size() > 0);
 
@@ -419,8 +412,7 @@ public class CollectionTest extends AbstractPersistenceTest {
   @Test
   public void testSubkeys() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization",
-            "testSubkeys");
+    UUID applicationId = createApplication("testOrganization", "testSubkeys");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -434,43 +426,34 @@ public class CollectionTest extends AbstractPersistenceTest {
     assertNotNull(user);
 
     properties = new LinkedHashMap<String, Object>();
-    properties.put("actor",
-            hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+    properties.put("actor", hashMap("displayName", "Ed Anuff").map("objectType", "person"));
     properties.put("verb", "tweet");
     properties.put("content", "I ate a sammich");
 
-    em.addToCollection(user, "activities",
-            em.create("activity", properties));
+    em.addToCollection(user, "activities", em.create("activity", properties));
 
     properties = new LinkedHashMap<String, Object>();
-    properties.put("actor",
-            hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+    properties.put("actor", hashMap("displayName", "Ed Anuff").map("objectType", "person"));
     properties.put("verb", "post");
     properties.put("content", "I wrote a blog post");
 
-    em.addToCollection(user, "activities",
-            em.create("activity", properties));
+    em.addToCollection(user, "activities", em.create("activity", properties));
 
     properties = new LinkedHashMap<String, Object>();
-    properties.put("actor",
-            hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+    properties.put("actor", hashMap("displayName", "Ed Anuff").map("objectType", "person"));
     properties.put("verb", "tweet");
     properties.put("content", "I ate another sammich");
 
-    em.addToCollection(user, "activities",
-            em.create("activity", properties));
+    em.addToCollection(user, "activities", em.create("activity", properties));
 
     properties = new LinkedHashMap<String, Object>();
-    properties.put("actor",
-            hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+    properties.put("actor", hashMap("displayName", "Ed Anuff").map("objectType", "person"));
     properties.put("verb", "post");
     properties.put("content", "I wrote another blog post");
 
-    em.addToCollection(user, "activities",
-            em.create("activity", properties));
+    em.addToCollection(user, "activities", em.create("activity", properties));
 
-    Results r = em.searchCollection(user, "activities",
-            Query.searchForProperty("verb", "post"));
+    Results r = em.searchCollection(user, "activities", Query.searchForProperty("verb", "post"));
     logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(2, r.size());
 
@@ -478,8 +461,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void emptyQuery() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "testEmptyQuery");
+    UUID applicationId = createApplication("testOrganization", "testEmptyQuery");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -521,8 +503,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   @Test
   public void emptyQueryReverse() throws Exception {
-    UUID applicationId = createApplication("testOrganization",
-            "testEmptyQueryReverse");
+    UUID applicationId = createApplication("testOrganization", "testEmptyQueryReverse");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -615,8 +596,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     assertEquals(game1.getUuid(), returned.getUuid());
 
     // field order shouldn't matter USERGRID-375
-    query = Query
-            .fromQL("select * where keywords contains 'blah' OR title contains 'blah'");
+    query = Query.fromQL("select * where keywords contains 'blah' OR title contains 'blah'");
 
     r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
 
@@ -626,8 +606,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     assertEquals(game1.getUuid(), returned.getUuid());
 
-    query = Query
-            .fromQL("select * where  title contains 'blah' OR keywords contains 'blah'");
+    query = Query.fromQL("select * where  title contains 'blah' OR keywords contains 'blah'");
 
     r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
 
@@ -766,8 +745,7 @@ public class CollectionTest extends AbstractPersistenceTest {
   public void testKeywordsOrQuery() throws Exception {
     logger.info("testKeywordsOrQuery");
 
-    UUID applicationId = createApplication("testOrganization",
-            "testKeywordsOrQuery");
+    UUID applicationId = createApplication("testOrganization", "testKeywordsOrQuery");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -788,8 +766,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     properties.put("keywords", "Action, New");
     em.create("game", properties);
 
-    Query query = Query
-            .fromQL("select * where keywords contains 'hot' or title contains 'hot'");
+    Query query = Query.fromQL("select * where keywords contains 'hot' or title contains 'hot'");
     Results r = em.searchCollection(em.getApplicationRef(), "games", query);
     logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(3, r.size());
@@ -800,8 +777,7 @@ public class CollectionTest extends AbstractPersistenceTest {
   public void testKeywordsAndQuery() throws Exception {
     logger.info("testKeywordsOrQuery");
 
-    UUID applicationId = createApplication("testOrganization",
-            "testKeywordsAndQuery");
+    UUID applicationId = createApplication("testOrganization", "testKeywordsAndQuery");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -822,8 +798,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     properties.put("keywords", "Action, New");
     Entity thirdGame = em.create("game", properties);
 
-    Query query = Query
-            .fromQL("select * where keywords contains 'new' and title contains 'extreme'");
+    Query query = Query.fromQL("select * where keywords contains 'new' and title contains 'extreme'");
     Results r = em.searchCollection(em.getApplicationRef(), "games", query);
     logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(2, r.size());
@@ -836,8 +811,7 @@ public class CollectionTest extends AbstractPersistenceTest {
   @Test
   public void pagingAfterDelete() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization",
-            "pagingAfterDelete");
+    UUID applicationId = createApplication("testOrganization", "pagingAfterDelete");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -857,8 +831,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     Query query = new Query();
     query.setLimit(50);
 
-    Results r = em.searchCollection(em.getApplicationRef(), "objects",
-            query);
+    Results r = em.searchCollection(em.getApplicationRef(), "objects", query);
 
     logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
@@ -895,18 +868,15 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     assertEquals(5, r.size());
     for (int i = 10; i < 15; i++) {
-      assertEquals(entityIds.get(i), r.getEntities().get(i - 10)
-              .getUuid());
+      assertEquals(entityIds.get(i), r.getEntities().get(i - 10).getUuid());
     }
 
   }
 
-
   @Test
   public void pagingLessThanWithCriteria() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization",
-            "pagingLessThanWithCriteria");
+    UUID applicationId = createApplication("testOrganization", "pagingLessThanWithCriteria");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -929,20 +899,12 @@ public class CollectionTest extends AbstractPersistenceTest {
     query.setLimit(pageSize);
     query.addFilter("index < " + size * 2);
 
-
     Results r = null;
 
     // check they're all the same before deletion
     for (int i = 0; i < size / pageSize; i++) {
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
-
-		for (Entry<UUID, Map<String, Object>> entry : r.metadata.entrySet()) {
-			Map<String, Object> map = entry.getValue();
-			if(map!=null) {
-				assertFalse(map.containsKey(Schema.PROPERTY_CURSOR));
-			}
-		}
 
       logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
@@ -954,17 +916,20 @@ public class CollectionTest extends AbstractPersistenceTest {
 
       query.setCursor(r.getCursor());
     }
+    
+    //check our last search
+    r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
+    assertEquals(0, r.size());
+    
     assertNull(r.getCursor());
-
 
   }
 
   @Test
   public void pagingGreaterThanWithCriteria() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization",
-            "pagingGreaterThanWithCriteria");
+    UUID applicationId = createApplication("testOrganization", "pagingGreaterThanWithCriteria");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -987,7 +952,6 @@ public class CollectionTest extends AbstractPersistenceTest {
     query.setLimit(pageSize);
     query.addFilter("index >= " + size / 2);
 
-
     Results r = null;
 
     // check they're all the same before deletion
@@ -1006,8 +970,11 @@ public class CollectionTest extends AbstractPersistenceTest {
       query.setCursor(r.getCursor());
     }
 
+    r = em.searchCollection(em.getApplicationRef(), "pages", query);
+    
+    assertEquals(0, r.size());
+    
     assertNull(r.getCursor());
-
 
   }
 
@@ -1038,7 +1005,6 @@ public class CollectionTest extends AbstractPersistenceTest {
     query.addFilter("index >= 10");
     query.addFilter("index <= 29");
 
-
     Results r = null;
 
     // check they're all the same before deletion
@@ -1056,181 +1022,157 @@ public class CollectionTest extends AbstractPersistenceTest {
 
       query.setCursor(r.getCursor());
     }
-    assertNull(r.getCursor());
+    
+    r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
+    assertEquals(0, r.size());
+    
+    assertNull(r.getCursor());
 
   }
 
+  @Test
+  public void subpropertyQuerying() throws Exception {
+    Map<String, Object> root = new HashMap<String, Object>();
 
-    @Test
-    public void subpropertyQuerying() throws Exception {
-        Map<String, Object> root = new HashMap<String, Object>();
+    Map<String, Object> subEntity = new HashMap<String, Object>();
 
-        Map<String, Object> subEntity = new HashMap<String, Object>();
+    root.put("rootprop1", "simpleprop");
 
-        root.put("rootprop1", "simpleprop");
+    subEntity.put("intprop", 10);
+    subEntity.put("substring", "I'm a tokenized string that should be indexed");
 
-        subEntity.put("intprop", 10);
-        subEntity.put("substring","I'm a tokenized string that should be indexed");
+    root.put("subentity", subEntity);
 
-        root.put("subentity", subEntity);
+    UUID applicationId = createApplication("testOrganization", "subpropertyQuerying");
+    assertNotNull(applicationId);
 
-        UUID applicationId = createApplication("testOrganization",
-                "subpropertyQuerying");
-        assertNotNull(applicationId);
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
 
+    Entity saved = em.create("test", root);
 
-        EntityManager em = emf.getEntityManager(applicationId);
-        assertNotNull(em);
+    Query query = new Query();
+    query.addEqualityFilter("rootprop1", "simpleprop");
 
-        Entity saved = em.create("test", root);
+    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
+    Entity entity = results.getEntitiesMap().get(saved.getUuid());
 
+    assertNotNull(entity);
 
-        Query query = new Query();
-        query.addEqualityFilter("rootprop1","simpleprop");
+    // query on the nested int value
+    query = new Query();
+    query.addEqualityFilter("subentity.intprop", 10);
 
-        Results results = em.searchCollection(em.getApplicationRef(), "tests",
-                query);
+    results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
+    entity = results.getEntitiesMap().get(saved.getUuid());
 
-        Entity entity = results.getEntitiesMap().get(saved.getUuid());
+    assertNotNull(entity);
 
-        assertNotNull(entity);
+    // query on the nexted tokenized value
+    query = new Query();
+    query.addContainsFilter("subentity.substring", "tokenized");
+    query.addContainsFilter("subentity.substring", "indexed");
 
+    results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
-        //query on the nested int value
-        query = new Query();
-        query.addEqualityFilter("subentity.intprop", 10);
+    entity = results.getEntitiesMap().get(saved.getUuid());
 
-         results = em.searchCollection(em.getApplicationRef(), "tests",
-                query);
+    assertNotNull(entity);
+  }
 
-        entity = results.getEntitiesMap().get(saved.getUuid());
+  @Test
+  public void arrayQuerying() throws Exception {
 
-        assertNotNull(entity);
+    Map<String, Object> root = new HashMap<String, Object>();
 
-        //query on the nexted tokenized value
-        query = new Query();
-        query.addContainsFilter("subentity.substring", "tokenized");
-        query.addContainsFilter("subentity.substring", "indexed");
+    root.put("intprop", 10);
+    root.put("array", new String[] { "val1", "val2", "val3 with spaces" });
 
-        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+    Map<String, Object> jsonData = (Map<String, Object>) JsonUtils.parse(JsonUtils.mapToJsonString(root));
 
-        entity = results.getEntitiesMap().get(saved.getUuid());
+    UUID applicationId = createApplication("testOrganization", "arrayQuerying");
+    assertNotNull(applicationId);
 
-        assertNotNull(entity);
-    }
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
 
-    @Test
-    public void arrayQuerying() throws Exception {
+    Entity saved = em.create("test", jsonData);
 
-        Map<String, Object> root = new HashMap<String, Object>();
+    Query query = new Query();
+    query.addEqualityFilter("intprop", 10);
 
+    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
-        root.put("intprop", 10);
-        root.put("array",new String[]{"val1", "val2", "val3 with spaces"} );
+    Entity entity = results.getEntitiesMap().get(saved.getUuid());
 
+    assertNotNull(entity);
 
-        Map<String, Object> jsonData = (Map<String, Object>) JsonUtils.parse(JsonUtils.mapToJsonString(root));
+    // query on the nested int value
+    query = new Query();
+    query.addEqualityFilter("array", "val1");
 
+    results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
-        UUID applicationId = createApplication("testOrganization",
-                "arrayQuerying");
-        assertNotNull(applicationId);
+    entity = results.getEntitiesMap().get(saved.getUuid());
 
+    assertNotNull(entity);
 
-        EntityManager em = emf.getEntityManager(applicationId);
-        assertNotNull(em);
+    // query on the nexted tokenized value
+    query = new Query();
+    query.addEqualityFilter("array", "val2");
 
-        Entity saved = em.create("test", jsonData);
+    results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
+    entity = results.getEntitiesMap().get(saved.getUuid());
 
+    assertNotNull(entity);
 
-        Query query = new Query();
-        query.addEqualityFilter("intprop", 10);
+    query = new Query();
+    query.addEqualityFilter("array", "val3");
 
-        Results results = em.searchCollection(em.getApplicationRef(), "tests",
-                query);
+    results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
+    entity = results.getEntitiesMap().get(saved.getUuid());
 
-        Entity entity = results.getEntitiesMap().get(saved.getUuid());
+    assertNull(entity);
 
-        assertNotNull(entity);
+    query = new Query();
+    query.addContainsFilter("array", "spaces");
+    results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
+    entity = results.getEntitiesMap().get(saved.getUuid());
 
-        //query on the nested int value
-        query = new Query();
-        query.addEqualityFilter("array", "val1");
+    assertNotNull(entity);
 
-        results = em.searchCollection(em.getApplicationRef(), "tests",
-                query);
+  }
 
-        entity = results.getEntitiesMap().get(saved.getUuid());
+  @Test
+  public void stringWithSpaces() throws Exception {
+    Map<String, Object> props = new HashMap<String, Object>();
 
-        assertNotNull(entity);
+    props.put("myString", "My simple string");
 
-        //query on the nexted tokenized value
-        query = new Query();
-        query.addEqualityFilter("array", "val2");
+    UUID applicationId = createApplication("testOrganization", "stringWithSpaces");
+    assertNotNull(applicationId);
 
-        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
 
-        entity = results.getEntitiesMap().get(saved.getUuid());
+    Entity saved = em.create("test", props);
 
-        assertNotNull(entity);
+    Query query = new Query();
+    query.addEqualityFilter("myString", "My simple string");
 
-        query = new Query();
-        query.addEqualityFilter("array", "val3");
+    Results results = em.searchCollection(em.getApplicationRef(), "tests", query);
 
-        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+    Entity entity = results.getEntitiesMap().get(saved.getUuid());
 
-        entity = results.getEntitiesMap().get(saved.getUuid());
+    assertNotNull(entity);
 
-        assertNull(entity);
-
-        query = new Query();
-        query.addContainsFilter("array", "spaces");
-        results = em.searchCollection(em.getApplicationRef(), "tests", query);
-
-        entity = results.getEntitiesMap().get(saved.getUuid());
-
-        assertNotNull(entity);
-
-
-    }
-
-
-    @Test
-    public void stringWithSpaces() throws Exception {
-        Map<String, Object> props = new HashMap<String, Object>();
-
-        props.put("myString", "My simple string");
-
-        UUID applicationId = createApplication("testOrganization",
-                "stringWithSpaces");
-        assertNotNull(applicationId);
-
-
-        EntityManager em = emf.getEntityManager(applicationId);
-        assertNotNull(em);
-
-        Entity saved = em.create("test", props);
-
-
-
-        Query query = new Query();
-        query.addEqualityFilter("myString","My simple string");
-
-        Results results = em.searchCollection(em.getApplicationRef(), "tests",
-                query);
-
-
-        Entity entity = results.getEntitiesMap().get(saved.getUuid());
-
-        assertNotNull(entity);
-
-    }
+  }
 
   @Test
   public void testSelectTerms() throws Exception {
@@ -1255,12 +1197,9 @@ public class CollectionTest extends AbstractPersistenceTest {
     List<Object> sr = query.getSelectionResults(r);
     assertTrue(sr.size() == 1);
 
-    List firstResult = (List)sr.get(0);
+    List firstResult = (List) sr.get(0);
     assertTrue("edanuff".equals(firstResult.get(0)));
     assertTrue("ed@anuff.com".equals(firstResult.get(1)));
-    
-    
-    
 
   }
 
@@ -1287,11 +1226,11 @@ public class CollectionTest extends AbstractPersistenceTest {
     List<Object> sr = query.getSelectionResults(r);
     assertTrue(sr.size() == 1);
 
-    Map firstResult = (Map)sr.get(0);
+    Map firstResult = (Map) sr.get(0);
     assertTrue("edanuff".equals(firstResult.get("name")));
     assertTrue("ed@anuff.com".equals(firstResult.get("email")));
   }
-  
+
   @Test
   public void testSelectEmailViaConnection() throws Exception {
 
@@ -1313,40 +1252,34 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     // selection results should be a list of lists
     Entity entity = r.getEntity();
-    
-    
+
     assertTrue("ed@anuff.com".equals(entity.getProperty("username")));
     assertTrue("ed@anuff.com".equals(entity.getProperty("email")));
-    
-    
-    //now create a role and connect it
+
+    // now create a role and connect it
     properties = new LinkedHashMap<String, Object>();
     properties.put("name", "test");
-    
+
     Entity foo = em.create("foo", properties);
-    
+
     em.createConnection(foo, "testconnection", entity);
-    
-    //now query via the testConnection, this should work
-    
+
+    // now query via the testConnection, this should work
+
     query = Query.fromQL(s);
     query.setConnectionType("testconnection");
     query.setEntityType("user");
-    
+
     r = em.searchConnectedEntities(foo, query);
-    
+
     assertTrue(r.size() == 1);
 
     // selection results should be a list of lists
     entity = r.getEntity();
     assertTrue("ed@anuff.com".equals(entity.getProperty("username")));
     assertTrue("ed@anuff.com".equals(entity.getProperty("email")));
-    
-    
-  }
-  
-  
 
+  }
 
   @Test
   public void testNotQueryAnd() throws Exception {
@@ -1355,56 +1288,52 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     EntityManager em = emf.getEntityManager(applicationId);
 
-    
-    Map<String, Object>  location = new LinkedHashMap<String, Object>();
+    Map<String, Object> location = new LinkedHashMap<String, Object>();
     location.put("Place", "24 Westminster Avenue, Venice, CA 90291, USA");
     location.put("Longitude", -118.47425979999998);
     location.put("Latitude", 33.9887663);
-    
 
-    Map<String, Object>  recipient = new LinkedHashMap<String, Object>();
+    Map<String, Object> recipient = new LinkedHashMap<String, Object>();
     recipient.put("TimeRequested", 1359077878l);
     recipient.put("Username", "fb_536692245");
     recipient.put("Location", location);
-    
+
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
     properties.put("Flag", "requested");
     properties.put("Recipient", recipient);
-    
+
     em.create("loveobject", properties);
-    
-    
-    
+
     location = new LinkedHashMap<String, Object>();
     location.put("Place", "Via Pietro Maroncelli, 48, 62012 Santa Maria Apparente Province of Macerata, Italy");
     location.put("Longitude", 13.693080199999999);
     location.put("Latitude", 43.2985019);
-    
+
     recipient = new LinkedHashMap<String, Object>();
     recipient.put("TimeRequested", 1359077878l);
     recipient.put("Username", "fb_100000787138041");
     recipient.put("Location", location);
-    
+
     properties = new LinkedHashMap<String, Object>();
     properties.put("Flag", "requested");
     properties.put("Recipient", recipient);
-    
+
     em.create("loveobject", properties);
-    
-//    String s = "select * where Flag = 'requested'";
-//    String s = "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
+
+    // String s = "select * where Flag = 'requested'";
+    // String s =
+    // "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
     String s = "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
     Query query = Query.fromQL(s);
 
     Results r = em.searchCollection(em.getApplicationRef(), "loveobjects", query);
     assertTrue(r.size() == 1);
 
-    String username = (String) ((Map)r.getEntities().get(0).getProperty("Recipient")).get("Username");
+    String username = (String) ((Map) r.getEntities().get(0).getProperty("Recipient")).get("Username");
     // selection results should be a list of lists
     List<Object> sr = query.getSelectionResults(r);
     assertTrue(sr.size() == 1);
 
-   
     assertEquals("fb_100000787138041", username);
   }
   
@@ -1447,4 +1376,5 @@ public class CollectionTest extends AbstractPersistenceTest {
   }
 
 
+  
 }

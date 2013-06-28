@@ -26,65 +26,80 @@ import org.antlr.runtime.Token;
  */
 public abstract class EqualityOperand extends Operand {
 
-    /**
-     * @param property
-     * @param literal
-     */
-    public EqualityOperand(Token t) {
-        super(t);
+  /**
+   * @param property
+   * @param literal
+   */
+  public EqualityOperand(Token t) {
+    super(t);
+  }
+
+  public EqualityOperand(String propName, Literal<?> value) {
+    super(null);
+  }
+
+  /**
+   * Set the property on this operand
+   * 
+   * @param name
+   */
+  public void setProperty(String name) {
+    setAtIndex(0, newProperty(name));
+  }
+
+  /**
+   * Get the property to set into the equality. Allows subclasses to override
+   * the type
+   * 
+   * @param name
+   * @return
+   */
+  protected Property newProperty(String name) {
+    return new Property(name);
+  }
+
+  /**
+   * Set the literal on this operand from the given value
+   * 
+   * @param literal
+   */
+  public void setLiteral(Object value) {
+    setAtIndex(1, LiteralFactory.getLiteral(value));
+  }
+
+  /**
+   * Set the child at the specified index. If it doesn't exist, it's added until
+   * it does
+   * 
+   * @param index
+   * @param value
+   */
+  @SuppressWarnings("unchecked")
+  private void setAtIndex(int index, Literal<?> value) {
+
+    if (children == null) {
+      children = createChildrenList();
     }
 
-    public EqualityOperand(String propName, Literal<?> value){
-        super(null);
-    }
-    
-    
-    /**
-     * Set the property on this operand
-     * @param name
-     */
-    public void setProperty(String name){
-       setAtIndex(0, new Property(name));
-    }
-    
-    /**
-     * Set the literal on this operand from the given value
-     * @param literal
-     */
-    public void setLiteral(Object value){
-        setAtIndex(1, LiteralFactory.getLiteral(value));
-    }
-    
-    /**
-     * Set the child at the specified index.  If it doesn't exist, it's added until it does
-     * @param index
-     * @param value
-     */
-    private void setAtIndex(int index, Literal<?> value){
-        
-        if(children == null){
-            children = createChildrenList();
-        }
-        
-        while(children.size() -1 < index){
-            children.add(null);
-        }
-        
-        setChild(index, value);
-    }
-    
-    /**
-           * @return the property
-           */
-    public Property getProperty() {
-        return (Property) this.children.get(0);
+    while (children.size() - 1 < index) {
+      children.add(null);
     }
 
-    /**
-     * @return the literal
-     */
-    public Literal<?> getLiteral() {
-        return (Literal<?>) this.children.get(1);
-    }
+    setChild(index, value);
+  }
+
+  /**
+   * @return the property
+   */
+  public Property getProperty() {
+    return (Property) this.children.get(0);
+  }
+
+  /**
+   * @return the literal
+   */
+  public Literal<?> getLiteral() {
+    return (Literal<?>) this.children.get(1);
+  }
 
 }

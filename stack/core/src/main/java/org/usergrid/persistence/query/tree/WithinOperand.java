@@ -47,7 +47,7 @@ public class WithinOperand extends Operand {
      * @param propName
      */
     public void setProperty(String propName) {
-        setChild(0, new Property(propName));
+        setChild(0, new WithinProperty(propName));
     }
 
     /**
@@ -72,12 +72,13 @@ public class WithinOperand extends Operand {
         setChild(3, new FloatLiteral(longitude));
     }
     
+    
     /**
      * 
      * @return
      */
-    public Property getProperty() {
-        return (Property) this.children.get(0);
+    public WithinProperty getProperty() {
+        return (WithinProperty) this.children.get(0);
     }
 
     /**

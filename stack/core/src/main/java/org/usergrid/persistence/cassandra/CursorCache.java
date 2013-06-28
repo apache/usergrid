@@ -21,6 +21,10 @@ public class CursorCache {
 
   private Map<Integer, ByteBuffer> cursors = new HashMap<Integer, ByteBuffer>();
 
+  public CursorCache(){
+    
+  }
+  
   /**
    * Create a new cursor cache from the string if passed
    * 
@@ -110,7 +114,7 @@ public class CursorCache {
       buff.append("|");
 
       // this range was empty, mark it as a null
-      if (value.remaining() == 0) {
+      if (value == null || value.remaining() == 0) {
         nullCount++;
       }
 

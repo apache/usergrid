@@ -555,7 +555,7 @@ public class QueryProcessorTest {
     NotNode notNode = (NotNode) rootNode.getRight();
 
     // now get the child of the not node
-    sliceNode = (SliceNode) notNode.getChild();
+    sliceNode = (SliceNode) notNode.getSubtractNode();
 
     slices = sliceNode.getAllSlices().iterator();
 
@@ -589,7 +589,7 @@ public class QueryProcessorTest {
 
     NotNode rootNode = (NotNode) processor.getFirstNode();
 
-    SliceNode sliceNode = (SliceNode) rootNode.getChild();
+    SliceNode sliceNode = (SliceNode) rootNode.getSubtractNode();
 
     Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 

@@ -295,11 +295,7 @@ public class CassandraPersistenceUtils {
 			}
 		}
 		StringBuilder s = new StringBuilder();
-		boolean first = true;
 		for (Object obj : objects) {
-			if (!first) {
-				s.append(KEY_DELIM);
-			}
 			if (obj instanceof String) {
 				s.append(((String) obj).toLowerCase());
 			} else if (obj instanceof List<?>) {
@@ -311,8 +307,12 @@ public class CassandraPersistenceUtils {
 			} else {
 				s.append("*");
 			}
-			first = false;
+			
+			s.append(KEY_DELIM);
 		}
+		
+		s.deleteCharAt(s.length()-1);
+		
 		return s.toString();
 	}
 

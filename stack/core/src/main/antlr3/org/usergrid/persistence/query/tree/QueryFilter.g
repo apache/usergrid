@@ -156,6 +156,10 @@ UNICODE_ESC
 
 
 property :	ID<Property>;
+
+containsproperty : ID<ContainsProperty>;
+
+withinproperty : ID<WithinProperty>;
 	
 booleanliteral: BOOLEAN<BooleanLiteral>;
 
@@ -199,11 +203,12 @@ equalityop :
 
 //geo location search
 locationop :
-  property WITHIN<WithinOperand>^ (floatliteral|longliteral) OF! (floatliteral|longliteral) ','! (floatliteral|longliteral);
+  withinproperty WITHIN<WithinOperand>^ (floatliteral|longliteral) OF! (floatliteral|longliteral) ','! (floatliteral|longliteral);
   
 //string search
 containsop :
-  property CONTAINS<ContainsOperand>^ stringliteral;
+  containsproperty CONTAINS<ContainsOperand>^ stringliteral;
+
 //
 operation :
  '('! expression ')'!

@@ -37,7 +37,7 @@ public class Role extends TypedEntity {
 
     public static final String ENTITY_TYPE = "role";
 
-    @EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = false, aliasProperty = true, mutable = false, unique = true)
+    @EntityProperty(indexed = true, fulltextIndexed = false, required = true, aliasProperty = true, mutable = false, unique = true)
     protected String name;
 
     @EntityProperty(mutable = true, indexed = true)

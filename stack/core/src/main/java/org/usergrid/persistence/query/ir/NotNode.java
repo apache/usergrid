@@ -17,49 +17,51 @@ package org.usergrid.persistence.query.ir;
 
 /**
  * @author tnine
- *
+ * 
  */
 public class NotNode extends QueryNode {
 
-    protected QueryNode child, allNode;
-    
-    /**
-     * @param child
-     * @param allNode may be null if there are parents to this
-     */
-    public NotNode(QueryNode child, QueryNode allNode){
-        this.child = child;
-      this.allNode = allNode;
-    }
+  protected QueryNode subtractNode, keepNode;
 
-    /**
-     * @return the child
-     */
-    public QueryNode getChild() {
-        return child;
-    }
+  /**
+   * @param subtractNode
+   * @param keepNode
+   *          may be null if there are parents to this
+   */
+  public NotNode(QueryNode subtractNode, QueryNode keepNode) {
+    this.subtractNode = subtractNode;
+    this.keepNode = keepNode;
+  }
+
+  /**
+   * @return the child
+   */
+  public QueryNode getSubtractNode() {
+    return subtractNode;
+  }
 
   /**
    * @return the all
    */
-  public QueryNode getAllNode() {
-    return allNode;
+  public QueryNode getKeepNode() {
+    return keepNode;
   }
 
-  /* (non-Javadoc)
-     * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
-     */
-    @Override
-    public void visit(NodeVisitor visitor) throws Exception {
-        visitor.visit(this);
-    }
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence
+   * .query.ir.NodeVisitor)
+   */
+  @Override
+  public void visit(NodeVisitor visitor) throws Exception {
+    visitor.visit(this);
+  }
 
-	@Override
-	public String toString() {
-		return "NotNode [child=" + child + "]";
-	}
-
-
-
+  @Override
+  public String toString() {
+    return "NotNode [child=" + subtractNode + "]";
+  }
 
 }

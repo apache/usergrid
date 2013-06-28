@@ -178,9 +178,29 @@ public interface EntityManager {
      * 
      * @throws Exception
      */
-    public Results get(List<UUID> entityIds, Results.Level resultsLevel)
+    public Results get(Collection<UUID> entityIds, Results.Level resultsLevel)
             throws Exception;
 
+    /**
+     * Retrieves a set of Entities. Will return an Entity object containing all
+     * of the entity's name/value properties and properties. For large numbers
+     * of entities, retrieving the properties can have additional overhead,
+     * passing false for includeProperties can result in better performance.
+     * <p>
+     * This method will be deprecated in future releases in favor of a version
+     * that supports paging.
+     * 
+     * @param entityIds
+     *            a list of entity UUIDs.
+     * @param includeProperties
+     *            whether to retrieve properties for the specified entities.
+     * @return a list of entity objects.
+     * 
+     * @throws Exception
+     */
+    public Results get(Collection<UUID> entityIds)
+            throws Exception;
+    
     /**
      * Retrieves a set of Entitues cast to the specified class type.
      * 
@@ -191,7 +211,7 @@ public interface EntityManager {
      * @return a list of entity objects.
      * @throws Exception
      */
-    public Results get(List<UUID> entityIds,
+    public Results get(Collection<UUID> entityIds,
             Class<? extends Entity> entityClass, Results.Level resultsLevel)
             throws Exception;
 
@@ -206,7 +226,7 @@ public interface EntityManager {
      * @return a list of entity objects.
      * @throws Exception
      */
-    public Results get(List<UUID> entityIds, String entityType,
+    public Results get(Collection<UUID> entityIds, String entityType,
             Class<? extends Entity> entityClass, Results.Level resultsLevel)
             throws Exception;
 
@@ -749,10 +769,7 @@ public interface EntityManager {
     public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
             String propertyName, Object propertyValue) throws Exception;
 
-    public List<ConnectionRef> searchConnections(EntityRef connectingEntity,
-            Query query) throws Exception;
-
-    // Application roles
+   // Application roles
 
     public Set<String> getConnectionIndexes(EntityRef entity,
             String connectionType) throws Exception;

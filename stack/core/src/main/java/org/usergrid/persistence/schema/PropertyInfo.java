@@ -23,8 +23,7 @@ public class PropertyInfo {
 
 	private boolean aliasProperty;
 	private boolean fulltextIndexed;
-	private boolean indexed;
-	private boolean indexedInConnections;
+	private boolean indexed = true;
 	private boolean basic = false;
 	private boolean mutable = true;
 	private boolean pathBasedName;
@@ -43,7 +42,6 @@ public class PropertyInfo {
 		setAliasProperty(propertyAnnotation.aliasProperty());
 		setFulltextIndexed(propertyAnnotation.fulltextIndexed());
 		setIndexed(propertyAnnotation.indexed());
-		setIndexedInConnections(propertyAnnotation.indexedInConnections());
 		setBasic(propertyAnnotation.basic());
 		setMutable(propertyAnnotation.mutable());
 		setPathBasedName(propertyAnnotation.pathBasedName());
@@ -107,14 +105,6 @@ public class PropertyInfo {
 
 	public void setMutable(boolean mutable) {
 		this.mutable = mutable;
-	}
-
-	public boolean isIndexedInConnections() {
-		return indexedInConnections;
-	}
-
-	public void setIndexedInConnections(boolean indexedInConnections) {
-		this.indexedInConnections = indexedInConnections;
 	}
 
 	public boolean isUnique() {
@@ -189,7 +179,7 @@ public class PropertyInfo {
 		return "PropertyInfo [name=" + name + ", type=" + type
 				+ ", aliasProperty=" + aliasProperty + ", fulltextIndexed="
 				+ fulltextIndexed + ", indexed=" + indexed
-				+ ", indexedInConnections=" + indexedInConnections + ", basic="
+				+ ", basic="
 				+ basic + ", mutable=" + mutable + ", pathBasedName="
 				+ pathBasedName + ", publicVisible=" + publicVisible
 				+ ", required=" + required + ", unique=" + unique

@@ -48,4 +48,26 @@ public class ContainsOperand extends EqualityOperand {
        return (StringLiteral) getLiteral();
     }
 
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.tree.EqualityOperand#newProperty(java.lang.String)
+     */
+    @Override
+    protected Property newProperty(String name) {
+      return new ContainsProperty(name);
+    }
+    
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.tree.EqualityOperand#getProperty()
+     */
+    @Override
+    public ContainsProperty getProperty() {
+      return (ContainsProperty) this.children.get(0);
+    }
+
+   
+    
+    
+
 }

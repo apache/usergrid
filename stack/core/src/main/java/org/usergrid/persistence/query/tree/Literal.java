@@ -33,7 +33,12 @@ public abstract class Literal<V> extends CommonTree{
     super(t);
   }
   
+  /**
+   * Return the value of the literal the user has passed in
+   * @return
+   */
   public abstract V getValue();
+
   
   
   
