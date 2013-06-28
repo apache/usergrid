@@ -26,12 +26,15 @@
 	<bean id="microsecondsTimeResolution"
 		class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
 
+<!--  Disabled until we update this more
     <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager"/>
     <bean id="traceTagReporter" class="org.usergrid.persistence.cassandra.util.Slf4jTraceTagReporter"/>
 
     <bean id="taggedOpTimer" class="org.usergrid.persistence.cassandra.util.TaggedOpTimer">
         <constructor-arg ref="traceTagManager"/>
     </bean>
+     -->
+    
 
 	<bean id="cassandraHostConfigurator"
 		class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
@@ -136,11 +139,12 @@
 
     <bean id="relationManager" class="org.usergrid.persistence.cassandra.RelationManagerImpl" scope="prototype"/>
 
+	<!-- Disabled until we update this a bit more
     <bean id="traceTagAspect" class="org.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 
     <aop:config>
-      <aop:aspect id="traceParticipant" ref="traceTagAspect">
-        <!-- pointcut on the prescense of the TraceParticipant annotation only -->
+      <aop:aspect id="traceParticipant" ref="traceTagAspect"> 
+         pointcut on the prescense of the TraceParticipant annotation only
         <aop:pointcut id="emTraceParticipant"
             expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.*(..)) and
             @annotation(org.usergrid.persistence.cassandra.util.TraceParticipant)"/>
@@ -148,6 +152,6 @@
            pointcut-ref="emTraceParticipant"
            method="applyTrace"/>
       </aop:aspect>
-    </aop:config>
+    </aop:config> -->
 
 </beans>
