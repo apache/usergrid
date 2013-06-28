@@ -159,6 +159,10 @@ function runner(step, arg, arg2){
 			notice('-----running step '+step+': try to create existing entity');
 			createExistingEntity(step, arg);
 			break;
+		case 32:
+			notice('-----running step '+step+': try to create new entity with no name');
+			createNewEntityNoName(step, arg);
+			break;
 		default:
 			notice('-----test complete!-----');
 			notice('Success count= ' + successCount);
@@ -871,6 +875,26 @@ function createExistingEntity(step, marty) {
 
 				}
 			});
+		}
+	});
+
+}
+
+function createNewEntityNoName(step, marty) {
+
+	var options = {
+   type:"something",
+   othervalue:"something else"
+	}
+
+	client.createEntity(options, function (err, entity) {
+		if (err) {
+			error('Create new entity with no name failed');
+		} else {
+			success('Create new entity with no name succeeded');
+
+      entity.destroy();
+      runner(step);
 		}
 	});
 

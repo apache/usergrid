@@ -254,7 +254,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+    var okToSave = ( (err && 'service_resource_not_found' === data.error) || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
     if(okToSave) {
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
@@ -886,6 +886,81 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         type += '/' + this.get('username');
       } else {
         if (typeof(callback) === 'function') {
+          var error = 'no_name_specified';
+          if (self._client.logging) {
+            console.log(error);
+          }
+          return callback(true, {error:error}, self)
+        }
+      }
+    } else if (type === 'a path') {
+
+      ///TODO add code to deal with the type as a path
+
+      if (this.get('path')) {
+        type += '/' + encodeURIComponent(this.get('name'));
+      } else {
+        if (typeof(callback) === 'function') {
+          var error = 'no_name_specified';
+          if (self._client.logging) {
+            console.log(error);
+          }
+          return callback(true, {error:error}, self)
+        }
+      }
+
+    } else {
+      if (this.get('name')) {
+        type += '/' + encodeURIComponent(this.get('name'));
+      } else {
+        if (typeof(callback) === 'function') {
+          var error = 'no_name_specified';
+          if (self._client.logging) {
+            console.log(error);
+          }
+          return callback(true, {error:error}, self)
+        }
+      }
+    }
+  }
+  var options = {
+    method:'GET',
+    endpoint:type
+  };
+  this._client.request(options, function (err, data) {
+    if (err && self._client.logging) {
+      console.log('could not get entity');
+    } else {
+      if (data.user) {
+        self.set(data.user);
+        self._json = JSON.stringify(data.user, null, 2);
+      } else if (data.entities) {
+        if (data.entities.length) {
+          var entity = data.entities[0];
+          self.set(entity);
+        }
+      }
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data, self);
+    }
+  });
+}
+
+/*
+Usergrid.Entity.prototype.fetch = function (callback) {
+  var type = this.get('type');
+  var self = this;
+
+  //if a uuid is available, use that, otherwise, use the name
+  if (this.get('uuid')) {
+    type += '/' + this.get('uuid');
+  } else {
+    if (type === 'users') {
+      if (this.get('username')) {
+        type += '/' + this.get('username');
+      } else {
+        if (typeof(callback) === 'function') {
           var error = 'cannot fetch entity, no username specified';
           if (self._client.logging) {
             console.log(error);
@@ -929,7 +1004,7 @@ Usergrid.Entity.prototype.fetch = function (callback) {
     }
   });
 }
-
+*/
 /*
 *  deletes the entity from the database - will only delete
 *  if the object has a valid uuid
