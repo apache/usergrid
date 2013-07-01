@@ -15,35 +15,81 @@
  ******************************************************************************/
 package org.usergrid.utils;
 
+import java.util.List;
 import java.util.Properties;
 
+import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-@Ignore
+import javax.mail.Message;
+
+import static org.junit.Assert.assertEquals;
+
 public class MailUtilsTest {
 
-	public static void main(String[] args) throws Exception {
-		MailUtilsTest test = new MailUtilsTest();
-		test.testSendMail();
-	}
+  private Properties props;
+  private MailUtils mailUtils;
 
-	public void testSendMail() {
+  @Before
+  public void setupLocal() {
+    props = new Properties();
+    props.put("mail.transport.protocol","smtp");
+    props.put("mail.smtp.host","usergrid.com");
+    props.put("mail.smtp.username","testuser");
+    props.put("mail.smtp.password","testpassword");
 
-		Properties properties = new Properties();
-		properties.setProperty("mail.transport.protocol", "smtps");
-		properties.setProperty("mail.smtps.host", "smtp.gmail.com");
-		properties.setProperty("mail.smtps.port", "465");
-		properties.setProperty("mail.smtps.auth", "true");
-		properties.setProperty("mail.smtps.username", "mailer@usergrid.com");
-		properties.setProperty("mail.smtps.password", "ugmail123$");
-		properties.setProperty("mail.smtps.quitwait", "false");
-		
-		MailUtils mailUtils = new MailUtils();
-		mailUtils.sendHtmlMail(
-						properties,
-						"Ed Anuff <ed@anuff.com>",
-						"Usergrid Mailer <mailer@usergrid.com>",
-						"test",
-						"this is a test, click here <a href=\"http://www.usergrid.com\">http://www.usergrid.com</a>");
-	}
+    mailUtils  = new MailUtils();
+  }
+
+
+  @Test
+  public void verifyConstructionOk() throws Exception {
+    String email = consistentEmail();
+
+    sendTestEmail(email);
+
+    List<Message> user_inbox = org.jvnet.mock_javamail.Mailbox
+    				.get(email);
+
+    assertEquals(1,user_inbox.size());
+  }
+
+  @Test
+  public void failedConstruction() throws Exception {
+
+    sendTestEmail("foo@bar.");
+
+  }
+
+
+  @Test
+  public void propertiesExtraction() {
+    props.put("some.other.prop","foo");
+    assertEquals(5, props.size());
+    assertEquals(4, MailUtils.getMailProperties(props).size());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyMissingTemplateFail() {
+    mailUtils.sendHtmlMail(props,
+            "foo@bar",
+            "user@usergrid.com",
+            "",
+            "");
+  }
+
+
+  private void sendTestEmail(String email) {
+    mailUtils.sendHtmlMail(props,
+            email,
+            "user@usergrid.com",
+            "test subject",
+            "Email body");
+  }
+
+  private String consistentEmail() {
+    return String.format("user-%s@mockserver.com", UUIDUtils.newTimeUUID().toString());
+  }
 }
