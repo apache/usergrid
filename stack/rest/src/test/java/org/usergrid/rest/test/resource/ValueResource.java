@@ -17,7 +17,7 @@ package org.usergrid.rest.test.resource;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.codehaus.jackson.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
 

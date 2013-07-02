@@ -34,11 +34,11 @@ import java.util.UUID;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.mutation.Mutator;
 
+import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.uuid.UUIDComparator;
 
 public class IndexUpdate {
@@ -327,14 +327,14 @@ public class IndexUpdate {
 		JsonNode json = toJsonNode(obj);
 		if ((json != null) && json.isValueNode()) {
 			if (json.isBigInteger()) {
-				return json.bigIntegerValue();
+				return json.getBigIntegerValue();
 			} else if (json.isNumber() || json.isBoolean()) {
-				return BigInteger.valueOf(json.longValue());
+				return BigInteger.valueOf(json.getValueAsLong());
 			} else if (json.isTextual()) {
-				return prepStringForIndex(json.textValue());
+				return prepStringForIndex(json.getTextValue());
 			} else if (json.isBinary()) {
 				try {
-					return wrap(json.binaryValue());
+					return wrap(json.getBinaryValue());
 				} catch (IOException e) {
 				}
 			}

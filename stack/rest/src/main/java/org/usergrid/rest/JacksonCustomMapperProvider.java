@@ -20,15 +20,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
+import org.codehaus.jackson.jaxrs.Annotations;
+import org.codehaus.jackson.jaxrs.MapperConfigurator;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.cfg.Annotations;
-import com.fasterxml.jackson.jaxrs.json.JsonMapperConfigurator;;
 
 @Provider
 @Component
@@ -41,18 +40,18 @@ public class JacksonCustomMapperProvider implements
 			.getLogger(JacksonCustomMapperProvider.class);
 
 	public final static Annotations[] BASIC_ANNOTATIONS = { Annotations.JACKSON };
-	JsonMapperConfigurator _mapperConfig;
+	MapperConfigurator _mapperConfig;
 
 	public JacksonCustomMapperProvider() {
 		logger.info("JacksonCustomMapperProvider installed");
-		_mapperConfig = new JsonMapperConfigurator(new ObjectMapper(),
+		_mapperConfig = new MapperConfigurator(new ObjectMapper(),
 				BASIC_ANNOTATIONS);
 		_mapperConfig.setAnnotationsToUse(BASIC_ANNOTATIONS);
 		// do configuration of mapper here
 		_mapperConfig
-				.configure(SerializationFeature.INDENT_OUTPUT, true);
+				.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
 		_mapperConfig.configure(
-		        SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+				SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
 	}
 
 	@Override
@@ -60,7 +59,7 @@ public class JacksonCustomMapperProvider implements
 		return _mapperConfig.getConfiguredMapper();
 	}
 
-	public JsonMapperConfigurator getConfigurator() {
+	public MapperConfigurator getConfigurator() {
 		return _mapperConfig;
 	}
 }

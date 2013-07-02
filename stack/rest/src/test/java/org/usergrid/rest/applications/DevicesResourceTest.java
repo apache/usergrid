@@ -1,7 +1,7 @@
 package org.usergrid.rest.applications;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.fasterxml.jackson.databind.JsonNode;
+import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
 
@@ -29,7 +29,7 @@ public class DevicesResourceTest extends AbstractRestTest {
     // create
     JsonNode entity = getEntity(response, 0);
     assertNotNull(entity);
-    String newUuid = entity.get("uuid").textValue();
+    String newUuid = entity.get("uuid").getTextValue();
     assertEquals(uuid.toString(), newUuid);
 
     // delete

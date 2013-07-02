@@ -40,10 +40,9 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.util.Version;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 public class IndexUtils {
 
@@ -95,7 +94,7 @@ public class IndexUtils {
 			Object[] new_history = Arrays.copyOf(history, history.length + 1);
 			new_history[history.length] = node;
 			ObjectNode c = (ObjectNode) node;
-			Iterator<Entry<String, JsonNode>> i = c.fields();
+			Iterator<Entry<String, JsonNode>> i = c.getFields();
 			while (i.hasNext()) {
 				Entry<String, JsonNode> e = i.next();
 				String new_path = path;
@@ -117,13 +116,13 @@ public class IndexUtils {
 
 			if (node instanceof JsonNode) {
 				if (((JsonNode) node).isTextual()) {
-					node = ((JsonNode) node).textValue();
+					node = ((JsonNode) node).getTextValue();
 					UUID uuid = UUIDUtils.tryGetUUID((String) node);
 					if (uuid != null) {
 						node = uuid;
 					}
 				} else if (((JsonNode) node).isNumber()) {
-					node = ((JsonNode) node).numberValue();
+					node = ((JsonNode) node).getNumberValue();
 				} else {
 					return;
 				}

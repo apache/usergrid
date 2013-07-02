@@ -25,6 +25,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
+import org.codehaus.jackson.JsonEncoding;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
@@ -39,9 +42,6 @@ import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.tools.bean.ExportOrg;
 import org.usergrid.utils.JsonUtils;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.BiMap;
 
 public class Export extends ExportingToolBase {
@@ -349,6 +349,7 @@ public class Export extends ExportingToolBase {
    *       }
    *   }
    * 
+   * http://jackson.codehaus.org/1.8.0/javadoc/org/codehaus/jackson/JsonGenerator.html
    * 
    *
    *-
@@ -403,6 +404,7 @@ public class Export extends ExportingToolBase {
   public void streamOutput(File file, List<Entity> entities) throws Exception {
     JsonFactory jsonFactory = new JsonFactory();
     // or, for data binding,
+    // org.codehaus.jackson.mapper.MappingJsonFactory
     JsonGenerator jg = jsonFactory.createJsonGenerator(file, JsonEncoding.UTF8);
     // or Stream, Reader
 

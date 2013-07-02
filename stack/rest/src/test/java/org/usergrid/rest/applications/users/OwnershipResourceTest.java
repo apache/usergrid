@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.rest.RestContextTest;
 import org.usergrid.rest.test.resource.CustomCollection;
@@ -39,7 +39,7 @@ public class OwnershipResourceTest extends RestContextTest {
     String token = user1.getToken();
     JsonNode userNode = context.application().users().user("me").get();
     assertNotNull(userNode);
-    String uuid = userNode.get("entities").get(0).get("uuid").textValue();
+    String uuid = userNode.get("entities").get(0).get("uuid").getTextValue();
     assertNotNull(uuid);
     managementService.revokeAccessTokenForAppUser(token);
 

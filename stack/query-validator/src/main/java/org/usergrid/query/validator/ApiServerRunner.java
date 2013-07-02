@@ -16,6 +16,7 @@
 package org.usergrid.query.validator;
 
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.JsonNode;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.usergrid.java.client.response.ApiResponse;

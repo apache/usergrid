@@ -80,7 +80,6 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.core.provider.EntityHolder;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
@@ -88,6 +87,7 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -311,7 +311,7 @@ public class UserResource extends ServiceResource {
         response.setAction("set user pin");
 
         if (getUser() != null) {
-            String pin = json.path("pin").textValue();
+            String pin = json.path("pin").getTextValue();
             management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
         } else {
             response.setError("User not found");

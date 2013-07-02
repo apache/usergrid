@@ -22,11 +22,5 @@ public class RootCollectionService extends AbstractCollectionService {
 	public RootCollectionService() {
 
 	}
-	
-  @Override
-  public boolean isRootService() {
-    return true;
-  }
-
 
 }

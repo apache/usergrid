@@ -17,7 +17,7 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 
 import junit.framework.Assert;
-import com.fasterxml.jackson.databind.JsonNode;
+import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;

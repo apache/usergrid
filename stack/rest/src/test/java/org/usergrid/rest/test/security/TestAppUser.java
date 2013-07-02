@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.test.security;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.TestContext;
 
 

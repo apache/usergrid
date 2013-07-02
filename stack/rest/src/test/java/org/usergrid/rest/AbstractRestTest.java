@@ -29,8 +29,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.WebResource;
+import org.codehaus.jackson.JsonNode;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.AfterClass;
@@ -223,7 +223,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         .queryParam("username", name).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
         .get(JsonNode.class);
 
-    String userToken = node.get("access_token").textValue();
+    String userToken = node.get("access_token").getTextValue();
     logger.info("returning user token: {}", userToken);
     return userToken;
 
@@ -300,7 +300,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         .queryParam("username", user).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
         .get(JsonNode.class);
 
-    String mgmToken = node.get("access_token").textValue();
+    String mgmToken = node.get("access_token").getTextValue();
     logger.info("got mgmt token: {}", mgmToken);
     return mgmToken;
 
