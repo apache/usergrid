@@ -700,7 +700,7 @@ class Client {
     $data = array(
       "name" => $name,
       "environment" => $environment,
-      "p12Certificat" => $p12Certificate_path,
+      "p12Certificate" => $p12Certificate_path,
       "provider" => "apple"
     );
     return $this->post($endpoint, array(), $data);
