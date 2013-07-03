@@ -12,6 +12,8 @@
 		22D61E76171CBBF100E9CD17 /* UGHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E70171CBBF100E9CD17 /* UGHTTPClient.m */; };
 		22D61E77171CBBF100E9CD17 /* UGHTTPHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E72171CBBF100E9CD17 /* UGHTTPHelpers.m */; };
 		22D61E78171CBBF100E9CD17 /* UGHTTPResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E74171CBBF100E9CD17 /* UGHTTPResult.m */; };
+		C96E782F1782349C004DD244 /* SSKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = C96E782E1782349C004DD244 /* SSKeychain.m */; };
+		C96E783717824711004DD244 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C96E783617824711004DD244 /* Security.framework */; };
 		E89D6CA1150E5B2E005F5FB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */; };
 		E89D6CA3150E5B2E005F5FB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */; };
 		E89D6CA5150E5B2E005F5FB9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA4150E5B2E005F5FB9 /* CoreGraphics.framework */; };
@@ -69,6 +71,9 @@
 		22D61E73171CBBF100E9CD17 /* UGHTTPResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPResult.h; sourceTree = "<group>"; };
 		22D61E74171CBBF100E9CD17 /* UGHTTPResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPResult.m; sourceTree = "<group>"; };
 		638F675816EF875F002BD513 /* UGClientDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UGClientDelegate.h; sourceTree = "<group>"; };
+		C96E782D1782349C004DD244 /* SSKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSKeychain.h; sourceTree = "<group>"; };
+		C96E782E1782349C004DD244 /* SSKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSKeychain.m; sourceTree = "<group>"; };
+		C96E783617824711004DD244 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		E89D6C9C150E5B2E005F5FB9 /* UGAPIApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UGAPIApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -136,6 +141,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C96E783717824711004DD244 /* Security.framework in Frameworks */,
 				E89D6D19150E5C54005F5FB9 /* CoreLocation.framework in Frameworks */,
 				E89D6CA1150E5B2E005F5FB9 /* UIKit.framework in Frameworks */,
 				E89D6CA3150E5B2E005F5FB9 /* Foundation.framework in Frameworks */,
@@ -171,9 +177,19 @@
 			path = v2;
 			sourceTree = "<group>";
 		};
+		C96E782917821C9D004DD244 /* SSKeychain */ = {
+			isa = PBXGroup;
+			children = (
+				C96E782D1782349C004DD244 /* SSKeychain.h */,
+				C96E782E1782349C004DD244 /* SSKeychain.m */,
+			);
+			name = SSKeychain;
+			sourceTree = "<group>";
+		};
 		E89D6C91150E5B2E005F5FB9 = {
 			isa = PBXGroup;
 			children = (
+				C96E783617824711004DD244 /* Security.framework */,
 				22CA67231732087600C03C70 /* Default-568h@2x.png */,
 				E89D6D18150E5C54005F5FB9 /* CoreLocation.framework */,
 				E89D6CDC150E5B99005F5FB9 /* UGAPI */,
@@ -251,6 +267,7 @@
 		E89D6CDC150E5B99005F5FB9 /* UGAPI */ = {
 			isa = PBXGroup;
 			children = (
+				C96E782917821C9D004DD244 /* SSKeychain */,
 				22D61E6C171CBBF100E9CD17 /* v2 */,
 				E89D6CDD150E5B99005F5FB9 /* SBJson */,
 				E89D6CF7150E5B99005F5FB9 /* UGActivity.h */,
@@ -439,6 +456,7 @@
 				22D61E76171CBBF100E9CD17 /* UGHTTPClient.m in Sources */,
 				22D61E77171CBBF100E9CD17 /* UGHTTPHelpers.m in Sources */,
 				22D61E78171CBBF100E9CD17 /* UGHTTPResult.m in Sources */,
+				C96E782F1782349C004DD244 /* SSKeychain.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
