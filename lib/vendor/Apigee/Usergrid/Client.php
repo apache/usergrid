@@ -233,16 +233,20 @@ class Client {
 
     curl_close($curl);
 
+
     $response_array = @json_decode($response, TRUE);
     $response_obj = new Response();
     $response_obj->set_curl_meta($meta);
     $response_obj->set_data($response_array);
 
+    $response_json = $response;
+    $response_obj->set_json($response_json);
+
     if ($meta['http_code'] != 200)   {
-     //there was an api error
-     $error_code = $response_array['error'];
-     $description = isset($response_array['error_description'])?$response_array['error_description']:'';
-     $description = isset($response_array['exception'])?$response_array['exception']:$description;
+      //there was an api error
+      $error_code = $response_array['error'];
+      $description = isset($response_array['error_description'])?$response_array['error_description']:'';
+      $description = isset($response_array['exception'])?$response_array['exception']:$description;
       $this->write_log('Error: '.$meta['http_code'].' error:'.$description);
       $response_obj->set_error(true);
       $response_obj->set_error_code($error_code);
@@ -339,7 +343,7 @@ class Client {
     $response = $entity->fetch();
 
     $ok_to_save = (
-      ($response->get_error() && ('service_resource_not_found' == $response->get_error_code() || 'no_name_specified' == $response->get_error_code() ))
+      ($response->get_error() && ('service_resource_not_found' == $response->get_error_code() || 'no_name_specified' == $response->get_error_code() || 'null_pointer' == $response->get_error_code() ))
       ||
       (!$response->get_error() && array_key_exists('getOnExist', $entity_data) && $entity_data['getOnExist'])
     );

@@ -12,13 +12,15 @@ namespace Apigee\Usergrid;
 
 class Response extends Request{
   private $data = array();
+  private $json = '';
   private $curl_meta = array();
   private $error = FALSE;
   private $error_code = '';
   private $error_message = '';
 
-  public function __construct($data = array(), $curl_meta = array(), $error = FALSE, $error_code = '', $error_message = '') {
+  public function __construct($data = array(), $curl_meta = array(), $error = FALSE, $error_code = '', $error_message = '', $json = '') {
 		$this->data = $data;
+		$this->json = $json;
 		$this->curl_meta = $curl_meta;
 		$this->error = $error;
 		$this->set_error_code = $error_code;
@@ -30,6 +32,13 @@ class Response extends Request{
   }
   public function get_data(){
     return $this->data;
+  }
+
+  public function set_json($in){
+    $this->json = $in;
+  }
+  public function get_json(){
+    return $this->json;
   }
 
   public function set_curl_meta($in){

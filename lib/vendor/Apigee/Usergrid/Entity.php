@@ -14,10 +14,20 @@ class Entity {
 
   private $client;
   private $data;
+  private $json;
 
-  public function __construct(Client $client, $data = array()) {
+  public function __construct(Client $client, $data = array(), $json_data='') {
     $this->client = $client;
     $this->data = $data;
+    $this->json_data = $json_data;
+  }
+
+  public function get_json() {
+    return $this->json;
+  }
+
+  public function set_json($json) {
+    $this->json = $json;
   }
 
   public function get($field = NULL) {
@@ -78,6 +88,8 @@ class Entity {
 		} else {
 			$response = $this->client->post($type, array(), $data);
 		}
+
+    $this->set_json($response->get_json());
 
     if ($response->get_error()) {
       $this->client->write_log('Could not save entity.');
