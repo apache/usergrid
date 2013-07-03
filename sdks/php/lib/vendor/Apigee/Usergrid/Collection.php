@@ -9,19 +9,50 @@
  */
 
 namespace Apigee\Usergrid;
+require_once(dirname(__FILE__) . '/Exceptions.php');
 
 class Collection {
 
+  /**
+   * @var \Apigee\Usergrid\Client
+   */
   private $client;
+  /**
+   * @var string
+   */
   private $type;
+  /**
+   * @var array
+   */
   private $qs;
-
+  /**
+   * @var array
+   */
   private $list;
+  /**
+   * @var int
+   */
   private $iterator;
+  /**
+   * @var array
+   */
   private $previous;
+  /**
+   * @var bool|int
+   */
   private $next;
+  /**
+   * @var null|int
+   */
   private $cursor;
 
+  /**
+   * Object constructor.
+   *
+   * @param \Apigee\Usergrid\Client $client
+   * @param string $type
+   * @param array $qs
+   */
   public function __construct(Client $client, $type, $qs = array()) {
     $this->client = $client;
     $this->type = $type;
@@ -37,13 +68,23 @@ class Collection {
     $this->fetch();
   }
 
-  public function get_type(){
-  	return $this->type;
-	}
-	public function set_type($type){
-  	$this->type = $type;
-	}
+  /**
+   * @return string
+   */
+  public function get_type() {
+    return $this->type;
+  }
 
+  /**
+   * @param string $type
+   */
+  public function set_type($type) {
+    $this->type = $type;
+  }
+
+  /**
+   * @return \Apigee\Usergrid\Response
+   */
   public function fetch() {
     if ($this->cursor) {
       $this->qs['cursor'] = $this->cursor;
@@ -56,7 +97,7 @@ class Collection {
       $this->client->write_log('Error getting collection.');
     }
     else {
-    	$response_data = $response->get_data();
+      $response_data = $response->get_data();
       $cursor = (isset($response_data['cursor']) ? $response_data['cursor'] : NULL);
       $this->save_cursor($cursor);
       if (!empty($response_data['entities'])) {
@@ -77,6 +118,10 @@ class Collection {
     return $response;
   }
 
+  /**
+   * @param array $entity_data
+   * @return \Apigee\Usergrid\Entity
+   */
   public function add_entity($entity_data) {
     $entity = $this->client->create_entity($entity_data);
     if ($entity) {
@@ -85,6 +130,10 @@ class Collection {
     return $entity;
   }
 
+  /**
+   * @param \Apigee\Usergrid\Entity $entity
+   * @return \Apigee\Usergrid\Response
+   */
   public function destroy_entity(Entity $entity) {
     $response = $entity->destroy();
     if ($response->get_error()) {
@@ -96,29 +145,55 @@ class Collection {
     return $response;
   }
 
+  /**
+   * @param string $uuid
+   * @return \Apigee\Usergrid\Response|bool
+   * @throws \Apigee\Usergrid\UGException
+   */
   public function get_entity_by_uuid($uuid) {
+    if (!Client::is_uuid($uuid)) {
+      if ($this->client->are_exceptions_enabled()) {
+        throw new UGException("Invalid UUID $uuid");
+      }
+      return FALSE;
+    }
     $entity = new Entity($this->client, array('type' => $this->type, 'uuid' => $uuid));
     return $entity->fetch();
   }
 
+  /**
+   * @return \Apigee\Usergrid\Entity|null
+   */
   public function get_first_entity() {
     return (count($this->list) > 0 ? $this->list[0] : NULL);
   }
 
+  /**
+   * @return \Apigee\Usergrid\Entity|null
+   */
   public function get_last_entity() {
     return (count($this->list) > 0 ? $this->list[count($this->list) - 1] : NULL);
   }
 
+  /**
+   * @return bool
+   */
   public function has_next_entity() {
     $next = $this->iterator + 1;
     return ($next >= 0 && $next < count($this->list));
   }
 
+  /**
+   * @return bool
+   */
   public function has_prev_entity() {
     $prev = $this->iterator - 1;
     return ($prev >= 0 && $prev < count($this->list));
   }
 
+  /**
+   * @return \Apigee\Usergrid\Entity|null
+   */
   public function get_next_entity() {
     if ($this->has_next_entity()) {
       $this->iterator++;
@@ -127,6 +202,9 @@ class Collection {
     return NULL;
   }
 
+  /**
+   * @return \Apigee\Usergrid\Entity|null
+   */
   public function get_prev_entity() {
     if ($this->has_prev_entity()) {
       $this->iterator--;
@@ -150,13 +228,16 @@ class Collection {
   }
 
   public function has_next_page() {
-    return $this->next;
+    return (bool) $this->next;
   }
 
   public function has_prev_page() {
     return (count($this->previous) > 0);
   }
 
+  /**
+   * @return \Apigee\Usergrid\Response|bool
+   */
   public function get_next_page() {
     if ($this->has_next_page()) {
       array_push($this->previous, $this->cursor);
@@ -167,6 +248,9 @@ class Collection {
     return FALSE;
   }
 
+  /**
+   * @return \Apigee\Usergrid\Response|bool
+   */
   public function get_prev_page() {
     if ($this->has_prev_page()) {
       $this->next = FALSE;
