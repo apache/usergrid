@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -591,6 +592,25 @@
 					</formats>
 					<aggregate>true</aggregate>
 					<maxmem>2G</maxmem>
+					<!-- this is 3rd party code, or code dont' deploy in the stack -->
+					<instrumentation>
+						<ignores>
+							<ignore>com.jdotsoft.*</ignore>
+							<ignore>org.usergrid.standalone.*</ignore>
+							<ignore>org.usergrid.websocket.*</ignore>
+							<ignore>org.usergrid.tools.*</ignore>
+							<ignore>org.usergrid.mongo.*</ignore>
+							<ignore>jsp.*</ignore>
+						</ignores>
+						<excludes>
+							<exclude>com/jdotsoft/**</exclude>
+							<exclude>org/usergrid/standalone/**</exclude>
+							<exclude>org/usergrid/websocket/**</exclude>
+							<exclude>org/usergrid/tools/**</exclude>
+							<exclude>org/usergrid/mongo/**</exclude>
+							<exclude>jsp/**</exclude>
+						</excludes>
+					</instrumentation>
 				</configuration>
 			</plugin>
 		</plugins>
