@@ -51,6 +51,8 @@ if ($result->get_error()){
 }
 //@solo
 $data = $result->get_data();
+$json = $result->get_json();
+//echo '<pre>'.$json.'</pre><br>';
 if (isset($data['entities'][0]['username']) && $data['entities'][0]['username'] == 'fred'){
   $tester->success($testname);
 } else {
