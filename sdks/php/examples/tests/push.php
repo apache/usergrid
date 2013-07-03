@@ -37,7 +37,7 @@ $notification->set_notifier_name($apple_name);
 $notification->set_message("Test Message");
 $notification->set_delivery_time(time());
 $notification->set_recipients_list(array(0=>'fred'));
-$notification->set_recipeint_type(USERS);
+$notification->set_recipient_type(USERS);
 
 $result = $client->scheduleNotification($notification);
 if ($result->get_error()){
