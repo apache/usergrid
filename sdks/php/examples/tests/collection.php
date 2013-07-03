@@ -26,6 +26,7 @@ $testname = 'Get dogs collection';
 //@han {get-collection}
 $dogs = $client->get_collection('dogs');
 //@solo
+//echo '<pre>'.$dogs->get_json().'</pre><br>';
 if ($dogs->get_type() == 'dogs') {
   $tester->success($testname);
 } else {

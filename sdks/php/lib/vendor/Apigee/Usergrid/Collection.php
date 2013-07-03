@@ -47,6 +47,11 @@ class Collection {
   private $cursor;
 
   /**
+   * @var string|string
+   */
+  private $json = '';
+
+  /**
    * Object constructor.
    *
    * @param \Apigee\Usergrid\Client $client
@@ -66,6 +71,14 @@ class Collection {
     $this->cursor = NULL;
 
     $this->fetch();
+  }
+
+  public function get_json() {
+    return $this->json;
+  }
+
+  public function set_json($json) {
+    $this->json = $json;
   }
 
   /**
@@ -97,6 +110,7 @@ class Collection {
       $this->client->write_log('Error getting collection.');
     }
     else {
+      $this->set_json($response->get_json());
       $response_data = $response->get_data();
       $cursor = (isset($response_data['cursor']) ? $response_data['cursor'] : NULL);
       $this->save_cursor($cursor);

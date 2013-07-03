@@ -157,6 +157,7 @@ class Entity {
       }
     }
     $response = $this->client->get($type, array());
+    $this->set_json($response->get_json());
     if ($response->get_error()) {
       $this->client->write_log('Could not get entity.');
     }
@@ -188,6 +189,7 @@ class Entity {
     }
 
     $response = $this->client->delete($type, array());
+    $this->set_json($response->get_json());
     if ($response->get_error()) {
       $this->client->write_log('Entity could not be deleted.');
     }

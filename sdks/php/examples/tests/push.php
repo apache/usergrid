@@ -12,9 +12,10 @@
 //--------------------------------------------------------------
 $testname = 'Create apple notifier';
 $apple_name = 'name_'.time();
-$environment = 'Development';
-$p12Certificate_path = "@certificate.p12";
+$environment = 'development';
+$p12Certificate_path = "@pushtest_dev.p12";
 $result =  $client->createNewNotifierApple($apple_name, $environment, $p12Certificate_path);
+echo '<pre>'.$result->get_json().'</pre><br>';
 if ($result->get_error()){
   $tester->error($testname);
 } else {
@@ -25,6 +26,7 @@ $testname = 'Create google notifier';
 $google_name = 'name_'.time();
 $apiKey = 'AIzaSyCIH_7WC0mOqBGMOXyQnFgrBpOePgHvQJM';
 $result =  $client->createNewNotifierAndroid($google_name, $apiKey);
+echo '<pre>'.$result->get_json().'</pre><br>';
 if ($result->get_error()){
   $tester->error($testname);
 } else {
@@ -40,6 +42,7 @@ $notification->set_recipients_list(array(0=>'fred'));
 $notification->set_recipient_type(USERS);
 
 $result = $client->scheduleNotification($notification);
+echo '<pre>'.$result->get_json().'</pre><br>';
 if ($result->get_error()){
   $tester->error($testname);
 } else {
