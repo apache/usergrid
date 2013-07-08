@@ -29,14 +29,13 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batch
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.buildSetIdListMutator;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytebuffers;
-import static org.usergrid.utils.ConversionUtils.string;
-import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.asMap;
 import static org.usergrid.utils.MapUtils.filter;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -70,7 +69,6 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
-import me.prettyprint.hector.api.ddl.ColumnDefinition;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -87,7 +85,8 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.utils.JsonUtils;
+import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
+import org.usergrid.persistence.cassandra.index.IndexScanner;
 
 public class CassandraService {
 
@@ -573,7 +572,7 @@ public class CassandraService {
    * @throws Exception
    *           the exception
    */
-  public <K, N, V> Rows<K, N, V> getRows(Keyspace ko, Object columnFamily, List<K> keys, Serializer<K> keySerializer,
+  public <K, N, V> Rows<K, N, V> getRows(Keyspace ko, Object columnFamily, Collection<K> keys, Serializer<K> keySerializer,
       Serializer<N> nameSerializer, Serializer<V> valueSerializer) throws Exception {
 
     if (db_logger.isDebugEnabled()) {
@@ -1035,34 +1034,28 @@ public class CassandraService {
    * @throws Exception
    *           the exception
    */
-  public List<UUID> getIdList(Keyspace ko, Object key, Object start, Object finish, int count, boolean reversed,
+  public IndexScanner getIdList(Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
       IndexBucketLocator locator, UUID applicationId, String collectionName) throws Exception {
 
     if (count <= 0) {
       count = DEFAULT_COUNT;
     }
-    List<UUID> ids = new ArrayList<UUID>();
+    
     if (NULL_ID.equals(start)) {
       start = null;
     }
 
-    IndexBucketScanner scanner = new IndexBucketScanner(this, locator, ENTITY_ID_SETS, applicationId,
-        IndexType.COLLECTION, key, start, finish, reversed, count, collectionName);
+    IndexScanner scanner = new IndexBucketScanner(this, locator,
+        ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key,
+        start, finish, reversed, count, collectionName);
 
-    List<HColumn<ByteBuffer, ByteBuffer>> results = scanner.load();
+    return scanner;
 
-    if (results != null) {
-      for (HColumn<ByteBuffer, ByteBuffer> result : results) {
-        ByteBuffer bytes = result.getName();
-        ids.add(uuid(bytes));
-      }
-    }
-
-    return ids;
 
   }
 
   public int countColumns(Keyspace ko, Object columnFamily, Object key) throws Exception {
+
 
     CountQuery<ByteBuffer, ByteBuffer> cq = HFactory.createCountQuery(ko, be, be);
     cq.setColumnFamily(columnFamily.toString());

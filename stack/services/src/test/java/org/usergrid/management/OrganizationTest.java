@@ -114,7 +114,7 @@ public class OrganizationTest {
   @Test
   public void testPasswordHistoryCheck() throws Exception {
 
-    String[] passwords = new String[] {"password1", "password2", "password3", "password4"};
+    String[] passwords = new String[] {"password1", "password2", "password3", "password4", "password5"};
 
     UserInfo user = management.createAdminUser("edanuff2", "Ed Anuff", "ed2@anuff.com", passwords[0], true, false);
     assertNotNull(user);
@@ -127,8 +127,27 @@ public class OrganizationTest {
     management.setAdminUserPassword(user.getUuid(), passwords[0]);
     management.setAdminUserPassword(user.getUuid(), passwords[0]);
 
-    // set history to 2
+    // set history to 4
     Map<String,Object> props = new HashMap<String,Object>();
+    props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 3);
+    organization.setProperties(props);
+    management.updateOrganization(organization);
+
+    // check the history
+    management.setAdminUserPassword(user.getUuid(), passwords[1]); // ok
+    management.setAdminUserPassword(user.getUuid(), passwords[2]); // ok
+    management.setAdminUserPassword(user.getUuid(), passwords[3]); // ok
+    management.setAdminUserPassword(user.getUuid(), passwords[4]); // ok
+    management.setAdminUserPassword(user.getUuid(), passwords[0]); // ok
+    try {
+      management.setAdminUserPassword(user.getUuid(), passwords[2]);
+      fail("password change should fail");
+    } catch (RecentlyUsedPasswordException e) {
+      // ok
+    }
+
+    // set history to 2
+    props = new HashMap<String,Object>();
     props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 2);
     organization.setProperties(props);
     management.updateOrganization(organization);

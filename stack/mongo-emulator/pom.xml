@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.usergrid</groupId>
 		<artifactId>usergrid</artifactId>
-		<version>0.0.16-SNAPSHOT</version>
+		<version>0.0.27-SNAPSHOT</version>
 	</parent>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,14 +47,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.6</version>
 				<configuration>
 					<!-- <groups>fast,${groups}</groups> -->
 					<systemPropertyVariables>
 						<storage-config>${basedir}/src/test/conf</storage-config>
 					</systemPropertyVariables>
 					<forkMode>always</forkMode>
-					<argLine>-Xmx512M -Xms512M</argLine>
+					<argLine>-Xmx2G -Xms2G</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

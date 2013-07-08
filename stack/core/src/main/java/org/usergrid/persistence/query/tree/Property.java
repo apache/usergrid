@@ -34,8 +34,7 @@ public class Property extends Literal<String> {
   }
   
   public Property(String property){
-    super(new ClassicToken(0, property));
-    this.property = property;
+    this(new ClassicToken(0, property));
   }
 
   /*
@@ -47,5 +46,16 @@ public class Property extends Literal<String> {
   public String getValue() {
     return this.property;
   }
+  
+  /**
+   * Subclasses an override.  Indexed value could be different when stored internally.  By default returns the same property
+   * @return
+   */
+  public String getIndexedValue(){
+    return this.property;
+  }
+  
+  
+  
 
 }

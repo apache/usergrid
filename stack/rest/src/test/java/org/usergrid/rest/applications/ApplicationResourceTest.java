@@ -413,6 +413,69 @@ public class ApplicationResourceTest extends AbstractRestTest {
 			
 		}
 	}
+	
+	@Test
+	public void appTokenFromOrgCreds() throws Exception{
+	
+	    OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+
+	    String clientId = managementService.getClientIdForOrganization(orgInfo.getUuid());
+	    String clientSecret = managementService.getClientSecretForOrganization(orgInfo.getUuid());
+
+	    JsonNode node = resource().path("/test-organization/test-app/token").queryParam("client_id", clientId)
+	        .queryParam("client_secret", clientSecret).queryParam("grant_type", "client_credentials").accept(MediaType.APPLICATION_JSON)
+	        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+	    assertNotNull(node.get("access_token"));
+	    
+	    String accessToken = node.get("access_token").asText();
+	    
+	    int ttl = node.get("expires_in").asInt();
+	    
+	    //check it's 1 day, should be the same as the default
+	    assertEquals(604800, ttl);
+	    
+	    node = resource().path("/test-organization/test-app/users").queryParam("access_token", accessToken).accept(MediaType.APPLICATION_JSON)
+	        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+	    assertNotNull(node.get("entities"));
+	    
+	    
+
+	  
+	}
+	
+	
+	 @Test
+	  public void appTokenFromAppCreds() throws Exception{
+	  
+	      ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+
+	      String clientId = managementService.getClientIdForApplication(appInfo.getId());
+	      String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+
+	      JsonNode node = resource().path("/test-organization/test-app/token").queryParam("client_id", clientId)
+	          .queryParam("client_secret", clientSecret).queryParam("grant_type", "client_credentials").accept(MediaType.APPLICATION_JSON)
+	          .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+	      assertNotNull(node.get("access_token"));
+	      
+	      String accessToken = node.get("access_token").asText();
+	      
+	      int ttl = node.get("expires_in").asInt();
+	      
+	      //check it's 1 day, should be the same as the default
+	      assertEquals(604800, ttl);
+	      
+	      node = resource().path("/test-organization/test-app/users").queryParam("access_token", accessToken).accept(MediaType.APPLICATION_JSON)
+	          .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+	      assertNotNull(node.get("entities"));
+	      
+	      
+
+	    
+	  }
 
 
 

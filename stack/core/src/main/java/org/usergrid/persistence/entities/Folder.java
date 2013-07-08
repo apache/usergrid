@@ -37,7 +37,7 @@ public class Folder extends TypedEntity {
 	@EntityProperty(required = true, indexed = true, mutable = false)
 	UUID owner;
 
-	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, pathBasedName = true, mutable = false, unique = true)
+	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, aliasProperty = true, pathBasedName = true, mutable = false, unique = true)
 	protected String path;
 
 	@EntityDictionary(keyType = java.lang.String.class)

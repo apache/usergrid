@@ -48,5 +48,5 @@ public class LessThan extends EqualityOperand {
     public void visit(QueryVisitor visitor) throws NoIndexException {
         visitor.visit(this);
     }
-
+   
 }

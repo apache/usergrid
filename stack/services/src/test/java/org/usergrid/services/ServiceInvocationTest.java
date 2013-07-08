@@ -38,7 +38,7 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 	public void testServices() throws Exception {
 		logger.info("testServices");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = createApplication("ServiceInvocationTest",
 				"testServices");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);

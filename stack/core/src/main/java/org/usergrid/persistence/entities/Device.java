@@ -36,7 +36,7 @@ public class Device extends TypedEntity {
 	public static final String ENTITY_TYPE = "device";
   public static final String RECEIPTS_COLLECTION = "receipts";
 
-  @EntityProperty(indexed = true, fulltextIndexed = false, required = false, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
+  @EntityProperty(indexed = true, fulltextIndexed = false, required = false, aliasProperty = true, unique = true, basic = true)
 	protected String name;
 
 	@EntityCollection(type = "user", linkedCollection = "devices")
