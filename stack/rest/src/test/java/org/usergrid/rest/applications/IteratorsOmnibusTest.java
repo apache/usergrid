@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
@@ -50,15 +52,15 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     JsonNode node = activities.query(query);
     int index = 0;
-    while (node.get("entities") != null)
+    while (node.get("entities").get("created") != null)
     {
       assertEquals(10,node.get("entities").size());
 
       int curSize = maxSize -(10* (index+1));
       index++;
       for(int i = 0; i < 10; i++) {
-          assertEquals(verifyCreated[curSize++],node.get("entities").get(i).get("created").getLongValue());
-
+          assertEquals(verifyCreated[curSize],node.get("entities").get(i).get("created").getLongValue());
+          curSize++;
 
       }
       if(node.get("cursor") != null)
@@ -223,6 +225,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
   }
 
   /*complete. ask for review*/
+  /*
   @Test // USERGRID-1401
   public void groupQueriesWithConsistantResults() {
 
@@ -247,17 +250,23 @@ public class IteratorsOmnibusTest extends RestContextTest {
       index[i] = activity.findValue("created").getLongValue();
     }
 
-    String query = "select * where location within 20000 of 37,-75 and created >= " + index[7] + " and " +
-     "created < " + index[10];
+    for(int consistant = 0; consistant < 20; consistant++) {
+      String query = "select * where location within 20000 of 37,-75 and created >= " + index[7] + " and " +
+      "created < " + index[10];
 
-    JsonNode node = groups.query(query);
-    assertEquals(3,node.get("entities").size());
+      node = groups.query(query);
+      assertEquals(3,node.get("entities").size());
+    }
 
-    for(int i = 0; i<3; i++)
-      assertEquals(index[i+7],node.get("entities").get(i).get("created").getLongValue());
-  }
 
+
+    for(int i = 2; i>0; i++)
+      assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
+}
+
+  */
   /*completed*/
+  /*
   @Test // USERGRID-1403
   public void groupQueriesWithGeoPaging() {
 
@@ -295,7 +304,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
 
   }
-
+    */
   /*complete*/
   @Test //USERGRID-1475
   public void orderByDisplayFullQueriesInLimit() {
@@ -393,6 +402,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     JsonNode incorrectNode = activities.query(errorQuery);
 
+    assertNotNull(incorrectNode.get("entities").get(0));
     assertEquals(created,incorrectNode.get("entities").get(0).findValue("created").getLongValue());
 
   }
@@ -425,6 +435,128 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
 
   }
+  /* includes test case with endless cursor looping for a strange reason */
+//
+//  @Test //Test to make sure all 1000 exist with a regular query
+//  public void queryReturnCheck() {
+//    CustomCollection madeupStuff = collection("imagination");
+//    Map character = hashMap("WhoHelpedYou","Ruff");
+//
+//    for (int i = 0; i < 1000; i++) {
+//      character.put("Ordinal",i);
+//      madeupStuff.create(character);
+//    }
+//
+//    String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
+//    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
+//
+//    int totalEntitiesContained = 0;
+//    /* while (incorrectNode.get("entities").size() != 0)    for whatever reason, this test loops endlessly*/
+//    /* so does while (incorrectNode.get("entites") != null) works below it does not work here? why? */
+//
+//    while (incorrectNode.get("entities") != null)
+//    {
+//      totalEntitiesContained += incorrectNode.get("entities").size();
+//
+//      incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+//
+//
+//    }
+//
+//    assertEquals(1000,totalEntitiesContained);
+//
+//  }
+//
+//  @Test //Checks to make sure short hand works
+//  public void queryReturnCheckWithShortHand() {
+//    CustomCollection madeupStuff = collection("imagination");
+//    Map character = hashMap("WhoHelpedYou","Ruff");
+//    int[] ordinalOrder = new int[1001];
+//
+//    for (int i = 0; i < 1001; i++) {
+//      character.put("Ordinal",i);
+//      ordinalOrder[i] = i;
+//      madeupStuff.create(character);
+//    }
+//
+//    String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
+//    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
+//
+//    int totalEntitiesContained = 0;
+//    while (incorrectNode.get("entities") != null)
+//    {
+//      totalEntitiesContained += incorrectNode.get("entities").size();
+//
+//      if(incorrectNode.get("cursor") != null)
+//        incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+//      else
+//        break;
+//    }
+//
+//    assertEquals(1001,totalEntitiesContained);
+//
+//  }
+
+  @Test //Check to make sure that asc works
+  public void queryCheckAsc() {
+    /* can only do it in sets of 10's*/
+    CustomCollection madeupStuff = collection("imagination");
+    Map character = hashMap("WhoHelpedYou","Ruff");
+
+    for (int i = 0; i < 1000; i++) {
+      character.put("Ordinal",i);
+      madeupStuff.create(character);
+    }
+
+    String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff' ORDER BY " +
+        "Ordinal asc";
+    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
+
+    int totalEntitiesContained = 0;
+    while (incorrectNode.get("entities") != null)
+    {
+      int incrementedBy = 0;
+
+      if(incorrectNode.get("entities").size() != 0)     {
+        totalEntitiesContained += incorrectNode.get("entities").size();
+        incrementedBy = incorrectNode.get("entities").size();
+      }
+      else {
+        //incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+        assertNull(incorrectNode.get("cursor"));
+        break;
+
+      }
+      //assertNull(incorrectNode.get("cursor").toString());
+
+      int entityCheck = 0;
+
+      //if(totalEntitiesContained == 1000)
+      //  incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+
+      for(int index = totalEntitiesContained-incrementedBy; index < totalEntitiesContained; index++) {
+
+        // while(entityCheck < 10) {
+        //if(index == 991)
+        //  System.out.printf("what?");
+        assertEquals(index,incorrectNode.get("entities").get(entityCheck).get("Ordinal").asInt());
+        entityCheck++;
+        //}
+      }
+
+      if(incorrectNode.get("cursor").toString() != null) {
+
+        incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+      }
+      else
+        break;
+    }
+
+    assertEquals(1000,totalEntitiesContained);
+
+  }
+
+
 }
 
 
