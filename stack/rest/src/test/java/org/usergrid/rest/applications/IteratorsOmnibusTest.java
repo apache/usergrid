@@ -515,33 +515,24 @@ public class IteratorsOmnibusTest extends RestContextTest {
     int totalEntitiesContained = 0;
     while (incorrectNode.get("entities") != null)
     {
-      int incrementedBy = 0;
+      int incrementedBy;
 
       if(incorrectNode.get("entities").size() != 0)     {
         totalEntitiesContained += incorrectNode.get("entities").size();
         incrementedBy = incorrectNode.get("entities").size();
       }
       else {
-        //incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
         assertNull(incorrectNode.get("cursor"));
         break;
 
       }
-      //assertNull(incorrectNode.get("cursor").toString());
 
       int entityCheck = 0;
-
-      //if(totalEntitiesContained == 1000)
-      //  incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
-
       for(int index = totalEntitiesContained-incrementedBy; index < totalEntitiesContained; index++) {
 
-        // while(entityCheck < 10) {
-        //if(index == 991)
-        //  System.out.printf("what?");
         assertEquals(index,incorrectNode.get("entities").get(entityCheck).get("Ordinal").asInt());
         entityCheck++;
-        //}
+
       }
 
       if(incorrectNode.get("cursor").toString() != null) {
