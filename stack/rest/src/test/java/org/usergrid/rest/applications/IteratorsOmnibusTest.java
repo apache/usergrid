@@ -3,6 +3,7 @@ package org.usergrid.rest.applications;
 import org.apache.commons.lang.ArrayUtils;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.rest.RestContextTest;
 import org.usergrid.rest.test.resource.CustomCollection;
@@ -103,12 +104,15 @@ public class IteratorsOmnibusTest extends RestContextTest {
     String uuid = node.get("entities").get(0).get("uuid").getTextValue();
     StringBuilder buf = new StringBuilder(uuid);
 
+
     activities.addToUrlEnd(buf);
     props.put("actor",newActor);
     node = activities.put(props);
     node = activities.query(query);
 
     assertEquals(6,node.get("entities").size());
+
+    query = "select * where displayName = 'Bob'";
   }
 
 
@@ -149,6 +153,28 @@ public class IteratorsOmnibusTest extends RestContextTest {
     assertEquals(node.get("entities").size(),incorrectNode.get("entities").size());
 
   }
+  @Test //Ignore("needs to query username or email . ") //USERGRID-1222 /* this needs to query
+  public void queryForUsername() {
+    CustomCollection users = collection("users");
+
+    Map props = new HashMap();
+
+    props.put("username","Alica");
+
+
+    users.create(props);
+    props.put("username","Bob");
+    users.create(props);
+
+
+    JsonNode incorrect = users.query("select * where username = 'Alica'");
+    JsonNode node = users.query("select *");
+
+    assertNotNull(node.get("entities").get("username").get(0));
+
+
+  }
+
 
   /*complete */
   @Test //USERGRID-1253
@@ -225,8 +251,8 @@ public class IteratorsOmnibusTest extends RestContextTest {
   }
 
   /*complete. ask for review*/
-  /*
-  @Test // USERGRID-1401
+
+  @Ignore("Test uses up to many resources to be run reliably") // USERGRID-1401
   public void groupQueriesWithConsistantResults() {
 
     CustomCollection groups = context.application().collection("groups");
@@ -250,6 +276,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
       index[i] = activity.findValue("created").getLongValue();
     }
 
+    JsonNode node = null;
     for(int consistant = 0; consistant < 20; consistant++) {
       String query = "select * where location within 20000 of 37,-75 and created >= " + index[7] + " and " +
       "created < " + index[10];
@@ -264,10 +291,10 @@ public class IteratorsOmnibusTest extends RestContextTest {
       assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
 }
 
-  */
+
   /*completed*/
-  /*
-  @Test // USERGRID-1403
+
+  @Ignore("Test uses up to many resources to run reliably") // USERGRID-1403
   public void groupQueriesWithGeoPaging() {
 
     CustomCollection groups = context.application().collection("groups");
@@ -304,14 +331,13 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
 
   }
-    */
+
   /*complete*/
   @Test //USERGRID-1475
-  public void orderByDisplayFullQueriesInLimit() {
+  public void displayFullQueriesInLimit() {
 
     CustomCollection activities = collection("activities");
 
-    long created = 0;
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
     props.put("actor", actor);
@@ -428,74 +454,76 @@ public class IteratorsOmnibusTest extends RestContextTest {
     String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
     String correctQuery = "select * where ordinal >= 10";
 
-    JsonNode incorrectNode = activities.query(inCorrectQuery,"limit",Integer.toString(10));
+    JsonNode incorrectNode = activities.query(inCorrectQuery);//JsonNode incorrectNode = activities.query
+    // (inCorrectQuery,"limit",
+    // Integer.toString(10));
     JsonNode correctNode =  activities.query(correctQuery);
 
     assertEquals(incorrectNode.get("entities").size(),correctNode.get("entities").size());
 
 
   }
-  /* includes test case with endless cursor looping for a strange reason */
-//
-//  @Test //Test to make sure all 1000 exist with a regular query
-//  public void queryReturnCheck() {
-//    CustomCollection madeupStuff = collection("imagination");
-//    Map character = hashMap("WhoHelpedYou","Ruff");
-//
-//    for (int i = 0; i < 1000; i++) {
-//      character.put("Ordinal",i);
-//      madeupStuff.create(character);
-//    }
-//
-//    String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
-//    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
-//
-//    int totalEntitiesContained = 0;
-//    /* while (incorrectNode.get("entities").size() != 0)    for whatever reason, this test loops endlessly*/
-//    /* so does while (incorrectNode.get("entites") != null) works below it does not work here? why? */
-//
-//    while (incorrectNode.get("entities") != null)
-//    {
-//      totalEntitiesContained += incorrectNode.get("entities").size();
-//
-//      incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
-//
-//
-//    }
-//
-//    assertEquals(1000,totalEntitiesContained);
-//
-//  }
-//
-//  @Test //Checks to make sure short hand works
-//  public void queryReturnCheckWithShortHand() {
-//    CustomCollection madeupStuff = collection("imagination");
-//    Map character = hashMap("WhoHelpedYou","Ruff");
-//    int[] ordinalOrder = new int[1001];
-//
-//    for (int i = 0; i < 1001; i++) {
-//      character.put("Ordinal",i);
-//      ordinalOrder[i] = i;
-//      madeupStuff.create(character);
-//    }
-//
-//    String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
-//    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
-//
-//    int totalEntitiesContained = 0;
-//    while (incorrectNode.get("entities") != null)
-//    {
-//      totalEntitiesContained += incorrectNode.get("entities").size();
-//
-//      if(incorrectNode.get("cursor") != null)
-//        incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
-//      else
-//        break;
-//    }
-//
-//    assertEquals(1001,totalEntitiesContained);
-//
-//  }
+
+
+  @Ignore("Loops Endlessly") //loops endlessly //Test to make sure all 1000 exist with a regular query
+  public void queryReturnCheck() {
+    CustomCollection madeupStuff = collection("imagination");
+    Map character = hashMap("WhoHelpedYou","Ruff");
+
+    for (int i = 0; i < 1000; i++) {
+      character.put("Ordinal",i);
+      madeupStuff.create(character);
+    }
+
+    String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
+    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
+
+    int totalEntitiesContained = 0;
+    /* while (incorrectNode.get("entities").size() != 0)    for whatever reason, this test loops endlessly*/
+    /* so does while (incorrectNode.get("entites") != null) works below it does not work here? why? */
+
+    while (incorrectNode.get("entities") != null)
+    {
+      totalEntitiesContained += incorrectNode.get("entities").size();
+
+      incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+
+
+    }
+
+    assertEquals(1000,totalEntitiesContained);
+
+  }
+
+  @Ignore("Endlessly Loops")
+  public void queryReturnCheckWithShortHand() {
+    CustomCollection madeupStuff = collection("imagination");
+    Map character = hashMap("WhoHelpedYou","Ruff");
+    int[] ordinalOrder = new int[1001];
+
+    for (int i = 0; i < 1001; i++) {
+      character.put("Ordinal",i);
+      ordinalOrder[i] = i;
+      madeupStuff.create(character);
+    }
+
+    String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
+    JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
+
+    int totalEntitiesContained = 0;
+    while (incorrectNode.get("entities") != null)
+    {
+      totalEntitiesContained += incorrectNode.get("entities").size();
+
+      if(incorrectNode.get("cursor") != null)
+        incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
+      else
+        break;
+    }
+
+    assertEquals(1001,totalEntitiesContained);
+
+  }
 
   @Test //Check to make sure that asc works
   public void queryCheckAsc() {
