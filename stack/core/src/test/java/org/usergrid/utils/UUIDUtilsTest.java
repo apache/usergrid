@@ -313,5 +313,40 @@ public class UUIDUtilsTest {
   public void minBothNull(){
     assertNull(UUIDUtils.min(null, null));
   }
+  
+  @Test
+  public void testDecrement(){
+    
+    int testSize = 100000;
+    
+    UUID current = UUIDUtils.MAX_TIME_UUID;
+    UUID previous = current;
+    
+    
+    
+    for(int i = 0; i < testSize; i ++){
+      current = UUIDUtils.decrement(current);
+      
+      assertEquals(-1, current.compareTo(previous) );
+      
+      previous = current;
+      
+    }
+    
+  }
+  
+
+  
+  @Test(expected=IllegalArgumentException.class)
+  public void testDecrementMin(){
+    UUIDUtils.decrement(UUIDUtils.MIN_TIME_UUID);
+  }
+  
+  @Test(expected=IllegalArgumentException.class)
+  public void nonTimeUUID(){
+    UUIDUtils.decrement(UUID.randomUUID());
+  }
+  
+  
 
 }

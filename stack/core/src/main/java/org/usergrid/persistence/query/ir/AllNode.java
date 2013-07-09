@@ -1,8 +1,5 @@
 package org.usergrid.persistence.query.ir;
 
-import java.util.UUID;
-
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 /**
  * Used to represent a "select all".  This will iterate over the entities by UUID
@@ -13,14 +10,17 @@ public class AllNode extends QueryNode {
 
 
   private final QuerySlice slice;
+  private final boolean forceKeepFirst;
   
   
   /**
    * Note that the slice isn't used on select, but is used when creating cursors
    * @param id.  The unique numeric id for this node
+   * @param forceKeepFirst True if we don't allow the iterator to skip the first result, regardless of cursor state.  Used for startUUID paging
    */
-  public AllNode(int id){
+  public AllNode(int id, boolean forceKeepFirst){
     this.slice = new QuerySlice("uuid", id);
+    this.forceKeepFirst = forceKeepFirst;
   }
   
   /* (non-Javadoc)
@@ -41,6 +41,13 @@ public class AllNode extends QueryNode {
    */
   public QuerySlice getSlice() {
     return slice;
+  }
+
+  /**
+   * @return the skipFirstMatch
+   */
+  public boolean isForceKeepFirst() {
+    return forceKeepFirst;
   }
 
 }

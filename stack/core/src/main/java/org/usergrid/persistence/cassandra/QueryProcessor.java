@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
 
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
@@ -129,7 +131,19 @@ public class QueryProcessor {
     
     //if we still don't have a root node, no query nor order by was specified, just use the all node
     if(rootNode == null){
-      rootNode = new AllNode(0);
+      
+      //this is a bit ugly, but how we handle the start parameter
+      UUID startResult = query.getStartResult();
+      
+      boolean startResultSet = startResult != null;
+      
+      AllNode allNode = new AllNode(0, startResultSet);
+      
+      if(startResultSet){
+        cursorCache.setNextCursor(allNode.getSlice().hashCode(), UUIDSerializer.get().toByteBuffer(startResult));
+      }
+      
+      rootNode = allNode;
     }
     
     if(opCount > 1){
@@ -343,7 +357,7 @@ public class QueryProcessor {
       createNewSlice(child);
       child.visit(this);
 
-      nodes.push(new NotNode(nodes.pop(), new AllNode(++contextCount)));
+      nodes.push(new NotNode(nodes.pop(), new AllNode(++contextCount, false)));
     }
 
     /*

@@ -513,6 +513,11 @@ public class Query {
         this.level = level;
         return this;
     }
+    
+    public Query withReversed(boolean reversed){
+      setReversed(reversed);
+      return this;
+    }
 
     public String getEntityType() {
         return type;
