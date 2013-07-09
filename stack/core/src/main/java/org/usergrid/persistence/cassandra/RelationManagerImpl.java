@@ -115,6 +115,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -159,6 +160,7 @@ import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
+import org.usergrid.utils.UUIDUtils;
 
 import com.beoui.geocell.model.Point;
 import com.yammer.metrics.annotation.Metered;
@@ -2012,23 +2014,18 @@ public class RelationManagerImpl implements RelationManager {
   @Metered(group = "core", name = "RelationManager_getCollection_start_result")
   public Results getCollection(String collectionName, UUID startResult, int count, Results.Level resultsLevel,
       boolean reversed) throws Exception {
-    // Entity_Collections
-    // Key: entity_id,collection_name
-    IndexScanner scanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-        key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startResult, null, count + 1, reversed,
-        indexBucketLocator, applicationId, collectionName);
+    //changed intentionally to delegate to search so that behavior is consistent across all index access.
 
-    List<UUID> ids = getUUIDListFromIdIndex(scanner, count);
-
-    Results results = null;
-
-    if (resultsLevel == Results.Level.IDS) {
-      results = Results.fromIdList(ids);
-    } else {
-      results = Results.fromIdList(ids, getDefaultSchema().getCollectionType(headEntity.getType(), collectionName));
-    }
-
-    return em.loadEntities(results, resultsLevel, count);
+    //TODO T.N fix cursor parsing here so startResult can be used in this context.  Needs a bit of refactor
+    //for accommodating cursor I/O USERGRID-1750.  A bit hacky, but until a furthur refactor this works.
+    
+    
+ 
+    
+    Query query = new Query().withResultsLevel(resultsLevel).withReversed(reversed).withLimit(count).withStartResult(startResult);
+   
+    
+    return searchCollection(collectionName, query);
   }
 
   @Override
@@ -2084,24 +2081,9 @@ public class RelationManagerImpl implements RelationManager {
   @Metered(group = "core", name = "RelationManager_getCollecitonForQuery")
   public Results getCollection(String collectionName, Query query, Results.Level resultsLevel) throws Exception {
 
-    UUID startResult = query.getStartResult();
-    String cursor = query.getCursor();
-    if (cursor != null) {
-      byte[] cursorBytes = decodeBase64(cursor);
-      if ((cursorBytes != null) && (cursorBytes.length == 16)) {
-        startResult = uuid(cursorBytes);
-      }
-    }
-    int count = query.getLimit();
-
-    Results results = getCollection(collectionName, startResult, count, resultsLevel, query.isReversed());
-
-    if (results != null) {
-      results.setQuery(query);
-    }
-
-    return results;
-
+    //changed intentionally to delegate to search so that behavior is consistent across all index access.
+    
+    return searchCollection(collectionName, query);
   }
 
   @Override
@@ -2340,7 +2322,7 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
-    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, new QuerySlice("uuid", -1), UUID_PARSER);
+    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, new QuerySlice("uuid", -1), UUID_PARSER, false);
 
     List<UUID> ids = new ArrayList<UUID>(size);
 
@@ -2625,7 +2607,7 @@ public class RelationManagerImpl implements RelationManager {
           columns = searchIndexBuckets(indexKey, slice, collection.getName(), queryProcessor.getPageSizeHint(node));
         }
 
-        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
+        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER, slice.hasCursor()));
 
       }
 
@@ -2647,11 +2629,14 @@ public class RelationManagerImpl implements RelationManager {
         startId = UUID_PARSER.parse(slice.getCursor());
       }
 
+      
+      boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor(); 
+          
       IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
           key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
           queryProcessor.getPageSizeHint(node), query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
-      this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER));
+      this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER, skipFirst));
     }
 
     /*
@@ -2728,7 +2713,7 @@ public class RelationManagerImpl implements RelationManager {
 
         IndexScanner columns = searchIndex(key, slice, size);
 
-        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER));
+        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER, slice.hasCursor()));
       }
 
       this.results.push(intersection);
@@ -2774,6 +2759,8 @@ public class RelationManagerImpl implements RelationManager {
         size++;
       }
 
+      boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor(); 
+      
       if (connection.getConnectionType() != null) {
         ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
             connection.getConnectedEntityType());
@@ -2781,7 +2768,7 @@ public class RelationManagerImpl implements RelationManager {
         IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
             connection, start, slice.isReversed(), size);
 
-        this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, connectionParser));
+        this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, connectionParser, skipFirst));
       }
       
       //no connection type defined, get all connections

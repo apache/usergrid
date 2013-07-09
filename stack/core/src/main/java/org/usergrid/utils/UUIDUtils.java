@@ -135,6 +135,11 @@ public class UUIDUtils {
     // Set variant
     uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] &= 0x3F;
     uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] |= 0x80;
+    setTime(uuidBytes, timestamp);
+
+  }
+  
+  private static void setTime(byte[] uuidBytes, long timestamp){
 
     // Time fields aren't nicely split across the UUID, so can't just
     // linearly dump the stamp:
@@ -154,7 +159,6 @@ public class UUIDUtils {
     // Set version
     uuidBytes[BYTE_OFFSET_CLOCK_HI] &= 0x0F;
     uuidBytes[BYTE_OFFSET_CLOCK_HI] |= 0x10;
-
   }
 
   /**
@@ -226,6 +230,8 @@ public class UUIDUtils {
 
     return uuid(uuidBytes);
   }
+  
+  
 
   public static UUID maxTimeUUID(long ts) {
     byte[] uuidBytes = new byte[16];
@@ -290,6 +296,34 @@ public class UUIDUtils {
     return first;
   }
 
+  /**
+   * Returns a UUID that is -1 of the passed uuid, sorted by time uuid only
+   * @param uuid
+   * @return
+   */
+  public static UUID decrement(UUID uuid){
+    if(!isTimeBased(uuid)){
+      throw new IllegalArgumentException("The uuid must be a time type");
+    }
+    
+    
+    //timestamp is in the 60 bit timestamp 
+    long timestamp = uuid.timestamp();
+    timestamp --;
+    
+    if(timestamp < 0){
+      throw new IllegalArgumentException("You must specify a time uuid with a timestamp > 0");
+    }
+    
+    //get our bytes, then set the smaller timestamp into it
+    byte[] uuidBytes = bytes(uuid);
+    
+    setTime(uuidBytes, timestamp);
+    
+    return uuid(uuidBytes);
+    
+    
+  }
 
   /**
    * @param uuid

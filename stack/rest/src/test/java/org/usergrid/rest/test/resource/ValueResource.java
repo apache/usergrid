@@ -16,6 +16,7 @@
 package org.usergrid.rest.test.resource;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
 
@@ -28,6 +29,9 @@ import com.sun.jersey.api.client.WebResource;
 public abstract class ValueResource extends NamedResource {
 
   private String name;
+  private String query;
+  private String cursor;
+  private UUID start;
 
   public ValueResource(String name, NamedResource parent) {
     super(parent);
@@ -102,15 +106,28 @@ public abstract class ValueResource extends NamedResource {
     return getInternal();
   }
 
-  /**
-   * Get a list of entities
-   * 
-   * @return
-   */
-  protected JsonNode getInternal() {
-    return jsonMedia(withParams(withToken(resource()))).get(JsonNode.class);
-  }
 
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withCursor(String cursor){
+    this.cursor = cursor;
+    return (T) this;
+  }
+  
+  
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withQuery(String query){
+    this.query = query;
+    return (T) this;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withStart(UUID start){
+    this.start = start;
+    return (T) this;
+  }
+  
+  
+  
   /**
    * Get entities in this collection. Cursor is optional
    * 
@@ -118,13 +135,21 @@ public abstract class ValueResource extends NamedResource {
    * @param cursor
    * @return
    */
-  protected JsonNode getInternal(String query, String cursor) {
+  protected JsonNode getInternal() {
 
     
-    WebResource resource = withParams(withToken(resource())).queryParam("ql", query);
+    WebResource resource = withParams(withToken(resource()));
+    
+    if(query != null){
+      resource = resource.queryParam("ql", query);
+    }
 
     if (cursor != null) {
       resource = resource.queryParam("cursor", cursor);
+    }
+    
+    if(start != null){
+      resource = resource.queryParam("start", start.toString());
     }
 
     return jsonMedia(resource).get(JsonNode.class);
