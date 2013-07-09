@@ -91,7 +91,11 @@ describe Usergrid::Collection do
     @collection.query
     @collection.cursor.should_not be_nil
     count = 0
-    @collection.follow_cursor.each {|e| count += 1 }
+    seen = Set.new
+    @collection.follow_cursor.each do |e|
+      seen.add?(e.uuid).should_not be_nil
+      count += 1
+    end
     count.should eq @entity_data.size
   end
 
