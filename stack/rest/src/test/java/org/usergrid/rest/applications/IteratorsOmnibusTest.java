@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.utils.MapUtils.hashMap;
+import javax.ws.rs.Path;
 
 
 
@@ -573,6 +574,74 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     assertEquals(1000,totalEntitiesContained);
 
+  }
+  @Path("/fancy")
+  @Test
+  public void restFrameWorkGetTest() {
+    REST_Framework test_Framework_test = new REST_Framework();
+    REST_Framework.testVariables testValueHolder= test_Framework_test.testReturn();
+    CustomCollection newCollec = collection("imagination");
+
+    testValueHolder.endpoint = "http://nobodyneedsthis.com";
+    testValueHolder.requestType = "GET";
+    testValueHolder.sql = "select * where hairstyle = 'bald'";
+    testValueHolder.howMany = 2;
+    testValueHolder.numValuesExpected = 1;
+
+    test_Framework_test.mapValueAdder(testValueHolder,0,"WhoHelpedYou","Ruff");
+    test_Framework_test.mapValueAdder(testValueHolder,0,"hairstyle","bald");
+    test_Framework_test.mapValueAdder(testValueHolder,1,"WhoHelpedYou","BACONRUFFL");
+
+    test_Framework_test.testCollectionsWith(testValueHolder,newCollec);
+  }
+  @Test
+  public void restFrameWorkPutTest() {
+    /* creates Framework instance*/
+    REST_Framework test_Framework_test = new REST_Framework();
+    REST_Framework.testVariables testValueHolder= test_Framework_test.testReturn();
+    /*sets the name of the collection to be tested against*/
+    CustomCollection newCollec = collection("imagination");
+
+    /*populate values that the user wants to test for or with*/
+    testValueHolder.endpoint = "http://nobodyneedsthis.com";
+    testValueHolder.requestType = "Put";
+    testValueHolder.sql = "select * ";
+    testValueHolder.howMany = 2;     /* how many values you want to input, redundant;*/
+    testValueHolder.numValuesExpected = 2; /* how many values you want to verify or expect from an entities.size
+    comparison*/
+
+    /* mapValueAdder
+    (specific instance of values to be tested against,
+    index of hashmap that you want to add or modify,
+    key of hash map,
+    value of hash map)
+     */
+    test_Framework_test.mapValueAdder(testValueHolder,0,"WhoHelpedYou","Ruff");
+    test_Framework_test.mapValueAdder(testValueHolder,0,"hairstyle","bald");
+    test_Framework_test.mapValueAdder(testValueHolder,1,"WhoHelpedYou","BACONRUFFL");
+    test_Framework_test.mapValueAdder(testValueHolder,0,"WhoHelpedYou","RUUUUFFFFFRRR");
+
+    /*runs the test, creating above methods and running a test against the requestType and specified collection*/
+    test_Framework_test.testCollectionsWith(testValueHolder,newCollec);
+  }
+
+  @Ignore("Returned the error HTTP method DELETE doesn't support output")
+  public void restFrameWorkDeleteTest() {
+    REST_Framework test_Framework_test = new REST_Framework();
+    REST_Framework.testVariables testValueHolder= test_Framework_test.testReturn();
+    CustomCollection newCollec = collection("imagination");
+
+    testValueHolder.endpoint = "http://nobodyneedsthis.com";
+    testValueHolder.requestType = "Delete";
+    testValueHolder.sql = "select * ";
+    testValueHolder.howMany = 2;
+    testValueHolder.numValuesExpected = 0;
+
+    test_Framework_test.mapValueAdder(testValueHolder,0,"WhoHelpedYou","Ruff");
+    test_Framework_test.mapValueAdder(testValueHolder,0,"hairstyle","bald");
+    test_Framework_test.mapValueAdder(testValueHolder,1,"WhoHelpedYou","BACONRUFFL");
+
+    test_Framework_test.testCollectionsWith(testValueHolder,newCollec);
   }
 
 
