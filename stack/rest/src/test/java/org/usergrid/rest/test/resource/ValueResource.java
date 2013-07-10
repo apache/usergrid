@@ -62,6 +62,22 @@ public abstract class ValueResource extends NamedResource {
   public JsonNode create(Map<String, ? > entity){
     return postInternal(entity);
   }
+
+  public void delete (Map<String,?> entity) {
+    deleteInternal(entity);
+  }
+
+  /**
+   * delete the entity set
+   *
+   * @param entity
+   * @return
+   */
+  protected void deleteInternal(Map<String,?> entity) {
+    jsonMedia(withParams(withToken(resource())))
+        .delete(JsonNode.class,entity);
+  }
+ // public String delete(@PathParam("entity"))
   
   /**
    * post to the entity set
