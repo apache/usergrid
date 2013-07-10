@@ -18,6 +18,7 @@ package org.usergrid.rest.applications.users;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.test.resource.Connection;
 import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
 import org.usergrid.rest.test.security.TestAppUser;
@@ -250,5 +251,105 @@ public class OwnershipResourceTest extends RestContextTest {
     assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
 
   }
+
+  
+
+  @Test
+  public void contextualConnectionOwnershipNoCollectionName() {
+
+    // anonymous user
+    context.clearUser();
+
+    TestUser user1 = new TestAppUser("testuser1@usergrid.org", "password", "testuser1@usergrid.org").create(context)
+        .login(context).makeActive(context);
+
+    // create a 4peaks restaurant
+    JsonNode data = context.application().collection("restaurants").create(MapUtils.hashMap("name", "4peaks"));
+    
+    String peaksId = getEntity(data, 0).get("uuid").asText();
+
+
+    // create our connection
+    data = context.application().users().user("me").connection("likes").entity(peaksId).post();
+    
+  
+    // anonymous user
+    context.clearUser();
+
+    // create a restaurant and link it to user 2
+    TestUser user2 = new TestAppUser("testuser2@usergrid.org", "password", "testuser2@usergrid.org").create(context)
+        .login(context).makeActive(context);
+
+    data = context.application().collection("restaurants").create(MapUtils.hashMap("name", "arrogantbutcher"));
+    
+    String arrogantButcherId = getEntity(data, 0).get("uuid").asText();
+    
+
+    data = context.application().users().user("me").connection("likes").entity(arrogantButcherId).post();
+
+    // now query on user 1.
+
+    Connection likeRestaurants = context.withUser(user1).application().users().user("me").connection("likes");
+
+    //check we can get it via id
+    data = likeRestaurants.entity(peaksId).get();
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+    
+    data = likeRestaurants.entity(arrogantButcherId).get();
+    assertNull(data);
+
+    // do a collection load, make sure we're not entities we shouldn't see
+    data = likeRestaurants.get();
+
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+    assertNull(getEntity(data, 1));
+
+    // log in as user 2 and check it
+    likeRestaurants = context.withUser(user2).application().users().user("me").connection("likes");
+
+    data = likeRestaurants.entity(arrogantButcherId).get();
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+
+    
+    data = likeRestaurants.entity(peaksId).get();
+    assertNull(data);
+
+    // do a collection load, make sure we're not loading device 1
+    data = likeRestaurants.get();
+
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+    assertNull(getEntity(data, 1));
+
+    // we should see both devices when loaded from the root application
+
+    // test for user 1
+
+    CustomCollection restaurants = context.withUser(user1).application().collection("restaurants");
+    data = restaurants.entity("4peaks").get();
+
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+
+    data = restaurants.entity("arrogantbutcher").get();
+
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+
+    // test for user 2
+    restaurants = context.withUser(user1).application().collection("restaurants");
+    data = restaurants.entity("4peaks").get();
+
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+
+    data = restaurants.entity("arrogantbutcher").get();
+
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+
+  }
+
 
 }
