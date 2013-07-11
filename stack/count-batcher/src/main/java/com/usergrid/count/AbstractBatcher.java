@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -114,7 +115,7 @@ public abstract class AbstractBatcher implements Batcher {
     
 
     class Batch {
-        private final Map<String,Count> counts;
+        private final ConcurrentMap<String,Count> counts;
         private final AtomicInteger localCallCounter = new AtomicInteger();
 
         Batch() {
@@ -135,15 +136,11 @@ public abstract class AbstractBatcher implements Batcher {
         void add(Count count) {
             opCount.incrementAndGet();
             localCallCounter.incrementAndGet();
-            Count found = counts.remove(count.getCounterName());
-
-              if ( found != null ) {
-                existingCounterHit.inc();
-                counts.put(found.getCounterName(), found.apply(count));
-              } else {
-                counts.put(count.getCounterName(),count);
-              }
-
+            Count found = counts.putIfAbsent(count.getCounterName(), count);
+            if ( found != null ) {
+              existingCounterHit.inc();
+              counts.put(found.getCounterName(), found.apply(count));
+            }
         }
 
         /**
