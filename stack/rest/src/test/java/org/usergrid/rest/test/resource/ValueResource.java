@@ -63,6 +63,7 @@ public abstract class ValueResource extends NamedResource {
     return postInternal(entity);
   }
 
+
   public void delete (Map<String,?> entity) {
     deleteInternal(entity);
   }
@@ -74,8 +75,9 @@ public abstract class ValueResource extends NamedResource {
    * @return
    */
   protected void deleteInternal(Map<String,?> entity) {
-    jsonMedia(withParams(withToken(resource())))
-        .delete(JsonNode.class,entity);
+    withParams(withToken(resource()))
+        .delete(JsonNode.class);
+    //json.delete(JsonNode.class);
   }
  // public String delete(@PathParam("entity"))
   
