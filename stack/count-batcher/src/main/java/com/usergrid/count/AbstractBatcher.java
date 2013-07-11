@@ -18,6 +18,7 @@ package com.usergrid.count;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -117,13 +118,13 @@ public abstract class AbstractBatcher implements Batcher {
         private final AtomicInteger localCallCounter = new AtomicInteger();
 
         Batch() {
-            counts = new HashMap<String, Count>();
+            counts = new ConcurrentHashMap<String, Count>();
         }
 
         /* copy constructor */
         Batch(Batch batch) {
             localCallCounter.set(batch.localCallCounter.get());
-            counts = new HashMap<String, Count>(batch.counts);
+            counts = new ConcurrentHashMap<String, Count>(batch.counts);
         }
 
         void clear() {
@@ -134,13 +135,15 @@ public abstract class AbstractBatcher implements Batcher {
         void add(Count count) {
             opCount.incrementAndGet();
             localCallCounter.incrementAndGet();
-            Count found = counts.get(count.getCounterName());
-            if ( found != null ) {
+            Count found = counts.remove(count.getCounterName());
+
+              if ( found != null ) {
                 existingCounterHit.inc();
                 counts.put(found.getCounterName(), found.apply(count));
-            } else {
+              } else {
                 counts.put(count.getCounterName(),count);
-            }
+              }
+
         }
 
         /**
