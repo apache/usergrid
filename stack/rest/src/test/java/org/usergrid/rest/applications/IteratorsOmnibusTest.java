@@ -112,9 +112,8 @@ public class IteratorsOmnibusTest extends RestContextTest {
     node = activities.query(query);
 
     assertEquals(6,node.get("entities").size());
-
-    query = "select * where displayName = 'Bob'";
   }
+
 
 
   /*complete*/
@@ -161,14 +160,12 @@ public class IteratorsOmnibusTest extends RestContextTest {
     Map props = new HashMap();
 
     props.put("username","Alica");
-
-
     users.create(props);
+
     props.put("username","Bob");
     users.create(props);
 
-
-    JsonNode incorrect = users.query("select * where username = 'Alica'");
+    JsonNode incorrect = users.query("select * where username = 'Alica'"); /* what exactly was this meant to do */
     JsonNode node = users.query("select *");
 
     assertNotNull(node.get("entities").get("username").get(0));
@@ -204,21 +201,15 @@ public class IteratorsOmnibusTest extends RestContextTest {
       if (i == 5) { created = activity.findValue("created").getLongValue(); }
     }
     ArrayUtils.reverse(verifyCreated);
+
     String query = "select * where created >= " + created + "or verb = 'stop'";
+    JsonNode incorrectNode = activities.query(query,"limit",Integer.toString(10));
 
+    String correctQuery = "select * where verb = 'stop'";
+    JsonNode node = activities.query(query);
 
-    JsonNode node = activities.query(query,"limit",Integer.toString(10));
+    int totalEntitiesContained = totalNumOfEntities(node,correctQuery,activities,query,incorrectNode);
 
-    int totalEntitiesContained = 0;
-    while (node.get("entities") != null)
-    {
-      totalEntitiesContained += node.get("entities").size();
-
-      if(node.get("cursor") != null)
-        node = activities.query(query,"cursor",node.get("cursor").toString());
-      else
-        break;
-    }
     assertEquals(maxSize, totalEntitiesContained);
   }
 
@@ -363,9 +354,6 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     for(int i = 0 ; i < 10; i++)
       assertEquals(node.get("entities").get(i),incorrectNode.get("entities").get(i));
-
-
-
   }
 
   /*complete*/
@@ -399,10 +387,13 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     while(checkResultsNum < 5)
     {
-      assertEquals(node.get("entities").get(checkResultsNum),incorrectNode.get("entities").get(checkResultsNum));
+      assertEquals(entityIndex(node,checkResultsNum),entityIndex(incorrectNode,checkResultsNum));
+      //assertEquals(node.get("entities").get(checkResultsNum),incorrectNode.get("entities").get(checkResultsNum));
       checkResultsNum++;
     }
   }
+
+
 
   /*possibly complete ask for review*/
   @Test //USERGRID-1521
@@ -430,9 +421,12 @@ public class IteratorsOmnibusTest extends RestContextTest {
     JsonNode incorrectNode = activities.query(errorQuery);
 
     assertNotNull(incorrectNode.get("entities").get(0));
-    assertEquals(created,incorrectNode.get("entities").get(0).findValue("created").getLongValue());
+    //assertEquals(created,incorrectNode.get("entities").get(0).findValue("created").getLongValue());
+    assertEquals(created,entityValue(incorrectNode,"created",0).getLongValue());
+
 
   }
+
 
   /*complete*/
   @Test //USERGRID-1615
@@ -455,13 +449,10 @@ public class IteratorsOmnibusTest extends RestContextTest {
     String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
     String correctQuery = "select * where ordinal >= 10";
 
-    JsonNode incorrectNode = activities.query(inCorrectQuery);//JsonNode incorrectNode = activities.query
-    // (inCorrectQuery,"limit",
-    // Integer.toString(10));
+    JsonNode incorrectNode = activities.query(inCorrectQuery);
     JsonNode correctNode =  activities.query(correctQuery);
 
     assertEquals(incorrectNode.get("entities").size(),correctNode.get("entities").size());
-
 
   }
 
@@ -483,17 +474,13 @@ public class IteratorsOmnibusTest extends RestContextTest {
     /* while (incorrectNode.get("entities").size() != 0)    for whatever reason, this test loops endlessly*/
     /* so does while (incorrectNode.get("entites") != null) works below it does not work here? why? */
 
+    /*change out for method when get chance */
     while (incorrectNode.get("entities") != null)
     {
       totalEntitiesContained += incorrectNode.get("entities").size();
-
       incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
-
-
     }
-
     assertEquals(1000,totalEntitiesContained);
-
   }
 
   @Ignore("Endlessly Loops")
@@ -511,20 +498,21 @@ public class IteratorsOmnibusTest extends RestContextTest {
     String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
     JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
 
-    int totalEntitiesContained = 0;
-    while (incorrectNode.get("entities") != null)
-    {
-      totalEntitiesContained += incorrectNode.get("entities").size();
-
-      if(incorrectNode.get("cursor") != null)
-        incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
-      else
-        break;
-    }
+    int totalEntitiesContained = totalNumOfEntities(incorrectNode,inquisitiveQuery,madeupStuff,"");
 
     assertEquals(1001,totalEntitiesContained);
 
   }
+
+  /*
+  framework: make writing tests easier,
+  for any given collection.
+  run a standard set of tests.
+  */
+
+
+
+
 
   @Test //Check to make sure that asc works
   public void queryCheckAsc() {
@@ -541,41 +529,62 @@ public class IteratorsOmnibusTest extends RestContextTest {
         "Ordinal asc";
     JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
 
+    //inquisitiveQuery = "select *";
+    JsonNode node = madeupStuff.query("select *");
+
+    int totalEntitiesContained = totalNumOfEntities(node,"select *",madeupStuff,inquisitiveQuery,incorrectNode);
+
+    assertEquals(1000,totalEntitiesContained);
+  }
+
+  /*needs to be updated to reflect the fact that it also does validation*/
+  public int totalNumOfEntities(JsonNode correctNode,String query,CustomCollection queryEndpoint,String checkedQuery,
+                                JsonNode... checkedNodes) {
+
     int totalEntitiesContained = 0;
-    while (incorrectNode.get("entities") != null)
+    while (correctNode.get("entities") != null)
     {
-      int incrementedBy;
+      totalEntitiesContained += correctNode.get("entities").size();
+      if(checkedNodes.length !=0) {
+        for(int index = 0; index < correctNode.get("entities").size();index++)
+          assertEquals(correctNode.get("entities").get(index),checkedNodes[0].get("entities").get(index));
 
-      if(incorrectNode.get("entities").size() != 0)     {
-        totalEntitiesContained += incorrectNode.get("entities").size();
-        incrementedBy = incorrectNode.get("entities").size();
-      }
-      else {
-        assertNull(incorrectNode.get("cursor"));
-        break;
-
+        if(checkedNodes[0].get("cursor") != null)
+          checkedNodes[0] = queryEndpoint.query(checkedQuery,"cursor",checkedNodes[0].get("cursor").toString());
       }
 
-      int entityCheck = 0;
-      for(int index = totalEntitiesContained-incrementedBy; index < totalEntitiesContained; index++) {
+      if(correctNode.get("cursor") != null)
+        correctNode = queryEndpoint.query(query,"cursor",correctNode.get("cursor").toString());
 
-        assertEquals(index,incorrectNode.get("entities").get(entityCheck).get("Ordinal").asInt());
-        entityCheck++;
-
-      }
-
-      if(incorrectNode.get("cursor").toString() != null) {
-
-        incorrectNode = madeupStuff.query(inquisitiveQuery,"cursor",incorrectNode.get("cursor").toString());
-      }
       else
         break;
     }
-
-    assertEquals(1000,totalEntitiesContained);
-
+    return totalEntitiesContained;
   }
-  @Path("/fancy")
+
+  public JsonNode entityValue (JsonNode nodeSearched , String valueToSearch, int index) {
+    return nodeSearched.get("entities").get(index).findValue(valueToSearch);
+  }
+
+  /*adds in key, with incrementing values starting at 0.*/
+  public void createCollectionValues(CustomCollection collectionOfItems, Map valueHolder,int numOfValues,
+                                     String... key) {
+
+    for(int i = 0; i < numOfValues; i++) {
+      for(int j = 0; j < key.length; j++) {
+        valueHolder.put(key[j],i);
+      }
+      collectionOfItems.create(valueHolder);
+    }
+  }
+
+   public JsonNode entityIndex(JsonNode container, int index) {
+    return container.get("entities").get(index);
+   }
+
+
+
+
   @Test
   public void restFrameWorkGetTest() {
     REST_Framework test_Framework_test = new REST_Framework();
@@ -594,6 +603,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     test_Framework_test.testCollectionsWith(testValueHolder,newCollec);
   }
+
   @Test
   public void restFrameWorkPutTest() {
     /* creates Framework instance*/
@@ -603,12 +613,14 @@ public class IteratorsOmnibusTest extends RestContextTest {
     CustomCollection newCollec = collection("imagination");
 
     /*populate values that the user wants to test for or with*/
-    testValueHolder.endpoint = "http://nobodyneedsthis.com";
-    testValueHolder.requestType = "Put";
-    testValueHolder.sql = "select * ";
+    /*you wouldn't do that on each test */
+    // testValueHolder.endpoint = "http://nobodyneedsthis.com";  /*configuration stuff*/
+    testValueHolder.requestType = "Put"; /*http method <- change name to ; and enum*/
+    testValueHolder.sql = "select * ";   /* general case you just need to make sure whateve ryou put in comes back*/
     testValueHolder.howMany = 2;     /* how many values you want to input, redundant;*/
     testValueHolder.numValuesExpected = 2; /* how many values you want to verify or expect from an entities.size
     comparison*/
+    /*populate , then set of tests */
 
     /* mapValueAdder
     (specific instance of values to be tested against,
@@ -625,7 +637,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
     test_Framework_test.testCollectionsWith(testValueHolder,newCollec);
   }
 
-  @Ignore("Returned the error HTTP method DELETE doesn't support output")
+  @Test//("Returned the error HTTP method DELETE doesn't support output")
   public void restFrameWorkDeleteTest() {
     REST_Framework test_Framework_test = new REST_Framework();
     REST_Framework.testVariables testValueHolder= test_Framework_test.testReturn();
