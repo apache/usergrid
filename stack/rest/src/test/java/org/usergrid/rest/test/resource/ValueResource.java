@@ -21,6 +21,8 @@ import org.codehaus.jackson.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author tnine
  * 
@@ -65,16 +67,10 @@ public abstract class ValueResource extends NamedResource {
 
 
   public void delete (Map<String,?> entity) {
-    deleteInternal(entity);
+    deleteInternal();
   }
 
-  /**
-   * delete the entity set
-   *
-   * @param entity
-   * @return
-   */
-  protected void deleteInternal(Map<String,?> entity) {
+  protected void deleteInternal() {
     withParams(withToken(resource()))
         .delete(JsonNode.class);
     //json.delete(JsonNode.class);
@@ -182,4 +178,59 @@ public abstract class ValueResource extends NamedResource {
 
     return jsonMedia(resource).get(JsonNode.class);
   }
+
+
+  /*take out JsonNodes and call quereies inside the function*/
+  /*call limit and just loop through that instead of having to do cursors and work
+  making it more complicated. */
+  /* Test will only handle values under 1000 really due to limit size being that big */
+  public int verificationOfQueryResults(String query,String checkedQuery) {
+
+    int totalEntitiesContained = 0;
+    JsonNode correctNode = this.query(query,"limit","1000");
+    JsonNode checkedNodes = this.query(checkedQuery,"limit","1000");
+
+    while (correctNode.get("entities") != null)
+    {
+      totalEntitiesContained += correctNode.get("entities").size();
+
+      for(int index = 0; index < correctNode.get("entities").size();index++)
+        assertEquals(correctNode.get("entities").get(index),checkedNodes.get("entities").get(index));
+
+      if(checkedNodes.get("cursor") != null || correctNode.get("cursor") != null) {
+        checkedNodes = this.query(checkedQuery,"cursor",checkedNodes.get("cursor").toString());
+        correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
+      }
+
+//      if(correctNode.get("cursor") != null)
+//        correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
+      else
+        break;
+    }
+    return totalEntitiesContained;
+  }
+  public int countEntities (String query) {
+
+    int totalEntitiesContained =0;
+    JsonNode correctNode = this.query(query);
+
+    while (correctNode.get("entities") != null) {
+      totalEntitiesContained += correctNode.get("entities").size();
+      if(correctNode.get("cursor") != null)
+        correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
+    }
+    return totalEntitiesContained;
+  }
+
+  /*cut out the key variable argument and move it into the customcollection call
+  then just have it automatically add in the variable. */
+
+  public void createEntitiesWithOrdinal(Map valueHolder,int numOfValues) {
+
+    for(int i = 0; i < numOfValues; i++) {
+      valueHolder.put("Ordinal",i);
+      this.create(valueHolder);
+    }
+  }
+
 }
