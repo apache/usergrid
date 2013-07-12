@@ -47,6 +47,11 @@ public class REST_Framework extends RestContextTest{
   private static Map[] cloneVerify;
   private static int entitySize;
 
+  /*writing tests easier! make it easier than what you have
+  parse the json
+  I know an endpoint should be able to do a bigger suite of tests
+  */
+
 //  public static class entitySetVerify {
 //
 //
@@ -138,6 +143,8 @@ public class REST_Framework extends RestContextTest{
     What if they don't give me an ordinal, would it be fine to add it in?
      */
   }
+  /* not that readable :< add it to the test value holder? */
+  /*create a test , accept the inputs, */
   public void mapValueAdder(testVariables input,int mapIndex, Object key, Object value) { //HashMap valueInserted) {
 
     if(input.valuesForRequestType == null) {
