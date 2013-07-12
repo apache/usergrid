@@ -61,11 +61,11 @@ public class SliceIterator<T> implements ResultIterator {
    * @param parser The parser for the scanner results
    * @param skipFirst True if the first record should be skipped, used with cursors
    */
-  public SliceIterator(IndexScanner scanner, QuerySlice slice, SliceParser<T> parser) {
+  public SliceIterator(IndexScanner scanner, QuerySlice slice, SliceParser<T> parser, boolean skipFirst) {
     this.slice = slice;
     this.parser = parser;
     this.scanner = scanner;
-    this.skipFirst = slice.hasCursor();
+    this.skipFirst = skipFirst;
     this.pageSize = scanner.getPageSize();
     this.cols = new LinkedHashMap<UUID, ByteBuffer>(this.pageSize);
   }

@@ -60,6 +60,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
+import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.Role;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.credentials.AccessTokenCredentials;
@@ -440,7 +441,7 @@ public class Realm extends AuthorizingRealm {
                         for (UUID groupId : r.getIds()) {
                           
                             Results roleResults = em.getCollection(new SimpleEntityRef(
-                                    Role.ENTITY_TYPE, groupId), "roles", null,
+                                    Group.ENTITY_TYPE, groupId), "roles", null,
                                     1000, Level.CORE_PROPERTIES, false);
                             
                             for(Entity entity : roleResults.getEntities()){

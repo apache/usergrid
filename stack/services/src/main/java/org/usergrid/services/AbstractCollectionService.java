@@ -207,7 +207,10 @@ public class AbstractCollectionService extends AbstractService {
     if (!query.isReversedSet()) {
       query.setReversed(isCollectionReversed(context));
     }
-    query.addSort(getCollectionSort(context));
+    
+    if(!query.isSortSet()){
+      query.addSort(getCollectionSort(context));
+    }
     /*
      * if (count > 0) { query.setMaxResults(count); }
      */
@@ -312,7 +315,9 @@ public class AbstractCollectionService extends AbstractService {
     if (!query.isReversedSet()) {
       query.setReversed(isCollectionReversed(context));
     }
-    query.addSort(getCollectionSort(context));
+    if(!query.isSortSet()){
+      query.addSort(getCollectionSort(context));
+    }
 
     Results r = em.searchCollection(context.getOwner(), context.getCollectionName(), query);
     if (r.isEmpty()) {
@@ -495,7 +500,9 @@ public class AbstractCollectionService extends AbstractService {
     if (!query.isReversedSet()) {
       query.setReversed(isCollectionReversed(context));
     }
-    query.addSort(getCollectionSort(context));
+    if(!query.isSortSet()){
+      query.addSort(getCollectionSort(context));
+    }
 
     Results r = em.searchCollection(context.getOwner(), context.getCollectionName(), query);
     if (r.isEmpty()) {
