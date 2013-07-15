@@ -78,7 +78,7 @@ public class REST_Framework extends RestContextTest{
       for(int i = 0; i < input.howMany; i++) {
         testCollection.create(input.valuesForRequestType[i]);
       }
-      JsonNode node = testCollection.query(input.sql); /* not sure if a post could be handled this way */
+      JsonNode node = null;//testCollection.query(input.sql); /* not sure if a post could be handled this way */
       //TODO: make this handle calls to limit or cursor queries
       entitySize = node.get("entities").size();
       //assertThat(testResult(entitySetVerify.class),isSuccessful());
@@ -90,30 +90,30 @@ public class REST_Framework extends RestContextTest{
     if (input.requestType.toLowerCase().equals("delete")) {
 
 
-      for(int i = 0; i < input.howMany; i++) {
-        testCollection.create(input.valuesForRequestType[i]);
-      }
-
-
-      for(int i = 0; i < input.howMany; i++) {
-        testCollection.delete(input.valuesForRequestType[i]);
-      }
-      JsonNode node = testCollection.query(input.sql);
-      //JsonNode node = testCollection.delete(input.valuesForRequestType);
-      assertEquals(input.numValuesExpected,node.get("entities").size());
-
-    }
-    if (input.requestType.toLowerCase().equals("put")) {
-
-      //testCollection.create(input.valuesForRequestType);
-
-      for(int i = 0; i < input.howMany; i++) {
-        testCollection.put(input.valuesForRequestType[i]);
-      }
-    //  JsonNode node = testCollection.put(input.valuesForRequestType);
-      JsonNode node = testCollection.query(input.sql);
-      assertEquals(input.numValuesExpected,node.get("entities").size()); /*need to be
-      fed information here because some might be updates or new values. */
+//      for(int i = 0; i < input.howMany; i++) {
+//        testCollection.create(input.valuesForRequestType[i]);
+//      }
+//
+//
+//      for(int i = 0; i < input.howMany; i++) {
+//        testCollection.delete(input.valuesForRequestType[i]);
+//      }
+//      JsonNode node = testCollection.query(input.sql);
+//      //JsonNode node = testCollection.delete(input.valuesForRequestType);
+//      assertEquals(input.numValuesExpected,node.get("entities").size());
+//
+//    }
+//    if (input.requestType.toLowerCase().equals("put")) {
+//
+//      //testCollection.create(input.valuesForRequestType);
+//
+//      for(int i = 0; i < input.howMany; i++) {
+//        testCollection.put(input.valuesForRequestType[i]);
+//      }
+//    //  JsonNode node = testCollection.put(input.valuesForRequestType);
+//      JsonNode node = testCollection.query(input.sql);
+//      assertEquals(input.numValuesExpected,node.get("entities").size()); /*need to be
+//      fed information here because some might be updates or new values. */
     }
 
     return "passed";
