@@ -24,6 +24,7 @@ import com.yammer.metrics.core.TimerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.concurrent.*;
 
 /**
@@ -43,14 +44,14 @@ public class Slf4JBatchSubmitter implements BatchSubmitter {
             Metrics.newTimer(Slf4JBatchSubmitter.class, "submit_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
 
     @Override
-    public Future submit(final Batch batch) {
+    public Future submit(final Collection<Count> counts) {
         return executor.submit(new Callable<Object>() {
             final TimerContext timer = addTimer.time();
             @Override
             public Object call() throws Exception {
                 // TODO perhaps this could be pushed down further into CountProducer Impl?
                 // - this would leave generic submitter class
-                for (Count c : batch.getCounts() ) {
+                for (Count c : counts ) {
                     log.info("found count {}",c);
                 }
                 timer.stop();

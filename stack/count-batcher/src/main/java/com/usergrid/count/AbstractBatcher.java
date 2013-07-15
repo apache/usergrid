@@ -15,12 +15,11 @@
  ******************************************************************************/
 package com.usergrid.count;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,20 +41,27 @@ public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
     private Batch batch;
-    private final ReentrantLock submitLock = new ReentrantLock();
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
-    private final Counter invocationCounter =
+    protected final Counter invocationCounter =
             Metrics.newCounter(AbstractBatcher.class, "batch_add_invocations");
     private final Counter existingCounterHit =
             Metrics.newCounter(AbstractBatcher.class,"counter_existed");
+  // TODO add batchCount, remove shouldSubmit, impl submit, change simpleBatcher to just be an extension
+  protected int batchSize = 500;
+  private final AtomicLong batchSubmissionCount = new AtomicLong();
 
-    
-    
-    public AbstractBatcher(int queueSize) {
-      batch = new Batch();
-    }
+  public AbstractBatcher() {
+    batch = new Batch();
+  }
+
+  public void setBatchSize(int batchSize) {
+    this.batchSize = batchSize;
+    batch = new Batch();
+  }
+
+
 
     public void setBatchSubmitter(BatchSubmitter batchSubmitter) {
         this.batchSubmitter = batchSubmitter;
@@ -70,8 +76,8 @@ public abstract class AbstractBatcher implements Batcher {
         return opCount.get();
     }
 
-    protected abstract boolean shouldSubmit(Batch batch);
-    protected abstract void submit(Batch batch);
+
+
 
   /**
      * Add a count object to this batcher
@@ -82,78 +88,43 @@ public abstract class AbstractBatcher implements Batcher {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
 
-
-     
       batch.add(count);
 
-      // If it's submit time and the lock is free, acquire the lock.
-      // Submission of the batch should reset the child impl submit state.
-      // Though multiple threads can return true on shouldSubmit, only one
-      //  thread will pass the tryLock check and acquire the submitLock
-      if (shouldSubmit(batch) && submitLock.tryLock()) {
-        try {
-
-          submit(copyAndClear(batch));
-        } finally {
-          // by this time, submit(copy) above will have reset the the
-          // shouldSubmit condition
-          submitLock.unlock();
-        }
-      }
       context.stop();
 
     }
 
-  private Batch copyAndClear(Batch original) {
-    Batch copy;
-    synchronized(original) {
-      copy = new Batch(original);
-      original.clear();
-    }
-    return copy;
+  public long getBatchSubmissionCount() {
+    return batchSubmissionCount.get();
   }
-    
 
     class Batch {
-        private final ConcurrentMap<String,Count> counts;
+        private BlockingQueue<Count> counts;
         private final AtomicInteger localCallCounter = new AtomicInteger();
+        private final ReentrantLock lock = new ReentrantLock();
 
         Batch() {
-            counts = new ConcurrentHashMap<String, Count>();
+            counts = new ArrayBlockingQueue<Count>(batchSize);
         }
 
-        /* copy constructor */
-        Batch(Batch batch) {
-            localCallCounter.set(batch.localCallCounter.get());
-            counts = new ConcurrentHashMap<String, Count>(batch.counts);
-        }
 
-        void clear() {
-          counts.clear();
-          localCallCounter.set(0);
-        }
 
-        void add(Count count) {
+      void add(Count count) {
+          if (!counts.offer(count) ) {
+            ArrayList<Count> flushed = new ArrayList<Count>(batchSize);
+            counts.drainTo(flushed);
+            batchSubmitter.submit(flushed);
+            batchSubmissionCount.incrementAndGet();
+            counts.offer(count);
+          }
+
+
             opCount.incrementAndGet();
             localCallCounter.incrementAndGet();
-            Count found = counts.putIfAbsent(count.getCounterName(), count);
-            if ( found != null ) {
-              existingCounterHit.inc();
-              counts.put(found.getCounterName(), found.apply(count));
-            }
+
         }
 
-        /**
-         * The number of distinct counters which have been seen
-         * @return
-         */
-        public int getPayloadSize() {
-            return counts.size();
-        }
 
-        public Collection<Count> getCounts() {
-            return counts.values();
-        }
 
         /**
          * The number of times the {@link #add(com.usergrid.count.common.Count)} method has been
@@ -164,5 +135,10 @@ public abstract class AbstractBatcher implements Batcher {
             return localCallCounter.get();
         }
 
+
+
+
+
     }
+
 }
