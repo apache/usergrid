@@ -33,6 +33,7 @@ public abstract class ValueResource extends NamedResource {
   private String name;
   private String query;
   private String cursor;
+  private String limit;
   private UUID start;
 
   public ValueResource(String name, NamedResource parent) {
@@ -149,21 +150,25 @@ public abstract class ValueResource extends NamedResource {
     this.start = start;
     return (T) this;
   }
+
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withLimit(String limit) {
+    this.limit = limit;
+    return (T) this;
+  }
   
   
   
   /**
    * Query this resource.
    */
-  public JsonNode query(String query) {
-    return getInternal(query, null);
-  }
+  //public JsonNode query(String query) {
+  //  return getInternal();
+  //}
 
   /**
    * Get entities in this collection. Cursor is optional
-   * 
-   * @param query
-   * @param cursor
+   *
    * @return
    */
   protected JsonNode getInternal() {
@@ -182,6 +187,12 @@ public abstract class ValueResource extends NamedResource {
     if(start != null){
       resource = resource.queryParam("start", start.toString());
     }
+
+    if (limit != null) {
+      resource = resource.queryParam("limit", limit);
+    }
+
+
 
     return jsonMedia(resource).get(JsonNode.class);
   }
@@ -212,8 +223,15 @@ public abstract class ValueResource extends NamedResource {
   public int verificationOfQueryResults(String query,String checkedQuery) {
 
     int totalEntitiesContained = 0;
-    JsonNode correctNode = this.query(query,"limit","1000");
-    JsonNode checkedNodes = this.query(checkedQuery,"limit","1000");
+    //JsonNode correctNode = this.query(query,"limit","1000");
+    //JsonNode checkedNodes = this.query(checkedQuery,"limit","1000");
+    JsonNode correctNode = this.withQuery(query).withLimit("1000").get();
+    JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit("1000").get();
+
+
+    //JsonNode correctNode = this.withQuery(query).with
+
+
 
     while (correctNode.get("entities") != null)
     {
@@ -237,12 +255,19 @@ public abstract class ValueResource extends NamedResource {
   public int countEntities (String query) {
 
     int totalEntitiesContained =0;
-    JsonNode correctNode = this.query(query);
+    JsonNode correctNode = this.withQuery(query).withLimit("1000").get();//this.withQuery(query).get();//this.query
+    // (query);
+    JsonNode checkedNodes = this.withQuery(query).withLimit("1000").get();
 
+    /*change code to reflect the above */
+    //this.withQuery().withCursor()
     while (correctNode.get("entities") != null) {
       totalEntitiesContained += correctNode.get("entities").size();
       if(correctNode.get("cursor") != null)
-        correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
+        //correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
+        correctNode = this.withQuery(query).withCursor(correctNode.get("cursor").toString()).get();
+      else
+        break;
     }
     return totalEntitiesContained;
   }
