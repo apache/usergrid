@@ -11,7 +11,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 		     github.com/apigee/usergrid-javascript-sdk -->
 
 		<script type="text/javascript">
-		
+
 			// Initializing the SDK
 			var client = new Usergrid.Client({
 				orgName:'yourorgname', // Your Usergrid organization name (or apigee.com username for App Services)
@@ -32,7 +32,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 			);
 
 			// Uncomment the next 4 lines if you want to write data
-			
+
 			// book = { "title": "the old man and the sea" };
 			// books.addEntity(book, function (error, response) {
 			// 	if (error) { alert("write failed");
@@ -47,7 +47,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 Current Version: **0.10.4**
 
-See change log:
+Please see change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
 
@@ -133,12 +133,12 @@ The last two items are optional. The **logging** option will enable console.log 
 You are now ready to use the client to make calls against the API.
 
 ##Asynchronous vs. Synchronous calls (a quick discussion)
-This SDK works by making RESTful API calls from your application to the App Services (Usergrid) API. This SDK currently only supports Asynchronous calls. 
+This SDK works by making RESTful API calls from your application to the App Services (Usergrid) API. This SDK currently only supports Asynchronous calls.
 
 ###Synchronous calls
 If an API call is synchronous, it means that code execution will block (or wait) for the API call to return before continuing.  This SDK does not yet support synchronous calls.
 
-###Asynchronous 
+###Asynchronous
 Asynchronous calls, which are supported by this SDK, do not block (or wait) for the API call to return from the server.  Execution continues on in your program, and when the call returns from the server, a "callback" function is executed. For example, in the following code, the function called dogCreateCallback will be called when the create dog API call returns from the server.  Meanwhile, execution will continue:
 
 
@@ -151,12 +151,12 @@ Asynchronous calls, which are supported by this SDK, do not block (or wait) for 
 
 		}
 	}
-	
+
 	client.createEntity({type:'dogs'}, dogCreateCallback);
-	
+
 	alert('I will probably be called first');
 
-The result of this is that we cannot guarantee the order of the two alert statements.  Most likely, the alert right after the createEntity function will be called first since the API call will take a second or so to complete.  
+The result of this is that we cannot guarantee the order of the two alert statements.  Most likely, the alert right after the createEntity function will be called first since the API call will take a second or so to complete.
 
 The important point is that program execution will continue, and asynchronously, the callback function will be called once program execution completes.
 
