@@ -187,7 +187,7 @@ You can easily create new entities, or access existing ones. Here is a simple ex
 
 **note:** all calls to the API will be executed asynchronously, so it is important that you use a callback.
 
-Once your object is created, you an update properties on it by using the "set" method, then save it back to the database using the "save" method
+Once your object is created, you can update properties on it by using the "set" method, then save it back to the database using the "save" method
 
 	//once the dog is created, you can set single properties (key, value):
 	dog.set('breed','mutt');
