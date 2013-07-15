@@ -182,9 +182,6 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
 
   }
-          /*do a query , have it called Query withCursor, and just
-          returns a node or something that has
-           */
 
   /*complete */
   @Test //USERGRID-1253
@@ -203,7 +200,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     for (int i = 0; i < maxSize; i++) {
 
-      if(i < 5)
+      if(i > 17 && i < 23)
         props.put("verb","stop");
       else
         props.put("verb","go");
@@ -223,10 +220,8 @@ public class IteratorsOmnibusTest extends RestContextTest {
     int totalEntitiesContained = activities.verificationOfQueryResults(correctQuery,query);//totalNumOfEntities(node,correctQuery,activities,
     // query,incorrectNode);
 
-    assertEquals(maxSize, totalEntitiesContained);
+    assertEquals(5, totalEntitiesContained);
   }
-
-
 
   /*complete*/
   @Test // USERGRID-1400
@@ -288,20 +283,17 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
       node = groups.withQuery(query).get(); //groups.query(query);
       assertEquals(3,node.get("entities").size());
-      for(int i = 3; i > 0; i++)
+      for(int i = 3; i > 0; i++) {
+        assertNotNull(node.get("entities").get(i).get("created").getLongValue());
         assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
+      }
     }
-
-
-
-    //for(int i = 2; i>0; i++)
-    //  assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
-}
+  }
 
 
   /*completed*/
 
-  @Ignore("Test uses up to many resources to run reliably") // USERGRID-1403
+  @Test //("Test uses up to many resources to run reliably") // USERGRID-1403
   public void groupQueriesWithGeoPaging() {
 
     CustomCollection groups = context.application().collection("groups");
@@ -320,7 +312,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
     props.put ("location",location);
     props.put("verb", "go");
     props.put("content", "bragh");
-    for (int i = 0; i < 1500; i++) {
+    for (int i = 0; i < 5; i++) {
       String newPath = String.format("/kero" + i);
       props.put("path",newPath);
       props.put("ordinal", i);
@@ -328,12 +320,12 @@ public class IteratorsOmnibusTest extends RestContextTest {
       index[i] = activity.findValue("created").getLongValue();
     }
 
-    String query = "select * where location within 20000 of 37,-75 and created > " + index[1301] + " and " +
-        "created < " + index[1303] + "";
+    String query = "select * where location within 20000 of 37,-75 and created > " + index[2] + " and " +
+        "created < " + index[4] + "";
     JsonNode node = groups.withQuery(query).get();//groups.query(query);
     assertEquals(1,node.get("entities").size());
 
-    assertEquals(index[1302],node.get("entities").get(0).get("created").getLongValue());
+    assertEquals(index[3],node.get("entities").get(0).get("created").getLongValue());
 
 
 
