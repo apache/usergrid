@@ -1093,6 +1093,10 @@ public class Results implements Iterable<Entity> {
     public String getCursor() {
         return cursor;
     }
+    
+    public boolean hasCursor(){
+      return cursor != null && cursor.length() > 0;
+    }
 
     public void setCursor(String cursor) {
         this.cursor = cursor;
