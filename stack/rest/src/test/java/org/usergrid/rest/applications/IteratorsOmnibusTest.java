@@ -353,8 +353,9 @@ public class IteratorsOmnibusTest extends RestContextTest {
       JsonNode activity = activities.create(props);
     }
 
-    String query = "select * where not verb = 'stop'";
-    JsonNode node = activities.withQuery("select * where ordinal > 9").get();//activities.query("select * where ordinal
+    String query = "select * where not verb = 'go'";
+    JsonNode node = activities.withQuery("select * where ordinal > 9").get();//activities.query("select * where
+    // ordinal
     // > 9");
     JsonNode incorrectNode = activities.query(query,"limit",Integer.toString(10));
 
