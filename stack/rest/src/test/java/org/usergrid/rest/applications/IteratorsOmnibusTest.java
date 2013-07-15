@@ -102,7 +102,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     String query = "select * ";
 
-    JsonNode node  = activities.query(query);
+    JsonNode node  = activities.withQuery(query).get();
     String uuid = node.get("entities").get(0).get("uuid").getTextValue();
     StringBuilder buf = new StringBuilder(uuid);
 
@@ -110,7 +110,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
     activities.addToUrlEnd(buf);
     props.put("actor",newActor);
     node = activities.put(props);
-    node = activities.query(query);
+    node = activities.withQuery(query).get();
 
     assertEquals(6,node.get("entities").size());
   }
@@ -148,8 +148,8 @@ public class IteratorsOmnibusTest extends RestContextTest {
     String query = "select * where created >= " + newlyCreated;
     String errorQuery = "select * where created >= " + created + "AND madeup = true";
 
-    JsonNode node = activities.query(query);
-    JsonNode incorrectNode = activities.query(errorQuery);
+    JsonNode node = activities.withQuery(query).get();
+    JsonNode incorrectNode = activities.withQuery(errorQuery).get();
 
     assertEquals(node.get("entities").size(),incorrectNode.get("entities").size());
 
@@ -168,8 +168,11 @@ public class IteratorsOmnibusTest extends RestContextTest {
     props.put("username","Bob");
     users.create(props);
 
-    JsonNode incorrect = users.query("select * where username = 'Alica'"); /* what exactly was this meant to do */
-    JsonNode node = users.query("select *");
+    JsonNode incorrect = users.withQuery("select * where username = 'Alica'").get(); //users.query("select * where
+    // username
+    // = 'Alica'"); /* what exactly was this meant
+    // to do */
+    JsonNode node = users.withQuery("select *").get(); //users.query("select *");
 
     //assertNotNull(node.get("entities").get("username").get(0));
       assertEquals(entityValue(node,"username",0),entityValue(incorrect,"username",0));
@@ -215,7 +218,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
     JsonNode incorrectNode = activities.query(query,"limit",Integer.toString(1000));
 
     String correctQuery = "select * where verb = 'stop'";
-    JsonNode node = activities.query(query);
+    JsonNode node = activities.withQuery(correctQuery).get();//activities.query(query);
 
     int totalEntitiesContained = activities.verificationOfQueryResults(correctQuery,query);//totalNumOfEntities(node,correctQuery,activities,
     // query,incorrectNode);
@@ -244,17 +247,17 @@ public class IteratorsOmnibusTest extends RestContextTest {
     }
 
     String query = "select * where created > " + created;
-    JsonNode node = activities.query(query);
+    JsonNode node = activities.withQuery(query).get();//activities.query(query);
     assertEquals(10, node.get("entities").size());
 
     query = query + " order by created desc";
-    node = activities.query(query);
+    node = activities.withQuery(query).get();//activities.query(query);
     assertEquals(10, node.get("entities").size());
   }
 
   /*complete. ask for review*/
 
-  @Ignore("Test uses up to many resources to be run reliably") // USERGRID-1401
+  @Test//("Test uses up to many resources to be run reliably") // USERGRID-1401
   public void groupQueriesWithConsistantResults() {
 
     CustomCollection groups = context.application().collection("groups");
@@ -283,14 +286,16 @@ public class IteratorsOmnibusTest extends RestContextTest {
       String query = "select * where location within 20000 of 37,-75 and created >= " + index[7] + " and " +
       "created < " + index[10];
 
-      node = groups.query(query);
+      node = groups.withQuery(query).get(); //groups.query(query);
       assertEquals(3,node.get("entities").size());
+      for(int i = 3; i > 0; i++)
+        assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
     }
 
 
 
-    for(int i = 2; i>0; i++)
-      assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
+    //for(int i = 2; i>0; i++)
+    //  assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
 }
 
 
@@ -325,7 +330,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
 
     String query = "select * where location within 20000 of 37,-75 and created > " + index[1301] + " and " +
         "created < " + index[1303] + "";
-    JsonNode node = groups.query(query);
+    JsonNode node = groups.withQuery(query).get();//groups.query(query);
     assertEquals(1,node.get("entities").size());
 
     assertEquals(index[1302],node.get("entities").get(0).get("created").getLongValue());
@@ -357,7 +362,8 @@ public class IteratorsOmnibusTest extends RestContextTest {
     }
 
     String query = "select * where not verb = 'stop'";
-    JsonNode node = activities.query("select * where ordinal > 9");
+    JsonNode node = activities.withQuery("select * where ordinal > 9").get();//activities.query("select * where ordinal
+    // > 9");
     JsonNode incorrectNode = activities.query(query,"limit",Integer.toString(10));
 
     assertEquals(10, incorrectNode.get("entities").size());
@@ -387,11 +393,11 @@ public class IteratorsOmnibusTest extends RestContextTest {
       if (i == 0) { created = activity.findValue("created").getLongValue(); }
     }
 
-    String query = "select * where created > " + created + " order by desc";
+    String query = "select * where created > " + 1 + " order by created desc";
     String errorQuery =  query;
 
-    JsonNode node = activities.query(query);
-    JsonNode incorrectNode = activities.query(errorQuery,"limit",Integer.toString(5));
+    JsonNode node = activities.withQuery(query).get();//activities.query(query);
+    JsonNode incorrectNode = activities.withQuery(errorQuery).withLimit("5").get();
 
     assertEquals(5, incorrectNode.get("entities").size()); //asserts that limit works
 
@@ -428,7 +434,7 @@ public class IteratorsOmnibusTest extends RestContextTest {
     String query = "select * where created >= " + Integer.toString(0);
     String errorQuery =  "select * where created <= " + created + " order by desc";
 
-    JsonNode incorrectNode = activities.query(errorQuery);
+    JsonNode incorrectNode = activities.withQuery(errorQuery).get();//activities.query(errorQuery);
 
     assertNotNull(incorrectNode.get("entities").get(0));
     //assertEquals(created,incorrectNode.get("entities").get(0).findValue("created").getLongValue());
@@ -451,18 +457,16 @@ public class IteratorsOmnibusTest extends RestContextTest {
     props.put("verb", "go");
     props.put("content", "bragh");
 
-    for (int i = 0; i < 20; i++) {
-      props.put("ordinal", i);
-      JsonNode activity = activities.create(props);
-    }
+    activities.createEntitiesWithOrdinal(props,20);
 
     String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
     String correctQuery = "select * where ordinal >= 10";
 
-    JsonNode incorrectNode = activities.query(inCorrectQuery);
-    JsonNode correctNode =  activities.query(correctQuery);
+    activities.verificationOfQueryResults(correctQuery,inCorrectQuery);
 
-    assertEquals(incorrectNode.get("entities").size(),correctNode.get("entities").size());
+    //assertEquals(activities.countEntities(inCorrectQuery),activities.countEntities(correctQuery));
+
+   // assertEquals(activities.countEntities(correctQuery),activities.countEntities(inCorrectQuery));
 
   }
 
