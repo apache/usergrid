@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author tnine
- * 
+ *
  */
 public abstract class ValueResource extends NamedResource {
 
@@ -80,28 +80,28 @@ public abstract class ValueResource extends NamedResource {
         .delete(JsonNode.class);
     //json.delete(JsonNode.class);
   }
- // public String delete(@PathParam("entity"))
-  
+  // public String delete(@PathParam("entity"))
+
   /**
    * post to the entity set
-   * 
+   *
    * @param entity
    * @return
    */
   protected JsonNode postInternal(Map<String, ?> entity) {
-   
+
     return jsonMedia(withParams(withToken(resource())))
         .post(JsonNode.class, entity);
   }
-  
+
   /**
    * post to the entity set
-   * 
+   *
    * @param entity
    * @return
    */
   protected JsonNode postInternal(Map<String, ?>[] entity) {
-   
+
     return jsonMedia(withParams(withToken(resource())))
         .post(JsonNode.class, entity);
   }
@@ -113,16 +113,16 @@ public abstract class ValueResource extends NamedResource {
 
   /**
    * put to the entity set
-   * 
+   *
    * @param entity
    * @return
    */
   protected JsonNode putInternal(Map<String, ?> entity) {
-   
+
     return jsonMedia(withParams(withToken(resource())))
         .put(JsonNode.class, entity);
   }
-  
+
   /**
    * Get the data
    * @return
@@ -137,14 +137,14 @@ public abstract class ValueResource extends NamedResource {
     this.cursor = cursor;
     return (T) this;
   }
-  
-  
+
+
   @SuppressWarnings("unchecked")
   public <T extends ValueResource> T withQuery(String query){
     this.query = query;
     return (T) this;
   }
-  
+
   @SuppressWarnings("unchecked")
   public <T extends ValueResource> T withStart(UUID start){
     this.start = start;
@@ -156,9 +156,9 @@ public abstract class ValueResource extends NamedResource {
     this.limit = limit;
     return (T) this;
   }
-  
-  
-  
+
+
+
   /**
    * Query this resource.
    */
@@ -173,9 +173,9 @@ public abstract class ValueResource extends NamedResource {
    */
   protected JsonNode getInternal() {
 
-    
+
     WebResource resource = withParams(withToken(resource()));
-    
+
     if(query != null){
       resource = resource.queryParam("ql", query);
     }
@@ -183,7 +183,7 @@ public abstract class ValueResource extends NamedResource {
     if (cursor != null) {
       resource = resource.queryParam("cursor", cursor);
     }
-    
+
     if(start != null){
       resource = resource.queryParam("start", start.toString());
     }
@@ -223,8 +223,7 @@ public abstract class ValueResource extends NamedResource {
   public int verificationOfQueryResults(String query,String checkedQuery) {
 
     int totalEntitiesContained = 0;
-    //JsonNode correctNode = this.query(query,"limit","1000");
-    //JsonNode checkedNodes = this.query(checkedQuery,"limit","1000");
+
     JsonNode correctNode = this.withQuery(query).withLimit("1000").get();
     JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit("1000").get();
 
@@ -281,6 +280,25 @@ public abstract class ValueResource extends NamedResource {
       valueHolder.put("Ordinal",i);
       this.create(valueHolder);
     }
+  }
+
+  // public JsonNode entityValue (JsonNode nodeSearched , String valueToSearch, int index) {
+  //   return nodeSearched.get("entities").get(index).findValue(valueToSearch);
+  //}
+  public JsonNode entityValue (String query, String valueToSearch, int index) {
+    JsonNode node = this.withQuery(query).get();
+    return node.get("entities").get(index).findValue(valueToSearch);
+  }
+
+  public JsonNode entityIndex(String query, int index) {
+
+    JsonNode node = this.withQuery(query).get();
+    return node.get("entities").get(index);
+  }
+  public JsonNode entityIndexLimit(String query,String limitSize, int index) {
+
+    JsonNode node = this.withQuery(query).withLimit(limitSize).get();
+    return node.get("entities").get(index);
   }
 
 }
