@@ -149,35 +149,24 @@ public class QuerySlice {
     else if (start != null) {
       startComposite = new DynamicComposite(start.getCode(), start.getValue());
 
-      //forward scanning from a > value
-      if (!reversed && !start.isInclusive()) {
+      // forward scanning from a >= 100 OR //reverse scanning from MAX to >= 100
+      if ((!reversed && !start.isInclusive()) || (reversed && start.isInclusive())) {
         setEqualityFlag(startComposite, ComponentEquality.GREATER_THAN_EQUAL);
-      } 
-      
-      //reverse scanning from  MAX to >= 100 
-      else if (reversed && start.isInclusive()) {
-        setEqualityFlag(startComposite, ComponentEquality.LESS_THAN_EQUAL);
       }
 
     }
-    
-    if(finish != null){
+
+    if (finish != null) {
       finishComposite = new DynamicComposite(finish.getCode(), finish.getValue());
 
-      //forward scan to <= 100
-      if (!reversed && finish.isInclusive()) {
-        setEqualityFlag(finishComposite, ComponentEquality.GREATER_THAN_EQUAL);
-      } 
-      
-      //reverse scan ININITY to > 100;
-      else if (reversed && !finish.isInclusive()) {
+      // forward scan to <= 100 OR reverse scan ININITY to > 100
+      if ((!reversed && finish.isInclusive()) || reversed && !finish.isInclusive()) {
         setEqualityFlag(finishComposite, ComponentEquality.GREATER_THAN_EQUAL);
       }
+
     }
-    
-    
-    return new DynamicComposite[]{startComposite, finishComposite};
-    
+
+    return new DynamicComposite[] { startComposite, finishComposite };
 
   }
 

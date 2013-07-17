@@ -614,7 +614,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       results = io.getResults(query);
 
       for (int i = 0; i < results.size(); i++) {
-        assertEquals(expected.get(size - delta - count - 1), results.getEntities().get(i).getName());
+        assertEquals(expected.get(size - delta - count), results.getEntities().get(i).getName());
         count++;
       }
 
@@ -622,7 +622,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     } while (results.hasCursor());
     
-    assertEquals(expected.size()-delta, count);
+    assertEquals(expected.size()-delta+1, count);
 
     stop = System.currentTimeMillis();
     logger.info("Query took {} ms to return {} entities", stop - start, count);
@@ -846,6 +846,153 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     logger.info("Query took {} ms to return {} entities", stop - start, count);
 
   }
+  
+  
+
+  @Test
+  public void singleOrderByBoundRangeScanDescCollection() throws Exception {
+    singleOrderByBoundRangeScanDesc(new CollectionIoHelper("singleOrderByBoundRangeScanDescCollection"));
+  }
+
+  @Test
+  public void singleOrderByBoundRangeScanDescConnection() throws Exception {
+    singleOrderByBoundRangeScanDesc(new ConnectionHelper("singleOrderByBoundRangeScanDescConnection"));
+  }
+
+  public void singleOrderByBoundRangeScanDesc(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 100;
+    int endValue = 400;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL(String.format("select * where index >= %d AND index <= %d order by index desc", startValue, endValue));
+    query.setLimit(queryLimit);
+
+    int count = 0;
+    int delta = size - endValue;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(size - count - delta), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-startValue - delta + 1, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
+  
+
+  @Test
+  public void singleOrderByBoundRangeScanAscCollection() throws Exception {
+    singleOrderByBoundRangeScanAsc(new CollectionIoHelper("singleOrderByBoundRangeScanAscCollection"));
+  }
+
+  @Test
+  public void singleOrderByBoundRangeScanAscConnection() throws Exception {
+    singleOrderByBoundRangeScanAsc(new ConnectionHelper("singleOrderByBoundRangeScanAscConnection"));
+  }
+
+  public void singleOrderByBoundRangeScanAsc(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 100;
+    int endValue = 400;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL(String.format("select * where index >= %d AND index <= %d order by index asc", startValue, endValue));
+    query.setLimit(queryLimit);
+
+    int count = 0;
+    int delta = size - endValue;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(delta+count), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-startValue - delta + 1, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
   
 
   @Test
