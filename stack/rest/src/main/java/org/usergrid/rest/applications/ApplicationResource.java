@@ -66,7 +66,9 @@ import org.usergrid.management.exceptions.DisabledAppUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAppUserException;
 import org.usergrid.mq.QueueManager;
+import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
@@ -578,11 +580,9 @@ public class ApplicationResource extends ServiceResource {
 	@Path("apm/apigeeMobileConfig")
 	public JSONWithPadding getAPMConfig(@Context UriInfo ui, 
 			@QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
-		Application app = services.getApplication();     
-		String apmJSon = (String) app.getProperty(APIGEE_MOBILE_APM_CONFIG_JSON_KEY);		
-		logger.debug("Get Apigee APM config " + apmJSon);
-		//Response response = Response.status(SC_OK).type(MediaType.APPLICATION_JSON).entity(s).build();  
-		return new JSONWithPadding(new GenericEntity<String>(apmJSon) {}, callback);
+		EntityManager em = (EntityManager) emf.getEntityManager(applicationId);
+		Object value = em.getProperty(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), APIGEE_MOBILE_APM_CONFIG_JSON_KEY);
+		return new JSONWithPadding(value, callback);
 	}
 
 }

@@ -67,7 +67,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       Map<String, Object> entity = new HashMap<String, Object>();
       entity.put("name", String.valueOf(i));
 
-      io.writeEntity( entity);
+      io.writeEntity(entity);
     }
 
     long stop = System.currentTimeMillis();
@@ -106,21 +106,19 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   }
 
   @Test
-  public void singleOrderByIntersectionCollection() throws Exception{
+  public void singleOrderByIntersectionCollection() throws Exception {
     singleOrderByIntersection(new CollectionIoHelper("singleOrderByIntersectionCollection"));
   }
-  
+
   @Test
   public void singleOrderByIntersectionConnection() throws Exception {
     singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionConnection"));
   }
-  
-  
-  
+
   private void singleOrderByIntersection(IoHelper io) throws Exception {
-   
+
     io.doSetup();
-    
+
     int size = 700;
     int queryLimit = Query.MAX_LIMIT;
 
@@ -143,9 +141,8 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       entity.put("name", String.valueOf(i));
       // if we hit the increment, set this to true
       entity.put("intersect", intersect);
-      
-      io.writeEntity( entity);
-      
+
+      io.writeEntity(entity);
 
       if (intersect) {
         expected.add(name);
@@ -198,9 +195,9 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   public void singleOrderByComplexIntersectionConnection() throws Exception {
     singleOrderByComplexIntersection(new ConnectionHelper("singleOrderByComplexIntersectionConnection"));
   }
-  
+
   private void singleOrderByComplexIntersection(IoHelper io) throws Exception {
-   
+
     int size = 5000;
     int queryLimit = Query.MAX_LIMIT;
 
@@ -209,7 +206,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     int secondIncrement = 9;
 
     long start = System.currentTimeMillis();
-    
+
     io.doSetup();
 
     logger.info("Writing {} entities.", size);
@@ -227,7 +224,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      io.writeEntity( entity);
+      io.writeEntity(entity);
 
       if (intersect1 && intersect2) {
         expectedResults.add(name);
@@ -271,18 +268,17 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-  
+
   @Test
   public void singleOrderByNoIntersectionCollection() throws Exception {
     singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionCollection"));
   }
-  
+
   @Test
   public void singleOrderByNoIntersectionConnection() throws Exception {
     singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionConnection"));
   }
 
-  
   private void singleOrderByNoIntersection(IoHelper io) throws Exception {
     io.doSetup();
 
@@ -302,7 +298,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       // if we hit the increment, set this to true
       entity.put("intersect", false);
       entity.put("intersect2", i % secondIncrement == 0);
-      io.writeEntity( entity);
+      io.writeEntity(entity);
 
     }
 
@@ -329,22 +325,21 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(0, results.size());
   }
-  
+
   @Test
   public void singleOrderByComplexUnionCollection() throws Exception {
     singleOrderByComplexUnion(new CollectionIoHelper("singleOrderByComplexUnionCollection"));
   }
-  
+
   @Test
   public void singleOrderByComplexUnionConnection() throws Exception {
     singleOrderByComplexUnion(new ConnectionHelper("singleOrderByComplexUnionConnection"));
   }
 
- 
   private void singleOrderByComplexUnion(IoHelper io) throws Exception {
-  
+
     io.doSetup();
-    
+
     int size = 2000;
     int queryLimit = Query.MAX_LIMIT;
 
@@ -369,7 +364,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("intersect", intersect1);
       entity.put("intersect2", intersect2);
-      io.writeEntity( entity);
+      io.writeEntity(entity);
 
       if (intersect1 || intersect2) {
         expectedResults.add(name);
@@ -410,20 +405,19 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
     assertEquals(expectedResults.size(), count);
   }
-  
+
   @Test
   public void singleOrderByNotCollection() throws Exception {
     singleOrderByNot(new CollectionIoHelper("singleOrderByNotCollection"));
   }
-  
+
   @Test
   public void singleOrderByNotConnection() throws Exception {
     singleOrderByNot(new ConnectionHelper("singleOrderByNotConnection"));
   }
 
-  
   private void singleOrderByNot(IoHelper io) throws Exception {
-  
+
     io.doSetup();
 
     int size = 2000;
@@ -496,12 +490,12 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   public void singleOrderByLessThanLimitCollection() throws Exception {
     singleOrderByLessThanLimit(new CollectionIoHelper("singleOrderByLessThanLimitCollection"));
   }
-  
+
   @Test
   public void singleOrderByLessThanLimitConnection() throws Exception {
     singleOrderByLessThanLimit(new ConnectionHelper("singleOrderByLessThanLimitConnection"));
   }
-  
+
   public void singleOrderByLessThanLimit(IoHelper io) throws Exception {
 
     io.doSetup();
@@ -525,7 +519,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
 
       entity.put("name", name);
       entity.put("searched", searched);
-      io.writeEntity( entity);
+      io.writeEntity(entity);
 
       if (searched) {
         expected.add(name);
@@ -562,8 +556,445 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     assertEquals(expected.size(), count);
 
   }
+
+  @Test
+  public void singleOrderBySameRangeScanLessThanEqualCollection() throws Exception {
+    singleOrderBySameRangeScanLessThanEqual(new CollectionIoHelper("singleOrderBySameRangeScanLessThanEqualCollection"));
+  }
+
+  @Test
+  public void singleOrderBySameRangeScanLessThanEqualConnection() throws Exception {
+    singleOrderBySameRangeScanLessThanEqual(new ConnectionHelper("singleOrderBySameRangeScanLessThanEqualConnection"));
+  }
+
+  public void singleOrderBySameRangeScanLessThanEqual(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 400;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = new Query();
+    query.addSort("index desc");
+    query.addLessThanEqualFilter("index", startValue);
+    query.setLimit(queryLimit);
+
+    int count = 0;
+    int delta = size - startValue;
+    
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(size - delta - count), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-delta+1, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
+
+  @Test
+  public void singleOrderBySameRangeScanLessCollection() throws Exception {
+    singleOrderBySameRangeScanLessEqual(new CollectionIoHelper("singleOrderBySameRangeScanLessCollection"));
+  }
+
+  @Test
+  public void singleOrderBySameRangeScanLessConnection() throws Exception {
+    singleOrderBySameRangeScanLessEqual(new ConnectionHelper("singleOrderBySameRangeScanLessConnection"));
+  }
+
+  public void singleOrderBySameRangeScanLessEqual(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 400;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = new Query();
+    query.addSort("index desc");
+    query.addLessThanFilter("index", startValue);
+    query.setLimit(queryLimit);
+
+    int count = 0;
+    int delta = size - startValue;
+    
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(size - delta - count - 1), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-delta, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
   
   
+
+  @Test
+  public void singleOrderBySameRangeScanGreaterThanEqualCollection() throws Exception {
+    singleOrderBySameRangeScanGreaterThanEqual(new CollectionIoHelper("singleOrderBySameRangeScanGreaterThanEqualCollection"));
+  }
+
+  @Test
+  public void singleOrderBySameRangeScanGreaterThanEqualConnection() throws Exception {
+    singleOrderBySameRangeScanGreaterThanEqual(new ConnectionHelper("singleOrderBySameRangeScanGreaterThanEqualConnection"));
+  }
+
+  public void singleOrderBySameRangeScanGreaterThanEqual(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 100;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = new Query();
+    query.addSort("index desc");
+    query.addGreaterThanEqualFilter("index", startValue);
+    query.setLimit(queryLimit);
+
+    int count = 0;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(size - count - 1), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-startValue, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
+
+  @Test
+  public void singleOrderBySameRangeScanGreaterCollection() throws Exception {
+    singleOrderBySameRangeScanGreater(new CollectionIoHelper("singleOrderBySameRangeScanGreaterCollection"));
+  }
+
+  @Test
+  public void singleOrderBySameRangeScanGreaterConnection() throws Exception {
+    singleOrderBySameRangeScanGreater(new ConnectionHelper("singleOrderBySameRangeScanGreaterConnection"));
+  }
+
+  public void singleOrderBySameRangeScanGreater(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 99;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = new Query();
+    query.addSort("index desc");
+    query.addGreaterThanFilter("index", startValue);
+    query.setLimit(queryLimit);
+
+    int count = 0;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(size - count - 1), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-startValue-1, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
+  
+
+  @Test
+  public void singleOrderByBoundRangeScanDescCollection() throws Exception {
+    singleOrderByBoundRangeScanDesc(new CollectionIoHelper("singleOrderByBoundRangeScanDescCollection"));
+  }
+
+  @Test
+  public void singleOrderByBoundRangeScanDescConnection() throws Exception {
+    singleOrderByBoundRangeScanDesc(new ConnectionHelper("singleOrderByBoundRangeScanDescConnection"));
+  }
+
+  public void singleOrderByBoundRangeScanDesc(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 100;
+    int endValue = 400;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL(String.format("select * where index >= %d AND index <= %d order by index desc", startValue, endValue));
+    query.setLimit(queryLimit);
+
+    int count = 0;
+    int delta = size - endValue;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(size - count - delta), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-startValue - delta + 1, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
+  
+
+  @Test
+  public void singleOrderByBoundRangeScanAscCollection() throws Exception {
+    singleOrderByBoundRangeScanAsc(new CollectionIoHelper("singleOrderByBoundRangeScanAscCollection"));
+  }
+
+  @Test
+  public void singleOrderByBoundRangeScanAscConnection() throws Exception {
+    singleOrderByBoundRangeScanAsc(new ConnectionHelper("singleOrderByBoundRangeScanAscConnection"));
+  }
+
+  public void singleOrderByBoundRangeScanAsc(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 500;
+    int queryLimit = 100;
+    int startValue = 100;
+    int endValue = 400;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    List<String> expected = new ArrayList<String>(size);
+
+    for (int i = 0; i < size; i++) {
+      String name = String.valueOf(i);
+
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      entity.put("name", name);
+      entity.put("index", i);
+      io.writeEntity(entity);
+      expected.add(name);
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL(String.format("select * where index >= %d AND index <= %d order by index asc", startValue, endValue));
+    query.setLimit(queryLimit);
+
+    int count = 0;
+    int delta = size - endValue;
+
+    start = System.currentTimeMillis();
+
+    // now do simple ordering, should be returned in order
+    Results results = null;
+
+    do {
+
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        assertEquals(expected.get(delta+count), results.getEntities().get(i).getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.hasCursor());
+    
+    assertEquals(expected.size()-startValue - delta + 1, count);
+
+    stop = System.currentTimeMillis();
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+  }
+  
+  
+
   @Test
   public void allInCollection() throws Exception {
     allIn(new CollectionIoHelper("allInCollection"));
@@ -573,14 +1004,16 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
   public void allInConnection() throws Exception {
     allIn(new ConnectionHelper("allInConnection"));
   }
-  
+
   @Test
   public void allInConnectionNoType() throws Exception {
     allIn(new ConnectionNoTypeHelper("allInConnectionNoType"));
   }
 
   /**
-   * Tests that when an empty query is issued, we page through all entities correctly
+   * Tests that when an empty query is issued, we page through all entities
+   * correctly
+   * 
    * @param io
    * @throws Exception
    */
@@ -598,7 +1031,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
       Map<String, Object> entity = new HashMap<String, Object>();
       entity.put("name", String.valueOf(i));
 
-      io.writeEntity( entity);
+      io.writeEntity(entity);
     }
 
     long stop = System.currentTimeMillis();
@@ -650,7 +1083,6 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * @param em
      */
     public void setEntityManager(EntityManager em);
-
 
     /**
      * Perform any setup required
@@ -799,25 +1231,28 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     }
 
   }
-  
+
   private class ConnectionNoTypeHelper extends ConnectionHelper {
-    
+
     private ConnectionNoTypeHelper(String name) {
       super(name);
     }
 
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.query.IteratingQueryTest.ConnectionHelper#getResults(org.usergrid.persistence.Query)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.IteratingQueryTest.ConnectionHelper#getResults
+     * (org.usergrid.persistence.Query)
      */
     @Override
     public Results getResults(Query query) throws Exception {
       query.setConnectionType(CONNECTION);
-      //don't set it on purpose
+      // don't set it on purpose
       query.setEntityType(null);
       return em.searchConnectedEntities(rootEntity, query);
-      
+
     }
-    
-  
+
   }
 }

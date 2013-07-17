@@ -44,6 +44,7 @@ import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QueryNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
@@ -112,7 +113,7 @@ public class QueryProcessor {
     // the root
     if (sorts.size() > 0) {
       
-      SliceNode sorts = generateSorts();
+      SliceNode sorts = generateSorts(opCount);
       
       opCount += sorts.getAllSlices().size();
       
@@ -170,7 +171,12 @@ public class QueryProcessor {
     SortPredicate sort = getSort(slice.getPropertyName());
 
     if (sort != null) {
-      slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
+      boolean isReversed = sort.getDirection() == SortDirection.DESCENDING;
+      
+      //we're reversing the direction of this slice, reverse the params as well
+      if(isReversed != slice.isReversed()){
+       slice.reverse();
+      }
     }
     // apply the cursor
     ByteBuffer cursor = cursorCache.getCursorBytes(slice.hashCode());
@@ -641,11 +647,11 @@ public class QueryProcessor {
    * 
    * @return
    */
-  private SliceNode generateSorts() {
+  private SliceNode generateSorts(int opCount) {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called
-    SliceNode node = new SliceNode(0);
+    SliceNode node = new SliceNode(opCount);
 
     for (SortPredicate predicate : sorts) {
       node.setStart(predicate.getPropertyName(), null, true);
