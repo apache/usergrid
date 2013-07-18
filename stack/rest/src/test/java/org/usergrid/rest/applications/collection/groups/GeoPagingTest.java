@@ -59,34 +59,39 @@ public class GeoPagingTest extends RestContextTest {
     CustomCollection groups = context.application().collection("groups");
 
     int maxRangeLimit = 20;
-    long[] index = new long[maxRangeLimit];
-    Map actor = hashMap("displayName", "Erin");
-    Map props = new HashMap();
+    JsonNode[] saved  = new JsonNode[maxRangeLimit];
+    
+    Map<String, String> actor = hashMap("displayName", "Erin");
+    Map<String, Object> props = new HashMap<String, Object>();
 
     props.put("actor",actor);
-    Map location = hashMap("latitude",37);
+    Map<String, Integer> location = hashMap("latitude",37);
     location.put("longitude",-75);
     props.put ("location",location);
     props.put("verb", "go");
     props.put("content", "bragh");
+  
     for (int i = 0; i < 20; i++) {
       String newPath = String.format("/kero" + i);
       props.put("path",newPath);
       props.put("ordinal", i);
-      JsonNode activity = groups.create(props);
-      index[i] = activity.findValue("created").getLongValue();
+      JsonNode activity = groups.create(props).get("entities").get(0);
+      saved[i] = activity;
     }
 
     JsonNode node = null;
     for(int consistent = 0; consistent < 20; consistent++) {
-      String query = "select * where location within 20000 of 37,-75 and created >= " + index[7] + " and " +
-          "created < " + index[10];
+      String query = String.format("select * where location within 100 of 37, -75 and ordinal >= %d and ordinal < %d" ,  saved[7].get("ordinal").asLong(),  saved[10].get("ordinal").asLong());
 
       node = groups.withQuery(query).get(); //groups.query(query);
-      assertEquals(3,node.get("entities").size());
-      for(int i = 3; i > 0; i++) {
-        assertNotNull(node.get("entities").get(i).get("created").getLongValue());
-        assertEquals(index[10-i],node.get("entities").get(i).get("created").getLongValue());
+      
+      JsonNode entities = node.get("entities");
+      
+      assertEquals(3, entities.size());
+      
+      for(int i = 0; i < 3; i++) {
+        //shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
+        assertEquals(saved[7+i], entities.get(i));
       }
     }
   }
