@@ -28,6 +28,7 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.exceptions.QueryParseException;
 
 /**
  * @author tnine
@@ -567,4 +568,57 @@ public class GrammarTreeTest {
       assertEquals("title", rootNode.getProperty().getValue());
       assertEquals(UUID.fromString("c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0"), ((UUIDLiteral)rootNode.getLiteral()).getValue());
     }
+    
+
+    @Test
+    public void badOrderByGrammar() throws QueryParseException {
+        // from isn't allowed
+        String s = "select * from where name = 'bob' order by";
+
+        String error = null;
+
+        try {
+            Query.fromQL(s);
+        } catch (QueryParseException qpe) {
+            error = qpe.getMessage();
+        }
+
+        assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
+
+    }
+    
+    @Test
+    public void badOrderByGrammarAsc() throws QueryParseException {
+        // from isn't allowed
+        String s = "select * from where name = 'bob' order by asc";
+
+        String error = null;
+
+        try {
+            Query.fromQL(s);
+        } catch (QueryParseException qpe) {
+            error = qpe.getMessage();
+        }
+
+        assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
+
+    }
+    
+    @Test
+    public void badOrderByGrammarDesc() throws QueryParseException {
+        // from isn't allowed
+        String s = "select * from where name = 'bob' order by desc";
+
+        String error = null;
+
+        try {
+            Query.fromQL(s);
+        } catch (QueryParseException qpe) {
+            error = qpe.getMessage();
+        }
+
+        assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
+
+    }
+
 }
