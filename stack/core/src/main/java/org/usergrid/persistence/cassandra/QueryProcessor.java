@@ -70,6 +70,8 @@ import org.usergrid.persistence.schema.CollectionInfo;
 public class QueryProcessor {
 
   private static final int PAGE_SIZE = 1000;
+  
+  private static final Schema SCHEMA = getDefaultSchema();
 
   private Operand rootOperand;
   private List<SortPredicate> sorts;
@@ -265,8 +267,7 @@ public class QueryProcessor {
     // objects
     private CountingStack<QueryNode> nodes = new CountingStack<QueryNode>();
 
-    private Schema schema = getDefaultSchema();
-
+    
     private int contextCount = -1;
 
     /**
@@ -377,7 +378,7 @@ public class QueryProcessor {
 
       String propertyName = op.getProperty().getValue();
 
-      if (!schema.isPropertyFulltextIndexed(entityType, propertyName)) {
+      if (!SCHEMA.isPropertyFulltextIndexed(entityType, propertyName)) {
         throw new NoFullTextIndexException(entityType, propertyName);
       }
 
@@ -566,13 +567,6 @@ public class QueryProcessor {
 
     }
 
-    private void checkIndexed(String propertyName) throws NoIndexException {
-
-      if (!schema.isPropertyIndexed(entityType, propertyName) && collectionInfo != null
-          && !collectionInfo.isSubkeyProperty(propertyName)) {
-        throw new NoIndexException(entityType, propertyName);
-      }
-    }
     
     public int getSliceCount(){
       return nodes.getSliceCount();
@@ -646,19 +640,33 @@ public class QueryProcessor {
    * cache
    * 
    * @return
+   * @throws NoIndexException 
    */
-  private SliceNode generateSorts(int opCount) {
+  private SliceNode generateSorts(int opCount) throws NoIndexException {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called
     SliceNode node = new SliceNode(opCount);
 
     for (SortPredicate predicate : sorts) {
-      node.setStart(predicate.getPropertyName(), null, true);
-      node.setFinish(predicate.getPropertyName(), null, true);
+      String name = predicate.getPropertyName();
+      
+      checkIndexed(name);
+      
+      node.setStart(name, null, true);
+      node.setFinish(name, null, true);
     }
 
     return node;
+  }
+  
+
+  private void checkIndexed(String propertyName) throws NoIndexException {
+
+    if (propertyName == null || propertyName.isEmpty() || (!SCHEMA.isPropertyIndexed(entityType, propertyName) && collectionInfo != null
+        && !collectionInfo.isSubkeyProperty(propertyName))) {
+      throw new NoIndexException(entityType, propertyName);
+    }
   }
 
 }
