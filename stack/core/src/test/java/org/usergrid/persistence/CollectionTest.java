@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.persistence.exceptions.NoIndexException;
+import org.usergrid.persistence.exceptions.QueryParseException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -1376,6 +1379,67 @@ public class CollectionTest extends AbstractPersistenceTest {
 
   }
 
+
+
+
+  @Test
+  public void badOrderByBadGrammarAsc() throws Exception {
+   
+    UUID applicationId = createApplication("testOrganization", "badOrderByBadGrammarAsc");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+    
+    String s = "select * where name = 'bob' order by asc";
+
+    String error = null;
+    String entityType = null;
+    String propertyName = null;
+
+    try {
+     em.searchCollection(em.getApplicationRef(), "users", Query.fromQL(s));
+     fail("I should throw an exception");
+    } catch (NoIndexException nie) {
+      error = nie.getMessage();
+      entityType = nie.getEntityType();
+      propertyName = nie.getPropertyName();
+    }
+
+    assertEquals("Entity 'user' with property named '' is not indexed.  You cannot use the this field in queries.", error);
+    assertEquals("user", entityType);
+    assertEquals("", propertyName);
+
+  }
+
+  @Test
+  public void badOrderByBadGrammarDesc() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "badOrderByBadGrammarDesc");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+    
+    String s = "select * where name = 'bob' order by desc";
+
+    String error = null;
+    String entityType = null;
+    String propertyName = null;
+
+
+    try {
+     em.searchCollection(em.getApplicationRef(), "users", Query.fromQL(s));
+     fail("I should throw an exception");
+    } catch (NoIndexException nie) {
+      error = nie.getMessage();
+      entityType = nie.getEntityType();
+      propertyName = nie.getPropertyName();
+    }
+
+    assertEquals("Entity 'user' with property named '' is not indexed.  You cannot use the this field in queries.", error);
+    assertEquals("user", entityType);
+    assertEquals("", propertyName);
+  }
 
   
 }

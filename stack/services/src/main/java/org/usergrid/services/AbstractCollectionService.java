@@ -204,6 +204,7 @@ public class AbstractCollectionService extends AbstractService {
     query = new Query(query);
     query.setResultsLevel(level);
     query.setLimit(query.getLimit(count));
+   
     if (!query.isReversedSet()) {
       query.setReversed(isCollectionReversed(context));
     }
