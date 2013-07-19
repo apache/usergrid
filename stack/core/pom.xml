@@ -71,9 +71,10 @@
 				<configuration>
 					<!-- <groups>fast,${groups}</groups> -->
 					<systemPropertyVariables>
-						<storage-config>${basedir}/src/test/conf</storage-config>
+					<storage-config>${basedir}/src/test/conf</storage-config>
 					</systemPropertyVariables>
-					<argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+                                        <forkMode>always</forkMode>
+					<argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 				</configuration>
 			</plugin>
 			
