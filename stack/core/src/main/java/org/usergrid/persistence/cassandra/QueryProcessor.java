@@ -149,7 +149,7 @@ public class QueryProcessor {
     if(opCount > 1){
       pageSizeHint = PAGE_SIZE;
     }else{
-      pageSizeHint = size;
+      pageSizeHint = Math.min(size, PAGE_SIZE);
     }
   }
 
@@ -218,7 +218,7 @@ public class QueryProcessor {
 
     ResultIterator itr = visitor.getResults();
     
-    List<UUID> entityIds = new ArrayList<UUID>(size);
+    List<UUID> entityIds = new ArrayList<UUID>(Math.min(size, Query.MAX_LIMIT));
     
     CursorCache resultsCursor = new CursorCache();
     
@@ -628,10 +628,6 @@ public class QueryProcessor {
    * @return the pageSizeHint
    */
   public int getPageSizeHint(QueryNode node) {
-    if(node == rootNode){
-      return size;
-    }
-    
     return pageSizeHint;
   }
 
