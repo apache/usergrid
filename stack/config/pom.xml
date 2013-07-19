@@ -7,13 +7,13 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.config</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
   </properties>
+
   <artifactId>usergrid-config</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid Config</name>
   <description>Runtime config resources for Usergrid system.</description>
   <packaging>jar</packaging>
   <build>

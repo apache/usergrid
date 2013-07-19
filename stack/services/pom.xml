@@ -7,14 +7,14 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.services</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
     <jclouds.version>1.5.0-beta.3</jclouds.version>
   </properties>
+
   <artifactId>usergrid-services</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid Services</name>
   <description>Service layer for Usergrid system.</description>
   <packaging>jar</packaging>
   <reporting>

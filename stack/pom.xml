@@ -3,9 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
-		<bundle.namespace>org.usergrid</bundle.namespace>
-		<!-- <cassandra-javautils-version>1.1.6</cassandra-javautils-version> -->
+
 		<cassandra-version>1.1.6</cassandra-version>
 		<hector-om-version>2.0-01</hector-om-version>
 		<hector-version>1.1-2-1</hector-version>
@@ -29,10 +27,11 @@
 		<artifactId>oss-parent</artifactId>
 		<version>7</version>
 	</parent>
+
 	<groupId>org.usergrid</groupId>
 	<artifactId>usergrid</artifactId>
 	<version>0.0.28-SNAPSHOT</version>
-	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
+	<name>Usergrid Parent</name>
 	<description>Usergrid Project</description>
 	<packaging>pom</packaging>
 

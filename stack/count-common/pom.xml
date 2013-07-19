@@ -6,14 +6,14 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.count-common</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
   </properties>
+
   <artifactId>usergrid-count-common</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
-  <description>Common classes and utilities for Usergrid distributed counter architechture</description>
+  <name>Usergrid Count Common</name>
+  <description>Common classes and utilities for Usergrid distributed counter architecture</description>
   <packaging>jar</packaging>
 
   <url>http://github.com/usergrid/stack/usergrid-count-common</url>

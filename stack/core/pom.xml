@@ -7,13 +7,13 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.core</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
   </properties>
+
   <artifactId>usergrid-core</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid Core</name>
   <description>Core services for Usergrid system.</description>
   <packaging>jar</packaging>
   <reporting>

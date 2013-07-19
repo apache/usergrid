@@ -7,13 +7,13 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.standalone</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
   </properties>
+
   <artifactId>usergrid-standalone</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid Standalone</name>
   <description>Standalone Usergrid server for testing and development.</description>
   <packaging>jar</packaging>
   <reporting>

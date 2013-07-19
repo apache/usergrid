@@ -7,16 +7,16 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.count-inserter</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
     <slf4j.version>1.6.1</slf4j.version>
   </properties>
+
   <artifactId>usergrid-count-inserter</artifactId>
   <packaging>jar</packaging>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
-  <description>Storage service for Usergrid distributed counter architechture</description>
+  <name>Usergrid Count Inserter</name>
+  <description>Storage service for Usergrid distributed counter architecture</description>
 
   <dependencies>
     <dependency>

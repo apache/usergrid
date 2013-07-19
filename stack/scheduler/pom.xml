@@ -6,8 +6,9 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <artifactId>usergrid-scheduler</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid Scheduler</name>
   <description>The scheduling framework for usergrid</description>
   <dependencies>
 

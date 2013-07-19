@@ -6,12 +6,12 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.rest</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
     <jetty.version>8.1.8.v20121106</jetty.version>
   </properties>
+
   <artifactId>usergrid-rest</artifactId>
   <packaging>war</packaging>
   <name>${bundle.symbolicName} [${bundle.namespace}]</name>

@@ -7,11 +7,11 @@
     <artifactId>usergrid</artifactId>
     <version>0.0.28-SNAPSHOT</version>
   </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <bundle.symbolicName>org.usergrid.test-utils</bundle.symbolicName>
-    <bundle.namespace>org.usergrid</bundle.namespace>
   </properties>
+
   <artifactId>usergrid-test-utils</artifactId>
   <name>${bundle.symbolicName} [${bundle.namespace}]</name>
   <description>Test Utilities for Usergrid system.</description>
