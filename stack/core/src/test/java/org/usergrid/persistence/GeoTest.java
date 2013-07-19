@@ -18,6 +18,7 @@ package org.usergrid.persistence;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -235,7 +236,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
     int count = 0;
     Results results;
-    
+
     do {
       results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
@@ -244,7 +245,54 @@ public class GeoTest extends AbstractPersistenceTest {
         count++;
       }
 
-      //set for the next "page"
+      // set for the next "page"
+      query.setCursor(results.getCursor());
+    } while (results.getCursor() != null);
+
+    // check we got back all 500 entities
+    assertEquals(numEntities, count);
+  }
+  
+
+  @Test
+  public void testSamePointPaging() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testSamePointPaging");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    // save objects in a diagonal line from -90 -180 to 90 180
+
+    int numEntities = 500;
+
+    for (int i = 0; i < numEntities; i++) {
+      Map<String, Object> data = new HashMap<String, Object>(2);
+      data.put("name", String.valueOf(i));
+      setPos(data, 0, 0);
+
+      em.create("store", data);
+    }
+
+    Query query = new Query();
+    // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+    // just to be save
+    query.addFilter("location within 50000000 of 0, 0");
+    query.setLimit(100);
+
+    int count = 0;
+    Results results;
+
+    do {
+      results = em.searchCollection(em.getApplicationRef(), "stores", query);
+
+      for (Entity entity : results.getEntities()) {
+        assertEquals(String.valueOf(count), entity.getName());
+        count++;
+      }
+
+      // set for the next "page"
       query.setCursor(results.getCursor());
     } while (results.getCursor() != null);
 
@@ -309,6 +357,62 @@ public class GeoTest extends AbstractPersistenceTest {
     assertEquals(numEntities, count);
   }
 
+  @Test
+  public void testGeoWithIntersection() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testGeoWithIntersection");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    int size = 100;
+    int min = 50;
+    int max = 90;
+    
+    List<Entity> created = new ArrayList<Entity>(size);
+
+    for (int i = 0; i < size; i++) {
+
+      // save all entities in the same location
+      Map<String, Object> data = new HashMap<String, Object>(2);
+      data.put("name", String.valueOf(i));
+      data.put("index", i);
+      setPos(data, 0, 0);
+
+      Entity e = em.create("store", data);
+      
+      created.add(e);
+
+    }
+
+    int startDelta = size - min;
+
+//    String queryString = String.format("select * where location within 100 of 0, 0 and index >= %d and index < %d order by index",min, max);
+    
+    String queryString = String.format("select * where index >= %d and index < %d order by index",min, max);
+
+    Query query = Query.fromQL(queryString);
+
+    Results r = null;
+    int count = 0;
+
+    do {
+
+      r = em.searchCollection(em.getApplicationRef(), "stores", query);
+      
+      for(Entity e : r.getEntities()){
+        assertEquals(created.get(startDelta+count), e);
+        count++;
+      }
+
+      query.setCursor(r.getCursor());
+    } while (r.hasCursor());
+    
+    assertEquals(startDelta-(size-max), count);
+
+  }
+
   public Map<String, Object> getLocation(double latitude, double longitude) throws Exception {
     Map<String, Object> latlong = new LinkedHashMap<String, Object>();
     latlong.put("latitude", latitude);
@@ -322,5 +426,13 @@ public class GeoTest extends AbstractPersistenceTest {
     latlong.put("longitude", longitude);
 
     em.setProperty(entity, "location", latlong);
+  }
+
+  public void setPos(Map<String, Object> data, double latitude, double longitude) {
+    Map<String, Object> latlong = new LinkedHashMap<String, Object>();
+    latlong.put("latitude", latitude);
+    latlong.put("longitude", longitude);
+
+    data.put("location", latlong);
   }
 }

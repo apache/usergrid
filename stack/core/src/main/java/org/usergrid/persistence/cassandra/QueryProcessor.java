@@ -628,10 +628,6 @@ public class QueryProcessor {
    * @return the pageSizeHint
    */
   public int getPageSizeHint(QueryNode node) {
-    if(node == rootNode){
-      return size;
-    }
-    
     return pageSizeHint;
   }
 
