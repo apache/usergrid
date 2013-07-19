@@ -573,7 +573,7 @@ public class GrammarTreeTest {
     @Test
     public void badOrderByGrammar() throws QueryParseException {
         // from isn't allowed
-        String s = "select * from where name = 'bob' order by";
+        String s = "select * where name = 'bob' order by";
 
         String error = null;
 
@@ -583,42 +583,9 @@ public class GrammarTreeTest {
             error = qpe.getMessage();
         }
 
-        assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
+        assertEquals("The query cannot be parsed.  The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
 
     }
-    
-    @Test
-    public void badOrderByGrammarAsc() throws QueryParseException {
-        // from isn't allowed
-        String s = "select * from where name = 'bob' order by asc";
-
-        String error = null;
-
-        try {
-            Query.fromQL(s);
-        } catch (QueryParseException qpe) {
-            error = qpe.getMessage();
-        }
-
-        assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
-
-    }
-    
-    @Test
-    public void badOrderByGrammarDesc() throws QueryParseException {
-        // from isn't allowed
-        String s = "select * from where name = 'bob' order by desc";
-
-        String error = null;
-
-        try {
-            Query.fromQL(s);
-        } catch (QueryParseException qpe) {
-            error = qpe.getMessage();
-        }
-
-        assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
-
-    }
+  
 
 }
