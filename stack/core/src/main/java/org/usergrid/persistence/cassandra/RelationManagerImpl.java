@@ -148,14 +148,7 @@ import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
-import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.ConnectionIterator;
-import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
-import org.usergrid.persistence.query.ir.result.GeoIterator;
-import org.usergrid.persistence.query.ir.result.IntersectionIterator;
-import org.usergrid.persistence.query.ir.result.SliceIterator;
-import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
@@ -2318,7 +2311,18 @@ public class RelationManagerImpl implements RelationManager {
     QueryProcessor qp = new QueryProcessor(query, collection);
     SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
 
-    return qp.getResults(em, visitor, new EntityResultsLoader(em));
+    return qp.getResults(em, visitor, getResultsLoader(query));
+  }
+
+  private ResultsLoader getResultsLoader(Query query) {
+    switch (query.getResultsLevel()) {
+      case IDS:
+        return new IDLoader();
+      case REFS:
+        return new ConnectionRefLoader(query.getEntityType());
+      default:
+        return new EntityResultsLoader(em);
+    }
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
