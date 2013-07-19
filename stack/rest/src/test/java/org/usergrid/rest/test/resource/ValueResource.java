@@ -156,4 +156,32 @@ public abstract class ValueResource extends NamedResource {
   }
   
 
+  /**
+   * Get entities in this collection. Cursor is optional
+   * 
+   * @param query
+   * @param cursor
+   * @return
+   */
+  protected JsonNode deleteInternal() {
+
+    
+    WebResource resource = withParams(withToken(resource()));
+    
+    if(query != null){
+      resource = resource.queryParam("ql", query);
+    }
+
+    if (cursor != null) {
+      resource = resource.queryParam("cursor", cursor);
+    }
+    
+    if(start != null){
+      resource = resource.queryParam("start", start.toString());
+    }
+
+    return jsonMedia(resource).delete(JsonNode.class);
+  }
+  
+
 }

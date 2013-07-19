@@ -78,6 +78,10 @@ public class EntityResource extends ValueResource {
     }
   }
   
+  public JsonNode delete(){
+    return deleteInternal();
+  }
+  
   
   public JsonNode post(Map<String, ? > data){
     return postInternal(data);
