@@ -14,7 +14,7 @@
 
   <artifactId>usergrid-rest</artifactId>
   <packaging>war</packaging>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid REST</name>
   <description>REST web services for Usergrid system.</description>
   <build>
     <finalName>ROOT</finalName>
@@ -385,10 +385,6 @@
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-multipart</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.saxon</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.shiro</groupId>

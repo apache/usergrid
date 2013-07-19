@@ -13,7 +13,7 @@
   </properties>
 
   <artifactId>usergrid-test-utils</artifactId>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+  <name>Usergrid Test Utils</name>
   <description>Test Utilities for Usergrid system.</description>
   <packaging>jar</packaging>
   <reporting>
