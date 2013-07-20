@@ -813,6 +813,27 @@
                     <ignore/>
                   </action>
                 </pluginExecution>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>
+                      org.codehaus.mojo.jspc
+                    </groupId>
+                    <artifactId>
+                      jspc-maven-plugin
+                    </artifactId>
+                    <versionRange>
+                      [2.0-alpha-3,)
+                    </versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+
                 <pluginExecution>
                   <pluginExecutionFilter>
                     <groupId>org.antlr</groupId>

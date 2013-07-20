@@ -8,7 +8,6 @@
   </parent>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>8.1.8.v20121106</jetty.version>
   </properties>
 
@@ -16,8 +15,10 @@
   <packaging>war</packaging>
   <name>Usergrid REST</name>
   <description>REST web services for Usergrid system.</description>
+
   <build>
     <finalName>ROOT</finalName>
+
     <resources>
       <resource>
         <directory>src/main/resources</directory>
@@ -28,6 +29,7 @@
         </includes>
       </resource>
     </resources>
+
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
@@ -37,30 +39,22 @@
         </includes>
       </testResource>
     </testResources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-
           <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <inherited>true</inherited>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>2.3</version>
       </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo.jspc</groupId>
         <artifactId>jspc-maven-plugin</artifactId>
@@ -85,6 +79,7 @@
           </dependency>
         </dependencies>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -121,6 +116,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
@@ -149,60 +145,141 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>cobertura-maven-plugin</artifactId>
       </plugin>
-      <!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId>
-        <version>1.23-RC1</version> <executions> <execution> <goals> <goal>docs</goal>
-        </goals> <configuration> <docsDir> ${project.build.directory}/docs </docsDir>
-        </configuration> </execution> </executions> </plugin> -->
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings
-          only. It has no influence on the Maven build itself. -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>
-                      org.codehaus.mojo.jspc
-                    </groupId>
-                    <artifactId>
-                      jspc-maven-plugin
-                    </artifactId>
-                    <versionRange>
-                      [2.0-alpha-3,)
-                    </versionRange>
-                    <goals>
-                      <goal>compile</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore/>
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
+
   <dependencies>
+
+    <!-- Usergrid Dependencies -->
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-count-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-count-inserter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-count-batcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-core</artifactId>
+      <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-services</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-scheduler</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-mongo-emulator</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Apache Dependencies -->
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.amber</groupId>
+      <artifactId>amber-oauth2-common</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.amber</groupId>
+      <artifactId>amber-oauth2-authzserver</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.amber</groupId>
+      <artifactId>amber-oauth2-resourceserver</artifactId>
+    </dependency>
+
+    <!--<dependency>-->
+      <!--<groupId>commons-beanutils</groupId>-->
+      <!--<artifactId>commons-beanutils</artifactId>-->
+      <!--<exclusions>-->
+        <!--<exclusion>-->
+          <!--<artifactId>commons-logging</artifactId>-->
+          <!--<groupId>commons-logging</groupId>-->
+        <!--</exclusion>-->
+      <!--</exclusions>-->
+    <!--</dependency>-->
+
+    <!--<dependency>-->
+      <!--<groupId>log4j</groupId>-->
+      <!--<artifactId>log4j</artifactId>-->
+    <!--</dependency>-->
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+
+
     <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
       <classifier>tests</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-config</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.usergrid</groupId>
@@ -216,47 +293,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
       <classifier>tests</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-inserter</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-batcher</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-services</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-scheduler</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-mongo-emulator</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -353,11 +389,6 @@
       <groupId>net.tanesha.recaptcha4j</groupId>
       <artifactId>recaptcha4j</artifactId>
     </dependency>
-    <!-- <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>catalina</artifactId>
-      <scope>provided</scope>
-    </dependency> -->
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
@@ -385,30 +416,6 @@
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-multipart</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-spring</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.amber</groupId>
-      <artifactId>amber-oauth2-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.amber</groupId>
-      <artifactId>amber-oauth2-authzserver</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.amber</groupId>
-      <artifactId>amber-oauth2-resourceserver</artifactId>
     </dependency>
     <dependency>
       <groupId>com.yammer.metrics</groupId>
@@ -458,11 +465,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
       <scope>compile</scope>
@@ -471,18 +473,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
       <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-      <type>jar</type>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.hectorclient</groupId>
