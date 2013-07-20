@@ -913,12 +913,6 @@
           <version>2.0</version>
         </plugin>
 
-         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>jdepend-maven-plugin</artifactId>
-          <version>2.0-beta-2</version>
-        </plugin>
-
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>l10n-maven-plugin</artifactId>
@@ -956,39 +950,6 @@
           <artifactId>jdepend-maven-plugin</artifactId>
           <version>2.0-beta-2</version>
         </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>l10n-maven-plugin</artifactId>
-          <version>1.0-alpha-2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>taglist-maven-plugin</artifactId>
-          <version>2.4</version>
-          <configuration>
-            <tags>
-              <tag>TODO</tag>
-              <tag>@todo</tag>
-              <tag>@deprecated</tag>
-              <tag>FIXME</tag>
-            </tags>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>versions-maven-plugin</artifactId>
-          <version>1.2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>com.agilejava.docbkx</groupId>
-          <artifactId>docbkx-maven-plugin</artifactId>
-          <version>2.0.13</version>
-        </plugin>
-
       </plugins>
     </pluginManagement>
 

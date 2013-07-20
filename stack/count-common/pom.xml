@@ -7,42 +7,36 @@
     <version>0.0.28-SNAPSHOT</version>
   </parent>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
   <artifactId>usergrid-count-common</artifactId>
   <name>Usergrid Count Common</name>
   <description>Common classes and utilities for Usergrid distributed counter architecture</description>
   <packaging>jar</packaging>
 
-  <url>http://github.com/usergrid/stack/usergrid-count-common</url>
-
-
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.8.1</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.4</version>
     </dependency>
+
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>hector-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
