@@ -1,27 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-		<cassandra-version>1.1.6</cassandra-version>
-		<hector-om-version>2.0-01</hector-om-version>
-		<hector-version>1.1-2-1</hector-version>
-		<hector-test-version>1.1-2</hector-test-version>
-		<jackson-version>1.9.9</jackson-version>
-		<jersey-version>1.17</jersey-version>
-		<shiro-version>1.2.0</shiro-version>
-		<junit-version>4.10</junit-version>
-		<log4j-version>1.2.16</log4j-version>
-		<org.springframework.version>3.1.2.RELEASE</org.springframework.version>
-		<slf4j-version>1.6.1</slf4j-version>
-		<snakeyaml-version>1.8</snakeyaml-version>
-		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
-		<usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
-		<metrics-version>2.1.2</metrics-version>
-		<amber-version>0.22-incubating</amber-version>
-	</properties>
-
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
@@ -35,14 +14,36 @@
 	<description>Usergrid Project</description>
 	<packaging>pom</packaging>
 
-	<licenses>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <cassandra-version>1.1.6</cassandra-version>
+    <hector-om-version>2.0-01</hector-om-version>
+    <hector-version>1.1-2-1</hector-version>
+    <hector-test-version>1.1-2</hector-test-version>
+    <jackson-version>1.9.9</jackson-version>
+    <jersey-version>1.17</jersey-version>
+    <shiro-version>1.2.0</shiro-version>
+    <junit-version>4.10</junit-version>
+    <log4j-version>1.2.16</log4j-version>
+    <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
+    <slf4j-version>1.6.1</slf4j-version>
+    <snakeyaml-version>1.8</snakeyaml-version>
+    <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
+    <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
+    <metrics-version>2.1.2</metrics-version>
+    <amber-version>0.22-incubating</amber-version>
+  </properties>
+
+  <licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
 			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	<developers>
+
+  <developers>
 		<developer>
 			<id>eanuff</id>
 			<name>Ed Anuff</name>
@@ -64,11 +65,13 @@
 			<name>Chakra Yeleswarapu</name>
 		</developer>
 	</developers>
-	<scm>
+
+  <scm>
 		<connection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</connection>
 		<developerConnection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</developerConnection>
 		<url>git@github.com:apigee/usergrid-stack-internal.git</url>
 	</scm>
+
 	<modules>
 		<module>config</module>
 		<module>core</module>
@@ -90,360 +93,504 @@
 
 	<dependencyManagement>
 		<dependencies>
+
+      <!-- Apache Dependencies -->
+
 			<dependency>
 				<groupId>commons-beanutils</groupId>
 				<artifactId>commons-beanutils</artifactId>
 				<version>1.8.3</version>
-				<type>jar</type>
-				<scope>compile</scope>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>commons-cli</groupId>
 				<artifactId>commons-cli</artifactId>
 				<version>1.2</version>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>commons-codec</groupId>
 				<artifactId>commons-codec</artifactId>
 				<version>1.4</version>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>commons-collections</groupId>
 				<artifactId>commons-collections</artifactId>
 				<version>3.2.1</version>
-				<type>jar</type>
 			</dependency>
 
 			<dependency>
 				<groupId>commons-lang</groupId>
 				<artifactId>commons-lang</artifactId>
 				<version>2.5</version>
-				<type>jar</type>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>2.4</version>
 			</dependency>
-			<dependency>
-				<groupId>com.datastax.hector</groupId>
-				<artifactId>hector-composite</artifactId>
-				<version>0.8.0-rc1-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.uuid</groupId>
-				<artifactId>java-uuid-generator</artifactId>
-				<version>3.1.2</version>
-			</dependency>
-			<dependency>
-				<groupId>com.hazelcast</groupId>
-				<artifactId>hazelcast-all</artifactId>
-				<version>1.9.3.1</version>
-			</dependency>
-			<dependency>
+
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>5.5.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-spring</artifactId>
+        <version>5.5.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-pool</artifactId>
+        <version>5.5.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.amber</groupId>
+        <artifactId>amber-oauth2-common</artifactId>
+        <version>${amber-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.amber</groupId>
+        <artifactId>amber-oauth2-authzserver</artifactId>
+        <version>${amber-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.amber</groupId>
+        <artifactId>amber-oauth2-resourceserver</artifactId>
+        <version>${amber-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.cassandra</groupId>
+        <artifactId>cassandra-all</artifactId>
+        <version>${cassandra-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>3.0.3</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-core</artifactId>
+        <version>${shiro-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-web</artifactId>
+        <version>${shiro-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-spring</artifactId>
+        <version>${shiro-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>catalina</artifactId>
+        <version>6.0.29</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.xbean</groupId>
+        <artifactId>xbean-spring</artifactId>
+        <version>3.7</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>3.4.5</version>
+      </dependency>
+
+      <!-- Sun and Javax Package Dependencies -->
+
+      <dependency>
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-json</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-client</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-server</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
-			<dependency>
+
+      <dependency>
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-grizzly2</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>org.glassfish.grizzly</groupId>
 				<artifactId>grizzly-http-servlet-server</artifactId>
 				<version>2.1.2</version>
 			</dependency>
+
 			<dependency>
 				<groupId>com.sun.jersey.contribs</groupId>
 				<artifactId>jersey-spring</artifactId>
 				<version>${jersey-version}</version>
 				<exclusions>
+
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring-aop</artifactId>
 					</exclusion>
+
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring-core</artifactId>
 					</exclusion>
+
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring</artifactId>
 					</exclusion>
+
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring-beans</artifactId>
 					</exclusion>
+
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring-context</artifactId>
 					</exclusion>
+
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring-web</artifactId>
 					</exclusion>
 				</exclusions>
 			</dependency>
+
 			<dependency>
 				<groupId>com.sun.jersey.contribs</groupId>
 				<artifactId>jersey-multipart</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
 				<artifactId>oauth-signature</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
 				<artifactId>oauth-server</artifactId>
 				<version>${jersey-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>com.sun.mail</groupId>
 				<artifactId>javax.mail</artifactId>
 				<version>1.4.4</version>
 			</dependency>
+
+      <dependency>
+        <groupId>javax.persistence</groupId>
+        <artifactId>persistence-api</artifactId>
+        <version>1.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>2.5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>jstl</artifactId>
+        <version>1.2</version>
+      </dependency>
+
+      <!-- Other Commercial Dependencies -->
+
+      <dependency>
+        <groupId>com.datastax.hector</groupId>
+        <artifactId>hector-composite</artifactId>
+        <version>0.8.0-rc1-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.uuid</groupId>
+        <artifactId>java-uuid-generator</artifactId>
+        <version>3.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hazelcast</groupId>
+        <artifactId>hazelcast-all</artifactId>
+        <version>1.9.3.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>12.0</version>
+      </dependency>
+
+      <!-- Third Party Non-Commercial Dependencies -->
+
+      <dependency>
+        <groupId>de.undercouch</groupId>
+        <artifactId>bson4jackson</artifactId>
+        <version>1.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.usergrid</groupId>
+        <artifactId>geocell</artifactId>
+        <version>0.0.11</version>
+      </dependency>
+
+      <dependency>
+        <!-- TODO T.N. try and remove this -->
+        <groupId>javaee</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.usergrid</groupId>
+        <artifactId>hector-core</artifactId>
+        <version>${hector-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.hectorclient</groupId>
+        <artifactId>hector-test</artifactId>
+        <version>${hector-test-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.hectorclient</groupId>
+        <artifactId>hector-object-mapper</artifactId>
+        <version>${hector-om-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>net.tanesha.recaptcha4j</groupId>
+        <artifactId>recaptcha4j</artifactId>
+        <version>0.0.8</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr-runtime</artifactId>
+        <version>3.4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-core-asl</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-jaxrs</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-mapper-asl</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-xc</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-smile</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.netty</groupId>
+        <artifactId>netty</artifactId>
+        <version>3.2.7.Final</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.6.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongo-java-driver</artifactId>
+        <version>2.9.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.python</groupId>
+        <artifactId>jython</artifactId>
+        <version>2.5.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-expression</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-aop</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context-support</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jms</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-web</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.yammer.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+        <version>${metrics-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.yammer.metrics</groupId>
+        <artifactId>metrics-spring</artifactId>
+        <version>${metrics-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.yammer.metrics</groupId>
+        <artifactId>metrics-annotation</artifactId>
+        <version>${metrics-version}</version>
+      </dependency>
+
+      <!-- Mock, Testing and Logging Dependencies -->
+
 			<dependency>
 				<groupId>org.jvnet.mock-javamail</groupId>
 				<artifactId>mock-javamail</artifactId>
 				<version>1.9</version>
-				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-all</artifactId>
 				<version>1.9.5-rc1</version>
-				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-module-junit4</artifactId>
 				<version>1.5</version>
-				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-module-junit4-rule-agent</artifactId>
 				<version>1.5</version>
-				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-api-mockito</artifactId>
 				<version>1.5</version>
-				<scope>test</scope>
 			</dependency>
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>12.0</version>
-			</dependency>
-			<dependency>
-				<groupId>de.undercouch</groupId>
-				<artifactId>bson4jackson</artifactId>
-				<version>1.1.2</version>
-			</dependency>
-			<dependency>
-				<groupId>org.usergrid</groupId>
-				<artifactId>geocell</artifactId>
-				<version>0.0.11</version>
-			</dependency>
-			<!-- TODO T.N. try and remove this -->
-			<dependency>
-				<groupId>javaee</groupId>
-				<artifactId>javaee-api</artifactId>
-				<version>5</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>javax.persistence</groupId>
-				<artifactId>persistence-api</artifactId>
-				<version>1.0</version>
-			</dependency>
-			<dependency>
-				<groupId>javax.servlet</groupId>
-				<artifactId>servlet-api</artifactId>
-				<version>2.5</version>
-			</dependency>
-			<dependency>
-				<groupId>javax.servlet</groupId>
-				<artifactId>jstl</artifactId>
-				<version>1.2</version>
-			</dependency>
+
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit-version}</version>
-				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
 				<version>${log4j-version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.usergrid</groupId>
-				<artifactId>hector-core</artifactId>
-				<version>${hector-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hectorclient</groupId>
-				<artifactId>hector-test</artifactId>
-				<version>${hector-test-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hectorclient</groupId>
-				<artifactId>hector-object-mapper</artifactId>
-				<version>${hector-om-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>net.tanesha.recaptcha4j</groupId>
-				<artifactId>recaptcha4j</artifactId>
-				<version>0.0.8</version>
-			</dependency>
-			<dependency>
-				<groupId>org.antlr</groupId>
-				<artifactId>antlr-runtime</artifactId>
-				<version>3.4</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.activemq</groupId>
-				<artifactId>activemq-core</artifactId>
-				<version>5.5.0</version>
-				<optional>false</optional>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.activemq</groupId>
-				<artifactId>activemq-spring</artifactId>
-				<version>5.5.0</version>
-				<optional>false</optional>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.activemq</groupId>
-				<artifactId>activemq-pool</artifactId>
-				<version>5.5.0</version>
-				<optional>false</optional>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.amber</groupId>
-				<artifactId>amber-oauth2-common</artifactId>
-				<version>${amber-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.amber</groupId>
-				<artifactId>amber-oauth2-authzserver</artifactId>
-				<version>${amber-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.amber</groupId>
-				<artifactId>amber-oauth2-resourceserver</artifactId>
-				<version>${amber-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cassandra</groupId>
-				<artifactId>cassandra-all</artifactId>
-				<version>${cassandra-version}</version>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.lucene</groupId>
-				<artifactId>lucene-core</artifactId>
-				<version>3.0.3</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.shiro</groupId>
-				<artifactId>shiro-core</artifactId>
-				<version>${shiro-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.shiro</groupId>
-				<artifactId>shiro-web</artifactId>
-				<version>${shiro-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.shiro</groupId>
-				<artifactId>shiro-spring</artifactId>
-				<version>${shiro-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.tomcat</groupId>
-				<artifactId>catalina</artifactId>
-				<version>6.0.29</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.xbean</groupId>
-				<artifactId>xbean-spring</artifactId>
-				<version>3.7</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.zookeeper</groupId>
-				<artifactId>zookeeper</artifactId>
-				<version>3.4.5</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.jackson</groupId>
-				<artifactId>jackson-core-asl</artifactId>
-				<version>${jackson-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.jackson</groupId>
-				<artifactId>jackson-jaxrs</artifactId>
-				<version>${jackson-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.jackson</groupId>
-				<artifactId>jackson-mapper-asl</artifactId>
-				<version>${jackson-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.jackson</groupId>
-				<artifactId>jackson-xc</artifactId>
-				<version>${jackson-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.jackson</groupId>
-				<artifactId>jackson-smile</artifactId>
-				<version>${jackson-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jboss.netty</groupId>
-				<artifactId>netty</artifactId>
-				<version>3.2.7.Final</version>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.jsoup</groupId>
-				<artifactId>jsoup</artifactId>
-				<version>1.6.0</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mongodb</groupId>
-				<artifactId>mongo-java-driver</artifactId>
-				<version>2.9.0</version>
-			</dependency>
+
 			<dependency>
 				<groupId>org.perf4j</groupId>
 				<artifactId>perf4j</artifactId>
 				<version>0.9.12</version>
-			</dependency>
-			<dependency>
-				<groupId>org.python</groupId>
-				<artifactId>jython</artifactId>
-				<version>2.5.0</version>
 			</dependency>
 
 			<dependency>
@@ -451,98 +598,31 @@
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-log4j12</artifactId>
 				<version>${slf4j-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>jcl-over-slf4j</artifactId>
 				<version>${slf4j-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>jul-to-slf4j</artifactId>
 				<version>${slf4j-version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>commons-logging</groupId>
 				<artifactId>commons-logging</artifactId>
 				<version>1.1.1</version>
-				<scope>provided</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-core</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-expression</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-beans</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-aop</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-context</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-context-support</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-jms</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-web</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-webmvc</artifactId>
-				<version>${org.springframework.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-test</artifactId>
-				<version>${org.springframework.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.yaml</groupId>
-				<artifactId>snakeyaml</artifactId>
-				<version>${snakeyaml-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.yammer.metrics</groupId>
-				<artifactId>metrics-core</artifactId>
-				<version>${metrics-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.yammer.metrics</groupId>
-				<artifactId>metrics-spring</artifactId>
-				<version>${metrics-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.yammer.metrics</groupId>
-				<artifactId>metrics-annotation</artifactId>
-				<version>${metrics-version}</version>
-			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
@@ -596,6 +676,7 @@
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <encoding>ISO-8859-1</encoding>
+            <showWarnings>true</showWarnings>
           </configuration>
         </plugin>
 
@@ -663,6 +744,17 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>2.4</version>
+          <executions>
+            <execution>
+              <id>test-jar-execution</id>
+              <phase>package</phase>
+              <goals>
+                <goal>test-jar</goal>
+              </goals>
+              <configuration>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
 
         <plugin>
