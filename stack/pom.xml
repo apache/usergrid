@@ -745,6 +745,12 @@
         <artifactId>javax.servlet-api</artifactId>
         <version>3.0.1</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.apple</groupId>
+        <artifactId>AppleJavaExtensions</artifactId>
+        <version>1.5</version>
+      </dependency>
     </dependencies>
 	</dependencyManagement>
 
