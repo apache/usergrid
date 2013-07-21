@@ -238,36 +238,132 @@
       <artifactId>amber-oauth2-resourceserver</artifactId>
     </dependency>
 
-    <!--<dependency>-->
-      <!--<groupId>commons-beanutils</groupId>-->
-      <!--<artifactId>commons-beanutils</artifactId>-->
-      <!--<exclusions>-->
-        <!--<exclusion>-->
-          <!--<artifactId>commons-logging</artifactId>-->
-          <!--<groupId>commons-logging</groupId>-->
-        <!--</exclusion>-->
-      <!--</exclusions>-->
-    <!--</dependency>-->
-
-    <!--<dependency>-->
-      <!--<groupId>log4j</groupId>-->
-      <!--<artifactId>log4j</artifactId>-->
-    <!--</dependency>-->
-
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>compile</scope>
-    </dependency>
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
-      <type>jar</type>
-      <scope>compile</scope>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
           <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+
+    <!-- SUN, Javax Package, and Other Com Dependencies -->
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>jstl</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>javax.mail</artifactId>
+    </dependency>
+
+    <!--
+      TODO - AOK - Fix this!
+
+      Switching the order of two dependencies in a POM should not have any
+      effect. However when you switch the order of the two dependencies below
+      the build fails. This drove me nuts for a while but I found out that the
+      failures giving me a bad day were due to this anomaly. If place
+      jersey-json before the jersey-multipart then the build will fail.
+
+      Why the heck would that happen? Got to find out why because this could
+      point to other much more severe issues that could plague us in the
+      future.
+
+    -->
+
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-multipart</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-json</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-annotation</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>net.tanesha.recaptcha4j</groupId>
+      <artifactId>recaptcha4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-spring</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-aop</artifactId>
+        </exclusion>
+
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-core</artifactId>
+        </exclusion>
+
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring</artifactId>
+        </exclusion>
+
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-beans</artifactId>
+        </exclusion>
+
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-context</artifactId>
+        </exclusion>
+
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-web</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -295,19 +391,6 @@
       <classifier>tests</classifier>
     </dependency>
 
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>jstl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.mail</groupId>
-      <artifactId>javax.mail</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -352,44 +435,6 @@
       <artifactId>spring-webmvc</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-spring</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-aop</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-beans</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-context</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-web</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>net.tanesha.recaptcha4j</groupId>
-      <artifactId>recaptcha4j</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
     </dependency>
@@ -408,26 +453,6 @@
     <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-multipart</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-spring</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -450,10 +475,6 @@
         </exclusion>
       </exclusions>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -509,11 +530,6 @@
       <artifactId>usergrid-java-client</artifactId>
       <version>0.0.3</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>12.0</version>
     </dependency>
   </dependencies>
 
