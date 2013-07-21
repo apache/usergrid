@@ -715,6 +715,12 @@
         <artifactId>usergrid-java-client</artifactId>
         <version>0.0.3</version>
       </dependency>
+
+      <dependency>
+        <groupId>net.sf.opencsv</groupId>
+        <artifactId>opencsv</artifactId>
+        <version>2.3</version>
+      </dependency>
     </dependencies>
 	</dependencyManagement>
 
@@ -838,6 +844,20 @@
                     </versionRange>
                     <goals>
                       <goal>install-file</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <versionRange>[2.0,)</versionRange>
+                    <goals>
+                      <goal>copy-dependencies</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
