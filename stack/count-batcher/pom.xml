@@ -30,12 +30,6 @@
   <dependencies>
     <dependency>
       <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.usergrid</groupId>
       <artifactId>usergrid-count-inserter</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -43,23 +37,16 @@
     <dependency>
       <groupId>com.yammer.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>2.0.2</version>
     </dependency>
 
     <dependency>
       <groupId>com.yammer.metrics</groupId>
       <artifactId>metrics-annotation</artifactId>
-      <version>2.0.2</version>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
     </dependency>
 
     <!-- Test and Logging Dependencies -->

@@ -19,11 +19,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>hector-core</artifactId>
-    </dependency>
-
     <!-- Test Dependencies -->
 
     <dependency>

@@ -119,17 +119,6 @@
 
     <dependency>
       <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>hector-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.usergrid</groupId>
       <artifactId>geocell</artifactId>
     </dependency>
 
@@ -152,15 +141,8 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <type>jar</type>
-    </dependency>
-
-    <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
-      <type>jar</type>
     </dependency>
 
     <dependency>
@@ -176,7 +158,6 @@
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
-      <type>jar</type>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
@@ -188,6 +169,11 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
     </dependency>
 
     <!-- SUN, Javax Package, and Other Commercial Dependencies -->
@@ -245,11 +231,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
       <exclusions>
@@ -293,11 +274,6 @@
     <dependency>
       <groupId>org.antlr</groupId>
       <artifactId>antlr-runtime</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
 
     <dependency>

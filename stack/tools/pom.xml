@@ -313,9 +313,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-
-      <!-- TODO - check if this really is compile scope -->
-      <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>

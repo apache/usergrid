@@ -336,9 +336,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-
-      <!-- TODO - check and see if this should be test scope instead of compile -->
-      <scope>compile</scope>
     </dependency>
 
     <dependency>
