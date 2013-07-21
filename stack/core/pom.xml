@@ -138,7 +138,6 @@
     <dependency>
       <groupId>org.apache.cassandra</groupId>
       <artifactId>cassandra-all</artifactId>
-      <scope>compile</scope>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
@@ -178,7 +177,6 @@
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
       <type>jar</type>
-      <scope>compile</scope>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
