@@ -143,7 +143,6 @@
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-rest</artifactId>
       <version>${project.version}</version>
-      <type>jar</type>
       <classifier>classes</classifier>
       <exclusions>
         <exclusion>
@@ -157,7 +156,6 @@
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-rest</artifactId>
       <version>${project.version}</version>
-      <type>jar</type>
       <classifier>compiled-jsp</classifier>
     </dependency>
 
@@ -231,7 +229,6 @@
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
-      <type>jar</type>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
