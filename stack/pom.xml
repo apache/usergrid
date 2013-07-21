@@ -25,6 +25,7 @@
     <jackson-version>1.9.9</jackson-version>
     <jclouds.version>1.5.0-beta.3</jclouds.version>
     <jersey-version>1.17</jersey-version>
+    <jetty.version>8.1.8.v20121106</jetty.version>
     <junit-version>4.10</junit-version>
     <log4j-version>1.2.16</log4j-version>
     <metrics-version>2.1.2</metrics-version>
@@ -32,6 +33,7 @@
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
     <snakeyaml-version>1.8</snakeyaml-version>
+    <tomcat-version>6.0.33</tomcat-version>
     <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
   </properties>
@@ -305,7 +307,31 @@
 				<version>${jersey-version}</version>
 			</dependency>
 
-			<dependency>
+      <dependency>
+        <groupId>com.sun.jersey.jersey-test-framework</groupId>
+        <artifactId>jersey-test-framework-external</artifactId>
+        <version>${jersey-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.sun.jersey.jersey-test-framework</groupId>
+        <artifactId>jersey-test-framework-core</artifactId>
+        <version>${jersey-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty.aggregate</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty.aggregate</groupId>
+        <artifactId>jetty-webapp</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+
+      <dependency>
 				<groupId>com.sun.mail</groupId>
 				<artifactId>javax.mail</artifactId>
 				<version>1.4.4</version>
@@ -683,9 +709,14 @@
         <artifactId>jclouds-slf4j</artifactId>
         <version>${jclouds.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.usergrid</groupId>
+        <artifactId>usergrid-java-client</artifactId>
+        <version>0.0.3</version>
+      </dependency>
     </dependencies>
 	</dependencyManagement>
-
 
 	<build>
     <pluginManagement>
