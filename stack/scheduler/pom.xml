@@ -10,50 +10,61 @@
   <artifactId>usergrid-scheduler</artifactId>
   <name>Usergrid Scheduler</name>
   <description>The scheduling framework for usergrid</description>
+
   <dependencies>
+
+    <!-- Usergrid Dependencies -->
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
-      <version>1.27</version>
     </dependency>
+
+    <!-- Test and Logging Dependencies -->
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-test-utils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+
     <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
@@ -61,6 +72,5 @@
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
-
   </dependencies>
 </project>
