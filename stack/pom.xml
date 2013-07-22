@@ -228,6 +228,12 @@
       <!-- Sun and Javax Package Dependencies -->
 
       <dependency>
+        <groupId>com.sun.jersey</groupId>
+        <artifactId>jersey-core</artifactId>
+        <version>${jersey-version}</version>
+      </dependency>
+
+      <dependency>
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-json</artifactId>
 				<version>${jersey-version}</version>
@@ -723,6 +729,12 @@
         <groupId>org.jclouds</groupId>
         <artifactId>jclouds-core</artifactId>
         <version>${jclouds.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>

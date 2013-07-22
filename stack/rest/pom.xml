@@ -198,21 +198,6 @@
       <artifactId>jstl</artifactId>
     </dependency>
 
-    <!--
-      TODO - AOK - Fix this!
-
-      Switching the order of two dependencies in a POM should not have any
-      effect. However when you switch the order of the two dependencies below
-      the build fails. This drove me nuts for a while but I found out that the
-      failures giving me a bad day were due to this anomaly. If place
-      jersey-json before the jersey-multipart then the build will fail.
-
-      Why the heck would that happen? Got to find out why because this could
-      point to other much more severe issues that could plague us in the
-      future.
-
-    -->
-
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-multipart</artifactId>
