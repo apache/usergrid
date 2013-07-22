@@ -255,14 +255,17 @@ public class OwnershipResourceTest extends RestContextTest {
   }
 
   @Test
-  public void contextualConnectionOwnershipNoCollectionName() {
+  public void contextualConnectionOwnershipGuestAccess() {
+
+    //set up full GET,PUT,POST,DELETE access for guests
+    context.application().collection("roles").entity("guest").collection("permissions").create(MapUtils.hashMap("permission", "get,put,post,delete:/**"));
+    
+
 
     // anonymous user
     context.clearUser();
 
-    TestUser user1 = new TestAppUser("testuser1@usergrid.org", "password", "testuser1@usergrid.org").create(context)
-        .login(context).makeActive(context);
-
+    
     JsonNode city = context.application().collection("cities").create(MapUtils.hashMap("name", "tempe"));
 
     String cityId = getEntity(city, 0).get("uuid").asText();
@@ -273,13 +276,6 @@ public class OwnershipResourceTest extends RestContextTest {
 
     String peaksId = getEntity(data, 0).get("uuid").asText();
 
-    // anonymous user
-    context.clearUser();
-
-    // create a restaurant and link it to user 2
-    TestUser user2 = new TestAppUser("testuser2@usergrid.org", "password", "testuser2@usergrid.org").create(context)
-        .login(context).makeActive(context);
-
     data = context.application().collection("cities").entity("tempe").connection("likes").collection("restaurants")
         .create(MapUtils.hashMap("name", "arrogantbutcher"));
 
@@ -287,7 +283,7 @@ public class OwnershipResourceTest extends RestContextTest {
 
     // now query on user 1.
 
-    Connection likeRestaurants = context.withUser(user1).application().collection("cities").entity("tempe")
+    Connection likeRestaurants = context.application().collection("cities").entity("tempe")
         .connection("likes");
 
     // check we can get it via id with no collection name

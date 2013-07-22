@@ -97,4 +97,8 @@ public class EntityResource extends ValueResource {
     return new Connection(name, this);
   }
   
+  public CustomCollection collection(String name){
+    return new CustomCollection(name, this);
+  }
+  
 }
