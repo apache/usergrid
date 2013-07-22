@@ -13,10 +13,32 @@
   <packaging>jar</packaging>
 
   <dependencies>
+
+    <!-- Usergrid Dependencies -->
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>hector-core</artifactId>
+    </dependency>
+
+    <!-- Apache Dependencies -->
+
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>cassandra-thrift</artifactId>
+    </dependency>
+
+    <!-- Codehaus and Other Org Dependencies -->
 
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
@@ -29,8 +51,15 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>hector-core</artifactId>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <!-- Testing and Logging Dependencies -->
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
 
     <dependency>

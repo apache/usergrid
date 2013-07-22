@@ -184,6 +184,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.cassandra</groupId>
+        <artifactId>cassandra-thrift</artifactId>
+        <version>${cassandra-version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.shiro</groupId>
         <artifactId>shiro-core</artifactId>
         <version>${shiro-version}</version>
@@ -406,6 +412,27 @@
         <groupId>org.usergrid</groupId>
         <artifactId>hector-core</artifactId>
         <version>${hector-version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>cassandra-thrift</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -1206,6 +1233,31 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>jdepend-maven-plugin</artifactId>
           <version>2.0-beta-2</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo.jspc</groupId>
+          <artifactId>jspc-maven-plugin</artifactId>
+          <version>2.0-alpha-3</version>
+          <configuration>
+            <includeInProject>false</includeInProject>
+            <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
+          </configuration>
+          <executions>
+            <execution>
+              <id>jspc</id>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.mojo.jspc</groupId>
+              <artifactId>jspc-compiler-tomcat6</artifactId>
+              <version>2.0-alpha-3</version>
+            </dependency>
+          </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>
