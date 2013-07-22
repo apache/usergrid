@@ -15,27 +15,51 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import static org.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
+import static org.usergrid.persistence.Schema.INDEX_CONNECTIONS;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
+import me.prettyprint.cassandra.serializers.DoubleSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+import me.prettyprint.hector.api.beans.AbstractComposite.Component;
+import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.IndexBucketLocator.IndexType;
+import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CursorCache;
+import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
+import org.usergrid.persistence.geo.GeocellUtils;
+import org.usergrid.persistence.geo.model.Point;
+import org.usergrid.persistence.geo.model.Tuple;
 import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.utils.UUIDUtils;
-
-import com.beoui.geocell.SearchResults;
-import com.beoui.geocell.model.Point;
 
 /**
  * Simple wrapper around list results until the geo library is updated so
@@ -46,31 +70,41 @@ import com.beoui.geocell.model.Point;
  */
 public class GeoIterator implements ResultIterator {
 
+  private static final Logger logger = LoggerFactory.getLogger(GeoIterator.class);
   /**
    * 
    */
   private static final String DELIM = "+";
+  private static final String TILE_DELIM = "TILE";
 
   private static final StringSerializer STR_SER = StringSerializer.get();
+
+  // The maximum *practical* geocell resolution.
+  public static final int MAX_GEOCELL_RESOLUTION = GeoIndexManager.MAX_RESOLUTION;
+
+  // The maximum number of geocells to consider for a bounding box search.
+  private static final int MAX_FEASIBLE_BBOX_SEARCH_CELLS = 300;
 
   private final GeoIndexSearcher searcher;
   private final int resultSize;
   private final QuerySlice slice;
-  private final LinkedHashMap<UUID, Integer> idOrder;
+  private final LinkedHashMap<UUID, EntityLocationRef> idOrder;
   private Set<UUID> toReturn;
 
   // set when parsing cursor. If the cursor has gone to the end, this will be
   // true, we should return no results
   private boolean done = false;
+  //
+  // private List<Double> distances;
 
-  private List<Double> distances;
-  
   /**
    * Moved and used as part of cursors
    */
-  private int nextResolution = GeoIndexManager.MAX_RESOLUTION;
-  private UUID startId;
-  private double cursorDistance;
+  // private int nextResolution = GeoIndexManager.MAX_RESOLUTION;
+  // private UUID startId;
+  // private double cursorDistance;
+  private EntityLocationRef last;
+  private List<String> lastCellsSearched;
 
   /**
    * 
@@ -79,7 +113,7 @@ public class GeoIterator implements ResultIterator {
     this.searcher = searcher;
     this.resultSize = resultSize;
     this.slice = slice;
-    this.idOrder = new LinkedHashMap<UUID, Integer>(resultSize);
+    this.idOrder = new LinkedHashMap<UUID, EntityLocationRef>(resultSize);
     parseCursor();
 
   }
@@ -112,68 +146,43 @@ public class GeoIterator implements ResultIterator {
     }
 
     idOrder.clear();
-    distances = new ArrayList<Double>(resultSize);
+    // distances = new ArrayList<Double>(resultSize);
 
-    int count = 0;
-    
-    /**
-     * we have to do some screwy logic for paging since it's distance based. A
-     * point could be the same distance, and then get cut off by a page. We need
-     * to discard results the have the same distance as the last one and an id
-     * <= to the last uuid
-     */
-    while (!done && idOrder.size() < resultSize) {
-      
-      SearchResults<EntityLocationRef> results;
-      
-      int queriedSize = resultSize - idOrder.size();
-      
-      //ask for 1 more record since we're going to discard the first one
-      if(startId != null){
-        queriedSize++;
-      }
+    // int count = 0;
 
-      try {
-        results = searcher.doSearch(cursorDistance, startId, nextResolution, queriedSize);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-      
-      List<EntityLocationRef> locations = results.getResults();
-      
-      List<Double> resultDistances = results.getDistances();
-      
-      nextResolution = results.getLastResolution();
-      
-      if(startId != null && locations.size() > 0 && startId.equals(locations.get(0).getUuid())){
-        locations.remove(0);
-        resultDistances.remove(0);
-      }
-            
-      for (int i = 0; i < locations.size(); i++) {
+    // SearchResults last = new SearchResults(entityLocations,
+    // lastSearchedGeoCells);
 
-        EntityLocationRef location = locations.get(i);
-        double distance = resultDistances.get(i);
-        UUID id = location.getUuid();
-        
+    SearchResults results;
 
-        idOrder.put(id, count);
-        distances.add(distance);
-        
-        startId = id;
-        cursorDistance = distance;
-        
-        count++;
-      }
+    try {
+      results = searcher.proximitySearch(last, lastCellsSearched, resultSize);
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to search geo locations", e);
+    }
+    // results = searcher.doSearch(last.getDistance(), last.getUuid(),
+    // nextResolution, queriedSize);
 
-     
-      if (locations.size() < queriedSize) {
-        done = true;
-      }
+    List<EntityLocationRef> locations = results.entityLocations;
 
-      
+    lastCellsSearched = results.lastSearchedGeoCells;
+
+    for (int i = 0; i < locations.size(); i++) {
+
+      EntityLocationRef location = locations.get(i);
+      UUID id = location.getUuid();
+
+      idOrder.put(id, location);
+      // distances.add(distance);
+
+      last = location;
+
+      // count++;
     }
 
+    if (locations.size() < resultSize) {
+      done = true;
+    }
 
     if (idOrder.size() > 0) {
       toReturn = idOrder.keySet();
@@ -216,9 +225,9 @@ public class GeoIterator implements ResultIterator {
    */
   @Override
   public void reset() {
-    distances = null;
     idOrder.clear();
-    nextResolution = GeoIndexManager.MAX_RESOLUTION;
+    lastCellsSearched = null;
+    last = null;
   }
 
   /*
@@ -229,25 +238,39 @@ public class GeoIterator implements ResultIterator {
    * org.usergrid.persistence.cassandra.CursorCache, java.util.UUID)
    */
   @Override
-  public void finalizeCursor(CursorCache cache, UUID lastValue) {
+  public void finalizeCursor(CursorCache cache, UUID uuid) {
 
-    Integer index = idOrder.get(lastValue);
+    EntityLocationRef location = idOrder.get(uuid);
 
-    if (index == null) {
+    if (location == null) {
       return;
     }
 
     int sliceHash = slice.hashCode();
 
     // get our next distance
-    double distance = distances.get(index);
+    double lattitude = location.getLatitude();
+
+    double longitude = location.getLongitude();
 
     // now create a string value for this
     StringBuilder builder = new StringBuilder();
 
-    builder.append(lastValue).append(DELIM);
-    builder.append(distance).append(DELIM);
-    builder.append(nextResolution);
+    builder.append(uuid).append(DELIM);
+    builder.append(lattitude).append(DELIM);
+    builder.append(longitude);
+
+    if (lastCellsSearched != null) {
+      builder.append(DELIM);
+
+      for (String geoCell : lastCellsSearched) {
+        builder.append(geoCell).append(TILE_DELIM);
+      }
+
+      int length = builder.length();
+
+      builder.delete(length - TILE_DELIM.length() - 1, length);
+    }
 
     ByteBuffer buff = STR_SER.toByteBuffer(builder.toString());
 
@@ -270,41 +293,379 @@ public class GeoIterator implements ResultIterator {
 
     String[] parts = string.split("\\" + DELIM);
 
-    if (parts.length != 3) {
-      throw new RuntimeException("Geo cursors must contain 3 parts.  Incorrect cursor, please execute the query again");
+    if (parts.length < 3) {
+      throw new RuntimeException(
+          "Geo cursors must contain 3 or more parts.  Incorrect cursor, please execute the query again");
     }
 
-    // discard the UUID for now
+    UUID startId = UUID.fromString(parts[0]);
+    double lattitude = Double.parseDouble(parts[1]);
+    double longtitude = Double.parseDouble(parts[2]);
 
-    // parse the double
-    startId = UUID.fromString(parts[0]);
-    cursorDistance = Double.parseDouble(parts[1]);
-    nextResolution = Integer.parseInt(parts[2]);
+    if (parts.length >= 4) {
+      String[] geoCells = parts[3].split(TILE_DELIM);
+
+      lastCellsSearched = Arrays.asList(geoCells);
+    }
+
+    last = new EntityLocationRef((String) null, startId, lattitude, longtitude);
+
   }
 
   public static abstract class GeoIndexSearcher {
 
-    protected GeoIndexManager geoIndexManager;
+    protected final EntityManagerImpl em;
     protected final Point searchPoint;
     protected final String propertyName;
-    protected final float distance;
+    protected final float maxDistance;
+    protected final float minDistance;
 
     /**
-     * @param geoIndexManager
+     * @param entityManager
      * @param pageSize
      * @param headEntity
      * @param searchPoint
      * @param propertyName
      * @param distance
      */
-    public GeoIndexSearcher(GeoIndexManager geoIndexManager, Point searchPoint, String propertyName, float distance) {
-      this.geoIndexManager = geoIndexManager;
+    public GeoIndexSearcher(EntityManagerImpl entityManager, Point searchPoint, String propertyName, float minDistance,
+        float maxDistance) {
+      this.em = entityManager;
       this.searchPoint = searchPoint;
       this.propertyName = propertyName;
-      this.distance = distance;
+      this.minDistance = minDistance;
+      this.maxDistance = maxDistance;
     }
 
-    abstract SearchResults<EntityLocationRef> doSearch(double minDistance, UUID startId, int resolution, int pageSize)
+    /**
+     * Perform a search from the center. The corresponding entities returned
+     * must be >= minDistance(inclusive) and < maxDistance (exclusive)
+     * 
+     * @param center
+     * @param maxResults
+     *          The maximum number of results to include
+     * @param minDistance
+     *          The minimum distance (inclusive)
+     * @param maxDistance
+     *          The maximum distance (exclusive)
+     * @param entityClass
+     *          The entity class
+     * @param baseQuery
+     *          The base query
+     * @param queryEngine
+     *          The query engine to use
+     * @param maxGeocellResolution
+     *          The max resolution to use when searching
+     * @return
+     * @throws Exception
+     */
+    public final SearchResults proximitySearch(final EntityLocationRef startResult, final List<String> geoCells,
+        final int maxResults) throws Exception {
+
+      List<EntityLocationRef> entityLocations = new ArrayList<EntityLocationRef>(maxResults);
+
+      // set our startresult if it's not set
+      EntityLocationRef minMatch = startResult;
+
+      if (minMatch == null) {
+        minMatch = new EntityLocationRef((String) null, UUIDUtils.MIN_TIME_UUID, searchPoint.getLat(),
+            searchPoint.getLon());
+        minMatch.calcDistance(searchPoint);
+      }
+
+      List<String> curGeocells = new ArrayList<String>();
+      String curContainingGeocell = null;
+
+      // we have some cells used from last time, re-use them
+      if (geoCells != null && geoCells.size() > 0) {
+        curGeocells.addAll(geoCells);
+        curContainingGeocell = geoCells.get(0);
+      }
+      // start at the bottom
+      else {
+
+        /*
+         * The currently-being-searched geocells. NOTES: Start with max
+         * possible. Must always be of the same resolution. Must always form a
+         * rectangular region. One of these must be equal to the
+         * cur_containing_geocell.
+         */
+        curContainingGeocell = GeocellUtils.compute(searchPoint, MAX_GEOCELL_RESOLUTION);
+        curGeocells.add(curContainingGeocell);
+      }
+
+      // Set of already searched cells
+      Set<String> searchedCells = new HashSet<String>();
+
+      List<String> curGeocellsUnique = null;
+
+      double closestPossibleNextResultDist = 0;
+
+      /*
+       * Assumes both a and b are lists of (entity, dist) tuples, *sorted by
+       * dist*. NOTE: This is an in-place merge, and there are guaranteed no
+       * duplicates in the resulting list.
+       */
+
+      int noDirection[] = { 0, 0 };
+      List<Tuple<int[], Double>> sortedEdgesDistances = Arrays.asList(new Tuple<int[], Double>(noDirection, 0d));
+      boolean done = false;
+      UUID lastReturned = null;
+
+      while (!curGeocells.isEmpty() && entityLocations.size() < maxResults) {
+        closestPossibleNextResultDist = sortedEdgesDistances.get(0).getSecond();
+        if (maxDistance > 0 && closestPossibleNextResultDist > maxDistance) {
+          break;
+        }
+
+        Set<String> curTempUnique = new HashSet<String>(curGeocells);
+        curTempUnique.removeAll(searchedCells);
+        curGeocellsUnique = new ArrayList<String>(curTempUnique);
+
+        Set<EntityLocationRef> queryResults = null;
+
+        // we need to keep searching everything in our tiles until we don't get
+        // any more results, then we'll have the closest points and can move on
+        // do the next tiles
+        do {
+          queryResults = doSearch(curGeocellsUnique, lastReturned, 1000);
+
+          if (logger.isDebugEnabled()) {
+            logger.debug("fetch complete for: {}", StringUtils.join(curGeocellsUnique, ", "));
+          }
+
+          searchedCells.addAll(curGeocells);
+
+          // Begin storing distance from the search result entity to the
+          // search center along with the search result itself, in a tuple.
+
+          // Merge new_results into results
+          for (EntityLocationRef entityLocation : queryResults) {
+
+            lastReturned = entityLocation.getUuid();
+
+            double distance = entityLocation.getDistance();
+
+            // discard, it's too close or too far
+            if (distance < minDistance || (maxDistance != 0 && distance > maxDistance)) {
+              continue;
+            }
+
+            int index = Collections.binarySearch(entityLocations, entityLocation);
+
+            // already in the index
+            if (index > -1) {
+              // check if it's the same point, if it is, skip it. Otherwise
+              // continue
+              // below
+              // set the insert index
+
+              if (entityLocations.get(index).equals(entityLocation)) {
+                continue;
+              }
+
+              index++;
+
+            } else {
+
+              // set the insert index
+              index = (index + 1) * -1;
+            }
+
+            // no point in adding it
+            if (index >= maxResults) {
+              continue;
+            }
+
+            // results.add(index, entity);
+            // distances.add(index, distance);
+            entityLocations.add(index, entityLocation);
+
+            /**
+             * Discard an additional entries as we iterate to avoid holding them
+             * all in ram
+             */
+            while (entityLocations.size() > maxResults) {
+              entityLocations.remove(entityLocations.size() - 1);
+            }
+
+          }
+
+        } while (queryResults != null && queryResults.size() > 0);
+        
+
+        /**
+         * We've searched everything and have a full set, we want to return the "current" tiles to search
+         * next time for the cursor, since cass could contain more results
+         */
+        if (done ||  entityLocations.size() == maxResults) {
+          break;
+        }
+
+        sortedEdgesDistances = GeocellUtils.distanceSortedEdges(curGeocells, searchPoint);
+
+        if (queryResults.size() == 0 || curGeocells.size() == 4) {
+          /*
+           * Either no results (in which case we optimize by not looking at
+           * adjacents, go straight to the parent) or we've searched 4 adjacent
+           * geocells, in which case we should now search the parents of those
+           * geocells.
+           */
+          curContainingGeocell = curContainingGeocell.substring(0, Math.max(curContainingGeocell.length() - 1, 0));
+          if (curContainingGeocell.length() == 0) {
+            // final check - top level tiles
+            curGeocells.clear();
+            String[] items = "0123456789abcdef".split("(?!^)");
+            for (String item : items)
+              curGeocells.add(item);
+            done = true;
+          }
+          else {
+            List<String> oldCurGeocells = new ArrayList<String>(curGeocells);
+            curGeocells.clear();
+            for (String cell : oldCurGeocells) {
+              if (cell.length() > 0) {
+                String newCell = cell.substring(0, cell.length() - 1);
+                if (!curGeocells.contains(newCell)) {
+                  curGeocells.add(newCell);
+                }
+              }
+            }
+          }
+
+        } else if (curGeocells.size() == 1) {
+          // Get adjacent in one direction.
+          // TODO(romannurik): Watch for +/- 90 degree latitude edge case
+          // geocells.
+          for (int i = 0; i < sortedEdgesDistances.size(); i++) {
+
+            int nearestEdge[] = sortedEdgesDistances.get(i).getFirst();
+            String edge = GeocellUtils.adjacent(curGeocells.get(0), nearestEdge);
+
+            // we're at the edge of the world, search in a different direction
+            if (edge == null) {
+              continue;
+            }
+
+            curGeocells.add(edge);
+            break;
+          }
+
+        } else if (curGeocells.size() == 2) {
+          // Get adjacents in perpendicular direction.
+          int nearestEdge[] = GeocellUtils.distanceSortedEdges(Arrays.asList(curContainingGeocell), searchPoint).get(0)
+              .getFirst();
+          int[] perpendicularNearestEdge = { 0, 0 };
+          if (nearestEdge[0] == 0) {
+            // Was vertical, perpendicular is horizontal.
+            for (Tuple<int[], Double> edgeDistance : sortedEdgesDistances) {
+              if (edgeDistance.getFirst()[0] != 0) {
+                perpendicularNearestEdge = edgeDistance.getFirst();
+                break;
+              }
+            }
+          } else {
+            // Was horizontal, perpendicular is vertical.
+            for (Tuple<int[], Double> edgeDistance : sortedEdgesDistances) {
+              if (edgeDistance.getFirst()[0] == 0) {
+                perpendicularNearestEdge = edgeDistance.getFirst();
+                break;
+              }
+            }
+          }
+          List<String> tempCells = new ArrayList<String>();
+          for (String cell : curGeocells) {
+            tempCells.add(GeocellUtils.adjacent(cell, perpendicularNearestEdge));
+          }
+          curGeocells.addAll(tempCells);
+        }
+
+        // We don't have enough items yet, keep searching.
+        if (entityLocations.size() < maxResults) {
+          logger.debug("{} results found but want {} results, continuing search.", entityLocations.size(), maxResults);
+          continue;
+        }
+
+        logger.debug("{} results found.", entityLocations.size());
+        
+       
+      }
+
+      // now we have our final sets, construct the results
+
+      return new SearchResults(entityLocations, curGeocells);
+    }
+
+    protected Set<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, UUID startId, int count)
+        throws Exception {
+
+      Set<EntityLocationRef> locations = new TreeSet<EntityLocationRef>();
+
+      List<Object> keys = new ArrayList<Object>();
+
+      IndexBucketLocator locator = em.getIndexBucketLocator();
+      UUID appId = em.getApplicationId();
+
+      for (String geoCell : curGeocellsUnique) {
+
+        // add buckets for each geoCell
+
+        for (String indexBucket : locator.getBuckets(appId, IndexType.GEO, geoCell)) {
+          keys.add(key(key, DICTIONARY_GEOCELL, geoCell, indexBucket));
+        }
+      }
+
+      CassandraService cass = em.getCass();
+      
+      
+      DynamicComposite composite = null;
+      
+      if(startId != null){
+       composite =  new DynamicComposite(startId);
+       setEqualityFlag(composite, ComponentEquality.GREATER_THAN_EQUAL);
+      }
+      
+      
+
+      Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass.multiGetColumns(
+          cass.getApplicationKeyspace(em.getApplicationId()), ENTITY_INDEX, keys, composite, null, count, false);
+
+      for (List<HColumn<ByteBuffer, ByteBuffer>> columns : rows.values()) {
+        addLocationIndexEntries(columns, locations, searchPoint);
+      }
+
+      return locations;
+
+    }
+
+    private static void addLocationIndexEntries(List<HColumn<ByteBuffer, ByteBuffer>> columns,
+        Set<EntityLocationRef> locations, Point search) {
+
+      if (columns == null) {
+        return;
+      }
+
+      EntityLocationRef location = null;
+
+      for (HColumn<ByteBuffer, ByteBuffer> column : columns) {
+        DynamicComposite composite = DynamicComposite.fromByteBuffer(column.getName());
+
+        UUID uuid = composite.get(0, UUIDSerializer.get());
+        String type = composite.get(1, StringSerializer.get());
+        UUID timestampUuid = composite.get(2, UUIDSerializer.get());
+        composite = DynamicComposite.fromByteBuffer(column.getValue());
+        Double latitude = composite.get(0, DoubleSerializer.get());
+        Double longitude = composite.get(1, DoubleSerializer.get());
+
+        location = new EntityLocationRef(type, uuid, timestampUuid, latitude, longitude);
+        location.calcDistance(search);
+
+        locations.add(location);
+
+      }
+    }
+
+    protected abstract Set<EntityLocationRef> doSearch(List<String> geoCells, UUID startId, int pageSize)
         throws Exception;
   }
 
@@ -319,9 +680,9 @@ public class GeoIterator implements ResultIterator {
     private final String collectionName;
     private final EntityRef headEntity;
 
-    public CollectionGeoSearch(GeoIndexManager geoIndexManager, EntityRef headEntity, String collectionName,
-        Point searchPoint, String propertyName, float distance) {
-      super(geoIndexManager, searchPoint, propertyName, distance);
+    public CollectionGeoSearch(EntityManagerImpl entityManager, EntityRef headEntity, String collectionName,
+        Point searchPoint, String propertyName, float minDistance, float maxDistance) {
+      super(entityManager, searchPoint, propertyName, minDistance, maxDistance);
       this.collectionName = collectionName;
       this.headEntity = headEntity;
     }
@@ -334,10 +695,10 @@ public class GeoIterator implements ResultIterator {
      * #doSearch()
      */
     @Override
-    public SearchResults<EntityLocationRef> doSearch(double minDistance, UUID startId, int resolution, int pageSize) throws Exception {
-      return geoIndexManager.proximitySearchCollection(headEntity, collectionName, propertyName, searchPoint,
-          minDistance, distance, startId, resolution, pageSize);
+    public Set<EntityLocationRef> doSearch(List<String> geoCells, UUID startId, int pageSize)
+        throws Exception {
 
+      return query(key(headEntity.getUuid(), collectionName, propertyName), geoCells, startId, pageSize);
     }
 
   }
@@ -352,9 +713,9 @@ public class GeoIterator implements ResultIterator {
 
     private final UUID connectionId;
 
-    public ConnectionGeoSearch(GeoIndexManager geoIndexManager, UUID connectionId, Point searchPoint,
-        String propertyName, float distance) {
-      super(geoIndexManager, searchPoint, propertyName, distance);
+    public ConnectionGeoSearch(EntityManagerImpl entityManager, UUID connectionId, Point searchPoint,
+        String propertyName, float minDistance, float maxDistance) {
+      super(entityManager, searchPoint, propertyName, minDistance, maxDistance);
 
       this.connectionId = connectionId;
     }
@@ -367,11 +728,28 @@ public class GeoIterator implements ResultIterator {
      * #doSearch()
      */
     @Override
-    public SearchResults<EntityLocationRef> doSearch(double minDistance,UUID startId, int resolution, int pageSize) throws Exception {
-      return geoIndexManager.proximitySearchConnections(connectionId, propertyName, searchPoint, minDistance, distance,
-          startId, resolution, pageSize);
+    public Set<EntityLocationRef> doSearch(List<String> geoCells, UUID startId, int pageSize)
+        throws Exception {
 
+      return query(key(connectionId, INDEX_CONNECTIONS, propertyName), geoCells, startId, pageSize);
     }
 
   }
+
+  private static class SearchResults {
+
+    private final List<EntityLocationRef> entityLocations;
+    private final List<String> lastSearchedGeoCells;
+
+    /**
+     * @param entityLocations
+     * @param curGeocells
+     */
+    public SearchResults(List<EntityLocationRef> entityLocations, List<String> lastSearchedGeoCells) {
+      this.entityLocations = entityLocations;
+      this.lastSearchedGeoCells = lastSearchedGeoCells;
+    }
+
+  }
+
 }

@@ -299,10 +299,10 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
-		<dependency>
+	<!-- 	<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>geocell</artifactId>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-core-asl</artifactId>
