@@ -214,6 +214,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>juli</artifactId>
+        <version>6.0.29</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
         <version>3.7</version>
@@ -793,6 +799,11 @@
           <exclusion>
             <artifactId>servlet-api</artifactId>
             <groupId>org.apache.tomcat</groupId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>juli</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

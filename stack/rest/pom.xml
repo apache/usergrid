@@ -354,14 +354,13 @@
     <dependency>
       <groupId>org.apache.tomcat</groupId>
       <artifactId>jasper</artifactId>
-      <version>${tomcat-version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>servlet-api</artifactId>
-          <groupId>org.apache.tomcat</groupId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>juli</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
