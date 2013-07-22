@@ -231,6 +231,12 @@
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-json</artifactId>
 				<version>${jersey-version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+          </exclusion>
+        </exclusions>
 			</dependency>
 
       <dependency>
@@ -439,6 +445,12 @@
         <groupId>org.hectorclient</groupId>
         <artifactId>hector-test</artifactId>
         <version>${hector-test-version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>cassandra-all</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -487,6 +499,12 @@
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-smile</artifactId>
         <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.jettison</groupId>
+        <artifactId>jettison</artifactId>
+        <version>1.2</version>
       </dependency>
 
       <dependency>
