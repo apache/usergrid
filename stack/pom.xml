@@ -202,6 +202,11 @@
 
         <exclusions>
           <exclusion>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+          </exclusion>
+
+          <exclusion>
             <artifactId>servlet-api</artifactId>
             <groupId>javax.servlet</groupId>
           </exclusion>
@@ -224,6 +229,11 @@
           <exclusion>
             <artifactId>commons-lang</artifactId>
             <groupId>commons-lang</groupId>
+          </exclusion>
+
+          <exclusion>
+            <artifactId>commons-cli</artifactId>
+            <groupId>commons-cli</groupId>
           </exclusion>
 
           <exclusion>
