@@ -869,6 +869,11 @@
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-core</artifactId>
           </exclusion>
+
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
@@ -983,6 +988,12 @@
         <groupId>com.netflix.curator</groupId>
         <artifactId>curator-recipes</artifactId>
         <version>1.2.6</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
 	</dependencyManagement>
