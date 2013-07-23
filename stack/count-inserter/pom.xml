@@ -62,6 +62,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.github.stephenc</groupId>
       <artifactId>jamm</artifactId>
       <scope>test</scope>
