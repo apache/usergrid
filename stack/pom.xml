@@ -877,7 +877,25 @@
         <artifactId>metrics-spring</artifactId>
         <version>${metrics-version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+          </exclusion>
 
+          <exclusion>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
