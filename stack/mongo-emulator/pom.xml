@@ -103,6 +103,7 @@
     </dependency>
 
     <dependency>
+      <!-- TODO - should not scope be 'test' ? -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>

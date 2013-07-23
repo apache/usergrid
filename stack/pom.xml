@@ -103,6 +103,12 @@
 				<groupId>commons-beanutils</groupId>
 				<artifactId>commons-beanutils</artifactId>
 				<version>1.8.3</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -139,6 +145,12 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-core</artifactId>
         <version>5.5.0</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -315,12 +327,6 @@
       </dependency>
 
       <dependency>
-        <groupId>jline</groupId>
-        <artifactId>jline</artifactId>
-        <version>0.9.94</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
         <version>3.0.3</version>
@@ -388,6 +394,12 @@
         <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
         <version>3.7</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -495,8 +507,7 @@
 				<groupId>com.sun.jersey.contribs</groupId>
 				<artifactId>jersey-spring</artifactId>
 				<version>${jersey-version}</version>
-				<exclusions>
-
+        <exclusions>
 					<exclusion>
 						<groupId>org.springframework</groupId>
 						<artifactId>spring-aop</artifactId>
@@ -560,18 +571,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.eclipse.jetty.aggregate</groupId>
-        <artifactId>jetty-server</artifactId>
-        <version>${jetty.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.eclipse.jetty.aggregate</groupId>
-        <artifactId>jetty-webapp</artifactId>
-        <version>${jetty.version}</version>
-      </dependency>
-
-      <dependency>
 				<groupId>com.sun.mail</groupId>
 				<artifactId>javax.mail</artifactId>
 				<version>1.4.4</version>
@@ -631,6 +630,18 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>12.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.yammer.metrics</groupId>
+        <artifactId>metrics-annotation</artifactId>
+        <version>${metrics-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.stephenc</groupId>
+        <artifactId>jamm</artifactId>
+        <version>0.2.5</version>
       </dependency>
 
       <!-- Third Party Non-Commercial Dependencies -->
@@ -792,6 +803,12 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
         <version>${org.springframework.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -822,6 +839,12 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
         <version>${org.springframework.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -840,6 +863,12 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-web</artifactId>
         <version>${org.springframework.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -900,15 +929,21 @@
       </dependency>
 
       <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-annotation</artifactId>
-        <version>${metrics-version}</version>
+        <groupId>jline</groupId>
+        <artifactId>jline</artifactId>
+        <version>0.9.94</version>
       </dependency>
 
       <dependency>
-        <groupId>com.github.stephenc</groupId>
-        <artifactId>jamm</artifactId>
-        <version>0.2.5</version>
+        <groupId>org.eclipse.jetty.aggregate</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty.aggregate</groupId>
+        <artifactId>jetty-webapp</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
 
       <!-- Mock, Testing and Logging Dependencies -->
@@ -953,7 +988,23 @@
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
 				<version>${log4j-version}</version>
-			</dependency>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>com.sun.jdmk</groupId>
+            <artifactId>jmxtools</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>com.sun.jmx</groupId>
+            <artifactId>jmxri</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
 			<dependency>
 				<groupId>org.perf4j</groupId>

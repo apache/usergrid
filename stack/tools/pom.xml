@@ -136,21 +136,25 @@
     <!-- Codehaus, Spring, and Other Org Dependencies -->
 
     <dependency>
+      <!-- TODO - should not scope be 'test' ? -->
       <groupId>org.hectorclient</groupId>
       <artifactId>hector-test</artifactId>
     </dependency>
 
     <dependency>
+      <!-- TODO - should not scope be 'test' ? -->
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
     </dependency>
 
     <dependency>
+      <!-- TODO - should not scope be 'test' ? -->
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
 
     <dependency>
+      <!-- TODO - should not scope be 'test' ? -->
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
     </dependency>
