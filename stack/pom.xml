@@ -157,12 +157,24 @@
         <groupId>org.apache.amber</groupId>
         <artifactId>amber-oauth2-common</artifactId>
         <version>${amber-version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>org.apache.amber</groupId>
         <artifactId>amber-oauth2-authzserver</artifactId>
         <version>${amber-version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
