@@ -165,6 +165,11 @@
     </dependency>
 
     <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>persistence-api</artifactId>
     </dependency>

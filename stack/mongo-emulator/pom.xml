@@ -91,10 +91,7 @@
 
     <!-- SUN, Javax Package and Other Com Dependencies -->
 
-    <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>persistence-api</artifactId>
-    </dependency>
+    <!-- -->
 
     <!-- Codehaus, Spring and Other Org Dependencies -->
 

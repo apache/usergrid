@@ -67,6 +67,11 @@
       <artifactId>commons-io</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+    </dependency>
+
     <!-- Spring and Other Dependencies -->
 
     <dependency>

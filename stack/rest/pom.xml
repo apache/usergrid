@@ -210,17 +210,7 @@
 
     <dependency>
       <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
       <artifactId>metrics-spring</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-annotation</artifactId>
     </dependency>
 
     <dependency>
