@@ -255,6 +255,16 @@
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
           </exclusion>
+
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
@@ -339,6 +349,16 @@
           <exclusion>
             <groupId>org.codehaus.jettison</groupId>
             <artifactId>jettison</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
           </exclusion>
         </exclusions>
 			</dependency>
@@ -503,6 +523,17 @@
         <groupId>de.undercouch</groupId>
         <artifactId>bson4jackson</artifactId>
         <version>1.1.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
