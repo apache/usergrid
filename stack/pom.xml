@@ -451,6 +451,16 @@
           </exclusion>
 
           <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-jaxrs</artifactId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-xc</artifactId>
+          </exclusion>
+
+          <exclusion>
             <groupId>javax.activation</groupId>
             <artifactId>activation</artifactId>
           </exclusion>
@@ -866,6 +876,9 @@
         <groupId>com.yammer.metrics</groupId>
         <artifactId>metrics-spring</artifactId>
         <version>${metrics-version}</version>
+        <exclusions>
+
+        </exclusions>
       </dependency>
 
       <dependency>
