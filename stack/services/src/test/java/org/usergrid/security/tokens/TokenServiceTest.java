@@ -259,6 +259,23 @@ public class TokenServiceTest {
         tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge + 1);
 
     }
+	@Test
+	public void appDefaultExpiration() throws Exception {
+
+		OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo", "foobar", "foobar",
+				"foo@bar.com", "foobar");
+		ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
+		EntityManager em = entityManagerFactory.getEntityManager(appInfo.getId());
+		Application app = em.getApplication();
+		AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+				UUIDUtils.newTimeUUID(), app.getUuid());
+		String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
+		assertNotNull(token);
+		TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+		assertNotNull(tokenInfo);
+		assertEquals(TokenServiceImpl.SHORT_TOKEN_AGE, tokenInfo.getDuration());
+
+	}
 
     @Test
     public void appExpiration() throws Exception {
