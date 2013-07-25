@@ -1,1 +1,13 @@
-java -jar target/usergrid-launcher-0.0.16-SNAPSHOT.jar
+#!/bin/bash
+
+# TODO make this a real script that can be executed from any directory
+
+VERSION=`grep '<parent>' -A 4 pom.xml | grep version | sed -e 's/ *<[\/]*version>//g'`
+JVM_OPTS='-Djava.library.path=/tmp -Dorg.xerial.snappy.tempdir=/tmp'
+
+if [ "$1" == "debug" ]; then
+  JVM_OPTS="$JVM_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+fi
+
+java -jar $JVM_OPTS target/usergrid-launcher-$VERSION.jar
+
