@@ -15,7 +15,7 @@ include '../autoloader.inc.php';
 $client = new Apigee\Usergrid\Client('yourorgname','sandbox');
 
 //reading data
-$books = $client->create_collection('books');
+$books = $client->get_collection('books');
 //do something with the data
 while ($books->has_next_entity()) {
 	$book = $books->get_next_entity();
