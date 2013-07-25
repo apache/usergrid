@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.collection;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,7 @@ import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.rest.RestContextTest;
 import org.usergrid.rest.test.resource.CustomCollection;
+import org.usergrid.rest.test.resource.app.CustomEntity;
 
 /**
  * Simple tests to test querying at the REST tier
@@ -62,20 +64,20 @@ public class PagingResourceTest extends RestContextTest {
     do {
 
       response = parse(things.get());
-      
-      for(Entity e: response.getEntities()){
+
+      for (Entity e : response.getEntities()) {
         assertTrue(entityItr.hasNext());
         assertEquals(entityItr.next().get("name"), e.getProperties().get("name").asText());
       }
 
       things = things.withCursor(response.getCursor());
     } while (response != null && response.getCursor() != null);
-    
-    //we paged them all
+
+    // we paged them all
     assertFalse(entityItr.hasNext());
 
   }
-  
+
   @Test
   public void startPaging() throws Exception {
 
@@ -94,33 +96,69 @@ public class PagingResourceTest extends RestContextTest {
 
     // now page them all
     ApiResponse response = null;
-    
+
     UUID start = null;
     int index = 0;
-   
 
     do {
 
       response = parse(things.get());
-      
-      
-      for(Entity e: response.getEntities()){
+
+      for (Entity e : response.getEntities()) {
         assertEquals(created.get(index).get("name"), e.getProperties().get("name").asText());
         index++;
       }
-      
-      //decrement since we'll get this one again
+
+      // decrement since we'll get this one again
       index--;
 
-      start = response.getEntities().get(response.getEntities().size()-1).getUuid();
-      
+      start = response.getEntities().get(response.getEntities().size() - 1).getUuid();
+
       things = things.withStart(start);
-    } while (response != null && response.getEntities().size() > 1 );
-    
-    //we paged them all
-    assertEquals(created.size()-1, index);
+    } while (response != null && response.getEntities().size() > 1);
+
+    // we paged them all
+    assertEquals(created.size() - 1, index);
 
   }
+
+  @Test
+  public void emptyQlandLimitIgnored() throws Exception {
+
+    CustomCollection things = context.application().collection("things");
+
+    Map<String, String> data = hashMap("name", "thing1");
+    JsonNode response = things.create(data);
+
+    JsonNode entity = getEntity(response, 0);
+
+    String uuid = entity.get("uuid").asText();
+
+    CustomEntity entityRequest = things.entity("thing1").withParam("ql", "").withParam("limit", "");
+    
+    JsonNode returnedEntity = getEntity(entityRequest.get(), 0);
+
+    assertEquals(entity, returnedEntity);
+    
+    entityRequest = things.entity(uuid).withParam("ql", "").withParam("limit", "");
+
+    returnedEntity = getEntity(entityRequest.get(), 0);
+
+    assertEquals(entity, returnedEntity);
+
+    // now do a delete
+    returnedEntity = getEntity(entityRequest.delete(), 0);
+
+    assertEquals(entity, returnedEntity);
+
+    // verify it's gone
+    returnedEntity = getEntity(things.entity(uuid).get(), 0);
+
+    assertNull(returnedEntity);
+
+  }
+  
+
 
   private static ObjectMapper mapper = new ObjectMapper();
 

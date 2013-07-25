@@ -314,7 +314,23 @@ public abstract class AbstractRestTest extends JerseyTest {
    * @return
    */
   protected JsonNode getEntity(JsonNode response, int index) {
-    return response.get("entities").get(index);
+    if(response == null){
+      return null;
+    }
+    
+    JsonNode entities = response.get("entities");
+    
+    if(entities == null){
+      return null;
+    }
+    
+    int size = entities.size();
+    
+    if(size <= index){
+      return null;
+    }
+    
+    return entities.get(index);
   }
 
   /**
