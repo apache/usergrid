@@ -273,15 +273,15 @@ public class TokenServiceTest {
 		assertNotNull(token);
 		TokenInfo tokenInfo = tokenService.getTokenInfo(token);
 		assertNotNull(tokenInfo);
-		assertEquals(TokenServiceImpl.SHORT_TOKEN_AGE, tokenInfo.getDuration());
+		assertEquals(TokenServiceImpl.LONG_TOKEN_AGE, tokenInfo.getDuration());
 
 	}
 
     @Test
     public void appExpiration() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo", "foobar", "foobar",
-                "foo@bar.com", "foobar");
+        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo2", "foobar2", "foobar",
+                "foo2@bar.com", "foobar");
 
         ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
 
