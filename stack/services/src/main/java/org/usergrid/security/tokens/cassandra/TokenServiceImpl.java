@@ -120,7 +120,7 @@ public class TokenServiceImpl implements TokenService {
 
     long maxPersistenceTokenAge = LONG_TOKEN_AGE;
 
-    Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS, SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
+    Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS, LONG_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
             .map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
 
     long maxAccessTokenAge = SHORT_TOKEN_AGE;
