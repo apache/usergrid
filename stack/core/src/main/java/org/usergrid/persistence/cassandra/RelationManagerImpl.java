@@ -2268,21 +2268,10 @@ public class RelationManagerImpl implements RelationManager {
     // we have something to search with, visit our tree and evaluate the
     // results
 
-    QueryProcessor qp = new QueryProcessor(query, collection);
-    SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
+    QueryProcessor qp = new QueryProcessor(query, collection, em);
+    SearchCollectionVisitor visitor = new SearchCollectionVisitor(qp);
 
-    return qp.getResults(em, visitor, getResultsLoader(query));
-  }
-
-  private ResultsLoader getResultsLoader(Query query) {
-    switch (query.getResultsLevel()) {
-      case IDS:
-        return new IDLoader();
-      case REFS:
-        return new ConnectionRefLoader(query.getEntityType());
-      default:
-        return new EntityResultsLoader(em);
-    }
+    return qp.getResults(visitor);
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
@@ -2479,10 +2468,10 @@ public class RelationManagerImpl implements RelationManager {
     ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(connectionType,
         connectedEntityType, null));
 
-    QueryProcessor qp = new QueryProcessor(query, null);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
+    QueryProcessor qp = new QueryProcessor(query, null, em);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
 
-    return qp.getResults(em, visitor, new EntityResultsLoader(em));
+    return qp.getResults(visitor);
   }
 
   @Override
@@ -2528,9 +2517,9 @@ public class RelationManagerImpl implements RelationManager {
      * @param query
      * @param collectionName
      */
-    public SearchCollectionVisitor(Query query, QueryProcessor queryProcessor, CollectionInfo collection) {
-      super(query, queryProcessor);
-      this.collection = collection;
+    public SearchCollectionVisitor(QueryProcessor queryProcessor) {
+      super(queryProcessor);
+      this.collection = queryProcessor.getCollectionInfo();
     }
 
     /*
@@ -2639,8 +2628,8 @@ public class RelationManagerImpl implements RelationManager {
      * @param query
      * @param collectionName
      */
-    public SearchConnectionVisitor(Query query, QueryProcessor queryProcessor, ConnectionRefImpl connection) {
-      super(query, queryProcessor);
+    public SearchConnectionVisitor(QueryProcessor queryProcessor, ConnectionRefImpl connection) {
+      super(queryProcessor);
       this.connection = connection;
     }
 

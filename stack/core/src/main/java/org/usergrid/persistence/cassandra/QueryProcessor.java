@@ -48,8 +48,7 @@ import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
-import org.usergrid.persistence.query.ir.result.ResultIterator;
-import org.usergrid.persistence.query.ir.result.ResultsLoader;
+import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
@@ -82,8 +81,9 @@ public class QueryProcessor {
   private int size;
   private Query query;
   private int pageSizeHint;
+  private EntityManager em;
 
-  public QueryProcessor(Query query, CollectionInfo collectionInfo) throws PersistenceException {
+  public QueryProcessor(Query query, CollectionInfo collectionInfo, EntityManager em) throws PersistenceException {
     this.sorts = query.getSortPredicates();
     this.cursorCache = new CursorCache(query.getCursor());
     this.rootOperand = query.getRootOperand();
@@ -91,7 +91,16 @@ public class QueryProcessor {
     this.size = query.getLimit();
     this.collectionInfo = collectionInfo;
     this.query = query;
+    this.em = em;
     process();
+  }
+
+  public Query getQuery() {
+    return query;
+  }
+
+  public CollectionInfo getCollectionInfo() {
+    return collectionInfo;
   }
 
   private void process() throws PersistenceException {
@@ -215,7 +224,7 @@ public class QueryProcessor {
    * @return
    * @throws Exception 
    */
-  public Results getResults(EntityManager em, SearchVisitor visitor, ResultsLoader loader) throws Exception {
+  public Results getResults(SearchVisitor visitor) throws Exception {
     // if we have no order by just load the results
 
     if (rootNode == null) {
@@ -243,7 +252,8 @@ public class QueryProcessor {
         itr.finalizeCursor(resultsCursor, entityIds.get(resultSize-1));
       }
     }
-    
+
+    ResultsLoader loader = getResultsLoader(em, query);
     Results results = loader.getResults(entityIds);
     
     if (results == null) {
@@ -260,7 +270,17 @@ public class QueryProcessor {
 
   }
 
- 
+  private ResultsLoader getResultsLoader(EntityManager em, Query query) {
+    switch (query.getResultsLevel()) {
+      case IDS:
+        return new IDLoader();
+      case REFS:
+        return new ConnectionRefLoader(query.getEntityType());
+      default:
+        return new EntityResultsLoader(em);
+    }
+  }
+
   private class TreeEvaluator implements QueryVisitor {
 
     // stack for nodes that will be used to construct the tree and create
