@@ -27,13 +27,17 @@ import org.usergrid.locking.exception.UGLockException;
  */
 public class SingleNodeLockImpl implements Lock {
 
-  private ReentrantLock lock;
+  private final String lockPath;
+  private final ReentrantLock lock;
+  private final SingleNodeLockManagerImpl lockManager;
   
   /**
    * 
    */
-  public SingleNodeLockImpl(ReentrantLock lock) {
+  public SingleNodeLockImpl(String lockPath, ReentrantLock lock, SingleNodeLockManagerImpl lockManager) {
+    this.lockPath = lockPath;
     this.lock = lock;
+    this.lockManager = lockManager; 
   }
 
  
@@ -64,6 +68,7 @@ public class SingleNodeLockImpl implements Lock {
   @Override
   public void unlock() throws UGLockException {
     this.lock.unlock();
+    this.lockManager.cleanup(lockPath);
   }
 
 }

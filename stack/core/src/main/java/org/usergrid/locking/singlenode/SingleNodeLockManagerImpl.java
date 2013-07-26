@@ -17,6 +17,7 @@ package org.usergrid.locking.singlenode;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.usergrid.locking.Lock;
@@ -30,13 +31,13 @@ import org.usergrid.locking.exception.UGLockException;
  */
 public class SingleNodeLockManagerImpl implements LockManager {
 
-  private final HashMap<String, ReentrantLock> globalLocks;
+  private final ConcurrentHashMap<String, ReentrantLock> globalLocks;
 
   /**
    * Default constructor.
    */
   public SingleNodeLockManagerImpl() {
-    globalLocks = new HashMap<String, ReentrantLock>();
+    globalLocks = new ConcurrentHashMap<String, ReentrantLock>();
   }
 
 
@@ -58,23 +59,30 @@ public class SingleNodeLockManagerImpl implements LockManager {
     
 
     if (lock == null) {
-      synchronized (this) {
-        // Check in the Global collection in case someone else owns it.
-        lock = globalLocks.get(lockPath);
-
-        if (lock == null) {
-          // if lock does not exist, null is return but intermediateLock
-          // is added to the map.
-          lock = new ReentrantLock();
-          globalLocks.put(lockPath, lock);
-        }
+      lock = new ReentrantLock();
+      ReentrantLock previous = globalLocks.putIfAbsent(lockPath, lock);
+     
+      if(previous != null){
+        lock = previous;
       }
     }
 
     // So at this point, the lock was added to the threadLocal collection as
     // well as
     // the general collection.
-    return new SingleNodeLockImpl(lock);
+    return new SingleNodeLockImpl(lockPath, lock, this);
+  }
+  
+  public void cleanup(String lockPath){
+    ReentrantLock lock = globalLocks.get(lockPath);
+    
+    if(!lock.hasQueuedThreads()){
+      globalLocks.remove(lock);
+    }
+  }
+  
+  public boolean lockExists(String lockPath){
+    return globalLocks.containsKey(lockPath);
   }
 
 }
