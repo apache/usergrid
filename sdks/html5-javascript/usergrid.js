@@ -190,7 +190,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
  *
  *  @method buildAssetURL
  *  @public
- *  @params {string} endpoint
+ *  @params {string} uuid
  *  @return {string} assetURL
  */
  Usergrid.Client.prototype.buildAssetURL = function(uuid) {
