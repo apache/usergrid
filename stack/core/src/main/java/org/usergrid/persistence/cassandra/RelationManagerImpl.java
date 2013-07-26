@@ -135,13 +135,15 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleCollectionRef;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.SimpleRoleRef;
-import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.entities.Group;
+import org.usergrid.persistence.geo.CollectionGeoSearch;
+import org.usergrid.persistence.geo.ConnectionGeoSearch;
+import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.persistence.query.ir.AllNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
@@ -2608,9 +2610,8 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      GeoIterator itr = new GeoIterator(new GeoIterator.CollectionGeoSearch(em, headEntity,
-          collection.getName(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
-          0, node.getDistance()), query.getLimit(), slice);
+      GeoIterator itr = new GeoIterator(new CollectionGeoSearch(em,indexBucketLocator, cass, headEntity,
+          collection.getName()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance());
 
       results.push(itr);
     }
@@ -2690,9 +2691,8 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      GeoIterator itr = new GeoIterator(new GeoIterator.ConnectionGeoSearch(em,
-          connection.getIndexId(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
-          0, node.getDistance()), query.getLimit(), slice);
+      GeoIterator itr = new GeoIterator(new ConnectionGeoSearch(em, indexBucketLocator, cass,
+          connection.getIndexId()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance());
 
       results.push(itr);
     }
