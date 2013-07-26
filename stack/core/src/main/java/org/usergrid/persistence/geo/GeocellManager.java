@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.geo.model.BoundingBox;
 import org.usergrid.persistence.geo.model.CostFunction;
 import org.usergrid.persistence.geo.model.DefaultCostFunction;
@@ -90,7 +91,7 @@ import org.usergrid.persistence.geo.model.Point;
 public class GeocellManager {
 
     // The maximum *practical* geocell resolution.
-    public static final int MAX_GEOCELL_RESOLUTION = 13;
+    public static final int MAX_GEOCELL_RESOLUTION = GeoIndexManager.MAX_RESOLUTION;
 
     // The maximum number of geocells to consider for a bounding box search.
     private static final int MAX_FEASIBLE_BBOX_SEARCH_CELLS = 300;

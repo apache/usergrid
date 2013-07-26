@@ -12,19 +12,14 @@ and limitations under the License.
  */
 package org.usergrid.persistence.geo;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.Id;
-
 import org.usergrid.persistence.geo.comparator.DoubleTupleComparator;
 import org.usergrid.persistence.geo.model.BoundingBox;
-import org.usergrid.persistence.geo.model.LocationCapable;
 import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.persistence.geo.model.Tuple;
 
@@ -559,80 +554,5 @@ public final class GeocellUtils {
     result.add(new Tuple<int[], Double>(EAST, distance(new Point(point.getLat(), maxEast), point)));
     Collections.sort(result, new DoubleTupleComparator());
     return result;
-  }
-
-  public static String getKeyString(Object entity) {
-    if (entity instanceof LocationCapable) {
-      return ((LocationCapable) entity).getKeyString();
-    }
-
-    Field field = getField(entity.getClass(), Id.class);
-    
-
-    try {
-      return field.get(entity).toString();
-    } catch (IllegalArgumentException e) {
-      // TODO Auto-generated catch block
-      return null;
-    } catch (IllegalAccessException e) {
-      // TODO Auto-generated catch block
-      return null;
-    }
-  }
-  
-  @SuppressWarnings("unchecked")
-  public static <C extends Object> Comparable<C> getKey(Object entity) {
-    Field field = getField(entity.getClass(), Id.class);
-    
-
-    try {
-      return (Comparable<C>) field.get(entity);
-    } catch (IllegalArgumentException e) {
-      // TODO Auto-generated catch block
-      return null;
-    } catch (IllegalAccessException e) {
-      // TODO Auto-generated catch block
-      return null;
-    }
-  }
-
-  private static Field getField(Class<?> type, Class<? extends Annotation> annotation) {
-    for (Field field : type.getDeclaredFields()) {
-      if (field.isAnnotationPresent(annotation)) {
-        try {
-          field.setAccessible(true);
-          return field;
-        } catch (IllegalArgumentException e) {
-          // TODO Auto-generated catch block
-          return null;
-        }
-      }
-    }
-
-    Class<?> superClass = type.getSuperclass();
-    if (superClass != null) {
-      return getField(superClass, annotation);
-    }
-
-    return null;
-  }
-
-  public static Point getLocation(Object entity) {
-    if (entity instanceof LocationCapable) {
-      return ((LocationCapable) entity).getLocation();
-    }
-
-    Point location = new Point();
-
-
-    return location;
-  }
-
-  public static String getGeocellsFieldName(Class<?> type) {
-    if (LocationCapable.class.isAssignableFrom(type)) {
-      return "geocells";
-    }
-    
-    return null;
   }
 }
