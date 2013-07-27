@@ -71,68 +71,7 @@ public class GeoIndexManager {
     this.cass = em.getCass();
     return this;
   }
-
-  // public SearchResults<EntityLocationRef> proximitySearchCollection(final
-  // EntityRef headEntity, final String collectionName,
-  // final String propertyName, Point center, double minDistance, double
-  // maxDistance, final UUID startId, final int resolution, final int count)
-  // throws Exception {
-  //
-  // GeocellQueryEngine gqe = new GeocellQueryEngine() {
-  // @SuppressWarnings("unchecked")
-  // @Override
-  // public <T> List<T> query(GeocellQuery baseQuery, List<String>
-  // curGeocellsUnique, Class<T> entityClass) {
-  // try {
-  // return (List<T>) GeoIndexManager.this.query(key(headEntity.getUuid(),
-  // collectionName, propertyName),
-  // curGeocellsUnique, startId, count);
-  // } catch (Exception e) {
-  // throw new RuntimeException(e);
-  // }
-  // }
-  // };
-  //
-  // return doSearch(center, minDistance, maxDistance, gqe, count, resolution);
-  // }
-
-  // public SearchResults<EntityLocationRef> proximitySearchConnections(final
-  // UUID connectionIndexId, final String propertyName,
-  // Point center, double minDistance, double maxDistance, final UUID startId,
-  // final int resolution, final int count )
-  // throws Exception {
-  //
-  // GeocellQueryEngine gqe = new GeocellQueryEngine() {
-  // @SuppressWarnings("unchecked")
-  // @Override
-  // public <T> List<T> query(GeocellQuery baseQuery, List<String>
-  // curGeocellsUnique, Class<T> entityClass) {
-  // try {
-  // return (List<T>) GeoIndexManager.this.query(key(connectionIndexId,
-  // INDEX_CONNECTIONS, propertyName),
-  // curGeocellsUnique, startId, count);
-  // } catch (Exception e) {
-  // throw new RuntimeException(e);
-  // }
-  // }
-  // };
-  //
-  // return doSearch(center, minDistance, maxDistance, gqe, count, resolution) ;
-  // }
-
-  // private SearchResults<EntityLocationRef> doSearch(Point center, double
-  // minDistance, double maxDistance, GeocellQueryEngine gqe, int count, int
-  // resolution) throws Exception {
-  // SearchResults<EntityLocationRef> locations = null;
-  //
-  // GeocellQuery baseQuery = new GeocellQuery();
-  //
-  // locations = GeocellManager.proximitySearch(center, count, minDistance,
-  // maxDistance, EntityLocationRef.class, baseQuery, gqe,resolution);
-  //
-  // return locations;
-  // }
-
+  
   public static Mutator<ByteBuffer> addLocationEntryInsertionToMutator(Mutator<ByteBuffer> m, Object key,
       EntityLocationRef entry) {
 
