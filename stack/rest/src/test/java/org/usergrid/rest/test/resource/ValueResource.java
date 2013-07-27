@@ -15,7 +15,9 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
@@ -32,6 +34,9 @@ public abstract class ValueResource extends NamedResource {
   private String query;
   private String cursor;
   private UUID start;
+  
+  private Map<String, String> customParams;
+  
 
   public ValueResource(String name, NamedResource parent) {
     super(parent);
@@ -126,6 +131,18 @@ public abstract class ValueResource extends NamedResource {
     return (T) this;
   }
   
+
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withParam(String name, String value){
+    if(customParams == null){
+      customParams = new HashMap<String, String>();
+    }
+    
+    customParams.put(name,  value);
+    
+    return (T) this;
+  }
+  
   
   
   /**
@@ -152,7 +169,42 @@ public abstract class ValueResource extends NamedResource {
       resource = resource.queryParam("start", start.toString());
     }
 
+    
+    if(customParams != null){
+      for(Entry<String, String> param : customParams.entrySet()){
+        resource = resource.queryParam(param.getKey(), param.getValue());
+      }
+    }
+    
     return jsonMedia(resource).get(JsonNode.class);
+  }
+  
+
+  /**
+   * Get entities in this collection. Cursor is optional
+   * 
+   * @param query
+   * @param cursor
+   * @return
+   */
+  protected JsonNode deleteInternal() {
+
+    
+    WebResource resource = withParams(withToken(resource()));
+    
+    if(query != null){
+      resource = resource.queryParam("ql", query);
+    }
+
+    if (cursor != null) {
+      resource = resource.queryParam("cursor", cursor);
+    }
+    
+    if(start != null){
+      resource = resource.queryParam("start", start.toString());
+    }
+
+    return jsonMedia(resource).delete(JsonNode.class);
   }
   
 

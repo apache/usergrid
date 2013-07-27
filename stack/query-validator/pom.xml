@@ -9,11 +9,9 @@
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <bundle.symbolicName>org.usergrid.query-validator</bundle.symbolicName>
-        <bundle.namespace>org.usergrid</bundle.namespace>
     </properties>
     <artifactId>usergrid-query-validator</artifactId>
-    <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+    <name>Usergrid Query Validator</name>
     <description>Query validator tools for Usergrid system.</description>
     <packaging>jar</packaging>
     <reporting>

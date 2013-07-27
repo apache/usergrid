@@ -78,6 +78,10 @@ public class EntityResource extends ValueResource {
     }
   }
   
+  public JsonNode delete(){
+    return deleteInternal();
+  }
+  
   
   public JsonNode post(Map<String, ? > data){
     return postInternal(data);
@@ -91,6 +95,10 @@ public class EntityResource extends ValueResource {
   
   public Connection connection(String name){
     return new Connection(name, this);
+  }
+  
+  public CustomCollection collection(String name){
+    return new CustomCollection(name, this);
   }
   
 }

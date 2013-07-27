@@ -120,7 +120,7 @@ public class TokenServiceImpl implements TokenService {
 
     long maxPersistenceTokenAge = LONG_TOKEN_AGE;
 
-    Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS, SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
+    Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS, LONG_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
             .map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
 
     long maxAccessTokenAge = SHORT_TOKEN_AGE;
@@ -211,7 +211,7 @@ public class TokenServiceImpl implements TokenService {
     public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
             Map<String, Object> state, long duration) throws Exception {
 
-        long maxTokenTtl = getMaxTtl(principal);
+        long maxTokenTtl = getMaxTtl(tokenCategory, principal);
 
         if (duration > maxTokenTtl) {
             throw new IllegalArgumentException(String.format(
@@ -247,7 +247,7 @@ public class TokenServiceImpl implements TokenService {
             if (tokenInfo != null) {
                 long now = currentTimeMillis();
 
-                long maxTokenTtl = getMaxTtl(tokenInfo.getPrincipal());
+                long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String( token ), tokenInfo.getPrincipal());
 
                 Mutator<UUID> batch = createMutator(cassandra.getSystemKeyspace(), UUIDSerializer.get());
 
@@ -278,20 +278,20 @@ public class TokenServiceImpl implements TokenService {
      * @return
      * @throws Exception
      */
-    private long getMaxTtl(AuthPrincipalInfo principal) throws Exception {
+    private long getMaxTtl(TokenCategory tokenCategory, AuthPrincipalInfo principal) throws Exception {
 
         if (principal == null) {
             return maxPersistenceTokenAge;
         }
-
+		long defaultMaxTtlForTokenType = getExpirationForTokenType( tokenCategory );
         Application application = emf.getEntityManager(principal.getApplicationId()).get(principal.getApplicationId(), Application.class);
 
         if (application == null) {
-            return maxPersistenceTokenAge;
+            return defaultMaxTtlForTokenType;
         }
 
         // set the max to the default
-        long maxTokenTtl = maxPersistenceTokenAge;
+        long maxTokenTtl = defaultMaxTtlForTokenType;
 
         // it's been defined on the expiration, override it
         if (application.getAccesstokenttl() != null) {
