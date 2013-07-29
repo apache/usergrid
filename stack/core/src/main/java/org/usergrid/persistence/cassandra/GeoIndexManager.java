@@ -17,7 +17,6 @@ package org.usergrid.persistence.cassandra;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.commons.lang.math.NumberUtils.toDouble;
 import static org.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
 import static org.usergrid.persistence.Schema.INDEX_CONNECTIONS;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -25,26 +24,13 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addIn
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.logBatchOperation;
-import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
-import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
-import javax.persistence.Id;
-
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.DoubleSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -55,17 +41,9 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Results;
-import org.usergrid.persistence.Results.Level;
-import org.usergrid.utils.UUIDUtils;
-
-import com.beoui.geocell.GeocellManager;
-import com.beoui.geocell.GeocellQueryEngine;
-import com.beoui.geocell.SearchResults;
-import com.beoui.geocell.annotations.Latitude;
-import com.beoui.geocell.annotations.Longitude;
-import com.beoui.geocell.model.GeocellQuery;
-import com.beoui.geocell.model.Point;
+import org.usergrid.persistence.geo.EntityLocationRef;
+import org.usergrid.persistence.geo.GeocellManager;
+import org.usergrid.persistence.geo.model.Point;
 
 public class GeoIndexManager {
 
@@ -81,159 +59,6 @@ public class GeoIndexManager {
    */
   public static final int MAX_RESOLUTION = 9;
 
-  public static class EntityLocationRef implements EntityRef {
-
-    @Id
-    private UUID uuid;
-
-    private String type;
-
-    private UUID timestampUuid = UUIDUtils.newTimeUUID();
-
-    @Latitude
-    private double latitude;
-
-    @Longitude
-    private double longitude;
-
-    public EntityLocationRef() {
-    }
-
-    public EntityLocationRef(EntityRef entity, double latitude, double longitude) {
-      this(entity.getType(), entity.getUuid(), latitude, longitude);
-    }
-
-    public EntityLocationRef(String type, UUID uuid, double latitude, double longitude) {
-      this.type = type;
-      this.uuid = uuid;
-      this.latitude = latitude;
-      this.longitude = longitude;
-    }
-
-    public EntityLocationRef(EntityRef entity, UUID timestampUuid, double latitude, double longitude) {
-      this(entity.getType(), entity.getUuid(), timestampUuid, latitude, longitude);
-    }
-
-    public EntityLocationRef(String type, UUID uuid, UUID timestampUuid, double latitude, double longitude) {
-      this.type = type;
-      this.uuid = uuid;
-      this.timestampUuid = timestampUuid;
-      this.latitude = latitude;
-      this.longitude = longitude;
-    }
-
-    public EntityLocationRef(EntityRef entity, UUID timestampUuid, String coord) {
-      this.type = entity.getType();
-      this.uuid = entity.getUuid();
-      this.timestampUuid = timestampUuid;
-      this.latitude = toDouble(stringOrSubstringBeforeFirst(coord, ','));
-      this.longitude = toDouble(stringOrSubstringAfterLast(coord, ','));
-    }
-
-    @Override
-    public UUID getUuid() {
-      return uuid;
-    }
-
-    public void setUuid(UUID uuid) {
-      this.uuid = uuid;
-    }
-
-    @Override
-    public String getType() {
-      return type;
-    }
-
-    public void setType(String type) {
-      this.type = type;
-    }
-
-    public UUID getTimestampUuid() {
-      return timestampUuid;
-    }
-
-    public void setTimestampUuid(UUID timestampUuid) {
-      this.timestampUuid = timestampUuid;
-    }
-
-    public double getLatitude() {
-      return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-      this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-      return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-      this.longitude = longitude;
-    }
-
-    public Point getPoint() {
-      return new Point(latitude, longitude);
-    }
-
-    public DynamicComposite getColumnName() {
-      return new DynamicComposite(uuid, type, timestampUuid);
-    }
-
-    public DynamicComposite getColumnValue() {
-      return new DynamicComposite(latitude, longitude);
-    }
-
-    public long getTimestampInMicros() {
-      return UUIDUtils.getTimestampInMicros(timestampUuid);
-    }
-
-    public long getTimestampInMillis() {
-      return UUIDUtils.getTimestampInMillis(timestampUuid);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((type == null) ? 0 : type.hashCode());
-      result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
-      return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      EntityLocationRef other = (EntityLocationRef) obj;
-      if (type == null) {
-        if (other.type != null)
-          return false;
-      } else if (!type.equals(other.type))
-        return false;
-      if (uuid == null) {
-        if (other.uuid != null)
-          return false;
-      } else if (!uuid.equals(other.uuid))
-        return false;
-      return true;
-    }
-
-  }
 
   EntityManagerImpl em;
   CassandraService cass;
@@ -246,112 +71,7 @@ public class GeoIndexManager {
     this.cass = em.getCass();
     return this;
   }
-
-  public static void addLocationIndexEntries(List<HColumn<ByteBuffer, ByteBuffer>> columns,
-      Set<EntityLocationRef> locations) {
-    if (columns != null) {
-      EntityLocationRef prevEntry = null;
-      for (HColumn<ByteBuffer, ByteBuffer> column : columns) {
-        DynamicComposite composite = DynamicComposite.fromByteBuffer(column.getName());
-        UUID uuid = composite.get(0, UUIDSerializer.get());
-        String type = composite.get(1, StringSerializer.get());
-        UUID timestampUuid = composite.get(2, UUIDSerializer.get());
-        composite = DynamicComposite.fromByteBuffer(column.getValue());
-        Double latitude = composite.get(0, DoubleSerializer.get());
-        Double longitude = composite.get(1, DoubleSerializer.get());
-        if ((prevEntry != null) && uuid.equals(prevEntry.getUuid())) {
-          prevEntry.setLatitude(latitude);
-          prevEntry.setLongitude(longitude);
-        } else {
-          prevEntry = new EntityLocationRef(type, uuid, timestampUuid, latitude, longitude);
-          locations.add(prevEntry);
-        }
-      }
-    }
-  }
-
-  public ArrayList<EntityLocationRef> query(Object key, List<String> curGeocellsUnique, UUID startId, int count) throws Exception {
-
-    Set<EntityLocationRef> locations = new LinkedHashSet<EntityLocationRef>();
-
-    List<Object> keys = new ArrayList<Object>();
-
-    IndexBucketLocator locator = em.getIndexBucketLocator();
-    UUID appId = em.getApplicationId();
-
-    for (String geoCell : curGeocellsUnique) {
-
-      // add buckets for each geoCell
-
-      for (String indexBucket : locator.getBuckets(appId, IndexType.GEO, geoCell)) {
-        keys.add(key(key, DICTIONARY_GEOCELL, geoCell, indexBucket));
-      }
-    }
-    
-    
-    DynamicComposite composite = startId == null ? null : new DynamicComposite(startId);
-
-    Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass.multiGetColumns(
-        cass.getApplicationKeyspace(em.getApplicationId()), ENTITY_INDEX, keys, composite, null, count, false);
-
-    for (List<HColumn<ByteBuffer, ByteBuffer>> columns : rows.values()) {
-      addLocationIndexEntries(columns, locations);
-    }
-
-    return new ArrayList<EntityLocationRef>(locations);
-    
-  }
-
-  public SearchResults<EntityLocationRef> proximitySearchCollection(final EntityRef headEntity, final String collectionName,
-      final String propertyName, Point center, double minDistance, double maxDistance,  final UUID startId, final int resolution, final int count) throws Exception {
-
-    GeocellQueryEngine gqe = new GeocellQueryEngine() {
-      @SuppressWarnings("unchecked")
-      @Override
-      public <T> List<T> query(GeocellQuery baseQuery, List<String> curGeocellsUnique, Class<T> entityClass) {
-        try {
-          return (List<T>) GeoIndexManager.this.query(key(headEntity.getUuid(), collectionName, propertyName),
-              curGeocellsUnique, startId, count);
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
-
-    return doSearch(center, minDistance, maxDistance, gqe, count, resolution);
-  }
-
-  public SearchResults<EntityLocationRef> proximitySearchConnections(final UUID connectionIndexId, final String propertyName,
-      Point center,  double minDistance, double maxDistance,  final UUID startId, final int resolution, final int count )
-      throws Exception {
-
-    GeocellQueryEngine gqe = new GeocellQueryEngine() {
-      @SuppressWarnings("unchecked")
-      @Override
-      public <T> List<T> query(GeocellQuery baseQuery, List<String> curGeocellsUnique, Class<T> entityClass) {
-        try {
-          return (List<T>) GeoIndexManager.this.query(key(connectionIndexId, INDEX_CONNECTIONS, propertyName),
-              curGeocellsUnique, startId, count);
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
-
-    return doSearch(center, minDistance, maxDistance, gqe, count, resolution) ;
-  }
-
-
-  private SearchResults<EntityLocationRef> doSearch(Point center, double minDistance, double maxDistance, GeocellQueryEngine gqe, int count, int resolution) throws Exception {
-    SearchResults<EntityLocationRef> locations = null;
-
-    GeocellQuery baseQuery = new GeocellQuery();
-
-    locations = GeocellManager.proximitySearch(center, count, minDistance,  maxDistance, EntityLocationRef.class, baseQuery, gqe,resolution);
-
-    return locations;
-  }
-
+  
   public static Mutator<ByteBuffer> addLocationEntryInsertionToMutator(Mutator<ByteBuffer> m, Object key,
       EntityLocationRef entry) {
 
@@ -391,7 +111,8 @@ public class GeoIndexManager {
     Object connection_type_and_entity_type_prop_index_key = key(
         index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName,
         DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
+            geoCell));
 
     // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
     addInsertToMutator(m, ENTITY_INDEX, property_index_key, columnName, columnValue, timestamp);
@@ -422,7 +143,8 @@ public class GeoIndexManager {
       batchAddConnectionIndexEntries(m, locator, appId, propertyName, cell, index_keys, columnName, columnValue, ts);
     }
 
-    logger.info("Geocells to be saved for Point({} , {} ) are: {}", new Object[]{location.latitude, location.longitude, cells});
+    logger.info("Geocells to be saved for Point({} , {} ) are: {}", new Object[] { location.getLatitude(),
+        location.getLongitude(), cells });
   }
 
   private static Mutator<ByteBuffer> addLocationEntryDeletionToMutator(Mutator<ByteBuffer> m, Object key,
@@ -461,7 +183,8 @@ public class GeoIndexManager {
     Object connection_type_and_entity_type_prop_index_key = key(
         index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, propertyName,
         DICTIONARY_GEOCELL, geoCell,
-        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], geoCell));
+        locator.getBucket(appId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
+            geoCell));
 
     // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
     m.addDeletion(bytebuffer(property_index_key), ENTITY_INDEX.toString(), columnName, ByteBufferSerializer.get(),
@@ -497,7 +220,8 @@ public class GeoIndexManager {
       batchDeleteConnectionIndexEntries(m, locator, appId, propertyName, cell, index_keys, columnName, ts);
     }
 
-    logger.info("Geocells to be saved for Point({} , {} ) are: {}", new Object[]{location.latitude, location.longitude, cells});
+    logger.info("Geocells to be saved for Point({} , {} ) are: {}", new Object[] { location.getLatitude(),
+        location.getLongitude(), cells });
   }
 
   public static void batchStoreLocationInCollectionIndex(Mutator<ByteBuffer> m, IndexBucketLocator locator, UUID appId,
@@ -515,8 +239,8 @@ public class GeoIndexManager {
     }
 
     if (logger.isInfoEnabled()) {
-      logger.info("Geocells to be saved for Point({},{}) are: {}", new Object[] { location.latitude,
-          location.longitude, cells });
+      logger.info("Geocells to be saved for Point({},{}) are: {}", new Object[] { location.getLatitude(),
+          location.getLongitude(), cells });
     }
   }
 
@@ -550,9 +274,9 @@ public class GeoIndexManager {
       }
     }
 
-    if(logger.isInfoEnabled()){
-      logger.info("Geocells to be deleted for Point({},{}) are: {}", new Object[] { location.latitude,
-          location.longitude, cells });
+    if (logger.isInfoEnabled()) {
+      logger.info("Geocells to be deleted for Point({},{}) are: {}", new Object[] { location.getLatitude(),
+          location.getLongitude(), cells });
     }
   }
 
