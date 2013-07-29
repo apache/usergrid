@@ -35,7 +35,7 @@ public abstract class ValueResource extends NamedResource {
   private String name;
   private String query;
   private String cursor;
-  private String limit;
+  private Integer limit;
   private UUID start;
   
   private Map<String, String> customParams;
@@ -150,7 +150,7 @@ public abstract class ValueResource extends NamedResource {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends ValueResource> T withLimit(String limit) {
+  public <T extends ValueResource> T withLimit(Integer limit) {
     this.limit = limit;
     return (T) this;
   }
@@ -200,7 +200,7 @@ public abstract class ValueResource extends NamedResource {
     }
 
     if (limit != null) {
-      resource = resource.queryParam("limit", limit);
+      resource = resource.queryParam("limit", limit.toString());
     }
 
 
@@ -242,8 +242,8 @@ public abstract class ValueResource extends NamedResource {
 
     int totalEntitiesContained = 0;
 
-    JsonNode correctNode = this.withQuery(query).withLimit("1000").get();
-    JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit("1000").get();
+    JsonNode correctNode = this.withQuery(query).withLimit(1000).get();
+    JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit(1000).get();
 
 
     //JsonNode correctNode = this.withQuery(query).with
@@ -285,7 +285,7 @@ public abstract class ValueResource extends NamedResource {
     JsonNode node = this.withQuery(query).get();
     return node.get("entities").get(index);
   }
-  public JsonNode entityIndexLimit(String query,String limitSize, int index) {
+  public JsonNode entityIndexLimit(String query, Integer limitSize, int index) {
 
     JsonNode node = this.withQuery(query).withLimit(limitSize).get();
     return node.get("entities").get(index);

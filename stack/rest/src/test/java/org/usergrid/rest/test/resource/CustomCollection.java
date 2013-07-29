@@ -21,7 +21,7 @@ import org.usergrid.rest.test.resource.app.CustomEntity;
  * @author tnine
  * 
  */
-public class CustomCollection extends ValueResource {
+public class CustomCollection extends SetResource {
 
  
   public CustomCollection(String name, NamedResource parent) {

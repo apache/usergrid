@@ -78,7 +78,7 @@ public class OrderByTest extends RestContextTest {
     String errorQuery = query;
 
     JsonNode node = activities.withQuery(query).get();// activities.query(query);
-    JsonNode incorrectNode = activities.withQuery(errorQuery).withLimit("5").get();
+    JsonNode incorrectNode = activities.withQuery(errorQuery).withLimit(5).get();
 
     assertEquals(5, incorrectNode.get("entities").size()); // asserts that limit
                                                            // works
@@ -86,7 +86,7 @@ public class OrderByTest extends RestContextTest {
     while (checkResultsNum < 5)
     {
       assertEquals(activities.entityIndex(query, checkResultsNum),
-          activities.entityIndexLimit(errorQuery, "5", checkResultsNum));
+          activities.entityIndexLimit(errorQuery, 5, checkResultsNum));
       // assertEquals(node.get("entities").get(checkResultsNum),incorrectNode.get("entities").get(checkResultsNum));
       checkResultsNum++;
     }
