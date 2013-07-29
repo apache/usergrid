@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.locking.singlenode;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -25,149 +25,155 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.exception.UGLockException;
 
-
-
 public class SingleNodeLockTestSingleNode {
 
-	private static final Logger logger = LoggerFactory.getLogger(SingleNodeLockTestSingleNode.class);
-	
-	private LockManager manager;
-	
-	private ExecutorService pool;
-	
-	@Before
-	public void setUp() throws Exception {
-		
-		manager = new SingleNodeLockManagerImpl();
-		
-		// Create a different thread to lock the same node, that is held by the main thread.
-		pool = Executors.newFixedThreadPool(1);
-	}
-	
-	@After
-	public void tearDown() throws Exception {
-		pool.shutdownNow();
-	}
+  private static final Logger logger = LoggerFactory.getLogger(SingleNodeLockTestSingleNode.class);
 
-	/**
-	 * Locks a path and launches a thread which also locks the same path.
-	 * @throws UGLockException 
-	 *
-	 */
-    @Test
-	public void testLock() throws InterruptedException, ExecutionException, UGLockException {
+  private LockManager manager;
 
-		final UUID application = UUID.randomUUID();
-		final UUID entity = UUID.randomUUID();
+  private ExecutorService pool;
 
-		logger.info("Locking:" + application.toString() + "/" + entity.toString());
+  @Before
+  public void setUp() throws Exception {
 
-		// Lock a node twice to test reentrancy and validate.
-		Lock lock = manager.createLock(application, entity.toString());
-		lock.lock();
-		lock.lock();
-		
-		boolean wasLocked = lockInDifferentThread(application, entity);
-		Assert.assertEquals(false, wasLocked);
-		
-		// Unlock once
-		lock.unlock();
-		
-		// Try from the thread expecting to fail since we still hold one reentrant lock.
-		wasLocked = lockInDifferentThread(application, entity);
-		Assert.assertEquals(false, wasLocked);
-		
-		// Unlock completely
-		logger.info("Releasing lock:" + application.toString() + "/" + entity.toString());
-		lock.unlock();
-		
-		// Try to effectively get the lock from the thread since the current one has already released it.
-		wasLocked = lockInDifferentThread(application, entity);
-		Assert.assertEquals(true, wasLocked);
-	}
-    
-    /**
-     * Locks a couple of times and try to clean up. Later oin another thread successfully acquire the lock
-     * 
-     */
-    @Test
-	public void testLock2() throws InterruptedException, ExecutionException, UGLockException {
+    manager = new SingleNodeLockManagerImpl();
 
-		final UUID application = UUID.randomUUID();
-		final UUID entity = UUID.randomUUID();
-		final UUID entity2 = UUID.randomUUID();
+    // Create a different thread to lock the same node, that is held by the main
+    // thread.
+    pool = Executors.newFixedThreadPool(1);
+  }
 
-		logger.info("Locking:" + application.toString() + "/" + entity.toString());
+  @After
+  public void tearDown() throws Exception {
+    pool.shutdownNow();
+  }
 
-		// Acquire to locks. One of them twice.
-		Lock lock = manager.createLock(application, entity.toString());
-		lock.lock();
-		lock.lock();
-		
-		Lock second = manager.createLock(application, entity2.toString());
-		second.lock();
+  /**
+   * Locks a path and launches a thread which also locks the same path.
+   * 
+   * @throws UGLockException
+   * 
+   */
+  @Test
+  public void testLock() throws InterruptedException, ExecutionException, UGLockException {
 
-		// Cleanup the locks for main thread
-		logger.info("Cleaning up locks for current thread...");
-		lock.unlock();
-		lock.unlock();
-		
-		second.unlock();
-		
-		boolean locked = lockInDifferentThread(application, entity);
-		assertTrue(locked);
-		
-		locked = lockInDifferentThread(application, entity2);
-		assertTrue(locked);
-	}
+    final UUID application = UUID.randomUUID();
+    final UUID entity = UUID.randomUUID();
 
-    /**
-     * Acquires a lock in a different thread.
-     * @param application
-     * @param entity
-     * @return
-     */
-	private boolean lockInDifferentThread(final UUID application, final UUID entity) {
-		Future<Boolean> status = pool.submit(new Callable<Boolean>() {
+    logger.info("Locking:" + application.toString() + "/" + entity.toString());
 
-			@Override
-			public Boolean call() throws Exception {
-				
-			  Lock lock = manager.createLock(application, entity.toString());
-			  
-			  // False here means that the lock WAS NOT ACQUIRED. And that is
+    // Lock a node twice to test reentrancy and validate.
+    Lock lock = manager.createLock(application, entity.toString());
+    lock.lock();
+    lock.lock();
+
+    boolean wasLocked = lockInDifferentThread(application, entity);
+    Assert.assertEquals(false, wasLocked);
+
+    // Unlock once
+    lock.unlock();
+
+    // Try from the thread expecting to fail since we still hold one reentrant
+    // lock.
+    wasLocked = lockInDifferentThread(application, entity);
+    Assert.assertEquals(false, wasLocked);
+
+    // Unlock completely
+    logger.info("Releasing lock:" + application.toString() + "/" + entity.toString());
+    lock.unlock();
+
+    // Try to effectively get the lock from the thread since the current one has
+    // already released it.
+    wasLocked = lockInDifferentThread(application, entity);
+    Assert.assertEquals(true, wasLocked);
+  }
+
+  /**
+   * Locks a couple of times and try to clean up. Later oin another thread
+   * successfully acquire the lock
+   * 
+   */
+  @Test
+  public void testLock2() throws InterruptedException, ExecutionException, UGLockException {
+
+    final UUID application = UUID.randomUUID();
+    final UUID entity = UUID.randomUUID();
+    final UUID entity2 = UUID.randomUUID();
+
+    logger.info("Locking:" + application.toString() + "/" + entity.toString());
+
+    // Acquire to locks. One of them twice.
+    Lock lock = manager.createLock(application, entity.toString());
+    lock.lock();
+    lock.lock();
+
+    Lock second = manager.createLock(application, entity2.toString());
+    second.lock();
+
+    // Cleanup the locks for main thread
+    logger.info("Cleaning up locks for current thread...");
+    lock.unlock();
+    lock.unlock();
+
+    second.unlock();
+
+    boolean locked = lockInDifferentThread(application, entity);
+    assertTrue(locked);
+
+    locked = lockInDifferentThread(application, entity2);
+    assertTrue(locked);
+  }
+
+ 
+  
+  /**
+   * Acquires a lock in a different thread.
+   * 
+   * @param application
+   * @param entity
+   * @return
+   */
+  private boolean lockInDifferentThread(final UUID application, final UUID entity) {
+    Future<Boolean> status = pool.submit(new Callable<Boolean>() {
+
+      @Override
+      public Boolean call() throws Exception {
+
+        Lock lock = manager.createLock(application, entity.toString());
+
+        // False here means that the lock WAS NOT ACQUIRED. And that is
         // what we expect.
-      
-			  boolean locked =  lock.tryLock(0, TimeUnit.MILLISECONDS);
-			  
-			  //shouldn't lock, so unlock to avoid polluting future tests
-			  if(locked){
-			    lock.unlock();
-			  }
-			  
-			  return locked;
-			  
-			}
-		});
 
-		boolean wasLocked = true;
-		try {
-			wasLocked = status.get(2, TimeUnit.SECONDS);
-		} catch (Exception e) {
-			wasLocked = false;
-		} 
-		
-		return wasLocked;
-	}
+        boolean locked = lock.tryLock(0, TimeUnit.MILLISECONDS);
+
+        // shouldn't lock, so unlock to avoid polluting future tests
+        if (locked) {
+          lock.unlock();
+        }
+
+        return locked;
+
+      }
+    });
+
+    boolean wasLocked = true;
+    try {
+      wasLocked = status.get(2, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      wasLocked = false;
+    }
+
+    return wasLocked;
+  }
 
 }
