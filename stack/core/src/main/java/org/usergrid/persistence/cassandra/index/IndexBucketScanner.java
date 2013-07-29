@@ -140,35 +140,8 @@ public class IndexBucketScanner implements IndexScanner {
     //and start paging at the next entity, otherwise we'll just load the page size we need 
     int selectSize = pageSize+1;
 
-    Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = cass.multiGetColumns(
-        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, selectSize, reversed);
-
-    final Comparator<ByteBuffer> comparator = reversed ? new DynamicCompositeReverseComparator(columnFamily)
-        : new DynamicCompositeForwardComparator(columnFamily);
-
-    TreeSet<HColumn<ByteBuffer, ByteBuffer>> resultsTree = new TreeSet<HColumn<ByteBuffer, ByteBuffer>>(
-        new Comparator<HColumn<ByteBuffer, ByteBuffer>>() {
-
-          @Override
-          public int compare(HColumn<ByteBuffer, ByteBuffer> first, HColumn<ByteBuffer, ByteBuffer> second) {
-
-            return comparator.compare(first.getName(), second.getName());
-          }
-
-        });
-
-    for (List<HColumn<ByteBuffer, ByteBuffer>> cols : results.values()) {
-
-      for (HColumn<ByteBuffer, ByteBuffer> col : cols) {
-        resultsTree.add(col);
-
-        // trim if we're over size
-        if (resultsTree.size() > selectSize) {
-          resultsTree.remove(resultsTree.last());
-        }
-      }
-
-    }
+    TreeSet<HColumn<ByteBuffer,ByteBuffer>> resultsTree = IndexMultiBucketSetLoader.load(cass, columnFamily, applicationId, cassKeys, start, finish, selectSize, reversed);
+    
     // we loaded a full page, there might be more
     if (resultsTree.size() == selectSize) {
       hasMore = true;
@@ -188,50 +161,7 @@ public class IndexBucketScanner implements IndexScanner {
 
   }
 
-  private static abstract class DynamicCompositeComparator implements Comparator<ByteBuffer> {
-    @SuppressWarnings("rawtypes")
-    protected final AbstractType dynamicComposite;
-
-    protected DynamicCompositeComparator(ApplicationCF cf) {
-      // should never happen, this will blow up during development if this fails
-      try {
-        dynamicComposite = TypeParser.parse(cf.getComparator());
-      } catch (ConfigurationException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
-  private static class DynamicCompositeForwardComparator extends DynamicCompositeComparator {
-
-    /**
-     * @param cf
-     */
-    protected DynamicCompositeForwardComparator(ApplicationCF cf) {
-      super(cf);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public int compare(ByteBuffer o1, ByteBuffer o2) {
-      return dynamicComposite.compare(o1, o2);
-    }
-  }
-
-  private static class DynamicCompositeReverseComparator extends DynamicCompositeComparator {
-    /**
-     * @param cf
-     */
-    protected DynamicCompositeReverseComparator(ApplicationCF cf) {
-      super(cf);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public int compare(ByteBuffer o1, ByteBuffer o2) {
-      return dynamicComposite.compare(o2, o1);
-    }
-  }
+ 
 
   /*
    * (non-Javadoc)

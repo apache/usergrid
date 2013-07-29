@@ -15,14 +15,16 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author tnine
@@ -35,6 +37,9 @@ public abstract class ValueResource extends NamedResource {
   private String cursor;
   private String limit;
   private UUID start;
+  
+  private Map<String, String> customParams;
+  
 
   public ValueResource(String name, NamedResource parent) {
     super(parent);
@@ -74,13 +79,6 @@ public abstract class ValueResource extends NamedResource {
   public void delete (Map<String,?> entity) {
     deleteInternal();
   }
-
-  protected void deleteInternal() {
-    withParams(withToken(resource()))
-        .delete(JsonNode.class);
-    //json.delete(JsonNode.class);
-  }
-  // public String delete(@PathParam("entity"))
 
   /**
    * post to the entity set
@@ -166,6 +164,19 @@ public abstract class ValueResource extends NamedResource {
   //  return getInternal();
   //}
 
+
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withParam(String name, String value){
+    if(customParams == null){
+      customParams = new HashMap<String, String>();
+    }
+    
+    customParams.put(name,  value);
+    
+    return (T) this;
+  }
+  
+  
   /**
    * Get entities in this collection. Cursor is optional
    *
@@ -212,6 +223,13 @@ public abstract class ValueResource extends NamedResource {
       resource = resource.queryParam(addition, numAddition);
     }
 
+    
+    if(customParams != null){
+      for(Entry<String, String> param : customParams.entrySet()){
+        resource = resource.queryParam(param.getKey(), param.getValue());
+      }
+    }
+    
     return jsonMedia(resource).get(JsonNode.class);
   }
 
@@ -251,36 +269,8 @@ public abstract class ValueResource extends NamedResource {
     }
     return totalEntitiesContained;
   }
-  public int countEntities (String query) {
-
-    int totalEntitiesContained =0;
-    JsonNode correctNode = this.withQuery(query).withLimit("1000").get();//this.withQuery(query).get();//this.query
-    // (query);
-    JsonNode checkedNodes = this.withQuery(query).withLimit("1000").get();
-
-    /*change code to reflect the above */
-    //this.withQuery().withCursor()
-    while (correctNode.get("entities") != null) {
-      totalEntitiesContained += correctNode.get("entities").size();
-      if(correctNode.get("cursor") != null)
-        //correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
-        correctNode = this.withQuery(query).withCursor(correctNode.get("cursor").toString()).get();
-      else
-        break;
-    }
-    return totalEntitiesContained;
-  }
-
-  /*cut out the key variable argument and move it into the customcollection call
-  then just have it automatically add in the variable. */
-
-  public void createEntitiesWithOrdinal(Map valueHolder,int numOfValues) {
-
-    for(int i = 0; i < numOfValues; i++) {
-      valueHolder.put("Ordinal",i);
-      this.create(valueHolder);
-    }
-  }
+  
+ 
 
   // public JsonNode entityValue (JsonNode nodeSearched , String valueToSearch, int index) {
   //   return nodeSearched.get("entities").get(index).findValue(valueToSearch);
@@ -300,5 +290,33 @@ public abstract class ValueResource extends NamedResource {
     JsonNode node = this.withQuery(query).withLimit(limitSize).get();
     return node.get("entities").get(index);
   }
+
+  /**
+   * Get entities in this collection. Cursor is optional
+   * 
+   * @param query
+   * @param cursor
+   * @return
+   */
+  protected JsonNode deleteInternal() {
+
+    
+    WebResource resource = withParams(withToken(resource()));
+    
+    if(query != null){
+      resource = resource.queryParam("ql", query);
+    }
+
+    if (cursor != null) {
+      resource = resource.queryParam("cursor", cursor);
+    }
+    
+    if(start != null){
+      resource = resource.queryParam("start", start.toString());
+    }
+
+    return jsonMedia(resource).delete(JsonNode.class);
+  }
+  
 
 }

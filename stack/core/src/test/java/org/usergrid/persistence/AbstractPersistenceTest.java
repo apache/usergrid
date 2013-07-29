@@ -51,11 +51,17 @@ public abstract class AbstractPersistenceTest {
 	public AbstractPersistenceTest() {
 		emf = CassandraRunner.getBean(EntityManagerFactory.class);
 		qmf = CassandraRunner.getBean(QueueManagerFactory.class);
+		indexBucketLocator = CassandraRunner.getBean(IndexBucketLocator.class);
+		cassandraService = CassandraRunner.getBean(CassandraService.class);
 	}
 
 	protected EntityManagerFactory emf;
 
 	protected QueueManagerFactory qmf;
+	
+	protected IndexBucketLocator indexBucketLocator;
+	
+	protected CassandraService cassandraService;
 
 	/* @BeforeClass (groups="datastore") */
 	@BeforeClass

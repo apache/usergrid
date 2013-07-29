@@ -26,14 +26,11 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.usergrid.persistence.exceptions.NoIndexException;
@@ -44,7 +41,6 @@ import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QueryNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
@@ -152,7 +148,7 @@ public class QueryProcessor {
     if(opCount > 1){
       pageSizeHint = PAGE_SIZE;
     }else{
-      pageSizeHint = size;
+      pageSizeHint = Math.min(size, PAGE_SIZE);
     }
   }
 
@@ -226,7 +222,7 @@ public class QueryProcessor {
 
     ResultIterator itr = visitor.getResults();
     
-    List<UUID> entityIds = new ArrayList<UUID>(size);
+    List<UUID> entityIds = new ArrayList<UUID>(Math.min(size, Query.MAX_LIMIT));
     
     CursorCache resultsCursor = new CursorCache();
     
@@ -628,10 +624,6 @@ public class QueryProcessor {
    * @return the pageSizeHint
    */
   public int getPageSizeHint(QueryNode node) {
-    if(node == rootNode){
-      return size;
-    }
-    
     return pageSizeHint;
   }
 

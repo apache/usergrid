@@ -115,7 +115,6 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -136,34 +135,27 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleCollectionRef;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.SimpleRoleRef;
-import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.entities.Group;
+import org.usergrid.persistence.geo.CollectionGeoSearch;
+import org.usergrid.persistence.geo.ConnectionGeoSearch;
+import org.usergrid.persistence.geo.EntityLocationRef;
+import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.persistence.query.ir.AllNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
-import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.ConnectionIterator;
-import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
-import org.usergrid.persistence.query.ir.result.GeoIterator;
-import org.usergrid.persistence.query.ir.result.IntersectionIterator;
-import org.usergrid.persistence.query.ir.result.SliceIterator;
-import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
-import org.usergrid.utils.UUIDUtils;
 
-import com.beoui.geocell.model.Point;
 import com.yammer.metrics.annotation.Metered;
 
 public class RelationManagerImpl implements RelationManager {
@@ -538,8 +530,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         if ("location.coordinates".equals(indexEntry.getPath())) {
-          EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
-              indexEntry.getValue().toString());
+             EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), indexEntry.getTimestampUuid(),indexEntry.getValue().toString());
           batchStoreLocationInCollectionIndex(indexUpdate.getBatch(), indexBucketLocator, applicationId, index_name,
               indexedEntity.getUuid(), loc);
         }
@@ -2278,7 +2269,18 @@ public class RelationManagerImpl implements RelationManager {
     QueryProcessor qp = new QueryProcessor(query, collection);
     SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
 
-    return qp.getResults(em, visitor, new EntityResultsLoader(em));
+    return qp.getResults(em, visitor, getResultsLoader(query));
+  }
+
+  private ResultsLoader getResultsLoader(Query query) {
+    switch (query.getResultsLevel()) {
+      case IDS:
+        return new IDLoader();
+      case REFS:
+        return new ConnectionRefLoader(query.getEntityType());
+      default:
+        return new EntityResultsLoader(em);
+    }
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
@@ -2612,9 +2614,8 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      GeoIterator itr = new GeoIterator(new GeoIterator.CollectionGeoSearch(em.getGeoIndexManager(), headEntity,
-          collection.getName(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
-          node.getDistance()), query.getLimit(), slice);
+      GeoIterator itr = new GeoIterator(new CollectionGeoSearch(em,indexBucketLocator, cass, headEntity,
+          collection.getName()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance());
 
       results.push(itr);
     }
@@ -2694,9 +2695,8 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      GeoIterator itr = new GeoIterator(new GeoIterator.ConnectionGeoSearch(em.getGeoIndexManager(),
-          connection.getIndexId(), new Point(node.getLattitude(), node.getLongitude()), node.getPropertyName(),
-          node.getDistance()), query.getLimit(), slice);
+      GeoIterator itr = new GeoIterator(new ConnectionGeoSearch(em, indexBucketLocator, cass,
+          connection.getIndexId()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance());
 
       results.push(itr);
     }
