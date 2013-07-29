@@ -33,7 +33,10 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 
 /**
- * Single Node implementation for {@link LocalManager}
+ * Single Node implementation for {@link LockManager}
+ * Note that this implementation has not been used in a production environment.
+ * 
+ * The hector based implementation is the preferred production locking system
  * 
  */
 public class SingleNodeLockManagerImpl implements LockManager {
