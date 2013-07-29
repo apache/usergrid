@@ -15,32 +15,66 @@
  ******************************************************************************/
 package org.usergrid.locking.singlenode;
 
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
-import org.usergrid.locking.exception.UGLockException;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 
 /**
- * Single Node implementation for {@link LocalManager}
+ * Single Node implementation for {@link LockManager}
+ * Note that this implementation has not been used in a production environment.
+ * 
+ * The hector based implementation is the preferred production locking system
  * 
  */
 public class SingleNodeLockManagerImpl implements LockManager {
 
-  private final HashMap<String, ReentrantLock> globalLocks;
+  private static final Logger logger  = LoggerFactory.getLogger(SingleNodeLockManagerImpl.class);
+  
+  public static final long MILLI_EXPIRATION = 5000;
+
+  /**
+   * Lock cache that sill expire after 5 seconds of no use for a lock path
+   */
+  private LoadingCache<String, ReentrantLock> locks = CacheBuilder.newBuilder()
+      .expireAfterWrite(MILLI_EXPIRATION, TimeUnit.MILLISECONDS)
+      // use weakValues. We want want entries removed if they're not being
+      // referenced by another
+      // thread somewhere and GC occurs
+      .weakValues()
+      .removalListener(new RemovalListener<String, ReentrantLock>() {
+
+        @Override
+        public void onRemoval(RemovalNotification<String, ReentrantLock> notification) {
+          logger.debug("Evicting reentrant lock for {}", notification.getKey());
+        }
+      })
+      .build(
+          new CacheLoader<String, ReentrantLock>() {
+
+            @Override
+            public ReentrantLock load(String arg0) throws Exception {
+              return new ReentrantLock(true);
+            }
+          });;
 
   /**
    * Default constructor.
    */
   public SingleNodeLockManagerImpl() {
-    globalLocks = new HashMap<String, ReentrantLock>();
   }
-
-
- 
 
   /*
    * (non-Javadoc)
@@ -52,29 +86,13 @@ public class SingleNodeLockManagerImpl implements LockManager {
   public Lock createLock(UUID applicationId, String... path) {
 
     String lockPath = LockPathBuilder.buildPath(applicationId, path);
-    
-    // check first if it is already own by this thread.
-    ReentrantLock lock = globalLocks.get(lockPath);
-    
 
-    if (lock == null) {
-      synchronized (this) {
-        // Check in the Global collection in case someone else owns it.
-        lock = globalLocks.get(lockPath);
-
-        if (lock == null) {
-          // if lock does not exist, null is return but intermediateLock
-          // is added to the map.
-          lock = new ReentrantLock();
-          globalLocks.put(lockPath, lock);
-        }
-      }
+    try {
+      return new SingleNodeLockImpl(locks.get(lockPath));
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Unable to create lock in cache", e);
     }
 
-    // So at this point, the lock was added to the threadLocal collection as
-    // well as
-    // the general collection.
-    return new SingleNodeLockImpl(lock);
   }
 
 }
