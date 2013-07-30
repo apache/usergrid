@@ -33,9 +33,6 @@ public class RetrieveUsersTest extends RestContextTest {
     String query = "select *";
     String incorrectQuery = "select * where username = 'Alica'";
 
-    JsonNode incorrect = users.withQuery("select * where username = 'Alica'").get(); //users.query("select * where
-    JsonNode node = users.withQuery("select *").get(); //users.query("select *");
-
     assertEquals(users.entityValue(query,"username",0),users.entityValue(incorrectQuery,"username",0));
   }
 }

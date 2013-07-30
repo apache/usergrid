@@ -160,10 +160,6 @@ public abstract class ValueResource extends NamedResource {
   /**
    * Query this resource.
    */
-  //public JsonNode query(String query) {
-  //  return getInternal();
-  //}
-
 
   @SuppressWarnings("unchecked")
   public <T extends ValueResource> T withParam(String name, String value){
@@ -203,14 +199,9 @@ public abstract class ValueResource extends NamedResource {
       resource = resource.queryParam("limit", limit.toString());
     }
 
-
-
     return jsonMedia(resource).get(JsonNode.class);
   }
 
-  /*created so a limit could be easily added. Consider merging with getInternal(query,cursor)
-  as those are the only two query input parameters.
-   */
   public JsonNode query(String query,String addition,String numAddition){
     return getInternal(query,addition,numAddition);
   }
@@ -233,22 +224,12 @@ public abstract class ValueResource extends NamedResource {
     return jsonMedia(resource).get(JsonNode.class);
   }
 
-
-  /*take out JsonNodes and call quereies inside the function*/
-  /*call limit and just loop through that instead of having to do cursors and work
-  making it more complicated. */
-  /* Test will only handle values under 1000 really due to limit size being that big */
   public int verificationOfQueryResults(String query,String checkedQuery) {
 
     int totalEntitiesContained = 0;
 
     JsonNode correctNode = this.withQuery(query).withLimit(1000).get();
     JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit(1000).get();
-
-
-    //JsonNode correctNode = this.withQuery(query).with
-
-
 
     while (correctNode.get("entities") != null)
     {
@@ -262,19 +243,12 @@ public abstract class ValueResource extends NamedResource {
         correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
       }
 
-//      if(correctNode.get("cursor") != null)
-//        correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
       else
         break;
     }
     return totalEntitiesContained;
   }
-  
- 
 
-  // public JsonNode entityValue (JsonNode nodeSearched , String valueToSearch, int index) {
-  //   return nodeSearched.get("entities").get(index).findValue(valueToSearch);
-  //}
   public JsonNode entityValue (String query, String valueToSearch, int index) {
     JsonNode node = this.withQuery(query).get();
     return node.get("entities").get(index).findValue(valueToSearch);
@@ -293,9 +267,7 @@ public abstract class ValueResource extends NamedResource {
 
   /**
    * Get entities in this collection. Cursor is optional
-   * 
-   * @param query
-   * @param cursor
+   *
    * @return
    */
   protected JsonNode deleteInternal() {

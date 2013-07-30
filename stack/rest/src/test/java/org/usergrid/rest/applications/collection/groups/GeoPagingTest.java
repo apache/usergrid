@@ -25,7 +25,6 @@ public class GeoPagingTest extends RestContextTest {
     CustomCollection groups = context.application().collection("groups");
 
     int maxRangeLimit = 2000;
-    int minRangeLimit = 5;
     long[] index = new long[maxRangeLimit];
     Map actor = hashMap("displayName", "Erin");
 
@@ -38,6 +37,7 @@ public class GeoPagingTest extends RestContextTest {
     props.put ("location",location);
     props.put("verb", "go");
     props.put("content", "bragh");
+
     for (int i = 0; i < 5; i++) {
       String newPath = String.format("/kero" + i);
       props.put("path",newPath);
@@ -48,12 +48,12 @@ public class GeoPagingTest extends RestContextTest {
 
     String query = "select * where location within 20000 of 37,-75 and created > " + index[2] + " and " +
         "created < " + index[4] + "";
-    JsonNode node = groups.withQuery(query).get();//groups.query(query);
+    JsonNode node = groups.withQuery(query).get();
     assertEquals(1,node.get("entities").size());
 
     assertEquals(index[3],node.get("entities").get(0).get("created").getLongValue());
   }
-  @Test//("Test uses up to many resources to be run reliably") // USERGRID-1401
+  @Test // USERGRID-1401
   public void groupQueriesWithConsistentResults() {
 
     CustomCollection groups = context.application().collection("groups");

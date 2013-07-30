@@ -52,7 +52,7 @@ public class AndOrQueryTest extends RestContextTest {
     JsonNode node = activities.withQuery(query).get();
     JsonNode incorrectNode = activities.withQuery(errorQuery).get();
 
-    assertEquals(node.get("entities").size(),incorrectNode.get("entities").size());
+    assertEquals(10,incorrectNode.get("entities").size());
 
   }
 
@@ -83,8 +83,10 @@ public class AndOrQueryTest extends RestContextTest {
 
     assertEquals(10, incorrectNode.get("entities").size());
 
-    for(int i = 0 ; i < 10; i++)
-      assertEquals(node.get("entities").get(i),incorrectNode.get("entities").get(i));
+    for(int i = 0 ; i < 10; i++) {
+      assertEquals(19-i,incorrectNode.get("entities").get(i).get("ordinal").getIntValue());
+      assertEquals("stop",incorrectNode.get("entities").get(i).get("verb").getTextValue());
+    }
   }
 
   @Test //USERGRID-1615
@@ -105,11 +107,6 @@ public class AndOrQueryTest extends RestContextTest {
     String correctQuery = "select * where ordinal >= 10";
 
     activities.verificationOfQueryResults(correctQuery,inCorrectQuery);
-
-    //assertEquals(activities.countEntities(inCorrectQuery),activities.countEntities(correctQuery));
-
-    // assertEquals(activities.countEntities(correctQuery),activities.countEntities(inCorrectQuery));
-
   }
 
   @Test //Check to make sure that asc works
@@ -157,11 +154,8 @@ public class AndOrQueryTest extends RestContextTest {
     }
 
     String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
-    //JsonNode incorrectNode = madeupStuff.query(inquisitiveQuery);
 
-    int totalEntitiesContained = madeupStuff.countEntities(inquisitiveQuery); //totalNumOfEntities(incorrectNode,
-    // inquisitiveQuery,madeupStuff,
-    // "");
+    int totalEntitiesContained = madeupStuff.countEntities(inquisitiveQuery);
 
     assertEquals(1001,totalEntitiesContained);
 

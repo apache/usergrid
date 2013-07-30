@@ -21,9 +21,7 @@ public class PutTest extends RestContextTest{
   @Test //USERGRID-545
   public void  putMassUpdateTest () {
 
-
     CustomCollection activities = collection("activities");
-
 
     Map<String, ?> payload = hashMap("name", "Austin");
     Map actor = hashMap("displayName", "Erin");

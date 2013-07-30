@@ -90,13 +90,9 @@ public class PagingEntitiesTest  extends RestContextTest {
     ArrayUtils.reverse(verifyCreated);
 
     String query = "select * where created >= " + created + " or verb = 'stop'";
-    JsonNode incorrectNode = activities.query(query,"limit",Integer.toString(1000));
-
     String correctQuery = "select * where verb = 'stop'";
-    JsonNode node = activities.withQuery(correctQuery).get();//activities.query(query);
 
-    int totalEntitiesContained = activities.verificationOfQueryResults(correctQuery,query);//totalNumOfEntities(node,correctQuery,activities,
-    // query,incorrectNode);
+    int totalEntitiesContained = activities.verificationOfQueryResults(correctQuery,query);
 
     assertEquals(5, totalEntitiesContained);
   }

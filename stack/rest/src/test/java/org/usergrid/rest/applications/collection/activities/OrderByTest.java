@@ -77,17 +77,15 @@ public class OrderByTest extends RestContextTest {
     String query = "select * where created > " + 1 + " order by created desc";
     String errorQuery = query;
 
-    JsonNode node = activities.withQuery(query).get();// activities.query(query);
+    JsonNode node = activities.withQuery(query).get();
     JsonNode incorrectNode = activities.withQuery(errorQuery).withLimit(5).get();
 
-    assertEquals(5, incorrectNode.get("entities").size()); // asserts that limit
-                                                           // works
+    assertEquals(5, incorrectNode.get("entities").size());
 
     while (checkResultsNum < 5)
     {
       assertEquals(activities.entityIndex(query, checkResultsNum),
           activities.entityIndexLimit(errorQuery, 5, checkResultsNum));
-      // assertEquals(node.get("entities").get(checkResultsNum),incorrectNode.get("entities").get(checkResultsNum));
       checkResultsNum++;
     }
   }
@@ -129,8 +127,7 @@ public class OrderByTest extends RestContextTest {
     do {
       JsonNode response = activities.withQuery(errorQuery).get();
       JsonNode cursorNode = response.get("cursor");
-      
-      
+
       cursor = cursorNode != null ? cursorNode.asText() : null;
       
       JsonNode entities = response.get("entities");
