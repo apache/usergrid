@@ -29,6 +29,16 @@
     <!-- Test and Logging Dependencies -->
 
     <dependency>
+      <!--
+      For some reason this dependency which should be transitively pulled in
+      from other Usergrid modules this module depends on, is not recognized
+      by IntelliJ IDEA.
+      -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>

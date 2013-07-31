@@ -223,6 +223,15 @@
     <!-- Testing and Logging Dependencies -->
 
     <dependency>
+      <!--
+      Do not remove this slf4j-api dependency remove even though pulled 
+      in transitively. If not present IntelliJ IDEA wigs out.
+      -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>  
+
+    <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
       <version>${project.version}</version>

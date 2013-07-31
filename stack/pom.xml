@@ -27,7 +27,7 @@
     <jclouds.version>1.5.0-beta.3</jclouds.version>
     <jersey-version>1.17</jersey-version>
     <jetty.version>8.1.8.v20121106</jetty.version>
-    <junit-version>4.10</junit-version>
+    <junit-version>4.11</junit-version>
     <log4j-version>1.2.16</log4j-version>
     <metrics-version>2.1.2</metrics-version>
     <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
