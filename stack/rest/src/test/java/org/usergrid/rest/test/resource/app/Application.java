@@ -33,32 +33,15 @@ import org.usergrid.rest.test.resource.app.queue.QueuesCollection;
  */
 public class Application extends ValueResource {
 
-  private final String appName;
-  private final String orgName;
 
   /**
    * @param parent
    */
   public Application(String orgName, String appName, RootResource root) {
     super(orgName + SLASH + appName, root);
-    this.orgName = orgName;
-    this.appName = appName;
   }
 
-  // /*
-  // * (non-Javadoc)
-  // *
-  // * @see
-  // *
-  // org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
-  // */
-  // @Override
-  // public void addToUrl(StringBuilder buffer) {
-  // parent.addToUrl(buffer);
-  // buffer.append(orgName);
-  // buffer.append(SLASH);
-  // buffer.append(appName);
-  // }
+  
 
   /**
    * Get the token from management for this username and password
