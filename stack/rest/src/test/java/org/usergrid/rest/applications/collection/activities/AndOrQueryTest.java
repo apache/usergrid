@@ -25,7 +25,6 @@ public class AndOrQueryTest extends RestContextTest {
     CustomCollection activities = collection("activities");
 
     long created = 0;
-    long newlyCreated = 0;
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
 
@@ -43,13 +42,9 @@ public class AndOrQueryTest extends RestContextTest {
       props.put("ordinal", i);
       JsonNode activity = activities.create(props);
       if (i == 0) { created = activity.findValue("created").getLongValue(); }
-      if (i == 1000) { newlyCreated = activity.findValue("created").getLongValue();}
     }
 
-    String query = "select * where created >= " + newlyCreated;
     String errorQuery = "select * where created >= " + created + "AND madeup = true";
-
-    JsonNode node = activities.withQuery(query).get();
     JsonNode incorrectNode = activities.withQuery(errorQuery).get();
 
     assertEquals(10,incorrectNode.get("entities").size());
@@ -78,7 +73,6 @@ public class AndOrQueryTest extends RestContextTest {
     }
 
     String query = "select * where not verb = 'go'";
-    JsonNode node = activities.withQuery("select * where ordinal > 9").get();
     JsonNode incorrectNode = activities.query(query,"limit",Integer.toString(10));
 
     assertEquals(10, incorrectNode.get("entities").size());
@@ -90,7 +84,7 @@ public class AndOrQueryTest extends RestContextTest {
   }
 
   @Test //USERGRID-1615
-  public void queryReturnCount() {
+  public void queryReturnCount() throws Exception{
 
     CustomCollection activities = collection("activities");
 
@@ -110,8 +104,8 @@ public class AndOrQueryTest extends RestContextTest {
   }
 
   @Test //Check to make sure that asc works
-  public void queryCheckAsc() {
-    /* can only do it in sets of 10's*/
+  public void queryCheckAsc() throws Exception{
+
     CustomCollection madeupStuff = collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
@@ -126,8 +120,8 @@ public class AndOrQueryTest extends RestContextTest {
     assertEquals(1000,totalEntitiesContained);
   }
 
-  @Ignore("NullPointerException") //loops endlessly //Test to make sure all 1000 exist with a regular query
-  public void queryReturnCheck() {
+  @Ignore//Test to make sure all 1000 exist with a regular query
+  public void queryReturnCheck() throws Exception{
     CustomCollection madeupStuff = collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
@@ -141,23 +135,18 @@ public class AndOrQueryTest extends RestContextTest {
     assertEquals(1000,totalEntitiesContained);
   }
 
-  @Ignore("Endlessly Loops")
+  @Ignore
   public void queryReturnCheckWithShortHand() {
     CustomCollection madeupStuff = collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
-    madeupStuff.createEntitiesWithOrdinal(character,1001);
-
-    for (int i = 0; i < 1001; i++) {
-      character.put("Ordinal",i);
-      madeupStuff.create(character);
-    }
+    madeupStuff.createEntitiesWithOrdinal(character,1000);
 
     String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
 
     int totalEntitiesContained = madeupStuff.countEntities(inquisitiveQuery);
 
-    assertEquals(1001,totalEntitiesContained);
+    assertEquals(1000,totalEntitiesContained);
 
   }
 

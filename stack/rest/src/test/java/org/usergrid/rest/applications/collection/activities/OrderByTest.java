@@ -57,7 +57,6 @@ public class OrderByTest extends RestContextTest {
 
     CustomCollection activities = collection("activities");
 
-    long created = 0;
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
     int checkResultsNum = 0;
@@ -69,23 +68,18 @@ public class OrderByTest extends RestContextTest {
     for (int i = 0; i < 20; i++) {
       props.put("ordinal", i);
       JsonNode activity = activities.create(props);
-      if (i == 0) {
-        created = activity.findValue("created").getLongValue();
-      }
     }
 
     String query = "select * where created > " + 1 + " order by created desc";
-    String errorQuery = query;
 
-    JsonNode node = activities.withQuery(query).get();
-    JsonNode incorrectNode = activities.withQuery(errorQuery).withLimit(5).get();
+    JsonNode incorrectNode = activities.withQuery(query).withLimit(5).get();
 
     assertEquals(5, incorrectNode.get("entities").size());
 
     while (checkResultsNum < 5)
     {
       assertEquals(activities.entityIndex(query, checkResultsNum),
-          activities.entityIndexLimit(errorQuery, 5, checkResultsNum));
+          activities.entityIndexLimit(query, 5, checkResultsNum));
       checkResultsNum++;
     }
   }

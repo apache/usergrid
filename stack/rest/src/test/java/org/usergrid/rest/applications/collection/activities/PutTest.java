@@ -23,7 +23,6 @@ public class PutTest extends RestContextTest{
 
     CustomCollection activities = collection("activities");
 
-    Map<String, ?> payload = hashMap("name", "Austin");
     Map actor = hashMap("displayName", "Erin");
     Map newActor = hashMap("displayName","Bob");
     Map props = new HashMap();

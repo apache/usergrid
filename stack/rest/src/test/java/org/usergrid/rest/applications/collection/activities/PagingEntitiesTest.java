@@ -63,7 +63,7 @@ public class PagingEntitiesTest  extends RestContextTest {
   }
 
   @Test //USERGRID-1253
-  public void pagingQueryReturnCorrectResults() {
+  public void pagingQueryReturnCorrectResults() throws Exception{
 
     CustomCollection activities = collection("activities");
 

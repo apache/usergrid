@@ -224,7 +224,7 @@ public abstract class ValueResource extends NamedResource {
     return jsonMedia(resource).get(JsonNode.class);
   }
 
-  public int verificationOfQueryResults(String query,String checkedQuery) {
+  public int verificationOfQueryResults(String query,String checkedQuery) throws Exception{
 
     int totalEntitiesContained = 0;
 
@@ -238,6 +238,9 @@ public abstract class ValueResource extends NamedResource {
       for(int index = 0; index < correctNode.get("entities").size();index++)
         assertEquals(correctNode.get("entities").get(index),checkedNodes.get("entities").get(index));
 
+      /*works because this method checks to make sure both queries return the same thing
+      therefore this if shouldn't be needed, but added just in case
+       */
       if(checkedNodes.get("cursor") != null || correctNode.get("cursor") != null) {
         checkedNodes = this.query(checkedQuery,"cursor",checkedNodes.get("cursor").toString());
         correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
