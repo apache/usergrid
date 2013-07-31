@@ -84,19 +84,23 @@ public class QueryProcessor {
   private EntityManager em;
 
   public QueryProcessor(Query query, CollectionInfo collectionInfo, EntityManager em) throws PersistenceException {
-    this.sorts = query.getSortPredicates();
-    this.cursorCache = new CursorCache(query.getCursor());
-    this.rootOperand = query.getRootOperand();
-    this.entityType = query.getEntityType();
-    this.size = query.getLimit();
+    setQuery(query);
     this.collectionInfo = collectionInfo;
-    this.query = query;
     this.em = em;
     process();
   }
 
   public Query getQuery() {
     return query;
+  }
+
+  public void setQuery(Query query) {
+    this.sorts = query.getSortPredicates();
+    this.cursorCache = new CursorCache(query.getCursor());
+    this.rootOperand = query.getRootOperand();
+    this.entityType = query.getEntityType();
+    this.size = query.getLimit();
+    this.query = query;
   }
 
   public CollectionInfo getCollectionInfo() {
@@ -264,7 +268,8 @@ public class QueryProcessor {
     results.setCursor(resultsCursor.asString());
 
     results.setQuery(query);
-   
+    results.setQueryProcessor(this);
+    results.setSearchVisitor(visitor);
     
     return results;
 
@@ -685,4 +690,7 @@ public class QueryProcessor {
     }
   }
 
+  public EntityManager getEntityManager() {
+    return em;
+  }
 }
