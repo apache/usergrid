@@ -229,33 +229,41 @@ public class TokenServiceImpl implements TokenService {
 
   @Override
   public TokenInfo getTokenInfo(String token) throws Exception {
-    TokenInfo tokenInfo = null;
+
     UUID uuid = getUUIDForToken(token);
-    if (uuid != null) {
-      tokenInfo = getTokenInfo(uuid);
-      if (tokenInfo != null) {
-        long now = currentTimeMillis();
-
-        long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String(token), tokenInfo.getPrincipal());
-
-        Mutator<UUID> batch = createMutator(cassandra.getSystemKeyspace(), UUIDSerializer.get());
-
-        HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now,
-            calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)), StringSerializer.get(),
-            LongSerializer.get());
-        batch.addInsertion(uuid, TOKENS_CF, col);
-
-        long inactive = now - tokenInfo.getAccessed();
-        if (inactive > tokenInfo.getInactive()) {
-          col = createColumn(TOKEN_INACTIVE, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
-              StringSerializer.get(), LongSerializer.get());
-          batch.addInsertion(uuid, TOKENS_CF, col);
-          tokenInfo.setInactive(inactive);
-        }
-
-        batch.execute();
-      }
+    
+    if (uuid == null) {
+      return null;
     }
+
+    TokenInfo tokenInfo = getTokenInfo(uuid);
+
+    if (tokenInfo == null) {
+      return null;
+    }
+    
+    //update the token
+    long now = currentTimeMillis();
+
+    long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String(token), tokenInfo.getPrincipal());
+
+    Mutator<UUID> batch = createMutator(cassandra.getSystemKeyspace(), UUIDSerializer.get());
+
+    HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now,
+        calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)), StringSerializer.get(),
+        LongSerializer.get());
+    batch.addInsertion(uuid, TOKENS_CF, col);
+
+    long inactive = now - tokenInfo.getAccessed();
+    if (inactive > tokenInfo.getInactive()) {
+      col = createColumn(TOKEN_INACTIVE, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
+          StringSerializer.get(), LongSerializer.get());
+      batch.addInsertion(uuid, TOKENS_CF, col);
+      tokenInfo.setInactive(inactive);
+    }
+
+    batch.execute();
+
     return tokenInfo;
   }
 
@@ -486,13 +494,6 @@ public class TokenServiceImpl implements TokenService {
     TokenCategory tokenCategory = TokenCategory.getFromBase64String(token);
     byte[] bytes = decodeBase64(token.substring(TokenCategory.BASE64_PREFIX_LENGTH));
     UUID uuid = uuid(bytes);
-    long timestamp = getTimestampInMillis(uuid);
-    if ((getExpirationForTokenType(tokenCategory) > 0)
-        && (currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenCategory)))) {
-      throw new ExpiredTokenException("Token expired "
-          + (currentTimeMillis() - (timestamp + getExpirationForTokenType(tokenCategory)))
-          + " millisecons ago.");
-    }
     int i = 16;
     long expires = Long.MAX_VALUE;
     if (tokenCategory.getExpires()) {
@@ -503,8 +504,17 @@ public class TokenServiceImpl implements TokenService {
     expected.put(sha(tokenCategory.getPrefix() + uuid + tokenSecretSalt + expires));
     expected.rewind();
     ByteBuffer signature = ByteBuffer.wrap(bytes, i, 20);
+    
+    
     if (!signature.equals(expected)) {
       throw new BadTokenException("Invalid token signature");
+    }
+    
+    
+    long expirationDelta = System.currentTimeMillis() - expires;
+    
+    if(expires != Long.MAX_VALUE && expirationDelta > 0){
+      throw new ExpiredTokenException(String.format("Token expired %d millisecons ago.", expirationDelta));
     }
     return uuid;
   }

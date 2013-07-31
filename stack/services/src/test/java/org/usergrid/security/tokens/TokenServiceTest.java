@@ -29,6 +29,7 @@ import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.UUIDUtils;
@@ -203,7 +204,7 @@ public class TokenServiceTest {
         UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
     // 2 second token
-    long expirationTime = 1000;
+    long expirationTime = 2000;
 
     String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
 
@@ -234,7 +235,7 @@ public class TokenServiceTest {
 
     try {
       tokenService.getTokenInfo(token);
-    } catch (InvalidTokenException ite) {
+    } catch (ExpiredTokenException ite) {
       invalidTokenException = true;
     }
 
@@ -327,7 +328,7 @@ public class TokenServiceTest {
 
     try {
       tokenService.getTokenInfo(token);
-    } catch (InvalidTokenException ite) {
+    } catch (ExpiredTokenException ite) {
       invalidTokenException = true;
     }
 
