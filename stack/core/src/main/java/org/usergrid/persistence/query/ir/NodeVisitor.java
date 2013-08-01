@@ -64,4 +64,10 @@ public interface NodeVisitor {
      */
     public void visit(AllNode node) throws Exception;
 
+    /**
+     * @param orderByNode
+     * @throws Exception 
+     */
+    public void visit(OrderByNode orderByNode) throws Exception;
+
 }

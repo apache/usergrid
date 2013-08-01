@@ -39,6 +39,7 @@ import org.usergrid.persistence.query.ir.AllNode;
 import org.usergrid.persistence.query.ir.AndNode;
 import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
+import org.usergrid.persistence.query.ir.OrderByNode;
 import org.usergrid.persistence.query.ir.QueryNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
@@ -111,17 +112,16 @@ public class QueryProcessor {
     // the root
     if (sorts.size() > 0) {
       
-      SliceNode sorts = generateSorts(opCount);
+      OrderByNode order = generateSorts(opCount);
       
-      opCount += sorts.getAllSlices().size();
+      opCount += order.getFirstPredicate().getAllSlices().size();
       
       if(rootNode != null){
-        AndNode and = new AndNode(sorts, rootNode);
+        AndNode and = new AndNode(order, rootNode);
         rootNode = and;
       }else{
-        rootNode = sorts;
+        rootNode = order;
       }
-     
       
     }
     
@@ -634,22 +634,29 @@ public class QueryProcessor {
    * @return
    * @throws NoIndexException 
    */
-  private SliceNode generateSorts(int opCount) throws NoIndexException {
+  private OrderByNode generateSorts(int opCount) throws NoIndexException {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called
     SliceNode node = new SliceNode(opCount);
 
-    for (SortPredicate predicate : sorts) {
-      String name = predicate.getPropertyName();
-      
-      checkIndexed(name);
-      
-      node.setStart(name, null, true);
-      node.setFinish(name, null, true);
+    SortPredicate first = sorts.get(0);
+    
+    String propertyName = first.getPropertyName();
+    
+    checkIndexed(propertyName);
+    
+    node.setStart(propertyName, null, true);
+    node.setFinish(propertyName, null, true);
+    
+    
+    for (int i = 1; i < sorts.size(); i ++) {
+      checkIndexed(sorts.get(i).getPropertyName());
     }
+    
+    
 
-    return node;
+    return new OrderByNode(node, sorts.subList(1, sorts.size()));
   }
   
 
