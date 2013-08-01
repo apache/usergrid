@@ -13,6 +13,7 @@ import org.junit.runners.Suite;
 @RunWith( Suite.class )
 @Suite.SuiteClasses( {
         CassandraResourceIT.class,
+        AnotherCassandraResourceIT.class
 } )
 public class CassandraResourceITSuite
 {
