@@ -18,11 +18,21 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+
         <configuration>
           <systemPropertyVariables>
             <storage-config>${basedir}/src/test/conf</storage-config>
           </systemPropertyVariables>
           <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+
+          <includes>
+            <include>**/CassandraResourceTestSuite.java</include>
+          </includes>
+          <excludes>
+            <exclude>**/CassandraResourceTest.java</exclude>
+            <exclude>**/CassandraRunnerTest.java</exclude>
+            <exclude>**/OtherRunnerTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

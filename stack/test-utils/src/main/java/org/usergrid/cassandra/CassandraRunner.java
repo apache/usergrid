@@ -1,29 +1,28 @@
 package org.usergrid.cassandra;
 
-import org.apache.cassandra.config.DatabaseDescriptor;
-import org.apache.cassandra.service.StorageService;
-import org.apache.cassandra.thrift.CassandraDaemon;
-import org.apache.commons.io.FileUtils;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class CassandraRunner extends BlockJUnit4ClassRunner {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.thrift.CassandraDaemon;
+import org.apache.commons.io.FileUtils;
+
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.InitializationError;
+
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+
+public class CassandraRunner extends BlockJUnit4ClassRunner
+{
     private static final String TMP = "tmp";
     private static Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
     private static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
