@@ -670,9 +670,7 @@ public class Query {
         
         for (SortPredicate s : sortPredicates) {
             if (s.getPropertyName().equals(sort.getPropertyName())) {
-                logger.error("Attempted to set sort order for "
-                        + s.getPropertyName() + " more than once, discardng...");
-                return this;
+                throw new QueryParseException(String.format("Attempted to set sort order for %s more than once", s.getPropertyName() ));
             }
         }
         sortPredicates.add(sort);

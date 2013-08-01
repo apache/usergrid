@@ -20,9 +20,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -1067,6 +1071,126 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
     assertEquals(size, count);
 
   }
+  
+
+  @Test
+  public void multiOrderByCollection() throws Exception {
+    multiOrderBy(new CollectionIoHelper("multiOrderByCollection"));
+  }
+
+  @Test
+  public void multOrderByConnection() throws Exception {
+    multiOrderBy(new ConnectionHelper("multOrderByConnection"));
+  }
+
+  private void multiOrderBy(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+//    int size = 2000;
+//    int queryLimit = Query.MAX_LIMIT;
+    
+    int size = 10;
+    int queryLimit = 2;
+
+    // the number of entities that should be written including an intersection
+
+    Set<Entity> sortedResults = new TreeSet<Entity>(new Comparator<Entity>() {
+
+      @Override
+      public int compare(Entity o1, Entity o2) {
+       boolean o1Boolean = (Boolean) o1.getProperty("boolean");
+       boolean o2Boolean = (Boolean) o2.getProperty("boolean");
+       
+       if(o1Boolean != o2Boolean){
+         if(o1Boolean){
+           return -1;
+         }
+         
+         return 1;
+       }
+       
+       int o1Index = (Integer) o1.getProperty("index");
+       int o2Index = (Integer) o2.getProperty("index");
+       
+       if(o1Index > o2Index){
+         return 1;
+       }else if (o2Index > o1Index){
+         return -1;
+       }
+       
+       return 0;
+       
+      }
+    });
+
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      String name = String.valueOf(i);
+      boolean bool = i %2 == 0;
+      entity.put("name", name);
+      entity.put("boolean", bool);
+      
+      /**
+       * we want them to be ordered from the "newest" time uuid to the oldec since we 
+       * have a low cardinality value as the first second clause.  This way the test
+       *won't accidentally pass b/c the UUID ordering matches the index ordering.  If we were
+       *to reverse the value of index (size-i) the test would pass incorrectly
+       */
+      
+      entity.put("index", i);
+      
+      Entity saved = io.writeEntity(entity);
+      
+      sortedResults.add(saved);
+
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL("select * order by boolean desc, index asc");
+    query.setLimit(queryLimit);
+
+    int count = 0;
+
+    Results results;
+
+    start = System.currentTimeMillis();
+    
+    Iterator<Entity> itr = sortedResults.iterator();
+
+    do {
+
+      // now do simple ordering, should be returned in order
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        Entity expected = itr.next();
+        Entity returned = results.getEntities().get(i);
+        
+        assertEquals("Order incorrect", expected.getName(), returned.getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.getCursor() != null);
+
+    stop = System.currentTimeMillis();
+
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+    assertEquals(sortedResults.size(), count);
+  }
+
 
   /**
    * Interface to abstract actually doing I/O targets. The same test logic can
