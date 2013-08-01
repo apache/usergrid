@@ -30,8 +30,6 @@
           </includes>
           <excludes>
             <exclude>**/CassandraResourceTest.java</exclude>
-            <exclude>**/CassandraRunnerTest.java</exclude>
-            <exclude>**/OtherRunnerTest.java</exclude>
           </excludes>
         </configuration>
       </plugin>
