@@ -12,9 +12,9 @@ import org.junit.runners.Suite;
  */
 @RunWith( Suite.class )
 @Suite.SuiteClasses( {
-        CassandraResourceTest.class,
+        CassandraResourceIT.class,
 } )
-public class CassandraResourceTestSuite
+public class CassandraResourceITSuite
 {
     @ClassRule
     public static CassandraResource cassandraResource = new CassandraResource();

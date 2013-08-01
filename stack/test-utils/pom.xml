@@ -24,13 +24,13 @@
             <storage-config>${basedir}/src/test/conf</storage-config>
           </systemPropertyVariables>
           <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <forkMode>always</forkMode>
 
           <includes>
-            <include>**/CassandraResourceTestSuite.java</include>
+            <include>**/CassandraResourceITSuite.java</include>
+            <include>**/CassandraRunnerTest.java</include>
+            <include>**/OtherRunnerTest.java</include>
           </includes>
-          <excludes>
-            <exclude>**/CassandraResourceTest.java</exclude>
-          </excludes>
         </configuration>
       </plugin>
     </plugins>
