@@ -10,11 +10,14 @@ import org.junit.runners.Suite;
  * An example TestSuite to demonstrate how to use the new
  * CassandraResource fixture.
  */
-@RunWith( Suite.class )
+@RunWith( ConcurrentSuite.class )
 @Suite.SuiteClasses( {
         CassandraResourceIT.class,
-        AnotherCassandraResourceIT.class
+        AnotherCassandraResourceIT.class,
+        YetAnotherCassandraResourceIT.class,
+        OkThisIsTheLastIT.class
 } )
+@Concurrent()
 public class CassandraResourceITSuite
 {
     @ClassRule

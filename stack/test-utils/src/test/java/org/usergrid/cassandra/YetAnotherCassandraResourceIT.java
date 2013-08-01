@@ -5,9 +5,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @Concurrent()
-public class CassandraResourceIT
+public class YetAnotherCassandraResourceIT
 {
     public static final Logger logger = LoggerFactory.getLogger(CassandraResource.class);
     private CassandraResource cassandraResource =

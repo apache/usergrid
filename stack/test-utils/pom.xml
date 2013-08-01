@@ -28,9 +28,11 @@
 
           <includes>
             <include>**/CassandraResourceITSuite.java</include>
-            <include>**/CassandraRunnerTest.java</include>
-            <include>**/OtherRunnerTest.java</include>
           </includes>
+          <excludes>
+            <exclude>**/CassandraRunnerTest.java</exclude>
+            <exclude>**/OtherRunnerTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

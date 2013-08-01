@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 
 @Concurrent()
-public class CassandraResourceIT
+public class OkThisIsTheLastIT
 {
     public static final Logger logger = LoggerFactory.getLogger(CassandraResource.class);
     private CassandraResource cassandraResource =

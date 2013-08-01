@@ -25,5 +25,51 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
+        Thread.sleep( 1000L );
+    }
+
+
+    @Test
+    public void testItAgainAndAgain2() throws Exception
+    {
+        String testBean = cassandraResource.getBean( "testBean", String.class );
+        logger.info( "Got another testBean again: {}", testBean );
+        Thread.sleep( 1000L );
+    }
+
+
+    @Test
+    public void testItAgainAndAgain3() throws Exception
+    {
+        String testBean = cassandraResource.getBean( "testBean", String.class );
+        logger.info( "Got another testBean again: {}", testBean );
+        Thread.sleep( 1000L );
+    }
+
+
+    @Test
+    public void testItAgainAndAgain4() throws Exception
+    {
+        String testBean = cassandraResource.getBean( "testBean", String.class );
+        logger.info( "Got another testBean again: {}", testBean );
+        Thread.sleep( 1000L );
+    }
+
+
+    @Test
+    public void testItAgainAndAgain5() throws Exception
+    {
+        String testBean = cassandraResource.getBean( "testBean", String.class );
+        logger.info( "Got another testBean again: {}", testBean );
+        Thread.sleep( 1000L );
+    }
+
+
+    @Test
+    public void testItAgainAndAgain6() throws Exception
+    {
+        String testBean = cassandraResource.getBean( "testBean", String.class );
+        logger.info( "Got another testBean again: {}", testBean );
+        Thread.sleep( 1000L );
     }
 }
