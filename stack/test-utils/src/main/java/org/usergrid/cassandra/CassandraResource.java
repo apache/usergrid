@@ -2,8 +2,6 @@ package org.usergrid.cassandra;
 
 
 import java.io.File;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -26,7 +24,6 @@ public class CassandraResource extends ExternalResource
     private static final String TMP = "tmp";
     public static final Logger logger = LoggerFactory.getLogger( CassandraResource.class );
 
-    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     ConfigurableApplicationContext applicationContext;
     CassandraDaemon cassandraDaemon;
 
@@ -109,9 +106,6 @@ public class CassandraResource extends ExternalResource
             {
                 cassandraDaemon.deactivate();
             }
-
-            executor.shutdown();
-            executor.shutdownNow();
         }
         catch ( Exception ex )
         {
