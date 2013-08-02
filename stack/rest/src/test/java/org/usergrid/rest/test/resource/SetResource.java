@@ -72,12 +72,16 @@ public abstract class SetResource extends ValueResource {
   /*cut out the key variable argument and move it into the customcollection call
   then just have it automatically add in the variable. */
 
-  public void createEntitiesWithOrdinal(Map valueHolder,int numOfValues) {
+  public JsonNode[] createEntitiesWithOrdinal(Map valueHolder,int numOfValues) {
+
+    JsonNode[] node = new JsonNode[numOfValues];
 
     for(int i = 0; i < numOfValues; i++) {
       valueHolder.put("Ordinal",i);
-      this.create(valueHolder);
+      node[i] = this.create(valueHolder);
     }
+
+    return node;
   }
 
 
