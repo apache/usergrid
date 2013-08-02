@@ -224,26 +224,31 @@ public abstract class ValueResource extends NamedResource {
     return jsonMedia(resource).get(JsonNode.class);
   }
 
-  public int verificationOfQueryResults(String query,String checkedQuery) throws Exception{
+  public int verificationOfQueryResults(JsonNode[] correctValues,boolean reverse,
+                                        String checkedQuery) throws Exception{
 
     int totalEntitiesContained = 0;
 
-    JsonNode correctNode = this.withQuery(query).withLimit(1000).get();
     JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit(1000).get();
 
-    while (correctNode.get("entities") != null)
+    while (correctValues.length != totalEntitiesContained)//correctNode.get("entities") != null)
     {
-      totalEntitiesContained += correctNode.get("entities").size();
+      totalEntitiesContained += checkedNodes.get("entities").size();
+      if (!reverse) {
+        for(int index = 0; index < checkedNodes.get("entities").size();index++)
+          assertEquals(correctValues[index].get("entities").get(0),checkedNodes.get("entities").get(index));
+      }
+      else
+        for(int index = 0; index < checkedNodes.get("entities").size();index++)
+          assertEquals(correctValues[correctValues.length-1].get("entities").get(0),checkedNodes.get("entities").get
+              (index));
 
-      for(int index = 0; index < correctNode.get("entities").size();index++)
-        assertEquals(correctNode.get("entities").get(index),checkedNodes.get("entities").get(index));
 
       /*works because this method checks to make sure both queries return the same thing
       therefore this if shouldn't be needed, but added just in case
        */
-      if(checkedNodes.get("cursor") != null || correctNode.get("cursor") != null) {
+      if(checkedNodes.get("cursor") != null) {
         checkedNodes = this.query(checkedQuery,"cursor",checkedNodes.get("cursor").toString());
-        correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
       }
 
       else
