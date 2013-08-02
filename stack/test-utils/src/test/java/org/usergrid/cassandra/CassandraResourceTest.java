@@ -5,6 +5,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
+import static junit.framework.Assert.assertTrue;
+
 
 /**
  * This tests the CassandraResource.
@@ -24,6 +28,7 @@ public class CassandraResourceTest
     {
         int rpcPort;
         int storagePort;
+        int sslStoragePort;
 
         do
         {
@@ -36,10 +41,17 @@ public class CassandraResourceTest
         {
             storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT + 1 );
         }
-        while ( storagePort == CassandraResource.DEFAULT_STORAGE_PORT );
+        while ( storagePort == CassandraResource.DEFAULT_STORAGE_PORT || storagePort == rpcPort );
         LOG.info( "Setting storage_port to {}", storagePort );
 
-        final CassandraResource cassandraResource = new CassandraResource( rpcPort, storagePort );
+        do
+        {
+            sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT + 1 );
+        }
+        while ( sslStoragePort == CassandraResource.DEFAULT_SSL_STORAGE_PORT || storagePort == sslStoragePort );
+        LOG.info( "Setting ssl_storage_port to {}", sslStoragePort );
+
+        final CassandraResource cassandraResource = new CassandraResource( rpcPort, storagePort, sslStoragePort );
 
         cassandraResource.before();
 
@@ -48,5 +60,42 @@ public class CassandraResourceTest
 
         cassandraResource.after();
         LOG.info( "Got the test bean: " );
+    }
+
+
+    @Test
+    public void testTmpDirectory() throws Exception
+    {
+        File tmpdir = CassandraResource.getTempDirectory();
+        assertTrue( tmpdir.toString().contains( "target" ) );
+        assertTrue( tmpdir.exists() );
+    }
+
+
+    /**
+     * Fires up two Cassandra instances on the same machine.
+     *
+     * @throws Exception if this don't work
+     */
+    @Test
+    public  void testDoubleTrouble() throws Throwable
+    {
+        CassandraResource c1 = CassandraResource.newWithAvailablePorts();
+        LOG.info( "Starting up first Cassandra instance: {}", c1 );
+        c1.before();
+
+        LOG.info( "Waiting a few seconds" );
+        Thread.sleep(5000);
+
+        CassandraResource c2 = CassandraResource.newWithAvailablePorts();
+        LOG.info( "Starting up second Cassandra instance: {}", c2 );
+        c2.before();
+
+        LOG.info( "Waiting a few seconds" );
+        Thread.sleep( 5000 );
+
+        LOG.info( "Shutting Cassandra instances down." );
+        c1.after();
+        c2.after();
     }
 }

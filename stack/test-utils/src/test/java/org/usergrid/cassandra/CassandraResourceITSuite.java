@@ -20,5 +20,5 @@ import org.junit.runners.Suite;
 public class CassandraResourceITSuite
 {
     @ClassRule
-    public static CassandraResource cassandraResource = new CassandraResource();
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 }

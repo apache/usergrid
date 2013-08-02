@@ -4,10 +4,13 @@ package org.usergrid.cassandra;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,25 +26,56 @@ import org.yaml.snakeyaml.Yaml;
  * A JUnit {@link org.junit.rules.ExternalResource} designed to start up
  * Cassandra once in a TestSuite or test Class as a shared external resource
  * across test cases and shut it down after the TestSuite has completed.
+ *
+ * This external resource is completely isolated in terms of the files used
+ * and the ports selected if the {@link AvailablePortFinder} is used with it.
+ *
+ * Note that for this resource to work properly, a project.properties file
+ * must be placed in the src/test/resources directory with the following
+ * stanza in the project pom's build section:
+ *
+ * <testResources>
+ *   <testResource>
+ *     <directory>src/test/resources</directory>
+ *     <filtering>true</filtering>
+ *     <includes>
+ *       <include>**\/*.properties</include>
+ *       <include>**\/*.xml</include>
+ *     </includes>
+ *   </testResource>
+ * </testResources>
+ *
+ * The following property expansion macro should be placed in this
+ * project.properties file:
+ *
+ * target.directory=${pom.build.directory}
  */
 public class CassandraResource extends ExternalResource
 {
     public static final Logger LOG = LoggerFactory.getLogger( CassandraResource.class );
-
-    /** TODO - make this be a file in the target directory */
-    public static final String TMP = "tmp";
-
     public static final int DEFAULT_RPC_PORT= 9160;
     public static final int DEFAULT_STORAGE_PORT = 7000;
+    public static final int DEFAULT_SSL_STORAGE_PORT = 7001;
+
+    public static final String PROPERTIES_FILE = "project.properties";
+    public static final String TARGET_DIRECTORY_KEY = "target.directory";
+    public static final String DATA_FILE_DIR_KEY = "data_file_directories";
+    public static final String COMMIT_FILE_DIR_KEY = "commitlog_directory";
+    public static final String SAVED_CACHES_DIR_KEY = "saved_caches_directory";
+
     public static final String RPC_PORT_KEY = "rpc_port";
     public static final String STORAGE_PORT_KEY = "storage_port";
+    public static final String SSL_STORAGE_PORT_KEY = "ssl_storage_port";
 
+    private static final Object lock = new Object();
+
+    private final File tempDir;
     private final String schemaManagerName;
-    private final Object lock = new Object();
 
     private boolean initialized = false;
-    public int rpcPort = DEFAULT_RPC_PORT;
-    public int storagePort = DEFAULT_STORAGE_PORT;
+    private int rpcPort = DEFAULT_RPC_PORT;
+    private int storagePort = DEFAULT_STORAGE_PORT;
+    private int sslStoragePort = DEFAULT_SSL_STORAGE_PORT;
     private ConfigurableApplicationContext applicationContext;
     private CassandraDaemon cassandraDaemon;
     private SchemaManager schemaManager;
@@ -51,9 +85,10 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the default SchemaManager for Cassandra.
      */
-    public CassandraResource()
+    @SuppressWarnings("UnusedDeclaration")
+    public CassandraResource() throws IOException
     {
-        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT );
+        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT );
     }
 
 
@@ -61,11 +96,14 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    public CassandraResource( String schemaManagerName, int rpcPort, int storagePort )
+    public CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort )
+            throws IOException
     {
         this.schemaManagerName = schemaManagerName;
         this.rpcPort = rpcPort;
         this.storagePort = storagePort;
+        this.sslStoragePort = sslStoragePort;
+        this.tempDir = getTempDirectory();
     }
 
 
@@ -73,9 +111,9 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    public CassandraResource( int rpcPort, int storagePort )
+    public CassandraResource( int rpcPort, int storagePort, int sslStoragePort ) throws IOException
     {
-        this( null, rpcPort, storagePort );
+        this( null, rpcPort, storagePort, sslStoragePort );
     }
 
 
@@ -98,6 +136,28 @@ public class CassandraResource extends ExternalResource
     public int getStoragePort()
     {
         return storagePort;
+    }
+
+
+    /**
+     * Gets the sslStoragePort for Cassandra.
+     *
+     * @return the sslStoragePort
+     */
+    public int getSslStoragePort()
+    {
+        return sslStoragePort;
+    }
+
+
+    /**
+     * Gets the temporary directory created for this CassandraResource.
+     *
+     * @return the temporary directory
+     */
+    public File getTemporaryDirectory()
+    {
+        return tempDir;
     }
 
 
@@ -140,6 +200,30 @@ public class CassandraResource extends ExternalResource
     }
 
 
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\n" );
+        sb.append( "cassandra.yaml = " ).append( new File( tempDir, "cassandra.yaml" ) );
+        sb.append( "\n" );
+        sb.append( RPC_PORT_KEY ).append(" = ").append( rpcPort );
+        sb.append( "\n" );
+        sb.append( STORAGE_PORT_KEY ).append( " = " ).append( storagePort );
+        sb.append( "\n" );
+        sb.append( SSL_STORAGE_PORT_KEY ).append( " = " ).append( sslStoragePort );
+        sb.append( "\n" );
+        sb.append( DATA_FILE_DIR_KEY ).append( " = " ).append( new File( tempDir, "data" ).toString() );
+        sb.append( "\n" );
+        sb.append( COMMIT_FILE_DIR_KEY ).append( " = " ).append( new File( tempDir, "commitlog" ).toString() );
+        sb.append( "\n" );
+        sb.append( SAVED_CACHES_DIR_KEY ).append( " = " ).append( new File( tempDir, "saved_caches" ).toString() );
+        sb.append( "\n" );
+
+        return sb.toString();
+    }
+
+
     /**
      * Protects against IDE or command line runs of a unit test which when
      * starting the test outside of the Suite will not start the resource.
@@ -171,6 +255,12 @@ public class CassandraResource extends ExternalResource
     @Override
     protected void before() throws Throwable
     {
+        /*
+         * Note that the lock is static so it is JVM wide which prevents other
+         * instances of this class from making changes to the Cassandra system
+         * properties while we are initializing Cassandra with unique settings.
+         */
+
         synchronized ( lock )
         {
             super.before();
@@ -180,26 +270,43 @@ public class CassandraResource extends ExternalResource
                 return;
             }
 
+            // Create temp directory, setup to create new File configuration there
+            URL oriYamlUrl = ClassLoader.getSystemResource("cassandra.yaml");
+            File oriYamlFile = new File( oriYamlUrl.getFile() );
+            File newYamlFile = new File( tempDir, "cassandra.yaml" );
+            URL newYamlUrl = FileUtils.toURLs( new File [] { newYamlFile } )[0];
+
+            // Read the original yaml file, make changes, and dump to new position in tmpdir
+            Yaml yaml = new Yaml();
+            @SuppressWarnings("unchecked") Map<String, Object> map =
+                    ( Map <String, Object> ) yaml.load( new FileInputStream( oriYamlFile ) );
+            map.put( RPC_PORT_KEY, getRpcPort() );
+            map.put( STORAGE_PORT_KEY, getStoragePort() );
+            map.put( SSL_STORAGE_PORT_KEY, getSslStoragePort() );
+            map.put( COMMIT_FILE_DIR_KEY, new File( tempDir, "commitlog" ).toString() );
+            map.put( DATA_FILE_DIR_KEY, new String [] { new File( tempDir, "data" ).toString() } );
+            map.put( SAVED_CACHES_DIR_KEY, new File(tempDir, "saved_caches").toString());
+            FileWriter writer = new FileWriter( newYamlFile );
+            yaml.dump(map, writer);
+            writer.flush();
+            writer.close();
+
+            // Fire up Cassandra by setting configuration to point to new yaml file
             LOG.info("Initializing Cassandra...");
 
             System.setProperty( "cassandra-foreground", "true" );
-            System.setProperty( "log4j.defaultInitOverride", "true" );
+            System.setProperty("log4j.defaultInitOverride", "true");
             System.setProperty( "log4j.configuration", "log4j.properties" );
-            System.setProperty( "cassandra.ring_delay_ms", "100" );
+            System.setProperty("cassandra.ring_delay_ms", "100");
+            System.setProperty( "cassandra.config", newYamlUrl.toString() );
+            System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
+            System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
+            System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
 
-            if ( getRpcPort() != DEFAULT_RPC_PORT || getStoragePort() != DEFAULT_STORAGE_PORT )
+            if ( ! newYamlFile.exists() )
             {
-                // See if we can modify the YAML file for the available port
-                Yaml yaml = new Yaml();
-                URL url = ClassLoader.getSystemResource( "cassandra.yaml" );
-                Map<String, Object> map = ( Map <String, Object> ) yaml.load(
-                        new FileInputStream( url.getFile() ) );
-                map.put( RPC_PORT_KEY, getRpcPort() );
-                map.put( STORAGE_PORT_KEY, getStoragePort() );
-                yaml.dump( map, new FileWriter( url.getFile() ) );
+                throw new RuntimeException( "Cannot find new Yaml file: " + newYamlFile );
             }
-
-            FileUtils.deleteQuietly( new File( TMP ) );
 
             cassandraDaemon = new CassandraDaemon();
             cassandraDaemon.activate();
@@ -222,7 +329,7 @@ public class CassandraResource extends ExternalResource
     {
         super.after();
 
-        LOG.info("Shutting down Cassandra");
+        LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
 
         if ( schemaManager != null )
         {
@@ -280,25 +387,68 @@ public class CassandraResource extends ExternalResource
      * ports that may or may not be the default ports. If either port is
      * taken, an alternative free port is found.
      *
-     * @return a new CassandaResource with possibly non-default ports
+     * @return a new CassandraResource with possibly non-default ports
      */
     public static CassandraResource newWithAvailablePorts()
     {
-        int rpcPort;
-        int storagePort;
+        int rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT );
+        int storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT );
+        int sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT );
 
-        do
+        if ( rpcPort == storagePort )
         {
-            rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT );
+            storagePort++;
+            storagePort = AvailablePortFinder.getNextAvailable( storagePort );
         }
-        while ( rpcPort == CassandraResource.DEFAULT_RPC_PORT );
 
-        do
+        if ( sslStoragePort == storagePort )
         {
-            storagePort = AvailablePortFinder.getNextAvailable(CassandraResource.DEFAULT_RPC_PORT);
+            sslStoragePort++;
+            sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
         }
-        while ( storagePort == CassandraResource.DEFAULT_RPC_PORT );
 
-        return new CassandraResource( rpcPort, storagePort );
+        try
+        {
+            return new CassandraResource( rpcPort, storagePort, sslStoragePort );
+        }
+        catch ( IOException e )
+        {
+            LOG.error( "Failed to initialized CassandraResource", e );
+            throw new RuntimeException( e );
+        }
+    }
+
+
+    /**
+     * Uses a project.properties file that Maven does substitution on to
+     * to replace the value of a property with the path to the Maven
+     * build directory (a.k.a. target). It then uses this path to generate
+     * a random String which it uses to append a path component to so a
+     * unique directory is selected. If already present it's deleted,
+     * then the directory is created.
+     *
+     * @return a unique temporary directory
+     * @throws IOException if we cannot access the properties file
+     */
+    public static File getTempDirectory() throws IOException
+    {
+        File tmpdir;
+        Properties props = new Properties();
+        props.load( ClassLoader.getSystemResourceAsStream( PROPERTIES_FILE ) );
+        File basedir = new File( ( String ) props.get( TARGET_DIRECTORY_KEY ) );
+        String comp = RandomStringUtils.randomAlphanumeric(7);
+        tmpdir = new File( basedir, comp );
+
+        LOG.info( "Creating temporary directory: {}", tmpdir );
+        if ( tmpdir.exists() )
+        {
+            FileUtils.forceDelete( tmpdir );
+        }
+        else
+        {
+            FileUtils.forceMkdir( tmpdir );
+        }
+
+        return tmpdir;
     }
 }

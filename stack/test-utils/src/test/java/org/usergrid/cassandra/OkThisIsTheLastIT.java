@@ -1,7 +1,9 @@
 package org.usergrid.cassandra;
 
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,15 +11,21 @@ import org.slf4j.LoggerFactory;
 @Concurrent()
 public class OkThisIsTheLastIT
 {
-    public static final Logger logger = LoggerFactory.getLogger(CassandraResource.class);
+    public static final Logger logger = LoggerFactory.getLogger( CassandraResource.class );
+
+    @Rule
+    public TestName name = new TestName();
+
     private CassandraResource cassandraResource =
             CassandraResourceITSuite.cassandraResource;
+
 
     @Test
     public void testUsage() throws Exception
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got the test bean: " + testBean );
+        logger.info( "Check it my test name is: {}", name.getMethodName() );
     }
 
 

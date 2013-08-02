@@ -14,6 +14,17 @@
   <packaging>jar</packaging>
 
   <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.properties</include>
+          <include>**/*.xml</include>
+        </includes>
+      </testResource>
+    </testResources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -22,6 +33,7 @@
         <configuration>
           <systemPropertyVariables>
             <storage-config>${basedir}/src/test/conf</storage-config>
+            <target-directory>${pom.build.directory}</target-directory>
           </systemPropertyVariables>
           <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
           <forkMode>always</forkMode>
