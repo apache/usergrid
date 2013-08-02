@@ -91,16 +91,19 @@ public class AndOrQueryTest extends RestContextTest {
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
 
+    int numValuesTested = 20;
+
+    JsonNode[] correctValues = new JsonNode[numValuesTested];
+
     props.put("actor", actor);
     props.put("verb", "go");
     props.put("content", "bragh");
 
-    activities.createEntitiesWithOrdinal(props,20);
+    correctValues = activities.createEntitiesWithOrdinal(props,numValuesTested);
 
     String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
-    String correctQuery = "select * where ordinal >= 10";
 
-    activities.verificationOfQueryResults(correctQuery,inCorrectQuery);
+    activities.verificationOfQueryResults(correctValues,true,inCorrectQuery);
   }
 
   @Test //Check to make sure that asc works
@@ -109,13 +112,15 @@ public class AndOrQueryTest extends RestContextTest {
     CustomCollection madeupStuff = collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
-    madeupStuff.createEntitiesWithOrdinal(character,1000);
+    JsonNode[] correctValues = new JsonNode[1000];
+
+
+    correctValues = madeupStuff.createEntitiesWithOrdinal(character,1000);
 
     String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff' ORDER BY " +
         "Ordinal asc";
-    String query = "select *";
 
-    int totalEntitiesContained = madeupStuff.verificationOfQueryResults(query,inquisitiveQuery);
+    int totalEntitiesContained = madeupStuff.verificationOfQueryResults(correctValues,false,inquisitiveQuery);
 
     assertEquals(1000,totalEntitiesContained);
   }
@@ -125,14 +130,15 @@ public class AndOrQueryTest extends RestContextTest {
     CustomCollection madeupStuff = collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
-    madeupStuff.createEntitiesWithOrdinal(character,1000);
+    int numOfEntities = 1000;
 
-    String query = "select *";
+    JsonNode[] correctValues = madeupStuff.createEntitiesWithOrdinal(character,numOfEntities);
+
     String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
 
-    int totalEntitiesContained = madeupStuff.verificationOfQueryResults(query,inquisitiveQuery);
+    int totalEntitiesContained = madeupStuff.verificationOfQueryResults(correctValues,true,inquisitiveQuery);
 
-    assertEquals(1000,totalEntitiesContained);
+    assertEquals(numOfEntities,totalEntitiesContained);
   }
 
   @Ignore
