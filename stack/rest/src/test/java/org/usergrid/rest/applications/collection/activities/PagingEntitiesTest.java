@@ -85,14 +85,17 @@ public class PagingEntitiesTest  extends RestContextTest {
       props.put("ordinal", i);
       JsonNode activity = activities.create(props);
       verifyCreated[i] = activity.findValue("created").getLongValue();
-      if (i == 5) { created = activity.findValue("created").getLongValue(); }
+      if (i == 18) { created = activity.findValue("created").getLongValue(); }
     }
-    ArrayUtils.reverse(verifyCreated);
 
     String query = "select * where created >= " + created + " or verb = 'stop'";
-    String correctQuery = "select * where verb = 'stop'";
 
-    int totalEntitiesContained = activities.verificationOfQueryResults(correctQuery,query);
+    JsonNode node = activities.withQuery(query).get();
+
+    for(int index = 0; index < 5; index++)
+      assertEquals(verifyCreated[maxSize-1-index],node.get("entities").get(index).get("created").getLongValue());
+
+    int totalEntitiesContained = activities.countEntities(query);
 
     assertEquals(5, totalEntitiesContained);
   }
