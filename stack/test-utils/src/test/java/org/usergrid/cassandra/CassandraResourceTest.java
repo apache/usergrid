@@ -85,7 +85,7 @@ public class CassandraResourceTest
         c1.before();
 
         LOG.info( "Waiting a few seconds" );
-        Thread.sleep(5000);
+        Thread.sleep( 5000 );
 
         CassandraResource c2 = CassandraResource.newWithAvailablePorts();
         LOG.info( "Starting up second Cassandra instance: {}", c2 );

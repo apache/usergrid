@@ -155,6 +155,7 @@ public class CassandraResource extends ExternalResource
      *
      * @return the temporary directory
      */
+    @SuppressWarnings("UnusedDeclaration")
     public File getTemporaryDirectory()
     {
         return tempDir;
@@ -240,7 +241,7 @@ public class CassandraResource extends ExternalResource
             }
             catch ( Throwable t )
             {
-                LOG.error("Failed to start up Cassandra.", t);
+                LOG.error( "Failed to start up Cassandra.", t );
                 throw new RuntimeException( t );
             }
         }
@@ -271,7 +272,7 @@ public class CassandraResource extends ExternalResource
             }
 
             // Create temp directory, setup to create new File configuration there
-            URL oriYamlUrl = ClassLoader.getSystemResource("cassandra.yaml");
+            URL oriYamlUrl = ClassLoader.getSystemResource( "cassandra.yaml" );
             File oriYamlFile = new File( oriYamlUrl.getFile() );
             File newYamlFile = new File( tempDir, "cassandra.yaml" );
             URL newYamlUrl = FileUtils.toURLs( new File [] { newYamlFile } )[0];
@@ -292,12 +293,12 @@ public class CassandraResource extends ExternalResource
             writer.close();
 
             // Fire up Cassandra by setting configuration to point to new yaml file
-            LOG.info("Initializing Cassandra...");
+            LOG.info( "Initializing Cassandra..." );
 
             System.setProperty( "cassandra-foreground", "true" );
-            System.setProperty("log4j.defaultInitOverride", "true");
+            System.setProperty( "log4j.defaultInitOverride", "true" );
             System.setProperty( "log4j.configuration", "log4j.properties" );
-            System.setProperty("cassandra.ring_delay_ms", "100");
+            System.setProperty( "cassandra.ring_delay_ms", "100" );
             System.setProperty( "cassandra.config", newYamlUrl.toString() );
             System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
             System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
