@@ -12,7 +12,6 @@ import org.junit.runners.Suite;
  */
 @RunWith( ConcurrentSuite.class )
 @Suite.SuiteClasses( {
-        CassandraResourceIT.class,
         AnotherCassandraResourceIT.class,
         YetAnotherCassandraResourceIT.class,
         OkThisIsTheLastIT.class

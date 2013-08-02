@@ -2,6 +2,10 @@ package org.usergrid.cassandra;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.net.URL;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -12,6 +16,7 @@ import org.junit.rules.ExternalResource;
 
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.yaml.snakeyaml.Yaml;
 
 
 /**
@@ -21,12 +26,22 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class CassandraResource extends ExternalResource
 {
-    private static final String TMP = "tmp";
     public static final Logger LOG = LoggerFactory.getLogger( CassandraResource.class );
+
+    /** TODO - make this be a file in the target directory */
+    public static final String TMP = "tmp";
+
+    public static final int DEFAULT_RPC_PORT= 9160;
+    public static final int DEFAULT_STORAGE_PORT = 7000;
+    public static final String RPC_PORT_KEY = "rpc_port";
+    public static final String STORAGE_PORT_KEY = "storage_port";
 
     private final String schemaManagerName;
     private final Object lock = new Object();
+
     private boolean initialized = false;
+    public int rpcPort = DEFAULT_RPC_PORT;
+    public int storagePort = DEFAULT_STORAGE_PORT;
     private ConfigurableApplicationContext applicationContext;
     private CassandraDaemon cassandraDaemon;
     private SchemaManager schemaManager;
@@ -38,7 +53,7 @@ public class CassandraResource extends ExternalResource
      */
     public CassandraResource()
     {
-        this( null );
+        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT );
     }
 
 
@@ -46,9 +61,43 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    public CassandraResource( String schemaManagerName )
+    public CassandraResource( String schemaManagerName, int rpcPort, int storagePort )
     {
         this.schemaManagerName = schemaManagerName;
+        this.rpcPort = rpcPort;
+        this.storagePort = storagePort;
+    }
+
+
+    /**
+     * Creates a Cassandra starting ExternalResource for JUnit test cases
+     * which uses the specified SchemaManager for Cassandra.
+     */
+    public CassandraResource( int rpcPort, int storagePort )
+    {
+        this( null, rpcPort, storagePort );
+    }
+
+
+    /**
+     * Gets the rpcPort for Cassandra.
+     *
+     * @return the rpc_port (in yaml file) used by Cassandra
+     */
+    public int getRpcPort()
+    {
+        return rpcPort;
+    }
+
+
+    /**
+     * Gets the storagePort for Cassandra.
+     *
+     * @return the storage_port (in yaml file) used by Cassandra
+     */
+    public int getStoragePort()
+    {
+        return storagePort;
     }
 
 
@@ -138,6 +187,18 @@ public class CassandraResource extends ExternalResource
             System.setProperty( "log4j.configuration", "log4j.properties" );
             System.setProperty( "cassandra.ring_delay_ms", "100" );
 
+            if ( getRpcPort() != DEFAULT_RPC_PORT || getStoragePort() != DEFAULT_STORAGE_PORT )
+            {
+                // See if we can modify the YAML file for the available port
+                Yaml yaml = new Yaml();
+                URL url = ClassLoader.getSystemResource( "cassandra.yaml" );
+                Map<String, Object> map = ( Map <String, Object> ) yaml.load(
+                        new FileInputStream( url.getFile() ) );
+                map.put( RPC_PORT_KEY, getRpcPort() );
+                map.put( STORAGE_PORT_KEY, getStoragePort() );
+                yaml.dump( map, new FileWriter( url.getFile() ) );
+            }
+
             FileUtils.deleteQuietly( new File( TMP ) );
 
             cassandraDaemon = new CassandraDaemon();
@@ -211,5 +272,33 @@ public class CassandraResource extends ExternalResource
 
         schemaManager.create();
         schemaManager.populateBaseData();
+    }
+
+
+    /**
+     * Creates a new instance of the CassandraResource with rpc and storage
+     * ports that may or may not be the default ports. If either port is
+     * taken, an alternative free port is found.
+     *
+     * @return a new CassandaResource with possibly non-default ports
+     */
+    public static CassandraResource newWithAvailablePorts()
+    {
+        int rpcPort;
+        int storagePort;
+
+        do
+        {
+            rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT );
+        }
+        while ( rpcPort == CassandraResource.DEFAULT_RPC_PORT );
+
+        do
+        {
+            storagePort = AvailablePortFinder.getNextAvailable(CassandraResource.DEFAULT_RPC_PORT);
+        }
+        while ( storagePort == CassandraResource.DEFAULT_RPC_PORT );
+
+        return new CassandraResource( rpcPort, storagePort );
     }
 }
