@@ -901,46 +901,6 @@ public class Query {
       return s.toString();
     }
 
-    public static enum FilterOperator {
-        LESS_THAN("<", "lt"), LESS_THAN_OR_EQUAL("<=", "lte"), GREATER_THAN(
-                ">", "gt"), GREATER_THAN_OR_EQUAL(">=", "gte"), EQUAL("=", "eq"), NOT_EQUAL(
-                "!=", "ne"), IN("in", null), CONTAINS("contains", null), WITHIN(
-                "within", null);
-
-        private final String shortName;
-        private final String textName;
-
-        FilterOperator(String shortName, String textName) {
-            this.shortName = shortName;
-            this.textName = textName;
-        }
-
-        static Map<String, FilterOperator> nameMap = new ConcurrentHashMap<String, FilterOperator>();
-
-        static {
-            for (FilterOperator op : EnumSet.allOf(FilterOperator.class)) {
-                if (op.shortName != null) {
-                    nameMap.put(op.shortName, op);
-                }
-                if (op.textName != null) {
-                    nameMap.put(op.textName, op);
-                }
-            }
-        }
-
-        public static FilterOperator find(String s) {
-            if (s == null) {
-                return null;
-            }
-            return nameMap.get(s);
-        }
-
-        @Override
-        public String toString() {
-            return shortName;
-        }
-    }
-
     public static enum SortDirection {
         ASCENDING, DESCENDING;
 
