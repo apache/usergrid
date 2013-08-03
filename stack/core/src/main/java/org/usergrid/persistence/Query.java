@@ -133,6 +133,7 @@ public class Query {
         if (ql == null) {
             return null;
         }
+        String originalQl = ql;
         ql = ql.trim();
 
         String qlt = ql.toLowerCase();
@@ -152,7 +153,7 @@ public class Query {
        
         try {
             Query q = parser.ql().query;
-            q.setQl(ql);
+            q.setQl(originalQl);
             return q;
         } catch (RecognitionException e) {
             logger.error("Unable to parse \"{}\"", ql, e);
@@ -161,9 +162,8 @@ public class Query {
             int lineNumber = e.line;
             Token token = e.token;
             
-            String message = String.format("The query cannot be parsed.  The token '%s' at column %d on line %d cannot be parsed", token.getText(), index, lineNumber );
-            
-         
+            String message = String.format("The query cannot be parsed. The token '%s' at column %d on line %d cannot be parsed", token.getText(), index, lineNumber );
+
             throw new QueryParseException(message, e);
         }
     }
