@@ -33,14 +33,12 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
@@ -49,6 +47,7 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
@@ -81,7 +80,7 @@ public class Query {
     private String cursor;
     private int limit = 0;
 
-    private Map<String, String> selectSubjects = new LinkedHashMap<String, String>();
+    private Map<String, String> selectAssignments = new LinkedHashMap<String, String>();
     private boolean mergeSelectResults = false;
     private Level level = Level.ALL_PROPERTIES;
     private String connection;
@@ -94,6 +93,8 @@ public class Query {
     private CounterResolution resolution = CounterResolution.ALL;
     private List<Identifier> identifiers;
     private List<CounterFilterPredicate> counterFilters;
+    private String collection;
+    private String ql;
 
     public Query() {
     }
@@ -106,8 +107,8 @@ public class Query {
             startResult = q.startResult;
             cursor = q.cursor;
             limit = q.limit;
-            selectSubjects = q.selectSubjects != null ? new LinkedHashMap<String, String>(
-                    q.selectSubjects) : null;
+            selectAssignments = q.selectAssignments != null ? new LinkedHashMap<String, String>(
+                    q.selectAssignments) : null;
             mergeSelectResults = q.mergeSelectResults;
             level = q.level;
             connection = q.connection;
@@ -124,7 +125,7 @@ public class Query {
                     q.identifiers) : null;
             counterFilters = q.counterFilters != null ? new ArrayList<CounterFilterPredicate>(
                     q.counterFilters) : null;
-
+            collection = q.collection;
         }
     }
 
@@ -150,7 +151,9 @@ public class Query {
         QueryFilterParser parser = new QueryFilterParser(tokens);
        
         try {
-            return parser.ql().query;
+            Query q = parser.ql().query;
+            q.setQl(ql);
+            return q;
         } catch (RecognitionException e) {
             logger.error("Unable to parse \"{}\"", ql, e);
             
@@ -163,9 +166,6 @@ public class Query {
          
             throw new QueryParseException(message, e);
         }
-        
-
-        
     }
 
     private static Query newQueryIfNull(Query query) {
@@ -362,6 +362,7 @@ public class Query {
         return true;
     }
 
+    @JsonIgnore
     public String getSingleNameOrEmailIdentifier() {
         if (!containsSingleNameOrEmailIdentifier()) {
             return null;
@@ -393,6 +394,7 @@ public class Query {
         return true;
     }
 
+    @JsonIgnore
     public UUID getSingleUuidIdentifier() {
         if (!containsSingleUuidIdentifier()) {
             return null;
@@ -400,9 +402,10 @@ public class Query {
         return (identifiers.get(0).getUUID());
     }
 
+    @JsonIgnore
     boolean isIdsOnly() {
-        if ((selectSubjects.size() == 1)
-                && selectSubjects.containsKey(PROPERTY_UUID)) {
+        if ((selectAssignments.size() == 1)
+                && selectAssignments.containsKey(PROPERTY_UUID)) {
             level = Level.IDS;
             return true;
         }
@@ -411,11 +414,11 @@ public class Query {
 
     public void setIdsOnly(boolean idsOnly) {
         if (idsOnly) {
-            selectSubjects = new LinkedHashMap<String, String>();
-            selectSubjects.put(PROPERTY_UUID, PROPERTY_UUID);
+            selectAssignments = new LinkedHashMap<String, String>();
+            selectAssignments.put(PROPERTY_UUID, PROPERTY_UUID);
             level = Level.IDS;
         } else if (isIdsOnly()) {
-            selectSubjects = new LinkedHashMap<String, String>();
+            selectAssignments = new LinkedHashMap<String, String>();
             level = Level.ALL_PROPERTIES;
         }
     }
@@ -488,21 +491,22 @@ public class Query {
             output = "";
         }
 
-        selectSubjects.put(select, output);
+        selectAssignments.put(select, output);
 
         return this;
     }
 
     public boolean hasSelectSubjects() {
-        return !selectSubjects.isEmpty();
+        return !selectAssignments.isEmpty();
     }
 
+    @JsonIgnore
     public Set<String> getSelectSubjects() {
-        return selectSubjects.keySet();
+        return selectAssignments.keySet();
     }
 
     public Map<String, String> getSelectAssignments() {
-        return selectSubjects;
+        return selectAssignments;
     }
 
     boolean isMergeSelectResults() {
@@ -572,6 +576,7 @@ public class Query {
         return this;
     }
 
+    @JsonIgnore
     public boolean isSortSet() {
       return !sortPredicates.isEmpty();
     }
@@ -693,8 +698,19 @@ public class Query {
         rootOperand = and;
     }
 
+    @JsonIgnore
     public Operand getRootOperand() {
-        return this.rootOperand;
+      if (rootOperand == null) { // attempt deserialization
+        if (ql != null) {
+          try {
+            Query q = Query.fromQL(ql);
+            rootOperand = q.rootOperand;
+          } catch (QueryParseException e) {
+            logger.error("error parsing sql for rootOperand", e); // shouldn't happen
+          }
+        }
+      }
+      return rootOperand;
     }
 
     public void setRootOperand(Operand root) {
@@ -849,14 +865,15 @@ public class Query {
 
     @Override
     public String toString() {
+      if (ql != null) { return ql; }
       StringBuilder s = new StringBuilder("select ");
-      if (selectSubjects.isEmpty()) {
+      if (selectAssignments.isEmpty()) {
         s.append("*");
       } else {
         if (mergeSelectResults) {
           s.append("{ ");
           boolean first = true;
-          for (Map.Entry<String, String> select : selectSubjects
+          for (Map.Entry<String, String> select : selectAssignments
               .entrySet()) {
             if (!first) {
               s.append(", ");
@@ -867,7 +884,7 @@ public class Query {
           s.append(" }");
         } else {
           boolean first = true;
-          for (String select : selectSubjects.keySet()) {
+          for (String select : selectAssignments.keySet()) {
             if (!first) {
               s.append(", ");
             }
@@ -1152,4 +1169,22 @@ public class Query {
             throw new RuntimeException(e);
         }
     }
+
+  // note: very likely to be null
+  public String getCollection() {
+    return collection;
+  }
+
+  public void setCollection(String collection) {
+    this.collection = collection;
+  }
+
+  // may be null
+  public String getQl() {
+    return ql;
+  }
+
+  public void setQl(String ql) {
+    this.ql = ql;
+  }
 }

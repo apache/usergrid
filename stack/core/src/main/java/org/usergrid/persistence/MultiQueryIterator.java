@@ -12,21 +12,21 @@ public class MultiQueryIterator implements Iterator {
   private EntityManager entityManager;
   private Iterator<UUID> source;
   private Query query;
-  private String collectionName;
   private MutableEntityRef entityRef = new MutableEntityRef();
   private Iterator currentIterator;
 
-  public MultiQueryIterator(Results results, Query query, String collectionName) {
+  public MultiQueryIterator(Results results, Query query) {
     this(results.getQueryProcessor().getEntityManager(),
-        new PagingResultsIterator(results, Results.Level.IDS),
-        query, collectionName);
+        new PagingResultsIterator(results, Results.Level.IDS), query);
   }
 
-  public MultiQueryIterator(EntityManager entityManager, Iterator<UUID> source, Query query, String collectionName) {
+  public MultiQueryIterator(EntityManager entityManager, Iterator<UUID> source, Query query) {
+    if (query.getCollection() == null && query.getConnectionType() == null) {
+      throw new IllegalArgumentException("Query must have a collection or connectionType value");
+    }
     this.entityManager = entityManager;
     this.source = source;
     this.query = query;
-    this.collectionName = collectionName;
   }
 
   @Override
@@ -59,8 +59,8 @@ public class MultiQueryIterator implements Iterator {
   private Results getResultsFor(UUID uuid) {
     entityRef.setUUID(uuid);
     try {
-      return (collectionName != null)
-          ? entityManager.searchCollection(entityRef, collectionName, query)
+      return (query.getCollection() != null)
+          ? entityManager.searchCollection(entityRef, query.getCollection(), query)
           : entityManager.searchConnectedEntities(entityRef, query);
     } catch (Exception e) {
       throw new RuntimeException(e);

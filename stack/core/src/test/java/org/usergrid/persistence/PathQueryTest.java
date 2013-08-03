@@ -48,6 +48,7 @@ public class PathQueryTest extends AbstractPersistenceTest {
     int pageSize = 10; // shouldn't affect these tests
 
     Query userQuery = new Query();
+    userQuery.setCollection("users");
     userQuery.setLimit(pageSize);
     userQuery.addFilter("index >= 2");
     userQuery.addFilter("index <= 13");
@@ -56,23 +57,26 @@ public class PathQueryTest extends AbstractPersistenceTest {
     // query the users, ignoring page boundaries
     Results results = em.searchCollection(em.getApplicationRef(), "users", userQuery);
     PagingResultsIterator pri = new PagingResultsIterator(results);
-    int i = 2;
+    int count = 2;
     while (pri.hasNext()) {
       Entity e = (Entity) pri.next();
-      assertEquals(i++, ((Long) e.getProperty("index")).intValue());
+      assertEquals(count++, ((Long) e.getProperty("index")).intValue());
     }
-    assertEquals(i, expectedUserQuerySize + 2);
+    assertEquals(count, expectedUserQuerySize + 2);
 
     // query devices as a sub-query of the users, ignoring page boundaries
     Query deviceQuery = new Query();
+    deviceQuery.setCollection("devices");
     deviceQuery.setLimit(pageSize);
     deviceQuery.addFilter("index >= 2");
     int expectedDeviceQuerySize = 3;
 
-    PathQuery<UUID> usersPQ = new PathQuery<UUID>(results);
-    PathQuery<Entity> devicesPQ = usersPQ.chainCollectionQuery("devices", deviceQuery);
+    PathQuery<UUID> usersPQ = new PathQuery<UUID>(em.getApplicationRef(), userQuery);
+    PathQuery<Entity> devicesPQ = usersPQ.chain(deviceQuery);
     HashSet set = new HashSet(expectedUserQuerySize * expectedDeviceQuerySize);
-    for (Entity e : devicesPQ) { set.add(e); }
+//    for (Entity e : devicesPQ) { set.add(e); }
+    Iterator<Entity> i = devicesPQ.iterator(em);
+    while (i.hasNext()) { set.add(i.next()); }
     assertEquals(expectedUserQuerySize * expectedDeviceQuerySize, set.size());
   }
 
@@ -125,28 +129,32 @@ public class PathQueryTest extends AbstractPersistenceTest {
     int pageSize = 3; // ensure we're crossing page boundaries
 
     Query groupQuery = new Query();
+    groupQuery.setCollection("groups");
     groupQuery.setLimit(pageSize);
     groupQuery.addFilter("index <= 7");
     int expectedGroupQuerySize = 4;
 
     Query userQuery = new Query();
+    userQuery.setCollection("users");
     userQuery.setLimit(pageSize);
     userQuery.addFilter("index >= 2");
     userQuery.addFilter("index <= 6");
     int expectedUserQuerySize = 5;
 
     Query deviceQuery = new Query();
+    deviceQuery.setCollection("devices");
     deviceQuery.setLimit(pageSize);
     deviceQuery.addFilter("index >= 4");
     int expectedDeviceQuerySize = 3;
 
-    Results results = em.searchCollection(em.getApplicationRef(), "groups", groupQuery);
-    PathQuery groupsPQ = new PathQuery(results);
-    PathQuery usersPQ = groupsPQ.chainCollectionQuery("users", userQuery);
-    PathQuery<Entity> devicesPQ = usersPQ.chainCollectionQuery("devices", deviceQuery);
+    PathQuery groupsPQ = new PathQuery(em.getApplicationRef(), groupQuery);
+    PathQuery usersPQ = groupsPQ.chain(userQuery);
+    PathQuery<Entity> devicesPQ = usersPQ.chain(deviceQuery);
 
     HashSet set = new HashSet(expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize);
-    for (Entity e : devicesPQ) { set.add(e); }
+//    for (Entity e : devicesPQ) { set.add(e); }
+    Iterator<Entity> i = devicesPQ.iterator(em);
+    while (i.hasNext()) { set.add(i.next()); }
     assertEquals(expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize, set.size());
   }
 }

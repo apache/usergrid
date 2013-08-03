@@ -1,66 +1,87 @@
 package org.usergrid.persistence;
 
 import java.util.Iterator;
+import java.util.UUID;
 
-/**
- * iterator() will be a PagingResultsIterator()
- */
-public class PathQuery<E> implements Iterable<E> {
+public class PathQuery<E> {
 
-  private EntityManager em;
   private PathQuery source;
   private Query query;
-  private String collectionName;
-  private Results head;
+  private UUID head;
 
-  /** top level
-   * @param collectionName null if connection query
-   */
-  public PathQuery(Results results) {
-    head = results;
-    em = results.getQueryProcessor().getEntityManager();
+  public PathQuery() {
   }
 
-  /** chained
-   * @param collectionName null if connection query
+  /** top level
+   * @param head the top-level entity
+   * @param collectionName the query - must have a collection or connectType value set
    */
-  public PathQuery(EntityManager em, PathQuery source, String collectionName, Query query) {
-    this.em = em;
-    this.source = source;
-    this.collectionName = collectionName;
+  public PathQuery(EntityRef head, Query query) {
+    if (query.getCollection() == null && query.getConnectionType() == null) {
+      throw new IllegalArgumentException("Query must have a collection or connectionType value");
+    }
+    this.head = head.getUuid();
     this.query = query;
   }
 
-  public PathQuery chainCollectionQuery(String collectionName, Query query) {
-    return new PathQuery(em, this, collectionName, query);
-  }
-
-  public PathQuery chainConnectionQuery(Query query) {
-    return new PathQuery(em, this, null, query);
-  }
-
-  protected Iterator uuidIterator() throws Exception {
-    if (head != null) {
-      return new PagingResultsIterator(head, Results.Level.IDS);
-    } else {
-      Query q = query;
-      if (query.getResultsLevel() != Results.Level.IDS) {
-        q = new Query(q);
-        q.setResultsLevel(Results.Level.IDS);
-      }
-      return new MultiQueryIterator(em, source.uuidIterator(), q, collectionName);
+  /** chained
+   * @param source the source query we're chaining from
+   * @param collectionName the query - must have a collection or connectType value set
+   */
+  public PathQuery(PathQuery source, Query query) {
+    if (query.getCollection() == null && query.getConnectionType() == null) {
+      throw new IllegalArgumentException("Query must have a collection or connectionType value");
     }
+    this.source = source;
+    this.query = query;
   }
 
-  public Iterator<E> iterator() {
+  public PathQuery chain(Query query) {
+    return new PathQuery(this, query);
+  }
+
+  public Iterator<E> iterator(EntityManager em) {
     try {
       if (head != null) {
-        return new PagingResultsIterator(head, query.getResultsLevel());
+        return new PagingResultsIterator(getHeadResults(em), query.getResultsLevel());
       } else {
-        return new MultiQueryIterator(em, source.uuidIterator(), query, collectionName);
+        return new MultiQueryIterator(em, source.uuidIterator(em), query);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+
+  protected Results getHeadResults(EntityManager em) throws Exception {
+    EntityRef ref = new SimpleEntityRef(head);
+    return (query.getCollection() != null)
+        ? em.searchCollection(ref, query.getCollection(), query)
+        : em.searchConnectedEntities(ref, query);
+  }
+
+  protected Iterator uuidIterator(EntityManager em) throws Exception {
+    if (head != null) {
+      return new PagingResultsIterator(getHeadResults(em), Results.Level.IDS);
+    } else {
+      Query q = query;
+      if (query.getResultsLevel() != Results.Level.IDS) { // ensure IDs level
+        q = new Query(q);
+        q.setResultsLevel(Results.Level.IDS);
+      }
+      return new MultiQueryIterator(em, source.uuidIterator(em), q);
+    }
+  }
+
+  public PathQuery getSource() {
+    return source;
+  }
+
+  public UUID getHead() {
+    return head;
+  }
+
+  public Query getQuery() {
+    return query;
   }
 }
