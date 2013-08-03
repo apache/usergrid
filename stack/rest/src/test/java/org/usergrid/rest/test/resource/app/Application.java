@@ -15,64 +15,55 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.app;
 
+import java.util.Map;
+
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.RootResource;
+import org.usergrid.rest.test.resource.ValueResource;
 import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
 import org.usergrid.rest.test.resource.app.queue.QueuesCollection;
-
 
 /**
  * @author tnine
  * 
  */
-public class Application extends NamedResource {
+public class Application extends ValueResource {
 
-  private String appName;
-  private String orgName;
 
   /**
    * @param parent
    */
   public Application(String orgName, String appName, RootResource root) {
-    super(root);
-    this.orgName = orgName;
-    this.appName = appName;
+    super(orgName + SLASH + appName, root);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
-   */
-  @Override
-  public void addToUrl(StringBuilder buffer) {
-    parent.addToUrl(buffer);
-    buffer.append(orgName);
-    buffer.append(SLASH);
-    buffer.append(appName);
-  }
   
+
   /**
    * Get the token from management for this username and password
+   * 
    * @param username
    * @param password
    * @return
    */
-  public String token(String username, String password){
+  public String token(String username, String password) {
 
-      String url = String.format("%s/token", url());
-      
-      JsonNode node = resource().path(url).queryParam("grant_type","password").queryParam("username",username).queryParam("password",password)
-          .accept(MediaType.APPLICATION_JSON)
-          .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-    
-    
-      return node.get("access_token").asText();
+    String url = String.format("%s/token", url());
+
+    JsonNode node = resource().path(url).queryParam("grant_type", "password").queryParam("username", username)
+        .queryParam("password", password)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+    return node.get("access_token").asText();
+  }
+
+  public JsonNode put(Map<String, Object> properties) {
+    return putInternal(properties);
   }
 
   public UsersCollection users() {
@@ -82,13 +73,13 @@ public class Application extends NamedResource {
   public QueuesCollection queues() {
     return new QueuesCollection(this);
   }
-  
+
   public DevicesCollection devices() {
     return new DevicesCollection(this);
   }
 
-  public CustomCollection collection(String name){
+  public CustomCollection collection(String name) {
     return new CustomCollection(name, this);
   }
-  
+
 }

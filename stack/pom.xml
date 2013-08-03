@@ -665,17 +665,6 @@
         </exclusions>
       </dependency>
 
-      <dependency>
-        <groupId>org.usergrid</groupId>
-        <artifactId>geocell</artifactId>
-        <version>0.0.11</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
       <dependency>
         <!-- TODO T.N. try and remove this -->
@@ -1822,11 +1811,6 @@
       </snapshots>
     </repository>
 
-    <repository>
-      <id>javageomodel-repo</id>
-      <name>GeocellJava Repository</name>
-      <url>http://javageomodel.googlecode.com/svn/repository</url>
-    </repository>
   </repositories>
 
   <pluginRepositories>

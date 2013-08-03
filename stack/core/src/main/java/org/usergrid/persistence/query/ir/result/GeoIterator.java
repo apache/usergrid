@@ -16,8 +16,7 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,15 +26,12 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 
-import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.cassandra.CursorCache;
-import org.usergrid.persistence.cassandra.GeoIndexManager;
-import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
+import org.usergrid.persistence.geo.EntityLocationRef;
+import org.usergrid.persistence.geo.GeoIndexSearcher;
+import org.usergrid.persistence.geo.GeoIndexSearcher.SearchResults;
+import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.utils.UUIDUtils;
-
-import com.beoui.geocell.SearchResults;
-import com.beoui.geocell.model.Point;
 
 /**
  * Simple wrapper around list results until the geo library is updated so
@@ -50,36 +46,49 @@ public class GeoIterator implements ResultIterator {
    * 
    */
   private static final String DELIM = "+";
+  private static final String TILE_DELIM = "TILE";
 
   private static final StringSerializer STR_SER = StringSerializer.get();
+
 
   private final GeoIndexSearcher searcher;
   private final int resultSize;
   private final QuerySlice slice;
-  private final LinkedHashMap<UUID, Integer> idOrder;
+  private final LinkedHashMap<UUID, EntityLocationRef> idOrder;
+  private final Point center;
+  private final double distance;
+  private final String propertyName;
+  
   private Set<UUID> toReturn;
 
   // set when parsing cursor. If the cursor has gone to the end, this will be
   // true, we should return no results
   private boolean done = false;
+  //
+  // private List<Double> distances;
 
-  private List<Double> distances;
-  
   /**
    * Moved and used as part of cursors
    */
-  private int nextResolution = GeoIndexManager.MAX_RESOLUTION;
-  private UUID startId;
-  private double cursorDistance;
+  // private int nextResolution = GeoIndexManager.MAX_RESOLUTION;
+  // private UUID startId;
+  // private double cursorDistance;
+  private EntityLocationRef last;
+  private List<String> lastCellsSearched;
 
+  
+  
   /**
    * 
    */
-  public GeoIterator(GeoIndexSearcher searcher, int resultSize, QuerySlice slice) {
+  public GeoIterator(GeoIndexSearcher searcher, int resultSize, QuerySlice slice, String propertyName, Point center, double distance) {
     this.searcher = searcher;
     this.resultSize = resultSize;
     this.slice = slice;
-    this.idOrder = new LinkedHashMap<UUID, Integer>(resultSize);
+    this.propertyName = propertyName;
+    this.center = center;
+    this.distance = distance;
+    this.idOrder = new LinkedHashMap<UUID, EntityLocationRef>(resultSize);
     parseCursor();
 
   }
@@ -112,68 +121,38 @@ public class GeoIterator implements ResultIterator {
     }
 
     idOrder.clear();
-    distances = new ArrayList<Double>(resultSize);
+  
 
-    int count = 0;
-    
-    /**
-     * we have to do some screwy logic for paging since it's distance based. A
-     * point could be the same distance, and then get cut off by a page. We need
-     * to discard results the have the same distance as the last one and an id
-     * <= to the last uuid
-     */
-    while (!done && idOrder.size() < resultSize) {
-      
-      SearchResults<EntityLocationRef> results;
-      
-      int queriedSize = resultSize - idOrder.size();
-      
-      //ask for 1 more record since we're going to discard the first one
-      if(startId != null){
-        queriedSize++;
-      }
+    SearchResults results;
 
-      try {
-        results = searcher.doSearch(cursorDistance, startId, nextResolution, queriedSize);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
+    try {
+      results = searcher.proximitySearch(last, lastCellsSearched, center, propertyName, 0, distance, resultSize);
       
-      List<EntityLocationRef> locations = results.getResults();
-      
-      List<Double> resultDistances = results.getDistances();
-      
-      nextResolution = results.getLastResolution();
-      
-      if(startId != null && locations.size() > 0 && startId.equals(locations.get(0).getUuid())){
-        locations.remove(0);
-        resultDistances.remove(0);
-      }
-            
-      for (int i = 0; i < locations.size(); i++) {
 
-        EntityLocationRef location = locations.get(i);
-        double distance = resultDistances.get(i);
-        UUID id = location.getUuid();
-        
-
-        idOrder.put(id, count);
-        distances.add(distance);
-        
-        startId = id;
-        cursorDistance = distance;
-        
-        count++;
-      }
-
-     
-      if (locations.size() < queriedSize) {
-        done = true;
-      }
-
-      
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to search geo locations", e);
     }
 
+    List<EntityLocationRef> locations = results.entityLocations;
+
+    lastCellsSearched = results.lastSearchedGeoCells;
+
+    for (int i = 0; i < locations.size(); i++) {
+
+      EntityLocationRef location = locations.get(i);
+      UUID id = location.getUuid();
+
+      idOrder.put(id, location);
+      // distances.add(distance);
+
+      last = location;
+
+      // count++;
+    }
+
+    if (locations.size() < resultSize) {
+      done = true;
+    }
 
     if (idOrder.size() > 0) {
       toReturn = idOrder.keySet();
@@ -216,9 +195,9 @@ public class GeoIterator implements ResultIterator {
    */
   @Override
   public void reset() {
-    distances = null;
     idOrder.clear();
-    nextResolution = GeoIndexManager.MAX_RESOLUTION;
+    lastCellsSearched = null;
+    last = null;
   }
 
   /*
@@ -229,25 +208,39 @@ public class GeoIterator implements ResultIterator {
    * org.usergrid.persistence.cassandra.CursorCache, java.util.UUID)
    */
   @Override
-  public void finalizeCursor(CursorCache cache, UUID lastValue) {
+  public void finalizeCursor(CursorCache cache, UUID uuid) {
 
-    Integer index = idOrder.get(lastValue);
+    EntityLocationRef location = idOrder.get(uuid);
 
-    if (index == null) {
+    if (location == null) {
       return;
     }
 
     int sliceHash = slice.hashCode();
 
     // get our next distance
-    double distance = distances.get(index);
+    double lattitude = location.getLatitude();
+
+    double longitude = location.getLongitude();
 
     // now create a string value for this
     StringBuilder builder = new StringBuilder();
 
-    builder.append(lastValue).append(DELIM);
-    builder.append(distance).append(DELIM);
-    builder.append(nextResolution);
+    builder.append(uuid).append(DELIM);
+    builder.append(lattitude).append(DELIM);
+    builder.append(longitude);
+
+    if (lastCellsSearched != null) {
+      builder.append(DELIM);
+
+      for (String geoCell : lastCellsSearched) {
+        builder.append(geoCell).append(TILE_DELIM);
+      }
+
+      int length = builder.length();
+
+      builder.delete(length - TILE_DELIM.length() - 1, length);
+    }
 
     ByteBuffer buff = STR_SER.toByteBuffer(builder.toString());
 
@@ -270,108 +263,26 @@ public class GeoIterator implements ResultIterator {
 
     String[] parts = string.split("\\" + DELIM);
 
-    if (parts.length != 3) {
-      throw new RuntimeException("Geo cursors must contain 3 parts.  Incorrect cursor, please execute the query again");
+    if (parts.length < 3) {
+      throw new RuntimeException(
+          "Geo cursors must contain 3 or more parts.  Incorrect cursor, please execute the query again");
     }
 
-    // discard the UUID for now
+    UUID startId = UUID.fromString(parts[0]);
+    double lattitude = Double.parseDouble(parts[1]);
+    double longtitude = Double.parseDouble(parts[2]);
 
-    // parse the double
-    startId = UUID.fromString(parts[0]);
-    cursorDistance = Double.parseDouble(parts[1]);
-    nextResolution = Integer.parseInt(parts[2]);
-  }
+    if (parts.length >= 4) {
+      String[] geoCells = parts[3].split(TILE_DELIM);
 
-  public static abstract class GeoIndexSearcher {
-
-    protected GeoIndexManager geoIndexManager;
-    protected final Point searchPoint;
-    protected final String propertyName;
-    protected final float distance;
-
-    /**
-     * @param geoIndexManager
-     * @param pageSize
-     * @param headEntity
-     * @param searchPoint
-     * @param propertyName
-     * @param distance
-     */
-    public GeoIndexSearcher(GeoIndexManager geoIndexManager, Point searchPoint, String propertyName, float distance) {
-      this.geoIndexManager = geoIndexManager;
-      this.searchPoint = searchPoint;
-      this.propertyName = propertyName;
-      this.distance = distance;
+      lastCellsSearched = Arrays.asList(geoCells);
     }
 
-    abstract SearchResults<EntityLocationRef> doSearch(double minDistance, UUID startId, int resolution, int pageSize)
-        throws Exception;
-  }
-
-  /**
-   * Class for loading collection search data
-   * 
-   * @author tnine
-   * 
-   */
-  public static class CollectionGeoSearch extends GeoIndexSearcher {
-
-    private final String collectionName;
-    private final EntityRef headEntity;
-
-    public CollectionGeoSearch(GeoIndexManager geoIndexManager, EntityRef headEntity, String collectionName,
-        Point searchPoint, String propertyName, float distance) {
-      super(geoIndexManager, searchPoint, propertyName, distance);
-      this.collectionName = collectionName;
-      this.headEntity = headEntity;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.ir.result.GeoIterator.GeoIndexSearcher
-     * #doSearch()
-     */
-    @Override
-    public SearchResults<EntityLocationRef> doSearch(double minDistance, UUID startId, int resolution, int pageSize) throws Exception {
-      return geoIndexManager.proximitySearchCollection(headEntity, collectionName, propertyName, searchPoint,
-          minDistance, distance, startId, resolution, pageSize);
-
-    }
+    last = new EntityLocationRef((String) null, startId, lattitude, longtitude);
 
   }
 
-  /**
-   * Class for loading connection data
-   * 
-   * @author tnine
-   * 
-   */
-  public static class ConnectionGeoSearch extends GeoIndexSearcher {
 
-    private final UUID connectionId;
 
-    public ConnectionGeoSearch(GeoIndexManager geoIndexManager, UUID connectionId, Point searchPoint,
-        String propertyName, float distance) {
-      super(geoIndexManager, searchPoint, propertyName, distance);
-
-      this.connectionId = connectionId;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.ir.result.GeoIterator.GeoIndexSearcher
-     * #doSearch()
-     */
-    @Override
-    public SearchResults<EntityLocationRef> doSearch(double minDistance,UUID startId, int resolution, int pageSize) throws Exception {
-      return geoIndexManager.proximitySearchConnections(connectionId, propertyName, searchPoint, minDistance, distance,
-          startId, resolution, pageSize);
-
-    }
-
-  }
+  
 }

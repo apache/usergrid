@@ -27,7 +27,7 @@ import org.usergrid.locking.exception.UGLockException;
  */
 public class SingleNodeLockImpl implements Lock {
 
-  private ReentrantLock lock;
+  private final ReentrantLock lock;
   
   /**
    * 

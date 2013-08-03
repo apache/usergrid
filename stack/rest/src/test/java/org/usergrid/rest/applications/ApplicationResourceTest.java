@@ -464,7 +464,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 	      
 	      int ttl = node.get("expires_in").asInt();
 	      
-	      //check it's 1 day, should be the same as the default
+	      //check it's 7 days, should be the same as the default
 	      assertEquals(604800, ttl);
 	      
 	      node = resource().path("/test-organization/test-app/users").queryParam("access_token", accessToken).accept(MediaType.APPLICATION_JSON)
