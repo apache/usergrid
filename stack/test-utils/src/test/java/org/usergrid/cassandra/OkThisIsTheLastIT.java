@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 public class OkThisIsTheLastIT
 {
     public static final Logger logger = LoggerFactory.getLogger( CassandraResource.class );
+    private static final long WAIT = 200L;
 
     @Rule
     public TestName name = new TestName();
@@ -34,7 +35,7 @@ public class OkThisIsTheLastIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -43,7 +44,7 @@ public class OkThisIsTheLastIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -52,7 +53,7 @@ public class OkThisIsTheLastIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -61,7 +62,7 @@ public class OkThisIsTheLastIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -70,7 +71,7 @@ public class OkThisIsTheLastIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -79,6 +80,6 @@ public class OkThisIsTheLastIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 }

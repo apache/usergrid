@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 public class YetAnotherCassandraResourceIT
 {
     public static final Logger logger = LoggerFactory.getLogger(CassandraResource.class);
+    private static final long WAIT = 200L;
+
     private CassandraResource cassandraResource =
             CassandraResourceITSuite.cassandraResource;
 
@@ -25,7 +27,7 @@ public class YetAnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -34,7 +36,7 @@ public class YetAnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -43,7 +45,7 @@ public class YetAnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -52,7 +54,7 @@ public class YetAnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -61,7 +63,7 @@ public class YetAnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -70,6 +72,6 @@ public class YetAnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 }

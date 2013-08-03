@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -271,6 +272,8 @@ public class CassandraResource extends ExternalResource
                 return;
             }
 
+            LOG.info( "Initializing Cassandra at {} ...", tempDir.toString() );
+
             // Create temp directory, setup to create new File configuration there
             URL oriYamlUrl = ClassLoader.getSystemResource( "cassandra.yaml" );
             File oriYamlFile = new File( oriYamlUrl.getFile() );
@@ -293,8 +296,6 @@ public class CassandraResource extends ExternalResource
             writer.close();
 
             // Fire up Cassandra by setting configuration to point to new yaml file
-            LOG.info( "Initializing Cassandra..." );
-
             System.setProperty( "cassandra-foreground", "true" );
             System.setProperty( "log4j.defaultInitOverride", "true" );
             System.setProperty( "log4j.configuration", "log4j.properties" );
@@ -316,7 +317,7 @@ public class CassandraResource extends ExternalResource
 
             loadSchemaManager( schemaManagerName );
             initialized = true;
-
+            LOG.info( "External Cassandra resource at {} is ready!", tempDir.toString() );
             lock.notifyAll();
         }
     }
@@ -392,9 +393,12 @@ public class CassandraResource extends ExternalResource
      */
     public static CassandraResource newWithAvailablePorts()
     {
-        int rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT );
-        int storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT );
-        int sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT );
+        int rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT
+                + RandomUtils.nextInt( 1000 ) );
+        int storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT
+                + RandomUtils.nextInt( 1000 ) );
+        int sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT
+                + RandomUtils.nextInt( 1000 ) );
 
         if ( rpcPort == storagePort )
         {

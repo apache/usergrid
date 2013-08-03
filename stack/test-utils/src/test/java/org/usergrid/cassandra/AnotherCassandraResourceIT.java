@@ -10,6 +10,7 @@ public class AnotherCassandraResourceIT
 {
     private static final Logger logger = LoggerFactory.getLogger( AnotherCassandraResourceIT.class );
     private CassandraResource cassandraResource = CassandraResourceITSuite.cassandraResource;
+    private static final long WAIT = 200L;
 
 
     @Test
@@ -25,7 +26,7 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -34,7 +35,7 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -43,7 +44,7 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -52,7 +53,7 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -61,7 +62,7 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 
 
@@ -70,6 +71,6 @@ public class AnotherCassandraResourceIT
     {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( 1000L );
+        Thread.sleep( WAIT );
     }
 }

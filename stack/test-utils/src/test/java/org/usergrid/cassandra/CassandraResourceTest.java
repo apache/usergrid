@@ -13,9 +13,11 @@ import static junit.framework.Assert.assertTrue;
 /**
  * This tests the CassandraResource.
  */
+@Concurrent()
 public class CassandraResourceTest
 {
     public static final Logger LOG = LoggerFactory.getLogger( CassandraResourceTest.class );
+    public static final long WAIT = 200L;
 
 
     /**
@@ -78,23 +80,29 @@ public class CassandraResourceTest
      * @throws Exception if this don't work
      */
     @Test
-    public  void testDoubleTrouble() throws Throwable
+    public void testDoubleTrouble() throws Throwable
     {
         CassandraResource c1 = CassandraResource.newWithAvailablePorts();
         LOG.info( "Starting up first Cassandra instance: {}", c1 );
         c1.before();
 
-        LOG.info( "Waiting a few seconds" );
-        Thread.sleep( 5000 );
+        LOG.debug( "Waiting for the new instance to come online." );
+        while( ! c1.isReady() )
+        {
+            Thread.sleep( WAIT );
+        }
 
         CassandraResource c2 = CassandraResource.newWithAvailablePorts();
-        LOG.info( "Starting up second Cassandra instance: {}", c2 );
+        LOG.debug( "Starting up second Cassandra instance: {}", c2 );
         c2.before();
 
-        LOG.info( "Waiting a few seconds" );
-        Thread.sleep( 5000 );
+        LOG.debug( "Waiting a few seconds for second instance to be ready before shutting down." );
+        while( ! c2.isReady() )
+        {
+            Thread.sleep( WAIT );
+        }
 
-        LOG.info( "Shutting Cassandra instances down." );
+        LOG.debug( "Shutting Cassandra instances down." );
         c1.after();
         c2.after();
     }

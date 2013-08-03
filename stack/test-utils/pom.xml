@@ -33,14 +33,13 @@
         <configuration>
           <systemPropertyVariables>
             <storage-config>${basedir}/src/test/conf</storage-config>
-            <target-directory>${pom.build.directory}</target-directory>
+            <target-directory>${project.build.directory}</target-directory>
           </systemPropertyVariables>
           <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
-          <forkMode>always</forkMode>
 
           <includes>
             <include>**/CassandraResourceITSuite.java</include>
-            <include>**/CassandraResourceTest.java</include>
+            <!-- <include>**/CassandraResourceTest.java</include>-->
           </includes>
           <excludes>
             <exclude>**/CassandraRunnerTest.java</exclude>
