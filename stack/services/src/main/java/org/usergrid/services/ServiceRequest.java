@@ -22,6 +22,7 @@ import static org.usergrid.utils.ListUtils.last;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.shiro.SecurityUtils;
@@ -53,6 +54,7 @@ public class ServiceRequest {
 	private final String childPath;
 	private final boolean returnsTree;
 	private final ServicePayload payload;
+  private final List<ServiceParameter> originalParameters;
 
 	// return results_set, result_entity, new_service, param_list, properties
 
@@ -67,6 +69,7 @@ public class ServiceRequest {
 		this.serviceName = serviceName;
 		path = "/" + serviceName;
 		this.parameters = parameters;
+    this.originalParameters = Collections.unmodifiableList(new ArrayList<ServiceParameter>(parameters));
 		this.returnsTree = returnsTree;
 		if (payload == null) {
 			payload = new ServicePayload();
@@ -95,7 +98,8 @@ public class ServiceRequest {
 			parameters = new ArrayList<ServiceParameter>();
 		}
 		this.parameters = parameters;
-		this.path = path;
+    this.originalParameters = Collections.unmodifiableList(new ArrayList<ServiceParameter>(parameters));
+    this.path = path;
 		this.childPath = childPath;
 	}
 
@@ -111,7 +115,8 @@ public class ServiceRequest {
 		this.serviceName = serviceName;
 		this.path = path;
 		this.parameters = parameters;
-		this.childPath = childPath;
+    this.originalParameters = Collections.unmodifiableList(new ArrayList<ServiceParameter>(parameters));
+    this.childPath = childPath;
 		this.returnsTree = returnsTree;
 		this.payload = payload;
 	}
@@ -224,15 +229,10 @@ public class ServiceRequest {
 			ServicePayload payload) throws Exception {
 
 		List<ServiceRequest> requests = previousResults.getNextRequests();
-    if (!previousResults.getPath().endsWith("/devices") &&
-        !previousResults.getPath().endsWith("/users") && // exception for selecting Devices for Notifications
-        !previousResults.getPath().endsWith("/groups")) {
-      if (requests.size() > MAX_INVOCATIONS) {
-        throw new IllegalArgumentException(
-            "Maximum sub-collection requests exceeded, limit is "
-                + MAX_INVOCATIONS + ", " + requests.size()
-                + " attempted");
-      }
+    if (requests.size() > MAX_INVOCATIONS) {
+      throw new IllegalArgumentException(
+          "Maximum sub-collection requests exceeded, limit is "
+              + MAX_INVOCATIONS + ", " + requests.size() + " attempted");
     }
 
 		if (returnsTree) {
@@ -342,4 +342,7 @@ public class ServiceRequest {
 		return returnsTree;
 	}
 
+  public List<ServiceParameter> getOriginalParameters() {
+    return originalParameters;
+  }
 }
