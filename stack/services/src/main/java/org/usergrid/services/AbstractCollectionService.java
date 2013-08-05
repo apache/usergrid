@@ -209,15 +209,6 @@ public class AbstractCollectionService extends AbstractService {
      * if (count > 0) { query.setMaxResults(count); }
      */
 
-    // enable fancy hierarchy selection for creating notifications
-    if (context.getAction() == ServiceAction.POST) {
-      List<ServiceParameter> parameters = context.getRequest().getParameters();
-      String lastParam = parameters.get(parameters.size() - 1).getName();
-      if (lastParam.equalsIgnoreCase("notification") || lastParam.equalsIgnoreCase("notifications")) {
-        query.setLimitNoCheck(MAX_NOTIFICATION_MATRIX_QUERY_SIZE);
-      }
-    }
-
     Results r = em.searchCollection(context.getOwner(), context.getCollectionName(), query);
 
     List<ServiceRequest> nextRequests = null;
