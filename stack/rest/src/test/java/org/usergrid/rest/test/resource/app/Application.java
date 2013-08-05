@@ -62,10 +62,7 @@ public class Application extends ValueResource {
     return node.get("access_token").asText();
   }
 
-  public JsonNode put(Map<String, Object> properties) {
-    return putInternal(properties);
-  }
-
+ 
   public UsersCollection users() {
     return new UsersCollection(this);
   }
