@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.mq;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -26,21 +27,27 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.AbstractPersistenceTest;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.utils.JsonUtils;
 
-public class MessagesTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(MessagesTest.class);
+@Concurrent()
+public class MessagesIT extends AbstractCoreTest
+{
+	private static final Logger logger = LoggerFactory.getLogger( MessagesIT.class );
 
-	public MessagesTest() {
+
+	public MessagesIT()
+    {
 		super();
 	}
 
+
 	@Test
 	public void testMessages() throws Exception {
-		logger.info("MessagesTest.testMessages");
+		logger.info("MessagesIT.testMessages");
 
 		UUID applicationId = createApplication("testOrganization","testMessages");
 		assertNotNull(applicationId);
@@ -191,7 +198,7 @@ public class MessagesTest extends AbstractPersistenceTest {
 
 		QueueManager qm = geQueueManagerFactory()
 				.getQueueManager(applicationId);
-		Message message = null;
+		Message message;
 
 		for (int i = 0; i < 10; i++) {
 			message = new Message();

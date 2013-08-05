@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -28,19 +29,23 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.AbstractPersistenceTest;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
+
 /**
  * @author tnine
  * 
  */
-public class IteratingQueryTest extends AbstractPersistenceTest {
+@Concurrent()
+public class IteratingQueryIT extends AbstractCoreTest
+{
 
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQueryTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(IteratingQueryIT.class);
 
   @Test
   public void singleOrderByMaxLimitCollection() throws Exception {
@@ -1138,7 +1143,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      */
     @Override
     public void doSetup() throws Exception {
-      UUID applicationId = createApplication("IteratingQueryTest", appName);
+      UUID applicationId = createApplication("IteratingQueryIT", appName);
       assertNotNull(applicationId);
 
       em = emf.getEntityManager(applicationId);
@@ -1187,14 +1192,14 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryTest.CollectionIoHelper#
+     * org.usergrid.persistence.query.IteratingQueryIT.CollectionIoHelper#
      * writeEntity(java.lang.String, java.util.Map)
      */
     /*
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryTest.CollectionIoHelper#
+     * org.usergrid.persistence.query.IteratingQueryIT.CollectionIoHelper#
      * doSetup()
      */
     @Override
@@ -1220,7 +1225,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryTest.CollectionIoHelper#
+     * org.usergrid.persistence.query.IteratingQueryIT.CollectionIoHelper#
      * getResults(org.usergrid.persistence.Query)
      */
     @Override
@@ -1242,7 +1247,7 @@ public class IteratingQueryTest extends AbstractPersistenceTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryTest.ConnectionHelper#getResults
+     * org.usergrid.persistence.query.IteratingQueryIT.ConnectionHelper#getResults
      * (org.usergrid.persistence.Query)
      */
     @Override

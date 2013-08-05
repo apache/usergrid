@@ -43,10 +43,10 @@ import org.usergrid.utils.UUIDUtils;
 
 
 @Concurrent()
-public class CollectionTest extends AbstractCoreTest
+public class CollectionIT extends AbstractCoreTest
 {
 
-  private static final Logger logger = LoggerFactory.getLogger( CollectionTest.class );
+  private static final Logger logger = LoggerFactory.getLogger( CollectionIT.class );
 
   @Test
   public void testCollection() throws Exception {

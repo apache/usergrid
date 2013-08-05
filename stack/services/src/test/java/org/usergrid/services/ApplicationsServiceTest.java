@@ -31,7 +31,7 @@ public class ApplicationsServiceTest extends AbstractServiceTest {
 
     @Test
     public void testPermissions() throws Exception {
-        logger.info("PermissionsTest.testPermissions");
+        logger.info("PermissionsIT.testPermissions");
 
         UUID applicationId = createApplication("testOrganization",
                 "testPermissions");

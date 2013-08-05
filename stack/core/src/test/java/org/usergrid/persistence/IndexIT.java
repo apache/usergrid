@@ -15,9 +15,11 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
@@ -31,7 +33,9 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.CoreSuite;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.IndexUpdate;
 import org.usergrid.persistence.cassandra.RelationManagerImpl;
@@ -39,18 +43,17 @@ import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-public class IndexTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(CollectionTest.class);
+@Concurrent()
+public class IndexIT extends AbstractCoreTest
+{
+	private static final Logger logger = LoggerFactory.getLogger(IndexIT.class);
 
 	public static final String[] alphabet = { "Alpha", "Bravo", "Charlie",
 			"Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet",
 			"Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec",
 			"Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey",
-			"X-ray", "Yankee", "Zulu" }
-
-	;
+			"X-ray", "Yankee", "Zulu" };
 
 	@Test
 	public void testCollectionOrdering() throws Exception {
@@ -436,7 +439,7 @@ public class IndexTest extends AbstractPersistenceTest {
     //now read the index and see what properties are there
     
     
-    CassandraService cass = CassandraRunner.getBean(CassandraService.class);
+    CassandraService cass = CoreSuite.cassandraResource.getBean( CassandraService.class );
     
     ByteBufferSerializer buf = ByteBufferSerializer.get();
     
@@ -459,9 +462,14 @@ public class IndexTest extends AbstractPersistenceTest {
     
     
     assertEquals(1, count);
-    
-    assertEquals("herring", lastMatch.getValue());
-  }
-  
 
+      if ( lastMatch != null )
+      {
+        assertEquals("herring", lastMatch.getValue());
+      }
+      else
+      {
+          fail( "The last match was null but should have been herring!" );
+      }
+  }
 }

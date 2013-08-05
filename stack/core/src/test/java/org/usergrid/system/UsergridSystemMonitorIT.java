@@ -30,7 +30,7 @@ import java.util.HashMap;
  * @author zznate
  */
 @Concurrent
-public class UsergridSystemMonitorTest
+public class UsergridSystemMonitorIT
 {
 
 

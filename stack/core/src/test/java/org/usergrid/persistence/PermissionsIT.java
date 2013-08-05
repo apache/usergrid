@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -28,14 +29,19 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.Role;
 
-public class PermissionsTest extends AbstractPersistenceTest {
+
+@Concurrent()
+public class PermissionsIT extends AbstractCoreTest
+{
 
     private static final Logger logger = LoggerFactory
-            .getLogger(PermissionsTest.class);
+            .getLogger(PermissionsIT.class);
 
-    public PermissionsTest() {
+    public PermissionsIT() {
         super();
     }
 
@@ -90,7 +96,7 @@ public class PermissionsTest extends AbstractPersistenceTest {
 
     @Test
     public void testPermissions() throws Exception {
-        logger.info("PermissionsTest.testPermissions");
+        logger.info("PermissionsIT.testPermissions");
 
         UUID applicationId = createApplication("testOrganization",
                 "testPermissions");

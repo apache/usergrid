@@ -15,28 +15,35 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+
 import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 
-public class EntityManagerFactoryTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(EntityManagerFactoryTest.class);
+@Concurrent()
+public class EntityManagerFactoryIT extends AbstractCoreTest
+{
 
-	public EntityManagerFactoryTest() {
+	private static final Logger LOG = LoggerFactory.getLogger(EntityManagerFactoryIT.class);
+
+
+	public EntityManagerFactoryIT()
+    {
 		super();
 	}
 
+
 	@Test
-	public void testEntityManagerFactory() throws Exception {
-		logger.info("EntityManagerFactoryTest.testEntityManagerFactory");
+	public void testEntityManagerFactory() throws Exception
+    {
+		LOG.info( "EntityManagerFactoryIT.testEntityManagerFactory" );
 
-		assertNotNull(emf);
-		logger.info(emf.getImpementationDescription());
-
+		assertNotNull( emf );
+		LOG.info( emf.getImpementationDescription() );
 	}
-
 }

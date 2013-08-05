@@ -40,14 +40,14 @@ import com.usergrid.count.SimpleBatcher;
 
 
 @Concurrent()
-public class CounterTest extends AbstractCoreTest
+public class CounterIT extends AbstractCoreTest
 {
 
-	private static final Logger logger = LoggerFactory.getLogger( CounterTest.class );
+	private static final Logger logger = LoggerFactory.getLogger( CounterIT.class );
 
 	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
 	
-	public CounterTest()
+	public CounterIT()
     {
 		super();
 	}
@@ -64,7 +64,7 @@ public class CounterTest extends AbstractCoreTest
 	@Test
 	public void testIncrementAndDecrement() throws Exception {
 		
-		logger.info("CounterTest.testIncrementAndDecrement");
+		logger.info("CounterIT.testIncrementAndDecrement");
 		
 		UUID applicationId = createApplication("testOrganization", "testCountersIandD");
 		assertNotNull(applicationId);
@@ -94,7 +94,7 @@ public class CounterTest extends AbstractCoreTest
 
 	@Test
 	public void testCounters() throws Exception {
-		logger.info("CounterTest.testCounters");
+		logger.info("CounterIT.testCounters");
 
 		UUID applicationId = createApplication("testOrganization","testCounters");
 		assertNotNull(applicationId);

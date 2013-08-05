@@ -44,9 +44,9 @@ import org.usergrid.persistence.cassandra.CassandraService;
 
 
 @Concurrent()
-public class HectorLockManagerTest extends AbstractCoreTest
+public class HectorLockManagerIT extends AbstractCoreTest
 {
-    private static final Logger logger = LoggerFactory.getLogger( HectorLockManagerTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( HectorLockManagerIT.class );
 
     private static LockManager manager;
     private static ExecutorService pool;

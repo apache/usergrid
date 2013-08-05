@@ -25,29 +25,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import me.prettyprint.cassandra.utils.TimeUUIDUtils;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
-import org.usergrid.utils.MapUtils;
-import org.usergrid.utils.UUIDUtils;
 
-public class EntityConnectionsTest extends AbstractPersistenceTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(EntityConnectionsTest.class);
+@Concurrent()
+public class EntityConnectionsIT extends AbstractCoreTest
+{
 
-  public EntityConnectionsTest() {
+  private static final Logger logger = LoggerFactory.getLogger(EntityConnectionsIT.class);
+
+  public EntityConnectionsIT() {
     super();
   }
 
   @Test
   public void testEntityConnectionsSimple() throws Exception {
-    UUID applicationId = createApplication("EntityConnectionsTest", "testEntityConnectionsSimple");
+    UUID applicationId = createApplication("EntityConnectionsIT", "testEntityConnectionsSimple");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -84,9 +83,9 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 
   @Test
   public void testEntityConnections() throws Exception {
-    logger.info("\n\nEntityConnectionsTest.testEntityConnections\n");
+    logger.info("\n\nEntityConnectionsIT.testEntityConnections\n");
 
-    UUID applicationId = createApplication("EntityConnectionsTest", "testEntityConnections");
+    UUID applicationId = createApplication("EntityConnectionsIT", "testEntityConnections");
     assertNotNull(applicationId);
 
     EntityManager em = emf.getEntityManager(applicationId);
@@ -140,8 +139,6 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
     // List forward connections for cat A
 
     // Thread.sleep(5000);
-
-    // CassandraRunner.getBean(CassandraService.class).logKeyspaces();
 
     logger.info("Find all connections for cat A: " + catA.getUuid());
 

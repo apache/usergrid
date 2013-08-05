@@ -25,7 +25,7 @@ import org.junit.Test;
 
 public class QueuePathsTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(MessagesTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MessagesIT.class);
 
 	public QueuePathsTest() {
 	}

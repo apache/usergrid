@@ -26,15 +26,21 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.utils.JsonUtils;
 
-public class EntityDictionaryTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(EntityDictionaryTest.class);
+@Concurrent()
+public class EntityDictionaryIT extends AbstractCoreTest
+{
 
-	public EntityDictionaryTest() {
+	private static final Logger logger = LoggerFactory.getLogger( EntityDictionaryIT.class );
+
+
+    public EntityDictionaryIT()
+    {
 		super();
 	}
 	
@@ -51,7 +57,7 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 		provider.setAccessTokenEndpointUrl("https://accounts.google.com/o/oauth2/token");
 		provider.setVersion("2.0");
 
-		logger.info("EntityDictionaryTest.testApplicationDictionaries");
+		logger.info("EntityDictionaryIT.testApplicationDictionaries");
 
 		UUID applicationId = createApplication("testOrganization","testApplicationDictionaries");
 		assertNotNull(applicationId);
@@ -70,7 +76,7 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 	@Test
 	public void testUserDictionaries() throws Exception {
 
-		logger.info("EntityDictionaryTest.testUserDictionaries");
+		logger.info("EntityDictionaryIT.testUserDictionaries");
 
 		UUID applicationId = createApplication("testOrganization","testUserDictionaries");
 		assertNotNull(applicationId);
