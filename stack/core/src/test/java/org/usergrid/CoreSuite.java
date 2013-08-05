@@ -13,11 +13,12 @@ import org.usergrid.persistence.CounterTest;
 import org.usergrid.system.UsergridSystemMonitorTest;
 
 
-@RunWith( ConcurrentSuite.class )
+@RunWith( Suite.class )
 @Suite.SuiteClasses( {
         HectorLockManagerTest.class,
         UsergridSystemMonitorTest.class,
-//        CollectionTest.class,
+        CollectionTest.class,
+        CounterTest.class
 } )
 @Concurrent()
 public class CoreSuite

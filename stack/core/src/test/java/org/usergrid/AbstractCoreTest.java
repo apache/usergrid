@@ -5,6 +5,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.PersistenceTestHelper;
@@ -16,6 +17,7 @@ import org.usergrid.utils.JsonUtils;
 import java.util.UUID;
 
 
+@Concurrent()
 public abstract class AbstractCoreTest
 {
     public static final boolean USE_DEFAULT_APPLICATION = false;
@@ -41,12 +43,6 @@ public abstract class AbstractCoreTest
     public static void setup() throws Exception
     {
         logger.info( "setup" );
-
-//        while( ! CoreSuite.cassandraResource.isReady() )
-//        {
-//            Thread.sleep( 100 );
-//        }
-
         helper = new PersistenceTestHelperImpl();
         helper.setup();
     }

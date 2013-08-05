@@ -351,15 +351,27 @@ public class CassandraResource extends ExternalResource
 
         if ( schemaManager != null )
         {
-            schemaManager.destroy();
+            LOG.info( "Destroying schemaManager..." );
+            try
+            {
+                schemaManager.destroy();
+            }
+            catch ( Exception e )
+            {
+                LOG.error( "Ignoring failures while dropping keyspaces: {}", e.getMessage() );
+            }
+
+            LOG.info( "SchemaManager destroyed..." );
         }
 
         applicationContext.stop();
+        LOG.info( "ApplicationContext stopped..." );
 
         try
         {
             if ( cassandraDaemon != null )
             {
+                LOG.info( "Deactivating CassandraDaemon..." );
                 cassandraDaemon.deactivate();
             }
         }
