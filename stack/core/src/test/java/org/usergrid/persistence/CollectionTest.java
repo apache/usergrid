@@ -15,9 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -28,23 +28,25 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.AbstractCoreTest;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoIndexException;
-import org.usergrid.persistence.exceptions.QueryParseException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-public class CollectionTest extends AbstractPersistenceTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(CollectionTest.class);
+@Concurrent()
+public class CollectionTest extends AbstractCoreTest
+{
+
+  private static final Logger logger = LoggerFactory.getLogger( CollectionTest.class );
 
   @Test
   public void testCollection() throws Exception {

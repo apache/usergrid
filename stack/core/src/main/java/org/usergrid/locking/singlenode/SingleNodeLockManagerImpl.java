@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.locking.singlenode;
 
+
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,57 +25,58 @@ import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
 import org.usergrid.locking.exception.UGLockException;
 
+
 /**
- * Single Node implementation for {@link LocalManager}
+ * Single Node implementation for {@link LockManager}
  * 
  */
-public class SingleNodeLockManagerImpl implements LockManager {
-
-  private final HashMap<String, ReentrantLock> globalLocks;
-
-  /**
-   * Default constructor.
-   */
-  public SingleNodeLockManagerImpl() {
-    globalLocks = new HashMap<String, ReentrantLock>();
-  }
+public class SingleNodeLockManagerImpl implements LockManager
+{
+    private final HashMap<String, ReentrantLock> globalLocks;
 
 
- 
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.usergrid.locking.LockManager#createLock(java.util.UUID,
-   * java.lang.String[])
-   */
-  @Override
-  public Lock createLock(UUID applicationId, String... path) {
-
-    String lockPath = LockPathBuilder.buildPath(applicationId, path);
-    
-    // check first if it is already own by this thread.
-    ReentrantLock lock = globalLocks.get(lockPath);
-    
-
-    if (lock == null) {
-      synchronized (this) {
-        // Check in the Global collection in case someone else owns it.
-        lock = globalLocks.get(lockPath);
-
-        if (lock == null) {
-          // if lock does not exist, null is return but intermediateLock
-          // is added to the map.
-          lock = new ReentrantLock();
-          globalLocks.put(lockPath, lock);
-        }
-      }
+    /**
+     * Default constructor.
+     */
+    public SingleNodeLockManagerImpl()
+    {
+        globalLocks = new HashMap<String, ReentrantLock>();
     }
 
-    // So at this point, the lock was added to the threadLocal collection as
-    // well as
-    // the general collection.
-    return new SingleNodeLockImpl(lock);
-  }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.usergrid.locking.LockManager#createLock(java.util.UUID, java.lang.String[])
+     */
+    @Override
+    public Lock createLock( UUID applicationId, String... path )
+    {
+        String lockPath = LockPathBuilder.buildPath( applicationId, path );
+    
+        // check first if it is already own by this thread.
+        ReentrantLock lock = globalLocks.get( lockPath );
+
+
+        if ( lock == null )
+        {
+            synchronized ( this )
+            {
+                // Check in the Global collection in case someone else owns it.
+                lock = globalLocks.get( lockPath );
+
+                if ( lock == null )
+                {
+                    // if lock does not exist, null is return but intermediateLock
+                    // is added to the map.
+                    lock = new ReentrantLock();
+                    globalLocks.put( lockPath, lock );
+                }
+            }
+        }
+
+        // So at this point, the lock was added to the threadLocal collection as
+        // well as the general collection.
+        return new SingleNodeLockImpl( lock );
+    }
 }

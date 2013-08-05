@@ -15,101 +15,52 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-/*
- import static org.testng.Assert.assertNotNull;
- import static org.testng.Assert.assertNull;
- */
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Properties;
 
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
-import org.usergrid.mq.QueueManagerFactory;
-import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.PersistenceTestHelper;
 
-@Component
-public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 
+@Component
+public class PersistenceTestHelperImpl implements PersistenceTestHelper
+{
+    private static final Logger logger = LoggerFactory.getLogger( PersistenceTestHelperImpl.class );
     public static final boolean FORCE_QUIT = false;
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(PersistenceTestHelperImpl.class);
-
-    // private static final String TMP = "tmp";
-
-    // DatastoreTestClient client;
-
-    EntityManagerFactory emf;
-    QueueManagerFactory mmf;
     Properties properties;
-    CassandraService cassandraService;
-
-    public boolean forceQuit = FORCE_QUIT;
-
-    public PersistenceTestHelperImpl() {
-
-    }
-
-    /*
-     * public DatastoreTestHelperImpl(DatastoreTestClient client) { this.client
-     * = client; }
-     * 
-     * public DatastoreTestClient getClient() { return client; }
-     * 
-     * public void setClient(DatastoreTestClient client) {
-     * assertNull(this.client); this.client = client; }
-     */
-
     ClassPathXmlApplicationContext ac = null;
 
-
-    @Override
-    public void setup() throws Exception {
-        // assertNotNull(client);
-
-        String maven_opts = System.getenv("MAVEN_OPTS");
-        logger.info("Maven options: " + maven_opts);
-
-
-
-    }
-
-    @Override
-    public void teardown() {
-
-
-    }
-
-    public void forceQuit() {
-        if (forceQuit) {
-            logger.warn("\n\n\n******\n\nSystem.exit(0) to workaround Cassandra not stopping!\n\n******\n\n\n");
-            System.exit(0);
-        }
+    public PersistenceTestHelperImpl()
+    {
     }
 
 
+    @Override
+    public void setup() throws Exception
+    {
+        String maven_opts = System.getenv( "MAVEN_OPTS" );
+        logger.info( "Maven options: " + maven_opts );
+    }
 
     @Override
-    public Properties getProperties() {
+    public void teardown()
+    {
+    }
+
+    @Override
+    public Properties getProperties()
+    {
         return properties;
     }
 
+
     @Override
-    public void setProperties(Properties properties) {
+    public void setProperties( Properties properties )
+    {
         this.properties = properties;
     }
-
-
-
 }

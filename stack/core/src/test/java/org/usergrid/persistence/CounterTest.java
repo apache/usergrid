@@ -34,22 +34,22 @@ import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 
-import com.usergrid.count.AbstractBatcher;
-import com.usergrid.count.BatchSubmitter;
-import com.usergrid.count.Batcher;
-import com.usergrid.count.CassandraSubmitter;
 import com.usergrid.count.SimpleBatcher;
 
-public class CounterTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(CounterTest.class);
+public class CounterTest extends AbstractPersistenceTest
+{
+
+	private static final Logger logger = LoggerFactory.getLogger( CounterTest.class );
 
 	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
 	
-	public CounterTest() {
+	public CounterTest()
+    {
 		super();
 	}
-	
+
+
 	@Before
 	public void getSubmitter(){
 	    //set the batcher to block the submit so we wait for results when testing

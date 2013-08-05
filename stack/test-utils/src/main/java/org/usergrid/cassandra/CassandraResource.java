@@ -2,7 +2,6 @@ package org.usergrid.cassandra;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
@@ -86,7 +85,7 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the default SchemaManager for Cassandra.
      */
-    @SuppressWarnings("UnusedDeclaration")
+    @SuppressWarnings( "UnusedDeclaration" )
     public CassandraResource() throws IOException
     {
         this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT );
@@ -98,13 +97,21 @@ public class CassandraResource extends ExternalResource
      * which uses the specified SchemaManager for Cassandra.
      */
     public CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort )
-            throws IOException
     {
         this.schemaManagerName = schemaManagerName;
         this.rpcPort = rpcPort;
         this.storagePort = storagePort;
         this.sslStoragePort = sslStoragePort;
-        this.tempDir = getTempDirectory();
+
+        try
+        {
+            this.tempDir = getTempDirectory();
+        }
+        catch ( IOException e )
+        {
+            LOG.error( "Failed to create temporary directory for Cassandra instance.", e );
+            throw new RuntimeException( e );
+        }
     }
 
 
@@ -156,7 +163,7 @@ public class CassandraResource extends ExternalResource
      *
      * @return the temporary directory
      */
-    @SuppressWarnings("UnusedDeclaration")
+    @SuppressWarnings( "UnusedDeclaration" )
     public File getTemporaryDirectory()
     {
         return tempDir;
@@ -275,15 +282,13 @@ public class CassandraResource extends ExternalResource
             LOG.info( "Initializing Cassandra at {} ...", tempDir.toString() );
 
             // Create temp directory, setup to create new File configuration there
-            URL oriYamlUrl = ClassLoader.getSystemResource( "cassandra.yaml" );
-            File oriYamlFile = new File( oriYamlUrl.getFile() );
             File newYamlFile = new File( tempDir, "cassandra.yaml" );
             URL newYamlUrl = FileUtils.toURLs( new File [] { newYamlFile } )[0];
 
             // Read the original yaml file, make changes, and dump to new position in tmpdir
             Yaml yaml = new Yaml();
             @SuppressWarnings("unchecked") Map<String, Object> map =
-                    ( Map <String, Object> ) yaml.load( new FileInputStream( oriYamlFile ) );
+                    ( Map <String, Object> ) yaml.load( ClassLoader.getSystemResourceAsStream( "cassandra.yaml" ) );
             map.put( RPC_PORT_KEY, getRpcPort() );
             map.put( STORAGE_PORT_KEY, getStoragePort() );
             map.put( SSL_STORAGE_PORT_KEY, getSslStoragePort() );
@@ -296,6 +301,7 @@ public class CassandraResource extends ExternalResource
             writer.close();
 
             // Fire up Cassandra by setting configuration to point to new yaml file
+            System.setProperty( "cassandra.url", "localhost:" + Integer.toString( rpcPort ) );
             System.setProperty( "cassandra-foreground", "true" );
             System.setProperty( "log4j.defaultInitOverride", "true" );
             System.setProperty( "log4j.configuration", "log4j.properties" );
@@ -312,6 +318,16 @@ public class CassandraResource extends ExternalResource
 
             cassandraDaemon = new CassandraDaemon();
             cassandraDaemon.activate();
+
+            Runtime.getRuntime().addShutdownHook( new Thread()
+            {
+                @Override
+                public void run()
+                {
+                    after();
+                }
+            });
+
             String[] locations = { "usergrid-test-context.xml" };
             applicationContext = new ClassPathXmlApplicationContext( locations );
 
@@ -368,7 +384,7 @@ public class CassandraResource extends ExternalResource
             applicationContext.refresh();
         }
 
-        if ( schemaManager != null )
+        if ( schemaManagerName != null )
         {
             LOG.info( "Looking up SchemaManager impl: {}", schemaManagerName );
             this.schemaManager = applicationContext.getBean( schemaManagerName, SchemaManager.class );
@@ -389,9 +405,10 @@ public class CassandraResource extends ExternalResource
      * ports that may or may not be the default ports. If either port is
      * taken, an alternative free port is found.
      *
+     * @param schemaManagerName the name of the schemaManager to use
      * @return a new CassandraResource with possibly non-default ports
      */
-    public static CassandraResource newWithAvailablePorts()
+    public static CassandraResource newWithAvailablePorts( String schemaManagerName )
     {
         int rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT
                 + RandomUtils.nextInt( 1000 ) );
@@ -412,15 +429,20 @@ public class CassandraResource extends ExternalResource
             sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
         }
 
-        try
-        {
-            return new CassandraResource( rpcPort, storagePort, sslStoragePort );
-        }
-        catch ( IOException e )
-        {
-            LOG.error( "Failed to initialized CassandraResource", e );
-            throw new RuntimeException( e );
-        }
+        return new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort );
+    }
+
+
+    /**
+     * Creates a new instance of the CassandraResource with rpc and storage
+     * ports that may or may not be the default ports. If either port is
+     * taken, an alternative free port is found.
+     *
+     * @return a new CassandraResource with possibly non-default ports
+     */
+    public static CassandraResource newWithAvailablePorts()
+    {
+        return  newWithAvailablePorts( null );
     }
 
 

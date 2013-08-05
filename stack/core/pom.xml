@@ -43,6 +43,7 @@
         <directory>src/test/resources</directory>
         <filtering>true</filtering>
         <includes>
+          <include>**/*.yaml</include>
           <include>**/*.xml</include>
           <include>**/*.properties</include>
         </includes>
@@ -74,6 +75,18 @@
           </systemPropertyVariables>
           <forkMode>once</forkMode>
           <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <excludes>
+            <exclude>**/*HectorLockManagerTest.java</exclude>
+            <exclude>**/*UsergridSystemMonitorTest.java</exclude>
+            <!--
+            <exclude>**/*CollectionTest.java</exclude>
+            <exclude>**/*CounterTest.java</exclude>
+            -->
+          </excludes>
+          <includes>
+            <include>**/*CoreSuite.java</include>
+            <include>**/*Test.java</include>
+          </includes>
         </configuration>
       </plugin>
 
