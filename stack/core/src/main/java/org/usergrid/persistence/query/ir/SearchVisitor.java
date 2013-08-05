@@ -31,8 +31,8 @@ public abstract class SearchVisitor implements NodeVisitor {
   /**
    * @param query
    */
-  public SearchVisitor(Query query, QueryProcessor queryProcessor) {
-    this.query = query;
+  public SearchVisitor(QueryProcessor queryProcessor) {
+    this.query = queryProcessor.getQuery();
     this.queryProcessor = queryProcessor;
   }
 

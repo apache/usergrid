@@ -28,17 +28,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoIndexException;
-import org.usergrid.persistence.exceptions.QueryParseException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -1031,6 +1028,54 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     assertEquals(0, r.size());
     
+    assertNull(r.getCursor());
+
+  }
+
+  @Test
+  public void testPagingWithGetNextResults() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "pagingWithBoundsCriteria2");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    int size = 40;
+    List<UUID> entityIds = new ArrayList<UUID>();
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> properties = new LinkedHashMap<String, Object>();
+      properties.put("index", i);
+      Entity created = em.create("page", properties);
+
+      entityIds.add(created.getUuid());
+    }
+
+    int pageSize = 10;
+
+    Query query = new Query();
+    query.setLimit(pageSize);
+    query.addFilter("index >= 10");
+    query.addFilter("index <= 29");
+
+    Results r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+    // check they're all the same before deletion
+    for (int i = 1; i < 3; i++) {
+
+      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+      assertEquals(pageSize, r.size());
+
+      for (int j = 0; j < pageSize; j++) {
+        assertEquals(entityIds.get(i * pageSize + j), r.getEntities().get(j).getUuid());
+      }
+
+      r = r.getNextPageResults();
+    }
+
+    assertEquals(0, r.size());
     assertNull(r.getCursor());
 
   }
