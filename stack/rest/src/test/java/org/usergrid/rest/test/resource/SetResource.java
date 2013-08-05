@@ -15,7 +15,10 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
+import java.util.Map;
 import java.util.UUID;
+
+import org.codehaus.jackson.JsonNode;
 
 /**
  * @author tnine
@@ -46,6 +49,39 @@ public abstract class SetResource extends ValueResource {
    */
   public EntityResource entity(UUID id){
     return new EntityResource(id, this);
+  }
+  
+  public int countEntities (String query) {
+
+    int totalEntitiesContained =0;
+    JsonNode correctNode = this.withQuery(query).withLimit(1000).get();//this.withQuery(query).get();//this.query
+   
+    /*change code to reflect the above */
+    //this.withQuery().withCursor()
+    while (correctNode.get("entities") != null) {
+      totalEntitiesContained += correctNode.get("entities").size();
+      if(correctNode.get("cursor") != null)
+        //correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
+        correctNode = this.withQuery(query).withCursor(correctNode.get("cursor").toString()).get();
+      else
+        break;
+    }
+    return totalEntitiesContained;
+  }
+
+  /*cut out the key variable argument and move it into the customcollection call
+  then just have it automatically add in the variable. */
+
+  public JsonNode[] createEntitiesWithOrdinal(Map valueHolder,int numOfValues) {
+
+    JsonNode[] node = new JsonNode[numOfValues];
+
+    for(int i = 0; i < numOfValues; i++) {
+      valueHolder.put("Ordinal",i);
+      node[i] = this.create(valueHolder);
+    }
+
+    return node;
   }
 
 
