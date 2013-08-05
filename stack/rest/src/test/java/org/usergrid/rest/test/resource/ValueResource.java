@@ -240,7 +240,8 @@ public abstract class ValueResource extends NamedResource {
       }
       else
         for(int index = 0; index < checkedNodes.get("entities").size();index++)
-          assertEquals(correctValues[correctValues.length-1].get("entities").get(0),checkedNodes.get("entities").get
+          assertEquals(correctValues[correctValues.length-1-index].get("entities").get(0),
+              checkedNodes.get("entities").get
               (index));
 
 
