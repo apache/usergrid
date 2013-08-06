@@ -680,8 +680,7 @@ public class QueryProcessor {
 
   private void checkIndexed(String propertyName) throws NoIndexException {
 
-    if (propertyName == null || propertyName.isEmpty() || (!SCHEMA.isPropertyIndexed(entityType, propertyName) && collectionInfo != null
-        && !collectionInfo.isSubkeyProperty(propertyName))) {
+    if (propertyName == null || propertyName.isEmpty() || (!SCHEMA.isPropertyIndexed(entityType, propertyName) && collectionInfo != null)) {
       throw new NoIndexException(entityType, propertyName);
     }
   }

@@ -29,8 +29,6 @@ public @interface EntityCollection {
 
 	boolean indexingDynamicDictionaries() default false;
 
-	String[] subkeys() default {};
-
 	String linkedCollection() default "";
 
 	boolean publicVisible() default true;

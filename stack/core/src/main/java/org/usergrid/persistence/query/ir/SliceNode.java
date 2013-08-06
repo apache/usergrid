@@ -173,33 +173,6 @@ public class SliceNode extends QueryNode {
 	}
 
 	/**
-	 * Remove this slice by name. Useful when using subkeys
-	 * 
-	 * @param fieldName
-	 */
-	public void removeSlice(String fieldName, CollectionInfo info) {
-		this.pairs.remove(fieldName);
-
-		// if we're the last prop slice pair to be removed, we want to add a
-		// select all to get all results in the slice.
-
-		if (this.pairs.size() == 0) {
-
-			// we've removed everything due to row key joining. We need at least
-			// one property to search with
-			// so we'll arbitrarily choose the first one. TODO choose something
-			// better
-			String searchProp = info.getPropertiesIndexed().iterator().next();
-
-			QuerySlice allSlice = new QuerySlice(searchProp, id++);
-			allSlice.setStart(null);
-			allSlice.setFinish(null);
-			this.pairs.put(searchProp, allSlice);
-		}
-
-	}
-
-	/**
 	 * Get all slices in our context
 	 * 
 	 * @return
