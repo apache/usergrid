@@ -65,11 +65,11 @@ public class AdminEmailEncodingTest extends RestContextTest {
 
     // now log in via a GET
 
-    String getToken = context.managment().tokenGet(email, password);
+    String getToken = context.management().tokenGet(email, password);
 
     assertNotNull(getToken);
 
-    String postToken = context.managment().tokenPost(email, password);
+    String postToken = context.management().tokenPost(email, password);
 
     assertNotNull(postToken);
 
@@ -78,11 +78,11 @@ public class AdminEmailEncodingTest extends RestContextTest {
     
     //now get the "me" and ensure it's correct
     
-    JsonNode data  = context.managment().me().get();
+    JsonNode data  = context.management().me().get();
     
     assertNotNull(data.get("access_token").asText());
     
-    data = context.managment().users().user(email).get();
+    data = context.management().users().user(email).get();
     
     JsonNode admin = data.get("data").get("organizations").get(org).get("users").get(email);
     

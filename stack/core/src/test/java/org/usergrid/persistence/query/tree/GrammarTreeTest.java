@@ -28,6 +28,7 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.exceptions.QueryParseException;
 
 /**
  * @author tnine
@@ -567,4 +568,24 @@ public class GrammarTreeTest {
       assertEquals("title", rootNode.getProperty().getValue());
       assertEquals(UUID.fromString("c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0"), ((UUIDLiteral)rootNode.getLiteral()).getValue());
     }
+    
+
+    @Test
+    public void badOrderByGrammar() throws QueryParseException {
+        // from isn't allowed
+        String s = "select * where name = 'bob' order by";
+
+        String error = null;
+
+        try {
+            Query.fromQL(s);
+        } catch (QueryParseException qpe) {
+            error = qpe.getMessage();
+        }
+
+        assertEquals("The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
+
+    }
+  
+
 }

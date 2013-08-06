@@ -18,7 +18,7 @@ package org.usergrid.rest.test.resource;
 import org.usergrid.rest.test.resource.app.User;
 
 /**
- * The "Me" resource from managment
+ * The "Me" resource from management
  * 
  * @author tnine
  * 

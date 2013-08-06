@@ -38,6 +38,8 @@ import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class AbstractCollectionService extends AbstractService {
 
+  private static final int MAX_NOTIFICATION_MATRIX_QUERY_SIZE = 10000000; // 10 M
+
   private static final Logger logger = LoggerFactory.getLogger(AbstractCollectionService.class);
 
   public AbstractCollectionService() {
@@ -192,18 +194,10 @@ public class AbstractCollectionService extends AbstractService {
       level = Results.Level.ALL_PROPERTIES;
     }
 
-    // enable fancy hierarchy selection for creating notifications
-    if (context.getAction() == ServiceAction.POST) {
-      List<ServiceParameter> parameters = context.getRequest().getParameters();
-      String lastParam = parameters.get(parameters.size() - 1).getName();
-      if (lastParam.equalsIgnoreCase("notification") || lastParam.equalsIgnoreCase("notifications")) {
-        count = 10000;
-      }
-    }
-
     query = new Query(query);
     query.setResultsLevel(level);
     query.setLimit(query.getLimit(count));
+   
     if (!query.isReversedSet()) {
       query.setReversed(isCollectionReversed(context));
     }

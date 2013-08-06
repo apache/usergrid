@@ -15,25 +15,21 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.SimpleEntityRef;
 
-/**
- * @author tnine
- *
- */
 public class ConnectionRefLoader implements ResultsLoader {
 
-  private EntityManager em;
+  private String type;
   
-  /**
-   * 
-   */
-  public ConnectionRefLoader(EntityManager em) {
-    this.em = em;
+  public ConnectionRefLoader(String type) {
+    this.type = type;
   }
 
   /* (non-Javadoc)
@@ -41,7 +37,13 @@ public class ConnectionRefLoader implements ResultsLoader {
    */
   @Override
   public Results getResults(List<UUID> entityIds) throws Exception {
-   return null;
+    Results r = new Results();
+    List<EntityRef> refs = new ArrayList<EntityRef>(entityIds.size());
+    for (UUID id : entityIds) {
+      refs.add(new SimpleEntityRef(type, id));
+    }
+    r.setRefs(refs);
+    return r;
   }
 
 }

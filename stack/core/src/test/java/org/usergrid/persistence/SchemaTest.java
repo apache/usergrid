@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static org.junit.Assert.*;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 import io.baas.Simple;
@@ -29,64 +30,106 @@ import org.usergrid.persistence.entities.SampleEntity;
 
 public class SchemaTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(SchemaTest.class);
+  private static final Logger logger = LoggerFactory
+      .getLogger(SchemaTest.class);
 
-	public SchemaTest() {
-	}
+  public SchemaTest() {
+  }
 
-	@Test
-	public void testTypes() throws Exception {
+  @Test
+  public void testTypes() throws Exception {
 
-		logger.info(""
-				+ Schema.getDefaultSchema().getEntityClass("sample_entity"));
-		logger.info(""
-				+ Schema.getDefaultSchema().getEntityType(SampleEntity.class));
+    logger.info(""
+        + Schema.getDefaultSchema().getEntityClass("sample_entity"));
+    logger.info(""
+        + Schema.getDefaultSchema().getEntityType(SampleEntity.class));
 
-		SampleEntity entity = new SampleEntity();
-		logger.info(entity.getType());
-	}
-	
-	@Test
-	public void testThirdPartyEntityTypes() throws Exception {
-		String thirdPartyPackage = "io.baas";
-		Schema schema = Schema.getDefaultSchema();
-		schema.addEntitiesPackage(thirdPartyPackage);
-		schema.scanEntities();
-		
-		List<String> entitiesPackage = schema.getEntitiesPackage();
-		for( String entityPackage : entitiesPackage ) {
-			logger.info(entityPackage);
-		}
-		
-		Assert.assertEquals(schema.getEntityClass("simple"), Simple.class);
-		Assert.assertEquals(schema.getEntityType(Simple.class), "simple");
-		
-		Simple entity = new Simple();
-		logger.info(entity.getType());
-	}
+    SampleEntity entity = new SampleEntity();
+    logger.info(entity.getType());
+  }
 
-	@Test
-	public void testSchema() throws Exception {
+  @Test
+  public void testThirdPartyEntityTypes() throws Exception {
+    String thirdPartyPackage = "io.baas";
+    Schema schema = Schema.getDefaultSchema();
+    schema.addEntitiesPackage(thirdPartyPackage);
+    schema.scanEntities();
 
-		dumpSetNames("application");
-		dumpSetNames("user");
-		dumpSetNames("thing");
-	}
+    List<String> entitiesPackage = schema.getEntitiesPackage();
+    for (String entityPackage : entitiesPackage) {
+      logger.info(entityPackage);
+    }
 
-	public void dumpSetNames(String entityType) {
-		logger.info(entityType + " entity has the following sets: "
-				+ Schema.getDefaultSchema().getDictionaryNames(entityType));
-	}
+    Assert.assertEquals(schema.getEntityClass("simple"), Simple.class);
+    Assert.assertEquals(schema.getEntityType(Simple.class), "simple");
 
-	@Test
-	public void testJsonSchema() throws Exception {
+    Simple entity = new Simple();
+    logger.info(entity.getType());
+  }
 
-		logger.info(mapToFormattedJsonString(Schema.getDefaultSchema()
-				.getEntityJsonSchema("user")));
+  @Test
+  public void testSchema() throws Exception {
 
-		logger.info(mapToFormattedJsonString(Schema.getDefaultSchema()
-				.getEntityJsonSchema("test")));
-	}
+    dumpSetNames("application");
+    dumpSetNames("user");
+    dumpSetNames("thing");
+  }
+
+  public void dumpSetNames(String entityType) {
+    logger.info(entityType + " entity has the following sets: "
+        + Schema.getDefaultSchema().getDictionaryNames(entityType));
+  }
+
+  @Test
+  public void testJsonSchema() throws Exception {
+
+    logger.info(mapToFormattedJsonString(Schema.getDefaultSchema()
+        .getEntityJsonSchema("user")));
+
+    logger.info(mapToFormattedJsonString(Schema.getDefaultSchema()
+        .getEntityJsonSchema("test")));
+  }
+
+  @Test
+  public void hasPropertyTyped() {
+
+    assertFalse(Schema.getDefaultSchema().hasProperty("user", ""));
+
+    assertTrue(Schema.getDefaultSchema().hasProperty("user", "username"));
+
+  }
+
+  @Test
+  public void hasPropertyDynamic() {
+
+    assertFalse(Schema.getDefaultSchema().hasProperty("things", ""));
+
+    assertFalse(Schema.getDefaultSchema().hasProperty("things", "foo"));
+
+  }
+  
+  /**
+   * Should always return true
+   * 
+   */
+  @Test
+  public void indexedTyped(){
+
+    assertTrue(Schema.getDefaultSchema().isPropertyIndexed("user", ""));
+
+    assertTrue(Schema.getDefaultSchema().isPropertyIndexed("user", "username"));
+  }
+  
+  /**
+   * Should always return true for dynamic types
+   */
+  @Test
+  public void indexedUnTyped(){
+
+    
+    assertTrue(Schema.getDefaultSchema().isPropertyIndexed("things", ""));
+
+    assertTrue(Schema.getDefaultSchema().isPropertyIndexed("things", "foo"));
+  }
 
 }

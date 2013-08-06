@@ -85,7 +85,7 @@ public abstract class NamedResource {
     resource =  resource.path(url());
   
     if (token != null) {
-      resource = resource.queryParam("access_token", token());
+      resource = resource.queryParam("access_token", token);
     }
     
     return resource;

@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.rest.test.security;
 
+import java.util.UUID;
+
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.TestContext;
 
@@ -29,6 +31,7 @@ public abstract class TestUser {
   protected String password;
   protected String email;
   protected String token;
+  protected UUID uuid;
   
   
   
@@ -90,6 +93,13 @@ public abstract class TestUser {
     return this.token;
   }
   
+  /**
+   * @return the uuid
+   */
+  public UUID getUuid() {
+    return uuid;
+  }
+
   public boolean isLoggedIn(){
     return this.token != null;
   }
@@ -100,7 +110,10 @@ public abstract class TestUser {
    * @return
    */
   public TestUser create(TestContext context){
-    createInternal(context);
+    JsonNode node = createInternal(context);
+    
+    uuid = UUID.fromString(node.findValue("uuid").asText());
+    
     return this;
   }
   

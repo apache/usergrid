@@ -26,14 +26,11 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.usergrid.persistence.exceptions.NoIndexException;
@@ -47,8 +44,7 @@ import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
-import org.usergrid.persistence.query.ir.result.ResultIterator;
-import org.usergrid.persistence.query.ir.result.ResultsLoader;
+import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
@@ -69,6 +65,8 @@ import org.usergrid.persistence.schema.CollectionInfo;
 public class QueryProcessor {
 
   private static final int PAGE_SIZE = 1000;
+  
+  private static final Schema SCHEMA = getDefaultSchema();
 
   private Operand rootOperand;
   private List<SortPredicate> sorts;
@@ -79,16 +77,30 @@ public class QueryProcessor {
   private int size;
   private Query query;
   private int pageSizeHint;
+  private EntityManager em;
 
-  public QueryProcessor(Query query, CollectionInfo collectionInfo) throws PersistenceException {
+  public QueryProcessor(Query query, CollectionInfo collectionInfo, EntityManager em) throws PersistenceException {
+    setQuery(query);
+    this.collectionInfo = collectionInfo;
+    this.em = em;
+    process();
+  }
+
+  public Query getQuery() {
+    return query;
+  }
+
+  public void setQuery(Query query) {
     this.sorts = query.getSortPredicates();
     this.cursorCache = new CursorCache(query.getCursor());
     this.rootOperand = query.getRootOperand();
     this.entityType = query.getEntityType();
     this.size = query.getLimit();
-    this.collectionInfo = collectionInfo;
     this.query = query;
-    process();
+  }
+
+  public CollectionInfo getCollectionInfo() {
+    return collectionInfo;
   }
 
   private void process() throws PersistenceException {
@@ -112,7 +124,7 @@ public class QueryProcessor {
     // the root
     if (sorts.size() > 0) {
       
-      SliceNode sorts = generateSorts();
+      SliceNode sorts = generateSorts(opCount);
       
       opCount += sorts.getAllSlices().size();
       
@@ -149,7 +161,7 @@ public class QueryProcessor {
     if(opCount > 1){
       pageSizeHint = PAGE_SIZE;
     }else{
-      pageSizeHint = size;
+      pageSizeHint = Math.min(size, PAGE_SIZE);
     }
   }
 
@@ -170,7 +182,12 @@ public class QueryProcessor {
     SortPredicate sort = getSort(slice.getPropertyName());
 
     if (sort != null) {
-      slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
+      boolean isReversed = sort.getDirection() == SortDirection.DESCENDING;
+      
+      //we're reversing the direction of this slice, reverse the params as well
+      if(isReversed != slice.isReversed()){
+       slice.reverse();
+      }
     }
     // apply the cursor
     ByteBuffer cursor = cursorCache.getCursorBytes(slice.hashCode());
@@ -207,7 +224,7 @@ public class QueryProcessor {
    * @return
    * @throws Exception 
    */
-  public Results getResults(EntityManager em, SearchVisitor visitor, ResultsLoader loader) throws Exception {
+  public Results getResults(SearchVisitor visitor) throws Exception {
     // if we have no order by just load the results
 
     if (rootNode == null) {
@@ -218,7 +235,7 @@ public class QueryProcessor {
 
     ResultIterator itr = visitor.getResults();
     
-    List<UUID> entityIds = new ArrayList<UUID>(size);
+    List<UUID> entityIds = new ArrayList<UUID>(Math.min(size, Query.MAX_LIMIT));
     
     CursorCache resultsCursor = new CursorCache();
     
@@ -235,7 +252,8 @@ public class QueryProcessor {
         itr.finalizeCursor(resultsCursor, entityIds.get(resultSize-1));
       }
     }
-    
+
+    ResultsLoader loader = getResultsLoader(em, query);
     Results results = loader.getResults(entityIds);
     
     if (results == null) {
@@ -246,21 +264,31 @@ public class QueryProcessor {
     results.setCursor(resultsCursor.asString());
 
     results.setQuery(query);
-   
+    results.setQueryProcessor(this);
+    results.setSearchVisitor(visitor);
     
     return results;
 
   }
 
- 
+  private ResultsLoader getResultsLoader(EntityManager em, Query query) {
+    switch (query.getResultsLevel()) {
+      case IDS:
+        return new IDLoader();
+      case REFS:
+        return new ConnectionRefLoader(query.getEntityType());
+      default:
+        return new EntityResultsLoader(em);
+    }
+  }
+
   private class TreeEvaluator implements QueryVisitor {
 
     // stack for nodes that will be used to construct the tree and create
     // objects
     private CountingStack<QueryNode> nodes = new CountingStack<QueryNode>();
 
-    private Schema schema = getDefaultSchema();
-
+    
     private int contextCount = -1;
 
     /**
@@ -371,7 +399,7 @@ public class QueryProcessor {
 
       String propertyName = op.getProperty().getValue();
 
-      if (!schema.isPropertyFulltextIndexed(entityType, propertyName)) {
+      if (!SCHEMA.isPropertyFulltextIndexed(entityType, propertyName)) {
         throw new NoFullTextIndexException(entityType, propertyName);
       }
 
@@ -560,13 +588,6 @@ public class QueryProcessor {
 
     }
 
-    private void checkIndexed(String propertyName) throws NoIndexException {
-
-      if (!schema.isPropertyIndexed(entityType, propertyName) && collectionInfo != null
-          && !collectionInfo.isSubkeyProperty(propertyName)) {
-        throw new NoIndexException(entityType, propertyName);
-      }
-    }
     
     public int getSliceCount(){
       return nodes.getSliceCount();
@@ -628,10 +649,6 @@ public class QueryProcessor {
    * @return the pageSizeHint
    */
   public int getPageSizeHint(QueryNode node) {
-    if(node == rootNode){
-      return size;
-    }
-    
     return pageSizeHint;
   }
 
@@ -640,19 +657,35 @@ public class QueryProcessor {
    * cache
    * 
    * @return
+   * @throws NoIndexException 
    */
-  private SliceNode generateSorts() {
+  private SliceNode generateSorts(int opCount) throws NoIndexException {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called
-    SliceNode node = new SliceNode(0);
+    SliceNode node = new SliceNode(opCount);
 
     for (SortPredicate predicate : sorts) {
-      node.setStart(predicate.getPropertyName(), null, true);
-      node.setFinish(predicate.getPropertyName(), null, true);
+      String name = predicate.getPropertyName();
+      
+      checkIndexed(name);
+      
+      node.setStart(name, null, true);
+      node.setFinish(name, null, true);
     }
 
     return node;
   }
+  
 
+  private void checkIndexed(String propertyName) throws NoIndexException {
+
+    if (propertyName == null || propertyName.isEmpty() || (!SCHEMA.isPropertyIndexed(entityType, propertyName) && collectionInfo != null)) {
+      throw new NoIndexException(entityType, propertyName);
+    }
+  }
+
+  public EntityManager getEntityManager() {
+    return em;
+  }
 }

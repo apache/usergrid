@@ -51,11 +51,6 @@ public interface RelationManager {
 			int count, Results.Level resultsLevel, boolean reversed)
 			throws Exception;
 
-	// T.N. This isn't used anywhere. Removing for this release
-	// public Results getCollection(String collectionName,
-	// Map<String, Object> subkeyProperties, UUID startResult, int count,
-	// Results.Level resultsLevel, boolean reversed) throws Exception;
-
 	public Results getCollection(String collectionName, Query query,
 			Results.Level resultsLevel) throws Exception;
 

@@ -70,7 +70,6 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.toSto
 import static org.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.getLong;
 import static org.usergrid.utils.ConversionUtils.object;
 import static org.usergrid.utils.ConversionUtils.string;
@@ -96,7 +95,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -120,11 +120,9 @@ import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
@@ -173,8 +171,6 @@ import org.usergrid.utils.UUIDUtils;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
-
-import javax.annotation.Resource;
 
 /**
  * Cassandra-specific implementation of Datastore
@@ -1080,30 +1076,6 @@ public class EntityManagerImpl implements EntityManager {
 					asList(TYPE_APPLICATION, collection_name, applicationId),
 					null, timestamp);
 
-			// If the collection has subkeys, find each subkey variant
-			// and insert into the subkeyed collection as well
-
-			if (collection != null) {
-				if (collection.hasSubkeys()) {
-					List<String[]> combos = collection.getSubkeyCombinations();
-					for (String[] combo : combos) {
-						List<Object> subkey_props = new ArrayList<Object>();
-						for (String subkey_name : combo) {
-							Object subkey_value = null;
-							if (subkey_name != null) {
-								subkey_value = properties.get(subkey_name);
-							}
-							subkey_props.add(subkey_value);
-						}
-						Object subkey_key = key(subkey_props.toArray());
-						if(!emptyPropertyMap) {
-							addInsertToMutator(m, ENTITY_ID_SETS,
-									key(collection_key, subkey_key), itemId, null,
-									timestamp);
-						}
-					}
-				}
-			}
 		}
 
 		if(emptyPropertyMap){
@@ -2956,14 +2928,6 @@ public class EntityManagerImpl implements EntityManager {
 		return getRelationManager(entityRef).getCollection(collectionName,
 				startResult, count, resultsLevel, reversed);
 	}
-
-	// @Override
-	// public Results getCollection(EntityRef entityRef, String collectionName,
-	// Map<String, Object> subkeyProperties, UUID startResult, int count,
-	// Level resultsLevel, boolean reversed) throws Exception {
-	// return getRelationManager(entityRef).getCollection(collectionName,
-	// subkeyProperties, startResult, count, resultsLevel, reversed);
-	// }
 
 	@Override
 	public Results getCollection(UUID entityId, String collectionName,

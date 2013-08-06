@@ -1,5 +1,6 @@
 package org.usergrid.tools;
 
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.common.collect.*;
@@ -14,6 +15,7 @@ import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.*;
+import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.tools.bean.*;
@@ -37,8 +39,11 @@ import java.util.*;
  */
 public class OrganizationExport extends ExportingToolBase {
 
+  /**
+   * 
+   */
+  private static final String QUERY_ARG = "query";
   private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
- 
 
   @Override
   public void runTool(CommandLine line) throws Exception {
@@ -48,34 +53,46 @@ public class OrganizationExport extends ExportingToolBase {
 
     prepareBaseOutputFileName(line);
 
-
     outputDir = createOutputParentDir();
+
+    String queryString = line.getOptionValue(QUERY_ARG);
+
+    Query query = Query.fromQL(queryString);
 
     logger.info("Export directory: {}", outputDir.getAbsolutePath());
 
-    CSVWriter writer = new CSVWriter(new FileWriter(outputDir.getAbsolutePath()+"/admins.csv"), ',');
-    
-    writer.writeNext(new String[]{"Organization Name", "Admin Name", "Admin Email", "Admin Created Date"});
-    
-    List<OrganizationInfo> organizations = managementService.getOrganizations(null, 1000000);
-    
-    for (OrganizationInfo organization : organizations) {
-      logger.info("Org Name: {} key: {}", organization.getName(), organization.getUuid());
-   
-      for(UserInfo user: managementService.getAdminUsersForOrganization(organization.getUuid())){
+    CSVWriter writer = new CSVWriter(new FileWriter(outputDir.getAbsolutePath() + "/admins.csv"), ',');
+
+    writer.writeNext(new String[] { "Organization Name", "Admin Name", "Admin Email", "Admin Created Date" });
+
+    Results organizations = null;
+
+    do {
+      
+      organizations = getOrganizations(query);
+      
+      for (Entity organization : organizations.getEntities()) {
+        String orgName = organization.getProperty("path").toString();
         
-        Entity admin = managementService.getAdminUserEntityByUuid(user.getUuid());
-        
-        Long createdDate = (Long) admin.getProperties().get("created");
-        
-       
-        writer.writeNext(new String[]{organization.getName(), user.getName(), user.getEmail(), createdDate == null? "Unknown" : sdf.format(new Date(createdDate)) });
+        logger.info("Org Name: {} key: {}", orgName, organization.getUuid());
+
+        for (UserInfo user : managementService.getAdminUsersForOrganization(organization.getUuid())) {
+
+          Entity admin = managementService.getAdminUserEntityByUuid(user.getUuid());
+
+          Long createdDate = (Long) admin.getProperties().get("created");
+
+          writer.writeNext(new String[] { orgName, user.getName(), user.getEmail(),
+              createdDate == null ? "Unknown" : sdf.format(new Date(createdDate)) });
+        }
       }
 
-    }
-    
+      query.setCursor(organizations.getCursor());
+      
+    } while (organizations != null && organizations.hasCursor());
+
     logger.info("Completed export");
-    
+
     writer.flush();
     writer.close();
   }
@@ -83,12 +100,19 @@ public class OrganizationExport extends ExportingToolBase {
   @Override
   public Options createOptions() {
     Options options = super.createOptions();
-   
+
+    @SuppressWarnings("static-access")
+    Option queryOption = OptionBuilder.withArgName(QUERY_ARG).hasArg().isRequired(true)
+        .withDescription("Query to execute when searching for organizations").create(QUERY_ARG);
+    options.addOption(queryOption);
 
     return options;
   }
 
- 
- 
+  private Results getOrganizations(Query query) throws Exception {
+
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    return em.searchCollection(em.getApplicationRef(), "groups", query);
+  }
 
 }

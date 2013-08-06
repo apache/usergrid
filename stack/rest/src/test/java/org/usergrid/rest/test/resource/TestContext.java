@@ -86,7 +86,7 @@ public class TestContext {
    * @return
    */
   public TestContext createNewOrgAndUser() {
-    orgUuid = managment().orgs().create(orgName, activeUser);
+    orgUuid = management().orgs().create(orgName, activeUser);
 
     return this;
   }
@@ -97,7 +97,7 @@ public class TestContext {
    * @return
    */
   public TestContext createAppForOrg() {
-    appUuid = managment().orgs().organization(orgName).apps().create(appName);
+    appUuid = management().orgs().organization(orgName).apps().create(appName);
 
     return this;
   }
@@ -163,7 +163,7 @@ public class TestContext {
     return new Application(orgName, appName, root());
   }
 
-  public Management managment() {
+  public Management management() {
     return new Management(root());
   }
 
