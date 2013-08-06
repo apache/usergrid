@@ -8,11 +8,13 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.batch.repository.JobDescriptor;
+import org.usergrid.cassandra.Concurrent;
 
 /**
  * @author zznate
  */
-public class UsergridJobFactoryUnitTest {
+@Concurrent()
+public class UsergridJobFactoryTest {
 
   private static UUID jobId = UUID.randomUUID();
 

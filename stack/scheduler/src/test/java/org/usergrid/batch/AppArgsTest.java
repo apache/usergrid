@@ -6,11 +6,13 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 import com.google.common.base.CharMatcher;
+import org.usergrid.cassandra.Concurrent;
 
 /**
  * @author zznate
  */
-public class AppArgsUnitTest {
+@Concurrent()
+public class AppArgsTest {
 
   @Test
   public void verifyDefaults() {

@@ -15,60 +15,50 @@
  ******************************************************************************/
 package org.usergrid.test;
 
+
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.cassandra.DataControl;
-import org.usergrid.security.shiro.utils.SubjectUtils;
+
+
 
 /**
  * @author tnine
- * 
  */
-public class ShiroHelperRunner extends CassandraRunner {
-
-  
-  private SubjectThreadState subjectThreadState;
-  
-  /**
-   * @param klass
-   * @throws InitializationError
-   */
-  public ShiroHelperRunner(Class<?> klass) throws InitializationError {
-    super(klass);
-  }
-
-  /* (non-Javadoc)
-   * @see org.usergrid.cassandra.CassandraRunner#preTest(org.junit.runner.notification.RunNotifier)
-   */
-  @Override
-  protected DataControl preTest(RunNotifier notifier) {
-    return super.preTest(notifier);
-    
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.cassandra.CassandraRunner#postTest(org.junit.runner.notification
-   * .RunNotifier, org.usergrid.cassandra.DataControl)
-   */
-  @Override
-  protected void postTest(RunNotifier notifier, DataControl control) {
-    Subject subject = SecurityUtils.getSubject();
-
-    if (subject == null) {
-      return;
+public class ShiroHelperRunner extends CassandraRunner
+{
+    /**
+     * @param klass
+     * @throws InitializationError
+     */
+    public ShiroHelperRunner( Class<?> klass ) throws InitializationError
+    {
+        super( klass) ;
     }
 
-    new SubjectThreadState(subject).clear();
 
-    super.postTest(notifier, control);
-  }
+    @Override
+    protected DataControl preTest( RunNotifier notifier )
+    {
+        return super.preTest(notifier);
+    }
 
+
+    @Override
+    protected void postTest( RunNotifier notifier, DataControl control )
+    {
+        Subject subject = SecurityUtils.getSubject();
+
+        if ( subject == null )
+        {
+            return;
+        }
+
+        new SubjectThreadState( subject ).clear();
+        super.postTest( notifier, control );
+    }
 }
