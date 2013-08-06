@@ -40,7 +40,7 @@ import com.yammer.metrics.core.TimerContext;
 public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
-    private Batch batch;
+    private volatile Batch batch;
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
@@ -51,6 +51,7 @@ public abstract class AbstractBatcher implements Batcher {
   // TODO add batchCount, remove shouldSubmit, impl submit, change simpleBatcher to just be an extension
   protected int batchSize = 500;
   private final AtomicLong batchSubmissionCount = new AtomicLong();
+  private final AtomicBoolean lock = new AtomicBoolean(false);
 
   public AbstractBatcher() {
     batch = new Batch();
@@ -87,12 +88,22 @@ public abstract class AbstractBatcher implements Batcher {
     public void add(Count count) throws CounterProcessingUnavailableException {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
-
-      batch.add(count);
-
+      getBatch().add(count);
       context.stop();
 
     }
+
+  Batch getBatch() {
+    Batch active = batch;
+    if ( active.getCapacity() == 0 ) {
+      synchronized(this) {
+        if ( active.getCapacity() == 0) {
+          active.flush();
+        }
+      }
+    }
+    return active;
+  }
 
   public long getBatchSubmissionCount() {
     return batchSubmissionCount.get();
@@ -101,28 +112,34 @@ public abstract class AbstractBatcher implements Batcher {
     class Batch {
         private BlockingQueue<Count> counts;
         private final AtomicInteger localCallCounter = new AtomicInteger();
-        private final ReentrantLock lock = new ReentrantLock();
+
+      private final AtomicBoolean lock = new AtomicBoolean(false);
 
         Batch() {
             counts = new ArrayBlockingQueue<Count>(batchSize);
         }
 
+    int getCapacity() {
+      return counts.remainingCapacity();
+    }
 
 
-      void add(Count count) {
-          if (!counts.offer(count) ) {
-            ArrayList<Count> flushed = new ArrayList<Count>(batchSize);
-            counts.drainTo(flushed);
-            batchSubmitter.submit(flushed);
-            batchSubmissionCount.incrementAndGet();
-            counts.offer(count);
-          }
+      void flush() {
+        ArrayList<Count> flushed = new ArrayList<Count>(batchSize);
+        counts.drainTo(flushed);
+        batchSubmitter.submit(flushed);
+        batchSubmissionCount.incrementAndGet();
+        opCount.incrementAndGet();
+        localCallCounter.incrementAndGet();
+      }
 
-
-            opCount.incrementAndGet();
-            localCallCounter.incrementAndGet();
-
+      void add(Count count)  {
+        try {
+          counts.offer(count, 500, TimeUnit.MILLISECONDS);
+        } catch (Exception ex){
+          ex.printStackTrace();
         }
+      }
 
 
 

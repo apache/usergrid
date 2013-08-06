@@ -62,6 +62,7 @@ public class BatchCountParallelismTest {
       }));
 
     }
+    batcher.add(new Count("Counter","k1","counter1",1));
     System.out.println("size: " +calls.size());
 
     cdl.await();
@@ -69,7 +70,7 @@ public class BatchCountParallelismTest {
 
     //exec.awaitTermination(3, TimeUnit.SECONDS);
     // we should have 100 total invocations of AbstractBatcher#add
-    assertEquals(100, batcher.invocationCounter.count());
+    assertEquals(101, batcher.invocationCounter.count());
     // we should have submitted 10 batches
 
     assertEquals(10, batcher.getBatchSubmissionCount());
@@ -85,6 +86,7 @@ public class BatchCountParallelismTest {
     AtomicLong submit = new AtomicLong();
     @Override
     public Future<?> submit(Collection<Count> counts) {
+      System.out.println("submitted: " + counts.size());
       counted.addAndGet(counts.size());
       submit.incrementAndGet();
       return null;
