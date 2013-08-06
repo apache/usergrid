@@ -28,7 +28,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JacksonInject;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.codehaus.jackson.annotate.JsonAutoDetect.*;
 
@@ -46,8 +45,8 @@ public class Count<K,C> {
     private final K keyName;
     @JsonProperty
     private final C columnName;
-
-    private AtomicLong value;
+    @JsonProperty
+    private long value;
 
     private Serializer<K> keySerializer;
     private Serializer<C> columnNameSerializer;
@@ -62,7 +61,7 @@ public class Count<K,C> {
         this.tableName = tableName;
         this.keyName = keyName;
         this.columnName = columnName;
-        this.value = new AtomicLong(value);
+        this.value = value;
         this.keySerializer = SerializerTypeInferer.getSerializer(keyName);
         this.columnNameSerializer = SerializerTypeInferer.getSerializer(columnName);
     }
@@ -71,7 +70,7 @@ public class Count<K,C> {
         if (!StringUtils.equals(count.getCounterName(), getCounterName()) ) {
             throw new IllegalArgumentException("Attempt to apply a counter with a different name");
         }
-        value.addAndGet(count.getValue());
+        this.value += count.getValue();
         return this;
     }
 
@@ -88,9 +87,8 @@ public class Count<K,C> {
         return counterName;
     }
 
-    @JsonProperty
     public long getValue() {
-        return value.get();
+        return value;
     }
 
     public C getColumnName() {
@@ -127,6 +125,6 @@ public class Count<K,C> {
 
     @Override
     public String toString() {
-        return "Counter Name: ".concat(getCounterName()).concat(" value: ").concat(Long.toString(value.get()));
+        return "Counter Name: ".concat(getCounterName()).concat(" value: ").concat(Long.toString(value));
     }
 }

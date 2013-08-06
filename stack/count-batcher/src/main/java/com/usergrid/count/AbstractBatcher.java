@@ -146,7 +146,12 @@ public abstract class AbstractBatcher implements Batcher {
       }
 
       void addSerial(Count count) {
-        batchSubmitter.submit(Arrays.asList(count));
+        Future f = batchSubmitter.submit(Arrays.asList(count));
+        try {
+          f.get();
+        }catch (Exception ex ) {
+          ex.printStackTrace();
+        }
         batchSubmissionCount.incrementAndGet();
         opCount.incrementAndGet();
         localCallCounter.incrementAndGet();
