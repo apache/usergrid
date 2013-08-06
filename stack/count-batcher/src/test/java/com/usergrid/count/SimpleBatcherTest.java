@@ -34,7 +34,7 @@ public class SimpleBatcherTest {
 
     @Test
     public void testBatchSizeTrigger() {
-        SimpleBatcher simpleBatcher = new SimpleBatcher(1);
+        SimpleBatcher simpleBatcher = new SimpleBatcher();
         simpleBatcher.setBatchSubmitter(new Slf4JBatchSubmitter());
         simpleBatcher.setBatchSize(4);
         simpleBatcher.add(new Count("Counter","k1","counter1", 1));

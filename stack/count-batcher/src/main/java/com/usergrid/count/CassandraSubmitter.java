@@ -15,12 +15,14 @@
  ******************************************************************************/
 package com.usergrid.count;
 
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.usergrid.count.common.Count;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,14 +52,13 @@ public class CassandraSubmitter implements BatchSubmitter {
 	}
 
 	@Override
-	public Future submit(final AbstractBatcher.Batch batch) {
-		// TODO reconcile this dupped code with the other submitters
+	public Future submit(final Collection<Count> counts) {
 		return executor.submit(new Callable<Object>() {
 			final TimerContext timer = addTimer.time();
 
 			@Override
 			public Object call() throws Exception {
-				cassandraCounterStore.save(batch.getCounts());
+				cassandraCounterStore.save(counts);
 				timer.stop();
 				return true;
 			}
