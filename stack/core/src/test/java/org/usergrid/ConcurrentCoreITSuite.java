@@ -6,14 +6,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.Concurrent;
+import org.usergrid.cassandra.ConcurrentSuite;
 import org.usergrid.locking.cassandra.HectorLockManagerIT;
 import org.usergrid.mq.MessagesIT;
 import org.usergrid.persistence.*;
-import org.usergrid.persistence.query.IteratingQueryIT;
+import org.usergrid.persistence.cassandra.EntityManagerFactoryImplIT;
 import org.usergrid.system.UsergridSystemMonitorIT;
 
 
-@RunWith( Suite.class )
+@RunWith( ConcurrentSuite.class )
 @Suite.SuiteClasses(
     {
         HectorLockManagerIT.class,
@@ -28,13 +29,12 @@ import org.usergrid.system.UsergridSystemMonitorIT;
         IndexIT.class,
         MessagesIT.class,
         PermissionsIT.class,
-        IteratingQueryIT.class,      // This should be broken down but it will not
-                                     // help us since we cannot use concurrency anyway
-                                     // due to the issues we're having with CME's and
-                                     // the lack of thread safety.
+        EntityManagerFactoryImplIT.class,
+        AnnotationDrivenIntIT.class,
+
     } )
 @Concurrent()
-public class CoreSuite
+public class ConcurrentCoreITSuite
 {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );

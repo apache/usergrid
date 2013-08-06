@@ -33,8 +33,8 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
-import org.usergrid.CoreSuite;
+import org.usergrid.AbstractCoreIT;
+import org.usergrid.CoreITSuite;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.IndexUpdate;
@@ -45,7 +45,7 @@ import org.usergrid.utils.UUIDUtils;
 
 
 @Concurrent()
-public class IndexIT extends AbstractCoreTest
+public class IndexIT extends AbstractCoreIT
 {
 	private static final Logger logger = LoggerFactory.getLogger(IndexIT.class);
 
@@ -439,7 +439,7 @@ public class IndexIT extends AbstractCoreTest
     //now read the index and see what properties are there
     
     
-    CassandraService cass = CoreSuite.cassandraResource.getBean( CassandraService.class );
+    CassandraService cass = CoreITSuite.cassandraResource.getBean( CassandraService.class );
     
     ByteBufferSerializer buf = ByteBufferSerializer.get();
     

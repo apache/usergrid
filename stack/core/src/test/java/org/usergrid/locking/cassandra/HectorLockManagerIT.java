@@ -34,8 +34,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
-import org.usergrid.CoreSuite;
+import org.usergrid.AbstractCoreIT;
+import org.usergrid.CoreITSuite;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
@@ -44,7 +44,7 @@ import org.usergrid.persistence.cassandra.CassandraService;
 
 
 @Concurrent()
-public class HectorLockManagerIT extends AbstractCoreTest
+public class HectorLockManagerIT extends AbstractCoreIT
 {
     private static final Logger logger = LoggerFactory.getLogger( HectorLockManagerIT.class );
 
@@ -55,10 +55,10 @@ public class HectorLockManagerIT extends AbstractCoreTest
     @BeforeClass
     public static void setup() throws Exception
     {
-        AbstractCoreTest.setup();
+        AbstractCoreIT.setup();
 
         HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
-        hlockManager.setCluster(CoreSuite.cassandraResource.getBean( CassandraService.class ).getCluster() );
+        hlockManager.setCluster(CoreITSuite.cassandraResource.getBean( CassandraService.class ).getCluster() );
         hlockManager.setKeyspaceName( "Locks" );
         hlockManager.setLockTtl( 2000 );
         hlockManager.setNumberOfLockObserverThreads( 1 );

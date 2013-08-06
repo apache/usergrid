@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.utils.UUIDUtils;
 
@@ -38,6 +39,7 @@ import com.yammer.metrics.core.TimerContext;
  * @author tnine
  * 
  */
+@Concurrent()
 public class SimpleIndexBucketLocatorImplTest {
 
     private static final Logger logger = LoggerFactory

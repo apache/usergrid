@@ -13,35 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.mq;
+package org.usergrid.persistence.query;
 
 
-import static org.usergrid.mq.Queue.getQueueParentPaths;
-import static org.usergrid.mq.Queue.normalizeQueuePath;
-import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
-
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
 
 
+/**
+ * @author tnine
+ * 
+ */
 @Concurrent()
-public class QueuePathsTest
+public class IteratingQuery1IT extends AbstractIteratingQueryIT
 {
-	private static final Logger logger = LoggerFactory.getLogger( QueuePathsTest.class );
 
+  private static final Logger logger = LoggerFactory.getLogger(IteratingQuery1IT.class);
 
-	@Test
-	public void testPaths() throws Exception
-    {
-		logger.info( normalizeQueuePath( "a/b/c" ) );
-		logger.info( normalizeQueuePath( "a/b/c/" ) );
-		logger.info( normalizeQueuePath( "/a/b/c" ) );
-		logger.info( normalizeQueuePath( "/////a/b/c" ) );
-		logger.info( normalizeQueuePath( "/" ) );
-
-		logger.info( mapToFormattedJsonString( getQueueParentPaths( "/a/b/c" ) ) );
-		logger.info( mapToFormattedJsonString( getQueueParentPaths( "/" ) ) );
-	}
+    @Test
+    public void singleOrderByMaxLimitCollection() throws Exception {
+        singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
+    }
 }

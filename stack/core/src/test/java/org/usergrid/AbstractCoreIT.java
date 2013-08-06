@@ -18,11 +18,11 @@ import java.util.UUID;
 
 
 @Concurrent()
-public abstract class AbstractCoreTest
+public abstract class AbstractCoreIT
 {
     public static final boolean USE_DEFAULT_APPLICATION = false;
 
-    private static final Logger logger = LoggerFactory.getLogger( AbstractCoreTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     protected static PersistenceTestHelper helper;
 
@@ -31,11 +31,11 @@ public abstract class AbstractCoreTest
 
 
 
-    public AbstractCoreTest()
+    public AbstractCoreIT()
     {
         logger.info( "Initializing test ..." );
-        emf = CoreSuite.cassandraResource.getBean( EntityManagerFactory.class );
-        qmf = CoreSuite.cassandraResource.getBean( QueueManagerFactory.class );
+        emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
+        qmf = CoreITSuite.cassandraResource.getBean( QueueManagerFactory.class );
     }
 
 

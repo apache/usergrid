@@ -21,12 +21,12 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
+import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
 
 
 @Concurrent()
-public class EntityManagerFactoryIT extends AbstractCoreTest
+public class EntityManagerFactoryIT extends AbstractCoreIT
 {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EntityManagerFactoryIT.class);

@@ -26,7 +26,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
+import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.Group;
@@ -35,7 +35,7 @@ import org.usergrid.utils.UUIDUtils;
 
 
 @Concurrent()
-public class EntityManagerIT extends AbstractCoreTest
+public class EntityManagerIT extends AbstractCoreIT
 {
 
     private static final Logger logger = LoggerFactory.getLogger(EntityManagerIT.class);

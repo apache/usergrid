@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.usergrid.AbstractCoreTest;
-import org.usergrid.CoreSuite;
+import org.usergrid.AbstractCoreIT;
+import org.usergrid.CoreITSuite;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
@@ -40,7 +40,7 @@ import com.usergrid.count.SimpleBatcher;
 
 
 @Concurrent()
-public class CounterIT extends AbstractCoreTest
+public class CounterIT extends AbstractCoreIT
 {
 
 	private static final Logger logger = LoggerFactory.getLogger( CounterIT.class );
@@ -56,7 +56,7 @@ public class CounterIT extends AbstractCoreTest
 	@Before
 	public void getSubmitter(){
 	    //set the batcher to block the submit so we wait for results when testing
-	    SimpleBatcher batcher = CoreSuite.cassandraResource.getBean(SimpleBatcher.class);
+	    SimpleBatcher batcher = CoreITSuite.cassandraResource.getBean(SimpleBatcher.class);
 	    
 	    batcher.setBlockingSubmit(true);
 	}

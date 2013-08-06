@@ -16,46 +16,107 @@
 package org.usergrid.persistence.query;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.junit.Test;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
-import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
+import org.usergrid.cassandra.CassandraResource;
+import org.usergrid.mq.QueueManagerFactory;
+import org.usergrid.persistence.*;
+import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
+import org.usergrid.utils.JsonUtils;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 
 /**
  * @author tnine
  * 
  */
-@Concurrent()
-public class IteratingQueryIT extends AbstractCoreTest
+public abstract class AbstractIteratingQueryIT
 {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractIteratingQueryIT.class);
+    public static final boolean USE_DEFAULT_APPLICATION = false;
 
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQueryIT.class);
+    @ClassRule
+    public final static CassandraResource cassandraResource
+            = CassandraResource.newWithAvailablePorts("coreManager");
+    protected static PersistenceTestHelper helper;
 
-  @Test
-  public void singleOrderByMaxLimitCollection() throws Exception {
-    singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
-  }
+    protected EntityManagerFactory emf;
+    protected QueueManagerFactory qmf;
 
-  @Test
-  public void singleOrderByMaxLimitConnection() throws Exception {
-    singleOrderByMaxLimit(new ConnectionHelper("singleOrderByMaxLimitConnection"));
-  }
+
+    public AbstractIteratingQueryIT()
+    {
+        logger.info( "Initializing test ..." );
+        emf = cassandraResource.getBean( EntityManagerFactory.class );
+        qmf = cassandraResource.getBean( QueueManagerFactory.class );
+    }
+
+
+    @BeforeClass
+    public static void setup() throws Exception
+    {
+        logger.info( "setup" );
+        helper = new PersistenceTestHelperImpl();
+        helper.setup();
+    }
+
+
+    @AfterClass
+    public static void teardown() throws Exception
+    {
+        logger.info( "teardown" );
+
+        if ( helper != null )
+        {
+            helper.teardown();
+        }
+    }
+
+
+    public EntityManagerFactory getEntityManagerFactory()
+    {
+        return emf;
+    }
+
+
+    public QueueManagerFactory geQueueManagerFactory()
+    {
+        return qmf;
+    }
+
+
+    public UUID createApplication( String organizationName, String applicationName ) throws Exception
+    {
+        if ( USE_DEFAULT_APPLICATION )
+        {
+            return CassandraService.DEFAULT_APPLICATION_ID;
+        }
+
+        return emf.createApplication( organizationName, applicationName );
+    }
+
+
+    public void dump( Object obj )
+    {
+        dump( "Object", obj );
+    }
+
+
+    public void dump( String name, Object obj )
+    {
+        if ( obj != null )
+        {
+            logger.info( name + ":\n" + JsonUtils.mapToFormattedJsonString(obj) );
+        }
+    }
+
 
   public void singleOrderByMaxLimit(IoHelper io) throws Exception {
 
@@ -110,17 +171,8 @@ public class IteratingQueryIT extends AbstractCoreTest
 
   }
 
-  @Test
-  public void singleOrderByIntersectionCollection() throws Exception {
-    singleOrderByIntersection(new CollectionIoHelper("singleOrderByIntersectionCollection"));
-  }
 
-  @Test
-  public void singleOrderByIntersectionConnection() throws Exception {
-    singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionConnection"));
-  }
-
-  private void singleOrderByIntersection(IoHelper io) throws Exception {
+  protected void singleOrderByIntersection(IoHelper io) throws Exception {
 
     io.doSetup();
 
@@ -191,17 +243,8 @@ public class IteratingQueryIT extends AbstractCoreTest
     assertEquals(expected.size(), count);
   }
 
-  @Test
-  public void singleOrderByComplexIntersectionCollection() throws Exception {
-    singleOrderByComplexIntersection(new CollectionIoHelper("singleOrderByComplexIntersectionCollection"));
-  }
 
-  @Test
-  public void singleOrderByComplexIntersectionConnection() throws Exception {
-    singleOrderByComplexIntersection(new ConnectionHelper("singleOrderByComplexIntersectionConnection"));
-  }
-
-  private void singleOrderByComplexIntersection(IoHelper io) throws Exception {
+  protected void singleOrderByComplexIntersection(IoHelper io) throws Exception {
 
     int size = 5000;
     int queryLimit = Query.MAX_LIMIT;
@@ -274,17 +317,8 @@ public class IteratingQueryIT extends AbstractCoreTest
     assertEquals(expectedResults.size(), count);
   }
 
-  @Test
-  public void singleOrderByNoIntersectionCollection() throws Exception {
-    singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionCollection"));
-  }
 
-  @Test
-  public void singleOrderByNoIntersectionConnection() throws Exception {
-    singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionConnection"));
-  }
-
-  private void singleOrderByNoIntersection(IoHelper io) throws Exception {
+  protected void singleOrderByNoIntersection(IoHelper io) throws Exception {
     io.doSetup();
 
     int size = 2000;
@@ -331,17 +365,7 @@ public class IteratingQueryIT extends AbstractCoreTest
     assertEquals(0, results.size());
   }
 
-  @Test
-  public void singleOrderByComplexUnionCollection() throws Exception {
-    singleOrderByComplexUnion(new CollectionIoHelper("singleOrderByComplexUnionCollection"));
-  }
-
-  @Test
-  public void singleOrderByComplexUnionConnection() throws Exception {
-    singleOrderByComplexUnion(new ConnectionHelper("singleOrderByComplexUnionConnection"));
-  }
-
-  private void singleOrderByComplexUnion(IoHelper io) throws Exception {
+  protected void singleOrderByComplexUnion(IoHelper io) throws Exception {
 
     io.doSetup();
 
@@ -411,17 +435,8 @@ public class IteratingQueryIT extends AbstractCoreTest
     assertEquals(expectedResults.size(), count);
   }
 
-  @Test
-  public void singleOrderByNotCollection() throws Exception {
-    singleOrderByNot(new CollectionIoHelper("singleOrderByNotCollection"));
-  }
 
-  @Test
-  public void singleOrderByNotConnection() throws Exception {
-    singleOrderByNot(new ConnectionHelper("singleOrderByNotConnection"));
-  }
-
-  private void singleOrderByNot(IoHelper io) throws Exception {
+  protected void singleOrderByNot(IoHelper io) throws Exception {
 
     io.doSetup();
 
@@ -491,15 +506,6 @@ public class IteratingQueryIT extends AbstractCoreTest
     assertEquals(expectedResults.size(), count);
   }
 
-  @Test
-  public void singleOrderByLessThanLimitCollection() throws Exception {
-    singleOrderByLessThanLimit(new CollectionIoHelper("singleOrderByLessThanLimitCollection"));
-  }
-
-  @Test
-  public void singleOrderByLessThanLimitConnection() throws Exception {
-    singleOrderByLessThanLimit(new ConnectionHelper("singleOrderByLessThanLimitConnection"));
-  }
 
   public void singleOrderByLessThanLimit(IoHelper io) throws Exception {
 
@@ -562,15 +568,6 @@ public class IteratingQueryIT extends AbstractCoreTest
 
   }
 
-  @Test
-  public void singleOrderBySameRangeScanLessThanEqualCollection() throws Exception {
-    singleOrderBySameRangeScanLessThanEqual(new CollectionIoHelper("singleOrderBySameRangeScanLessThanEqualCollection"));
-  }
-
-  @Test
-  public void singleOrderBySameRangeScanLessThanEqualConnection() throws Exception {
-    singleOrderBySameRangeScanLessThanEqual(new ConnectionHelper("singleOrderBySameRangeScanLessThanEqualConnection"));
-  }
 
   public void singleOrderBySameRangeScanLessThanEqual(IoHelper io) throws Exception {
 
@@ -634,16 +631,6 @@ public class IteratingQueryIT extends AbstractCoreTest
 
   }
   
-
-  @Test
-  public void singleOrderBySameRangeScanLessCollection() throws Exception {
-    singleOrderBySameRangeScanLessEqual(new CollectionIoHelper("singleOrderBySameRangeScanLessCollection"));
-  }
-
-  @Test
-  public void singleOrderBySameRangeScanLessConnection() throws Exception {
-    singleOrderBySameRangeScanLessEqual(new ConnectionHelper("singleOrderBySameRangeScanLessConnection"));
-  }
 
   public void singleOrderBySameRangeScanLessEqual(IoHelper io) throws Exception {
 
@@ -709,16 +696,6 @@ public class IteratingQueryIT extends AbstractCoreTest
   
   
 
-  @Test
-  public void singleOrderBySameRangeScanGreaterThanEqualCollection() throws Exception {
-    singleOrderBySameRangeScanGreaterThanEqual(new CollectionIoHelper("singleOrderBySameRangeScanGreaterThanEqualCollection"));
-  }
-
-  @Test
-  public void singleOrderBySameRangeScanGreaterThanEqualConnection() throws Exception {
-    singleOrderBySameRangeScanGreaterThanEqual(new ConnectionHelper("singleOrderBySameRangeScanGreaterThanEqualConnection"));
-  }
-
   public void singleOrderBySameRangeScanGreaterThanEqual(IoHelper io) throws Exception {
 
     io.doSetup();
@@ -781,15 +758,6 @@ public class IteratingQueryIT extends AbstractCoreTest
   }
   
 
-  @Test
-  public void singleOrderBySameRangeScanGreaterCollection() throws Exception {
-    singleOrderBySameRangeScanGreater(new CollectionIoHelper("singleOrderBySameRangeScanGreaterCollection"));
-  }
-
-  @Test
-  public void singleOrderBySameRangeScanGreaterConnection() throws Exception {
-    singleOrderBySameRangeScanGreater(new ConnectionHelper("singleOrderBySameRangeScanGreaterConnection"));
-  }
 
   public void singleOrderBySameRangeScanGreater(IoHelper io) throws Exception {
 
@@ -854,16 +822,6 @@ public class IteratingQueryIT extends AbstractCoreTest
   
   
 
-  @Test
-  public void singleOrderByBoundRangeScanDescCollection() throws Exception {
-    singleOrderByBoundRangeScanDesc(new CollectionIoHelper("singleOrderByBoundRangeScanDescCollection"));
-  }
-
-  @Test
-  public void singleOrderByBoundRangeScanDescConnection() throws Exception {
-    singleOrderByBoundRangeScanDesc(new ConnectionHelper("singleOrderByBoundRangeScanDescConnection"));
-  }
-
   public void singleOrderByBoundRangeScanDesc(IoHelper io) throws Exception {
 
     io.doSetup();
@@ -927,16 +885,6 @@ public class IteratingQueryIT extends AbstractCoreTest
   
   
 
-  @Test
-  public void singleOrderByBoundRangeScanAscCollection() throws Exception {
-    singleOrderByBoundRangeScanAsc(new CollectionIoHelper("singleOrderByBoundRangeScanAscCollection"));
-  }
-
-  @Test
-  public void singleOrderByBoundRangeScanAscConnection() throws Exception {
-    singleOrderByBoundRangeScanAsc(new ConnectionHelper("singleOrderByBoundRangeScanAscConnection"));
-  }
-
   public void singleOrderByBoundRangeScanAsc(IoHelper io) throws Exception {
 
     io.doSetup();
@@ -998,22 +946,6 @@ public class IteratingQueryIT extends AbstractCoreTest
 
   }
   
-  
-
-  @Test
-  public void allInCollection() throws Exception {
-    allIn(new CollectionIoHelper("allInCollection"));
-  }
-
-  @Test
-  public void allInConnection() throws Exception {
-    allIn(new ConnectionHelper("allInConnection"));
-  }
-
-  @Test
-  public void allInConnectionNoType() throws Exception {
-    allIn(new ConnectionNoTypeHelper("allInConnectionNoType"));
-  }
 
   /**
    * Tests that when an empty query is issued, we page through all entities
@@ -1115,12 +1047,12 @@ public class IteratingQueryIT extends AbstractCoreTest
 
   }
 
-  private class CollectionIoHelper implements IoHelper {
+  class CollectionIoHelper implements IoHelper {
 
     protected EntityManager em;
     private String appName;
 
-    private CollectionIoHelper(String appName) {
+    CollectionIoHelper(String appName) {
       this.appName = appName;
     }
 
@@ -1143,7 +1075,7 @@ public class IteratingQueryIT extends AbstractCoreTest
      */
     @Override
     public void doSetup() throws Exception {
-      UUID applicationId = createApplication("IteratingQueryIT", appName);
+      UUID applicationId = createApplication("IteratingQuery1IT", appName);
       assertNotNull(applicationId);
 
       em = emf.getEntityManager(applicationId);
@@ -1176,7 +1108,7 @@ public class IteratingQueryIT extends AbstractCoreTest
     }
   }
 
-  private class ConnectionHelper extends CollectionIoHelper {
+  class ConnectionHelper extends CollectionIoHelper {
 
     /**
      * 
@@ -1184,7 +1116,7 @@ public class IteratingQueryIT extends AbstractCoreTest
     protected static final String CONNECTION = "connection";
     protected Entity rootEntity;
 
-    private ConnectionHelper(String name) {
+    ConnectionHelper(String name) {
       super(name);
     }
 
@@ -1192,14 +1124,14 @@ public class IteratingQueryIT extends AbstractCoreTest
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryIT.CollectionIoHelper#
+     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
      * writeEntity(java.lang.String, java.util.Map)
      */
     /*
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryIT.CollectionIoHelper#
+     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
      * doSetup()
      */
     @Override
@@ -1225,7 +1157,7 @@ public class IteratingQueryIT extends AbstractCoreTest
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryIT.CollectionIoHelper#
+     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
      * getResults(org.usergrid.persistence.Query)
      */
     @Override
@@ -1237,9 +1169,10 @@ public class IteratingQueryIT extends AbstractCoreTest
 
   }
 
-  private class ConnectionNoTypeHelper extends ConnectionHelper {
 
-    private ConnectionNoTypeHelper(String name) {
+    class ConnectionNoTypeHelper extends ConnectionHelper {
+
+    ConnectionNoTypeHelper(String name) {
       super(name);
     }
 
@@ -1247,7 +1180,7 @@ public class IteratingQueryIT extends AbstractCoreTest
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQueryIT.ConnectionHelper#getResults
+     * org.usergrid.persistence.query.IteratingQuery1IT.ConnectionHelper#getResults
      * (org.usergrid.persistence.Query)
      */
     @Override

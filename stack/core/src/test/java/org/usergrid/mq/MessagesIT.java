@@ -27,14 +27,14 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
+import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.utils.JsonUtils;
 
 
 @Concurrent()
-public class MessagesIT extends AbstractCoreTest
+public class MessagesIT extends AbstractCoreIT
 {
 	private static final Logger logger = LoggerFactory.getLogger( MessagesIT.class );
 

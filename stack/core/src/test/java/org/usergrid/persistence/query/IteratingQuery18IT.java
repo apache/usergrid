@@ -13,35 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.mq;
+package org.usergrid.persistence.query;
 
 
-import static org.usergrid.mq.Queue.getQueueParentPaths;
-import static org.usergrid.mq.Queue.normalizeQueuePath;
-import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
 
 
+/**
+ * @author tnine
+ */
 @Concurrent()
-public class QueuePathsTest
+public class IteratingQuery18IT extends AbstractIteratingQueryIT
 {
-	private static final Logger logger = LoggerFactory.getLogger( QueuePathsTest.class );
+    @Test
+    public void singleOrderBySameRangeScanLessConnection() throws Exception {
+        singleOrderBySameRangeScanLessEqual(new ConnectionHelper("singleOrderBySameRangeScanLessConnection"));
+    }
 
-
-	@Test
-	public void testPaths() throws Exception
-    {
-		logger.info( normalizeQueuePath( "a/b/c" ) );
-		logger.info( normalizeQueuePath( "a/b/c/" ) );
-		logger.info( normalizeQueuePath( "/a/b/c" ) );
-		logger.info( normalizeQueuePath( "/////a/b/c" ) );
-		logger.info( normalizeQueuePath( "/" ) );
-
-		logger.info( mapToFormattedJsonString( getQueueParentPaths( "/a/b/c" ) ) );
-		logger.info( mapToFormattedJsonString( getQueueParentPaths( "/" ) ) );
-	}
 }

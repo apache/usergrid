@@ -27,7 +27,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
+import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
@@ -38,7 +38,7 @@ import com.beoui.geocell.model.Point;
 
 
 @Concurrent()
-public class GeoIT extends AbstractCoreTest
+public class GeoIT extends AbstractCoreIT
 {
     private static final Logger logger = LoggerFactory.getLogger( GeoIT.class );
 

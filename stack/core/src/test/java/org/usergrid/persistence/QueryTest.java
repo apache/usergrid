@@ -23,6 +23,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
 import org.usergrid.persistence.exceptions.QueryParseException;
@@ -30,6 +31,8 @@ import org.usergrid.persistence.query.tree.*;
 
 import static org.junit.Assert.*;
 
+
+@Concurrent()
 public class QueryTest {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);

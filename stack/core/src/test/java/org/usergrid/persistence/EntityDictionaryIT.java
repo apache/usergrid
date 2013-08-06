@@ -26,14 +26,14 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreTest;
+import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.utils.JsonUtils;
 
 
 @Concurrent()
-public class EntityDictionaryIT extends AbstractCoreTest
+public class EntityDictionaryIT extends AbstractCoreIT
 {
 
 	private static final Logger logger = LoggerFactory.getLogger( EntityDictionaryIT.class );

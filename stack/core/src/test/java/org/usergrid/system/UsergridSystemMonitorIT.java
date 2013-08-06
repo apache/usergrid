@@ -4,26 +4,14 @@ package org.usergrid.system;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import javax.annotation.Resource;
-
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-
 import org.apache.commons.lang.StringUtils;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.usergrid.CoreSuite;
-import org.usergrid.cassandra.CassandraResource;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.CoreITSuite;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.utils.MapUtils;
 
 import java.util.Date;
-import java.util.HashMap;
 
 
 /**
@@ -39,7 +27,7 @@ public class UsergridSystemMonitorIT
     @Before
     public void setupLocal()
     {
-        usergridSystemMonitor = CoreSuite.cassandraResource.getBean( UsergridSystemMonitor.class );
+        usergridSystemMonitor = CoreITSuite.cassandraResource.getBean( UsergridSystemMonitor.class );
     }
 
     @Test
