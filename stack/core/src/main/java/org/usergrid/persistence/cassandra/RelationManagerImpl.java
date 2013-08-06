@@ -313,78 +313,6 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   /**
-   * Gets the cF key for subkey.
-   * 
-   * @param collection
-   *          the collection
-   * @param properties
-   *          the properties
-   * @return row key
-   */
-  public Object getCFKeyForSubkey(CollectionInfo collection, SliceNode node) {
-
-    // only bother if we have subkeys
-    if (!collection.hasSubkeys()) {
-      return null;
-    }
-
-    Set<String> fields_used = null;
-    Object best_key = null;
-    int most_keys_matched = 0;
-
-    List<String[]> combos = collection.getSubkeyCombinations();
-
-    for (String[] combo : combos) {
-
-      int keys_matched = 0;
-      List<Object> subkey_props = new ArrayList<Object>();
-      Set<String> subkey_names = new LinkedHashSet<String>();
-
-      for (String subkey_name : combo) {
-
-        QuerySlice slice = node.getSlice(subkey_name);
-
-        // no slice for this property, or not an equals, skip it
-        if (slice == null || !slice.isEquals()) {
-          continue;
-        }
-
-        Object subkey_value = null;
-
-        if (subkey_name != null) {
-
-          subkey_value = slice.getStart().getValue();
-
-          if (subkey_value != null) {
-            keys_matched++;
-            subkey_names.add(subkey_name);
-          }
-        }
-
-        subkey_props.add(subkey_value);
-      }
-
-      Object subkey_key = key(subkey_props.toArray());
-
-      if (keys_matched > most_keys_matched) {
-        best_key = subkey_key;
-        fields_used = subkey_names;
-      }
-    }
-
-    // Remove any fields that we used in constructing the row key, it's
-    // already been joined
-    // by adding it to the row key
-    if (fields_used != null) {
-      for (String field : fields_used) {
-        node.removeSlice(field, collection);
-      }
-    }
-
-    return best_key;
-  }
-
-  /**
    * Batch update collection index.
    * 
    * @param batch
@@ -451,30 +379,6 @@ public class RelationManagerImpl implements RelationManager {
         addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_key, entry.getIndexComposite(),
             indexUpdate.getTimestamp());
 
-        if (collection != null) {
-          if (collection.hasSubkeys()) {
-            List<String[]> combos = collection.getSubkeyCombinations();
-            for (String[] combo : combos) {
-              List<Object> subkey_props = new ArrayList<Object>();
-              for (String subkey_name : combo) {
-                Object subkey_value = null;
-                if (subkey_name != null) {
-                  subkey_value = indexUpdate.getEntity().getProperty(subkey_name);
-                }
-                subkey_props.add(subkey_value);
-              }
-              Object subkey_key = key(subkey_props.toArray());
-
-              // entity_id,collection_name,prop_name
-              Object index_subkey_key = key(owner.getUuid(), collectionName, subkey_key, entry.getPath());
-
-              addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_subkey_key, entry.getIndexComposite(),
-                  indexUpdate.getTimestamp());
-
-            }
-          }
-        }
-
         if ("location.coordinates".equals(entry.getPath())) {
           EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), entry.getTimestampUuid(), entry
               .getValue().toString());
@@ -502,32 +406,6 @@ public class RelationManagerImpl implements RelationManager {
 
         addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_key, indexEntry.getIndexComposite(), null,
             indexUpdate.getTimestamp());
-
-        // Add subkey indexes
-
-        if (collection != null) {
-          if (collection.hasSubkeys()) {
-            List<String[]> combos = collection.getSubkeyCombinations();
-            for (String[] combo : combos) {
-              List<Object> subkey_props = new ArrayList<Object>();
-              for (String subkey_name : combo) {
-                Object subkey_value = null;
-                if (subkey_name != null) {
-                  subkey_value = indexUpdate.getEntity().getProperty(subkey_name);
-                }
-                subkey_props.add(subkey_value);
-              }
-              Object subkey_key = key(subkey_props.toArray());
-
-              // entity_id,collection_name,prop_name
-              Object index_subkey_key = key(owner.getUuid(), collectionName, subkey_key, indexEntry.getPath(), bucketId);
-
-              addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_subkey_key,
-                  indexEntry.getIndexComposite(), null, indexUpdate.getTimestamp());
-
-            }
-          }
-        }
 
         if ("location.coordinates".equals(indexEntry.getPath())) {
              EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), indexEntry.getTimestampUuid(),indexEntry.getValue().toString());
@@ -693,30 +571,9 @@ public class RelationManagerImpl implements RelationManager {
           membershipRef.getUuid(), timestamp);
 
     }
-    // Insert in subkeyed collections
-    Schema schema = getDefaultSchema();
-    CollectionInfo collection = schema.getCollection(ownerType, collectionName);
-    if (collection != null) {
-      if (collection.hasSubkeys()) {
-        List<String[]> combos = collection.getSubkeyCombinations();
-        for (String[] combo : combos) {
-          List<Object> subkey_props = new ArrayList<Object>();
-          for (String subkey_name : combo) {
-            Object subkey_value = null;
-            if (subkey_name != null) {
-              subkey_value = entity.getProperty(subkey_name);
-            }
-            subkey_props.add(subkey_value);
-          }
-          for (UUID ownerId : ownerIds) {
-            addInsertToMutator(batch, ENTITY_ID_SETS,
-                key(ownerId, Schema.DICTIONARY_COLLECTIONS, collectionName, subkey_props.toArray()), entity.getUuid(),
-                membershipRefs.get(ownerId).getUuid(), timestamp);
-          }
 
-        }
-      }
-    }
+    
+    Schema schema = getDefaultSchema();
 
     // Add property indexes
     for (String propertyName : entity.getProperties().keySet()) {
@@ -849,28 +706,6 @@ public class RelationManagerImpl implements RelationManager {
     // Delete actual property
 
     addDeleteToMutator(batch, ENTITY_ID_SETS, collections_key, entity.getUuid(), timestamp);
-
-    // Delete from subkeyed collections
-
-    CollectionInfo collection = schema.getCollection(headEntity.getType(), collectionName);
-    if (collection != null) {
-      if (collection.hasSubkeys()) {
-        List<String[]> combos = collection.getSubkeyCombinations();
-        for (String[] combo : combos) {
-          List<Object> subkey_props = new ArrayList<Object>();
-          for (String subkey_name : combo) {
-            Object subkey_value = null;
-            if (subkey_name != null) {
-              subkey_value = entity.getProperty(subkey_name);
-            }
-            subkey_props.add(subkey_value);
-          }
-          addDeleteToMutator(batch, ENTITY_ID_SETS, key(collections_key, subkey_props.toArray()), entity.getUuid(),
-              timestamp);
-
-        }
-      }
-    }
 
     addDeleteToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
         key(entity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES),
@@ -1992,41 +1827,6 @@ public class RelationManagerImpl implements RelationManager {
     return result;
   }
 
-  // @Override
-  // public Results getCollection(String collectionName,
-  // Map<String, Object> subkeyProperties, UUID startResult, int count,
-  // Results.Level resultsLevel, boolean reversed) throws Exception {
-  //
-  // Entity e = getHeadEntity();
-  //
-  // CollectionInfo collection = getDefaultSchema().getCollection(
-  // e.getType(), collectionName);
-  //
-  // Object subkey_key = getCFKeyForSubkey(collection, subkeyProperties,
-  // null);
-  //
-  // Map<UUID, UUID> ids = null;
-  //
-  // if (subkey_key != null) {
-  // ids = cass
-  // .getIdPairList(
-  // cass.getApplicationKeyspace(applicationId),
-  // key(e.getUuid(), DICTIONARY_COLLECTIONS,
-  // collectionName, subkey_key), startResult,
-  // null, count + 1, reversed);
-  // } else {
-  // ids = cass.getIdPairList(
-  // cass.getApplicationKeyspace(applicationId),
-  // key(e.getUuid(), DICTIONARY_COLLECTIONS, collectionName),
-  // startResult, null, count + 1, reversed);
-  // }
-  //
-  // Results results = Results.fromIdList(new ArrayList<UUID>(ids.keySet()),
-  // collection.getType());
-  //
-  // return em.loadEntities(results, resultsLevel, ids, count);
-  // }
-
   @Override
   @Metered(group = "core", name = "RelationManager_getCollecitonForQuery")
   public Results getCollection(String collectionName, Query query, Results.Level resultsLevel) throws Exception {
@@ -2531,19 +2331,16 @@ public class RelationManagerImpl implements RelationManager {
 
       // check if we have sub keys for equality clauses at this node
       // level. If so we can just use them as a row key for faster seek
-      Object subKey = getCFKeyForSubkey(collection, node);
-
-      IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
+       IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
 
       for (QuerySlice slice : node.getAllSlices()) {
 
         // NOTE we explicitly do not append the slice value here. This
         // is done in the searchIndex method below
-        Object indexKey = subKey == null ? key(headEntity.getUuid(), collection.getName()) : key(headEntity.getUuid(),
-            collection.getName(), subKey);
+        Object indexKey = key(headEntity.getUuid(), collection.getName());
 
         // update the cursor and order before we perform the slice
-        // operation. Should be done after subkeying since this can
+        // operation. Should be done at runtime since this can
         // change the hash value of the slice
         queryProcessor.applyCursorAndSort(slice);
 

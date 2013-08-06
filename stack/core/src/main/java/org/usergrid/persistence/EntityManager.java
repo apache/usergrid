@@ -459,28 +459,6 @@ public interface EntityManager {
             UUID startResult, int count, Results.Level resultsLevel,
             boolean reversed) throws Exception;
 
-    // T.N. Unused. Removing for this release
-    // /**
-    // * Gets a list of entities in the specified collection belonging to the
-    // * specified entity.
-    // *
-    // * @param entity
-    // * an entity reference
-    // * @param collectionName
-    // * the collection name.
-    // * @param subkeyProperties
-    // * the subkey properties
-    // * @param startResult
-    // * the start result
-    // * @param count
-    // * the count
-    // * @return a list of entities in the specified collection.
-    // * @throws Exception
-    // * the exception
-    // */
-    // public Results getCollection(EntityRef entityRef, String collectionName,
-    // Map<String, Object> subkeyProperties, UUID startResult, int count,
-    // Results.Level resultsLevel, boolean reversed) throws Exception;
 
     public Results getCollection(UUID entityId, String collectionName,
             Query query, Results.Level resultsLevel) throws Exception;

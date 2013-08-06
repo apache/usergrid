@@ -680,10 +680,6 @@ public class Query {
 		return !filterPredicates.isEmpty();
 	}
 
-	public boolean hasFilterPredicatesExcludingSubkeys(
-			Map<String, Object> subkeyProperties) {
-		return !filterPredicates.isEmpty();
-	}
 
 	public Map<String, Object> getEqualityFilters() {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
