@@ -97,7 +97,6 @@
     </bean>
 
     <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
-        <constructor-arg value="1"/>
         <property name="batchSubmitter" ref="batchSubmitter"/>
         <property name="batchSize" value="${usergrid.counter.batch.size}"/>
     </bean>

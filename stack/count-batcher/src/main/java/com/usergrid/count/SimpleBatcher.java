@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SimpleBatcher extends AbstractBatcher {
     private Logger log = LoggerFactory.getLogger(SimpleBatcher.class);
 
-
     private boolean blockingSubmit = false;
 
 

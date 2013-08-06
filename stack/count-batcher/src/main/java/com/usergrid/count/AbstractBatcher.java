@@ -15,10 +15,7 @@
  ******************************************************************************/
 package com.usergrid.count;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,15 +50,10 @@ public abstract class AbstractBatcher implements Batcher {
   private final AtomicLong batchSubmissionCount = new AtomicLong();
   private final AtomicBoolean lock = new AtomicBoolean(false);
 
-  public AbstractBatcher() {
-    batch = new Batch();
-  }
 
   public void setBatchSize(int batchSize) {
     this.batchSize = batchSize;
-    batch = new Batch();
   }
-
 
 
     public void setBatchSubmitter(BatchSubmitter batchSubmitter) {
@@ -88,14 +80,26 @@ public abstract class AbstractBatcher implements Batcher {
     public void add(Count count) throws CounterProcessingUnavailableException {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
-      getBatch().add(count);
+      if ( batchSize == 1 ) {
+        getBatch().addSerial(count);
+      } else {
+        getBatch().add(count);
+      }
       context.stop();
 
     }
 
   Batch getBatch() {
     Batch active = batch;
-    if ( active.getCapacity() == 0 ) {
+    if ( active == null ) {
+      synchronized(this) {
+        active = batch;
+        if ( active == null ) {
+          batch = active = new Batch();
+        }
+      }
+    }
+    if ( batchSize > 1 && active.getCapacity() == 0 ) {
       synchronized(this) {
         if ( active.getCapacity() == 0) {
           active.flush();
@@ -139,6 +143,13 @@ public abstract class AbstractBatcher implements Batcher {
         } catch (Exception ex){
           ex.printStackTrace();
         }
+      }
+
+      void addSerial(Count count) {
+        batchSubmitter.submit(Arrays.asList(count));
+        batchSubmissionCount.incrementAndGet();
+        opCount.incrementAndGet();
+        localCallCounter.incrementAndGet();
       }
 
 

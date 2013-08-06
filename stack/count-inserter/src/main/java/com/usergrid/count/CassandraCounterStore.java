@@ -56,6 +56,8 @@ public class CassandraCounterStore implements CounterStore {
           Count c = countHolder.get(count.getCounterName());
           if ( c != null ) {
             c.apply(count);
+          } else {
+            countHolder.put(count.getCounterName(), count);
           }
         }
       Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());

@@ -53,7 +53,6 @@ public class CassandraSubmitter implements BatchSubmitter {
 
 	@Override
 	public Future submit(final Collection<Count> counts) {
-		// TODO reconcile this dupped code with the other submitters
 		return executor.submit(new Callable<Object>() {
 			final TimerContext timer = addTimer.time();
 
