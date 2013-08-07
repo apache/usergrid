@@ -146,10 +146,10 @@
               </systemPropertyVariables>
 
               <parallel>both</parallel>
-              <forkCount>8</forkCount>
+              <forkCount>4</forkCount>
               <reuseForks>false</reuseForks>
 
-              <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                 -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
               </argLine>
@@ -157,6 +157,8 @@
               <includes>
                 <include>**/ServiceITSuite.java</include>
                 <include>**/ServiceTestSuite.java</include>
+                <include>**/TokenServiceIT.java</include>
+                <include>**/*Test.java</include>
               </includes>
               <excludes>
                 <!-- <exclude>**/*Test.java</exclude> -->
@@ -287,7 +289,8 @@
               </argLine>
 
               <includes>
-                <include>**/*ConcurrentServiceITSuite.java</include>
+                <include>**/ConcurrentServiceITSuite.java</include>
+                <include>**/TokenServiceIT.java</include>
               </includes>
               <excludes>
                 <exclude>**/*IT.java</exclude>

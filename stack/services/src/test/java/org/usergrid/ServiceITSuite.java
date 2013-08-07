@@ -36,7 +36,6 @@ import org.usergrid.services.*;
             ServiceRequestIT.class,
             ServiceFactoryIT.class,
             ServiceInvocationIT.class,
-            TokenServiceIT.class,
             UsersServiceIT.class
     } )
 @Concurrent()
