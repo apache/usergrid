@@ -220,7 +220,14 @@
       <artifactId>jython</artifactId>
     </dependency>
 
-    <!-- Testing and Logging Dependencies -->
+     <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+     </dependency>
+
+
+
+      <!-- Testing and Logging Dependencies -->
 
     <dependency>
       <groupId>org.usergrid</groupId>
