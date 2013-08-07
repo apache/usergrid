@@ -174,15 +174,11 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
 
-              <!--
-              <forkMode>once</forkMode>
-              -->
-               
               <parallel>both</parallel>
               <forkCount>8</forkCount>
               <reuseForks>false</reuseForks>            
 
-              <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx2G -Xms768m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <includes>
                 <include>**/*CoreITSuite.java</include>
                 <include>**/*CoreTestSuite.java</include>
