@@ -15,10 +15,8 @@
  ******************************************************************************/
 package com.usergrid.count;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,21 +37,24 @@ import com.yammer.metrics.core.TimerContext;
 public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
-    private Batch batch;
-    private final ReentrantLock submitLock = new ReentrantLock();
+    private volatile Batch batch;
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
-    private final Counter invocationCounter =
+    protected final Counter invocationCounter =
             Metrics.newCounter(AbstractBatcher.class, "batch_add_invocations");
     private final Counter existingCounterHit =
             Metrics.newCounter(AbstractBatcher.class,"counter_existed");
+  // TODO add batchCount, remove shouldSubmit, impl submit, change simpleBatcher to just be an extension
+  protected int batchSize = 500;
+  private final AtomicLong batchSubmissionCount = new AtomicLong();
+  private final AtomicBoolean lock = new AtomicBoolean(false);
 
-    
-    
-    public AbstractBatcher(int queueSize) {
-      batch = new Batch();
-    }
+
+  public void setBatchSize(int batchSize) {
+    this.batchSize = batchSize;
+  }
+
 
     public void setBatchSubmitter(BatchSubmitter batchSubmitter) {
         this.batchSubmitter = batchSubmitter;
@@ -68,8 +69,8 @@ public abstract class AbstractBatcher implements Batcher {
         return opCount.get();
     }
 
-    protected abstract boolean shouldSubmit(Batch batch);
-    protected abstract void submit(Batch batch);
+
+
 
   /**
      * Add a count object to this batcher
@@ -79,81 +80,84 @@ public abstract class AbstractBatcher implements Batcher {
     public void add(Count count) throws CounterProcessingUnavailableException {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
-
-
-     
-      batch.add(count);
-
-      // If it's submit time and the lock is free, acquire the lock.
-      // Submission of the batch should reset the child impl submit state.
-      // Though multiple threads can return true on shouldSubmit, only one
-      //  thread will pass the tryLock check and acquire the submitLock
-      if (shouldSubmit(batch) && submitLock.tryLock()) {
-        try {
-
-          submit(copyAndClear(batch));
-        } finally {
-          // by this time, submit(copy) above will have reset the the
-          // shouldSubmit condition
-          submitLock.unlock();
-        }
+      if ( batchSize == 1 ) {
+        getBatch().addSerial(count);
+      } else {
+        getBatch().add(count);
       }
       context.stop();
 
     }
 
-  private Batch copyAndClear(Batch original) {
-    Batch copy;
-    synchronized(original) {
-      copy = new Batch(original);
-      original.clear();
+  Batch getBatch() {
+    Batch active = batch;
+    if ( active == null ) {
+      synchronized(this) {
+        active = batch;
+        if ( active == null ) {
+          batch = active = new Batch();
+        }
+      }
     }
-    return copy;
+    if ( batchSize > 1 && active.getCapacity() == 0 ) {
+      synchronized(this) {
+        if ( active.getCapacity() == 0) {
+          active.flush();
+        }
+      }
+    }
+    return active;
   }
-    
+
+  public long getBatchSubmissionCount() {
+    return batchSubmissionCount.get();
+  }
 
     class Batch {
-        private final Map<String,Count> counts;
+        private BlockingQueue<Count> counts;
         private final AtomicInteger localCallCounter = new AtomicInteger();
 
+      private final AtomicBoolean lock = new AtomicBoolean(false);
+
         Batch() {
-            counts = new HashMap<String, Count>();
+            counts = new ArrayBlockingQueue<Count>(batchSize);
         }
 
-        /* copy constructor */
-        Batch(Batch batch) {
-            localCallCounter.set(batch.localCallCounter.get());
-            counts = new HashMap<String, Count>(batch.counts);
-        }
+    int getCapacity() {
+      return counts.remainingCapacity();
+    }
 
-        void clear() {
-          counts.clear();
-          localCallCounter.set(0);
-        }
 
-        void add(Count count) {
-            opCount.incrementAndGet();
-            localCallCounter.incrementAndGet();
-            Count found = counts.get(count.getCounterName());
-            if ( found != null ) {
-                existingCounterHit.inc();
-                counts.put(found.getCounterName(), found.apply(count));
-            } else {
-                counts.put(count.getCounterName(),count);
-            }
-        }
+      void flush() {
+        ArrayList<Count> flushed = new ArrayList<Count>(batchSize);
+        counts.drainTo(flushed);
+        batchSubmitter.submit(flushed);
+        batchSubmissionCount.incrementAndGet();
+        opCount.incrementAndGet();
+        localCallCounter.incrementAndGet();
+      }
 
-        /**
-         * The number of distinct counters which have been seen
-         * @return
-         */
-        public int getPayloadSize() {
-            return counts.size();
+      void add(Count count)  {
+        try {
+          counts.offer(count, 500, TimeUnit.MILLISECONDS);
+        } catch (Exception ex){
+          ex.printStackTrace();
         }
+      }
 
-        public Collection<Count> getCounts() {
-            return counts.values();
+      void addSerial(Count count) {
+        Future f = batchSubmitter.submit(Arrays.asList(count));
+        try {
+          f.get();
+        }catch (Exception ex ) {
+          ex.printStackTrace();
         }
+        batchSubmissionCount.incrementAndGet();
+        opCount.incrementAndGet();
+        localCallCounter.incrementAndGet();
+      }
+
+
 
         /**
          * The number of times the {@link #add(com.usergrid.count.common.Count)} method has been
@@ -164,5 +168,10 @@ public abstract class AbstractBatcher implements Batcher {
             return localCallCounter.get();
         }
 
+
+
+
+
     }
+
 }

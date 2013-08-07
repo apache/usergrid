@@ -32,45 +32,11 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class SimpleBatcher extends AbstractBatcher {
     private Logger log = LoggerFactory.getLogger(SimpleBatcher.class);
-    private int batchSize = 500;
-    private AtomicLong batchSubmissionCount = new AtomicLong();
+
     private boolean blockingSubmit = false;
 
-    public SimpleBatcher(int queueSize) {
-        super(queueSize);
-    }
 
-    /**
-     * @return true if we have more than batchSize insertions
-     */
-    protected boolean shouldSubmit(Batch batch) {
-      if (batchSize == 0) return true;
-      int localCallCount = batch.getLocalCallCount();
-      return (localCallCount > 0 && localCallCount % batchSize == 0);
-    }
 
-    protected void submit(Batch batch) {
-      log.debug("submit triggered...");
-      Future f = batchSubmitter.submit(batch);
-      if (blockingSubmit) {
-        try {
-          f.get();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (ExecutionException e) {
-          e.printStackTrace();
-        }
-      }
-      batchSubmissionCount.incrementAndGet();
-    }
-
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
-    }
-
-    public long getBatchSubmissionCount() {
-        return batchSubmissionCount.get();
-    }
 
     public void setBlockingSubmit(boolean blockingSubmit) {
       this.blockingSubmit = blockingSubmit;
