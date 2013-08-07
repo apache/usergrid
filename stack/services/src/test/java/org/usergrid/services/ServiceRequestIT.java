@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
 import static org.usergrid.services.ServiceParameter.filter;
 import static org.usergrid.services.ServiceParameter.parameters;
@@ -25,31 +26,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.test.ShiroHelperRunner;
+import org.usergrid.ServiceITSuite;
+import org.usergrid.cassandra.ClearShiroSubject;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.management.ServiceTestRule;
 
-@RunWith(ShiroHelperRunner.class)
-public class ServiceRequestTest {
+
+@Concurrent()
+public class ServiceRequestIT {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(ServiceRequestTest.class);
+			.getLogger(ServiceRequestIT.class);
+
+    @Rule
+    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
+
+    @Rule
+    public ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
 
 	@Test
 	public void testPaths() throws Exception {
 
 		UUID applicationId = DEFAULT_APPLICATION_ID;
 
-		ServiceManagerFactory smf = CassandraRunner.getBean(ServiceManagerFactory.class);
+		ServiceManager services = setup.getSmf().getServiceManager(applicationId);
 
-		ServiceManager services = smf.getServiceManager(applicationId);
-
-		ServiceRequest path = null;
-
-		path = services.newRequest(ServiceAction.GET,
+        ServiceRequest path = services.newRequest(ServiceAction.GET,
 				parameters("users", "bob"), null);
 		// path = path.addSegment("users", "bob");
 		logger.info("" + path.getParameters());

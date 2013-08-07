@@ -24,20 +24,22 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 
-public class GroupServiceTest extends AbstractServiceTest {
+@Concurrent()
+public class GroupServiceIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(GroupServiceTest.class);
+            .getLogger(GroupServiceIT.class);
 
     @Test
     public void testGroups() throws Exception {
 
         UUID applicationId = createApplication("testOrganization", "testGroups");
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("path", "test/test");
@@ -87,10 +89,10 @@ public class GroupServiceTest extends AbstractServiceTest {
         logger.info("PermissionsIT.testPermissions");
 
         UUID applicationId = createApplication("testOrganization",
-                "testPermissions");
+                "testPermissions2");
         assertNotNull(applicationId);
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
         assertNotNull(em);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -107,7 +109,7 @@ public class GroupServiceTest extends AbstractServiceTest {
         em.grantGroupRolePermission(group.getUuid(), "author",
                 "assets:access:*");
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
         testDataRequest(sm, ServiceAction.GET, null, "groups", group.getUuid(),
                 "rolenames");
@@ -117,7 +119,5 @@ public class GroupServiceTest extends AbstractServiceTest {
 
         testDataRequest(sm, ServiceAction.GET, null, "groups", group.getUuid(),
                 "roles", "author", "permissions");
-
     }
-
 }

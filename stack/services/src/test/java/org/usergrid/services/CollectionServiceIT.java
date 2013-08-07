@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -28,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
@@ -35,21 +37,22 @@ import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
-public class CollectionServiceTest extends AbstractServiceTest {
 
-    private static final Logger logger = LoggerFactory
-			.getLogger(CollectionServiceTest.class);
+@Concurrent()
+public class CollectionServiceIT extends AbstractServiceIT {
+    private static final Logger LOG = LoggerFactory
+			.getLogger(CollectionServiceIT.class);
     private static final String TEST_ORGANIZATION = "testOrganizationCST";
     private static final String TEST_APPLICATION = "testCollectionCST";
     public static final String CST_TEST_GROUP = "cst-test-group";
 
     @Test
 	public void testUsersCollectionWithGroupIdName() throws Exception {
-
+        LOG.info( "Please make use of the logger folks :-)" );
 		UUID applicationId = createApplication(TEST_ORGANIZATION,
                 TEST_APPLICATION);
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -156,7 +159,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 		UUID applicationId = createApplication(TEST_ORGANIZATION,
 				"testCatsDogs");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 		properties.put("name", "Tom");
@@ -265,7 +268,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 		UUID applicationId = createApplication("testOrganization",
 				"testEmptyCollections");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 

@@ -57,6 +57,12 @@
       <version>${project.version}</version>
     </dependency>
 
+    <!--<dependency>-->
+      <!--<groupId>org.usergrid</groupId>-->
+      <!--<artifactId>usergrid-services</artifactId>-->
+      <!--<version>${project.version}</version>-->
+    <!--</dependency>-->
+
     <!-- Apache Dependencies -->
 
     <dependency>
@@ -107,6 +113,21 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-web</artifactId>
     </dependency>
 
     <dependency>

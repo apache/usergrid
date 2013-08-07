@@ -26,20 +26,23 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 
-public class ConnectionsServiceTest extends AbstractServiceTest {
+@Concurrent()
+public class ConnectionsServiceIT extends AbstractServiceIT {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ConnectionsServiceTest.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(ConnectionsServiceIT.class);
 
 	@SuppressWarnings("rawtypes")
 	@Test
 	public void testUserConnections() throws Exception {
-		UUID applicationId = createApplication("testOrganization",
+		LOG.info( "Please use your loggers folks." );
+        UUID applicationId = createApplication("testOrganization",
 				"testUserConnections");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 		properties.put("username", "conn-user1");

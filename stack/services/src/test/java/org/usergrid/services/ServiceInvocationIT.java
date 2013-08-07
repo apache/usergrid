@@ -29,19 +29,19 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 
-public class ServiceInvocationTest extends AbstractServiceTest {
+public class ServiceInvocationIT extends AbstractServiceIT {
 
 	public static final Logger logger = LoggerFactory
-			.getLogger(ServiceInvocationTest.class);
+			.getLogger(ServiceInvocationIT.class);
 
 	@Test
 	public void testServices() throws Exception {
 		logger.info("testServices");
 
-		UUID applicationId = createApplication("ServiceInvocationTest",
+		UUID applicationId = createApplication("ServiceInvocationIT",
 				"testServices");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 		properties.put("username", "edanuff");
@@ -163,7 +163,7 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 		UUID applicationId = createApplication("testOrganization",
 				"testBatchCreate");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 		List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
 

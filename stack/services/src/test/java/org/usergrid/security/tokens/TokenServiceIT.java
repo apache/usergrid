@@ -8,97 +8,88 @@ import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.management.ApplicationInfo;
-import org.usergrid.management.ManagementService;
-import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.OrganizationOwnerInfo;
-import org.usergrid.management.UserInfo;
+import org.usergrid.ServiceITSuite;
+import org.usergrid.cassandra.ClearShiroSubject;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.management.*;
 import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
-import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.UUIDUtils;
 
-@RunWith(ShiroHelperRunner.class)
-public class TokenServiceTest {
+@Concurrent()
+public class TokenServiceIT {
 
-    static Logger log = LoggerFactory.getLogger(TokenServiceTest.class);
-    static ManagementService managementService;
-    static TokenService tokenService;
-    static EntityManagerFactory entityManagerFactory;
+    static Logger log = LoggerFactory.getLogger(TokenServiceIT.class);
+
     // app-level data generated only once
     private static UserInfo adminUser;
-    private static OrganizationInfo organization;
-    private static UUID applicationId;
+
+    @Rule
+    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
+
+    @ClassRule
+    public static ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
 
     @BeforeClass
     public static void setup() throws Exception {
         log.info("in setup");
-        managementService = CassandraRunner.getBean(ManagementService.class);
-        tokenService = CassandraRunner.getBean(TokenService.class);
-        entityManagerFactory = CassandraRunner.getBean(EntityManagerFactory.class);
-        setupLocal();
-    }
+        adminUser = setup.getMgmtSvc().createAdminUser( "edanuff34", "Ed Anuff", "ed@anuff34.com", "test", false, false );
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "TokenServiceTestOrg", adminUser, true );
 
-    public static void setupLocal() throws Exception {
-        adminUser = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false);
-        organization = managementService.createOrganization("ed-organization", adminUser, true);
         // TODO update to organizationName/applicationName
-        applicationId = managementService.createApplication(organization.getUuid(), "ed-organization/ed-application")
-                .getId();
+        setup.getMgmtSvc().createApplication(organization.getUuid(), "TokenServiceTestOrg/ed-application").getId();
     }
 
 
     @SuppressWarnings("unchecked")
     @Test
     public void testEmailConfirmToken() throws Exception {
-        String tokenStr = tokenService.createToken(TokenCategory.EMAIL, "email_confirm",
-                (Map<String, Object>) cast(hashMap("email", "ed@anuff.com").map("username", "edanuff")));
+        String tokenStr = setup.getTokenSvc().createToken(TokenCategory.EMAIL, "email_confirm",
+                (Map<String, Object>) cast(hashMap("email", "ed@anuff34.com").map("username", "edanuff34")));
 
         log.info("token: " + tokenStr);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(tokenStr);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(tokenStr);
 
         long last_access = tokenInfo.getAccessed();
 
         assertEquals("email_confirm", tokenInfo.getType());
-        assertEquals("ed@anuff.com", tokenInfo.getState().get("email"));
-        assertEquals("edanuff", tokenInfo.getState().get("username"));
+        assertEquals("ed@anuff34.com", tokenInfo.getState().get("email"));
+        assertEquals("edanuff34", tokenInfo.getState().get("username"));
 
-        tokenInfo = tokenService.getTokenInfo(tokenStr);
+        tokenInfo = setup.getTokenSvc().getTokenInfo(tokenStr);
 
         assertTrue(last_access < tokenInfo.getAccessed());
     }
 
     @Test
     public void testAdminPrincipalToken() throws Exception {
-        String tokenStr = tokenService
+        String tokenStr = setup.getTokenSvc()
                 .createToken(
                         new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), UUIDUtils
                                 .newTimeUUID()), null);
 
         log.info("token: " + tokenStr);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(tokenStr);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(tokenStr);
 
         long last_access = tokenInfo.getAccessed();
 
         assertEquals("access", tokenInfo.getType());
         assertEquals(adminUser.getUuid(), tokenInfo.getPrincipal().getUuid());
 
-        tokenInfo = tokenService.getTokenInfo(tokenStr);
+        tokenInfo = setup.getTokenSvc().getTokenInfo(tokenStr);
 
         assertTrue(last_access < tokenInfo.getAccessed());
     }
@@ -109,25 +100,25 @@ public class TokenServiceTest {
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, UUIDUtils.newTimeUUID(),
                 UUIDUtils.newTimeUUID());
 
-        String firstToken = tokenService.createToken(adminPrincipal);
-        String secondToken = tokenService.createToken(adminPrincipal);
+        String firstToken = setup.getTokenSvc().createToken(adminPrincipal);
+        String secondToken = setup.getTokenSvc().createToken(adminPrincipal);
 
         assertNotNull(firstToken);
         assertNotNull(secondToken);
 
-        TokenInfo firstInfo = tokenService.getTokenInfo(firstToken);
+        TokenInfo firstInfo = setup.getTokenSvc().getTokenInfo(firstToken);
         assertNotNull(firstInfo);
 
-        TokenInfo secondInfo = tokenService.getTokenInfo(secondToken);
+        TokenInfo secondInfo = setup.getTokenSvc().getTokenInfo(secondToken);
         assertNotNull(secondInfo);
 
-        tokenService.removeTokens(adminPrincipal);
+        setup.getTokenSvc().removeTokens(adminPrincipal);
 
         // tokens shouldn't be there anymore
         boolean invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(firstToken);
+            setup.getTokenSvc().getTokenInfo(firstToken);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -137,7 +128,7 @@ public class TokenServiceTest {
         invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(secondToken);
+            setup.getTokenSvc().getTokenInfo(secondToken);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -150,25 +141,25 @@ public class TokenServiceTest {
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        String firstToken = tokenService.createToken(adminPrincipal);
-        String secondToken = tokenService.createToken(adminPrincipal);
+        String firstToken = setup.getTokenSvc().createToken(adminPrincipal);
+        String secondToken = setup.getTokenSvc().createToken(adminPrincipal);
 
         assertNotNull(firstToken);
         assertNotNull(secondToken);
 
-        TokenInfo firstInfo = tokenService.getTokenInfo(firstToken);
+        TokenInfo firstInfo = setup.getTokenSvc().getTokenInfo(firstToken);
         assertNotNull(firstInfo);
 
-        TokenInfo secondInfo = tokenService.getTokenInfo(secondToken);
+        TokenInfo secondInfo = setup.getTokenSvc().getTokenInfo(secondToken);
         assertNotNull(secondInfo);
 
-        tokenService.removeTokens(adminPrincipal);
+        setup.getTokenSvc().removeTokens(adminPrincipal);
 
         // tokens shouldn't be there anymore
         boolean invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(firstToken);
+            setup.getTokenSvc().getTokenInfo(firstToken);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -178,7 +169,7 @@ public class TokenServiceTest {
         invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(secondToken);
+            setup.getTokenSvc().getTokenInfo(secondToken);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -194,26 +185,26 @@ public class TokenServiceTest {
         // 2 second token
         long expirationTime = 1000;
 
-        String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
+        String token = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
 
         long start = System.currentTimeMillis();
 
         assertNotNull(token);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(expirationTime, tokenInfo.getDuration());
-        long maxTokenAge = tokenService.getMaxTokenAge(token);
+        long maxTokenAge = setup.getTokenSvc().getMaxTokenAge(token);
         assertEquals(expirationTime, maxTokenAge);
 
-        token = tokenService.refreshToken(token);
+        token = setup.getTokenSvc().refreshToken(token);
         assertNotNull(token);
 
-        tokenInfo = tokenService.getTokenInfo(token);
+        tokenInfo = setup.getTokenSvc().getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(expirationTime, tokenInfo.getDuration());
 
-        maxTokenAge = tokenService.getMaxTokenAge(token);
+        maxTokenAge = setup.getTokenSvc().getMaxTokenAge(token);
         assertEquals(expirationTime, maxTokenAge);
 
         /**
@@ -224,7 +215,7 @@ public class TokenServiceTest {
         boolean invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(token);
+            setup.getTokenSvc().getTokenInfo(token);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -237,13 +228,13 @@ public class TokenServiceTest {
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        long maxAge = ((TokenServiceImpl) tokenService).getMaxPersistenceTokenAge();
+        long maxAge = ((TokenServiceImpl) setup.getTokenSvc()).getMaxPersistenceTokenAge();
 
-        String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+        String token = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
 
         assertNotNull(token);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(maxAge, tokenInfo.getDuration());
     }
@@ -251,24 +242,24 @@ public class TokenServiceTest {
     @Test(expected = IllegalArgumentException.class)
     public void invalidDurationValue() throws Exception {
 
-        long maxAge = ((TokenServiceImpl) tokenService).getMaxPersistenceTokenAge();
+        long maxAge = ((TokenServiceImpl) setup.getTokenSvc()).getMaxPersistenceTokenAge();
 
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge + 1);
+        setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge + 1);
 
     }
 
     @Test
     public void appExpiration() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo", "foobar", "foobar",
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("foo", "foobar", "foobar",
                 "foo@bar.com", "foobar");
 
-        ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
+        ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgInfo.getOrganization().getUuid(), "bar");
 
-        EntityManager em = entityManagerFactory.getEntityManager(appInfo.getId());
+        EntityManager em = setup.getEmf().getEntityManager(appInfo.getId());
 
         Application app = em.getApplication();
 
@@ -281,13 +272,13 @@ public class TokenServiceTest {
         AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), app.getUuid());
 
-        String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
+        String token = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
 
         long start = System.currentTimeMillis();
 
         assertNotNull(token);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(appTokenAge, tokenInfo.getDuration());
 
@@ -299,7 +290,7 @@ public class TokenServiceTest {
         boolean invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(token);
+            setup.getTokenSvc().getTokenInfo(token);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -312,19 +303,19 @@ public class TokenServiceTest {
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        String realToken = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+        String realToken = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
 
         assertNotNull(realToken);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(realToken);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(realToken);
         assertNotNull(tokenInfo);
 
-        tokenService.revokeToken(realToken);
+        setup.getTokenSvc().revokeToken(realToken);
 
         boolean invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(realToken);
+            setup.getTokenSvc().getTokenInfo(realToken);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
@@ -333,19 +324,19 @@ public class TokenServiceTest {
 
         String fakeToken = "notarealtoken";
 
-        tokenService.revokeToken(fakeToken);
+        setup.getTokenSvc().revokeToken(fakeToken);
 
     }
 
     @Test
     public void appExpirationInfinite() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("appExpirationInfinite", "appExpirationInfinite", "foobar",
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("appExpirationInfinite", "appExpirationInfinite", "foobar",
                 "appExpirationInfinite@bar.com", "foobar");
 
-        ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
+        ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgInfo.getOrganization().getUuid(), "bar");
 
-        EntityManager em = entityManagerFactory.getEntityManager(appInfo.getId());
+        EntityManager em = setup.getEmf().getEntityManager(appInfo.getId());
 
         Application app = em.getApplication();
 
@@ -358,31 +349,31 @@ public class TokenServiceTest {
         AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), app.getUuid());
 
-        String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
+        String token = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
 
 
         assertNotNull(token);
 
-        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(Long.MAX_VALUE, tokenInfo.getDuration());
 
         boolean invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(token);
+            setup.getTokenSvc().getTokenInfo(token);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
 
         assertFalse(invalidTokenException);
 
-        tokenService.revokeToken(token);
+        setup.getTokenSvc().revokeToken(token);
 
         invalidTokenException = false;
 
         try {
-            tokenService.getTokenInfo(token);
+            setup.getTokenSvc().getTokenInfo(token);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }

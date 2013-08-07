@@ -17,22 +17,23 @@ package org.usergrid.services;
 
 import java.util.UUID;
 
-import junit.framework.Assert;
-
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.test.ShiroHelperRunner;
+import org.usergrid.cassandra.Concurrent;
 
 import baas.io.simple.SimpleService;
 
-@RunWith(ShiroHelperRunner.class)
-public class ServiceFactoryTest extends AbstractServiceTest {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+
+@Concurrent()
+public class ServiceFactoryIT extends AbstractServiceIT {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(ServiceFactoryTest.class);
+			.getLogger(ServiceFactoryIT.class);
 
 	@Ignore
 	@Test
@@ -44,11 +45,11 @@ public class ServiceFactoryTest extends AbstractServiceTest {
 	public void testPackagePrefixes() throws Exception {
 		logger.info("test package prefixes");
 
-		UUID applicationId = emf.createApplication("org", "app");
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		UUID applicationId = setup.getEmf().createApplication("org", "app");
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 		Service service = sm.getService("simple");
-		Assert.assertEquals("/simple", service.getServiceType());
-		Assert.assertNotNull(service);
-		Assert.assertEquals(SimpleService.class, service.getClass());
+		assertEquals("/simple", service.getServiceType());
+		assertNotNull(service);
+		assertEquals(SimpleService.class, service.getClass());
 	}
 }

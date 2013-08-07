@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.utils.JsonUtils;
 
-public class ServiceInfoTest {
+
+public class ServiceInfoTest
+{
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceInfoTest.class);

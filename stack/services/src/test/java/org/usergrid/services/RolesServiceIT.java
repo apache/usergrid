@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
@@ -35,9 +36,9 @@ import org.usergrid.persistence.entities.Role;
 
 /**
  * @author tnine
- * 
  */
-public class RolesServiceTest extends AbstractServiceTest {
+@Concurrent()
+public class RolesServiceIT extends AbstractServiceIT {
 
     /**
      * Happy path test
@@ -75,7 +76,7 @@ public class RolesServiceTest extends AbstractServiceTest {
         UUID applicationId = createApplication("testOrganization", "noRoleName");
         assertNotNull(applicationId);
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();
@@ -96,7 +97,7 @@ public class RolesServiceTest extends AbstractServiceTest {
         UUID applicationId = createApplication("testOrganization", "noPermissionsOnPost");
         assertNotNull(applicationId);
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();
@@ -130,7 +131,7 @@ public class RolesServiceTest extends AbstractServiceTest {
         UUID applicationId = createApplication("testOrganization", "noPermissionsOnPut");
         assertNotNull(applicationId);
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();
@@ -177,7 +178,7 @@ public class RolesServiceTest extends AbstractServiceTest {
 
         // we know we created the role successfully, now delete it
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();
@@ -266,7 +267,7 @@ public class RolesServiceTest extends AbstractServiceTest {
 
         // we know we created the role successfully, now delete it
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();
@@ -304,7 +305,7 @@ public class RolesServiceTest extends AbstractServiceTest {
     private void createAndTestRoles(UUID applicationId, ServiceAction action, String roleName, String roleTitle,
             long inactivity) throws Exception {
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();
@@ -352,7 +353,7 @@ public class RolesServiceTest extends AbstractServiceTest {
     private void createAndTestPermission(UUID applicationId, ServiceAction action, String roleName, String grant)
             throws Exception {
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
         assertNotNull(sm);
 
         EntityManager em = sm.getEntityManager();

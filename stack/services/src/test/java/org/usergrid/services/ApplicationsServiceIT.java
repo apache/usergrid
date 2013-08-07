@@ -17,20 +17,20 @@ package org.usergrid.services;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Entity;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.EntityManager;
 
-public class UsersServiceTest extends AbstractServiceTest {
+
+@Concurrent()
+public class ApplicationsServiceIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(UsersServiceTest.class);
+            .getLogger(ApplicationsServiceIT.class);
 
     @Test
     public void testPermissions() throws Exception {
@@ -40,10 +40,7 @@ public class UsersServiceTest extends AbstractServiceTest {
                 "testPermissions");
         assertNotNull(applicationId);
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
         assertNotNull(em);
 
         // em.createRole("admin", null);
@@ -53,31 +50,11 @@ public class UsersServiceTest extends AbstractServiceTest {
         em.grantRolePermission("admin", "users:access:*");
         em.grantRolePermission("admin", "groups:access:*");
 
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put("username", "edanuff");
-        properties.put("email", "ed@anuff.com");
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
-        Entity user = em.create("user", properties);
-        assertNotNull(user);
 
-        // em.addUserToRole(user.getUuid(), "admin");
-        testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
-                "roles", "admin");
-        // em.addUserToRole(user.getUuid(), "manager");
-        testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
-                "roles", "manager");
-
-        em.grantUserPermission(user.getUuid(), "users:access:*");
-        em.grantUserPermission(user.getUuid(), "groups:access:*");
-
-        testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
-                "rolenames");
-
-        testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
+        testDataRequest(sm, ServiceAction.GET, null, "roles", "admin",
                 "permissions");
-
-        testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
-                "roles", "admin", "permissions");
 
     }
 

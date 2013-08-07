@@ -17,27 +17,32 @@ package org.usergrid.services;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 
-public class ApplicationsServiceTest extends AbstractServiceTest {
+public class UsersServiceIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(ApplicationsServiceTest.class);
+            .getLogger(UsersServiceIT.class);
 
     @Test
     public void testPermissions() throws Exception {
         logger.info("PermissionsIT.testPermissions");
 
-        UUID applicationId = createApplication("testOrganization",
-                "testPermissions");
+        UUID applicationId = createApplication("testOrganization", "testPermissions3");
         assertNotNull(applicationId);
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
+        assertNotNull(sm);
+
+        EntityManager em = sm.getEntityManager();
         assertNotNull(em);
 
         // em.createRole("admin", null);
@@ -47,12 +52,30 @@ public class ApplicationsServiceTest extends AbstractServiceTest {
         em.grantRolePermission("admin", "users:access:*");
         em.grantRolePermission("admin", "groups:access:*");
 
-        ServiceManager sm = smf.getServiceManager(applicationId);
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
 
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
 
-        testDataRequest(sm, ServiceAction.GET, null, "roles", "admin",
+        // em.addUserToRole(user.getUuid(), "admin");
+        testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
+                "roles", "admin");
+        // em.addUserToRole(user.getUuid(), "manager");
+        testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
+                "roles", "manager");
+
+        em.grantUserPermission(user.getUuid(), "users:access:*");
+        em.grantUserPermission(user.getUuid(), "groups:access:*");
+
+        testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
+                "rolenames");
+
+        testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
                 "permissions");
 
+        testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
+                "roles", "admin", "permissions");
     }
-
 }

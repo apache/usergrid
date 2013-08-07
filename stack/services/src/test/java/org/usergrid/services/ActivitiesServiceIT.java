@@ -24,22 +24,24 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.entities.Activity;
 
-public class ActivitiesServiceTest extends AbstractServiceTest {
+@Concurrent()
+public class ActivitiesServiceIT extends AbstractServiceIT {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory
-			.getLogger(ActivitiesServiceTest.class);
+			.getLogger(ActivitiesServiceIT.class);
 
 	@Test
 	public void testActivites() throws Exception {
 
 		UUID applicationId = createApplication("testOrganization", "test");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 		properties.put("username", "edanuff");

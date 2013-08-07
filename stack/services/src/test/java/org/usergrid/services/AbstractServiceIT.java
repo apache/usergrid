@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
@@ -26,47 +27,40 @@ import static org.usergrid.utils.InflectionUtils.pluralize;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.ServiceITSuite;
+import org.usergrid.cassandra.ClearShiroSubject;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.management.ServiceTestRule;
 import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
-import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.JsonUtils;
 
-@RunWith(ShiroHelperRunner.class)
-public abstract class AbstractServiceTest {
+
+@Concurrent()
+public abstract class AbstractServiceIT
+{
 	public static final boolean USE_DEFAULT_DOMAIN = false;
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(AbstractServiceTest.class);
+			.getLogger(AbstractServiceIT.class);
 
-	protected Properties properties;
-    protected EntityManagerFactoryImpl emf;
-   	protected ServiceManagerFactory smf;
+    @Rule
+    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @Before
-	public void setupLocal() {
-		emf = (EntityManagerFactoryImpl) CassandraRunner.getBean(EntityManagerFactory.class);
-		smf = CassandraRunner.getBean(ServiceManagerFactory.class);
-        properties = CassandraRunner.getBean("properties",Properties.class);
-	}
+    @Rule
+    public ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
 
-
-	UUID dId = null;
 
 	public UUID createApplication(String organizationName,
 			String applicationName) throws Exception {
 		if (USE_DEFAULT_DOMAIN) {
 			return DEFAULT_APPLICATION_ID;
 		}
-		return emf.createApplication(organizationName, applicationName);
+		return setup.getEmf().createApplication(organizationName, applicationName);
 	}
 
 	public Entity doCreate(ServiceManager sm, String entityType, String name)
@@ -117,7 +111,7 @@ public abstract class AbstractServiceTest {
 	public void dumpProperties(Map<String, Object> properties) {
 		if (properties != null) {
 			logger.info("Input:\n"
-					+ JsonUtils.mapToFormattedJsonString(properties));
+                    + JsonUtils.mapToFormattedJsonString(properties));
 		}
 	}
 
@@ -126,10 +120,6 @@ public abstract class AbstractServiceTest {
 			List<Entity> entities = results.getEntities();
 			dump("Results", entities);
 		}
-	}
-
-	public void dumpEntity(Entity entity) {
-		dump("Entity", entity);
 	}
 
 	public void dump(Object obj) {

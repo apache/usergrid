@@ -34,28 +34,13 @@ import org.usergrid.security.tokens.TokenService;
 @Component
 public class ManagementTestHelperImpl implements ManagementTestHelper
 {
-
-    public static final boolean FORCE_QUIT = false;
-
-    private static final Logger logger = LoggerFactory
-            .getLogger(ManagementTestHelperImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ManagementTestHelperImpl.class);
 
     EntityManagerFactory emf;
-
-    javax.persistence.EntityManagerFactory jpaEmf;
-
     ManagementService management;
-
     TokenService tokens;
-
     Properties properties;
 
-    public boolean forceQuit = FORCE_QUIT;
-
-
-    public ManagementTestHelperImpl()
-    {
-    }
 
     @Override
     public void setup() throws Exception

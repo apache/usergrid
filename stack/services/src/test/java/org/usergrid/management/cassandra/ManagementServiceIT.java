@@ -14,26 +14,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.ServiceITSuite;
+import org.usergrid.cassandra.CassandraResource;
+import org.usergrid.cassandra.ClearShiroSubject;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.ServiceTestRule;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.crypto.command.Md5HashCommand;
 import org.usergrid.security.crypto.command.Sha1HashCommand;
 import org.usergrid.security.tokens.TokenCategory;
-import org.usergrid.security.tokens.TokenService;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
-import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -42,42 +41,42 @@ import com.usergrid.count.SimpleBatcher;
 /**
  * @author zznate
  */
-@RunWith(ShiroHelperRunner.class)
-public class ManagementServiceTest {
-  static Logger log = LoggerFactory.getLogger(ManagementServiceTest.class);
-  static ManagementServiceImpl managementService;
-  static TokenService tokenService;
-  static EntityManagerFactory emf;
+@Concurrent()
+public class ManagementServiceIT {
+  private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
+
+  private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
 
   // app-level data generated only once
   private static UserInfo adminUser;
   private static OrganizationInfo organization;
   private static UUID applicationId;
 
-  @BeforeClass
-  public static void setup() throws Exception {
-    log.info("in setup");
-    managementService = CassandraRunner.getBean(ManagementServiceImpl.class);
-    tokenService = CassandraRunner.getBean(TokenService.class);
-    emf = CassandraRunner.getBean(EntityManagerFactory.class);
-    setupLocal();
-  }
+    @Rule
+    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-  public static void setupLocal() throws Exception {
-    adminUser = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false);
-    organization = managementService.createOrganization("ed-organization", adminUser, true);
-    applicationId = managementService.createApplication(organization.getUuid(), "ed-application").getId();
-  }
+    @ClassRule
+    public static final ServiceTestRule setup = new ServiceTestRule( cassandraResource );
+
+    @BeforeClass
+    public static void setup() throws Exception {
+      LOG.info( "in setup" );
+      adminUser = setup.getMgmtSvc().createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false);
+      organization = setup.getMgmtSvc().createOrganization("ed-organization", adminUser, true);
+      applicationId = setup.getMgmtSvc().createApplication(organization.getUuid(), "ed-application").getId();
+    }
 
   @Test
   public void testGetTokenForPrincipalAdmin() throws Exception {
-    String token = managementService.getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-        AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), 0);
+    String token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
+            .getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                    AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), 0);
     // ^ same as:
     // managementService.getAccessTokenForAdminUser(user.getUuid());
     assertNotNull(token);
-    token = managementService.getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-        AuthPrincipalType.APPLICATION_USER, adminUser.getUuid(), 0);
+    token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
+            .getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                    AuthPrincipalType.APPLICATION_USER, adminUser.getUuid(), 0);
     // This works because ManagementService#getSecret takes the same code
     // path
     // on an OR for APP._USER as for ADMIN_USER
@@ -96,27 +95,28 @@ public class ManagementServiceTest {
     properties.put("username", "edanuff");
     properties.put("email", "ed@anuff.com");
 
-    Entity user = emf.getEntityManager(applicationId).create("user", properties);
+    Entity user = setup.getEmf().getEntityManager(applicationId).create("user", properties);
 
     assertNotNull(user);
-    String token = managementService.getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-        AuthPrincipalType.APPLICATION_USER, user.getUuid(), 0);
+    String token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
+            .getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                    AuthPrincipalType.APPLICATION_USER, user.getUuid(), 0);
     assertNotNull(token);
   }
 
   @Test
   public void testCountAdminUserAction() throws Exception {
-    SimpleBatcher batcher = CassandraRunner.getBean(SimpleBatcher.class);
+    SimpleBatcher batcher = cassandraResource.getBean(SimpleBatcher.class);
 
     batcher.setBlockingSubmit(true);
 
-    managementService.countAdminUserAction(adminUser, "login");
+    setup.getMgmtSvc().countAdminUserAction(adminUser, "login");
 
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Map<String, Long> counts = em.getApplicationCounters();
-    log.info(JsonUtils.mapToJsonString(counts));
-    log.info(JsonUtils.mapToJsonString(em.getCounterNames()));
+    LOG.info(JsonUtils.mapToJsonString(counts));
+    LOG.info(JsonUtils.mapToJsonString(em.getCounterNames()));
     assertNotNull(counts.get("admin_logins"));
     assertEquals(1, counts.get("admin_logins").intValue());
   }
@@ -129,7 +129,7 @@ public class ManagementServiceTest {
     properties.put("username", "test" + uuid);
     properties.put("email", String.format("test%s@anuff.com", uuid));
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     Entity entity = em.create("user", properties);
 
@@ -140,7 +140,7 @@ public class ManagementServiceTest {
     assertFalse(user.activated());
     assertNull(user.getDeactivated());
 
-    managementService.activateAppUser(applicationId, user.getUuid());
+      setup.getMgmtSvc().activateAppUser(applicationId, user.getUuid());
 
     user = em.get(entity.getUuid(), User.class);
 
@@ -148,15 +148,15 @@ public class ManagementServiceTest {
     assertNull(user.getDeactivated());
 
     // get a couple of tokens. These shouldn't work after we deactive the user
-    String token1 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
-    String token2 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
+    String token1 = setup.getMgmtSvc().getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
+    String token2 = setup.getMgmtSvc().getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
 
-    assertNotNull(tokenService.getTokenInfo(token1));
-    assertNotNull(tokenService.getTokenInfo(token2));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token1));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token2));
 
     long startTime = System.currentTimeMillis();
 
-    managementService.deactivateUser(applicationId, user.getUuid());
+      setup.getMgmtSvc().deactivateUser(applicationId, user.getUuid());
 
     long endTime = System.currentTimeMillis();
 
@@ -170,7 +170,7 @@ public class ManagementServiceTest {
     boolean invalidTokenExcpetion = false;
 
     try {
-      tokenService.getTokenInfo(token1);
+        setup.getTokenSvc().getTokenInfo(token1);
     } catch (InvalidTokenException ite) {
       invalidTokenExcpetion = true;
     }
@@ -180,7 +180,7 @@ public class ManagementServiceTest {
     invalidTokenExcpetion = false;
 
     try {
-      tokenService.getTokenInfo(token2);
+        setup.getTokenSvc().getTokenInfo(token2);
     } catch (InvalidTokenException ite) {
       invalidTokenExcpetion = true;
     }
@@ -197,7 +197,7 @@ public class ManagementServiceTest {
     properties.put("username", "test" + uuid);
     properties.put("email", String.format("test%s@anuff.com", uuid));
 
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Entity entity = em.create("user", properties);
 
@@ -208,7 +208,7 @@ public class ManagementServiceTest {
     assertFalse(user.activated());
     assertNull(user.getDeactivated());
 
-    managementService.activateAdminUser(user.getUuid());
+      setup.getMgmtSvc().activateAdminUser(user.getUuid());
 
     user = em.get(entity.getUuid(), User.class);
 
@@ -216,13 +216,13 @@ public class ManagementServiceTest {
     assertNull(user.getDeactivated());
 
     // get a couple of tokens. These shouldn't work after we deactive the user
-    String token1 = managementService.getAccessTokenForAdminUser(user.getUuid(), 0);
-    String token2 = managementService.getAccessTokenForAdminUser(user.getUuid(), 0);
+    String token1 = setup.getMgmtSvc().getAccessTokenForAdminUser(user.getUuid(), 0);
+    String token2 = setup.getMgmtSvc().getAccessTokenForAdminUser(user.getUuid(), 0);
 
-    assertNotNull(tokenService.getTokenInfo(token1));
-    assertNotNull(tokenService.getTokenInfo(token2));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token1));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token2));
 
-    managementService.disableAdminUser(user.getUuid());
+      setup.getMgmtSvc().disableAdminUser(user.getUuid());
 
     user = em.get(entity.getUuid(), User.class);
 
@@ -231,7 +231,7 @@ public class ManagementServiceTest {
     boolean invalidTokenExcpetion = false;
 
     try {
-      tokenService.getTokenInfo(token1);
+        setup.getTokenSvc().getTokenInfo(token1);
     } catch (InvalidTokenException ite) {
       invalidTokenExcpetion = true;
     }
@@ -241,7 +241,7 @@ public class ManagementServiceTest {
     invalidTokenExcpetion = false;
 
     try {
-      tokenService.getTokenInfo(token2);
+        setup.getTokenSvc().getTokenInfo(token2);
     } catch (InvalidTokenException ite) {
       invalidTokenExcpetion = true;
     }
@@ -254,18 +254,18 @@ public class ManagementServiceTest {
   public void userTokensRevoke() throws Exception {
     UUID userId = UUIDUtils.newTimeUUID();
 
-    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
-    String token2 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+    String token1 = setup.getMgmtSvc().getAccessTokenForAppUser(applicationId, userId, 0);
+    String token2 = setup.getMgmtSvc().getAccessTokenForAppUser(applicationId, userId, 0);
 
-    assertNotNull(tokenService.getTokenInfo(token1));
-    assertNotNull(tokenService.getTokenInfo(token2));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token1));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token2));
 
-    managementService.revokeAccessTokensForAppUser(applicationId, userId);
+      setup.getMgmtSvc().revokeAccessTokensForAppUser(applicationId, userId);
 
     boolean invalidTokenExcpetion = false;
 
     try {
-      tokenService.getTokenInfo(token1);
+        setup.getTokenSvc().getTokenInfo(token1);
     } catch (InvalidTokenException ite) {
       invalidTokenExcpetion = true;
     }
@@ -275,7 +275,7 @@ public class ManagementServiceTest {
     invalidTokenExcpetion = false;
 
     try {
-      tokenService.getTokenInfo(token2);
+        setup.getTokenSvc().getTokenInfo(token2);
     } catch (InvalidTokenException ite) {
       invalidTokenExcpetion = true;
     }
@@ -285,7 +285,7 @@ public class ManagementServiceTest {
 
   @Test
   public void userTokenRevoke() throws Exception {
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
     properties.put("username", "realbeast");
@@ -296,18 +296,18 @@ public class ManagementServiceTest {
 
     UUID userId = user.getUuid();
 
-    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
-    String token2 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+    String token1 = setup.getMgmtSvc().getAccessTokenForAppUser(applicationId, userId, 0);
+    String token2 = setup.getMgmtSvc().getAccessTokenForAppUser(applicationId, userId, 0);
 
-    assertNotNull(tokenService.getTokenInfo(token1));
-    assertNotNull(tokenService.getTokenInfo(token2));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token1));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token2));
 
-    managementService.revokeAccessTokenForAppUser(token1);
+      setup.getMgmtSvc().revokeAccessTokenForAppUser(token1);
 
     boolean invalidToken1Excpetion = false;
 
     try {
-      tokenService.getTokenInfo(token1);
+        setup.getTokenSvc().getTokenInfo(token1);
     } catch (InvalidTokenException ite) {
       invalidToken1Excpetion = true;
     }
@@ -317,7 +317,7 @@ public class ManagementServiceTest {
     boolean invalidToken2Excpetion = true;
 
     try {
-      tokenService.getTokenInfo(token2);
+        setup.getTokenSvc().getTokenInfo(token2);
     } catch (InvalidTokenException ite) {
       invalidToken2Excpetion = false;
     }
@@ -329,51 +329,51 @@ public class ManagementServiceTest {
   public void adminTokensRevoke() throws Exception {
     UUID userId = UUIDUtils.newTimeUUID();
 
-    String token1 = managementService.getAccessTokenForAdminUser(userId, 0);
-    String token2 = managementService.getAccessTokenForAdminUser(userId, 0);
+    String token1 = setup.getMgmtSvc().getAccessTokenForAdminUser(userId, 0);
+    String token2 = setup.getMgmtSvc().getAccessTokenForAdminUser(userId, 0);
 
-    assertNotNull(tokenService.getTokenInfo(token1));
-    assertNotNull(tokenService.getTokenInfo(token2));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token1));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token2));
 
-    managementService.revokeAccessTokensForAdminUser(userId);
+      setup.getMgmtSvc().revokeAccessTokensForAdminUser(userId);
 
-    boolean invalidTokenExcpetion = false;
-
-    try {
-      tokenService.getTokenInfo(token1);
-    } catch (InvalidTokenException ite) {
-      invalidTokenExcpetion = true;
-    }
-
-    assertTrue(invalidTokenExcpetion);
-
-    invalidTokenExcpetion = false;
+    boolean invalidTokenException = false;
 
     try {
-      tokenService.getTokenInfo(token2);
+        setup.getTokenSvc().getTokenInfo(token1);
     } catch (InvalidTokenException ite) {
-      invalidTokenExcpetion = true;
+      invalidTokenException = true;
     }
 
-    assertTrue(invalidTokenExcpetion);
+    assertTrue(invalidTokenException);
+
+    invalidTokenException = false;
+
+    try {
+        setup.getTokenSvc().getTokenInfo(token2);
+    } catch (InvalidTokenException ite) {
+      invalidTokenException = true;
+    }
+
+    assertTrue(invalidTokenException);
   }
 
   @Test
   public void adminTokenRevoke() throws Exception {
     UUID userId = adminUser.getUuid();
 
-    String token1 = managementService.getAccessTokenForAdminUser(userId, 0);
-    String token2 = managementService.getAccessTokenForAdminUser(userId, 0);
+    String token1 = setup.getMgmtSvc().getAccessTokenForAdminUser(userId, 0);
+    String token2 = setup.getMgmtSvc().getAccessTokenForAdminUser(userId, 0);
 
-    assertNotNull(tokenService.getTokenInfo(token1));
-    assertNotNull(tokenService.getTokenInfo(token2));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token1));
+    assertNotNull(setup.getTokenSvc().getTokenInfo(token2));
 
-    managementService.revokeAccessTokenForAdminUser(userId, token1);
+      setup.getMgmtSvc().revokeAccessTokenForAdminUser(userId, token1);
 
     boolean invalidToken1Excpetion = false;
 
     try {
-      tokenService.getTokenInfo(token1);
+        setup.getTokenSvc().getTokenInfo(token1);
     } catch (InvalidTokenException ite) {
       invalidToken1Excpetion = true;
     }
@@ -383,7 +383,7 @@ public class ManagementServiceTest {
     boolean invalidToken2Excpetion = true;
 
     try {
-      tokenService.getTokenInfo(token2);
+        setup.getTokenSvc().getTokenInfo(token2);
     } catch (InvalidTokenException ite) {
       invalidToken2Excpetion = false;
     }
@@ -393,17 +393,18 @@ public class ManagementServiceTest {
 
   @Test
   public void superUserGetOrganizationsPage() throws Exception {
+    int beforeSize = setup.getMgmtSvc().getOrganizations().size() - 1;
     // create 15 orgs
     for (int x = 0; x < 15; x++) {
-      managementService.createOrganization("super-user-org-" + x, adminUser, true);
+        setup.getMgmtSvc().createOrganization("super-user-org-" + x, adminUser, true);
     }
     // should be 17 total
-    assertEquals(16, managementService.getOrganizations().size());
-    List<OrganizationInfo> orgs = managementService.getOrganizations(null, 10);
+    assertEquals(16+beforeSize, setup.getMgmtSvc().getOrganizations().size());
+    List<OrganizationInfo> orgs = setup.getMgmtSvc().getOrganizations(null, 10);
     assertEquals(10, orgs.size());
     UUID val = orgs.get(9).getUuid();
-    orgs = managementService.getOrganizations(val, 10);
-    assertEquals(7, orgs.size());
+    orgs = setup.getMgmtSvc().getOrganizations(val, 10);
+    assertEquals(7+beforeSize, orgs.size());
     assertEquals(val, orgs.get(0).getUuid());
   }
 
@@ -413,18 +414,18 @@ public class ManagementServiceTest {
     String username = "tnine";
     String password = "test";
 
-    UserInfo adminUser = managementService.createAdminUser(username, "Todd Nine", UUID.randomUUID() + "@apigee.com",
-        password, false, false);
+    UserInfo adminUser = setup.getMgmtSvc().createAdminUser(username, "Todd Nine", UUID.randomUUID() + "@apigee.com",
+            password, false, false);
 
-    UserInfo authedUser = managementService.verifyAdminUserPasswordCredentials(username, password);
-
-    assertEquals(adminUser.getUuid(), authedUser.getUuid());
-
-    authedUser = managementService.verifyAdminUserPasswordCredentials(adminUser.getEmail(), password);
+    UserInfo authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials(username, password);
 
     assertEquals(adminUser.getUuid(), authedUser.getUuid());
 
-    authedUser = managementService.verifyAdminUserPasswordCredentials(adminUser.getUuid().toString(), password);
+    authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials(adminUser.getEmail(), password);
+
+    assertEquals(adminUser.getUuid(), authedUser.getUuid());
+
+    authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials(adminUser.getUuid().toString(), password);
 
     assertEquals(adminUser.getUuid(), authedUser.getUuid());
 
@@ -445,7 +446,7 @@ public class ManagementServiceTest {
     user.setActivated(true);
     user.setUsername(username);
     
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
     
     User storedUser = em.create(user);
     
@@ -469,17 +470,17 @@ public class ManagementServiceTest {
     
     
     //verify authorization works
-    User authedUser = managementService.verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, password);
+    User authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, password);
 
     assertEquals(userId, authedUser.getUuid());
     
     //test we can change the password
     String newPassword = "test2";
-    
-    managementService.setAppUserPassword(MANAGEMENT_APPLICATION_ID, userId, password, newPassword);
+
+      setup.getMgmtSvc().setAppUserPassword(MANAGEMENT_APPLICATION_ID, userId, password, newPassword);
     
     //verify authorization works
-    authedUser = managementService.verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, newPassword);
+    authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, newPassword);
 
     assertEquals(userId, authedUser.getUuid());
   }
@@ -498,7 +499,7 @@ public class ManagementServiceTest {
     user.setActivated(true);
     user.setUsername(username);
     
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
     
     User storedUser = em.create(user);
     
@@ -531,17 +532,17 @@ public class ManagementServiceTest {
     
     
     //verify authorization works
-    User authedUser = managementService.verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, password);
+    User authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, password);
 
     assertEquals(userId, authedUser.getUuid());
     
     //test we can change the password
     String newPassword = "test2";
-    
-    managementService.setAppUserPassword(MANAGEMENT_APPLICATION_ID, userId, password, newPassword);
+
+      setup.getMgmtSvc().setAppUserPassword(MANAGEMENT_APPLICATION_ID, userId, password, newPassword);
     
     //verify authorization works
-    authedUser = managementService.verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, newPassword);
+    authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, username, newPassword);
 
     assertEquals(userId, authedUser.getUuid());
   }
@@ -554,13 +555,13 @@ public class ManagementServiceTest {
     String orgName = "autneticateUser";
     String appName = "authenticateUser";
     
-    UUID appId = emf.createApplication(orgName, appName);
+    UUID appId = setup.getEmf().createApplication(orgName, appName);
     
     User user = new User();
     user.setActivated(true);
     user.setUsername(username);
     
-    EntityManager em = emf.getEntityManager(appId);
+    EntityManager em = setup.getEmf().getEntityManager(appId);
     
     User storedUser = em.create(user);
     
@@ -568,20 +569,20 @@ public class ManagementServiceTest {
     UUID userId = storedUser.getUuid();
     
     //set the password
-    managementService.setAppUserPassword(appId, userId, password);
+    setup.getMgmtSvc().setAppUserPassword(appId, userId, password);
     
     //verify authorization works
-    User authedUser = managementService.verifyAppUserPasswordCredentials(appId, username, password);
+    User authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(appId, username, password);
 
     assertEquals(userId, authedUser.getUuid());
     
     //test we can change the password
     String newPassword = "test2";
-    
-    managementService.setAppUserPassword(appId, userId, password, newPassword);
+
+    setup.getMgmtSvc().setAppUserPassword(appId, userId, password, newPassword);
     
     //verify authorization works
-    authedUser = managementService.verifyAppUserPasswordCredentials(appId, username, newPassword);
+    authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(appId, username, newPassword);
 
 
   }
@@ -597,13 +598,13 @@ public class ManagementServiceTest {
     String orgName = "testAppUserPasswordChangeShaType";
     String appName = "testAppUserPasswordChangeShaType";
     
-    UUID appId = emf.createApplication(orgName, appName);
+    UUID appId = setup.getEmf().createApplication(orgName, appName);
     
     User user = new User();
     user.setActivated(true);
     user.setUsername(username);
     
-    EntityManager em = emf.getEntityManager(appId);
+    EntityManager em = setup.getEmf().getEntityManager(appId);
     
     User storedUser = em.create(user);
     
@@ -627,17 +628,17 @@ public class ManagementServiceTest {
     
     
     //verify authorization works
-    User authedUser = managementService.verifyAppUserPasswordCredentials(appId, username, password);
+    User authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(appId, username, password);
 
     assertEquals(userId, authedUser.getUuid());
     
     //test we can change the password
     String newPassword = "test2";
-    
-    managementService.setAppUserPassword(appId, userId, password, newPassword);
+
+    setup.getMgmtSvc().setAppUserPassword(appId, userId, password, newPassword);
     
     //verify authorization works
-    authedUser = managementService.verifyAppUserPasswordCredentials(appId, username, newPassword);
+    authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(appId, username, newPassword);
 
     assertEquals(userId, authedUser.getUuid());
 
@@ -654,13 +655,13 @@ public class ManagementServiceTest {
     String orgName = "testAppUserPasswordChangeMd5ShaType";
     String appName = "testAppUserPasswordChangeMd5ShaType";
     
-    UUID appId = emf.createApplication(orgName, appName);
+    UUID appId = setup.getEmf().createApplication(orgName, appName);
     
     User user = new User();
     user.setActivated(true);
     user.setUsername(username);
     
-    EntityManager em = emf.getEntityManager(appId);
+    EntityManager em = setup.getEmf().getEntityManager(appId);
     
     User storedUser = em.create(user);
     
@@ -693,17 +694,17 @@ public class ManagementServiceTest {
   
     
     //verify authorization works
-    User authedUser = managementService.verifyAppUserPasswordCredentials(appId, username, password);
+    User authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(appId, username, password);
 
     assertEquals(userId, authedUser.getUuid());
     
     //test we can change the password
     String newPassword = "test2";
-    
-    managementService.setAppUserPassword(appId, userId, password, newPassword);
+
+    setup.getMgmtSvc().setAppUserPassword(appId, userId, password, newPassword);
     
     //verify authorization works
-    authedUser = managementService.verifyAppUserPasswordCredentials(appId, username, newPassword);
+    authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials(appId, username, newPassword);
 
     assertEquals(userId, authedUser.getUuid());
   }
