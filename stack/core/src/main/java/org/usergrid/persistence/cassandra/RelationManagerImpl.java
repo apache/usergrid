@@ -146,11 +146,19 @@ import org.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.persistence.query.ir.AllNode;
+import org.usergrid.persistence.query.ir.QueryNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
-import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
-import org.usergrid.persistence.query.ir.result.*;
+import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.ConnectionIterator;
+import org.usergrid.persistence.query.ir.result.ConnectionRefLoader;
+import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
+import org.usergrid.persistence.query.ir.result.GeoIterator;
+import org.usergrid.persistence.query.ir.result.IDLoader;
+import org.usergrid.persistence.query.ir.result.ResultsLoader;
+import org.usergrid.persistence.query.ir.result.SliceIterator;
+import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
@@ -2210,18 +2218,6 @@ public class RelationManagerImpl implements RelationManager {
     }
   }
 
-  private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
-    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, new QuerySlice("uuid", -1), UUID_PARSER, false);
-
-    List<UUID> ids = new ArrayList<UUID>(size);
-
-    while (iter.hasNext() && ids.size() < size) {
-      ids.addAll(iter.next());
-    }
-
-    return ids;
-  }
-
   @Override
   @Metered(group = "core", name = "RelationManager_createConnection_connection_ref")
   public ConnectionRef createConnection(ConnectionRef connection) throws Exception {
@@ -2456,16 +2452,12 @@ public class RelationManagerImpl implements RelationManager {
       this.collection = collection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org
-     * .usergrid.persistence.query.ir.SliceNode,
-     * org.usergrid.persistence.query.ir.QuerySlice)
+  
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.usergrid.persistence.query.ir.QueryNode, org.usergrid.persistence.query.ir.QuerySlice)
      */
     @Override
-    protected IndexScanner secondaryIndexScan(SliceNode node, QuerySlice slice) throws Exception {
+    protected IndexScanner secondaryIndexScan(QueryNode node, QuerySlice slice) throws Exception {
       // NOTE we explicitly do not append the slice value here. This
       // is done in the searchIndex method below
       Object indexKey = key(headEntity.getUuid(), collection.getName());
@@ -2505,11 +2497,11 @@ public class RelationManagerImpl implements RelationManager {
 
       boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
 
-      IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
+      IndexScanner indexScanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
           key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
           queryProcessor.getPageSizeHint(node), query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
-      this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER, skipFirst));
+      this.results.push(new SliceIterator<UUID>(slice, indexScanner, UUID_PARSER, skipFirst));
     }
 
     /*
@@ -2553,16 +2545,12 @@ public class RelationManagerImpl implements RelationManager {
       this.connection = connection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org
-     * .usergrid.persistence.query.ir.SliceNode,
-     * org.usergrid.persistence.query.ir.QuerySlice)
+ 
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.usergrid.persistence.query.ir.QueryNode, org.usergrid.persistence.query.ir.QuerySlice)
      */
     @Override
-    protected IndexScanner secondaryIndexScan(SliceNode node, QuerySlice slice) throws Exception {
+    protected IndexScanner secondaryIndexScan(QueryNode node, QuerySlice slice) throws Exception {
 
       UUID id = ConnectionRefImpl.getIndexId(ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
           connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0]);
@@ -2632,7 +2620,7 @@ public class RelationManagerImpl implements RelationManager {
         IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
             connection, start, slice.isReversed(), size);
 
-        this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, connectionParser, skipFirst));
+        this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
       }
 
       // no connection type defined, get all connections

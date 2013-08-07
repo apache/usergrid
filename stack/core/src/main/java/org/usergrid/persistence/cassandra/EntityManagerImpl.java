@@ -459,13 +459,11 @@ public class EntityManagerImpl implements EntityManager {
 	 *
 	 * @param batch
 	 *            the batch
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
 	 * @param properties
 	 *            the properties
-	 * @param timestamp
+	 * @param timestampUuid
 	 *            the timestamp
 	 * @return batch
 	 * @throws Exception

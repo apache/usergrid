@@ -25,7 +25,7 @@ import java.util.UUID;
  * @author tnine
  *
  */
-public interface SliceParser<T> extends Comparator<T> {
+public interface SliceParser<T> {
 
   /**
    * Parse the slice and return it's parse type.  If null is returned, the column should be considered
@@ -41,6 +41,20 @@ public interface SliceParser<T> extends Comparator<T> {
    * @return
    */
   public UUID getUUID(T value);
+
+  /**
+   * Get the value stored in this composite
+   * @param value
+   * @return
+   */
+  public Object getValue(T value);
+//
+//  /**
+//   * Get the type stored in this composite
+//   * @param value
+//   * @return
+//   */
+//  public byte getType(T value);
   
   /**
    * Serialize the parse type back into a byte buffer

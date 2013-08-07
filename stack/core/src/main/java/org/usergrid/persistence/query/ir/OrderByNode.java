@@ -30,12 +30,11 @@ public class OrderByNode extends QueryNode {
   private final SliceNode firstPredicate;
 	private final List<SortPredicate> secondarySorts;
 
-	/**
-	 * @param propertyName
-	 * @param distance
-	 * @param lattitude
-	 * @param longitude
-	 */
+  /**
+   *
+   * @param firstPredicate The first predicate that is in the order by statement
+   * @param secondarySorts Any subsequent terms
+   */
 	public OrderByNode(SliceNode firstPredicate, List<SortPredicate> secondarySorts) {
 	  this.firstPredicate = firstPredicate;
 	  this.secondarySorts = secondarySorts;

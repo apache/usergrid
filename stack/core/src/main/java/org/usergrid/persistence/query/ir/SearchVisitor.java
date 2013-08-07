@@ -10,13 +10,7 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.cassandra.QueryProcessor;
 import org.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
-import org.usergrid.persistence.query.ir.result.CollectionIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.IntersectionIterator;
-import org.usergrid.persistence.query.ir.result.OrderByIterator;
-import org.usergrid.persistence.query.ir.result.ResultIterator;
-import org.usergrid.persistence.query.ir.result.SliceIterator;
-import org.usergrid.persistence.query.ir.result.SubtractionIterator;
-import org.usergrid.persistence.query.ir.result.UnionIterator;
+import org.usergrid.persistence.query.ir.result.*;
 
 /**
  * Simple search visitor that performs all the joining in memory for results.
@@ -135,17 +129,26 @@ public abstract class SearchVisitor implements NodeVisitor {
    * .query.ir.OrderByNode)
    */
   @Override
-  public void visit(OrderByNode orderByNode) throws Exception {
+  public void visit(OrderByNode orderByNode) throws Exception { 
+    
+    QuerySlice slice = orderByNode.getFirstPredicate().getAllSlices().iterator().next();
+    
+    IndexScanner scanner = secondaryIndexScan(orderByNode, slice);
 
-    // visit the slice node for the first order
-    orderByNode.getFirstPredicate().visit(this);
+    List<Query.SortPredicate> secondarySorts = orderByNode.getSecondarySorts();
 
-    ResultIterator firstOrder = results.pop();
+    ResultIterator orderIterator;
+
+    if(secondarySorts == null || secondarySorts.size() == 0){
+      orderIterator = new SliceIterator<DynamicComposite>(slice,scanner,  COLLECTION_PARSER, slice.hasCursor() );
+    }
+    else{
+      orderIterator = new OrderByIterator(slice, scanner, COLLECTION_PARSER, secondarySorts, queryProcessor.getPageSizeHint(orderByNode));
+    }
 
     // now create our intermediate iterator with our real results
-    OrderByIterator orderBy = new OrderByIterator(queryProcessor.getPageSizeHint(orderByNode), firstOrder, orderByNode.getSecondarySorts());
-    
-    results.push(orderBy);
+
+    results.push(orderIterator);
     
   }
 
@@ -163,7 +166,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     for (QuerySlice slice : node.getAllSlices()) {
       IndexScanner scanner = secondaryIndexScan(node, slice);
 
-      intersections.addIterator(new SliceIterator<DynamicComposite>(scanner, slice, COLLECTION_PARSER, slice
+      intersections.addIterator(new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice
           .hasCursor()));
     }
 
@@ -180,6 +183,8 @@ public abstract class SearchVisitor implements NodeVisitor {
    * @return
    * @throws Exception
    */
-  protected abstract IndexScanner secondaryIndexScan(SliceNode node, QuerySlice slice) throws Exception;
+  protected abstract IndexScanner secondaryIndexScan(QueryNode node, QuerySlice slice) throws Exception;
+  
+  
 
 }

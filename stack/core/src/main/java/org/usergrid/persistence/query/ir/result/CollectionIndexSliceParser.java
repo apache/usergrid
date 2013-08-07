@@ -28,13 +28,7 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
  */
 public class CollectionIndexSliceParser implements SliceParser<DynamicComposite> {
 
-  /* (non-Javadoc)
-   * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-   */
-  @Override
-  public int compare(DynamicComposite first, DynamicComposite second) {
-    return ((UUID)first.get(2)).compareTo((UUID)second.get(2));
-  }
+
 
   /* (non-Javadoc)
    * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
@@ -52,6 +46,11 @@ public class CollectionIndexSliceParser implements SliceParser<DynamicComposite>
     return (UUID) value.get(2);
   }
 
+  @Override
+  public Object getValue(DynamicComposite value) {
+    return value.get(1);
+  }
+
   /* (non-Javadoc)
    * @see org.usergrid.persistence.query.ir.result.SliceParser#serialize(java.lang.Object)
    */
@@ -59,5 +58,7 @@ public class CollectionIndexSliceParser implements SliceParser<DynamicComposite>
   public ByteBuffer serialize(DynamicComposite type) {
     return type.serialize();
   }
+
+
 
 }
