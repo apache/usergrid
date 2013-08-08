@@ -145,11 +145,7 @@ import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.model.Point;
-import org.usergrid.persistence.query.ir.AllNode;
-import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.ir.SearchVisitor;
-import org.usergrid.persistence.query.ir.SliceNode;
-import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.ir.*;
 import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
@@ -850,7 +846,7 @@ public class RelationManagerImpl implements RelationManager {
   @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
   public IndexUpdate batchUpdateConnectionIndex(IndexUpdate indexUpdate, ConnectionRefImpl connection) throws Exception {
 
-    // UUID connection_id = connection.getId();
+    // UUID connection_id = connection.getUuid();
 
     UUID[] index_keys = connection.getIndexIds();
 
@@ -2312,8 +2308,7 @@ public class RelationManagerImpl implements RelationManager {
     private final CollectionInfo collection;
 
     /**
-     * @param query
-     * @param collectionName
+     * @param queryProcessor
      */
     public SearchCollectionVisitor(QueryProcessor queryProcessor) {
       super(queryProcessor);
@@ -2406,6 +2401,18 @@ public class RelationManagerImpl implements RelationManager {
       results.push(itr);
     }
 
+
+    @Override
+    public void visit(NameIdentifierNode nameIdentifierNode) throws Exception {
+      EntityRef ref = em.getAlias(headEntity.getUuid(), collection.getName(), nameIdentifierNode.getName());
+
+      if(ref == null){
+        this.results.push(new EmptyIterator());
+        return;
+      }
+
+      this.results.push(new StaticIdIterator(ref.getUuid()));
+    }
   }
 
   /**
@@ -2419,8 +2426,8 @@ public class RelationManagerImpl implements RelationManager {
     private final ConnectionRefImpl connection;
 
     /**
-     * @param query
-     * @param collectionName
+     * @param queryProcessor
+     * @param connection
      */
     public SearchConnectionVisitor(QueryProcessor queryProcessor, ConnectionRefImpl connection) {
       super(queryProcessor);
@@ -2523,6 +2530,20 @@ public class RelationManagerImpl implements RelationManager {
         this.results.push(new ConnectionIterator(headEntity, slice, RelationManagerImpl.this));
       }
 
+    }
+
+
+    @Override
+    public void visit(NameIdentifierNode nameIdentifierNode) throws Exception {
+      //TODO T.N. USERGRID-1919 actually validate this is connected
+      EntityRef ref = em.getAlias(applicationId, connection.getConnectedEntityType(), nameIdentifierNode.getName());
+
+      if(ref == null){
+        this.results.push(new EmptyIterator());
+        return;
+      }
+
+      this.results.push(new StaticIdIterator(ref.getUuid()));
     }
   }
 
