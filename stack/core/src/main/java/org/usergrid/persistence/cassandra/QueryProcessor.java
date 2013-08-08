@@ -32,6 +32,7 @@ import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.usergrid.persistence.exceptions.NoIndexException;
 import org.usergrid.persistence.exceptions.PersistenceException;
@@ -136,14 +137,20 @@ public class QueryProcessor {
     //if we still don't have a root node, no query nor order by was specified, just use the all node or the identifiers
     if(rootNode == null){
 
+
       //a name alias or email alias was specified
-      if(query.containsSingleNameOrEmailIdentifier()){
-        rootNode = new NameIdentifierNode(query.getSingleNameOrEmailIdentifier());
+      if(query.containsNameIdentifiersOnly()){
+        rootNode = new NameIdentifierNode(query.getSingleNameIdentifier());
       }
       //a uuid was specified
       else if (query.containsSingleUuidIdentifier()){
         rootNode = new UuidIdentifierNode(query.getSingleUuidIdentifier());
       }
+      //an email was specified.  An edge case that only applies to users.  This is fulgy to put here, but required
+      else if (query.containsEmailIdentifiersOnly() && query.getEntityType().equals(User.ENTITY_TYPE)){
+        rootNode = new EmailIdentifierNode(query.getSingleEmailIdentifier());
+      }
+
       //nothing was specified, order it by uuid
       else{
 

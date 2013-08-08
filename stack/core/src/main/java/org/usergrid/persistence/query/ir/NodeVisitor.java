@@ -71,4 +71,10 @@ public interface NodeVisitor {
    * @param uuidIdentifierNode
    */
   public void visit(UuidIdentifierNode uuidIdentifierNode);
+
+  /**
+   * Visit the email id node
+   * @param emailIdentifierNode
+   */
+  public void visit(EmailIdentifierNode emailIdentifierNode) throws Exception;
 }

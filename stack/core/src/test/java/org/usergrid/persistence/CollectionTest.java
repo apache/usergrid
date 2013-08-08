@@ -1546,4 +1546,32 @@ public class CollectionTest extends AbstractPersistenceTest {
   }
 
 
+
+  @Test
+  public void emailIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "emailIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    User user = new User();
+    user.setUsername("foobar");
+    user.setEmail("foobar@usergrid.org");
+
+    Entity createUser = em.create(user);
+    assertNotNull(createUser);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromEmail("foobar@usergrid.org"));
+    Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", createUser, r.getEntity());
+
+  }
+
 }

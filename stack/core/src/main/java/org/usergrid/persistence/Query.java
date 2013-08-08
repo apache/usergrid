@@ -323,7 +323,7 @@ public class Query {
     return rootOperand != null;
   }
 
-  public boolean containsNameOrEmailIdentifiersOnly() {
+  public boolean containsNameIdentifiersOnly() {
     if (hasQueryPredicates()) {
       return false;
     }
@@ -331,7 +331,22 @@ public class Query {
       return false;
     }
     for (Identifier identifier : identifiers) {
-      if (!identifier.isEmail() && !identifier.isName()) {
+      if (!identifier.isName()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean containsEmailIdentifiersOnly() {
+    if (hasQueryPredicates()) {
+      return false;
+    }
+    if ((identifiers == null) || identifiers.isEmpty()) {
+      return false;
+    }
+    for (Identifier identifier : identifiers) {
+      if (!identifier.isEmail()) {
         return false;
       }
     }
@@ -339,15 +354,28 @@ public class Query {
   }
 
   @JsonIgnore
-  public String getSingleNameOrEmailIdentifier() {
-    if (!containsSingleNameOrEmailIdentifier()) {
+  public Identifier getSingleEmailIdentifier() {
+    if (!containsSingleEmailIdentifier()) {
+      return null;
+    }
+    return identifiers.get(0);
+  }
+
+  public boolean containsSingleEmailIdentifier() {
+    return containsEmailIdentifiersOnly()
+        && (identifiers.size() == 1);
+  }
+
+  @JsonIgnore
+  public String getSingleNameIdentifier() {
+    if (!containsSingleNameIdentifier()) {
       return null;
     }
     return (identifiers.get(0).toString());
   }
 
-  public boolean containsSingleNameOrEmailIdentifier() {
-    return containsNameOrEmailIdentifiersOnly()
+  public boolean containsSingleNameIdentifier() {
+    return containsNameIdentifiersOnly()
         && (identifiers.size() == 1);
   }
 

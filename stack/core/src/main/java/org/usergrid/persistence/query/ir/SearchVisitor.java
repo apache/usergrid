@@ -2,6 +2,7 @@ package org.usergrid.persistence.query.ir;
 
 import java.util.Stack;
 
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.cassandra.QueryProcessor;
 import org.usergrid.persistence.query.ir.result.*;
@@ -117,5 +118,18 @@ public abstract class SearchVisitor implements NodeVisitor {
     this.results.push(new StaticIdIterator(uuidIdentifierNode.getUuid()));
   }
 
+
+
+  @Override
+  public void visit(EmailIdentifierNode emailIdentifierNode) throws Exception {
+    EntityRef user = queryProcessor.getEntityManager().getUserByIdentifier(emailIdentifierNode.getIdentifier());
+
+    if(user == null){
+      this.results.push(new EmptyIterator());
+      return;
+    }
+
+    this.results.push(new StaticIdIterator(user.getUuid()));
+  }
 
 }
