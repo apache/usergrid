@@ -95,7 +95,7 @@ public abstract class AbstractSearch implements QueueSearch {
    * 
    * @return
    */
-  protected UUID getConsumerQueuePosition(UUID queueId, UUID consumerId) {
+  public UUID getConsumerQueuePosition(UUID queueId, UUID consumerId) {
     HColumn<UUID, UUID> result = HFactory.createColumnQuery(ko, ue, ue, ue).setKey(consumerId).setName(queueId)
         .setColumnFamily(CONSUMERS.getColumnFamily()).execute().get();
     if (result != null) {
@@ -250,12 +250,11 @@ public abstract class AbstractSearch implements QueueSearch {
 
   /**
    * Get the bounds for the queue
-   * 
-   * @param ko
+   *
    * @param queueId
-   * @return
+   * @return The bounds for the queue
    */
-  protected QueueBounds getQueueBounds(UUID queueId) {
+  public QueueBounds getQueueBounds(UUID queueId) {
     try {
       ColumnSlice<String, UUID> result = HFactory.createSliceQuery(ko, ue, se, ue).setKey(queueId)
           .setColumnNames(QUEUE_NEWEST, QUEUE_OLDEST).setColumnFamily(QUEUE_PROPERTIES.getColumnFamily()).execute()
@@ -304,67 +303,6 @@ public abstract class AbstractSearch implements QueueSearch {
     mutator.execute();
   }
 
-  protected static final class QueueBounds {
-
-    private final UUID oldest;
-    private final UUID newest;
-
-    public QueueBounds(UUID oldest, UUID newest) {
-      this.oldest = oldest;
-      this.newest = newest;
-    }
-
-    public UUID getOldest() {
-      return oldest;
-    }
-
-    public UUID getNewest() {
-      return newest;
-    }
-
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = (prime * result) + ((newest == null) ? 0 : newest.hashCode());
-      result = (prime * result) + ((oldest == null) ? 0 : oldest.hashCode());
-      return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      QueueBounds other = (QueueBounds) obj;
-      if (newest == null) {
-        if (other.newest != null) {
-          return false;
-        }
-      } else if (!newest.equals(other.newest)) {
-        return false;
-      }
-      if (oldest == null) {
-        if (other.oldest != null) {
-          return false;
-        }
-      } else if (!oldest.equals(other.oldest)) {
-        return false;
-      }
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return "QueueBounds [oldest=" + oldest + ", newest=" + newest + "]";
-    }
-  }
 
   private class RequestedOrderComparator implements Comparator<Message> {
 

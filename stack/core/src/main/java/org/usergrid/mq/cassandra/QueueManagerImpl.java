@@ -99,12 +99,7 @@ import org.usergrid.mq.Query.CounterFilterPredicate;
 import org.usergrid.mq.QueryProcessor.QuerySlice;
 import org.usergrid.mq.QueueSet.QueueInfo;
 import org.usergrid.mq.cassandra.QueueIndexUpdate.QueueIndexEntry;
-import org.usergrid.mq.cassandra.io.FilterSearch;
-import org.usergrid.mq.cassandra.io.ConsumerTransaction;
-import org.usergrid.mq.cassandra.io.EndSearch;
-import org.usergrid.mq.cassandra.io.NoTransactionSearch;
-import org.usergrid.mq.cassandra.io.QueueSearch;
-import org.usergrid.mq.cassandra.io.StartSearch;
+import org.usergrid.mq.cassandra.io.*;
 import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.CounterResolution;
@@ -116,6 +111,7 @@ import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 import com.fasterxml.uuid.UUIDComparator;
+import org.usergrid.utils.UUIDUtils;
 
 public class QueueManagerImpl implements QueueManager {
 
@@ -1402,29 +1398,57 @@ public class QueueManagerImpl implements QueueManager {
   }
 
   @Override
-  public boolean hasOutstandingTransactions(String queuePath) {
-    QueueQuery query = new QueueQuery();
+  public boolean hasOutstandingTransactions(String queuePath, UUID consumerId) {
     UUID queueId = CassandraMQUtils.getQueueId(queuePath);
-    UUID consumerId = getConsumerId(queueId, query);
+
+    //no consumer id set, use the same one as the overall queue
+    if(consumerId == null){
+      consumerId = queueId;
+    }
 
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
+
+
     return new ConsumerTransaction(applicationId, ko, lockManager, cass)
         .hasOutstandingTransactions(queueId, consumerId);
   }
 
+
+  @Override
   public boolean hasMessagesInQueue(String queuePath, UUID consumerId) {
-    if (getQueue(queuePath) == null) return false;
-    Message msg1 = getLastMessage(queuePath, null);
-    if (msg1 == null) return false;
-    return msg1.equals(getLastMessage(queuePath, consumerId));
+
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    UUID queueId = CassandraMQUtils.getQueueId(queuePath);
+
+    if(consumerId == null){
+      consumerId = queueId;
+    }
+
+    NoTransactionSearch search = new NoTransactionSearch(ko);
+
+    QueueBounds bounds = search.getQueueBounds(queueId);
+
+    //Queue doesn't exist
+    if(bounds == null){
+      return false;
+    }
+
+    UUID consumerPosition = search.getConsumerQueuePosition(queueId, consumerId);
+
+    //queue exists, but the consumer does not, meaning it's never read from the Q
+    if(consumerPosition == null){
+      return true;
+    }
+
+    //check our consumer position against the newest message.  If it's equal or larger, we're read to the end of the queue
+    //note that this does not take transactions into consideration, just the client pointer relative to the largest
+    //message in the queue
+    return UUIDUtils.compare(consumerPosition, bounds.getNewest() ) > 0;
+
   }
 
-  private Message getLastMessage(String queuePath, UUID consumerId) {
-    QueueQuery qq = new QueueQuery();
-    qq.setPosition(QueuePosition.LAST);
-    qq.setLimit(1);
-    qq.setConsumerId(consumerId);
-    QueueResults qr = getFromQueue(queuePath, qq);
-    return qr.getMessages().size() > 0 ? qr.getMessages().get(0) : null;
+  @Override
+  public boolean hasPendingReads(String queuePath, UUID consumerId) {
+    return hasOutstandingTransactions(queuePath, consumerId) || hasMessagesInQueue(queuePath, consumerId);
   }
 }

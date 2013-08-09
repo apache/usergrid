@@ -259,12 +259,14 @@ public class MessagesTest extends AbstractPersistenceTest {
     qq.setLimit(1);
     QueueResults qr = qm.getFromQueue(queuePath, qq);
 
-    assertTrue(qm.hasMessagesInQueue(queuePath, null));
-    assertTrue(qm.hasOutstandingTransactions(queuePath));
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+    assertTrue(qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
 
     qm.deleteTransaction(queuePath, qr.getMessages().get(0).getTransaction(), qq);
 
     assertFalse(qm.hasMessagesInQueue(queuePath, null));
-    assertFalse(qm.hasOutstandingTransactions(queuePath));
+    assertFalse(qm.hasOutstandingTransactions(queuePath, null));
+    assertFalse(qm.hasPendingReads(queuePath, null));
   }
 }
