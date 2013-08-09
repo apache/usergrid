@@ -1148,4 +1148,20 @@ public class Query {
   public void setQl(String ql) {
     this.ql = ql;
   }
+
+  public List<Identifier> getIdentifiers() {
+    return identifiers;
+  }
+
+  public String getConnection() {
+    return connection;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public Level getLevel() {
+    return level;
+  }
 }
