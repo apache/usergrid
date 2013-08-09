@@ -79,11 +79,7 @@ public class ConnectionResourceTest extends RestContextTest {
     String uuid = node.get("entities").get(0).get("uuid").getTextValue();
 
 
-    node = resource().path("/test-organization/test-app/users/todd/likes/" + uuid)
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .get(JsonNode.class);
+
 
     try {
       node = resource().path("/test-organization/test-app/users/scott/likes/" + uuid)
