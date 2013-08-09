@@ -26,12 +26,9 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
-import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.Query;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
-import org.usergrid.persistence.Results;
-import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.usergrid.persistence.exceptions.NoIndexException;
@@ -139,17 +136,25 @@ public class QueryProcessor {
 
 
       //a name alias or email alias was specified
-      if(query.containsNameIdentifiersOnly()){
-        rootNode = new NameIdentifierNode(query.getSingleNameIdentifier());
+      if(query.containsSingleNameOrEmailIdentifier()){
+
+        Identifier ident = query.getSingleIdentifier();
+
+        //an email was specified.  An edge case that only applies to users.  This is fulgy to put here, but required
+        if(query.getEntityType().equals(User.ENTITY_TYPE) && ident.isEmail()){
+          rootNode = new EmailIdentifierNode(ident);
+        }
+
+        //use the ident with the default alias.  could be an email
+        else{
+          rootNode = new NameIdentifierNode(ident.getName());
+        }
       }
       //a uuid was specified
       else if (query.containsSingleUuidIdentifier()){
         rootNode = new UuidIdentifierNode(query.getSingleUuidIdentifier());
       }
-      //an email was specified.  An edge case that only applies to users.  This is fulgy to put here, but required
-      else if (query.containsEmailIdentifiersOnly() && query.getEntityType().equals(User.ENTITY_TYPE)){
-        rootNode = new EmailIdentifierNode(query.getSingleEmailIdentifier());
-      }
+
 
       //nothing was specified, order it by uuid
       else{

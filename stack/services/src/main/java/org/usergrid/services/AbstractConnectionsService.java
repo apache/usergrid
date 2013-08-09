@@ -252,9 +252,9 @@ public class AbstractConnectionsService extends AbstractService {
 		checkPermissionsForCollection(context);
 
 		if (!query.hasQueryPredicates() && (query.getEntityType() != null)
-				&& query.containsNameIdentifiersOnly()) {
+				&& query.containsNameOrEmailIdentifiersOnly()) {
 
-			String name = query.getSingleNameIdentifier();
+			String name = query.getSingleNameOrEmailIdentifier();
 
 			String nameProperty = Schema.getDefaultSchema().aliasProperty(
 					query.getEntityType());
@@ -353,8 +353,8 @@ public class AbstractConnectionsService extends AbstractService {
     if (!query.hasQueryPredicates() && (query.getEntityType() != null)) {
 
       Entity entity;
-      if (query.containsNameIdentifiersOnly()) {
-        String name = query.getSingleNameIdentifier();
+      if (query.containsSingleNameOrEmailIdentifier()) {
+        String name = query.getSingleNameOrEmailIdentifier();
 
         EntityRef ref = em.getAlias(query.getEntityType(), name);
         if (ref == null) {
@@ -468,9 +468,9 @@ public class AbstractConnectionsService extends AbstractService {
 		checkPermissionsForCollection(context);
 
 		if (!query.hasQueryPredicates() && (query.getEntityType() != null)
-				&& query.containsNameIdentifiersOnly()) {
+				&& query.containsNameOrEmailIdentifiersOnly()) {
 
-			String name = query.getSingleNameIdentifier();
+			String name = query.getSingleNameOrEmailIdentifier();
 
 			String nameProperty = Schema.getDefaultSchema().aliasProperty(
 					query.getEntityType());

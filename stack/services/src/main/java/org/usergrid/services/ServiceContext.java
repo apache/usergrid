@@ -270,7 +270,7 @@ public class ServiceContext {
 	}
 
 	public boolean isByName() {
-		return ((query != null) && query.containsNameIdentifiersOnly());
+		return ((query != null) && query.containsSingleNameOrEmailIdentifier());
 	}
 
 	public boolean isByQuery() {
@@ -286,7 +286,7 @@ public class ServiceContext {
 
 	public String getName() {
 		if (query != null) {
-			return query.getSingleNameIdentifier();
+			return query.getSingleNameOrEmailIdentifier();
 		}
 		return null;
 	}
