@@ -31,6 +31,8 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.java.client.entities.Group;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
@@ -41,23 +43,22 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+
 /**
  * Tests permissions of adding and removing users from roles as well as groups
  * 
  * @author tnine
  */
-public class PermissionsResourceTest extends AbstractRestTest {
+public class PermissionsResourceTest extends AbstractRestTest
+{
+    private static final Logger LOG = LoggerFactory.getLogger( PermissionsResourceTest.class );
+    private static final String ROLE = "permtestrole";
+    private static final String USER = "edanuff";
 
-  private static final String ROLE = "permtestrole";
-
-  private static final String USER = "edanuff";
-
-  public PermissionsResourceTest() throws Exception {
-
-  }
 
   @Test
-  public void deleteUserFromRole() {
+  public void deleteUserFromRole()
+  {
     Map<String, String> data = hashMap("name", ROLE);
 
     JsonNode node = resource().path("/test-organization/test-app/roles").queryParam("access_token", access_token)
@@ -156,13 +157,13 @@ public class PermissionsResourceTest extends AbstractRestTest {
     String password = "password";
     String email = String.format("email%s@usergrid.com", id);
 
-    OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname, username, "noname", email,
-        password, true, false);
+    OrganizationOwnerInfo orgs = setup.getMgmtSvc().createOwnerAndOrganization(orgname, username, "noname", email,
+            password, true, false);
 
     // create the app
-    ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), applicationName);
+    ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgs.getOrganization().getUuid(), applicationName);
 
-    String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+    String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
 
     // add the perms to the guest to allow users in the role to create roles
     // themselves
@@ -210,16 +211,16 @@ public class PermissionsResourceTest extends AbstractRestTest {
     String password = "password";
     String email = String.format("email%s@usergrid.com", id);
 
-    OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname, username, "noname", email,
-        password, true, false);
+    OrganizationOwnerInfo orgs = setup.getMgmtSvc().createOwnerAndOrganization(orgname, username, "noname", email,
+            password, true, false);
 
     // create the app
-    ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), applicationName);
+    ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgs.getOrganization().getUuid(), applicationName);
 
     // now create the new role
     Map<String, String> data = hashMap("name", "reviewer");
 
-    String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+    String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
 
     JsonNode node = resource().path(String.format("/%s/%s/roles", orgname, applicationName))
         .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
@@ -250,7 +251,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
     assertNull(getError(node));
 
-    String reviewer1Token = managementService.getAccessTokenForAppUser(appInfo.getId(), userId, 0);
+    String reviewer1Token = setup.getMgmtSvc().getAccessTokenForAppUser(appInfo.getId(), userId, 0);
 
     Map<String, String> review = hashMap("rating", "4").map("name", "noca").map("review", "Excellent service and food");
 
@@ -324,7 +325,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
     // post 2 reviews. Should get permissions from the group
 
-    String secondUserToken = managementService.getAccessTokenForAppUser(appInfo.getId(), secondUserId, 0);
+    String secondUserToken = setup.getMgmtSvc().getAccessTokenForAppUser(appInfo.getId(), secondUserId, 0);
 
     review = hashMap("rating", "4").map("name", "cowboyciao").map("review", "Great atmosphoere");
 
@@ -401,15 +402,15 @@ public class PermissionsResourceTest extends AbstractRestTest {
   @Test
   public void wildcardMiddlePermission() throws Exception {
     Map<String,String> params = buildOrgAppParams();
-    OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(params.get("orgName"),
+    OrganizationOwnerInfo orgs = setup.getMgmtSvc().createOwnerAndOrganization(params.get("orgName"),
             params.get("username"), "noname", params.get("email"),
             params.get("password"), true, false);
 
         // create the app
-    ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), params.get("appName"));
+    ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgs.getOrganization().getUuid(), params.get("appName"));
     assertNotNull(appInfo);
 
-    String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+    String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
 
     JsonNode node = resource().path(String.format("/%s/%s/roles/default", params.get("orgName"), params.get("appName")))
                .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
@@ -470,11 +471,11 @@ public class PermissionsResourceTest extends AbstractRestTest {
             .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, book);
 
-    logNode(node);
+    logNode(node,LOG);
     assertEquals("Ready Player One", getEntity(node,0).get("title").getTextValue());
     String bookId = getEntity(node,0).get("uuid").getTextValue();
 
-    String userOneToken = managementService.getAccessTokenForAppUser(appInfo.getId(), userOneId, 0);
+    String userOneToken = setup.getMgmtSvc().getAccessTokenForAppUser(appInfo.getId(), userOneId, 0);
     // post a review of the book as user1
     // POST https://api.usergrid.com/my-org/my-app/users/$user1/reviewed/books/$uuid
     Map<String,String> review = hashMap("heading","Loved It")
@@ -498,7 +499,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
             bookId))
             .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
-    logNode(node);
+    logNode(node,LOG);
     // POST https://api.usergrid.com/my-org/my-app/books/${bookId}/review/${reviewId}
     node =  resource().path(String.format("/%s/%s/books/%s/review/%s",
                 params.get("orgName"),
@@ -507,7 +508,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
                 reviewId))
                 .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
-    logNode(node);
+    logNode(node,LOG);
     // now try to post the same thing to books to verify as userOne the failure
     Status status = null;
     try{
@@ -516,7 +517,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
               params.get("appName")))
               .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
               .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
-      logNode(node);
+      logNode(node,LOG);
     } catch (UniformInterfaceException uie) {
       status = uie.getResponse().getClientResponseStatus();
     }
@@ -527,7 +528,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
             params.get("appName")))
             .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-    logNode(node);
+    logNode(node,LOG);
 
     node =  resource().path(String.format("/%s/%s/reviews/%s",
             params.get("orgName"),
@@ -535,14 +536,14 @@ public class PermissionsResourceTest extends AbstractRestTest {
             reviewId))
             .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-    logNode(node);
+    logNode(node,LOG);
 
     node =  resource().path(String.format("/%s/%s/users/me/wrote",
             params.get("orgName"),
             params.get("appName")))
             .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-    logNode(node);
+    logNode(node,LOG);
 
   }
   /**
@@ -574,15 +575,15 @@ public class PermissionsResourceTest extends AbstractRestTest {
 	    String password = "password";
 	    String email = String.format("email%s@usergrid.com", id);
     
-    OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname,
+    OrganizationOwnerInfo orgs = setup.getMgmtSvc().createOwnerAndOrganization(orgname,
             username, "noname", email,
             password, true, false);
 
         // create the app
-    ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), applicationName);
+    ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgs.getOrganization().getUuid(), applicationName);
     assertNotNull(appInfo);
 
-    String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+    String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
 
     JsonNode node = resource().path(String.format("/%s/%s/roles/default", orgname, applicationName))
                .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
@@ -622,7 +623,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
                 .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-    String patientToken = managementService.getAccessTokenForAppUser(appInfo.getId(), patientId, 0);
+    String patientToken = setup.getMgmtSvc().getAccessTokenForAppUser(appInfo.getId(), patientId, 0);
         
     node =  resource().path(String.format("/%s/%s/users/%s/following/users/%s",
             orgname,
@@ -630,7 +631,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
             "examplepatient"))
             .queryParam("access_token", patientToken).accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
-    logNode(node);
+    logNode(node,LOG);
     
 
   }
@@ -672,7 +673,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
     UUID userId = UUID.fromString(getEntity(node, 0).get("uuid").asText());
 
     // manually activate user
-    managementService.activateAppUser(appId, userId);
+    setup.getMgmtSvc().activateAppUser(appId, userId);
 
     return userId;
 

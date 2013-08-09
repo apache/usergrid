@@ -14,14 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractRestTest;
 
-public class EventsResourceTest extends AbstractRestTest {
+public class EventsResourceTest extends AbstractRestTest
+{
+	private static final Logger LOG = LoggerFactory.getLogger( EventsResourceTest.class );
 
-	private static Logger log = LoggerFactory
-			.getLogger(EventsResourceTest.class);
 
 	@Test
-	public void testEventPostandGet() {
-
+	public void testEventPostandGet()
+    {
 		Map<String, Object> payload = new LinkedHashMap<String, Object>();
 		payload.put("timestamp", 0);
 		payload.put("category", "advertising");
@@ -86,7 +86,7 @@ public class EventsResourceTest extends AbstractRestTest {
 					.accept(MediaType.APPLICATION_JSON)
 					.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-			logNode(node);
+			logNode( node, LOG );
 			assertEquals("Expected Advertising", advertising, node.get("messages").get(0).get("uuid").asText());
 			lastId = node.get("last").asText();
 		}
@@ -97,7 +97,7 @@ public class EventsResourceTest extends AbstractRestTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-		logNode(node);
+		logNode( node, LOG );
 		assertEquals("Expected Sales", sales,node.get("messages").get(0).get("uuid").asText());
 		lastId = node.get("last").asText();
 		
@@ -108,7 +108,7 @@ public class EventsResourceTest extends AbstractRestTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-		logNode(node);
+		logNode( node, LOG );
 		assertEquals("Expected Marketing", marketing, node.get("messages").get(0).get("uuid").asText());
 
 

@@ -60,7 +60,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 @Ignore
 public class UserResourceTest extends AbstractRestTest {
 
-    private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
+    private static Logger LOG = LoggerFactory.getLogger(UserResourceTest.class);
 
     @Test
     public void usernameQuery() {
@@ -101,8 +101,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name = 'John*'";
 
-        ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-        OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+        OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
 
         resource().path("/" + orgInfo.getUuid() + "/" + appInfo.getId() + "/users").queryParam("ql", ql)
         .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
@@ -819,7 +819,7 @@ public class UserResourceTest extends AbstractRestTest {
     @Test
     public void test_POST_batch() {
 
-        log.info("UserResourceTest.test_POST_batch");
+        LOG.info("UserResourceTest.test_POST_batch");
 
         JsonNode node = null;
 
@@ -842,7 +842,7 @@ public class UserResourceTest extends AbstractRestTest {
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, batch);
 
         assertNotNull(node);
-        logNode(node);
+        logNode(node,LOG);
 
     }
 
@@ -896,7 +896,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         node = resource().path("/test-organization/test-app/users/" + uuid).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        logNode(node);
+        logNode(node,LOG);
         assertEquals("ed@anuff.com", node.get("entities").get(0).get("email").getTextValue());
     }
 
@@ -1160,10 +1160,10 @@ public class UserResourceTest extends AbstractRestTest {
         createUser("test_2", "test_2@test.com", "test123", "Test2 User");        // client.setApiUrl(apiUrl);
         createUser("test_3", "test_3@test.com", "test123", "Test3 User");        // client.setApiUrl(apiUrl);
 
-        ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
 
-        String clientId = managementService.getClientIdForApplication(appInfo.getId());
-        String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+        String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+        String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
         JsonNode node = resource().path("/test-organization/test-app/users/test_1/token").queryParam("client_id", clientId).queryParam("client_secret", clientSecret).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -1171,9 +1171,9 @@ public class UserResourceTest extends AbstractRestTest {
         String user_token_from_client_credentials = node.get("access_token").asText();
 
         UUID userId = UUID.fromString(node.get("user").get("uuid").asText());
-        managementService.activateAppUser(appInfo.getId(), userId);
+        setup.getMgmtSvc().activateAppUser(appInfo.getId(), userId);
 
-        String user_token_from_java = managementService.getAccessTokenForAppUser(appInfo.getId(), userId, 1000000);
+        String user_token_from_java = setup.getMgmtSvc().getAccessTokenForAppUser(appInfo.getId(), userId, 1000000);
 
         assertNotNull(user_token_from_client_credentials);
 
@@ -1185,7 +1185,7 @@ public class UserResourceTest extends AbstractRestTest {
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         }catch(UniformInterfaceException uie){
             status = uie.getResponse().getClientResponseStatus();
-            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+            LOG.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
         assertEquals(Status.FORBIDDEN, status);
@@ -1195,7 +1195,7 @@ public class UserResourceTest extends AbstractRestTest {
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         }catch(UniformInterfaceException uie){
             status = uie.getResponse().getClientResponseStatus();
-            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+            LOG.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
         assertEquals(Status.FORBIDDEN, status);
@@ -1214,7 +1214,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         assertNotNull(getEntity(response, 0));
 
-        managementService.deactivateUser(appInfo.getId(), userId);
+        setup.getMgmtSvc().deactivateUser(appInfo.getId(), userId);
         try {
             resource().path("/test-organization/test-app/token")
                 .queryParam("grant_type", "password")
@@ -1240,7 +1240,7 @@ public class UserResourceTest extends AbstractRestTest {
         JsonNode response = resource().path("/test-organization/test-app/users/"+randomName)
                         .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
                         .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        logNode(response);
+        logNode(response,LOG);
         assertNotNull(getEntity(response, 0));
         // PUT on user
 
@@ -1254,13 +1254,13 @@ public class UserResourceTest extends AbstractRestTest {
         response = resource().path("/test-organization/test-app/users").queryParam("access_token", adminAccessToken)
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
 
-        logNode(response);
+        logNode(response,LOG);
         response = resource().path("/test-organization/test-app/users/"+randomName)
                                 .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
                                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         assertNotNull(getEntity(response, 0));
-        logNode(response);
+        logNode(response,LOG);
     }
 
 

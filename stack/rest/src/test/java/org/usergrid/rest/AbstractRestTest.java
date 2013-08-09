@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
+
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
@@ -36,12 +37,11 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.Client;
-import org.usergrid.management.ManagementService;
 
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -52,6 +52,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
+
 /**
  * Base class for testing Usergrid Jersey-based REST API. Implementations should
  * model the paths mapped, not the method names. For example, to test the the
@@ -59,175 +60,172 @@ import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
  * test method(s) should following the following naming convention: test_[HTTP
  * verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
  */
-// @Autowire
-@RunWith(CassandraRunner.class)
-public abstract class AbstractRestTest extends JerseyTest {
+@Concurrent()
+public abstract class AbstractRestTest extends JerseyTest
+{
+    private static final int JETTY_PORT = 9998;
+    private static final String CONTEXT = "/";
+    private static Logger LOG = LoggerFactory.getLogger( AbstractRestTest.class );
 
-  /**
-   * 
-   */
-  private static final int JETTY_PORT = 9998;
+    static boolean usersSetup = false;
+    static ClientConfig clientConfig = new DefaultClientConfig();
 
-  private static final String CONTEXT = "/";
+    protected Properties properties;
+    protected static String access_token;
+    protected static String adminAccessToken;
 
-  private static Logger logger = LoggerFactory.getLogger(AbstractRestTest.class);
-
-  static boolean usersSetup = false;
-  protected Properties properties;
-
-  protected static String access_token;
-
-  protected static String adminAccessToken;
-
-  protected static ManagementService managementService;
-
-  static ClientConfig clientConfig = new DefaultClientConfig();
-
-  protected static Client client;
-
-  protected static final AppDescriptor descriptor;
+    protected static Client client;
+    protected static final AppDescriptor descriptor;
 
     private static Server server;
-  
 
 
-  static {
-    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+    @ClassRule
+    public static ITSetup setup = new ITSetup();
 
-    descriptor = new WebAppDescriptor.Builder("org.usergrid.rest").clientConfig(clientConfig).build();
 
-    dumpClasspath(AbstractRestTest.class.getClassLoader());
-    
-  }
-
-  public static void main(String... args) {
-  }
-
-  public static void dumpClasspath(ClassLoader loader) {
-    System.out.println("Classloader " + loader + ":");
-
-    if (loader instanceof URLClassLoader) {
-      URLClassLoader ucl = (URLClassLoader) loader;
-      System.out.println("\t" + Arrays.toString(ucl.getURLs()));
-    } else {
-      System.out.println("\t(cannot display components as not a URLClassLoader)");
+    @BeforeClass
+    public static void setup() throws Exception
+    {
+        LOG.info("setup");
+        startJetty();
     }
 
-    if (loader.getParent() != null) {
-      dumpClasspath(loader.getParent());
-    }
-  }
 
-  public AbstractRestTest() throws TestContainerException {
-    super(descriptor);
-
-  }
-
-  protected void setupUsers() {
-
-    if (usersSetup) {
-      return;
+    static
+    {
+        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+        descriptor = new WebAppDescriptor.Builder( "org.usergrid.rest" ).clientConfig( clientConfig ).build();
+        dumpClasspath( AbstractRestTest.class.getClassLoader() );
     }
 
-    //
-    createUser("edanuff", "ed@anuff.com", "sesame", "Ed Anuff"); // client.setApiUrl(apiUrl);
-
-    usersSetup = true;
-
-  }
-
-  public void loginClient() throws InterruptedException {
-    // now create a client that logs in ed
-
-    // TODO T.N. This is a filthy hack and I should be ashamed of it (which
-    // I am). There's a bug in the grizzly server when it's restarted per
-    // test, and until we can upgrade versions this is the workaround. Backs
-    // off with each attempt to allow the server to catch up
-
-
-        setUserPassword("ed@anuff.com", "sesame");
-
-        client = new Client("test-organization", "test-app").withApiUrl(getBaseURI().toString());
-
-        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
-
-        assertTrue(response != null && response.getError() == null);
-
-  }
-
-
-
-  @Override
-  protected TestContainerFactory getTestContainerFactory() {
-    // return new
-    // com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
-    return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
-  }
-
-  @BeforeClass
-  public static void setup() throws Exception {
-    // Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
-    logger.info("setup");
-    
-    startJetty();
-
-
-
-      managementService = CassandraRunner.getBean(ManagementService.class);
-
-      managementService.setup();
-
-
-  }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardown()
+    {
         access_token = null;
         usersSetup = false;
         adminAccessToken = null;
     }
 
-  private static void startJetty() throws Exception {
-      if ( server == null ) {
-    server = new Server(JETTY_PORT);
-    server.setHandler(new WebAppContext("src/main/webapp", CONTEXT));
-    server.start();
-      }
-  }
-
-  public static void logNode(JsonNode node) {
-    logger.info(mapToFormattedJsonString(node));
-  }
-
-  /**
-   * Hook to get the token for our base user
-   */
-  @Before
-  public void acquireToken() throws Exception {
-      properties = CassandraRunner.getBean("properties",Properties.class);
-      setupUsers();
-    logger.info("acquiring token");
-    access_token = userToken("ed@anuff.com", "sesame");
-    logger.info("with token: {}", access_token);
-    loginClient();
 
 
+    /**
+     * Hook to get the token for our base user
+     */
+    @Before
+    public void acquireToken() throws Exception
+    {
+        properties = setup.getProps();
+        setupUsers();
+        LOG.info("acquiring token");
+        access_token = userToken("ed@anuff.com", "sesame");
+        LOG.info("with token: {}", access_token);
+        loginClient();
+    }
 
-  }
 
-  protected String userToken(String name, String password) throws Exception {
+    public static void dumpClasspath( ClassLoader loader )
+    {
+        System.out.println("Classloader " + loader + ":");
 
-    setUserPassword("ed@anuff.com", "sesame");
+        if ( loader instanceof URLClassLoader )
+        {
+            URLClassLoader ucl = (URLClassLoader) loader;
+            System.out.println("\t" + Arrays.toString(ucl.getURLs()));
+        }
+        else
+        {
+            System.out.println("\t(cannot display components as not a URLClassLoader)");
+        }
 
-    JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
-        .queryParam("username", name).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
-        .get(JsonNode.class);
+        if ( loader.getParent() != null )
+        {
+            dumpClasspath( loader.getParent() );
+        }
+    }
 
-    String userToken = node.get("access_token").getTextValue();
-    logger.info("returning user token: {}", userToken);
-    return userToken;
 
-  }
+    private static void startJetty() throws Exception
+    {
+        if ( server == null )
+        {
+            server = new Server( JETTY_PORT );
+            server.setHandler(new WebAppContext( "src/main/webapp", CONTEXT ) );
+            server.start();
+        }
+    }
+
+
+    public AbstractRestTest() throws TestContainerException
+    {
+        super(descriptor);
+    }
+
+
+    protected void setupUsers()
+    {
+        if ( usersSetup )
+        {
+            return;
+        }
+
+        createUser( "edanuff", "ed@anuff.com", "sesame", "Ed Anuff" );
+        usersSetup = true;
+    }
+
+
+    public void loginClient() throws InterruptedException
+    {
+        // now create a client that logs in ed
+
+        // TODO T.N. This is a filthy hack and I should be ashamed of it (which
+        // I am). There's a bug in the grizzly server when it's restarted per
+        // test, and until we can upgrade versions this is the workaround. Backs
+        // off with each attempt to allow the server to catch up
+
+        setUserPassword("ed@anuff.com", "sesame");
+        client = new Client("test-organization", "test-app").withApiUrl(getBaseURI().toString());
+        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
+        assertTrue(response != null && response.getError() == null);
+    }
+
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory()
+    {
+        // return new
+        // com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
+        return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
+    }
+
+
+    public static void logNode( JsonNode node, Logger logger )
+    {
+        if ( logger.isInfoEnabled() )
+        {
+            logger.info( mapToFormattedJsonString( node ) );
+        }
+    }
+
+
+    protected String userToken( String name, String password ) throws Exception
+    {
+        setUserPassword( "ed@anuff.com", "sesame" );
+
+        JsonNode node = resource()
+                .path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", name )
+                .queryParam( "password", password )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( JsonNode.class );
+
+        String userToken = node.get( "access_token" ).getTextValue();
+        LOG.info( "returning user token: {}", userToken );
+        return userToken;
+    }
+
 
   public void createUser(String username, String email, String password, String name) {
       try {
@@ -238,7 +236,7 @@ public abstract class AbstractRestTest extends JerseyTest {
               return;
           }
       } catch (Exception ex) {
-          logger.error("Miss on user. Creating.");
+          LOG.error("Miss on user. Creating.");
       }
 
       adminToken();
@@ -301,7 +299,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         .get(JsonNode.class);
 
     String mgmToken = node.get("access_token").getTextValue();
-    logger.info("got mgmt token: {}", mgmToken);
+    LOG.info("got mgmt token: {}", mgmToken);
     return mgmToken;
 
   }

@@ -1,5 +1,6 @@
 package org.usergrid.rest.management.users.organizations;
 
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -10,19 +11,22 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractRestTest;
+
 
 /**
  * @author zznate
  */
-public class UsersOrganizationsResourceTest extends AbstractRestTest {
-
+public class UsersOrganizationsResourceTest extends AbstractRestTest
+{
+    private static final Logger LOG = LoggerFactory.getLogger( UsersOrganizationsResourceTest.class );
 
 
     @Test
-    public void createOrgFromUserConnectionFail() throws Exception {
-
-
+    public void createOrgFromUserConnectionFail() throws Exception
+    {
         Map<String, String> payload = hashMap("email",
                         "orgfromuserconn@apigee.com").map("password", "password")
                         .map("organization", "orgfromuserconn");
@@ -43,7 +47,7 @@ public class UsersOrganizationsResourceTest extends AbstractRestTest {
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .get(JsonNode.class);
 
-        logNode(node);
+        logNode(node,LOG);
 
         payload = hashMap("organization", "Orgfromuserconn");
 

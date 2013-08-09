@@ -1,11 +1,13 @@
-package org.usergrid.management;
+package org.usergrid.rest;
 
 
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
+
 import org.usergrid.cassandra.CassandraResource;
+import org.usergrid.management.ApplicationCreator;
+import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.security.tokens.TokenService;
@@ -13,15 +15,17 @@ import org.usergrid.services.ServiceManagerFactory;
 
 import java.util.Properties;
 
+import static junit.framework.TestCase.assertNotNull;
+
 
 /**
  * A {@link org.junit.rules.TestRule} that sets up services.
  *
  * TODO - rename to ServiceITestRule and move to org.usergrid top level
  */
-public class ServiceTestRule extends ExternalResource
+public class ITSetup extends ExternalResource
 {
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceTestRule.class );
+    private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
     private final CassandraResource cassandraResource;
 
     private ServiceManagerFactory smf;
@@ -33,9 +37,10 @@ public class ServiceTestRule extends ExternalResource
     private Properties properties;
 
 
-    public ServiceTestRule( CassandraResource cassandraResource )
+    public ITSetup()
     {
-        this.cassandraResource = cassandraResource;
+        cassandraResource = RestITSuite.cassandraResource;
+        assertNotNull( "The CassandraResource cannot be null.", cassandraResource );
     }
 
 
@@ -45,14 +50,15 @@ public class ServiceTestRule extends ExternalResource
         super.before();
 
         managementService = cassandraResource.getBean( ManagementService.class );
+        managementService.setup();
         applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
         emf = cassandraResource.getBean( EntityManagerFactory.class );
         tokenService = cassandraResource.getBean( TokenService.class );
         providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
-        properties = cassandraResource.getBean(PropertiesFactoryBean.class).getObject();
-        smf = cassandraResource.getBean(ServiceManagerFactory.class);
+        properties = cassandraResource.getBean( "properties", Properties.class );
+        smf = cassandraResource.getBean( ServiceManagerFactory.class );
 
-        LOG.info( "Test setup complete..." );
+        LOG.info("Test setup complete...");
     }
 
 

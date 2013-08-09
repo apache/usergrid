@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
+
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,21 +36,26 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class BasicTest extends AbstractRestTest {
 
-	private static Logger log = LoggerFactory.getLogger(BasicTest.class);
+public class BasicTest extends AbstractRestTest
+{
+	private static final Logger LOG = LoggerFactory.getLogger( BasicTest.class );
 
-	public BasicTest() throws Exception {
+
+	public BasicTest() throws Exception
+    {
 		super();
 	}
 
-	public void tryTest() {
+
+    public void tryTest()
+    {
 		WebResource webResource = resource();
 		String json = webResource.path("/test/hello")
 				.accept(MediaType.APPLICATION_JSON).get(String.class);
 		assertTrue(isNotBlank(json));
 
-		log.info(json);
+		LOG.info(json);
 	}
 
 	@Test
@@ -81,7 +87,7 @@ public class BasicTest extends AbstractRestTest {
 				.queryParam("access_token", mgmtToken)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
-		logNode(node);
+		logNode(node,LOG);
 
 		assertEquals("Test User",
 				node.get("data").get("organizations").get("test-organization")
@@ -128,7 +134,7 @@ public class BasicTest extends AbstractRestTest {
 				.queryParam("password", "sesame")
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
-		logNode(node);
+        logNode(node,LOG);
 
 		String user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
@@ -153,7 +159,7 @@ public class BasicTest extends AbstractRestTest {
 		node = resource().path("/test-organization/test-app/users/edanuff")
 				.queryParam("access_token", user_access_token)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		logNode(node);
+        logNode(node,LOG);
 
 		assertEquals(1, node.get("entities").size());
 
@@ -193,7 +199,7 @@ public class BasicTest extends AbstractRestTest {
 				.queryParam("pin", "1234").accept(MediaType.APPLICATION_JSON)
 				.get(JsonNode.class);
 
-		logNode(node);
+        logNode(node,LOG);
 
 		user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
@@ -213,7 +219,7 @@ public class BasicTest extends AbstractRestTest {
 				.queryParam("pin", "5678").accept(MediaType.APPLICATION_JSON)
 				.get(JsonNode.class);
 
-		logNode(node);
+		logNode(node,LOG);
 
 		user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
@@ -222,7 +228,7 @@ public class BasicTest extends AbstractRestTest {
 
 		node = resource().path("/test-organization/test-app/users/ed@anuff.com/test").get(
 				JsonNode.class);
-		logNode(node);
+		logNode(node,LOG);
 
 		// test create user with guest permissions (no token)
 
@@ -235,7 +241,7 @@ public class BasicTest extends AbstractRestTest {
 				.type(MediaType.APPLICATION_JSON_TYPE)
 				.post(JsonNode.class, payload);
 
-		logNode(node);
+		logNode(node,LOG);
 
 		assertEquals("ed.anuff", node.get("entities").get(0).get("username")
 				.getTextValue());
@@ -249,7 +255,7 @@ public class BasicTest extends AbstractRestTest {
 				.type(MediaType.APPLICATION_JSON_TYPE)
 				.put(JsonNode.class, payload);
 
-		logNode(node);
+		logNode(node,LOG);
 
 		// test create entity with guest permissions (no token), should fail
 
