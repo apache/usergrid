@@ -351,6 +351,10 @@ public class Query {
         && (identifiers.size() == 1);
   }
 
+  public Identifier getSingleIdentifier(){
+    return identifiers != null && identifiers.size() == 1? identifiers.get(0) : null;
+  }
+
   public boolean containsSingleUuidIdentifier() {
     return containsUuidIdentifiersOnly() && (identifiers.size() == 1);
   }

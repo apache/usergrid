@@ -15,12 +15,15 @@
  ******************************************************************************/
 package com.usergrid.count;
 
+import com.usergrid.count.common.Count;
+
+import java.util.Collection;
 import java.util.concurrent.Future;
 
 /**
  * @author zznate
  */
 public interface BatchSubmitter {
-    Future<?> submit(SimpleBatcher.Batch batch);
+    Future<?> submit(Collection<Count> counts);
     void shutdown();
 }
