@@ -43,9 +43,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class RegistrationTest extends AbstractRestTest
-{
-    private static final Logger LOG = LoggerFactory.getLogger( RegistrationTest.class );
+public class RegistrationTest extends AbstractRestTest {
+
+    private static final Logger logger = LoggerFactory
+            .getLogger(RegistrationTest.class);
 
     @Ignore
     @Test
@@ -76,10 +77,10 @@ public class RegistrationTest extends AbstractRestTest
                 account_confirmation_message.getSubject());
 
         String token = getTokenFromMessage(account_confirmation_message);
-        LOG.info(token);
+        logger.info(token);
 
 
-        setup.getMgmtSvc().disableAdminUser(owner_uuid);
+        managementService.disableAdminUser(owner_uuid);
         try{
             resource().path("/management/token")
                 .queryParam("grant_type", "password")
@@ -94,7 +95,7 @@ public class RegistrationTest extends AbstractRestTest
         }
 
 
-        setup.getMgmtSvc().deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
+        managementService.deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
         try{
             resource().path("/management/token")
                 .queryParam("grant_type", "password")
@@ -110,13 +111,13 @@ public class RegistrationTest extends AbstractRestTest
 
 
         // assertEquals(ActivationState.ACTIVATED,
-        // setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
+        // managementService.handleConfirmationTokenForAdminUser(
         // owner_uuid, token));
 
         String response = resource().path(
                 "/management/users/" + owner_uuid + "/confirm").get(
                 String.class);
-        LOG.info(response);
+        logger.info(response);
 
         Message account_activation_message = inbox.get(1);
         assertEquals("User Account Activated",
@@ -149,7 +150,7 @@ public class RegistrationTest extends AbstractRestTest
                 .post(JsonNode.class, payload);
 
         assertNotNull(node);
-        logNode(node,LOG);
+        logNode(node);
         return node;
     }
 
@@ -170,7 +171,7 @@ public class RegistrationTest extends AbstractRestTest
                 .post(JsonNode.class, formData);
 
         assertNotNull(node);
-        logNode(node,LOG);
+        logNode(node);
         return node;
     }
 
@@ -256,12 +257,12 @@ public class RegistrationTest extends AbstractRestTest
 
 	    // reseturl
 	    String mailContent = (String)((MimeMultipart)msgs[0].getContent()).getBodyPart(1).getContent();
-	    LOG.info(mailContent);
+	    logger.info(mailContent);
 	    assertTrue(StringUtils.contains(mailContent, reset_url));
 
 	    //token
 	    String token = getTokenFromMessage(msgs[0]);
-	    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userId, token));
+	    assertTrue(managementService.checkPasswordResetTokenForAdminUser(userId, token));
     }
 
     @Test
@@ -279,7 +280,7 @@ public class RegistrationTest extends AbstractRestTest
 
         // setup an admin user
         String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
-		UserInfo adminUser = setup.getMgmtSvc().createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
+		UserInfo adminUser = managementService.createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
 				true, false);
 		assertNotNull(adminUser);
         Message[] msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password1");
@@ -318,9 +319,9 @@ public class RegistrationTest extends AbstractRestTest
 	    Message[] msgs = folder.getMessages();
 
 		for (Message m : msgs) {
-			LOG.info("Subject: " + m.getSubject());
-			LOG.info("Body content 0 " + (String) ((MimeMultipart) m.getContent()).getBodyPart(0).getContent());
-			LOG.info("Body content 1 " + (String) ((MimeMultipart) m.getContent()).getBodyPart(1).getContent());
+			logger.info("Subject: " + m.getSubject());
+			logger.info("Body content 0 " +(String)((MimeMultipart)m.getContent()).getBodyPart(0).getContent());
+			logger.info("Body content 1 " +(String)((MimeMultipart)m.getContent()).getBodyPart(1).getContent());
 		}
 		return msgs;
 

@@ -16,8 +16,6 @@ import java.util.Properties;
 
 /**
  * A {@link org.junit.rules.TestRule} that sets up services.
- *
- * TODO - rename to ServiceITestRule and move to org.usergrid top level
  */
 public class ServiceTestRule extends ExternalResource
 {

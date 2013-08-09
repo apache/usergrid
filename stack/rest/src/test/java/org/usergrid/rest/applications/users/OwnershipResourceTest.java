@@ -42,7 +42,7 @@ public class OwnershipResourceTest extends RestContextTest {
     assertNotNull(userNode);
     String uuid = userNode.get("entities").get(0).get("uuid").getTextValue();
     assertNotNull(uuid);
-      setup.getMgmtSvc().revokeAccessTokenForAppUser(token);
+    managementService.revokeAccessTokenForAppUser(token);
 
     try {
       context.application().users().user("me").get();

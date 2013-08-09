@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.codehaus.jackson.JsonNode;
@@ -30,12 +31,10 @@ import org.usergrid.rest.management.organizations.OrganizationsResource;
  */
 public class MUUserResourceTest extends AbstractRestTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger( MUUserResourceTest.class );
-
+    private Logger logger = LoggerFactory.getLogger(MUUserResourceTest.class);
 
     @Test
-    public void updateManagementUser() throws Exception
-    {
+    public void updateManagementUser() throws Exception {
         Map<String, String> payload = hashMap("email",
                 "uort-user-1@apigee.com").map("username", "uort-user-1")
                 .map("name", "Test User").map("password", "password")
@@ -46,7 +45,7 @@ public class MUUserResourceTest extends AbstractRestTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
-        logNode(node,LOG);
+        logNode(node);
         String userId = node.get("data").get("owner").get("uuid").asText();
 
         assertEquals("Apigee",node.get("data").get("owner").get("properties").get("company").asText());
@@ -58,10 +57,10 @@ public class MUUserResourceTest extends AbstractRestTest {
                         .type(MediaType.APPLICATION_JSON_TYPE)
                         .get(JsonNode.class);
 
-        logNode(node,LOG);
+        logNode(node);
 
         payload = hashMap("company","Usergrid");
-        LOG.info("sending PUT for company update");
+        logger.info("sending PUT for company update");
         node = resource().path(String.format("/management/users/%s",userId))
                                 .queryParam("access_token",token)
                                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -74,7 +73,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         assertEquals("Usergrid",node.get("data").get("properties").get("company").asText());
 
 
-        logNode(node,LOG);
+        logNode(node);
     }
 
   @Test
@@ -97,7 +96,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         .accept(MediaType.APPLICATION_JSON)
         .type(MediaType.APPLICATION_JSON_TYPE)
         .get(JsonNode.class);
-    logNode(node,LOG);
+    logNode(node);
 
     JsonNode securityLevel = node.findValue("securityLevel");
     assertNotNull(securityLevel);
@@ -112,7 +111,7 @@ public class MUUserResourceTest extends AbstractRestTest {
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, buildOrgUserPayload("reactivate"));
 
-        logNode(node,LOG);
+        logNode(node);
         String email = node.get("data").get("owner").get("email").asText();
         String uuid = node.get("data").get("owner").get("uuid").asText();
         assertNotNull(email);
@@ -129,7 +128,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get(email);
 
         assertFalse(inbox.isEmpty());
-        logNode(node,LOG);
+        logNode(node);
     }
 
     private Map<String, String> buildOrgUserPayload(String caller) {
@@ -148,10 +147,10 @@ public class MUUserResourceTest extends AbstractRestTest {
   public void checkPasswordReset() throws Exception {
 
     String email = "test@usergrid.com";
-    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail(email);
-    String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+    UserInfo userInfo = managementService.getAdminUserByEmail(email);
+    String resetToken = managementService.getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
 
-    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+    assertTrue(managementService.checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
 
     Form formData = new Form();
     formData.add("token", resetToken);
@@ -165,7 +164,7 @@ public class MUUserResourceTest extends AbstractRestTest {
 
     assertTrue(html.contains("password set"));
 
-    assertFalse(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+    assertFalse(managementService.checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
 
     html = resource()
         .path("/management/users/" + userInfo.getUsername() + "/resetpw")
@@ -180,19 +179,19 @@ public class MUUserResourceTest extends AbstractRestTest {
 
     String[] passwords = new String[] {"password1", "password2", "password3", "password4"};
 
-    UserInfo user = setup.getMgmtSvc().createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
+    UserInfo user = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
     assertNotNull(user);
 
-    OrganizationInfo organization = setup.getMgmtSvc().createOrganization("ed-organization", user, true);
+    OrganizationInfo organization = managementService.createOrganization("ed-organization", user, true);
     assertNotNull(organization);
 
     // set history to 1
     Map<String,Object> props = new HashMap<String,Object>();
     props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 1);
     organization.setProperties(props);
-    setup.getMgmtSvc().updateOrganization(organization);
+    managementService.updateOrganization(organization);
 
-    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail("ed@anuff.com");
+    UserInfo userInfo = managementService.getAdminUserByEmail("ed@anuff.com");
 
     Map<String, String> payload =
         hashMap("oldpassword", passwords[0])
@@ -235,8 +234,8 @@ public class MUUserResourceTest extends AbstractRestTest {
   public void checkPasswordChangeTime() throws Exception {
 
     String email = "test@usergrid.com";
-    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail(email);
-    String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+    UserInfo userInfo = managementService.getAdminUserByEmail(email);
+    String resetToken = managementService.getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
 
     Form formData = new Form();
     formData.add("token", resetToken);

@@ -19,12 +19,12 @@ import javax.ws.rs.core.MediaType;
 import junit.framework.Assert;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestTest;
@@ -33,18 +33,16 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
-
 /**
  * @author zznate
  */
-public class OrganizationsResourceTest extends AbstractRestTest
-{
-    private static final Logger LOG = LoggerFactory.getLogger( OrganizationsResourceTest.class );
+public class OrganizationsResourceTest extends AbstractRestTest {
 
+
+    private EntityManagerFactory emf = CassandraRunner.getBean(EntityManagerFactory.class);
 
     @Test
-    public void createOrgAndOwner() throws Exception
-    {
+    public void createOrgAndOwner() throws Exception {
         properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
         properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
@@ -71,26 +69,26 @@ public class OrganizationsResourceTest extends AbstractRestTest
 
         assertNotNull(node);
 
-        ApplicationInfo applicationInfo = setup.getMgmtSvc()
+        ApplicationInfo applicationInfo = managementService
                 .getApplicationInfo("test-org-1/sandbox");
 
         assertNotNull(applicationInfo);
 
-        Set<String> rolePerms = setup.getEmf().getEntityManager(applicationInfo.getId())
+        Set<String> rolePerms = emf.getEntityManager(applicationInfo.getId())
                 .getRolePermissions("guest");
         assertNotNull(rolePerms);
         assertTrue(rolePerms.contains("get,post,put,delete:/**"));
-        logNode( node, LOG );
+        logNode(node);
 
-        UserInfo ui = setup.getMgmtSvc()
+        UserInfo ui = managementService
                 .getAdminUserByEmail("test-user-1@mockserver.com");
-        EntityManager em = setup.getEmf()
+        EntityManager em = emf
                 .getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
         User user = em.get(ui.getUuid(), User.class);
         assertEquals("Test User", user.getName());
         assertEquals("Apigee",(String)user.getProperty("company"));
 
-        OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-org-1");
+        OrganizationInfo orgInfo = managementService.getOrganizationByName("test-org-1");
         assertEquals(5L, orgInfo.getProperties().get("securityLevel"));
 
         node = resource().path("/management/organizations/test-org-1")
@@ -98,7 +96,7 @@ public class OrganizationsResourceTest extends AbstractRestTest
           .accept(MediaType.APPLICATION_JSON)
           .type(MediaType.APPLICATION_JSON_TYPE)
           .get(JsonNode.class);
-        logNode( node, LOG );
+        logNode(node);
         Assert.assertEquals(5, node.get("organization").get(OrganizationsResource.ORGANIZATION_PROPERTIES).get("securityLevel").asInt());
 
         node = resource().path("/management/organizations/test-org-1")
@@ -120,7 +118,7 @@ public class OrganizationsResourceTest extends AbstractRestTest
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
 
-        logNode( node, LOG ) ;
+        logNode(node);
         assertNotNull(node);
 
         payload = hashMap("email",
@@ -145,7 +143,7 @@ public class OrganizationsResourceTest extends AbstractRestTest
                     .post(JsonNode.class, payload);
             fail("Should not have created user");
         } catch (Exception ex) {}
-        logNode( node, LOG ) ;
+        logNode(node);
 
         payload = hashMap("username",
                         "create-duplicate-org@mockserver.com").map("grant_type", "password")
@@ -154,7 +152,7 @@ public class OrganizationsResourceTest extends AbstractRestTest
                             .accept(MediaType.APPLICATION_JSON)
                             .type(MediaType.APPLICATION_JSON_TYPE)
                             .post(JsonNode.class, payload);
-        logNode( node, LOG ) ;
+        logNode(node);
     }
 
     @Test
@@ -213,5 +211,6 @@ public class OrganizationsResourceTest extends AbstractRestTest
         }
 
         assertEquals(Status.BAD_REQUEST, status);
+//        assertEquals("Application delete is not allowed yet", node.get("error_description").asText());
     }
 }

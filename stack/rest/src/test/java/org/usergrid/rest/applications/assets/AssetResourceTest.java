@@ -21,10 +21,9 @@ import org.usergrid.rest.applications.utils.UserRepo;
 /**
  * @author zznate
  */
-public class AssetResourceTest extends AbstractRestTest
-{
-  private static final Logger LOG = LoggerFactory.getLogger( AssetResourceTest.class );
+public class AssetResourceTest extends AbstractRestTest {
 
+  private Logger logger = LoggerFactory.getLogger(AssetResourceTest.class);
 
   @Test
   public void verifyBinaryCrud() throws Exception {
@@ -44,7 +43,7 @@ public class AssetResourceTest extends AbstractRestTest
     JsonNode idNode = node.get("entities").get(0).get("uuid");
     UUID id = UUID.fromString(idNode.getTextValue());
     assertNotNull(idNode.getTextValue());
-    logNode( node, LOG );
+    logNode(node);
 
     byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
     resource().path("/test-organization/test-app/assets/" + id.toString() + "/data")

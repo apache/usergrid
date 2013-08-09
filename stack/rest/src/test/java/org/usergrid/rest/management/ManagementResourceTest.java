@@ -29,8 +29,6 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractRestTest;
@@ -42,10 +40,11 @@ import org.usergrid.rest.management.organizations.OrganizationsResource;
 /**
  * @author tnine
  */
-public class ManagementResourceTest extends AbstractRestTest
-{
-    private static final Logger LOG = LoggerFactory.getLogger( ManagementResourceTest.class );
+public class ManagementResourceTest extends AbstractRestTest {
 
+    public ManagementResourceTest() throws Exception {
+
+    }
 
     /**
      * Test if we can reset our password as an admin
@@ -144,7 +143,7 @@ public class ManagementResourceTest extends AbstractRestTest
     @Test
     public void crossOrgsNotViewable() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("crossOrgsNotViewable",
+        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("crossOrgsNotViewable",
             "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
 
         // check that the test admin cannot access the new org info
@@ -186,7 +185,7 @@ public class ManagementResourceTest extends AbstractRestTest
 
         assertNull(status);
 
-        OrganizationInfo org = setup.getMgmtSvc().getOrganizationByName("test-organization");
+        OrganizationInfo org = managementService.getOrganizationByName("test-organization");
 
         status = null;
         try {
@@ -211,7 +210,7 @@ public class ManagementResourceTest extends AbstractRestTest
     @Test
     public void mgmtCreateAndGetApplication() throws Exception {
 
-    	OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
+    	OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
         Map<String, String> data = new HashMap<String, String>();
         data.put("name", "mgmt-org-app");
 
@@ -220,7 +219,7 @@ public class ManagementResourceTest extends AbstractRestTest
         		.queryParam("access_token", adminToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class,data);
-        logNode(appdata,LOG);
+        logNode(appdata);
         appdata = getEntity(appdata, 0);
 
         assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());
@@ -232,7 +231,7 @@ public class ManagementResourceTest extends AbstractRestTest
         		.queryParam("access_token", adminToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        logNode(appdata,LOG);
+        logNode(appdata);
 
         assertEquals("test-organization", appdata.get("organization").asText());
         assertEquals("mgmt-org-app", appdata.get("applicationName").asText());
@@ -285,7 +284,7 @@ public class ManagementResourceTest extends AbstractRestTest
         .queryParam("username", "test@usergrid.com").queryParam("password", "test")
         .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
-    logNode(node,LOG);
+    logNode(node);
     String token = node.get("access_token").getTextValue();
     assertNotNull(token);
 
@@ -303,7 +302,7 @@ public class ManagementResourceTest extends AbstractRestTest
     // ensure the organization property is included
     node = resource().path("/management/token").queryParam("access_token", token)
         .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-    logNode(node,LOG);
+    logNode(node);
 
     JsonNode securityLevel = node.findValue("securityLevel");
     assertNotNull(securityLevel);
@@ -316,14 +315,14 @@ public class ManagementResourceTest extends AbstractRestTest
               .queryParam("username", "test@usergrid.com").queryParam("password", "test")
               .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
-      logNode(node,LOG);
+      logNode(node);
       String token = node.get("access_token").getTextValue();
 
       assertNotNull(token);
 
       node = resource().path("/management/me").queryParam("access_token", token)
               .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-      logNode(node,LOG);
+      logNode(node);
     }
 
   @Test
@@ -335,14 +334,14 @@ public class ManagementResourceTest extends AbstractRestTest
             .accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
 
-    logNode(node,LOG);
+    logNode(node);
     String token = node.get("access_token").getTextValue();
 
     assertNotNull(token);
 
     node = resource().path("/management/me").queryParam("access_token", token)
             .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-    logNode(node,LOG);
+    logNode(node);
   }
 
   @Test
@@ -353,14 +352,14 @@ public class ManagementResourceTest extends AbstractRestTest
             .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
             .post(JsonNode.class);
 
-    logNode(node,LOG);
+    logNode(node);
     String token = node.get("access_token").getTextValue();
 
     assertNotNull(token);
 
     node = resource().path("/management/me").queryParam("access_token", token)
             .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-    logNode(node,LOG);
+    logNode(node);
   }
 
     @Test
