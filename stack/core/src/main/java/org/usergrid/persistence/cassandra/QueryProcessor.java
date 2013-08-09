@@ -211,7 +211,7 @@ public class QueryProcessor {
    * @return
    * @throws Exception 
    */
-  public Results getResults(EntityManager em, SearchVisitor visitor, ResultsLoader loader) throws Exception {
+  public Results getResults(SearchVisitor visitor, ResultsLoader loader) throws Exception {
     // if we have no order by just load the results
 
     if (rootNode == null) {

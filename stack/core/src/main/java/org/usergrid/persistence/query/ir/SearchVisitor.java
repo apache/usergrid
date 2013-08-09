@@ -6,10 +6,12 @@ import java.util.Stack;
 
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
+import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.cassandra.QueryProcessor;
 import org.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.query.ir.result.*;
 
 /**
@@ -30,14 +32,17 @@ public abstract class SearchVisitor implements NodeVisitor {
 
   protected final QueryProcessor queryProcessor;
 
+  protected final EntityManager em;
+
   protected final Stack<ResultIterator> results = new Stack<ResultIterator>();
 
   /**
    * @param query
    */
-  public SearchVisitor(Query query, QueryProcessor queryProcessor) {
+  public SearchVisitor(Query query, QueryProcessor queryProcessor, EntityManager em) {
     this.query = query;
     this.queryProcessor = queryProcessor;
+    this.em = em;
   }
 
   /**
@@ -129,27 +134,36 @@ public abstract class SearchVisitor implements NodeVisitor {
    * .query.ir.OrderByNode)
    */
   @Override
-  public void visit(OrderByNode orderByNode) throws Exception { 
-    
+  public void visit(OrderByNode orderByNode) throws Exception {
+
     QuerySlice slice = orderByNode.getFirstPredicate().getAllSlices().iterator().next();
-    
-    IndexScanner scanner = secondaryIndexScan(orderByNode, slice);
+
+    queryProcessor.applyCursorAndSort(slice);
+
+    IndexScanner scanner;
+
+    // nothing left to search for this range
+    if (slice.isComplete()) {
+      scanner = new NoOpIndexScanner();
+    } else {
+      scanner = secondaryIndexScan(orderByNode, slice);
+    }
 
     List<Query.SortPredicate> secondarySorts = orderByNode.getSecondarySorts();
 
     ResultIterator orderIterator;
 
-    if(secondarySorts == null || secondarySorts.size() == 0){
-      orderIterator = new SliceIterator<DynamicComposite>(slice,scanner,  COLLECTION_PARSER, slice.hasCursor() );
-    }
-    else{
-      orderIterator = new OrderByIterator(slice, scanner, COLLECTION_PARSER, secondarySorts, queryProcessor.getPageSizeHint(orderByNode));
+    if (secondarySorts == null || secondarySorts.size() == 0) {
+      orderIterator = new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice.hasCursor());
+    } else {
+      orderIterator = new OrderByIterator(slice, scanner, COLLECTION_PARSER, secondarySorts, em,
+          queryProcessor.getPageSizeHint(orderByNode));
     }
 
     // now create our intermediate iterator with our real results
 
     results.push(orderIterator);
-    
+
   }
 
   /*

@@ -118,23 +118,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.usergrid.persistence.AssociatedEntityRef;
-import org.usergrid.persistence.CollectionRef;
-import org.usergrid.persistence.ConnectedEntityRef;
-import org.usergrid.persistence.ConnectionRef;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.RelationManager;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.RoleRef;
-import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.SimpleCollectionRef;
-import org.usergrid.persistence.SimpleEntityRef;
-import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
@@ -2202,9 +2188,9 @@ public class RelationManagerImpl implements RelationManager {
     // results
 
     QueryProcessor qp = new QueryProcessor(query, collection);
-    SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
+    SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, em, collection);
 
-    return qp.getResults(em, visitor, getResultsLoader(query));
+    return qp.getResults(visitor, getResultsLoader(query));
   }
 
   private ResultsLoader getResultsLoader(Query query) {
@@ -2401,9 +2387,9 @@ public class RelationManagerImpl implements RelationManager {
         connectedEntityType, null));
 
     QueryProcessor qp = new QueryProcessor(query, null);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, em, connectionRef);
 
-    return qp.getResults(em, visitor, new EntityResultsLoader(em));
+    return qp.getResults(visitor, getResultsLoader(query));
   }
 
   @Override
@@ -2447,8 +2433,8 @@ public class RelationManagerImpl implements RelationManager {
      * @param query
      * @param collectionName
      */
-    public SearchCollectionVisitor(Query query, QueryProcessor queryProcessor, CollectionInfo collection) {
-      super(query, queryProcessor);
+    public SearchCollectionVisitor(Query query, QueryProcessor queryProcessor, EntityManager em, CollectionInfo collection) {
+      super(query, queryProcessor, em);
       this.collection = collection;
     }
 
@@ -2540,8 +2526,8 @@ public class RelationManagerImpl implements RelationManager {
      * @param query
      * @param collectionName
      */
-    public SearchConnectionVisitor(Query query, QueryProcessor queryProcessor, ConnectionRefImpl connection) {
-      super(query, queryProcessor);
+    public SearchConnectionVisitor(Query query, QueryProcessor queryProcessor, EntityManager em, ConnectionRefImpl connection) {
+      super(query, queryProcessor, em);
       this.connection = connection;
     }
 
