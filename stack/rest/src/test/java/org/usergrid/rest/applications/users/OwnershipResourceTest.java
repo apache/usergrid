@@ -16,8 +16,10 @@
 package org.usergrid.rest.applications.users;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.Connection;
 import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
@@ -30,7 +32,10 @@ import static org.junit.Assert.*;
 /**
  * 
  */
-public class OwnershipResourceTest extends RestContextTest {
+public class OwnershipResourceTest extends AbstractRestTest {
+
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
   @Test
   public void meVerify() throws Exception {

@@ -19,9 +19,11 @@ import java.util.concurrent.Future;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.usergrid.mq.QueuePosition;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.app.queue.Queue;
 import org.usergrid.rest.test.resource.app.queue.Transaction;
 import org.usergrid.utils.MapUtils;
@@ -30,7 +32,10 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-public class QueueResourceTest extends RestContextTest {
+public class QueueResourceTest extends AbstractRestTest {
+
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
   @Test
   public void inOrder() {

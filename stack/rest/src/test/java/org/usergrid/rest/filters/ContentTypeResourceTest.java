@@ -41,9 +41,10 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -53,7 +54,10 @@ import org.usergrid.utils.UUIDUtils;
  */
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not using grizzly to test")
-public class ContentTypeResourceTest extends RestContextTest {
+public class ContentTypeResourceTest extends AbstractRestTest {
+
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
     /**
      * Creates a simple entity of type game. Does not set the content type. The

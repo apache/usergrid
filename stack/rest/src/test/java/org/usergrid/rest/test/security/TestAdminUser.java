@@ -39,7 +39,7 @@ public class TestAdminUser extends TestUser{
    */
   @Override
   protected String getToken(TestContext context) {
-    return context.managment().tokenGet(user, password);
+    return context.management().tokenGet(user, password);
   }
 
   /* (non-Javadoc)
