@@ -15,9 +15,6 @@
  ******************************************************************************/
 package org.usergrid.mq;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.AbstractPersistenceTest;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.utils.JsonUtils;
+
+import static org.junit.Assert.*;
 
 public class MessagesTest extends AbstractPersistenceTest {
 
@@ -230,4 +229,42 @@ public class MessagesTest extends AbstractPersistenceTest {
 		}
 	}
 
+  @Test
+  public void testTransactions() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testTransactions");
+    assertNotNull(applicationId);
+
+    EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
+    assertNotNull(em);
+
+    logger.info("Creating messages");
+
+    QueueManager qm = geQueueManagerFactory().getQueueManager(applicationId);
+
+    String queuePath = "/foo/bar";
+
+    Message message = new Message();
+    message.setStringProperty("foo", "bar");
+
+    logger.info("Posting message # to queue /foo/bar: " + message.getUuid());
+
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+
+    qm.postToQueue(queuePath, message);
+    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+
+    QueueQuery qq = new QueueQuery();
+    qq.setTimeout(100);
+    qq.setLimit(1);
+    QueueResults qr = qm.getFromQueue(queuePath, qq);
+
+    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+    assertTrue(qm.hasOutstandingTransactions(queuePath));
+
+    qm.deleteTransaction(queuePath, qr.getMessages().get(0).getTransaction(), qq);
+
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+    assertFalse(qm.hasOutstandingTransactions(queuePath));
+  }
 }

@@ -29,11 +29,7 @@ import static org.usergrid.mq.QueuePosition.CONSUMER;
 import static org.usergrid.mq.QueuePosition.END;
 import static org.usergrid.mq.QueuePosition.LAST;
 import static org.usergrid.mq.QueuePosition.START;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.addMessageToMutator;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.addQueueToMutator;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.deserializeMessage;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.deserializeQueue;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.getQueueShardRowKey;
+import static org.usergrid.mq.cassandra.CassandraMQUtils.*;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.indexValueCode;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.toIndexableValue;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.validIndexableValue;
@@ -98,17 +94,9 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
-import org.usergrid.mq.CounterQuery;
-import org.usergrid.mq.Message;
-import org.usergrid.mq.Query;
+import org.usergrid.mq.*;
 import org.usergrid.mq.Query.CounterFilterPredicate;
-import org.usergrid.mq.QueryProcessor;
 import org.usergrid.mq.QueryProcessor.QuerySlice;
-import org.usergrid.mq.Queue;
-import org.usergrid.mq.QueueManager;
-import org.usergrid.mq.QueueQuery;
-import org.usergrid.mq.QueueResults;
-import org.usergrid.mq.QueueSet;
 import org.usergrid.mq.QueueSet.QueueInfo;
 import org.usergrid.mq.cassandra.QueueIndexUpdate.QueueIndexEntry;
 import org.usergrid.mq.cassandra.io.FilterSearch;
@@ -1413,4 +1401,30 @@ public class QueueManagerImpl implements QueueManager {
 
   }
 
+  @Override
+  public boolean hasOutstandingTransactions(String queuePath) {
+    QueueQuery query = new QueueQuery();
+    UUID queueId = CassandraMQUtils.getQueueId(queuePath);
+    UUID consumerId = getConsumerId(queueId, query);
+
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    return new ConsumerTransaction(applicationId, ko, lockManager, cass)
+        .hasOutstandingTransactions(queueId, consumerId);
+  }
+
+  public boolean hasMessagesInQueue(String queuePath, UUID consumerId) {
+    if (getQueue(queuePath) == null) return false;
+    Message msg1 = getLastMessage(queuePath, null);
+    if (msg1 == null) return false;
+    return msg1.equals(getLastMessage(queuePath, consumerId));
+  }
+
+  private Message getLastMessage(String queuePath, UUID consumerId) {
+    QueueQuery qq = new QueueQuery();
+    qq.setPosition(QueuePosition.LAST);
+    qq.setLimit(1);
+    qq.setConsumerId(consumerId);
+    QueueResults qr = getFromQueue(queuePath, qq);
+    return qr.getMessages().size() > 0 ? qr.getMessages().get(0) : null;
+  }
 }

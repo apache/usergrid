@@ -333,6 +333,14 @@ public class ConsumerTransaction extends NoTransactionSearch {
     return results;
   }
 
+  public boolean hasOutstandingTransactions(UUID queueId, UUID consumerId) {
+    SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
+    q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
+    q.setKey(getQueueClientTransactionKey(queueId, consumerId));
+    q.setRange(null, null, false, 1);
+    return q.execute().get().getColumns().size() > 0;
+  }
+
   /**
    * Delete all re-read transaction pointers
    * 

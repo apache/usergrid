@@ -114,4 +114,19 @@ public interface QueueManager {
 	 * @param query
 	 */
 	public abstract void deleteTransaction(String queuePath,UUID transactionId, QueueQuery query);
+
+  /**
+   * Determines if there are any outstanding transactions on a queue
+   * @param queuePath The path to the queue
+   * @param query
+   */
+  public abstract boolean hasOutstandingTransactions(String queuePath);
+
+  /**
+   * Determines if there are any Messages to retrieve in a queue
+   * @param queuePath The path to the queue
+   * @param consumerId
+   */
+  public abstract boolean hasMessagesInQueue(String queuePath, UUID consumerId);
+
 }
