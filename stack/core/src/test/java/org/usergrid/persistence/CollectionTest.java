@@ -1486,5 +1486,92 @@ public class CollectionTest extends AbstractPersistenceTest {
     assertEquals("", propertyName);
   }
 
-  
+  @Test
+  public void uuidIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "uuidIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("keywords", "blah,test,game");
+    properties.put("title", "Solitaire");
+
+    Entity game1 = em.create("game", properties);
+    assertNotNull(game1);
+
+    //we create 2 entities, otherwise this test will pass when it shouldn't
+    Entity game2 = em.create("game", properties);
+    assertNotNull(game2);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromUUID(game1.getUuid()));
+    Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", game1, r.getEntity());
+
+  }
+
+  @Test
+  public void nameIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "nameIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("keywords", "blah,test,game");
+    properties.put("title", "Solitaire");
+    properties.put("name", "test");
+
+    Entity game1 = em.create("games", properties);
+    assertNotNull(game1);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromName("test"));
+    Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", game1, r.getEntity());
+
+  }
+
+
+
+  @Test
+  public void emailIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "emailIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    User user = new User();
+    user.setUsername("foobar");
+    user.setEmail("foobar@usergrid.org");
+
+    Entity createUser = em.create(user);
+    assertNotNull(createUser);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromEmail("foobar@usergrid.org"));
+    Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", createUser, r.getEntity());
+
+  }
+
 }

@@ -513,8 +513,8 @@ public class Results implements Iterable<Entity> {
          * connectionTypeAndEntityTypeToEntityMap.keySet()) { Map<String,
          * List<Entity>> m = connectionTypeAndEntityTypeToEntityMap .get(ctype);
          * for (String etype : m.keySet()) { List<Entity> l = m.get(etype); for
-         * (Entity e : l) { if (!eMap.containsKey(e.getId())) { entities.add(e);
-         * eMap.put(e.getId(), e); } } } } return entities; }
+         * (Entity e : l) { if (!eMap.containsKey(e.getUuid())) { entities.add(e);
+         * eMap.put(e.getUuid(), e); } } } } return entities; }
          */
         if (entity != null) {
             entities = new ArrayList<Entity>();

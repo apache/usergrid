@@ -454,42 +454,6 @@ public class EntityManagerImpl implements EntityManager {
 		return batch;
 	}
 
-	/**
-	 * Batch update properties.
-	 *
-	 * @param batch
-	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityId
-	 *            the entity id
-	 * @param properties
-	 *            the properties
-	 * @param timestamp
-	 *            the timestamp
-	 * @return batch
-	 * @throws Exception
-	 *             the exception
-	 */
-	public Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch,
-			UUID entityId, Map<String, Object> properties, UUID timestampUuid)
-			throws Exception {
-
-    EntityRef entity = getRef(entityId);
-		if (entity == null) {
-			return batch;
-		}
-
-		for (Map.Entry<String,Object> entry : properties.entrySet()) {
-      String propertyName = entry.getKey();
-			Object propertyValue = entry.getValue();
-
-			batch = batchSetProperty(batch, entity, propertyName,
-					propertyValue, timestampUuid);
-		}
-
-		return batch;
-	}
 
 	/**
 	 * Batch update set.
