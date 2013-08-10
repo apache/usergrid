@@ -110,7 +110,7 @@
               <parallel>both</parallel>
               <forkCount>8</forkCount>
               <reuseForks>false</reuseForks>
-              <argLine>-Xmx256G -Xms256m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx256m -Xms256m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <includes>
                 <include>**/SchedulerTestSuite.java</include>
                 <include>**/SchedulerRuntime*IT.java</include>
