@@ -19,12 +19,10 @@ import javax.ws.rs.core.MediaType;
 import junit.framework.Assert;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestTest;
@@ -38,8 +36,6 @@ import com.sun.jersey.api.representation.Form;
  */
 public class OrganizationsResourceTest extends AbstractRestTest {
 
-
-    private EntityManagerFactory emf = CassandraRunner.getBean(EntityManagerFactory.class);
 
     @Test
     public void createOrgAndOwner() throws Exception {
@@ -74,7 +70,7 @@ public class OrganizationsResourceTest extends AbstractRestTest {
 
         assertNotNull(applicationInfo);
 
-        Set<String> rolePerms = emf.getEntityManager(applicationInfo.getId())
+        Set<String> rolePerms = setup.getEmf().getEntityManager(applicationInfo.getId())
                 .getRolePermissions("guest");
         assertNotNull(rolePerms);
         assertTrue(rolePerms.contains("get,post,put,delete:/**"));
@@ -82,8 +78,7 @@ public class OrganizationsResourceTest extends AbstractRestTest {
 
         UserInfo ui = managementService
                 .getAdminUserByEmail("test-user-1@mockserver.com");
-        EntityManager em = emf
-                .getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = setup.getEmf().getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
         User user = em.get(ui.getUuid(), User.class);
         assertEquals("Test User", user.getName());
         assertEquals("Apigee",(String)user.getProperty("company"));

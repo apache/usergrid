@@ -36,10 +36,10 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.Client;
 import org.usergrid.management.ManagementService;
 
@@ -59,13 +59,9 @@ import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
  * test method(s) should following the following naming convention: test_[HTTP
  * verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
  */
-// @Autowire
-@RunWith(CassandraRunner.class)
-public abstract class AbstractRestTest extends JerseyTest {
-
-  /**
-   * 
-   */
+@Concurrent()
+public abstract class AbstractRestTest extends JerseyTest
+{
   private static final int JETTY_PORT = 9998;
 
   private static final String CONTEXT = "/";
@@ -88,7 +84,10 @@ public abstract class AbstractRestTest extends JerseyTest {
   protected static final AppDescriptor descriptor;
 
     private static Server server;
-  
+
+
+  @ClassRule
+  public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
 
   static {
@@ -171,13 +170,8 @@ public abstract class AbstractRestTest extends JerseyTest {
     
     startJetty();
 
-
-
-      managementService = CassandraRunner.getBean(ManagementService.class);
-
-      managementService.setup();
-
-
+      managementService = setup.getMgmtSvc();
+      // managementService.setup();
   }
 
     @AfterClass
@@ -204,7 +198,7 @@ public abstract class AbstractRestTest extends JerseyTest {
    */
   @Before
   public void acquireToken() throws Exception {
-      properties = CassandraRunner.getBean("properties",Properties.class);
+      properties = setup.getProps();
       setupUsers();
     logger.info("acquiring token");
     access_token = userToken("ed@anuff.com", "sesame");
