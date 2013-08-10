@@ -125,7 +125,6 @@ public class Identifier {
 		return type == Type.NAME;
 	}
 
-  @JsonIgnore
   public Type getType() {
     return type;
   }

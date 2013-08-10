@@ -351,6 +351,7 @@ public class Query {
         && (identifiers.size() == 1);
   }
 
+  @JsonIgnore
   public Identifier getSingleIdentifier(){
     return identifiers != null && identifiers.size() == 1? identifiers.get(0) : null;
   }
