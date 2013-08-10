@@ -54,7 +54,7 @@ import org.usergrid.utils.UUIDUtils;
  */
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not using grizzly to test")
-public class ContentTypeResourceTest extends AbstractRestTest {
+public class ContentTypeResourceIT extends AbstractRestTest {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );

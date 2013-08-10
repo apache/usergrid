@@ -21,9 +21,9 @@ import org.usergrid.rest.applications.utils.UserRepo;
 /**
  * @author zznate
  */
-public class AssetResourceTest extends AbstractRestTest {
+public class AssetResourceIT extends AbstractRestTest {
 
-  private Logger logger = LoggerFactory.getLogger(AssetResourceTest.class);
+  private Logger logger = LoggerFactory.getLogger(AssetResourceIT.class);
 
   @Test
   public void verifyBinaryCrud() throws Exception {

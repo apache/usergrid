@@ -19,7 +19,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author zznate
  * @author tnine
  */
-public class CollectionsResourceTest extends AbstractRestTest {
+public class CollectionsResourceIT extends AbstractRestTest {
 
     @Test
     public void postToBadPath() {

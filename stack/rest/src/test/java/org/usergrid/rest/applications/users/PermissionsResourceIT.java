@@ -46,13 +46,13 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * 
  * @author tnine
  */
-public class PermissionsResourceTest extends AbstractRestTest {
+public class PermissionsResourceIT extends AbstractRestTest {
 
   private static final String ROLE = "permtestrole";
 
   private static final String USER = "edanuff";
 
-  public PermissionsResourceTest() throws Exception {
+  public PermissionsResourceIT() throws Exception {
 
   }
 
@@ -157,7 +157,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
     String email = String.format("email%s@usergrid.com", id);
 
     OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname, username, "noname", email,
-        password, true, false);
+            password, true, false);
 
     // create the app
     ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), applicationName);
@@ -211,7 +211,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
     String email = String.format("email%s@usergrid.com", id);
 
     OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname, username, "noname", email,
-        password, true, false);
+            password, true, false);
 
     // create the app
     ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), applicationName);

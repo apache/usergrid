@@ -16,7 +16,7 @@ import org.usergrid.rest.test.security.TestAdminUser;
  * 
  * @author tnine
  **/
-public class AdminEmailEncodingTest extends AbstractRestTest
+public class AdminEmailEncodingIT extends AbstractRestTest
 {
 
     @Rule

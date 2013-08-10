@@ -16,11 +16,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public class OrganizationResourceTest extends AbstractRestTest {
+public class OrganizationResourceIT extends AbstractRestTest {
 
   @Test
   @Ignore( "Running alone is fine, with other tests it bombs: " +
-          "OrganizationResourceTest.testOrganizationUpdate:32 » UniformInterface POST htt..." )
+          "OrganizationResourceIT.testOrganizationUpdate:32 » UniformInterface POST htt..." )
   public void testOrganizationUpdate() throws Exception {
     Map<String, Object> properties = new HashMap<String,Object>();
     properties.put("securityLevel", 5);

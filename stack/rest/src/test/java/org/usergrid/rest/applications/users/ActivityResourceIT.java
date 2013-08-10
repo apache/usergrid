@@ -32,9 +32,9 @@ import org.usergrid.utils.UUIDUtils;
 /**
  * @author tnine
  */
-public class ActivityResourceTest extends AbstractRestTest {
+public class ActivityResourceIT extends AbstractRestTest {
     private static Logger log = LoggerFactory
-            .getLogger(ActivityResourceTest.class);
+            .getLogger(ActivityResourceIT.class);
 
     private static final String GROUP = "testGroup";
 
@@ -42,7 +42,7 @@ public class ActivityResourceTest extends AbstractRestTest {
 
     private static boolean groupCreated = false;
 
-    public ActivityResourceTest() throws Exception {
+    public ActivityResourceIT() throws Exception {
 
     }
 

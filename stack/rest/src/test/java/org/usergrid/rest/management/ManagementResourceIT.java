@@ -40,9 +40,9 @@ import org.usergrid.rest.management.organizations.OrganizationsResource;
 /**
  * @author tnine
  */
-public class ManagementResourceTest extends AbstractRestTest {
+public class ManagementResourceIT extends AbstractRestTest {
 
-    public ManagementResourceTest() throws Exception {
+    public ManagementResourceIT() throws Exception {
 
     }
 
@@ -144,7 +144,7 @@ public class ManagementResourceTest extends AbstractRestTest {
     public void crossOrgsNotViewable() throws Exception {
 
         OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("crossOrgsNotViewable",
-            "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
+                "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
 
         // check that the test admin cannot access the new org info
 

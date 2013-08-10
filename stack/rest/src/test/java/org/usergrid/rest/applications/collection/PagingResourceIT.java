@@ -39,7 +39,7 @@ import org.usergrid.rest.test.resource.CustomCollection;
 /**
  * Simple tests to test querying at the REST tier
  */
-public class PagingResourceTest extends AbstractRestTest {
+public class PagingResourceIT extends AbstractRestTest {
 
 
     @Rule

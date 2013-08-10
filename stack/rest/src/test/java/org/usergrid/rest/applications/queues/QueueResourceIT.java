@@ -32,7 +32,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-public class QueueResourceTest extends AbstractRestTest {
+public class QueueResourceIT extends AbstractRestTest {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -845,7 +845,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.QueueCommand#
+     * org.usergrid.rest.applications.queues.QueueResourceIT.QueueCommand#
      * processQueue(org.usergrid.rest.test.resource.app.Queue)
      */
     @Override
@@ -867,7 +867,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.QueueCommand#
+     * org.usergrid.rest.applications.queues.QueueResourceIT.QueueCommand#
      * processQueue(org.usergrid.rest.test.resource.app.Queue)
      */
     @Override
@@ -916,7 +916,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * org.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
      * #response(org.codehaus.jackson.JsonNode)
      */
     @Override
@@ -958,7 +958,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * org.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
      * #response(org.codehaus.jackson.JsonNode)
      */
     @Override
@@ -1002,7 +1002,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * org.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
      * #response(org.codehaus.jackson.JsonNode)
      */
     @Override
@@ -1045,7 +1045,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * org.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
      * #response(org.codehaus.jackson.JsonNode)
      */
     @Override
@@ -1084,7 +1084,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * org.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
      * #response(org.codehaus.jackson.JsonNode)
      */
     @Override
@@ -1155,7 +1155,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * org.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
      * #response(org.codehaus.jackson.JsonNode)
      */
     @Override

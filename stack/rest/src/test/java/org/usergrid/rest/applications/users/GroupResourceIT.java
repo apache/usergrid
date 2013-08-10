@@ -38,9 +38,9 @@ import org.usergrid.utils.UUIDUtils;
 /**
  * @author tnine
  */
-public class GroupResourceTest extends AbstractRestTest {
+public class GroupResourceIT extends AbstractRestTest {
     private static Logger log = LoggerFactory
-            .getLogger(GroupResourceTest.class);
+            .getLogger(GroupResourceIT.class);
 
     private static final String GROUP = "testGroup";
 
@@ -48,7 +48,7 @@ public class GroupResourceTest extends AbstractRestTest {
 
     private static boolean groupCreated = false;
 
-    public GroupResourceTest() throws Exception {
+    public GroupResourceIT() throws Exception {
 
     }
 

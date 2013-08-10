@@ -6,15 +6,49 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.rest.applications.users.GroupResourceTest;
-import org.usergrid.rest.management.organizations.AdminEmailEncodingTest;
+import org.usergrid.rest.applications.ApplicationRequestCounterIT;
+import org.usergrid.rest.applications.ApplicationResourceIT;
+import org.usergrid.rest.applications.DevicesResourceIT;
+import org.usergrid.rest.applications.assets.AssetResourceIT;
+import org.usergrid.rest.applications.collection.PagingResourceIT;
+import org.usergrid.rest.applications.events.EventsResourceIT;
+import org.usergrid.rest.applications.queues.QueueResourceIT;
+import org.usergrid.rest.applications.users.*;
+import org.usergrid.rest.filters.ContentTypeResourceIT;
+import org.usergrid.rest.management.ManagementResourceIT;
+import org.usergrid.rest.management.RegistrationIT;
+import org.usergrid.rest.management.organizations.AdminEmailEncodingIT;
+import org.usergrid.rest.management.organizations.OrganizationResourceIT;
+import org.usergrid.rest.management.organizations.OrganizationsResourceIT;
+import org.usergrid.rest.management.users.MUUserResourceIT;
+import org.usergrid.rest.management.users.organizations.UsersOrganizationsResourceIT;
 
 
 @RunWith( Suite.class )
 @Suite.SuiteClasses(
     {
-            GroupResourceTest.class,
-            AdminEmailEncodingTest.class
+            ActivityResourceIT.class,
+            AdminEmailEncodingIT.class,
+            ApplicationRequestCounterIT.class,
+            ApplicationResourceIT.class,
+            AssetResourceIT.class,
+            BasicIT.class,
+            CollectionsResourceIT.class,
+            ContentTypeResourceIT.class,
+            DevicesResourceIT.class,
+            EventsResourceIT.class,
+            GroupResourceIT.class,
+            MUUserResourceIT.class,
+            ManagementResourceIT.class,
+            OrganizationResourceIT.class,
+            OrganizationsResourceIT.class,
+            OwnershipResourceIT.class,
+            PagingResourceIT.class,
+            PermissionsResourceIT.class,
+            QueueResourceIT.class,
+            RegistrationIT.class,
+            UserResourceIT.class,
+            UsersOrganizationsResourceIT.class
     } )
 @Concurrent()
 public class RestITSuite

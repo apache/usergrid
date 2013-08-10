@@ -15,7 +15,7 @@ import org.usergrid.rest.AbstractRestTest;
 /**
  * @author zznate
  */
-public class UsersOrganizationsResourceTest extends AbstractRestTest {
+public class UsersOrganizationsResourceIT extends AbstractRestTest {
 
 
 

@@ -34,7 +34,7 @@ import com.sun.jersey.api.representation.Form;
 /**
  * @author zznate
  */
-public class OrganizationsResourceTest extends AbstractRestTest {
+public class OrganizationsResourceIT extends AbstractRestTest {
 
 
     @Test

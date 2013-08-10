@@ -44,7 +44,7 @@ import com.sun.jersey.api.representation.Form;
  *
  * @author zznate
  */
-public class ApplicationResourceTest extends AbstractRestTest {
+public class ApplicationResourceIT extends AbstractRestTest {
 	@Test
 	public void applicationWithOrgCredentials() throws Exception {
 
@@ -109,7 +109,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
 	@Test
     @Ignore( "When run with all tests it fails with expected 3 but got 4, " +
-            "but alone it succeeds: ApplicationResourceTest." +
+            "but alone it succeeds: ApplicationResourceIT." +
             "rootApplicationWithOrgCredentials:139 expected:<3> but was:<4>" )
 	public void rootApplicationWithOrgCredentials() throws Exception {
 
@@ -119,7 +119,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 				.getApplicationInfo("test-organization/test-app");
 
 		String clientId = managementService.getClientIdForOrganization(orgInfo
-				.getUuid());
+                .getUuid());
 		String clientSecret = managementService
 				.getClientSecretForOrganization(orgInfo.getUuid());
 

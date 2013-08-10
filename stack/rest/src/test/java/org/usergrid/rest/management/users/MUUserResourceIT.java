@@ -13,7 +13,6 @@ import java.util.Map;
 import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
 
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.codehaus.jackson.JsonNode;
@@ -29,9 +28,9 @@ import org.usergrid.rest.management.organizations.OrganizationsResource;
 /**
  * @author zznate
  */
-public class MUUserResourceTest extends AbstractRestTest {
+public class MUUserResourceIT extends AbstractRestTest {
 
-    private Logger logger = LoggerFactory.getLogger(MUUserResourceTest.class);
+    private Logger logger = LoggerFactory.getLogger(MUUserResourceIT.class);
 
     @Test
     public void updateManagementUser() throws Exception {
@@ -115,7 +114,7 @@ public class MUUserResourceTest extends AbstractRestTest {
         String email = node.get("data").get("owner").get("email").asText();
         String uuid = node.get("data").get("owner").get("uuid").asText();
         assertNotNull(email);
-        assertEquals("MUUserResourceTest-reactivate@apigee.com", email);
+        assertEquals("MUUserResourceIT-reactivate@apigee.com", email);
 
         // reactivate should send activation email
 

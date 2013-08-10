@@ -43,10 +43,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class RegistrationTest extends AbstractRestTest {
+public class RegistrationIT extends AbstractRestTest {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(RegistrationTest.class);
+            .getLogger(RegistrationIT.class);
 
     @Ignore
     @Test
@@ -281,7 +281,7 @@ public class RegistrationTest extends AbstractRestTest {
         // setup an admin user
         String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
 		UserInfo adminUser = managementService.createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
-				true, false);
+                true, false);
 		assertNotNull(adminUser);
         Message[] msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password1");
         assertEquals(1,msgs.length);

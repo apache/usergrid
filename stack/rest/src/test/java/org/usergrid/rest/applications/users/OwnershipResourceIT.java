@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
 /**
  * 
  */
-public class OwnershipResourceTest extends AbstractRestTest {
+public class OwnershipResourceIT extends AbstractRestTest {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );

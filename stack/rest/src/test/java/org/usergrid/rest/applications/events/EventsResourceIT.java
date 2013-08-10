@@ -14,10 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractRestTest;
 
-public class EventsResourceTest extends AbstractRestTest {
+public class EventsResourceIT extends AbstractRestTest {
 
 	private static Logger log = LoggerFactory
-			.getLogger(EventsResourceTest.class);
+			.getLogger(EventsResourceIT.class);
 
 	@Test
 	public void testEventPostandGet() {

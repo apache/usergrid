@@ -58,9 +58,9 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author tnine
  */
 @Ignore
-public class UserResourceTest extends AbstractRestTest {
+public class UserResourceIT extends AbstractRestTest {
 
-    private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
+    private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
 
     @Test
     public void usernameQuery() {
@@ -819,7 +819,7 @@ public class UserResourceTest extends AbstractRestTest {
     @Test
     public void test_POST_batch() {
 
-        log.info("UserResourceTest.test_POST_batch");
+        log.info("UserResourceIT.test_POST_batch");
 
         JsonNode node = null;
 

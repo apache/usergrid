@@ -35,11 +35,11 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class BasicTest extends AbstractRestTest {
+public class BasicIT extends AbstractRestTest {
 
-	private static Logger log = LoggerFactory.getLogger(BasicTest.class);
+	private static Logger log = LoggerFactory.getLogger(BasicIT.class);
 
-	public BasicTest() throws Exception {
+	public BasicIT() throws Exception {
 		super();
 	}
 

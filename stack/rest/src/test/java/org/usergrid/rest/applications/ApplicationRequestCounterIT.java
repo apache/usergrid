@@ -39,7 +39,7 @@ import org.usergrid.utils.UUIDUtils;
  *
  * @author realbeast
  */
-public class ApplicationRequestCounterTest extends AbstractRestTest {
+public class ApplicationRequestCounterIT extends AbstractRestTest {
 	
 	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
 	
