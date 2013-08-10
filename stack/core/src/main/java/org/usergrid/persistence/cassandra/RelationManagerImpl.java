@@ -2390,7 +2390,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     public void visit(NameIdentifierNode nameIdentifierNode) throws Exception {
-      EntityRef ref = em.getAlias(headEntity.getUuid(), collection.getName(), nameIdentifierNode.getName());
+      EntityRef ref = em.getAlias(headEntity.getUuid(), collection.getType(), nameIdentifierNode.getName());
 
       if(ref == null){
         this.results.push(new EmptyIterator());

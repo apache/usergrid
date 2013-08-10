@@ -1533,6 +1533,10 @@ public class CollectionTest extends AbstractPersistenceTest {
     Entity game1 = em.create("games", properties);
     assertNotNull(game1);
 
+    //we create 2 entities, otherwise this test will pass when it shouldn't
+    properties.put("name", "test2");
+    Entity game2 = em.create("game", properties);
+    assertNotNull(game2);
 
     // overlap
     Query query = new Query();
@@ -1562,6 +1566,12 @@ public class CollectionTest extends AbstractPersistenceTest {
     Entity createUser = em.create(user);
     assertNotNull(createUser);
 
+    //we create 2 entities, otherwise this test will pass when it shouldn't
+    User user2 = new User();
+    user2.setUsername("foobar2");
+    user2.setEmail("foobar2@usergrid.org");
+    Entity createUser2 = em.create(user2);
+    assertNotNull(createUser2);
 
     // overlap
     Query query = new Query();
