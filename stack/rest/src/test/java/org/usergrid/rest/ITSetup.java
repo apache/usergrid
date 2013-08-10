@@ -1,10 +1,13 @@
 package org.usergrid.rest;
 
 
+import org.apache.commons.lang.math.RandomUtils;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
+import org.usergrid.cassandra.AvailablePortFinder;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ManagementService;
@@ -21,6 +24,7 @@ import java.util.Properties;
  */
 public class ITSetup extends ExternalResource
 {
+    private static final int DEFAULT_JETTY_PORT = 9998;
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
     private final CassandraResource cassandraResource;
 
@@ -31,6 +35,8 @@ public class ITSetup extends ExternalResource
     private TokenService tokenService;
     private SignInProviderFactory providerFactory;
     private Properties properties;
+    private Server jetty;
+    private int jettyPort = DEFAULT_JETTY_PORT;
 
 
     public ITSetup(CassandraResource cassandraResource)
@@ -39,6 +45,7 @@ public class ITSetup extends ExternalResource
     }
 
     private boolean setupCalled = false;
+    private boolean ready = false;
 
 
     @Override
@@ -61,48 +68,97 @@ public class ITSetup extends ExternalResource
         properties = cassandraResource.getBean( "properties", Properties.class );
         smf = cassandraResource.getBean(ServiceManagerFactory.class);
 
+        if ( jetty == null )
+        {
+            if ( AvailablePortFinder.available(DEFAULT_JETTY_PORT) )
+            {
+                LOG.info( "Starting the Jetty Server on the DEFAULT port {}", DEFAULT_JETTY_PORT );
+                jettyPort = DEFAULT_JETTY_PORT;
+            }
+            else
+            {
+                LOG.info( "Starting the Jetty Server on port {}", jettyPort );
+                jettyPort = AvailablePortFinder.getNextAvailable( DEFAULT_JETTY_PORT + RandomUtils.nextInt( 1000 ) );
+            }
+
+            jetty = new Server( jettyPort );
+            jetty.setHandler( new WebAppContext( "src/main/webapp", "/" ) );
+            jetty.start();
+        }
+
+        ready = true;
         LOG.info( "Test setup complete..." );
+    }
+
+
+    public void protect()
+    {
+        if ( ready ) return;
+
+        try
+        {
+            LOG.warn( "Calls made to access members without being ready ... initializing..." );
+            before();
+        }
+        catch ( Throwable t )
+        {
+            throw new RuntimeException( "Failed on before()", t );
+        }
+    }
+
+
+    public int getJettyPort()
+    {
+        protect();
+        return jettyPort;
     }
 
 
     public ManagementService getMgmtSvc()
     {
+        protect();
         return managementService;
     }
 
 
     public EntityManagerFactory getEmf()
     {
+        protect();
         return emf;
     }
 
 
     public ServiceManagerFactory getSmf()
     {
+        protect();
         return smf;
     }
 
 
     public ApplicationCreator getAppCreator()
     {
+        protect();
         return applicationCreator;
     }
 
 
     public TokenService getTokenSvc()
     {
+        protect();
         return tokenService;
     }
 
 
     public Properties getProps()
     {
+        protect();
         return properties;
     }
 
 
     public SignInProviderFactory getProviderFactory()
     {
+        protect();
         return providerFactory;
     }
 }

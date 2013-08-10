@@ -45,22 +45,22 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 @Concurrent()
-public class RegistrationIT extends AbstractRestIT {
+public class RegistrationIT extends AbstractRestIT
+{
+    private static final Logger logger = LoggerFactory.getLogger( RegistrationIT.class );
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(RegistrationIT.class);
 
     @Ignore
     @Test
     public void postCreateOrgAndAdmin() throws Exception {
 
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
                 "false");
-        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
                 "true");
-        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
         JsonNode node = postCreateOrgAndAdmin("test-org-1", "test-user-1",
@@ -82,7 +82,7 @@ public class RegistrationIT extends AbstractRestIT {
         logger.info(token);
 
 
-        managementService.disableAdminUser(owner_uuid);
+        setup.getMgmtSvc().disableAdminUser(owner_uuid);
         try{
             resource().path("/management/token")
                 .queryParam("grant_type", "password")
@@ -97,7 +97,7 @@ public class RegistrationIT extends AbstractRestIT {
         }
 
 
-        managementService.deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
+        setup.getMgmtSvc().deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
         try{
             resource().path("/management/token")
                 .queryParam("grant_type", "password")
@@ -113,7 +113,7 @@ public class RegistrationIT extends AbstractRestIT {
 
 
         // assertEquals(ActivationState.ACTIVATED,
-        // managementService.handleConfirmationTokenForAdminUser(
+        // setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
         // owner_uuid, token));
 
         String response = resource().path(
@@ -180,13 +180,13 @@ public class RegistrationIT extends AbstractRestIT {
     @Test
     public void putAddToOrganizationFail() throws Exception {
 
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
                 "false");
-        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
         String t = adminToken();
@@ -209,13 +209,13 @@ public class RegistrationIT extends AbstractRestIT {
     public void postAddToOrganization() throws Exception {
 
 
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
                 "false");
-        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
         String t = adminToken();
@@ -228,13 +228,13 @@ public class RegistrationIT extends AbstractRestIT {
     public void addNewAdminUserWithNoPwdToOrganization() throws Exception {
 
     	Mailbox.clearAll();
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
                 "false");
-        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
         // this should send resetpwd  link in email to newly added org admin user(that did not exist in usergrid)
@@ -245,7 +245,7 @@ public class RegistrationIT extends AbstractRestIT {
         UUID userId = UUID.fromString(uuid);
 
         String subject = "Password Reset";
-        String reset_url = String.format(properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL), uuid);
+        String reset_url = String.format(setup.getProps().getProperty(PROPERTIES_ADMIN_RESETPW_URL), uuid);
         String invited = "User Invited To Organization";
 
 	    Message[] msgs = getMessages("mockserver.com","test-admin-nopwd",  "password");
@@ -264,25 +264,25 @@ public class RegistrationIT extends AbstractRestIT {
 
 	    //token
 	    String token = getTokenFromMessage(msgs[0]);
-	    assertTrue(managementService.checkPasswordResetTokenForAdminUser(userId, token));
+	    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userId, token));
     }
 
     @Test
     public void addExistingAdminUserToOrganization() throws Exception {
 
     	Mailbox.clearAll();
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
                 "false");
-        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
         // setup an admin user
         String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
-		UserInfo adminUser = managementService.createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
+		UserInfo adminUser = setup.getMgmtSvc().createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
                 true, false);
 		assertNotNull(adminUser);
         Message[] msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password1");

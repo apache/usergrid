@@ -49,10 +49,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 	@Test
 	public void applicationWithOrgCredentials() throws Exception {
 
-		OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+		OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
 
-		String clientId = managementService.getClientIdForOrganization(orgInfo.getUuid());
-		String clientSecret = managementService.getClientSecretForOrganization(orgInfo.getUuid());
+		String clientId = setup.getMgmtSvc().getClientIdForOrganization(orgInfo.getUuid());
+		String clientSecret = setup.getMgmtSvc().getClientSecretForOrganization(orgInfo.getUuid());
 
 		JsonNode node = resource().path("/test-organization/test-app/users").queryParam("client_id", clientId)
 				.queryParam("client_secret", clientSecret).accept(MediaType.APPLICATION_JSON)
@@ -65,10 +65,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 	@Test
 	public void applicationWithAppCredentials() throws Exception {
 
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
 
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
-		String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+		String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
 		JsonNode node = resource().path("/test-organization/test-app/users").queryParam("client_id", clientId)
 				.queryParam("client_secret", clientSecret).accept(MediaType.APPLICATION_JSON)
@@ -81,10 +81,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 	@Test
 	public void applicationWithJsonCreds() throws Exception {
 
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
 
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
-		String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+		String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
 		Map<String, String> payload = hashMap("email", "applicationWithJsonCreds@usergrid.org")
 				.map("username", "applicationWithJsonCreds").map("name", "applicationWithJsonCreds")
@@ -114,14 +114,14 @@ public class ApplicationResourceIT extends AbstractRestIT {
             "rootApplicationWithOrgCredentials:139 expected:<3> but was:<4>" )
 	public void rootApplicationWithOrgCredentials() throws Exception {
 
-		OrganizationInfo orgInfo = managementService
+		OrganizationInfo orgInfo = setup.getMgmtSvc()
 				.getOrganizationByName("test-organization");
-		ApplicationInfo appInfo = managementService
+		ApplicationInfo appInfo = setup.getMgmtSvc()
 				.getApplicationInfo("test-organization/test-app");
 
-		String clientId = managementService.getClientIdForOrganization(orgInfo
+		String clientId = setup.getMgmtSvc().getClientIdForOrganization(orgInfo
                 .getUuid());
-		String clientSecret = managementService
+		String clientSecret = setup.getMgmtSvc()
 				.getClientSecretForOrganization(orgInfo.getUuid());
 
 		JsonNode node = resource().path("/" + appInfo.getId())
@@ -292,8 +292,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 	@Test
 	@Ignore("We need to fix JSPs in our test harness")
 	public void authorizationCodeWithWrongCredentials() throws Exception {
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
 
 		Form payload = new Form();
 		payload.add("username", "wrong_user");
@@ -317,8 +317,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 	@Test
 	public void authorizationCodeWithValidCredentials() throws Exception {
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
 
 		Form payload = new Form();
 		payload.add("username", "ed@anuff.com");
@@ -342,9 +342,9 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 	@Test
 	public void clientCredentialsFlowWithHeaderAuthorization() throws Exception{
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
-		String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+		String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
 		String clientCredentials = clientId + ":" + clientSecret;
 		String token = Base64.encodeToString(clientCredentials.getBytes());
@@ -364,9 +364,9 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 	@Test
 	public void clientCredentialsFlowWithPayload() throws Exception{
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
-		String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+		String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
 		Form payload = new Form();
 		payload.add("grant_type", "client_credentials");
@@ -384,9 +384,9 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 	@Test
 	public void clientCredentialsFlowWithHeaderAuthorizationAndPayload() throws Exception {
-		ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-		String clientId = managementService.getClientIdForApplication(appInfo.getId());
-		String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+		ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+		String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+		String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
 		String clientCredentials = clientId + ":" + clientSecret;
 		String token = Base64.encodeToString(clientCredentials.getBytes());
@@ -423,10 +423,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 	@Test
 	public void appTokenFromOrgCreds() throws Exception{
 	
-	    OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+	    OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
 
-	    String clientId = managementService.getClientIdForOrganization(orgInfo.getUuid());
-	    String clientSecret = managementService.getClientSecretForOrganization(orgInfo.getUuid());
+	    String clientId = setup.getMgmtSvc().getClientIdForOrganization(orgInfo.getUuid());
+	    String clientSecret = setup.getMgmtSvc().getClientSecretForOrganization(orgInfo.getUuid());
 
 	    JsonNode node = resource().path("/test-organization/test-app/token").queryParam("client_id", clientId)
 	        .queryParam("client_secret", clientSecret).queryParam("grant_type", "client_credentials").accept(MediaType.APPLICATION_JSON)
@@ -455,10 +455,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 	 @Test
 	  public void appTokenFromAppCreds() throws Exception{
 	  
-	      ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+	      ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
 
-	      String clientId = managementService.getClientIdForApplication(appInfo.getId());
-	      String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+	      String clientId = setup.getMgmtSvc().getClientIdForApplication(appInfo.getId());
+	      String clientSecret = setup.getMgmtSvc().getClientSecretForApplication(appInfo.getId());
 
 	      JsonNode node = resource().path("/test-organization/test-app/token").queryParam("client_id", clientId)
 	          .queryParam("client_secret", clientSecret).queryParam("grant_type", "client_credentials").accept(MediaType.APPLICATION_JSON)

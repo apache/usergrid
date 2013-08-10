@@ -145,7 +145,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void crossOrgsNotViewable() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("crossOrgsNotViewable",
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("crossOrgsNotViewable",
                 "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
 
         // check that the test admin cannot access the new org info
@@ -187,7 +187,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertNull(status);
 
-        OrganizationInfo org = managementService.getOrganizationByName("test-organization");
+        OrganizationInfo org = setup.getMgmtSvc().getOrganizationByName("test-organization");
 
         status = null;
         try {
@@ -212,7 +212,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void mgmtCreateAndGetApplication() throws Exception {
 
-    	OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+    	OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
         Map<String, String> data = new HashMap<String, String>();
         data.put("name", "mgmt-org-app");
 

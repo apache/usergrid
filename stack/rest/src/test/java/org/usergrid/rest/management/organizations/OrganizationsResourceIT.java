@@ -19,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 import junit.framework.Assert;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
@@ -35,19 +34,18 @@ import com.sun.jersey.api.representation.Form;
 /**
  * @author zznate
  */
-@Concurrent()
 public class OrganizationsResourceIT extends AbstractRestIT {
 
 
     @Test
     public void createOrgAndOwner() throws Exception {
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
                 "false");
-        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
                 "false");
-        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
         Map<String, Object> organizationProperties = new HashMap<String,Object>();
@@ -67,7 +65,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
 
         assertNotNull(node);
 
-        ApplicationInfo applicationInfo = managementService
+        ApplicationInfo applicationInfo = setup.getMgmtSvc()
                 .getApplicationInfo("test-org-1/sandbox");
 
         assertNotNull(applicationInfo);
@@ -78,14 +76,14 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         assertTrue(rolePerms.contains("get,post,put,delete:/**"));
         logNode(node);
 
-        UserInfo ui = managementService
+        UserInfo ui = setup.getMgmtSvc()
                 .getAdminUserByEmail("test-user-1@mockserver.com");
         EntityManager em = setup.getEmf().getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
         User user = em.get(ui.getUuid(), User.class);
         assertEquals("Test User", user.getName());
         assertEquals("Apigee",(String)user.getProperty("company"));
 
-        OrganizationInfo orgInfo = managementService.getOrganizationByName("test-org-1");
+        OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-org-1");
         assertEquals(5L, orgInfo.getProperties().get("securityLevel"));
 
         node = resource().path("/management/organizations/test-org-1")

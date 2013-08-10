@@ -148,10 +148,10 @@ public class MUUserResourceIT extends AbstractRestIT {
   public void checkPasswordReset() throws Exception {
 
     String email = "test@usergrid.com";
-    UserInfo userInfo = managementService.getAdminUserByEmail(email);
-    String resetToken = managementService.getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail(email);
+    String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
 
-    assertTrue(managementService.checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
 
     Form formData = new Form();
     formData.add("token", resetToken);
@@ -165,7 +165,7 @@ public class MUUserResourceIT extends AbstractRestIT {
 
     assertTrue(html.contains("password set"));
 
-    assertFalse(managementService.checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+    assertFalse(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
 
     html = resource()
         .path("/management/users/" + userInfo.getUsername() + "/resetpw")
@@ -180,19 +180,19 @@ public class MUUserResourceIT extends AbstractRestIT {
 
     String[] passwords = new String[] {"password1", "password2", "password3", "password4"};
 
-    UserInfo user = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
+    UserInfo user = setup.getMgmtSvc().createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false);
     assertNotNull(user);
 
-    OrganizationInfo organization = managementService.createOrganization("ed-organization", user, true);
+    OrganizationInfo organization = setup.getMgmtSvc().createOrganization("ed-organization", user, true);
     assertNotNull(organization);
 
     // set history to 1
     Map<String,Object> props = new HashMap<String,Object>();
     props.put(OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 1);
     organization.setProperties(props);
-    managementService.updateOrganization(organization);
+    setup.getMgmtSvc().updateOrganization(organization);
 
-    UserInfo userInfo = managementService.getAdminUserByEmail("ed@anuff.com");
+    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail("ed@anuff.com");
 
     Map<String, String> payload =
         hashMap("oldpassword", passwords[0])
@@ -235,8 +235,8 @@ public class MUUserResourceIT extends AbstractRestIT {
   public void checkPasswordChangeTime() throws Exception {
 
     String email = "test@usergrid.com";
-    UserInfo userInfo = managementService.getAdminUserByEmail(email);
-    String resetToken = managementService.getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail(email);
+    String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
 
     Form formData = new Form();
     formData.add("token", resetToken);

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
+
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
@@ -24,24 +25,20 @@ import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import com.sun.jersey.api.client.WebResource;
 import org.codehaus.jackson.JsonNode;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.Client;
-import org.usergrid.management.ManagementService;
 
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -62,302 +59,278 @@ import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 @Concurrent()
 public abstract class AbstractRestIT extends JerseyTest
 {
-  private static final int JETTY_PORT = 9998;
-
-  private static final String CONTEXT = "/";
-
-  private static Logger logger = LoggerFactory.getLogger(AbstractRestIT.class);
-
-  static boolean usersSetup = false;
-  protected Properties properties;
-
-  protected static String access_token;
-
-  protected static String adminAccessToken;
-
-  protected static ManagementService managementService;
-
-  static ClientConfig clientConfig = new DefaultClientConfig();
-
-  protected static Client client;
-
-  protected static final AppDescriptor descriptor;
-
-    private static Server server;
+    private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
+    private static boolean usersSetup = false;
 
 
-  @ClassRule
-  public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
+    private static ClientConfig clientConfig = new DefaultClientConfig();
+
+    protected static String access_token;
+
+    protected static String adminAccessToken;
+
+    protected static Client client;
+
+    protected static final AppDescriptor descriptor;
 
 
-  static {
-    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+    @ClassRule
+    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-    descriptor = new WebAppDescriptor.Builder("org.usergrid.rest").clientConfig(clientConfig).build();
 
-    dumpClasspath(AbstractRestIT.class.getClassLoader());
-    
-  }
-
-  public static void main(String... args) {
-  }
-
-  public static void dumpClasspath(ClassLoader loader) {
-    System.out.println("Classloader " + loader + ":");
-
-    if (loader instanceof URLClassLoader) {
-      URLClassLoader ucl = (URLClassLoader) loader;
-      System.out.println("\t" + Arrays.toString(ucl.getURLs()));
-    } else {
-      System.out.println("\t(cannot display components as not a URLClassLoader)");
+    static
+    {
+        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        descriptor = new WebAppDescriptor.Builder("org.usergrid.rest").clientConfig(clientConfig).build();
+        dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
 
-    if (loader.getParent() != null) {
-      dumpClasspath(loader.getParent());
-    }
-  }
-
-  public AbstractRestIT() throws TestContainerException {
-    super(descriptor);
-
-  }
-
-  protected void setupUsers() {
-
-    if (usersSetup) {
-      return;
-    }
-
-    //
-    createUser("edanuff", "ed@anuff.com", "sesame", "Ed Anuff"); // client.setApiUrl(apiUrl);
-
-    usersSetup = true;
-
-  }
-
-  public void loginClient() throws InterruptedException {
-    // now create a client that logs in ed
-
-    // TODO T.N. This is a filthy hack and I should be ashamed of it (which
-    // I am). There's a bug in the grizzly server when it's restarted per
-    // test, and until we can upgrade versions this is the workaround. Backs
-    // off with each attempt to allow the server to catch up
-
-
-        setUserPassword("ed@anuff.com", "sesame");
-
-        client = new Client("test-organization", "test-app").withApiUrl(getBaseURI().toString());
-
-        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
-
-        assertTrue(response != null && response.getError() == null);
-
-  }
-
-
-
-  @Override
-  protected TestContainerFactory getTestContainerFactory() {
-    // return new
-    // com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
-    return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
-  }
-
-  @BeforeClass
-  public static void setup() throws Exception {
-    // Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
-    logger.info("setup");
-    
-    startJetty();
-
-      managementService = setup.getMgmtSvc();
-      // managementService.setup();
-  }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardown()
+    {
         access_token = null;
         usersSetup = false;
         adminAccessToken = null;
     }
 
-  private static void startJetty() throws Exception {
-      if ( server == null ) {
-    server = new Server(JETTY_PORT);
-    server.setHandler(new WebAppContext("src/main/webapp", CONTEXT));
-    server.start();
-      }
-  }
 
-  public static void logNode(JsonNode node) {
-    logger.info(mapToFormattedJsonString(node));
-  }
-
-  /**
-   * Hook to get the token for our base user
-   */
-  @Before
-  public void acquireToken() throws Exception {
-      properties = setup.getProps();
-      setupUsers();
-    logger.info("acquiring token");
-    access_token = userToken("ed@anuff.com", "sesame");
-    logger.info("with token: {}", access_token);
-    loginClient();
+    /**
+     * Hook to get the token for our base user
+     */
+    @Before
+    public void acquireToken() throws Exception
+    {
+        setupUsers();
+        LOG.info("acquiring token");
+        access_token = userToken("ed@anuff.com", "sesame");
+        LOG.info("with token: {}", access_token);
+        loginClient();
+    }
 
 
+    public static void dumpClasspath(ClassLoader loader) {
+        System.out.println("Classloader " + loader + ":");
 
-  }
+        if (loader instanceof URLClassLoader) {
+            URLClassLoader ucl = (URLClassLoader) loader;
+            System.out.println("\t" + Arrays.toString(ucl.getURLs()));
+        } else {
+            System.out.println("\t(cannot display components as not a URLClassLoader)");
+        }
 
-  protected String userToken(String name, String password) throws Exception {
+        if (loader.getParent() != null) {
+            dumpClasspath(loader.getParent());
+        }
+    }
 
-    setUserPassword("ed@anuff.com", "sesame");
+    public AbstractRestIT() throws TestContainerException {
+        super(descriptor);
 
-    JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
-        .queryParam("username", name).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
-        .get(JsonNode.class);
+    }
 
-    String userToken = node.get("access_token").getTextValue();
-    logger.info("returning user token: {}", userToken);
-    return userToken;
+    protected void setupUsers() {
 
-  }
+        if (usersSetup) {
+            return;
+        }
 
-  public void createUser(String username, String email, String password, String name) {
-      try {
-          JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
-                  .queryParam("username", username).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
-                  .get(JsonNode.class);
-          if ( getError(node) == null ) {
-              return;
-          }
-      } catch (Exception ex) {
-          logger.error("Miss on user. Creating.");
-      }
+        //
+        createUser("edanuff", "ed@anuff.com", "sesame", "Ed Anuff"); // client.setApiUrl(apiUrl);
 
-      adminToken();
+        usersSetup = true;
 
+    }
 
-      Map<String, String> payload = hashMap("email", email).map("username", username).map("name", name)
-              .map("password", password).map("pin", "1234");
+    public void loginClient() throws InterruptedException {
+        // now create a client that logs in ed
 
-      resource().path("/test-organization/test-app/users").queryParam("access_token", adminAccessToken)
-              .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
-
-  }
-
-  public void setUserPassword(String username, String password) {
-    Map<String, String> data = new HashMap<String, String>();
-    data.put("newpassword", password);
+        // TODO T.N. This is a filthy hack and I should be ashamed of it (which
+        // I am). There's a bug in the grizzly server when it's restarted per
+        // test, and until we can upgrade versions this is the workaround. Backs
+        // off with each attempt to allow the server to catch up
 
 
-      adminToken();
+        setUserPassword("ed@anuff.com", "sesame");
+
+        client = new Client("test-organization", "test-app")
+                .withApiUrl( UriBuilder.fromUri( "http://localhost/" )
+                        .port( setup.getJettyPort() ).build().toString() );
+
+        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
+
+        assertTrue(response != null && response.getError() == null);
+
+    }
 
 
-    // change the password as admin. The old password isn't required
-    JsonNode node = resource().path(String.format("/test-organization/test-app/users/%s/password", username))
-        .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
-    assertNull(getError(node));
+    @Override
+    protected TestContainerFactory getTestContainerFactory()
+    {
+        // return new
+        // com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
+        return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
+    }
 
-  }
 
-  /**
-   * Acquire the management token for the test@usergrid.com user with the
-   * default password
-   * 
-   * @return
-   */
-  protected String adminToken() {
-    adminAccessToken = mgmtToken("test@usergrid.com", "test");
-    return adminAccessToken;
-  }
+    public static void logNode( JsonNode node )
+    {
+        if ( LOG.isInfoEnabled() ) // - protect against unnecessary call to formatter
+        {
+            LOG.info( mapToFormattedJsonString( node ) );
+        }
+    }
 
-  /**
-   * Get the super user's access token
-   * 
-   * @return
-   */
-  protected String superAdminToken() {
-    return mgmtToken("superuser", "superpassword");
-  }
+    protected String userToken(String name, String password) throws Exception {
 
-  /**
-   * Acquire the management token for the test@usergrid.com user with the given
-   * password
-   * 
-   * @return
-   */
-  protected String mgmtToken(String user, String password) {
-    JsonNode node = resource().path("/management/token").queryParam("grant_type", "password")
-        .queryParam("username", user).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
-        .get(JsonNode.class);
+        setUserPassword("ed@anuff.com", "sesame");
 
-    String mgmToken = node.get("access_token").getTextValue();
-    logger.info("got mgmt token: {}", mgmToken);
-    return mgmToken;
+        JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
+                .queryParam("username", name).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
+                .get(JsonNode.class);
 
-  }
+        String userToken = node.get("access_token").getTextValue();
+        LOG.info("returning user token: {}", userToken);
+        return userToken;
 
-  /**
-   * Get the entity from the entity array in the response
-   * 
-   * @param response
-   * @param index
-   * @return
-   */
-  protected JsonNode getEntity(JsonNode response, int index) {
-    return response.get("entities").get(index);
-  }
+    }
 
-  /**
-   * Get the entity from the entity array in the response
-   * 
-   * @param response
-   * @param name
-   * @return
-   */
-  protected JsonNode getEntity(JsonNode response, String name) {
-    return response.get("entities").get(name);
-  }
+    public void createUser(String username, String email, String password, String name) {
+        try {
+            JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
+                    .queryParam("username", username).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
+                    .get(JsonNode.class);
+            if ( getError(node) == null ) {
+                return;
+            }
+        } catch (Exception ex) {
+            LOG.error("Miss on user. Creating.");
+        }
 
-  /**
-   * Get the uuid from the entity at the specified index
-   * 
-   * @param response
-   * @param index
-   * @return
-   */
-  protected UUID getEntityId(JsonNode response, int index) {
-    return UUID.fromString(getEntity(response, index).get("uuid").asText());
-  }
+        adminToken();
 
-  /**
-   * Get the error response
-   * 
-   * @param response
-   * @return
-   */
-  protected JsonNode getError(JsonNode response) {
-    return response.get("error");
-  }
 
-  /** convenience to return a ready WebResource.Builder in a single call */
-  protected WebResource.Builder appPath(String path) {
-    return resource()
-        .path("/test-organization/test-app/" + path)
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE);
-  }
+        Map<String, String> payload = hashMap("email", email).map("username", username).map("name", name)
+                .map("password", password).map("pin", "1234");
 
-  /** convenience to return a ready WebResource.Builder in a single call */
-  protected WebResource.Builder path(String path) {
-    return resource()
-        .path(path)
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE);
-  }
+        resource().path("/test-organization/test-app/users").queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+
+    }
+
+    public void setUserPassword(String username, String password) {
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("newpassword", password);
+
+
+        adminToken();
+
+
+        // change the password as admin. The old password isn't required
+        JsonNode node = resource().path(String.format("/test-organization/test-app/users/%s/password", username))
+                .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+
+        assertNull(getError(node));
+
+    }
+
+    /**
+     * Acquire the management token for the test@usergrid.com user with the
+     * default password
+     *
+     * @return
+     */
+    protected String adminToken() {
+        adminAccessToken = mgmtToken("test@usergrid.com", "test");
+        return adminAccessToken;
+    }
+
+    /**
+     * Get the super user's access token
+     *
+     * @return
+     */
+    protected String superAdminToken() {
+        return mgmtToken("superuser", "superpassword");
+    }
+
+    /**
+     * Acquire the management token for the test@usergrid.com user with the given
+     * password
+     *
+     * @return
+     */
+    protected String mgmtToken(String user, String password) {
+        JsonNode node = resource().path("/management/token").queryParam("grant_type", "password")
+                .queryParam("username", user).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
+                .get(JsonNode.class);
+
+        String mgmToken = node.get("access_token").getTextValue();
+        LOG.info("got mgmt token: {}", mgmToken);
+        return mgmToken;
+
+    }
+
+    /**
+     * Get the entity from the entity array in the response
+     *
+     * @param response
+     * @param index
+     * @return
+     */
+    protected JsonNode getEntity(JsonNode response, int index) {
+        return response.get("entities").get(index);
+    }
+
+    /**
+     * Get the entity from the entity array in the response
+     *
+     * @param response
+     * @param name
+     * @return
+     */
+    protected JsonNode getEntity(JsonNode response, String name) {
+        return response.get("entities").get(name);
+    }
+
+    /**
+     * Get the uuid from the entity at the specified index
+     *
+     * @param response
+     * @param index
+     * @return
+     */
+    protected UUID getEntityId(JsonNode response, int index) {
+        return UUID.fromString(getEntity(response, index).get("uuid").asText());
+    }
+
+    /**
+     * Get the error response
+     *
+     * @param response
+     * @return
+     */
+    protected JsonNode getError(JsonNode response) {
+        return response.get("error");
+    }
+
+    /** convenience to return a ready WebResource.Builder in a single call */
+    protected WebResource.Builder appPath(String path) {
+        return resource()
+                .path("/test-organization/test-app/" + path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE);
+    }
+
+    /** convenience to return a ready WebResource.Builder in a single call */
+    protected WebResource.Builder path(String path) {
+        return resource()
+                .path(path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE);
+    }
 }

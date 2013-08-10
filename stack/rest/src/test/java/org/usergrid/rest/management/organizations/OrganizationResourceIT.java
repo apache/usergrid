@@ -40,7 +40,7 @@ public class OrganizationResourceIT extends AbstractRestIT {
         .post(JsonNode.class, payload);
     assertNotNull(node);
 
-    OrganizationInfo orgInfo = managementService.getOrganizationByName("test-org-1");
+    OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-org-1");
     assertEquals(5L, orgInfo.getProperties().get("securityLevel"));
 
     payload = new HashMap();
