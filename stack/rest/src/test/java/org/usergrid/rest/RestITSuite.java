@@ -45,7 +45,6 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
             OwnershipResourceIT.class,
             PagingResourceIT.class,
             PermissionsResourceIT.class,
-            QueueResourceIT.class,
             RegistrationIT.class,
             UserResourceIT.class,
             UsersOrganizationsResourceIT.class

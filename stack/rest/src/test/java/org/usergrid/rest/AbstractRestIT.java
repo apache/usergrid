@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,15 +74,17 @@ public abstract class AbstractRestIT extends JerseyTest
 
     protected static final AppDescriptor descriptor;
 
-
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
 
+    private static final URI baseURI = setup.getBaseURI();
+
+
     static
     {
-        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        descriptor = new WebAppDescriptor.Builder("org.usergrid.rest").clientConfig(clientConfig).build();
+        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+        descriptor = new WebAppDescriptor.Builder( "org.usergrid.rest" ).clientConfig( clientConfig ).build();
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
 
@@ -126,7 +129,6 @@ public abstract class AbstractRestIT extends JerseyTest
 
     public AbstractRestIT() throws TestContainerException {
         super(descriptor);
-
     }
 
     protected void setupUsers() {
@@ -154,8 +156,8 @@ public abstract class AbstractRestIT extends JerseyTest
         setUserPassword("ed@anuff.com", "sesame");
 
         client = new Client("test-organization", "test-app")
-                .withApiUrl( UriBuilder.fromUri( "http://localhost/" )
-                        .port( setup.getJettyPort() ).build().toString() );
+                .withApiUrl(UriBuilder.fromUri("http://localhost/")
+                        .port(setup.getJettyPort()).build().toString());
 
         org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
 
@@ -173,6 +175,12 @@ public abstract class AbstractRestIT extends JerseyTest
         return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
     }
 
+
+    @Override
+    protected URI getBaseURI()
+    {
+        return baseURI;
+    }
 
     public static void logNode( JsonNode node )
     {

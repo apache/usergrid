@@ -214,7 +214,7 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
 
-              <parallel>both</parallel>
+              <parallel>classes</parallel>
               <forkCount>4</forkCount>
               <reuseForks>false</reuseForks>
 
@@ -223,8 +223,9 @@
               <includes>
                 <include>**/RestITSuite.java</include>
                 <include>**/RestTestSuite.java</include>
-                <include>**/AnyLongRunningTestsNotInTheSuiteIT.java</include> <!-- this is an example -->
+                <include>**/QueueResourceIT.java</include> <!-- this is an example -->
                 <include>**/*Test.java</include>
+
               </includes>
               <excludes>
                 <!-- <exclude>**/*Test.java</exclude> -->

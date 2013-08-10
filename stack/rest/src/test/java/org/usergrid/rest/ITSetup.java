@@ -1,6 +1,10 @@
 package org.usergrid.rest;
 
 
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.test.framework.AppDescriptor;
+import com.sun.jersey.test.framework.WebAppDescriptor;
 import org.apache.commons.lang.math.RandomUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -16,6 +20,9 @@ import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+import java.util.Map;
 import java.util.Properties;
 
 
@@ -46,48 +53,61 @@ public class ITSetup extends ExternalResource
 
     private boolean setupCalled = false;
     private boolean ready = false;
+    private URI uri;
 
 
     @Override
     protected void before() throws Throwable
     {
-        super.before();
-
-        managementService = cassandraResource.getBean( ManagementService.class );
-
-        if ( ! setupCalled )
+        synchronized ( cassandraResource )
         {
-            managementService.setup();
-            setupCalled = true;
+            super.before();
+
+            managementService = cassandraResource.getBean( ManagementService.class );
+
+            if ( ! setupCalled )
+            {
+                managementService.setup();
+                setupCalled = true;
+            }
+
+            applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
+            emf = cassandraResource.getBean( EntityManagerFactory.class );
+            tokenService = cassandraResource.getBean( TokenService.class );
+            providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
+            properties = cassandraResource.getBean( "properties", Properties.class );
+            smf = cassandraResource.getBean(ServiceManagerFactory.class);
+
+            while ( jetty == null )
+            {
+                startJetty();
+            }
+
+            // Initialize Jersey Client
+            uri = UriBuilder.fromUri("http://localhost/").port( jettyPort ).build();
+
+            ready = true;
+            LOG.info( "Test setup complete..." );
         }
+    }
 
-        applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-        emf = cassandraResource.getBean( EntityManagerFactory.class );
-        tokenService = cassandraResource.getBean( TokenService.class );
-        providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
-        properties = cassandraResource.getBean( "properties", Properties.class );
-        smf = cassandraResource.getBean(ServiceManagerFactory.class);
 
-        if ( jetty == null )
+    private void startJetty()
+    {
+        LOG.info( "Starting the Jetty Server on port {}", jettyPort );
+        jettyPort = AvailablePortFinder.getNextAvailable( DEFAULT_JETTY_PORT + RandomUtils.nextInt( 1000 ) );
+
+        jetty = new Server( jettyPort );
+        jetty.setHandler( new WebAppContext( "src/main/webapp", "/" ) );
+
+        try
         {
-            if ( AvailablePortFinder.available(DEFAULT_JETTY_PORT) )
-            {
-                LOG.info( "Starting the Jetty Server on the DEFAULT port {}", DEFAULT_JETTY_PORT );
-                jettyPort = DEFAULT_JETTY_PORT;
-            }
-            else
-            {
-                LOG.info( "Starting the Jetty Server on port {}", jettyPort );
-                jettyPort = AvailablePortFinder.getNextAvailable( DEFAULT_JETTY_PORT + RandomUtils.nextInt( 1000 ) );
-            }
-
-            jetty = new Server( jettyPort );
-            jetty.setHandler( new WebAppContext( "src/main/webapp", "/" ) );
             jetty.start();
         }
-
-        ready = true;
-        LOG.info( "Test setup complete..." );
+        catch ( Exception e )
+        {
+            jetty = null;
+        }
     }
 
 
@@ -160,5 +180,12 @@ public class ITSetup extends ExternalResource
     {
         protect();
         return providerFactory;
+    }
+
+
+    public URI getBaseURI()
+    {
+        protect();
+        return uri;
     }
 }
