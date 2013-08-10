@@ -11,7 +11,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
@@ -19,7 +20,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author zznate
  * @author tnine
  */
-public class CollectionsResourceIT extends AbstractRestTest {
+@Concurrent()
+public class CollectionsResourceIT extends AbstractRestIT {
 
     @Test
     public void postToBadPath() {

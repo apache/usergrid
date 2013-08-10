@@ -29,9 +29,10 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -40,7 +41,8 @@ import org.usergrid.rest.management.organizations.OrganizationsResource;
 /**
  * @author tnine
  */
-public class ManagementResourceIT extends AbstractRestTest {
+@Concurrent()
+public class ManagementResourceIT extends AbstractRestIT {
 
     public ManagementResourceIT() throws Exception {
 

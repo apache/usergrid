@@ -18,7 +18,8 @@ package org.usergrid.rest.applications.users;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.Connection;
 import org.usergrid.rest.test.resource.CustomCollection;
@@ -32,7 +33,8 @@ import static org.junit.Assert.*;
 /**
  * 
  */
-public class OwnershipResourceIT extends AbstractRestTest {
+@Concurrent()
+public class OwnershipResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );

@@ -24,12 +24,13 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.CounterResolution;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.utils.UUIDUtils;
 
@@ -39,7 +40,8 @@ import org.usergrid.utils.UUIDUtils;
  *
  * @author realbeast
  */
-public class ApplicationRequestCounterIT extends AbstractRestTest {
+@Concurrent()
+public class ApplicationRequestCounterIT extends AbstractRestIT {
 	
 	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
 	

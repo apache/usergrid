@@ -35,15 +35,17 @@ import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class RegistrationIT extends AbstractRestTest {
+@Concurrent()
+public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory
             .getLogger(RegistrationIT.class);

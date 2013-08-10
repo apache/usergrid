@@ -26,12 +26,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.shiro.codec.Base64;
 import org.codehaus.jackson.JsonNode;
-import org.jclouds.json.Json;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 
 
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -44,7 +44,8 @@ import com.sun.jersey.api.representation.Form;
  *
  * @author zznate
  */
-public class ApplicationResourceIT extends AbstractRestTest {
+@Concurrent()
+public class ApplicationResourceIT extends AbstractRestIT {
 	@Test
 	public void applicationWithOrgCredentials() throws Exception {
 

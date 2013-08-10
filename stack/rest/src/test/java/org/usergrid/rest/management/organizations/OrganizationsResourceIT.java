@@ -19,13 +19,14 @@ import javax.ws.rs.core.MediaType;
 import junit.framework.Assert;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -34,7 +35,8 @@ import com.sun.jersey.api.representation.Form;
 /**
  * @author zznate
  */
-public class OrganizationsResourceIT extends AbstractRestTest {
+@Concurrent()
+public class OrganizationsResourceIT extends AbstractRestIT {
 
 
     @Test

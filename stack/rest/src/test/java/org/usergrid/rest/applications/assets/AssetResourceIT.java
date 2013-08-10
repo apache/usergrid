@@ -15,13 +15,15 @@ import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.applications.utils.UserRepo;
 
 /**
  * @author zznate
  */
-public class AssetResourceIT extends AbstractRestTest {
+@Concurrent()
+public class AssetResourceIT extends AbstractRestIT {
 
   private Logger logger = LoggerFactory.getLogger(AssetResourceIT.class);
 

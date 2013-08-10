@@ -6,7 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.security.TestAdminUser;
 
@@ -16,7 +17,8 @@ import org.usergrid.rest.test.security.TestAdminUser;
  * 
  * @author tnine
  **/
-public class AdminEmailEncodingIT extends AbstractRestTest
+@Concurrent()
+public class AdminEmailEncodingIT extends AbstractRestIT
 {
 
     @Rule

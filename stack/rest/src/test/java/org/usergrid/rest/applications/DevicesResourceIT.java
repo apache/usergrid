@@ -3,7 +3,8 @@ package org.usergrid.rest.applications;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +14,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-public class DevicesResourceIT extends AbstractRestTest {
+@Concurrent()
+public class DevicesResourceIT extends AbstractRestIT {
 
   @Test
   public void putWithUUIDShouldCreateAfterDelete() {

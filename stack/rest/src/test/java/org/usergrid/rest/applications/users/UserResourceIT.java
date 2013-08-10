@@ -38,6 +38,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Activity;
 import org.usergrid.java.client.entities.Activity.ActivityObject;
@@ -46,7 +47,7 @@ import org.usergrid.java.client.entities.User;
 import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.applications.utils.UserRepo;
 import org.usergrid.utils.UUIDUtils;
 
@@ -58,7 +59,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author tnine
  */
 @Ignore
-public class UserResourceIT extends AbstractRestTest {
+@Concurrent()
+public class UserResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
 

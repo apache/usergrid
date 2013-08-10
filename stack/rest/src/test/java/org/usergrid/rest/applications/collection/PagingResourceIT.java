@@ -30,16 +30,18 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Rule;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.response.ApiResponse;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 /**
  * Simple tests to test querying at the REST tier
  */
-public class PagingResourceIT extends AbstractRestTest {
+@Concurrent()
+public class PagingResourceIT extends AbstractRestIT {
 
 
     @Rule

@@ -21,8 +21,9 @@ import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.mq.QueuePosition;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.app.queue.Queue;
 import org.usergrid.rest.test.resource.app.queue.Transaction;
@@ -32,7 +33,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-public class QueueResourceIT extends AbstractRestTest {
+@Concurrent()
+public class QueueResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );

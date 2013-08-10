@@ -43,7 +43,8 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
@@ -54,7 +55,8 @@ import org.usergrid.utils.UUIDUtils;
  */
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not using grizzly to test")
-public class ContentTypeResourceIT extends AbstractRestTest {
+@Concurrent()
+public class ContentTypeResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );

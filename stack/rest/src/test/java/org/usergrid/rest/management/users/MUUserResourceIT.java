@@ -20,15 +20,17 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
 
 /**
  * @author zznate
  */
-public class MUUserResourceIT extends AbstractRestTest {
+@Concurrent()
+public class MUUserResourceIT extends AbstractRestIT {
 
     private Logger logger = LoggerFactory.getLogger(MUUserResourceIT.class);
 

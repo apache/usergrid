@@ -31,10 +31,11 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.entities.Group;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -46,7 +47,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * 
  * @author tnine
  */
-public class PermissionsResourceIT extends AbstractRestTest {
+@Concurrent()
+public class PermissionsResourceIT extends AbstractRestIT {
 
   private static final String ROLE = "permtestrole";
 

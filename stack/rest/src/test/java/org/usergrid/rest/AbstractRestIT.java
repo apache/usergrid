@@ -60,13 +60,13 @@ import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
  * verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
  */
 @Concurrent()
-public abstract class AbstractRestTest extends JerseyTest
+public abstract class AbstractRestIT extends JerseyTest
 {
   private static final int JETTY_PORT = 9998;
 
   private static final String CONTEXT = "/";
 
-  private static Logger logger = LoggerFactory.getLogger(AbstractRestTest.class);
+  private static Logger logger = LoggerFactory.getLogger(AbstractRestIT.class);
 
   static boolean usersSetup = false;
   protected Properties properties;
@@ -95,7 +95,7 @@ public abstract class AbstractRestTest extends JerseyTest
 
     descriptor = new WebAppDescriptor.Builder("org.usergrid.rest").clientConfig(clientConfig).build();
 
-    dumpClasspath(AbstractRestTest.class.getClassLoader());
+    dumpClasspath(AbstractRestIT.class.getClassLoader());
     
   }
 
@@ -117,7 +117,7 @@ public abstract class AbstractRestTest extends JerseyTest
     }
   }
 
-  public AbstractRestTest() throws TestContainerException {
+  public AbstractRestIT() throws TestContainerException {
     super(descriptor);
 
   }

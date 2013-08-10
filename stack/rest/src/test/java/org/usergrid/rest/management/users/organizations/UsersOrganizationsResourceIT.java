@@ -10,12 +10,14 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.rest.AbstractRestIT;
 
 /**
  * @author zznate
  */
-public class UsersOrganizationsResourceIT extends AbstractRestTest {
+@Concurrent()
+public class UsersOrganizationsResourceIT extends AbstractRestIT {
 
 
 

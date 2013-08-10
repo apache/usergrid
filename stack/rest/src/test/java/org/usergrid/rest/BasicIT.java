@@ -35,7 +35,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class BasicIT extends AbstractRestTest {
+public class BasicIT extends AbstractRestIT {
 
 	private static Logger log = LoggerFactory.getLogger(BasicIT.class);
 

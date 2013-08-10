@@ -4,8 +4,9 @@ import junit.framework.Assert;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
@@ -16,7 +17,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public class OrganizationResourceIT extends AbstractRestTest {
+@Concurrent()
+public class OrganizationResourceIT extends AbstractRestIT {
 
   @Test
   @Ignore( "Running alone is fine, with other tests it bombs: " +

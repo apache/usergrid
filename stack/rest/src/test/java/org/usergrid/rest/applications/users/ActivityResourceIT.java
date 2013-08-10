@@ -22,17 +22,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.entities.User;
 import org.usergrid.java.client.response.ApiResponse;
-import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author tnine
  */
-public class ActivityResourceIT extends AbstractRestTest {
+@Concurrent()
+public class ActivityResourceIT extends AbstractRestIT {
     private static Logger log = LoggerFactory
             .getLogger(ActivityResourceIT.class);
 
