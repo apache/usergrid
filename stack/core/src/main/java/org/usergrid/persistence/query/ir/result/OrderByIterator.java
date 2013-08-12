@@ -40,6 +40,7 @@ import static org.usergrid.persistence.cassandra.IndexUpdate.compareIndexedValue
 public class OrderByIterator extends MergeIterator {
 
 
+  private static final String NAME_UUID = "uuid";
   private static final Logger logger = LoggerFactory.getLogger(OrderByIterator.class);
   private final QuerySlice slice;
   private final IndexScanner firstOrder;
@@ -78,6 +79,11 @@ public class OrderByIterator extends MergeIterator {
       this.secondaryFields.add(sort.getPropertyName());
     }
 
+    //do uuid sorting last, this way if all our previous sorts are equal, we'll have a reproducible sort order for paging
+    this.secondaryFields.add(NAME_UUID);
+    this.subSortCompare.addComparator(new EntityPropertyComparator(NAME_UUID, false));
+
+
 
   }
 
@@ -111,9 +117,9 @@ public class OrderByIterator extends MergeIterator {
         loadedPage = new PeekingIterator<HColumn<ByteBuffer, ByteBuffer>>(firstOrder.next().iterator());
       }
 
-      //our current set is empty and there's nothing to load further, exit
-      if (!loadedPage.hasNext()) {
-        return entries.toIds();
+      if(!loadedPage.hasNext()){
+        load();
+        break;
       }
 
       DynamicComposite composite = null;
@@ -131,7 +137,7 @@ public class OrderByIterator extends MergeIterator {
         /**
          * We've aggregated results already that are max size, and we've advanced to a "new" value, short circuit
          */
-        if (lastValueInPreviousPage != null && entries.size() == pageSize && compareIndexedValues
+        if (lastValueInPreviousPage != null && entries.size() >= pageSize && compareIndexedValues
             (lastValueInPreviousPage, currentValue) > 0) {
           stopped = true;
           break;
@@ -144,21 +150,28 @@ public class OrderByIterator extends MergeIterator {
 
         //pop what we processed
         loadedPage.next();
+
       }
 
       lastValueInPreviousPage = currentValue;
 
-      //now load and sort the values, ones that we don't want will be dropped
-      try {
-        entries.load(em, secondaryFields);
-      } catch (Exception e) {
-        throw new RuntimeException("Unable to retrieve values for secondary sort", e);
-      }
+      load();
+
+
 
     }
 
 
     return entries.toIds();
+  }
+
+  private void load(){
+    //now load and sort the values, ones that we don't want will be dropped
+    try {
+      entries.load(em, secondaryFields);
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to retrieve values for secondary sort", e);
+    }
   }
 
   @Override
@@ -220,6 +233,8 @@ public class OrderByIterator extends MergeIterator {
         add(e);
       }
 
+      toLoad.clear();
+
     }
 
     /** Turn our sorted entities into a set of ids */
@@ -241,17 +256,6 @@ public class OrderByIterator extends MergeIterator {
     }
 
   }
-
-
-  protected static final Comparator<Object> entryComparator = new Comparator<Object>() {
-
-    @Override
-    public int compare(Object o1, Object o2) {
-      return compareIndexedValues(o1, o2);
-    }
-  };
-
-  protected static final UUIDComparator uuidComparator = new UUIDComparator();
 
 
 }
