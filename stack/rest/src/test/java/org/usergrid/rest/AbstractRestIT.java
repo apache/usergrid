@@ -77,7 +77,6 @@ public abstract class AbstractRestIT extends JerseyTest
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-
     private static final URI baseURI = setup.getBaseURI();
 
 

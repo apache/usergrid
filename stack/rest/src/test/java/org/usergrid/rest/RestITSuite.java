@@ -30,7 +30,7 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
             ActivityResourceIT.class,
             AdminEmailEncodingIT.class,
             ApplicationRequestCounterIT.class,
-            ApplicationResourceIT.class,
+//            ApplicationResourceIT.class,         ==> Run alone since it runs long
             AssetResourceIT.class,
             BasicIT.class,
             CollectionsResourceIT.class,
@@ -39,7 +39,7 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
             EventsResourceIT.class,
             GroupResourceIT.class,
             MUUserResourceIT.class,
-            ManagementResourceIT.class,
+//            ManagementResourceIT.class,          ==> Run alone since it runs long
             OrganizationResourceIT.class,
             OrganizationsResourceIT.class,
             OwnershipResourceIT.class,

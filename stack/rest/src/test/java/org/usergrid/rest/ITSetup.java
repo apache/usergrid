@@ -1,10 +1,6 @@
 package org.usergrid.rest;
 
 
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.test.framework.AppDescriptor;
-import com.sun.jersey.test.framework.WebAppDescriptor;
 import org.apache.commons.lang.math.RandomUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -22,7 +18,6 @@ import org.usergrid.services.ServiceManagerFactory;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.Map;
 import java.util.Properties;
 
 

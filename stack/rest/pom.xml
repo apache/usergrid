@@ -12,7 +12,15 @@
   <name>Usergrid REST</name>
   <description>REST web services for Usergrid system.</description>
 
+  <!-- Override these properties in an active profile within your settings.xml -->
+  <properties>
+    <!-- If you got the resources, max parallelism = 6 forks -->
+    <rest.it.forkCount>3</rest.it.forkCount>
 
+    <!-- Tests can run even on 128m, but let's play it safe  -->
+    <rest.it.heapmax>256m</rest.it.heapmax>
+    <rest.it.heapmin>256m</rest.it.heapmin>
+  </properties>
 
   <profiles>
     <profile>
@@ -215,20 +223,21 @@
               </systemPropertyVariables>
 
               <parallel>classes</parallel>
-              <forkCount>4</forkCount>
+              <forkCount>${rest.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
-
-              <argLine>-Xmx2G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <perCoreThreadCount>false</perCoreThreadCount>
+              <argLine>-Xmx${rest.it.heapmax} -Xms${rest.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
               <includes>
-                <include>**/RestITSuite.java</include>
                 <include>**/RestTestSuite.java</include>
-                <include>**/QueueResourceIT.java</include> <!-- this is an example -->
-                <include>**/*Test.java</include>
-
+                <include>**/RestITSuite.java</include>
+                <include>**/QueueResourceLong*IT.java</include>
+                <include>**/QueueResourceShortIT.java</include>
+                <include>**/ManagementResourceIT.java</include>
+                <include>**/ApplicationResourceIT.java</include>
               </includes>
               <excludes>
-                <!-- <exclude>**/*Test.java</exclude> -->
+                 <exclude>**/*Test.java</exclude>
                 <exclude>**/*Concurrent*Suite.java</exclude>
               </excludes>
             </configuration>
