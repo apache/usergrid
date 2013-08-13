@@ -69,6 +69,13 @@ public class OrderByNode extends QueryNode {
 		visitor.visit(this);
 	}
 
+  /**
+   * Return true if this order has secondary sorts
+   * @return
+   */
+  public boolean hasSecondarySorts(){
+    return secondarySorts != null && secondarySorts.size() > 0;
+  }
 
   /* (non-Javadoc)
    * @see java.lang.Object#toString()

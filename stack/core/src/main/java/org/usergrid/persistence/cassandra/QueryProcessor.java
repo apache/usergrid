@@ -193,17 +193,6 @@ public class QueryProcessor {
     return null;
   }
 
-  /**
-   * Update the cursor for the slice with the new value
-   * 
-   * @param slice
-   */
-  public void updateCursor(QuerySlice slice, ByteBuffer value) {
-
-    cursorCache.setNextCursor(slice.hashCode(), value);
-
-  }
-
 
   /**
    * Return the iterator results, ordered if required
@@ -638,7 +627,7 @@ public class QueryProcessor {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called
-    SliceNode node = new SliceNode(opCount);
+    SliceNode slice = new SliceNode(opCount);
 
     SortPredicate first = sorts.get(0);
     
@@ -646,8 +635,8 @@ public class QueryProcessor {
     
     checkIndexed(propertyName);
     
-    node.setStart(propertyName, null, true);
-    node.setFinish(propertyName, null, true);
+    slice.setStart(propertyName, null, true);
+    slice.setFinish(propertyName, null, true);
     
     
     for (int i = 1; i < sorts.size(); i ++) {
@@ -656,7 +645,7 @@ public class QueryProcessor {
     
     
 
-    return new OrderByNode(node, sorts.subList(1, sorts.size()));
+    return new OrderByNode(slice, sorts.subList(1, sorts.size()));
   }
   
 

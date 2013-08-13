@@ -138,7 +138,18 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     QuerySlice slice = orderByNode.getFirstPredicate().getAllSlices().iterator().next();
 
+    QuerySlice primarySlice = slice;
+
     queryProcessor.applyCursorAndSort(slice);
+
+
+    /**
+     * We have secondary sorts, we need to create a copy of the slice with a new slice ID to avoid getting a cursor on it
+     * the slice represents logic that should be loaded in the order by iterators
+     */
+    if(orderByNode.hasSecondarySorts()){
+       primarySlice = new QuerySlice(slice.getPropertyName(), Integer.MIN_VALUE);
+    }
 
     IndexScanner scanner;
 
@@ -146,17 +157,16 @@ public abstract class SearchVisitor implements NodeVisitor {
     if (slice.isComplete()) {
       scanner = new NoOpIndexScanner();
     } else {
-      scanner = secondaryIndexScan(orderByNode, slice);
+      scanner = secondaryIndexScan(orderByNode, primarySlice);
     }
 
-    List<Query.SortPredicate> secondarySorts = orderByNode.getSecondarySorts();
 
     ResultIterator orderIterator;
 
-    if (secondarySorts == null || secondarySorts.size() == 0) {
+    if (!orderByNode.hasSecondarySorts()) {
       orderIterator = new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice.hasCursor());
     } else {
-      orderIterator = new OrderByIterator(slice, scanner, COLLECTION_PARSER, secondarySorts, em,
+      orderIterator = new OrderByIterator(slice, scanner, COLLECTION_PARSER, orderByNode.getSecondarySorts(), em,
           queryProcessor.getPageSizeHint(orderByNode));
     }
 

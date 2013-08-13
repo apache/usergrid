@@ -70,7 +70,9 @@ public class OrderByIterator extends MergeIterator {
     this.subSortCompare = new ComparatorChain();
     this.secondaryFields = new ArrayList<String>(1 + secondary.size());
 
+    //add the sort of the primary column
     this.secondaryFields.add(slice.getPropertyName());
+    this.subSortCompare.addComparator(new EntityPropertyComparator(slice.getPropertyName(), slice.isReversed()));
 
     for (SortPredicate sort : secondary) {
       this.subSortCompare.addComparator(new EntityPropertyComparator(sort.getPropertyName(),
@@ -90,9 +92,21 @@ public class OrderByIterator extends MergeIterator {
   @Override
   protected Set<UUID> advance() {
 
-    entries = new SortedEntitySet(subSortCompare, pageSize);
+    ByteBuffer cursor = slice.getCursor();
 
     Object lastValueInPreviousPage = null;
+
+    UUID minEntryId = null;
+
+    if(cursor != null){
+      DynamicComposite minCol = parser.parse(cursor);
+
+      minEntryId  = parser.getUUID(minCol);
+
+    }
+
+    entries = new SortedEntitySet(subSortCompare, em, secondaryFields, pageSize, minEntryId);
+
 
     boolean stopped = false;
 
@@ -118,7 +132,7 @@ public class OrderByIterator extends MergeIterator {
       }
 
       if(!loadedPage.hasNext()){
-        load();
+        entries.load();
         break;
       }
 
@@ -130,7 +144,7 @@ public class OrderByIterator extends MergeIterator {
       while (loadedPage.hasNext()) {
         HColumn<ByteBuffer, ByteBuffer> col = loadedPage.peek();
 
-        composite = parser.parse(col.getName().duplicate());
+        composite = parser.parse(col.getName());
 
         currentValue = parser.getValue(composite);
 
@@ -155,7 +169,7 @@ public class OrderByIterator extends MergeIterator {
 
       lastValueInPreviousPage = currentValue;
 
-      load();
+      entries.load();
 
 
 
@@ -165,14 +179,6 @@ public class OrderByIterator extends MergeIterator {
     return entries.toIds();
   }
 
-  private void load(){
-    //now load and sort the values, ones that we don't want will be dropped
-    try {
-      entries.load(em, secondaryFields);
-    } catch (Exception e) {
-      throw new RuntimeException("Unable to retrieve values for secondary sort", e);
-    }
-  }
 
   @Override
   protected void doReset() {
@@ -200,15 +206,30 @@ public class OrderByIterator extends MergeIterator {
     private final int maxSize;
     private final Set<UUID> toLoad = new LinkedHashSet<UUID>();
     private final Map<UUID, ByteBuffer> cursorVal = new HashMap<UUID, ByteBuffer>();
+    private final EntityManager em;
+    private final List<String> fields;
+    private final Entity minEntity;
+    private final Comparator<Entity> comparator;
 
 
-    public SortedEntitySet(Comparator<Entity> comparator, int maxSize) {
+    public SortedEntitySet(Comparator<Entity> comparator,  EntityManager em, List<String> fields, int maxSize, UUID minEntityId) {
       super(comparator);
       this.maxSize = maxSize;
+      this.em = em;
+      this.fields = fields;
+      this.comparator = comparator;
+      this.minEntity = getPartialEntity(minEntityId);
     }
 
     @Override
     public boolean add(Entity entity) {
+
+      // don't add this entity.  We get it in our scan range, but it's <= the minimum value that
+      //should be allowed in the result set
+      if(minEntity != null && comparator.compare(entity, minEntity) <= 0){
+        return false;
+      }
+
       boolean added = super.add(entity);
 
       while (size() > maxSize) {
@@ -228,9 +249,31 @@ public class OrderByIterator extends MergeIterator {
       cursorVal.put(id, column);
     }
 
-    public void load(EntityManager em, List<String> fieldNames) throws Exception {
-      for (Entity e : em.getPartialEntities(toLoad, fieldNames)) {
-        add(e);
+    private Entity getPartialEntity(UUID minEntityId){
+      List<Entity> entities = null;
+
+      try {
+       entities =  em.getPartialEntities(Collections.singletonList(minEntityId), fields );
+      } catch (Exception e) {
+        logger.error("Unable to load partial entities", e);
+        throw new RuntimeException(e);
+      }
+
+      if(entities == null || entities.size() == 0){
+        return null;
+      }
+
+      return entities.get(0);
+    }
+
+    public void load() {
+      try {
+        for (Entity e : em.getPartialEntities(toLoad, fields)) {
+          add(e);
+        }
+      } catch (Exception e) {
+        logger.error("Unable to load partial entities", e);
+        throw new RuntimeException(e);
       }
 
       toLoad.clear();
