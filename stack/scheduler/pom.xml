@@ -7,10 +7,15 @@
     <version>0.0.28-SNAPSHOT</version>
   </parent>
 
+  <properties>
+    <scheduler.it.forkCount>2</scheduler.it.forkCount>
+    <scheduler.it.heapmax>256m</scheduler.it.heapmax>
+    <scheduler.it.heapmin>256m</scheduler.it.heapmin>
+  </properties>
+
   <artifactId>usergrid-scheduler</artifactId>
   <name>Usergrid Scheduler</name>
   <description>The scheduling framework for usergrid</description>
-
 
   <profiles>
     <profile>
@@ -21,30 +26,7 @@
           <value>true</value>
         </property>
       </activation>
-
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-        </resources>
-
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-        </testResources>
-
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -76,28 +58,6 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-        </resources>
-
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-        </testResources>
-
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -170,28 +130,6 @@
         </property>
       </activation>
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-        </resources>
-
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-        </testResources>
-
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -215,29 +153,79 @@
               </excludes>
             </configuration>
           </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>test-jar-execution</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>test-jar</goal>
-                </goals>
-                <configuration>
-                  <includes>
-                    <include>**/org/usergrid/**</include>
-                  </includes>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
         </plugins>
       </build>
     </profile>
   </profiles>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.xml</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.yaml</include>
+          <include>**/*.xml</include>
+          <include>**/*.properties</include>
+        </includes>
+      </testResource>
+    </testResources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <storage-config>${basedir}/src/test/conf</storage-config>
+            <target.directory>${project.build.directory}</target.directory>
+          </systemPropertyVariables>
+          <parallel>both</parallel>
+          <forkCount>8</forkCount>
+          <reuseForks>false</reuseForks>
+          <argLine>-Xmx256m -Xms256m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <includes>
+            <include>**/SchedulerTestSuite.java</include>
+            <include>**/SchedulerRuntime*IT.java</include>
+          </includes>
+          <excludes>
+            <exclude>**/ConcurrentSchedulerITSuite.java</exclude>
+            <exclude>**/ConcurrentSchedulerTestSuite.java</exclude>
+            <exclude>**/*Test.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>test-jar-execution</id>
+            <phase>package</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/org/usergrid/**</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
 

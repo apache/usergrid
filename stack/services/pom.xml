@@ -8,6 +8,13 @@
     <version>0.0.28-SNAPSHOT</version>
   </parent>
 
+  <!-- Override these properties in your settings.xml in an active profile -->
+  <properties>
+    <services.it.forkCount>2</services.it.forkCount>
+    <services.it.heapmax>384m</services.it.heapmax>
+    <services.it.heapmin>384m</services.it.heapmin>
+  </properties>
+
   <artifactId>usergrid-services</artifactId>
   <name>Usergrid Services</name>
   <description>Service layer for Usergrid system.</description>
@@ -27,15 +34,6 @@
     </plugins>
   </reporting>
 
-  <!-- PROFILES -->
-
-
-
-
-
-
-
-
   <profiles>
     <profile>
       <id>unit</id>
@@ -47,32 +45,6 @@
       </activation>
 
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-          <resource>
-            <directory>src/main/python</directory>
-          </resource>
-        </resources>
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-          <testResource>
-            <directory>src/main/python</directory>
-          </testResource>
-        </testResources>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -109,32 +81,6 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-          <resource>
-            <directory>src/main/python</directory>
-          </resource>
-        </resources>
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-          <testResource>
-            <directory>src/main/python</directory>
-          </testResource>
-        </testResources>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -146,10 +92,10 @@
               </systemPropertyVariables>
 
               <parallel>both</parallel>
-              <forkCount>4</forkCount>
+              <forkCount>${services.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
 
-              <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${services.it.heapmax} -Xms${services.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                 -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
               </argLine>
@@ -179,32 +125,6 @@
         </property>
       </activation>
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-          <resource>
-            <directory>src/main/python</directory>
-          </resource>
-        </resources>
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-          <testResource>
-            <directory>src/main/python</directory>
-          </testResource>
-        </testResources>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -232,7 +152,6 @@
               </excludes>
             </configuration>
           </plugin>
-
         </plugins>
       </build>
     </profile>
@@ -247,32 +166,6 @@
         </property>
       </activation>
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.xml</include>
-            </includes>
-          </resource>
-          <resource>
-            <directory>src/main/python</directory>
-          </resource>
-        </resources>
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/*.yaml</include>
-              <include>**/*.xml</include>
-              <include>**/*.properties</include>
-            </includes>
-          </testResource>
-          <testResource>
-            <directory>src/main/python</directory>
-          </testResource>
-        </testResources>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -305,17 +198,68 @@
     </profile>
   </profiles>
 
-
-
-
-
-
-
-
-
-
   <!-- PROFILES -->
 
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.xml</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/python</directory>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.yaml</include>
+          <include>**/*.xml</include>
+          <include>**/*.properties</include>
+        </includes>
+      </testResource>
+      <testResource>
+        <directory>src/main/python</directory>
+      </testResource>
+    </testResources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <storage-config>${basedir}/src/test/conf</storage-config>
+            <target.directory>${project.build.directory}</target.directory>
+          </systemPropertyVariables>
+
+          <parallel>both</parallel>
+          <forkCount>4</forkCount>
+          <reuseForks>false</reuseForks>
+
+          <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <argLine>
+            -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+          </argLine>
+
+          <includes>
+            <include>**/ServiceITSuite.java</include>
+            <include>**/ServiceTestSuite.java</include>
+            <include>**/TokenServiceIT.java</include>
+            <include>**/*Test.java</include>
+          </includes>
+          <excludes>
+            <!-- <exclude>**/*Test.java</exclude> -->
+            <exclude>**/*Concurrent*Suite.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
 
