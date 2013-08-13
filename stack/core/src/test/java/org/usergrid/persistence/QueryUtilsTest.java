@@ -1,6 +1,7 @@
 package org.usergrid.persistence;
 
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author zznate
  */
+@Concurrent()
 public class QueryUtilsTest {
 
     private static final String FAKE_QL = "select color from cat";

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
 	xmlns:hz="http://www.hazelcast.com/schema/config" xmlns:aop="http://www.springframework.org/schema/aop"
 	xsi:schemaLocation="
@@ -26,26 +27,14 @@
 
 	<import resource="classpath:/usergrid-core-context.xml"/>
 
-    <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
-        <constructor-arg ref="entityManagerFactory"/>
-        <constructor-arg ref="cassandraService"/>
-    </bean>
-    <!-- The default schema manager -->
-    <!--
-    <bean class="org.usergrid.persistence.CoreSchemaManager">
-        <constructor-arg ref="setup"/>
-        <constructor-arg ref="cassandraCluster"/>
-    </bean>
-    -->
-    <!-- refer to a named schemaManager from the DataControl annotation thusly -->
-    <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
-        <constructor-arg ref="setup"/>
-        <constructor-arg ref="cassandraCluster"/>
-    </bean>
-    <!--
-    <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager">
-        <property name="reportUnattached" value="true"/>
-        <property name="traceEnabled" value="true"/>
-    </bean>
-    -->
+  <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+    <constructor-arg ref="entityManagerFactory"/>
+    <constructor-arg ref="cassandraService"/>
+  </bean>
+
+  <!-- Refer to a named schemaManager from the DataControl annotation thusly -->
+  <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+    <constructor-arg ref="setup"/>
+    <constructor-arg ref="cassandraCluster"/>
+  </bean>
 </beans>

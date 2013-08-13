@@ -41,7 +41,7 @@ public class TestContext {
   /**
    * 
    */
-  private TestContext(JerseyTest test) {
+  protected TestContext(JerseyTest test) {
     this.test = test;
   }
 

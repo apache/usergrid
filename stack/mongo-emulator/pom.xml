@@ -84,7 +84,10 @@
 
     <!-- Apache Dependencies -->
 
-    <!-- -->
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+    </dependency>
 
     <!-- SUN, Javax Package and Other Com Dependencies -->
 

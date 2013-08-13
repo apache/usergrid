@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
-import org.usergrid.locking.exception.UGLockException;
+
 
 /**
  * Uses the hector based locking implementation to obtain locks
@@ -36,8 +36,8 @@ import org.usergrid.locking.exception.UGLockException;
  * @author tnine
  * 
  */
-public class HectorLockManagerImpl implements LockManager {
-
+public class HectorLockManagerImpl implements LockManager
+{
   private int replicationFactor = 1;
   private int numberOfLockObserverThreads = 1;
   private long lockTtl = 2000;
