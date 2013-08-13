@@ -118,23 +118,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.usergrid.persistence.AssociatedEntityRef;
-import org.usergrid.persistence.CollectionRef;
-import org.usergrid.persistence.ConnectedEntityRef;
-import org.usergrid.persistence.ConnectionRef;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.RelationManager;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.RoleRef;
-import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.SimpleCollectionRef;
-import org.usergrid.persistence.SimpleEntityRef;
-import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
@@ -145,11 +131,7 @@ import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.model.Point;
-import org.usergrid.persistence.query.ir.AllNode;
-import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.ir.SearchVisitor;
-import org.usergrid.persistence.query.ir.SliceNode;
-import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.ir.*;
 import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
@@ -313,78 +295,6 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   /**
-   * Gets the cF key for subkey.
-   * 
-   * @param collection
-   *          the collection
-   * @param properties
-   *          the properties
-   * @return row key
-   */
-  public Object getCFKeyForSubkey(CollectionInfo collection, SliceNode node) {
-
-    // only bother if we have subkeys
-    if (!collection.hasSubkeys()) {
-      return null;
-    }
-
-    Set<String> fields_used = null;
-    Object best_key = null;
-    int most_keys_matched = 0;
-
-    List<String[]> combos = collection.getSubkeyCombinations();
-
-    for (String[] combo : combos) {
-
-      int keys_matched = 0;
-      List<Object> subkey_props = new ArrayList<Object>();
-      Set<String> subkey_names = new LinkedHashSet<String>();
-
-      for (String subkey_name : combo) {
-
-        QuerySlice slice = node.getSlice(subkey_name);
-
-        // no slice for this property, or not an equals, skip it
-        if (slice == null || !slice.isEquals()) {
-          continue;
-        }
-
-        Object subkey_value = null;
-
-        if (subkey_name != null) {
-
-          subkey_value = slice.getStart().getValue();
-
-          if (subkey_value != null) {
-            keys_matched++;
-            subkey_names.add(subkey_name);
-          }
-        }
-
-        subkey_props.add(subkey_value);
-      }
-
-      Object subkey_key = key(subkey_props.toArray());
-
-      if (keys_matched > most_keys_matched) {
-        best_key = subkey_key;
-        fields_used = subkey_names;
-      }
-    }
-
-    // Remove any fields that we used in constructing the row key, it's
-    // already been joined
-    // by adding it to the row key
-    if (fields_used != null) {
-      for (String field : fields_used) {
-        node.removeSlice(field, collection);
-      }
-    }
-
-    return best_key;
-  }
-
-  /**
    * Batch update collection index.
    * 
    * @param batch
@@ -451,30 +361,6 @@ public class RelationManagerImpl implements RelationManager {
         addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_key, entry.getIndexComposite(),
             indexUpdate.getTimestamp());
 
-        if (collection != null) {
-          if (collection.hasSubkeys()) {
-            List<String[]> combos = collection.getSubkeyCombinations();
-            for (String[] combo : combos) {
-              List<Object> subkey_props = new ArrayList<Object>();
-              for (String subkey_name : combo) {
-                Object subkey_value = null;
-                if (subkey_name != null) {
-                  subkey_value = indexUpdate.getEntity().getProperty(subkey_name);
-                }
-                subkey_props.add(subkey_value);
-              }
-              Object subkey_key = key(subkey_props.toArray());
-
-              // entity_id,collection_name,prop_name
-              Object index_subkey_key = key(owner.getUuid(), collectionName, subkey_key, entry.getPath());
-
-              addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_subkey_key, entry.getIndexComposite(),
-                  indexUpdate.getTimestamp());
-
-            }
-          }
-        }
-
         if ("location.coordinates".equals(entry.getPath())) {
           EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), entry.getTimestampUuid(), entry
               .getValue().toString());
@@ -502,32 +388,6 @@ public class RelationManagerImpl implements RelationManager {
 
         addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_key, indexEntry.getIndexComposite(), null,
             indexUpdate.getTimestamp());
-
-        // Add subkey indexes
-
-        if (collection != null) {
-          if (collection.hasSubkeys()) {
-            List<String[]> combos = collection.getSubkeyCombinations();
-            for (String[] combo : combos) {
-              List<Object> subkey_props = new ArrayList<Object>();
-              for (String subkey_name : combo) {
-                Object subkey_value = null;
-                if (subkey_name != null) {
-                  subkey_value = indexUpdate.getEntity().getProperty(subkey_name);
-                }
-                subkey_props.add(subkey_value);
-              }
-              Object subkey_key = key(subkey_props.toArray());
-
-              // entity_id,collection_name,prop_name
-              Object index_subkey_key = key(owner.getUuid(), collectionName, subkey_key, indexEntry.getPath(), bucketId);
-
-              addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX, index_subkey_key,
-                  indexEntry.getIndexComposite(), null, indexUpdate.getTimestamp());
-
-            }
-          }
-        }
 
         if ("location.coordinates".equals(indexEntry.getPath())) {
              EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), indexEntry.getTimestampUuid(),indexEntry.getValue().toString());
@@ -693,30 +553,9 @@ public class RelationManagerImpl implements RelationManager {
           membershipRef.getUuid(), timestamp);
 
     }
-    // Insert in subkeyed collections
-    Schema schema = getDefaultSchema();
-    CollectionInfo collection = schema.getCollection(ownerType, collectionName);
-    if (collection != null) {
-      if (collection.hasSubkeys()) {
-        List<String[]> combos = collection.getSubkeyCombinations();
-        for (String[] combo : combos) {
-          List<Object> subkey_props = new ArrayList<Object>();
-          for (String subkey_name : combo) {
-            Object subkey_value = null;
-            if (subkey_name != null) {
-              subkey_value = entity.getProperty(subkey_name);
-            }
-            subkey_props.add(subkey_value);
-          }
-          for (UUID ownerId : ownerIds) {
-            addInsertToMutator(batch, ENTITY_ID_SETS,
-                key(ownerId, Schema.DICTIONARY_COLLECTIONS, collectionName, subkey_props.toArray()), entity.getUuid(),
-                membershipRefs.get(ownerId).getUuid(), timestamp);
-          }
 
-        }
-      }
-    }
+    
+    Schema schema = getDefaultSchema();
 
     // Add property indexes
     for (String propertyName : entity.getProperties().keySet()) {
@@ -849,28 +688,6 @@ public class RelationManagerImpl implements RelationManager {
     // Delete actual property
 
     addDeleteToMutator(batch, ENTITY_ID_SETS, collections_key, entity.getUuid(), timestamp);
-
-    // Delete from subkeyed collections
-
-    CollectionInfo collection = schema.getCollection(headEntity.getType(), collectionName);
-    if (collection != null) {
-      if (collection.hasSubkeys()) {
-        List<String[]> combos = collection.getSubkeyCombinations();
-        for (String[] combo : combos) {
-          List<Object> subkey_props = new ArrayList<Object>();
-          for (String subkey_name : combo) {
-            Object subkey_value = null;
-            if (subkey_name != null) {
-              subkey_value = entity.getProperty(subkey_name);
-            }
-            subkey_props.add(subkey_value);
-          }
-          addDeleteToMutator(batch, ENTITY_ID_SETS, key(collections_key, subkey_props.toArray()), entity.getUuid(),
-              timestamp);
-
-        }
-      }
-    }
 
     addDeleteToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
         key(entity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES),
@@ -1015,7 +832,7 @@ public class RelationManagerImpl implements RelationManager {
   @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
   public IndexUpdate batchUpdateConnectionIndex(IndexUpdate indexUpdate, ConnectionRefImpl connection) throws Exception {
 
-    // UUID connection_id = connection.getId();
+    // UUID connection_id = connection.getUuid();
 
     UUID[] index_keys = connection.getIndexIds();
 
@@ -1992,41 +1809,6 @@ public class RelationManagerImpl implements RelationManager {
     return result;
   }
 
-  // @Override
-  // public Results getCollection(String collectionName,
-  // Map<String, Object> subkeyProperties, UUID startResult, int count,
-  // Results.Level resultsLevel, boolean reversed) throws Exception {
-  //
-  // Entity e = getHeadEntity();
-  //
-  // CollectionInfo collection = getDefaultSchema().getCollection(
-  // e.getType(), collectionName);
-  //
-  // Object subkey_key = getCFKeyForSubkey(collection, subkeyProperties,
-  // null);
-  //
-  // Map<UUID, UUID> ids = null;
-  //
-  // if (subkey_key != null) {
-  // ids = cass
-  // .getIdPairList(
-  // cass.getApplicationKeyspace(applicationId),
-  // key(e.getUuid(), DICTIONARY_COLLECTIONS,
-  // collectionName, subkey_key), startResult,
-  // null, count + 1, reversed);
-  // } else {
-  // ids = cass.getIdPairList(
-  // cass.getApplicationKeyspace(applicationId),
-  // key(e.getUuid(), DICTIONARY_COLLECTIONS, collectionName),
-  // startResult, null, count + 1, reversed);
-  // }
-  //
-  // Results results = Results.fromIdList(new ArrayList<UUID>(ids.keySet()),
-  // collection.getType());
-  //
-  // return em.loadEntities(results, resultsLevel, ids, count);
-  // }
-
   @Override
   @Metered(group = "core", name = "RelationManager_getCollecitonForQuery")
   public Results getCollection(String collectionName, Query query, Results.Level resultsLevel) throws Exception {
@@ -2266,21 +2048,10 @@ public class RelationManagerImpl implements RelationManager {
     // we have something to search with, visit our tree and evaluate the
     // results
 
-    QueryProcessor qp = new QueryProcessor(query, collection);
-    SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
+    QueryProcessor qp = new QueryProcessor(query, collection, em);
+    SearchCollectionVisitor visitor = new SearchCollectionVisitor(qp);
 
-    return qp.getResults(em, visitor, getResultsLoader(query));
-  }
-
-  private ResultsLoader getResultsLoader(Query query) {
-    switch (query.getResultsLevel()) {
-      case IDS:
-        return new IDLoader();
-      case REFS:
-        return new ConnectionRefLoader(query.getEntityType());
-      default:
-        return new EntityResultsLoader(em);
-    }
+    return qp.getResults(visitor);
   }
 
   private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
@@ -2477,10 +2248,10 @@ public class RelationManagerImpl implements RelationManager {
     ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(connectionType,
         connectedEntityType, null));
 
-    QueryProcessor qp = new QueryProcessor(query, null);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
+    QueryProcessor qp = new QueryProcessor(query, null, em);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
 
-    return qp.getResults(em, visitor, new EntityResultsLoader(em));
+    return qp.getResults(visitor);
   }
 
   @Override
@@ -2523,12 +2294,11 @@ public class RelationManagerImpl implements RelationManager {
     private final CollectionInfo collection;
 
     /**
-     * @param query
-     * @param collectionName
+     * @param queryProcessor
      */
-    public SearchCollectionVisitor(Query query, QueryProcessor queryProcessor, CollectionInfo collection) {
-      super(query, queryProcessor);
-      this.collection = collection;
+    public SearchCollectionVisitor(QueryProcessor queryProcessor) {
+      super(queryProcessor);
+      this.collection = queryProcessor.getCollectionInfo();
     }
 
     /*
@@ -2542,19 +2312,16 @@ public class RelationManagerImpl implements RelationManager {
 
       // check if we have sub keys for equality clauses at this node
       // level. If so we can just use them as a row key for faster seek
-      Object subKey = getCFKeyForSubkey(collection, node);
-
-      IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
+       IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
 
       for (QuerySlice slice : node.getAllSlices()) {
 
         // NOTE we explicitly do not append the slice value here. This
         // is done in the searchIndex method below
-        Object indexKey = subKey == null ? key(headEntity.getUuid(), collection.getName()) : key(headEntity.getUuid(),
-            collection.getName(), subKey);
+        Object indexKey = key(headEntity.getUuid(), collection.getName());
 
         // update the cursor and order before we perform the slice
-        // operation. Should be done after subkeying since this can
+        // operation. Should be done at runtime since this can
         // change the hash value of the slice
         queryProcessor.applyCursorAndSort(slice);
 
@@ -2620,6 +2387,18 @@ public class RelationManagerImpl implements RelationManager {
       results.push(itr);
     }
 
+
+    @Override
+    public void visit(NameIdentifierNode nameIdentifierNode) throws Exception {
+      EntityRef ref = em.getAlias(headEntity.getUuid(), collection.getName(), nameIdentifierNode.getName());
+
+      if(ref == null){
+        this.results.push(new EmptyIterator());
+        return;
+      }
+
+      this.results.push(new StaticIdIterator(ref.getUuid()));
+    }
   }
 
   /**
@@ -2633,11 +2412,11 @@ public class RelationManagerImpl implements RelationManager {
     private final ConnectionRefImpl connection;
 
     /**
-     * @param query
-     * @param collectionName
+     * @param queryProcessor
+     * @param connection
      */
-    public SearchConnectionVisitor(Query query, QueryProcessor queryProcessor, ConnectionRefImpl connection) {
-      super(query, queryProcessor);
+    public SearchConnectionVisitor(QueryProcessor queryProcessor, ConnectionRefImpl connection) {
+      super(queryProcessor);
       this.connection = connection;
     }
 
@@ -2738,6 +2517,21 @@ public class RelationManagerImpl implements RelationManager {
       }
 
     }
+
+
+    @Override
+    public void visit(NameIdentifierNode nameIdentifierNode) throws Exception {
+      //TODO T.N. USERGRID-1919 actually validate this is connected
+      EntityRef ref = em.getAlias(applicationId, connection.getConnectedEntityType(), nameIdentifierNode.getName());
+
+      if(ref == null){
+        this.results.push(new EmptyIterator());
+        return;
+      }
+
+      this.results.push(new StaticIdIterator(ref.getUuid()));
+    }
+
   }
 
 }

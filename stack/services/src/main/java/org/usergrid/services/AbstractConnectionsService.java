@@ -266,6 +266,9 @@ public class AbstractConnectionsService extends AbstractService {
 			if (ref == null) {
 				return null;
 			}
+
+      //TODO T.N. USERGRID-1919 actually validate this is connected
+
 			Entity entity = em.get(ref);
 			if (entity == null) {
 				return null;

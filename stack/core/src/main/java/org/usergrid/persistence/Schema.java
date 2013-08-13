@@ -230,13 +230,10 @@ public class Schema {
             String.CASE_INSENSITIVE_ORDER);
     Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollectionsIndexingDynamicDictionaries = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
             String.CASE_INSENSITIVE_ORDER);
-    Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollectionsSubkeyedOnProperties = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
-            String.CASE_INSENSITIVE_ORDER);
-
+  
     Map<String, Map<String, Map<String, Set<CollectionInfo>>>> entityPropertyContainerCollectionsIndexingProperty = new TreeMap<String, Map<String, Map<String, Set<CollectionInfo>>>>(
             String.CASE_INSENSITIVE_ORDER);
-    Map<String, Map<String, Map<String, Set<CollectionInfo>>>> entityPropertyContainerCollectionsSubkeyedOnProperty = new TreeMap<String, Map<String, Map<String, Set<CollectionInfo>>>>(
-            String.CASE_INSENSITIVE_ORDER);
+  
     Map<String, Map<String, Map<String, Set<CollectionInfo>>>> entityDictionaryContainerCollectionsIndexingDictionary = new TreeMap<String, Map<String, Map<String, Set<CollectionInfo>>>>(
             String.CASE_INSENSITIVE_ORDER);
 
@@ -314,18 +311,6 @@ public class Schema {
             MapUtils.addMapMapSet(
                     entityContainerCollectionsIndexingDynamicDictionaries,
                     true, entityType, containerType, collection);
-        }
-
-        if (!collection.getSubkeySet().isEmpty()) {
-            MapUtils.addMapMapSet(
-                    entityContainerCollectionsSubkeyedOnProperties, true,
-                    entityType, containerType, collection);
-            for (String propertyName : collection.getPropertiesIndexed()) {
-                MapUtils.addMapMapMapSet(
-                        entityPropertyContainerCollectionsSubkeyedOnProperty,
-                        true, entityType, propertyName, containerType,
-                        collection);
-            }
         }
 
     }
@@ -867,23 +852,6 @@ public class Schema {
         return collection.isPropertyIndexed(propertyName);
     }
 
-    /**
-     * @param containerType
-     * @param collectionName
-     * @param propertyName
-     * @return value
-     */
-    public boolean isPropertyCollectionSubkey(String containerType,
-            String collectionName, String propertyName) {
-
-        CollectionInfo collection = getCollection(containerType, collectionName);
-        if (collection == null) {
-            return false;
-        }
-
-        return collection.isSubkeyProperty(propertyName);
-    }
-
   
     /**
      * @param entityType
@@ -1265,18 +1233,7 @@ public class Schema {
                 .get(entityType);
     }
 
-    /**
-     * @param entityType
-     * @return value
-     */
-    public Map<String, Set<CollectionInfo>> getContainersSubkeyedOnProperties(
-            String entityType) {
-
-        entityType = normalizeEntityType(entityType);
-
-        // Application does index subkeys by default
-        return entityContainerCollectionsSubkeyedOnProperties.get(entityType);
-    }
+   
 
     /**
      * @param entityType
@@ -1333,29 +1290,6 @@ public class Schema {
         // Application does index any set by default
         return dictionaryContainerCollectionsIndexingDictionary
                 .get(dictionaryName);
-
-    }
-
-    /**
-     * @param entityType
-     * @param propertyName
-     * @return value
-     */
-    public Map<String, Set<CollectionInfo>> getContainersSubkeyedOnPropertyInfo(
-            String entityType, String propertyName) {
-
-        entityType = normalizeEntityType(entityType);
-
-        Map<String, Map<String, Set<CollectionInfo>>> propertyContainerCollectionsSubkeyedOnPropertyInfo = entityPropertyContainerCollectionsSubkeyedOnProperty
-                .get(entityType);
-
-        if (propertyContainerCollectionsSubkeyedOnPropertyInfo == null) {
-            return null;
-        }
-
-        // Application does index any subkey by default
-        return propertyContainerCollectionsSubkeyedOnPropertyInfo
-                .get(propertyName);
 
     }
 

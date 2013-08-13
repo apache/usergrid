@@ -37,7 +37,7 @@ public class QueryTest {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);
 
-  @SuppressWarnings("unchecked")
+  
   @Test
   public void testQueryTree() throws Exception {
     logger.info("testQuery");
@@ -210,7 +210,7 @@ public class QueryTest {
       error = qpe.getMessage();
     }
 
-    assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
+    assertEquals("The query cannot be parsed. The token 'from' at column 4 on line 1 cannot be parsed", error);
 
   }
 
@@ -250,7 +250,7 @@ public class QueryTest {
       error = qpe.getMessage();
     }
 
-    assertEquals("The query cannot be parsed.  The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
+    assertEquals("The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
 
   }
 

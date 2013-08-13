@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
+
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,13 +28,14 @@ import com.sun.jersey.api.client.WebResource;
 
 /**
  * @author tnine
- * 
+ *
  */
 public abstract class ValueResource extends NamedResource {
 
   private String name;
   private String query;
   private String cursor;
+  private Integer limit;
   private UUID start;
   
   private Map<String, String> customParams;
@@ -58,6 +61,11 @@ public abstract class ValueResource extends NamedResource {
     buffer.append(name);
   }
 
+  public void addToUrlEnd(StringBuilder buffer) {
+    buffer.append(SLASH);
+    buffer.append(buffer);
+  }
+
   /**
    * Create a new entity with the specified data
    * @param entity
@@ -66,43 +74,53 @@ public abstract class ValueResource extends NamedResource {
   public JsonNode create(Map<String, ? > entity){
     return postInternal(entity);
   }
-  
+
+
+  public void delete (Map<String,?> entity) {
+    deleteInternal();
+  }
+
   /**
    * post to the entity set
-   * 
+   *
    * @param entity
    * @return
    */
   protected JsonNode postInternal(Map<String, ?> entity) {
-   
+
     return jsonMedia(withParams(withToken(resource())))
         .post(JsonNode.class, entity);
   }
-  
+
   /**
    * post to the entity set
-   * 
+   *
    * @param entity
    * @return
    */
   protected JsonNode postInternal(Map<String, ?>[] entity) {
-   
+
     return jsonMedia(withParams(withToken(resource())))
         .post(JsonNode.class, entity);
   }
-  
+
+  public JsonNode put (Map<String,?> entity) {
+
+    return putInternal(entity);
+  }
+
   /**
-   * post to the entity set
-   * 
+   * put to the entity set
+   *
    * @param entity
    * @return
    */
   protected JsonNode putInternal(Map<String, ?> entity) {
-   
+
     return jsonMedia(withParams(withToken(resource())))
         .put(JsonNode.class, entity);
   }
-  
+
   /**
    * Get the data
    * @return
@@ -117,20 +135,31 @@ public abstract class ValueResource extends NamedResource {
     this.cursor = cursor;
     return (T) this;
   }
-  
-  
+
+
   @SuppressWarnings("unchecked")
   public <T extends ValueResource> T withQuery(String query){
     this.query = query;
     return (T) this;
   }
-  
+
   @SuppressWarnings("unchecked")
   public <T extends ValueResource> T withStart(UUID start){
     this.start = start;
     return (T) this;
   }
-  
+
+  @SuppressWarnings("unchecked")
+  public <T extends ValueResource> T withLimit(Integer limit) {
+    this.limit = limit;
+    return (T) this;
+  }
+
+
+
+  /**
+   * Query this resource.
+   */
 
   @SuppressWarnings("unchecked")
   public <T extends ValueResource> T withParam(String name, String value){
@@ -144,19 +173,16 @@ public abstract class ValueResource extends NamedResource {
   }
   
   
-  
   /**
    * Get entities in this collection. Cursor is optional
-   * 
-   * @param query
-   * @param cursor
+   *
    * @return
    */
   protected JsonNode getInternal() {
 
-    
+
     WebResource resource = withParams(withToken(resource()));
-    
+
     if(query != null){
       resource = resource.queryParam("ql", query);
     }
@@ -164,9 +190,28 @@ public abstract class ValueResource extends NamedResource {
     if (cursor != null) {
       resource = resource.queryParam("cursor", cursor);
     }
-    
+
     if(start != null){
       resource = resource.queryParam("start", start.toString());
+    }
+
+    if (limit != null) {
+      resource = resource.queryParam("limit", limit.toString());
+    }
+
+    return jsonMedia(resource).get(JsonNode.class);
+  }
+
+  public JsonNode query(String query,String addition,String numAddition){
+    return getInternal(query,addition,numAddition);
+  }
+
+  protected JsonNode getInternal(String query,String addition, String numAddition)
+  {
+    WebResource resource = withParams(withToken(resource())).queryParam("ql", query);
+
+    if (addition != null) {
+      resource = resource.queryParam(addition, numAddition);
     }
 
     
@@ -178,13 +223,60 @@ public abstract class ValueResource extends NamedResource {
     
     return jsonMedia(resource).get(JsonNode.class);
   }
-  
+
+  public int verificationOfQueryResults(JsonNode[] correctValues,boolean reverse,
+                                        String checkedQuery) throws Exception{
+
+    int totalEntitiesContained = 0;
+
+    JsonNode checkedNodes = this.withQuery(checkedQuery).withLimit(1000).get();
+
+    while (correctValues.length != totalEntitiesContained)//correctNode.get("entities") != null)
+    {
+      totalEntitiesContained += checkedNodes.get("entities").size();
+      if (!reverse) {
+        for(int index = 0; index < checkedNodes.get("entities").size();index++)
+          assertEquals(correctValues[index].get("entities").get(0),checkedNodes.get("entities").get(index));
+      }
+      else
+        for(int index = 0; index < checkedNodes.get("entities").size();index++)
+          assertEquals(correctValues[correctValues.length-1-index].get("entities").get(0),
+              checkedNodes.get("entities").get
+              (index));
+
+
+      /*works because this method checks to make sure both queries return the same thing
+      therefore this if shouldn't be needed, but added just in case
+       */
+      if(checkedNodes.get("cursor") != null) {
+        checkedNodes = this.query(checkedQuery,"cursor",checkedNodes.get("cursor").toString());
+      }
+
+      else
+        break;
+    }
+    return totalEntitiesContained;
+  }
+
+  public JsonNode entityValue (String query, String valueToSearch, int index) {
+    JsonNode node = this.withQuery(query).get();
+    return node.get("entities").get(index).findValue(valueToSearch);
+  }
+
+  public JsonNode entityIndex(String query, int index) {
+
+    JsonNode node = this.withQuery(query).get();
+    return node.get("entities").get(index);
+  }
+  public JsonNode entityIndexLimit(String query, Integer limitSize, int index) {
+
+    JsonNode node = this.withQuery(query).withLimit(limitSize).get();
+    return node.get("entities").get(index);
+  }
 
   /**
    * Get entities in this collection. Cursor is optional
-   * 
-   * @param query
-   * @param cursor
+   *
    * @return
    */
   protected JsonNode deleteInternal() {

@@ -1038,6 +1038,54 @@ public class CollectionIT extends AbstractCoreIT
   }
 
   @Test
+  public void testPagingWithGetNextResults() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "pagingWithBoundsCriteria2");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    int size = 40;
+    List<UUID> entityIds = new ArrayList<UUID>();
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> properties = new LinkedHashMap<String, Object>();
+      properties.put("index", i);
+      Entity created = em.create("page", properties);
+
+      entityIds.add(created.getUuid());
+    }
+
+    int pageSize = 10;
+
+    Query query = new Query();
+    query.setLimit(pageSize);
+    query.addFilter("index >= 10");
+    query.addFilter("index <= 29");
+
+    Results r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+    // check they're all the same before deletion
+    for (int i = 1; i < 3; i++) {
+
+      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+      assertEquals(pageSize, r.size());
+
+      for (int j = 0; j < pageSize; j++) {
+        assertEquals(entityIds.get(i * pageSize + j), r.getEntities().get(j).getUuid());
+      }
+
+      r = r.getNextPageResults();
+    }
+
+    assertEquals(0, r.size());
+    assertNull(r.getCursor());
+
+  }
+
+  @Test
   public void subpropertyQuerying() throws Exception {
     Map<String, Object> root = new HashMap<String, Object>();
 
@@ -1443,5 +1491,92 @@ public class CollectionIT extends AbstractCoreIT
     assertEquals("", propertyName);
   }
 
-  
+  @Test
+  public void uuidIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "uuidIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("keywords", "blah,test,game");
+    properties.put("title", "Solitaire");
+
+    Entity game1 = em.create("game", properties);
+    assertNotNull(game1);
+
+    //we create 2 entities, otherwise this test will pass when it shouldn't
+    Entity game2 = em.create("game", properties);
+    assertNotNull(game2);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromUUID(game1.getUuid()));
+    Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", game1, r.getEntity());
+
+  }
+
+  @Test
+  public void nameIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "nameIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("keywords", "blah,test,game");
+    properties.put("title", "Solitaire");
+    properties.put("name", "test");
+
+    Entity game1 = em.create("games", properties);
+    assertNotNull(game1);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromName("test"));
+    Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", game1, r.getEntity());
+
+  }
+
+
+
+  @Test
+  public void emailIdentifierTest() throws Exception {
+    UUID applicationId = createApplication("testOrganization", "emailIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    User user = new User();
+    user.setUsername("foobar");
+    user.setEmail("foobar@usergrid.org");
+
+    Entity createUser = em.create(user);
+    assertNotNull(createUser);
+
+
+    // overlap
+    Query query = new Query();
+    query.addIdentifier(Identifier.fromEmail("foobar@usergrid.org"));
+    Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+    assertEquals("We should only get 1 result", 1, r.size());
+    assertNull("No cursor should be present", r.getCursor());
+
+    assertEquals("Saved entity returned", createUser, r.getEntity());
+
+  }
+
 }

@@ -168,7 +168,7 @@ public class CounterIT extends AbstractCoreIT
 	
 		
 		Map<String, Long> counts = em.getApplicationCounters();
-		logger.info(JsonUtils.mapToJsonString(counts));
+		logger.info("counts map: "+JsonUtils.mapToJsonString(counts));
 
 		assertEquals(new Long(10), counts.get("clicks"));
 		assertEquals(new Long(200), counts.get("visits"));

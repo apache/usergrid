@@ -15,10 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.schema;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -36,7 +34,6 @@ public class CollectionInfo {
 	private boolean publicVisible = true;
 	private final Set<String> dictionariesIndexed = new TreeSet<String>(
 			String.CASE_INSENSITIVE_ORDER);
-	private Set<String> subkeys = new LinkedHashSet<String>();
 	private String type;
 	private boolean reversed;
 	private boolean includedInExport = true;
@@ -52,7 +49,6 @@ public class CollectionInfo {
 		setPublic(collectionAnnotation.publicVisible());
 		setDictionariesIndexed(new LinkedHashSet<String>(
 				Arrays.asList(collectionAnnotation.dictionariesIndexed())));
-		setSubkeys(Arrays.asList(collectionAnnotation.subkeys()));
 		setType(collectionAnnotation.type());
 		setReversed(collectionAnnotation.reversed());
 		setIncludedInExport(collectionAnnotation.includedInExport());
@@ -137,58 +133,6 @@ public class CollectionInfo {
 		container = entityInfo;
 	}
 
-	public boolean isSubkeyProperty(String propertyName) {
-		return subkeys.contains(propertyName);
-	}
-
-	public boolean hasSubkeys() {
-		return !subkeys.isEmpty();
-	}
-
-	public Set<String> getSubkeySet() {
-		return subkeys;
-	}
-
-	public List<String> getSubkeys() {
-		return new ArrayList<String>(subkeys);
-	}
-
-	public void setSubkeys(List<String> s) {
-		subkeys = new LinkedHashSet<String>();
-		subkeys.addAll(s);
-		makeSubkeyCombos();
-	}
-
-	List<String[]> subkeyCombinations = new ArrayList<String[]>();
-
-	void makeSubkeyCombos() {
-		subkeyCombinations = new ArrayList<String[]>();
-
-		if (subkeys.size() > 0) {
-			int combos = (1 << subkeys.size());
-			// System.out.println(subkeys.size() + " elements = " +
-			// combos
-			// + " combos");
-			for (int i = 1; i < combos; i++) {
-				List<String> combo = new ArrayList<String>();
-				int j = 0;
-				for (String subkey : subkeys) {
-					if (((1 << j) & i) != 0) {
-						combo.add(subkey);
-					} else {
-						combo.add(null);
-					}
-					j++;
-				}
-				subkeyCombinations.add(combo.toArray(new String[0]));
-			}
-		}
-	}
-
-	public List<String[]> getSubkeyCombinations() {
-		return subkeyCombinations;
-	}
-
 	public boolean isPublic() {
 		return publicVisible;
 	}
@@ -231,10 +175,9 @@ public class CollectionInfo {
 				+ indexingDynamicDictionaries + ", linkedCollection="
 				+ linkedCollection + ", propertiesIndexed=" + propertiesIndexed
 				+ ", publicVisible=" + publicVisible + ", dictionariesIndexed="
-				+ dictionariesIndexed + ", subkeys=" + subkeys + ", type="
+				+ dictionariesIndexed + ", type="
 				+ type + ", reversed=" + reversed + ", includedInExport="
-				+ includedInExport + ", sort=" + sort + ", subkeyCombinations="
-				+ subkeyCombinations + "]";
+				+ includedInExport + ", sort=" + sort +  "]";
 	}
 
 }

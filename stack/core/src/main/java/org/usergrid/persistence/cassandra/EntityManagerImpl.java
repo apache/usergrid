@@ -454,42 +454,6 @@ public class EntityManagerImpl implements EntityManager {
 		return batch;
 	}
 
-	/**
-	 * Batch update properties.
-	 *
-	 * @param batch
-	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityId
-	 *            the entity id
-	 * @param properties
-	 *            the properties
-	 * @param timestamp
-	 *            the timestamp
-	 * @return batch
-	 * @throws Exception
-	 *             the exception
-	 */
-	public Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch,
-			UUID entityId, Map<String, Object> properties, UUID timestampUuid)
-			throws Exception {
-
-    EntityRef entity = getRef(entityId);
-		if (entity == null) {
-			return batch;
-		}
-
-		for (Map.Entry<String,Object> entry : properties.entrySet()) {
-      String propertyName = entry.getKey();
-			Object propertyValue = entry.getValue();
-
-			batch = batchSetProperty(batch, entity, propertyName,
-					propertyValue, timestampUuid);
-		}
-
-		return batch;
-	}
 
 	/**
 	 * Batch update set.
@@ -1076,30 +1040,6 @@ public class EntityManagerImpl implements EntityManager {
 					asList(TYPE_APPLICATION, collection_name, applicationId),
 					null, timestamp);
 
-			// If the collection has subkeys, find each subkey variant
-			// and insert into the subkeyed collection as well
-
-			if (collection != null) {
-				if (collection.hasSubkeys()) {
-					List<String[]> combos = collection.getSubkeyCombinations();
-					for (String[] combo : combos) {
-						List<Object> subkey_props = new ArrayList<Object>();
-						for (String subkey_name : combo) {
-							Object subkey_value = null;
-							if (subkey_name != null) {
-								subkey_value = properties.get(subkey_name);
-							}
-							subkey_props.add(subkey_value);
-						}
-						Object subkey_key = key(subkey_props.toArray());
-						if(!emptyPropertyMap) {
-							addInsertToMutator(m, ENTITY_ID_SETS,
-									key(collection_key, subkey_key), itemId, null,
-									timestamp);
-						}
-					}
-				}
-			}
 		}
 
 		if(emptyPropertyMap){
@@ -2952,14 +2892,6 @@ public class EntityManagerImpl implements EntityManager {
 		return getRelationManager(entityRef).getCollection(collectionName,
 				startResult, count, resultsLevel, reversed);
 	}
-
-	// @Override
-	// public Results getCollection(EntityRef entityRef, String collectionName,
-	// Map<String, Object> subkeyProperties, UUID startResult, int count,
-	// Level resultsLevel, boolean reversed) throws Exception {
-	// return getRelationManager(entityRef).getCollection(collectionName,
-	// subkeyProperties, startResult, count, resultsLevel, reversed);
-	// }
 
 	@Override
 	public Results getCollection(UUID entityId, String collectionName,

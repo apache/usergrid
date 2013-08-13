@@ -2,13 +2,10 @@ package org.usergrid.persistence.query.ir;
 
 import java.util.Stack;
 
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.cassandra.QueryProcessor;
-import org.usergrid.persistence.cassandra.RelationManagerImpl;
-import org.usergrid.persistence.query.ir.result.IntersectionIterator;
-import org.usergrid.persistence.query.ir.result.ResultIterator;
-import org.usergrid.persistence.query.ir.result.SubtractionIterator;
-import org.usergrid.persistence.query.ir.result.UnionIterator;
+import org.usergrid.persistence.query.ir.result.*;
 
 /**
  * Simple search visitor that performs all the joining in memory for results.
@@ -29,10 +26,10 @@ public abstract class SearchVisitor implements NodeVisitor {
   protected final Stack<ResultIterator> results = new Stack<ResultIterator>();
 
   /**
-   * @param query
+   * @param queryProcessor
    */
-  public SearchVisitor(Query query, QueryProcessor queryProcessor) {
-    this.query = query;
+  public SearchVisitor(QueryProcessor queryProcessor) {
+    this.query = queryProcessor.getQuery();
     this.queryProcessor = queryProcessor;
   }
 
@@ -114,6 +111,25 @@ public abstract class SearchVisitor implements NodeVisitor {
     }
     
     results.push(union);
+  }
+
+  @Override
+  public void visit(UuidIdentifierNode uuidIdentifierNode) {
+    this.results.push(new StaticIdIterator(uuidIdentifierNode.getUuid()));
+  }
+
+
+
+  @Override
+  public void visit(EmailIdentifierNode emailIdentifierNode) throws Exception {
+    EntityRef user = queryProcessor.getEntityManager().getUserByIdentifier(emailIdentifierNode.getIdentifier());
+
+    if(user == null){
+      this.results.push(new EmptyIterator());
+      return;
+    }
+
+    this.results.push(new StaticIdIterator(user.getUuid()));
   }
 
 }

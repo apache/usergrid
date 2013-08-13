@@ -394,10 +394,15 @@ public class ServiceManager {
 					payload);
 		}
 
-		String serviceName = pluralize(ServiceParameter.dequeueParameter(
-				parameters).getName());
-		return new ServiceRequest(this, action, serviceName, parameters,
-				payload, returnsTree);
+    // special-case for Notifications. todo: generalize
+    if (action == ServiceAction.POST &&
+        ServiceParameter.lastParameterIsName(parameters) &&
+        "notifications".equals(parameters.get(parameters.size() - 1).getName())) {
+      return new ServiceRequest(this, action, "notifications", parameters, payload, returnsTree);
+    }
+
+    String serviceName = pluralize(ServiceParameter.dequeueParameter(parameters).getName());
+		return new ServiceRequest(this, action, serviceName, parameters, payload, returnsTree);
 	}
 
 	public void notifyExecutionEventListeners(ServiceAction action,
