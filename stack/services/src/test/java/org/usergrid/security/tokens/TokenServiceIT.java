@@ -250,12 +250,29 @@ public class TokenServiceIT {
         setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge + 1);
 
     }
+	@Test
+	public void appDefaultExpiration() throws Exception {
+
+		OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("foo", "foobar", "foobar",
+                "foo@bar.com", "foobar");
+		ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgInfo.getOrganization().getUuid(), "bar");
+		EntityManager em = setup.getEmf().getEntityManager(appInfo.getId());
+		Application app = em.getApplication();
+		AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+				UUIDUtils.newTimeUUID(), app.getUuid());
+		String token = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
+		assertNotNull(token);
+		TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo(token);
+		assertNotNull(tokenInfo);
+		assertEquals(TokenServiceImpl.LONG_TOKEN_AGE, tokenInfo.getDuration());
+
+	}
 
     @Test
     public void appExpiration() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("foo", "foobar", "foobar",
-                "foo@bar.com", "foobar");
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization("foo2", "foobar2", "foobar",
+                "foo2@bar.com", "foobar");
 
         ApplicationInfo appInfo = setup.getMgmtSvc().createApplication(orgInfo.getOrganization().getUuid(), "bar");
 

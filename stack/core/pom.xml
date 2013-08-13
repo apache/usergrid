@@ -345,10 +345,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>geocell</artifactId>
-    </dependency>
 
     <!-- Apache Dependencies -->
 

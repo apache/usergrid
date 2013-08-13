@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
@@ -28,6 +29,8 @@ public abstract class AbstractCoreIT
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
+    protected IndexBucketLocator indexBucketLocator;
+    protected CassandraService cassandraService;
 
 
 
@@ -36,6 +39,8 @@ public abstract class AbstractCoreIT
         logger.info( "Initializing test ..." );
         emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
         qmf = CoreITSuite.cassandraResource.getBean( QueueManagerFactory.class );
+        indexBucketLocator = CoreITSuite.cassandraResource.getBean( IndexBucketLocator.class );
+        cassandraService = CoreITSuite.cassandraResource.getBean( CassandraService.class );
     }
 
 

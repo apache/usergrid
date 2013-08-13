@@ -28,9 +28,9 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.usergrid.persistence.exceptions.NoIndexException;
