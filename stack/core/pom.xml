@@ -8,6 +8,16 @@
     <version>0.0.28-SNAPSHOT</version>
   </parent>
 
+  <properties>
+    <!-- Up to 30x parallelism can be used -->
+    <core.it.forkCount>4</core.it.forkCount>
+
+    <!-- This seems to be a safe figure -->
+    <core.it.heapmax>384m</core.it.heapmax>
+    <core.it.heapmin>384m</core.it.heapmin>
+  </properties>
+
+
   <artifactId>usergrid-core</artifactId>
   <name>Usergrid Core</name>
   <description>Core services for Usergrid system.</description>
@@ -175,10 +185,10 @@
               </systemPropertyVariables>
 
               <parallel>both</parallel>
-              <forkCount>8</forkCount>
+              <forkCount>${core.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>            
 
-              <argLine>-Xmx2G -Xms768m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <includes>
                 <include>**/*CoreITSuite.java</include>
                 <include>**/*CoreTestSuite.java</include>
