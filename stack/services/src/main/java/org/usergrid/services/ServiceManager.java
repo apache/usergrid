@@ -80,11 +80,11 @@ public class ServiceManager {
 	private ServiceManagerFactory smf;
   private QueueManager qm;
 
+  private Properties properties;
+
 	// search for commercial packages first for SaaS version
 	public static String[] package_prefixes = { COM_PACKAGE_PREFIX,
 			OSS_PACKAGE_PREFIX };
-
-	boolean searchPython;
 
 	public ServiceManager() {
 	}
@@ -96,6 +96,7 @@ public class ServiceManager {
 		this.smf = smf;
 		this.em = em;
     this.qm = qm;
+    this.properties = properties;
 
 		if (em != null) {
 			try {
@@ -416,5 +417,9 @@ public class ServiceManager {
 
   public QueueManager getQueueManager() {
     return qm;
+  }
+
+  public Properties getProperties() {
+    return properties;
   }
 }
