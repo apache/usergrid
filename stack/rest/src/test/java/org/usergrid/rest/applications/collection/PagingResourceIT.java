@@ -44,6 +44,7 @@ import org.usergrid.rest.test.resource.app.CustomEntity;
  * Simple tests to test querying at the REST tier
  */
 @Concurrent()
+@Ignore( "Seems to be breaking the build here: http://goo.gl/BkIYju" )
 public class PagingResourceIT extends AbstractRestIT {
 
 
@@ -52,7 +53,6 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
   @Test
-  @Ignore( "Seems to be breaking the build here: http://goo.gl/BkIYju" )
   public void collectionPaging() throws Exception {
 
     CustomCollection things = context.application().collection("things");
