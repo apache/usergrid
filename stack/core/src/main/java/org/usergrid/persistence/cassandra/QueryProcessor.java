@@ -115,14 +115,8 @@ public class QueryProcessor {
       OrderByNode order = generateSorts(opCount);
       
       opCount += order.getFirstPredicate().getAllSlices().size();
-      
-      if(rootNode != null){
-        AndNode and = new AndNode(order, rootNode);
-        rootNode = and;
-      }else{
-        rootNode = order;
-      }
-      
+
+      rootNode = order;
     }
     
     
@@ -605,9 +599,7 @@ public class QueryProcessor {
     
     
   }
-  
 
-  
 
   /**
    * @return the pageSizeHint
@@ -642,10 +634,9 @@ public class QueryProcessor {
     for (int i = 1; i < sorts.size(); i ++) {
       checkIndexed(sorts.get(i).getPropertyName());
     }
-    
-    
 
-    return new OrderByNode(slice, sorts.subList(1, sorts.size()));
+
+    return new OrderByNode(slice, sorts.subList(1, sorts.size()), rootNode);
   }
   
 

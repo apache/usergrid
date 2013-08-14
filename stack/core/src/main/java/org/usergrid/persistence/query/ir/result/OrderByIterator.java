@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import com.fasterxml.uuid.UUIDComparator;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import org.apache.commons.collections.comparators.ComparatorChain;
@@ -36,22 +36,24 @@ import java.util.*;
 
 import static org.usergrid.persistence.cassandra.IndexUpdate.compareIndexedValues;
 
-/** @author tnine */
+/**
+ * 1) Take a result set iterator as the child
+ * 2) Iterate only over candidates and create a cursor from the candidates
+ *
+ * @author tnine
+ */
+
 public class OrderByIterator extends MergeIterator {
 
+  private static final UUIDSerializer UUID_SER = new UUIDSerializer();
 
   private static final String NAME_UUID = "uuid";
   private static final Logger logger = LoggerFactory.getLogger(OrderByIterator.class);
   private final QuerySlice slice;
-  private final IndexScanner firstOrder;
-  private final SliceParser<DynamicComposite> parser;
+  private final ResultIterator candidates;
   private final ComparatorChain subSortCompare;
   private final List<String> secondaryFields;
   private final EntityManager em;
-
-
-  //the pointer to our last loaded set.  If we short circuited our loaded page, we'll want to resume from here
-  private PeekingIterator<HColumn<ByteBuffer, ByteBuffer>> loadedPage;
 
   //our last result from in memory sorting
   private SortedEntitySet entries;
@@ -60,13 +62,12 @@ public class OrderByIterator extends MergeIterator {
   /**
    * @param pageSize
    */
-  public OrderByIterator(QuerySlice slice, IndexScanner firstOrder, SliceParser<DynamicComposite> parser,
-                         List<Query.SortPredicate> secondary, EntityManager em, int pageSize) {
+  public OrderByIterator(QuerySlice slice, List<Query.SortPredicate> secondary, ResultIterator candidates,
+                         EntityManager em, int pageSize) {
     super(pageSize);
     this.slice = slice;
-    this.firstOrder = firstOrder;
-    this.parser = parser;
     this.em = em;
+    this.candidates = candidates;
     this.subSortCompare = new ComparatorChain();
     this.secondaryFields = new ArrayList<String>(1 + secondary.size());
 
@@ -81,12 +82,10 @@ public class OrderByIterator extends MergeIterator {
       this.secondaryFields.add(sort.getPropertyName());
     }
 
-    //do uuid sorting last, this way if all our previous sorts are equal, we'll have a reproducible sort order for paging
+    //do uuid sorting last, this way if all our previous sorts are equal, we'll have a reproducible sort order for
+    // paging
     this.secondaryFields.add(NAME_UUID);
     this.subSortCompare.addComparator(new EntityPropertyComparator(NAME_UUID, false));
-
-
-
   }
 
   @Override
@@ -94,85 +93,29 @@ public class OrderByIterator extends MergeIterator {
 
     ByteBuffer cursor = slice.getCursor();
 
-    Object lastValueInPreviousPage = null;
-
     UUID minEntryId = null;
 
-    if(cursor != null){
-      DynamicComposite minCol = parser.parse(cursor);
-
-      minEntryId  = parser.getUUID(minCol);
-
+    if (cursor != null) {
+      minEntryId = UUID_SER.fromByteBuffer(cursor);
     }
 
     entries = new SortedEntitySet(subSortCompare, em, secondaryFields, pageSize, minEntryId);
 
-
-    boolean stopped = false;
-
     /**
      *  keep looping through our peek iterator.  We need to inspect each forward page to ensure we have performed a
-     *  seek to the end of our primary range.  Otherwise we need to keep aggregating. I.E  if the value is a boolean and we order by "true
-     *  asc, timestamp desc" we must load every entity that has the value "true" before sub sorting, then drop all values that fall out of the sort.
+     *  seek to the end of our primary range.  Otherwise we need to keep aggregating. I.E  if the value is a boolean
+     *  and we order by "true
+     *  asc, timestamp desc" we must load every entity that has the value "true" before sub sorting,
+     *  then drop all values that fall out of the sort.
      */
-    while (!stopped) {
+    while (candidates.hasNext()) {
 
 
-      if(loadedPage == null){
-        //we haven't loaded our first page, but we don't have any matches to load, return emtpy
-        if(!firstOrder.hasNext()){
-          break;
-        }
-
-        loadedPage = new PeekingIterator<HColumn<ByteBuffer, ByteBuffer>>(firstOrder.next().iterator());
+      for (UUID id : candidates.next()) {
+        entries.add(id);
       }
-      //nothing loaded advanced based on our first order cass scan
-      else if (!loadedPage.hasNext() && firstOrder.hasNext()) {
-        loadedPage = new PeekingIterator<HColumn<ByteBuffer, ByteBuffer>>(firstOrder.next().iterator());
-      }
-
-      if(!loadedPage.hasNext()){
-        entries.load();
-        break;
-      }
-
-      DynamicComposite composite = null;
-      UUID id;
-
-      Object currentValue = null;
-
-      while (loadedPage.hasNext()) {
-        HColumn<ByteBuffer, ByteBuffer> col = loadedPage.peek();
-
-        composite = parser.parse(col.getName());
-
-        currentValue = parser.getValue(composite);
-
-        /**
-         * We've aggregated results already that are max size, and we've advanced to a "new" value, short circuit
-         */
-        if (lastValueInPreviousPage != null && entries.size() >= pageSize && compareIndexedValues
-            (lastValueInPreviousPage, currentValue) > 0) {
-          stopped = true;
-          break;
-        }
-
-
-        id = parser.getUUID(composite);
-
-        entries.add(id, col.getName().duplicate());
-
-        //pop what we processed
-        loadedPage.next();
-
-      }
-
-      lastValueInPreviousPage = currentValue;
 
       entries.load();
-
-
-
     }
 
 
@@ -182,15 +125,14 @@ public class OrderByIterator extends MergeIterator {
 
   @Override
   protected void doReset() {
-    //reset our root cursor, we have to re-load everything anywa
-    firstOrder.reset();
+    // no op
   }
 
   @Override
   public void finalizeCursor(CursorCache cache, UUID lastValue) {
     int sliceHash = slice.hashCode();
 
-    ByteBuffer bytes = entries.getColumn(lastValue);
+    ByteBuffer bytes = UUID_SER.toByteBuffer(lastValue);
 
     if (bytes == null) {
       return;
@@ -212,7 +154,8 @@ public class OrderByIterator extends MergeIterator {
     private final Comparator<Entity> comparator;
 
 
-    public SortedEntitySet(Comparator<Entity> comparator,  EntityManager em, List<String> fields, int maxSize, UUID minEntityId) {
+    public SortedEntitySet(Comparator<Entity> comparator, EntityManager em, List<String> fields, int maxSize,
+                           UUID minEntityId) {
       super(comparator);
       this.maxSize = maxSize;
       this.em = em;
@@ -226,7 +169,7 @@ public class OrderByIterator extends MergeIterator {
 
       // don't add this entity.  We get it in our scan range, but it's <= the minimum value that
       //should be allowed in the result set
-      if(minEntity != null && comparator.compare(entity, minEntity) <= 0){
+      if (minEntity != null && comparator.compare(entity, minEntity) <= 0) {
         return false;
       }
 
@@ -244,22 +187,21 @@ public class OrderByIterator extends MergeIterator {
 
 
     /** add the id to be loaded, and the dynamiccomposite column that belongs with it */
-    public void add(UUID id, ByteBuffer column) {
+    public void add(UUID id) {
       toLoad.add(id);
-      cursorVal.put(id, column);
     }
 
-    private Entity getPartialEntity(UUID minEntityId){
+    private Entity getPartialEntity(UUID minEntityId) {
       List<Entity> entities = null;
 
       try {
-       entities =  em.getPartialEntities(Collections.singletonList(minEntityId), fields );
+        entities = em.getPartialEntities(Collections.singletonList(minEntityId), fields);
       } catch (Exception e) {
         logger.error("Unable to load partial entities", e);
         throw new RuntimeException(e);
       }
 
-      if(entities == null || entities.size() == 0){
+      if (entities == null || entities.size() == 0) {
         return null;
       }
 

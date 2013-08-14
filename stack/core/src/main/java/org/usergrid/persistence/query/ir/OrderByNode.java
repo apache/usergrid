@@ -27,17 +27,21 @@ import org.usergrid.persistence.Query.SortPredicate;
  */
 public class OrderByNode extends QueryNode {
 
+
   private final SliceNode firstPredicate;
 	private final List<SortPredicate> secondarySorts;
+  private final QueryNode queryOperations;
 
   /**
    *
    * @param firstPredicate The first predicate that is in the order by statement
    * @param secondarySorts Any subsequent terms
+   * @param queryOperations The subtree for boolean evaluation
    */
-	public OrderByNode(SliceNode firstPredicate, List<SortPredicate> secondarySorts) {
+	public OrderByNode(SliceNode firstPredicate, List<SortPredicate> secondarySorts, QueryNode queryOperations) {
 	  this.firstPredicate = firstPredicate;
 	  this.secondarySorts = secondarySorts;
+    this.queryOperations = queryOperations;
 	}
 
 
@@ -56,14 +60,17 @@ public class OrderByNode extends QueryNode {
     return firstPredicate;
   }
 
+  public QueryNode getQueryOperations() {
+    return queryOperations;
+  }
 
   /*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence
-	 * .query.ir.NodeVisitor)
-	 */
+     * (non-Javadoc)
+     *
+     * @see
+     * org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence
+     * .query.ir.NodeVisitor)
+     */
 	@Override
 	public void visit(NodeVisitor visitor) throws Exception {
 		visitor.visit(this);

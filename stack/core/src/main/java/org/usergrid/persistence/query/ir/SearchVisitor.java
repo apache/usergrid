@@ -138,42 +138,61 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     QuerySlice slice = orderByNode.getFirstPredicate().getAllSlices().iterator().next();
 
-    QuerySlice primarySlice = slice;
-
     queryProcessor.applyCursorAndSort(slice);
 
+    QueryNode subOperations = orderByNode.getQueryOperations();
 
-    /**
-     * We have secondary sorts, we need to create a copy of the slice with a new slice ID to avoid getting a cursor on it
-     * the slice represents logic that should be loaded in the order by iterators
-     */
-    if(orderByNode.hasSecondarySorts()){
-       primarySlice = new QuerySlice(slice.getPropertyName(), Integer.MIN_VALUE);
+    ResultIterator subResults = null;
+
+    if(subOperations != null){
+    //visit our sub operation
+      subOperations.visit(this);
+
+      subResults = results.pop();
     }
-
-    IndexScanner scanner;
-
-    // nothing left to search for this range
-    if (slice.isComplete()) {
-      scanner = new NoOpIndexScanner();
-    } else {
-      scanner = secondaryIndexScan(orderByNode, primarySlice);
-    }
-
 
     ResultIterator orderIterator;
 
-    if (!orderByNode.hasSecondarySorts()) {
-      orderIterator = new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice.hasCursor());
-    } else {
-      orderIterator = new OrderByIterator(slice, scanner, COLLECTION_PARSER, orderByNode.getSecondarySorts(), em,
-          queryProcessor.getPageSizeHint(orderByNode));
+    /**
+     * We have secondary sorts, we need to evaluate the candidate results and sort them in memory
+     */
+    if(orderByNode.hasSecondarySorts()){
+
+      //only order by with no query, start scanning the first field
+      if(subResults == null){
+        QuerySlice firstFieldSlice = new QuerySlice(slice.getPropertyName(), -1);
+        subResults = new SliceIterator<DynamicComposite>(slice, secondaryIndexScan(orderByNode, firstFieldSlice), COLLECTION_PARSER, slice.hasCursor());
+      }
+
+      orderIterator = new OrderByIterator(slice, orderByNode.getSecondarySorts(), subResults, em, queryProcessor.getPageSizeHint(orderByNode));
+    }
+
+    //we don't have multi field sorting, we can simply do inersection with a single scan range
+    else{
+
+      IndexScanner scanner;
+
+      if (slice.isComplete()) {
+        scanner = new NoOpIndexScanner();
+      } else {
+        scanner = secondaryIndexScan(orderByNode, slice);
+      }
+
+      SliceIterator<DynamicComposite> joinSlice = new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice.hasCursor());
+
+      IntersectionIterator union = new IntersectionIterator(queryProcessor.getPageSizeHint(orderByNode));
+      union.addIterator(joinSlice);
+
+      if(subResults != null){
+        union.addIterator(subResults);
+      }
+
+      orderIterator = union;
+
     }
 
     // now create our intermediate iterator with our real results
-
     results.push(orderIterator);
-
   }
 
   /*
