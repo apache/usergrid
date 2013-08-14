@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -34,17 +33,14 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
-import org.usergrid.persistence.geo.EntityLocationRefDistanceComparator;
 import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.utils.MapUtils;
-import org.usergrid.utils.UUIDUtils;
-
 
 
 @Concurrent()
 public class GeoIT extends AbstractCoreIT
 {
-    private static final Logger logger = LoggerFactory.getLogger( GeoIT.class );
+    private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
     public GeoIT()
     {
@@ -54,7 +50,7 @@ public class GeoIT extends AbstractCoreIT
 
   @Test
   public void testGeo() throws Exception {
-    logger.info("GeoIT.testGeo");
+    LOG.info("GeoIT.testGeo");
 
     UUID applicationId = createApplication("testOrganization", "testGeo");
     assertNotNull(applicationId);
@@ -381,7 +377,7 @@ public class GeoIT extends AbstractCoreIT
 
     Query query = Query.fromQL(queryString);
 
-    Results r = null;
+    Results r;
     int count = 0;
 
     do {

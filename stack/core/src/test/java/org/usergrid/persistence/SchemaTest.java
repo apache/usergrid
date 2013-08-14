@@ -24,7 +24,6 @@ import io.baas.Simple;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,17 +34,17 @@ import org.usergrid.persistence.entities.SampleEntity;
 @Concurrent()
 public class SchemaTest
 {
-    private static final Logger logger = LoggerFactory.getLogger( SchemaTest.class );
+    private static final Logger LOG = LoggerFactory.getLogger( SchemaTest.class );
 
 
     @Test
     public void testTypes() throws Exception
     {
-        logger.info( "" + Schema.getDefaultSchema().getEntityClass( "sample_entity" ) );
-        logger.info( "" + Schema.getDefaultSchema().getEntityType( SampleEntity.class ) );
+        LOG.info("" + Schema.getDefaultSchema().getEntityClass("sample_entity"));
+        LOG.info("" + Schema.getDefaultSchema().getEntityType(SampleEntity.class));
 
         SampleEntity entity = new SampleEntity();
-        logger.info( entity.getType() );
+        LOG.info(entity.getType());
     }
 
 
@@ -58,14 +57,14 @@ public class SchemaTest
 
     List<String> entitiesPackage = schema.getEntitiesPackage();
     for (String entityPackage : entitiesPackage) {
-      logger.info(entityPackage);
+      LOG.info(entityPackage);
     }
 
     Assert.assertEquals(schema.getEntityClass("simple"), Simple.class);
     Assert.assertEquals(schema.getEntityType(Simple.class), "simple");
 
     Simple entity = new Simple();
-    logger.info(entity.getType());
+    LOG.info(entity.getType());
   }
 
   @Test
@@ -77,18 +76,18 @@ public class SchemaTest
   }
 
   public void dumpSetNames(String entityType) {
-    logger.info(entityType + " entity has the following sets: "
-        + Schema.getDefaultSchema().getDictionaryNames(entityType));
+    LOG.info(entityType + " entity has the following sets: "
+            + Schema.getDefaultSchema().getDictionaryNames(entityType));
   }
 
   @Test
   public void testJsonSchema() throws Exception {
 
-    logger.info(mapToFormattedJsonString(Schema.getDefaultSchema()
-        .getEntityJsonSchema("user")));
+    LOG.info(mapToFormattedJsonString(Schema.getDefaultSchema()
+            .getEntityJsonSchema("user")));
 
-    logger.info(mapToFormattedJsonString(Schema.getDefaultSchema()
-        .getEntityJsonSchema("test")));
+    LOG.info(mapToFormattedJsonString(Schema.getDefaultSchema()
+            .getEntityJsonSchema("test")));
   }
 
     @Test

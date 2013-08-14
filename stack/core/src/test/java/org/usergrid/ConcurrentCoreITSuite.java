@@ -23,15 +23,13 @@ import org.usergrid.system.UsergridSystemMonitorIT;
         CounterIT.class,
         EntityConnectionsIT.class,
         EntityDictionaryIT.class,
-        EntityManagerFactoryIT.class,
         EntityManagerIT.class,
         GeoIT.class,
         IndexIT.class,
         MessagesIT.class,
         PermissionsIT.class,
-        EntityManagerFactoryImplIT.class,
-        AnnotationDrivenIntIT.class,
-
+        PathQueryIT.class,
+        EntityManagerFactoryImplIT.class
     } )
 @Concurrent()
 public class ConcurrentCoreITSuite
