@@ -32,8 +32,7 @@ public abstract class AbstractZooKeeperTest {
 
 	public static final String ZOO_KEEPER_HOST = "localhost:20181/";
 
-	protected static Logger logger = LoggerFactory
-			.getLogger(AbstractZooKeeperTest.class);
+	private static Logger LOG = LoggerFactory.getLogger( AbstractZooKeeperTest.class );
 
 	static class ZKServerMain extends ZooKeeperServerMain {
 		@Override
@@ -71,7 +70,7 @@ public abstract class AbstractZooKeeperTest {
 
 				try {
 					zkServer.runFromConfig(config);
-					logger.info("ZOOKEEPER EXIT");
+					LOG.info("ZOOKEEPER EXIT");
 				} catch (Throwable e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -85,7 +84,7 @@ public abstract class AbstractZooKeeperTest {
 
 		buildZooKeeper();
 
-		logger.info("Zookeeper initialized.");
+		LOG.info("Zookeeper initialized.");
 	}
 
 	public static void buildZooKeeper() throws Exception {
@@ -104,8 +103,8 @@ public abstract class AbstractZooKeeperTest {
 		// Remove test data.
 		boolean deletedData = recurseDelete(tmpDir);
 		if (!deletedData) {
-			logger.warn("Zk testing data was not removed properly. You need to"
-					+ "manually remove:" + tmpDir.getAbsolutePath());
+			LOG.warn("Zk testing data was not removed properly. You need to"
+                    + "manually remove:" + tmpDir.getAbsolutePath());
 		}
 	}
 

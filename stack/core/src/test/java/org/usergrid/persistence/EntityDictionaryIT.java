@@ -35,8 +35,7 @@ import org.usergrid.utils.JsonUtils;
 @Concurrent()
 public class EntityDictionaryIT extends AbstractCoreIT
 {
-
-	private static final Logger logger = LoggerFactory.getLogger( EntityDictionaryIT.class );
+	private static final Logger LOG = LoggerFactory.getLogger( EntityDictionaryIT.class );
 
 
     public EntityDictionaryIT()
@@ -46,8 +45,8 @@ public class EntityDictionaryIT extends AbstractCoreIT
 	
 
 	@Test
-	public void testApplicationDictionaries() throws Exception {
-
+	public void testApplicationDictionaries() throws Exception
+    {
 		Application.OAuthProvider provider = new Application.OAuthProvider();
 		provider.setClientId("123456789012.apps.googleusercontent.com");
 		provider.setClientSecret("abcdefghijklmnopqrstuvwx");
@@ -57,7 +56,7 @@ public class EntityDictionaryIT extends AbstractCoreIT
 		provider.setAccessTokenEndpointUrl("https://accounts.google.com/o/oauth2/token");
 		provider.setVersion("2.0");
 
-		logger.info("EntityDictionaryIT.testApplicationDictionaries");
+		LOG.info("EntityDictionaryIT.testApplicationDictionaries");
 
 		UUID applicationId = createApplication("testOrganization","testApplicationDictionaries");
 		assertNotNull(applicationId);
@@ -70,13 +69,14 @@ public class EntityDictionaryIT extends AbstractCoreIT
 
 		Object o = em.getDictionaryElementValue(em.getApplicationRef(),
 				"oauthproviders", "google");
-		logger.info(JsonUtils.mapToFormattedJsonString(o));
+		LOG.info(JsonUtils.mapToFormattedJsonString(o));
 	}
 
-	@Test
-	public void testUserDictionaries() throws Exception {
 
-		logger.info("EntityDictionaryIT.testUserDictionaries");
+	@Test
+	public void testUserDictionaries() throws Exception
+    {
+		LOG.info("EntityDictionaryIT.testUserDictionaries");
 
 		UUID applicationId = createApplication("testOrganization","testUserDictionaries");
 		assertNotNull(applicationId);
@@ -97,13 +97,13 @@ public class EntityDictionaryIT extends AbstractCoreIT
 		credentials.setSecret("test");
 		credentials.setEncrypted(false);
 		credentials.setRecoverable(true);
-    credentials.setCryptoChain(new String[]{"plaintext"});
+        credentials.setCryptoChain(new String[]{"plaintext"});
 
 		em.addToDictionary(user, "credentials", "plaintext", credentials);
 
 		Object o = em.getDictionaryElementValue(user, "credentials",
 				"plaintext");
-		logger.info(JsonUtils.mapToFormattedJsonString(o));
+		LOG.info(JsonUtils.mapToFormattedJsonString(o));
 
 		assertEquals(CredentialsInfo.class, o.getClass());
 		
@@ -125,7 +125,7 @@ public class EntityDictionaryIT extends AbstractCoreIT
 		em.addToDictionary(user, "credentials", "encrypted", credentials);
 
 		o = em.getDictionaryElementValue(user, "credentials", "encrypted");
-		logger.info(JsonUtils.mapToFormattedJsonString(o));
+		LOG.info(JsonUtils.mapToFormattedJsonString(o));
 
 		assertEquals(CredentialsInfo.class, o.getClass());
 		returned = (CredentialsInfo) o;

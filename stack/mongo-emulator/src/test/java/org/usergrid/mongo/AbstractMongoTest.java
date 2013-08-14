@@ -15,18 +15,12 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
-import static org.junit.Assert.assertNull;
-
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
-import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
 import org.usergrid.services.ServiceManagerFactory;
 
 import com.mongodb.DB;
@@ -39,7 +33,6 @@ public abstract class AbstractMongoTest {
 	private static Logger logger = LoggerFactory
 			.getLogger(AbstractMongoTest.class);
 
-	static PersistenceTestHelper helper;
 	static MongoServer server = null;
 	static boolean usersSetup = false;
 	protected static Properties properties;
@@ -51,25 +44,10 @@ public abstract class AbstractMongoTest {
 
 	public AbstractMongoTest() {
 		super();
-		//emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
 		smf = new ServiceManagerFactory(emf, properties, null, null);
-		//smf.setApplicationContext(helper.getApplicationContext());
 	}
 
-	@BeforeClass
-	public static void setup() throws Exception {
-		assertNull(helper);
-		helper = new PersistenceTestHelperImpl();
-		// helper.setClient(this);
-		helper.setup();
-	}
 
-	@AfterClass
-	public static void teardown() throws Exception {
-		logger.info("teardown");
-		helper.teardown();
-	}
-	
 	/**
 	 * Get a db instance for testing
 	 * @return

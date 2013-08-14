@@ -19,7 +19,6 @@ package org.usergrid.persistence.cassandra;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -37,7 +36,6 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.util.TraceTag;
 import org.usergrid.persistence.cassandra.util.TraceTagManager;
@@ -54,8 +52,6 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerFactoryImplIT.class);
 
-	static PersistenceTestHelper helper;
-
 	public EntityManagerFactoryImplIT() {
 		emf = CoreITSuite.cassandraResource.getBean(EntityManagerFactory.class);
 	}
@@ -63,16 +59,11 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
 	@BeforeClass
 	public static void setup() throws Exception {
 		logger.info("setup");
-		assertNull(helper);
-		helper = new PersistenceTestHelperImpl();
-		// helper.setClient(this);
-		helper.setup();
 	}
 
 	@AfterClass
 	public static void teardown() throws Exception {
 		logger.info("teardown");
-		helper.teardown();
 	}
 
 	EntityManagerFactory emf;

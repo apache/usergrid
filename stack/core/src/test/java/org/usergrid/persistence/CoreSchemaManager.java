@@ -9,8 +9,6 @@ import org.usergrid.cassandra.SchemaManager;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.Setup;
 
-import javax.annotation.Resource;
-
 
 /**
  * @author zznate
@@ -18,7 +16,7 @@ import javax.annotation.Resource;
 @Ignore
 public class CoreSchemaManager implements SchemaManager
 {
-    private Logger logger = LoggerFactory.getLogger( CoreSchemaManager.class );
+    private static final Logger LOG = LoggerFactory.getLogger( CoreSchemaManager.class );
 
     private final Setup setup;
     private final Cluster cluster;
@@ -43,7 +41,7 @@ public class CoreSchemaManager implements SchemaManager
         }
         catch ( Exception ex )
         {
-            logger.error( "Could not setup usergrid core schema", ex );
+            LOG.error("Could not setup usergrid core schema", ex);
         }
     }
 
@@ -64,7 +62,7 @@ public class CoreSchemaManager implements SchemaManager
         }
         catch ( Exception ex )
         {
-            logger.error("Could not create default applications", ex);
+            LOG.error("Could not create default applications", ex);
         }
     }
 
@@ -72,9 +70,9 @@ public class CoreSchemaManager implements SchemaManager
     @Override
     public void destroy()
     {
-        logger.info( "dropping keyspaces" );
+        LOG.info("dropping keyspaces");
         cluster.dropKeyspace( CassandraService.SYSTEM_KEYSPACE );
         cluster.dropKeyspace( CassandraService.STATIC_APPLICATION_KEYSPACE );
-        logger.info( "keyspaces dropped" );
+        LOG.info("keyspaces dropped");
     }
 }
