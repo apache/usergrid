@@ -1,24 +1,20 @@
 package org.usergrid.persistence;
 
+
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
-import org.usergrid.utils.JsonUtils;
 
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
-public class PathQueryTest extends AbstractCoreIT {
 
-  private static final Logger logger = LoggerFactory.getLogger(PathQueryTest.class);
+public class PathQueryIT extends AbstractCoreIT
+{
 
   @Test
-  public void testUserDevicePathQuery() throws Exception {
-
+  public void testUserDevicePathQuery() throws Exception
+  {
     UUID applicationId = createApplication("testOrganization", "testUserDevicePathQuery");
     EntityManager em = emf.getEntityManager(applicationId);
 
@@ -75,7 +71,6 @@ public class PathQueryTest extends AbstractCoreIT {
     PathQuery<UUID> usersPQ = new PathQuery<UUID>(em.getApplicationRef(), userQuery);
     PathQuery<Entity> devicesPQ = usersPQ.chain(deviceQuery);
     HashSet set = new HashSet(expectedUserQuerySize * expectedDeviceQuerySize);
-//    for (Entity e : devicesPQ) { set.add(e); }
     Iterator<Entity> i = devicesPQ.iterator(em);
     while (i.hasNext()) { set.add(i.next()); }
     assertEquals(expectedUserQuerySize * expectedDeviceQuerySize, set.size());
@@ -153,7 +148,6 @@ public class PathQueryTest extends AbstractCoreIT {
     PathQuery<Entity> devicesPQ = usersPQ.chain(deviceQuery);
 
     HashSet set = new HashSet(expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize);
-//    for (Entity e : devicesPQ) { set.add(e); }
     Iterator<Entity> i = devicesPQ.iterator(em);
     while (i.hasNext()) { set.add(i.next()); }
     assertEquals(expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize, set.size());

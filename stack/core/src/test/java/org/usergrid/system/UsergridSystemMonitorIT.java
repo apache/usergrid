@@ -20,9 +20,8 @@ import java.util.Date;
 @Concurrent
 public class UsergridSystemMonitorIT
 {
-
-
     private UsergridSystemMonitor usergridSystemMonitor;
+
 
     @Before
     public void setupLocal()
@@ -46,7 +45,7 @@ public class UsergridSystemMonitorIT
     @Test
     public void verifyLogDump()
     {
-        String str = usergridSystemMonitor.formatMessage( 1600L, MapUtils.hashMap( "message", "hello" ) );
+        String str = UsergridSystemMonitor.formatMessage( 1600L, MapUtils.hashMap( "message", "hello" ) );
 
         assertTrue( StringUtils.contains( str, "hello" ) );
 

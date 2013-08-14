@@ -9,9 +9,7 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.IndexBucketLocator;
-import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
 import org.usergrid.utils.JsonUtils;
 
 
@@ -23,9 +21,7 @@ public abstract class AbstractCoreIT
 {
     public static final boolean USE_DEFAULT_APPLICATION = false;
 
-    private static final Logger logger = LoggerFactory.getLogger( AbstractCoreIT.class );
-
-    protected static PersistenceTestHelper helper;
+    private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
@@ -36,7 +32,7 @@ public abstract class AbstractCoreIT
 
     public AbstractCoreIT()
     {
-        logger.info( "Initializing test ..." );
+        LOG.info("Initializing test ...");
         emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
         qmf = CoreITSuite.cassandraResource.getBean( QueueManagerFactory.class );
         indexBucketLocator = CoreITSuite.cassandraResource.getBean( IndexBucketLocator.class );
@@ -47,21 +43,14 @@ public abstract class AbstractCoreIT
     @BeforeClass
     public static void setup() throws Exception
     {
-        logger.info( "setup" );
-        helper = new PersistenceTestHelperImpl();
-        helper.setup();
+        LOG.info("setup");
     }
 
 
     @AfterClass
     public static void teardown() throws Exception
     {
-        logger.info( "teardown" );
-
-        if ( helper != null )
-        {
-            helper.teardown();
-        }
+        LOG.info("teardown");
     }
 
 
@@ -98,7 +87,7 @@ public abstract class AbstractCoreIT
     {
         if ( obj != null )
         {
-            logger.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
+            LOG.info(name + ":\n" + JsonUtils.mapToFormattedJsonString(obj));
         }
     }
 }
