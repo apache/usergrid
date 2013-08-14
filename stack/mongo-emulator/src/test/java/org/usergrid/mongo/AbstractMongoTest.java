@@ -26,7 +26,6 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 
-
 public abstract class AbstractMongoTest
 {
 	static MongoServer server = null;
@@ -52,7 +51,8 @@ public abstract class AbstractMongoTest
 	 * @throws UnknownHostException
 	 * @throws MongoException
 	 */
-	public static DB getDb() throws UnknownHostException, MongoException{
+	public static DB getDb() throws UnknownHostException, MongoException
+    {
 	    Mongo m = new Mongo("localhost", 27017);
         m.setWriteConcern(WriteConcern.SAFE);
 

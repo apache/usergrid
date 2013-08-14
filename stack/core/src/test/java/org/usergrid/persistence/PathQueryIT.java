@@ -16,7 +16,7 @@ public class PathQueryIT extends AbstractCoreIT
   public void testUserDevicePathQuery() throws Exception
   {
     UUID applicationId = setup.createApplication("testOrganization", "testUserDevicePathQuery");
-    EntityManager em = setup.getEmf().getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
     List<Entity> users = new ArrayList<Entity>();
     for (int i = 0; i < 15; i++) {

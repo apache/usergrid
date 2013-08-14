@@ -31,7 +31,8 @@ import org.usergrid.utils.JsonUtils;
 import static org.junit.Assert.*;
 
 @Concurrent()
-public class MessagesIT extends AbstractCoreIT {
+public class MessagesIT extends AbstractCoreIT
+{
 	private static final Logger LOG = LoggerFactory.getLogger( MessagesIT.class );
 
 	public MessagesIT() {
@@ -231,11 +232,11 @@ public class MessagesIT extends AbstractCoreIT {
 		}
 	}
 
-    @Test
-    public void testTransactions() throws Exception
-    {
 
-        UUID applicationId = createApplication("testOrganization", "testTransactions");
+    @Test
+    public void testTransactions() throws Exception {
+
+        UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
         assertNotNull(applicationId);
 
         EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
@@ -243,7 +244,7 @@ public class MessagesIT extends AbstractCoreIT {
 
         LOG.info("Creating messages");
 
-        QueueManager qm = geQueueManagerFactory().getQueueManager(applicationId);
+        QueueManager qm = getQueueManagerFactory().getQueueManager(applicationId);
 
         String queuePath = "/foo/bar";
 
