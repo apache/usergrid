@@ -4,9 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.usergrid.utils.ClassUtils.cast;
-import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.BeforeClass;
@@ -24,6 +23,7 @@ import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.UUIDUtils;
 
@@ -55,8 +55,16 @@ public class TokenServiceIT {
     @SuppressWarnings("unchecked")
     @Test
     public void testEmailConfirmToken() throws Exception {
-        String tokenStr = setup.getTokenSvc().createToken(TokenCategory.EMAIL, "email_confirm",
-                (Map<String, Object>) cast(hashMap("email", "ed@anuff34.com").map("username", "edanuff34")));
+
+        Map<String, Object> data = new HashMap<String, Object>(){
+            {
+                put("email", "ed@anuff34.com");
+                put("username", "edanuff34");
+            }
+        };
+
+
+        String tokenStr = setup.getTokenSvc().createToken(TokenCategory.EMAIL, "email_confirm", null, data, 0);
 
         log.info("token: " + tokenStr);
 
@@ -73,12 +81,17 @@ public class TokenServiceIT {
         assertTrue(last_access < tokenInfo.getAccessed());
     }
 
+
     @Test
-    public void testAdminPrincipalToken() throws Exception {
+    public void testAdminPrincipalToken() throws Exception
+    {
+
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, adminUser.getUuid(),
+                UUIDUtils
+                        .newTimeUUID());
+
         String tokenStr = setup.getTokenSvc()
-                .createToken(
-                        new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), UUIDUtils
-                                .newTimeUUID()), null);
+                .createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
 
         log.info("token: " + tokenStr);
 
@@ -97,11 +110,12 @@ public class TokenServiceIT {
     @Test
     public void adminPrincipalTokenRevoke() throws Exception {
 
+
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, UUIDUtils.newTimeUUID(),
                 UUIDUtils.newTimeUUID());
 
-        String firstToken = setup.getTokenSvc().createToken(adminPrincipal);
-        String secondToken = setup.getTokenSvc().createToken(adminPrincipal);
+        String firstToken = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+        String secondToken = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
 
         assertNotNull(firstToken);
         assertNotNull(secondToken);
@@ -141,8 +155,8 @@ public class TokenServiceIT {
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
                 UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        String firstToken = setup.getTokenSvc().createToken(adminPrincipal);
-        String secondToken = setup.getTokenSvc().createToken(adminPrincipal);
+        String firstToken = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+        String secondToken = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
 
         assertNotNull(firstToken);
         assertNotNull(secondToken);
@@ -174,8 +188,7 @@ public class TokenServiceIT {
             invalidTokenException = true;
         }
 
-        assertTrue(invalidTokenException);
-    }
+        assertTrue(invalidTokenException);    }
 
     @Test
     public void tokenDurationExpiration() throws Exception {
@@ -183,7 +196,7 @@ public class TokenServiceIT {
                 UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
         // 2 second token
-        long expirationTime = 1000;
+        long expirationTime = 2000;
 
         String token = setup.getTokenSvc().createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
 
@@ -197,8 +210,6 @@ public class TokenServiceIT {
         long maxTokenAge = setup.getTokenSvc().getMaxTokenAge(token);
         assertEquals(expirationTime, maxTokenAge);
 
-        token = setup.getTokenSvc().refreshToken(token);
-        assertNotNull(token);
 
         tokenInfo = setup.getTokenSvc().getTokenInfo(token);
         assertNotNull(tokenInfo);
@@ -216,7 +227,7 @@ public class TokenServiceIT {
 
         try {
             setup.getTokenSvc().getTokenInfo(token);
-        } catch (InvalidTokenException ite) {
+        } catch (ExpiredTokenException ite) {
             invalidTokenException = true;
         }
 
@@ -308,12 +319,13 @@ public class TokenServiceIT {
 
         try {
             setup.getTokenSvc().getTokenInfo(token);
-        } catch (InvalidTokenException ite) {
+        } catch (ExpiredTokenException ite) {
             invalidTokenException = true;
         }
 
         assertTrue(invalidTokenException);
     }
+
 
     @Test
     public void tokenDeletion() throws Exception {

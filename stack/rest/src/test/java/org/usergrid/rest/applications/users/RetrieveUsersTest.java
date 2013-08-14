@@ -1,8 +1,9 @@
 package org.usergrid.rest.applications.users;
 
-import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestIT;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 import java.util.HashMap;
@@ -16,11 +17,14 @@ import static org.junit.Assert.assertEquals;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class RetrieveUsersTest extends RestContextTest {
+public class RetrieveUsersTest extends AbstractRestIT {
+
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
 
   @Test //USERGRID-1222
   public void queryForUsername() {
-    CustomCollection users = collection("users");
+    CustomCollection users = context.collection("users");
 
     Map props = new HashMap();
 

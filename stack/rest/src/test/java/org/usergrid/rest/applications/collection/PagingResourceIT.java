@@ -48,8 +48,8 @@ import org.usergrid.rest.test.resource.app.CustomEntity;
 public class PagingResourceIT extends AbstractRestIT {
 
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
 
 
   @Test

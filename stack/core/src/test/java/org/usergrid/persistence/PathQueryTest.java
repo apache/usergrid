@@ -3,6 +3,7 @@ package org.usergrid.persistence;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.AbstractCoreIT;
 import org.usergrid.utils.JsonUtils;
 
 import java.util.*;
@@ -11,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class PathQueryTest extends AbstractPersistenceTest {
+public class PathQueryTest extends AbstractCoreIT {
 
   private static final Logger logger = LoggerFactory.getLogger(PathQueryTest.class);
 

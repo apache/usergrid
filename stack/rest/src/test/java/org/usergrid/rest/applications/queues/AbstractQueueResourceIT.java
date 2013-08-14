@@ -11,13 +11,7 @@ import java.util.concurrent.Callable;
 
 import static org.junit.Assert.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: akarasulu
- * Date: 8/13/13
- * Time: 1:25 AM
- * To change this template use File | Settings | File Templates.
- */
+
 public class AbstractQueueResourceIT extends AbstractRestIT {
     /**
      * Commands for editing queue information

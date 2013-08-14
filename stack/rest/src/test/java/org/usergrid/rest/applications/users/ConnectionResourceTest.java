@@ -2,19 +2,19 @@ package org.usergrid.rest.applications.users;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.codehaus.jackson.JsonNode;
-import org.usergrid.rest.RestContextTest;
+import org.junit.Rule;
+import org.usergrid.rest.AbstractRestIT;
 
 import javax.ws.rs.core.MediaType;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.HashMap;
 
 import org.junit.Test;
 import com.sun.jersey.api.client.ClientResponse;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.app.CustomEntity;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import org.usergrid.rest.test.resource.CustomCollection;
@@ -25,14 +25,17 @@ import org.usergrid.rest.test.resource.CustomCollection;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class ConnectionResourceTest extends RestContextTest {
+public class ConnectionResourceTest extends AbstractRestIT
+{
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
 
   @Test
   public void connectionsQueryTest() {
 
     CustomEntity items = new CustomEntity("item", null);
 
-    CustomCollection activities = collection("peeps");
+    CustomCollection activities = context.collection("peeps");
 
     Map stuff = hashMap("type", "chicken");
 

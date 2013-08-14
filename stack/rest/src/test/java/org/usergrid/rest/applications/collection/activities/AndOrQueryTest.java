@@ -2,8 +2,10 @@ package org.usergrid.rest.applications.collection.activities;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestIT;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 import java.util.HashMap;
@@ -18,11 +20,16 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class AndOrQueryTest extends RestContextTest {
+public class AndOrQueryTest extends AbstractRestIT
+{
+
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
+
   @Test //USERGRID-900
   public void queriesWithAndPastLimit() {
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     long created = 0;
     Map actor = hashMap("displayName", "Erin");
@@ -54,7 +61,7 @@ public class AndOrQueryTest extends RestContextTest {
   @Test //USERGRID-1475
   public void displayFullQueriesInLimit() {
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
@@ -86,7 +93,7 @@ public class AndOrQueryTest extends RestContextTest {
   @Test //USERGRID-1615
   public void queryReturnCount() throws Exception{
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
@@ -109,7 +116,7 @@ public class AndOrQueryTest extends RestContextTest {
   @Test //Check to make sure that asc works
   public void queryCheckAsc() throws Exception{
 
-    CustomCollection madeupStuff = collection("imagination");
+    CustomCollection madeupStuff = context.collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
     JsonNode[] correctValues = new JsonNode[1000];
@@ -127,7 +134,7 @@ public class AndOrQueryTest extends RestContextTest {
 
   @Ignore//Test to make sure all 1000 exist with a regular query
   public void queryReturnCheck() throws Exception{
-    CustomCollection madeupStuff = collection("imagination");
+    CustomCollection madeupStuff = context.collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
     int numOfEntities = 1000;
@@ -143,7 +150,7 @@ public class AndOrQueryTest extends RestContextTest {
 
   @Ignore
   public void queryReturnCheckWithShortHand() {
-    CustomCollection madeupStuff = collection("imagination");
+    CustomCollection madeupStuff = context.collection("imagination");
     Map character = hashMap("WhoHelpedYou","Ruff");
 
     madeupStuff.createEntitiesWithOrdinal(character,1000);
