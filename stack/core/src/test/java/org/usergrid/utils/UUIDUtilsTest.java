@@ -23,6 +23,7 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.util.*;
+import org.junit.Ignore;
 import java.util.concurrent.*;
 
 import org.junit.Test;
@@ -120,6 +121,7 @@ public class UUIDUtilsTest {
   }
 
   @Test
+  @Ignore( "This test is timing dependent." )
   public void verifyOrderingTsOnlyAndUnique() {
     int count = 500;
     long ts = System.currentTimeMillis();
