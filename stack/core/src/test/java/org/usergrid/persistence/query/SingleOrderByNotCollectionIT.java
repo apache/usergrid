@@ -17,8 +17,6 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 
 
@@ -27,11 +25,10 @@ import org.usergrid.cassandra.Concurrent;
  * 
  */
 @Concurrent()
-public class IteratingQuery1IT extends AbstractIteratingQueryIT
+public class SingleOrderByNotCollectionIT extends AbstractIteratingQueryIT
 {
-
     @Test
-    public void singleOrderByMaxLimitCollection() throws Exception {
-        singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
+    public void singleOrderByNotCollection() throws Exception {
+        singleOrderByNot(new CollectionIoHelper("singleOrderByNotCollection"));
     }
 }

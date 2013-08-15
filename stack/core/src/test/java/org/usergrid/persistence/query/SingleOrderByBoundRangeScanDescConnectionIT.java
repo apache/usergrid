@@ -17,24 +17,18 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 
 
 /**
  * @author tnine
- * 
  */
 @Concurrent()
-public class IteratingQuery2IT extends AbstractIteratingQueryIT
+public class SingleOrderByBoundRangeScanDescConnectionIT extends AbstractIteratingQueryIT
 {
-
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQuery2IT.class);
-
     @Test
-    public void singleOrderByMaxLimitConnection() throws Exception {
-        singleOrderByMaxLimit(new ConnectionHelper("singleOrderByMaxLimitConnection"));
+    public void singleOrderByBoundRangeScanDescConnection() throws Exception {
+        singleOrderByBoundRangeScanDesc(new ConnectionHelper("singleOrderByBoundRangeScanDescConnection"));
     }
 
 }

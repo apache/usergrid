@@ -17,23 +17,18 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 
 
 /**
  * @author tnine
- * 
  */
 @Concurrent()
-public class IteratingQuery4IT extends AbstractIteratingQueryIT
+public class AllInCollectionIT extends AbstractIteratingQueryIT
 {
-
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQuery4IT.class);
-
     @Test
-    public void singleOrderByIntersectionConnection() throws Exception {
-        singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionConnection"));
+    public void allInCollection() throws Exception {
+        allIn(new CollectionIoHelper("allInCollection"));
     }
+
 }

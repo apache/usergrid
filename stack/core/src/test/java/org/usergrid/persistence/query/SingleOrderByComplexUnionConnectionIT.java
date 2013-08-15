@@ -17,18 +17,20 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 
 
 /**
  * @author tnine
+ * 
  */
 @Concurrent()
-public class IteratingQuery16IT extends AbstractIteratingQueryIT
+public class SingleOrderByComplexUnionConnectionIT extends AbstractIteratingQueryIT
 {
     @Test
-    public void singleOrderBySameRangeScanLessThanEqualConnection() throws Exception {
-        singleOrderBySameRangeScanLessThanEqual(new ConnectionHelper("singleOrderBySameRangeScanLessThanEqualConnection"));
+    public void singleOrderByComplexUnionConnection() throws Exception {
+        singleOrderByComplexUnion(new ConnectionHelper("singleOrderByComplexUnionConnection"));
     }
-
 }

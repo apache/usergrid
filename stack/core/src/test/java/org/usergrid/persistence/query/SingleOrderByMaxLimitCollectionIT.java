@@ -22,13 +22,14 @@ import org.usergrid.cassandra.Concurrent;
 
 /**
  * @author tnine
+ * 
  */
 @Concurrent()
-public class IteratingQuery17IT extends AbstractIteratingQueryIT
+public class SingleOrderByMaxLimitCollectionIT extends AbstractIteratingQueryIT
 {
-    @Test
-    public void singleOrderBySameRangeScanLessCollection() throws Exception {
-        singleOrderBySameRangeScanLessEqual(new CollectionIoHelper("singleOrderBySameRangeScanLessCollection"));
-    }
 
+    @Test
+    public void singleOrderByMaxLimitCollection() throws Exception {
+        singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
+    }
 }
