@@ -155,8 +155,7 @@ public class QueryProcessor {
 			ComparatorChain chain = new ComparatorChain();
 			for (SortPredicate sort : sorts) {
 				chain.addComparator(
-						new EntityPropertyComparator(sort.getPropertyName()),
-						sort.getDirection() == DESCENDING);
+						new EntityPropertyComparator(sort.getPropertyName(),sort.getDirection() == DESCENDING));
 			}
 			Collections.sort(entities, chain);
 		}

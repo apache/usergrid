@@ -305,27 +305,29 @@ public class QueryProcessorTest {
 
     QuerySlice slice = slices.next();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+
+      assertEquals("a", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+      assertTrue(slice.getStart().isInclusive());
+      assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
+      assertTrue(slice.getFinish().isInclusive());
 
     slice = slices.next();
 
-    assertEquals("c", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(3), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(3), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+      assertEquals("b", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
+      assertTrue(slice.getStart().isInclusive());
+      assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
+      assertTrue(slice.getFinish().isInclusive());
 
     slice = slices.next();
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+      assertEquals("c", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(3), slice.getStart().getValue());
+      assertTrue(slice.getStart().isInclusive());
+      assertEquals(BigInteger.valueOf(3), slice.getFinish().getValue());
+      assertTrue(slice.getFinish().isInclusive());
+
   }
 
   @Test
@@ -402,21 +404,25 @@ public class QueryProcessorTest {
 
     QuerySlice slice = slices.next();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(10), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
 
-    assertEquals(BigInteger.valueOf(20), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
+      assertEquals("a", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+      assertFalse(slice.getStart().isInclusive());
+
+      assertEquals(BigInteger.valueOf(10), slice.getFinish().getValue());
+      assertFalse(slice.getFinish().isInclusive());
+
 
     slice = slices.next();
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
 
-    assertEquals(BigInteger.valueOf(10), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
+      assertEquals("b", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(10), slice.getStart().getValue());
+      assertFalse(slice.getStart().isInclusive());
+
+      assertEquals(BigInteger.valueOf(20), slice.getFinish().getValue());
+      assertFalse(slice.getFinish().isInclusive());
+
 
     sliceNode = (SliceNode) node.getRight();
 
@@ -424,19 +430,20 @@ public class QueryProcessorTest {
 
     slice = slices.next();
 
-    assertEquals("d", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(30), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(40), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+
+      assertEquals("c", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(20), slice.getStart().getValue());
+      assertTrue(slice.getStart().isInclusive());
+      assertEquals(BigInteger.valueOf(30), slice.getFinish().getValue());
+      assertTrue(slice.getFinish().isInclusive());
 
     slice = slices.next();
 
-    assertEquals("c", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(20), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(30), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+      assertEquals("d", slice.getPropertyName());
+      assertEquals(BigInteger.valueOf(30), slice.getStart().getValue());
+      assertTrue(slice.getStart().isInclusive());
+      assertEquals(BigInteger.valueOf(40), slice.getFinish().getValue());
+      assertTrue(slice.getFinish().isInclusive());
 
   }
 

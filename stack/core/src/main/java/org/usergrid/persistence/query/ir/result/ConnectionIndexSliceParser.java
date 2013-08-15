@@ -38,13 +38,6 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
     this.connectedEntityType = connectedEntityType;
   }
 
-  /* (non-Javadoc)
-   * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-   */
-  @Override
-  public int compare(DynamicComposite first, DynamicComposite second) {
-    return ((UUID)first.get(0)).compareTo((UUID)second.get(0));
-  }
 
   /* (non-Javadoc)
    * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
@@ -77,6 +70,11 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
   @Override
   public UUID getUUID(DynamicComposite value) {
     return (UUID) value.get(0);
+  }
+
+  @Override
+  public Object getValue(DynamicComposite value) {
+    throw new UnsupportedOperationException("Getting the value is not supported on connections");
   }
 
   /* (non-Javadoc)

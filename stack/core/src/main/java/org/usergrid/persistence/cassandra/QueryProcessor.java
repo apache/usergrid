@@ -15,17 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static org.usergrid.persistence.Schema.getDefaultSchema;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-import java.util.UUID;
-
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
-
 import org.usergrid.persistence.*;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
@@ -35,22 +25,13 @@ import org.usergrid.persistence.exceptions.NoIndexException;
 import org.usergrid.persistence.exceptions.PersistenceException;
 import org.usergrid.persistence.query.ir.*;
 import org.usergrid.persistence.query.ir.result.*;
-import org.usergrid.persistence.query.tree.AndOperand;
-import org.usergrid.persistence.query.tree.ContainsOperand;
-import org.usergrid.persistence.query.tree.Equal;
-import org.usergrid.persistence.query.tree.EqualityOperand;
-import org.usergrid.persistence.query.tree.GreaterThan;
-import org.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.usergrid.persistence.query.tree.LessThan;
-import org.usergrid.persistence.query.tree.LessThanEqual;
-import org.usergrid.persistence.query.tree.Literal;
-import org.usergrid.persistence.query.tree.NotOperand;
-import org.usergrid.persistence.query.tree.Operand;
-import org.usergrid.persistence.query.tree.OrOperand;
-import org.usergrid.persistence.query.tree.QueryVisitor;
-import org.usergrid.persistence.query.tree.StringLiteral;
-import org.usergrid.persistence.query.tree.WithinOperand;
+import org.usergrid.persistence.query.tree.*;
 import org.usergrid.persistence.schema.CollectionInfo;
+
+import java.nio.ByteBuffer;
+import java.util.*;
+
+import static org.usergrid.persistence.Schema.getDefaultSchema;
 
 
 public class QueryProcessor {
@@ -114,19 +95,12 @@ public class QueryProcessor {
     // see if we have sorts, if so, we can add them all as a single node at
     // the root
     if (sorts.size() > 0) {
+      
+      OrderByNode order = generateSorts(opCount);
+      
+      opCount += order.getFirstPredicate().getAllSlices().size();
 
-      SliceNode sorts = generateSorts(opCount);
-
-      opCount += sorts.getAllSlices().size();
-
-      if(rootNode != null){
-        AndNode and = new AndNode(sorts, rootNode);
-        rootNode = and;
-      }else{
-        rootNode = sorts;
-      }
-
-
+      rootNode = order;
     }
 
 
@@ -222,17 +196,6 @@ public class QueryProcessor {
         return sort;
     }
     return null;
-  }
-
-  /**
-   * Update the cursor for the slice with the new value
-   *
-   * @param slice
-   */
-  public void updateCursor(QuerySlice slice, ByteBuffer value) {
-
-    cursorCache.setNextCursor(slice.hashCode(), value);
-
   }
 
 
@@ -661,8 +624,6 @@ public class QueryProcessor {
   }
 
 
-
-
   /**
    * @return the pageSizeHint
    */
@@ -677,22 +638,28 @@ public class QueryProcessor {
    * @return
    * @throws NoIndexException
    */
-  private SliceNode generateSorts(int opCount) throws NoIndexException {
+  private OrderByNode generateSorts(int opCount) throws NoIndexException {
 
     // the value is irrelevant since we'll only ever have 1 slice node
     // if this is called
-    SliceNode node = new SliceNode(opCount);
+    SliceNode slice = new SliceNode(opCount);
 
-    for (SortPredicate predicate : sorts) {
-      String name = predicate.getPropertyName();
-
-      checkIndexed(name);
-
-      node.setStart(name, null, true);
-      node.setFinish(name, null, true);
+    SortPredicate first = sorts.get(0);
+    
+    String propertyName = first.getPropertyName();
+    
+    checkIndexed(propertyName);
+    
+    slice.setStart(propertyName, null, true);
+    slice.setFinish(propertyName, null, true);
+    
+    
+    for (int i = 1; i < sorts.size(); i ++) {
+      checkIndexed(sorts.get(i).getPropertyName());
     }
 
-    return node;
+
+    return new OrderByNode(slice, sorts.subList(1, sorts.size()), rootNode);
   }
 
 

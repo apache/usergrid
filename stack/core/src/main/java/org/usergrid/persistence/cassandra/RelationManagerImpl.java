@@ -131,6 +131,20 @@ import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.model.Point;
+import org.usergrid.persistence.query.ir.AllNode;
+import org.usergrid.persistence.query.ir.QueryNode;
+import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.SearchVisitor;
+import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
+import org.usergrid.persistence.query.ir.result.ConnectionIterator;
+import org.usergrid.persistence.query.ir.result.ConnectionRefLoader;
+import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
+import org.usergrid.persistence.query.ir.result.GeoIterator;
+import org.usergrid.persistence.query.ir.result.IDLoader;
+import org.usergrid.persistence.query.ir.result.ResultsLoader;
+import org.usergrid.persistence.query.ir.result.SliceIterator;
+import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.usergrid.persistence.query.ir.*;
 import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.schema.CollectionInfo;
@@ -390,7 +404,8 @@ public class RelationManagerImpl implements RelationManager {
             indexUpdate.getTimestamp());
 
         if ("location.coordinates".equals(indexEntry.getPath())) {
-             EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), indexEntry.getTimestampUuid(),indexEntry.getValue().toString());
+          EntityLocationRef loc = new EntityLocationRef(indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
+              indexEntry.getValue().toString());
           batchStoreLocationInCollectionIndex(indexUpdate.getBatch(), indexBucketLocator, applicationId, index_name,
               indexedEntity.getUuid(), loc);
         }
@@ -1674,7 +1689,7 @@ public class RelationManagerImpl implements RelationManager {
   private IndexScanner searchIndex(Object indexKey, QuerySlice slice, int pageSize) throws Exception {
 
     DynamicComposite[] range = slice.getRange();
-    
+
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     IndexScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,
@@ -1698,7 +1713,7 @@ public class RelationManagerImpl implements RelationManager {
       throws Exception {
 
     DynamicComposite[] range = slice.getRange();
-    
+
     Object keyPrefix = key(indexKey, slice.getPropertyName());
 
     // we have a cursor, so the first record should be discarded
@@ -1712,8 +1727,6 @@ public class RelationManagerImpl implements RelationManager {
     return scanner;
 
   }
-
- 
 
   @SuppressWarnings("unchecked")
   @Override
@@ -2047,23 +2060,10 @@ public class RelationManagerImpl implements RelationManager {
 
     // we have something to search with, visit our tree and evaluate the
     // results
-
     QueryProcessor qp = new QueryProcessor(query, collection, em);
     SearchCollectionVisitor visitor = new SearchCollectionVisitor(qp);
 
     return qp.getResults(visitor);
-  }
-
-  private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
-    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, new QuerySlice("uuid", -1), UUID_PARSER, false);
-
-    List<UUID> ids = new ArrayList<UUID>(size);
-
-    while (iter.hasNext() && ids.size() < size) {
-      ids.addAll(iter.next());
-    }
-
-    return ids;
   }
 
   @Override
@@ -2279,8 +2279,6 @@ public class RelationManagerImpl implements RelationManager {
 
   }
 
-  private static final CollectionIndexSliceParser COLLECTION_PARSER = new CollectionIndexSliceParser();
-
   private static final UUIDIndexSliceParser UUID_PARSER = new UUIDIndexSliceParser();
 
   /**
@@ -2301,48 +2299,33 @@ public class RelationManagerImpl implements RelationManager {
       this.collection = queryProcessor.getCollectionInfo();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
-     * persistence.query.ir.SliceNode)
+  
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.usergrid.persistence.query.ir.QueryNode, org.usergrid.persistence.query.ir.QuerySlice)
      */
     @Override
-    public void visit(SliceNode node) throws Exception {
+    protected IndexScanner secondaryIndexScan(QueryNode node, QuerySlice slice) throws Exception {
+      // NOTE we explicitly do not append the slice value here. This
+      // is done in the searchIndex method below
+      Object indexKey = key(headEntity.getUuid(), collection.getName());
 
-      // check if we have sub keys for equality clauses at this node
-      // level. If so we can just use them as a row key for faster seek
-       IntersectionIterator intersection = new IntersectionIterator(queryProcessor.getPageSizeHint(node));
+      // update the cursor and order before we perform the slice
+      // operation. Should be done after subkeying since this can
+      // change the hash value of the slice
+      queryProcessor.applyCursorAndSort(slice);
 
-      for (QuerySlice slice : node.getAllSlices()) {
+      IndexScanner columns = null;
 
-        // NOTE we explicitly do not append the slice value here. This
-        // is done in the searchIndex method below
-        Object indexKey = key(headEntity.getUuid(), collection.getName());
-
-        // update the cursor and order before we perform the slice
-        // operation. Should be done at runtime since this can
-        // change the hash value of the slice
-        queryProcessor.applyCursorAndSort(slice);
-
-        IndexScanner columns = null;
-
-        // nothing left to search for this range
-        if (slice.isComplete()) {
-          columns = new NoOpIndexScanner();
-        }
-        // perform the search
-        else {
-          columns = searchIndexBuckets(indexKey, slice, collection.getName(), queryProcessor.getPageSizeHint(node));
-        }
-
-        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER, slice
-            .hasCursor()));
-
+      // nothing left to search for this range
+      if (slice.isComplete()) {
+        columns = new NoOpIndexScanner();
+      }
+      // perform the search
+      else {
+        columns = searchIndexBuckets(indexKey, slice, collection.getName(), queryProcessor.getPageSizeHint(node));
       }
 
-      this.results.push(intersection);
-
+      return columns;
     }
 
     public void visit(AllNode node) throws Exception {
@@ -2361,11 +2344,11 @@ public class RelationManagerImpl implements RelationManager {
 
       boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
 
-      IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
+      IndexScanner indexScanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
           key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
           queryProcessor.getPageSizeHint(node), query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
-      this.results.push(new SliceIterator<UUID>(results, slice, UUID_PARSER, skipFirst));
+      this.results.push(new SliceIterator<UUID>(slice, indexScanner, UUID_PARSER, skipFirst));
     }
 
     /*
@@ -2381,8 +2364,9 @@ public class RelationManagerImpl implements RelationManager {
 
       queryProcessor.applyCursorAndSort(slice);
 
-      GeoIterator itr = new GeoIterator(new CollectionGeoSearch(em,indexBucketLocator, cass, headEntity,
-          collection.getName()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance());
+      GeoIterator itr = new GeoIterator(new CollectionGeoSearch(em, indexBucketLocator, cass, headEntity,
+          collection.getName()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(),
+          node.getLongitude()), node.getDistance());
 
       results.push(itr);
     }
@@ -2420,45 +2404,31 @@ public class RelationManagerImpl implements RelationManager {
       this.connection = connection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
-     * persistence.query.ir.SliceNode)
+ 
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.usergrid.persistence.query.ir.QueryNode, org.usergrid.persistence.query.ir.QuerySlice)
      */
     @Override
-    public void visit(SliceNode node) throws Exception {
+    protected IndexScanner secondaryIndexScan(QueryNode node, QuerySlice slice) throws Exception {
 
-      int size = queryProcessor.getPageSizeHint(node);
+      UUID id = ConnectionRefImpl.getIndexId(ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
+          connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0]);
 
-      IntersectionIterator intersection = new IntersectionIterator(size);
+      Object key = key(id, INDEX_CONNECTIONS);
 
-      for (QuerySlice slice : node.getAllSlices()) {
+      // update the cursor and order before we perform the slice
+      // operation
+      queryProcessor.applyCursorAndSort(slice);
 
-        // Object connection_type_and_entity_type_prop_index_key = key(
-        // index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
-        // INDEX_CONNECTIONS, entry.getPath(),
-        // indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION,
-        // index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
-        // entry.getPath()));
+      IndexScanner columns = null;
 
-        UUID id = ConnectionRefImpl.getIndexId(ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
-            connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0]);
-
-        Object key = key(id, INDEX_CONNECTIONS);
-
-        // update the cursor and order before we perform the slice
-        // operation
-        queryProcessor.applyCursorAndSort(slice);
-
-        IndexScanner columns = searchIndex(key, slice, size);
-
-        intersection.addIterator(new SliceIterator<DynamicComposite>(columns, slice, COLLECTION_PARSER, slice
-            .hasCursor()));
+      if (slice.isComplete()) {
+        columns = new NoOpIndexScanner();
+      } else {
+        columns = searchIndex(key, slice, queryProcessor.getPageSizeHint(node));
       }
 
-      this.results.push(intersection);
-
+      return columns;
     }
 
     /*
@@ -2475,7 +2445,8 @@ public class RelationManagerImpl implements RelationManager {
       queryProcessor.applyCursorAndSort(slice);
 
       GeoIterator itr = new GeoIterator(new ConnectionGeoSearch(em, indexBucketLocator, cass,
-          connection.getIndexId()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance());
+          connection.getIndexId()), query.getLimit(), slice, node.getPropertyName(), new Point(node.getLattitude(),
+          node.getLongitude()), node.getDistance());
 
       results.push(itr);
     }
@@ -2508,7 +2479,7 @@ public class RelationManagerImpl implements RelationManager {
         IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
             connection, start, slice.isReversed(), size);
 
-        this.results.push(new SliceIterator<DynamicComposite>(connectionScanner, slice, connectionParser, skipFirst));
+        this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
       }
 
       // no connection type defined, get all connections

@@ -20,6 +20,7 @@ import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
@@ -51,7 +52,7 @@ public class SliceNode extends QueryNode {
 	 */
 	// private class TreeContext {
 
-	private Map<String, QuerySlice> pairs = new HashMap<String, QuerySlice>();
+	private Map<String, QuerySlice> pairs = new LinkedHashMap<String, QuerySlice>();
 
 	private int id;
 

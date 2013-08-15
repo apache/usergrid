@@ -32,13 +32,14 @@ import org.usergrid.utils.NumberUtils;
  */
 public class QuerySlice {
 
-  private String propertyName;
+  private  final String propertyName;
+  private final int nodeId;
   // Object value;
   private RangeValue start;
   private RangeValue finish;
   private ByteBuffer cursor;
   private boolean reversed;
-  private int nodeId;
+
 
   /**
    * @param propertyName
@@ -68,9 +69,6 @@ public class QuerySlice {
     return propertyName;
   }
 
-  public void setPropertyName(String propertyName) {
-    this.propertyName = propertyName;
-  }
 
   public RangeValue getStart() {
     return start;
@@ -89,7 +87,7 @@ public class QuerySlice {
   }
 
   public ByteBuffer getCursor() {
-    return cursor;
+    return hasCursor() ? cursor.duplicate() : null;
   }
 
   public void setCursor(ByteBuffer cursor) {
@@ -121,17 +119,6 @@ public class QuerySlice {
   }
 
   /**
-   * True if this slice represents an equals operation
-   * 
-   * @return the equals
-   */
-  public boolean isEquals() {
-    // note that both null is a full scan range and should not be considered
-    // equal
-    return start != null && finish != null && start.equals(finish);
-  }
-
-  /**
    * Get the slice range to be used during querying
    * 
    * @return An array of dynamic composites to use. Index 0 is the start, index
@@ -143,7 +130,7 @@ public class QuerySlice {
 
     // calc
     if (hasCursor()) {
-      startComposite = DynamicComposite.fromByteBuffer(cursor);
+      startComposite = DynamicComposite.fromByteBuffer(cursor.duplicate());
     }
 
     else if (start != null) {
@@ -235,9 +222,9 @@ public class QuerySlice {
   }
 
   public static class RangeValue {
-    byte code;
-    Object value;
-    boolean inclusive;
+    final byte code;
+    final Object value;
+    final boolean inclusive;
 
     public RangeValue(byte code, Object value, boolean inclusive) {
       this.code = code;
@@ -249,24 +236,12 @@ public class QuerySlice {
       return code;
     }
 
-    public void setCode(byte code) {
-      this.code = code;
-    }
-
     public Object getValue() {
       return value;
     }
 
-    public void setValue(Object value) {
-      this.value = value;
-    }
-
     public boolean isInclusive() {
       return inclusive;
-    }
-
-    public void setInclusive(boolean inclusive) {
-      this.inclusive = inclusive;
     }
 
     @Override

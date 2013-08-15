@@ -17,21 +17,19 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 
 
 /**
  * @author tnine
- * 
  */
 @Concurrent()
-public class IteratingQuery1IT extends AbstractIteratingQueryIT
+public class MultiOrderByConnectionIT extends AbstractIteratingQueryIT
 {
 
-    @Test
-    public void singleOrderByMaxLimitCollection() throws Exception {
-        singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
-    }
+  @Test
+  public void multOrderByConnection() throws Exception {
+    multiOrderBy(new ConnectionHelper("multOrderByConnection"));
+  }
+
 }

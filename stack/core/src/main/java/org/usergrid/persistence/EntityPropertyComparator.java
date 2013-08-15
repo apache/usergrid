@@ -21,36 +21,32 @@ import java.util.Comparator;
 
 public class EntityPropertyComparator implements Comparator<Entity> {
 
-	final boolean reverse;
 	final String propertyName;
-
-	public EntityPropertyComparator(String propertyName) {
-		this.propertyName = propertyName;
-		reverse = false;
-	}
+  final int reverse;
 
 	public EntityPropertyComparator(String propertyName, boolean reverse) {
 		this.propertyName = propertyName;
-		this.reverse = reverse;
+		this.reverse = reverse ? -1 : 1;
 	}
 
 	@Override
 	public int compare(Entity e1, Entity e2) {
 
-		if ((e1 == null) && (e2 == null)) {
-			return 0;
-		} else if (e1 == null) {
+		if (e1 == null) {
+      //second one is not null and first is, second is larger
+      if(e2 != null){
+        return 1;
+      } else{
+        return 0;
+      }
+		}
+    //first one is not null, second is
+    else if (e2 == null) {
 			return -1;
-		} else if (e2 == null) {
-			return 1;
 		}
 
-		int c = compareIndexedValues(e1.getProperty(propertyName),
-				e2.getProperty(propertyName));
-		if (reverse) {
-			c = -c;
-		}
-		return c;
+    return compareIndexedValues(e1.getProperty(propertyName), e2.getProperty(propertyName)) * reverse;
+
 	}
 
 }

@@ -253,7 +253,7 @@ public class GeoIterator implements ResultIterator {
       return;
     }
 
-    String string = STR_SER.fromByteBuffer(slice.getCursor().duplicate());
+    String string = STR_SER.fromByteBuffer(slice.getCursor());
 
     // was set to the end, set the no op flag
     if (string.length() == 0) {

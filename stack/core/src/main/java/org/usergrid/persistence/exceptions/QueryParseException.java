@@ -21,7 +21,7 @@ package org.usergrid.persistence.exceptions;
  * @author tnine
  *
  */
-public class QueryParseException extends Exception {
+public class QueryParseException extends RuntimeException {
 
     /**
      * 

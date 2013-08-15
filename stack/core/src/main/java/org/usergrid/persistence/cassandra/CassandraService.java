@@ -659,7 +659,7 @@ public class CassandraService {
    *           the exception
    */
   @SuppressWarnings("unchecked")
-  public <K, N, V> Rows<K, N, V> getRows(Keyspace ko, Object columnFamily, List<K> keys, Set<String> columnNames,
+  public <K, N, V> Rows<K, N, V> getRows(Keyspace ko, Object columnFamily, Collection<K> keys, Collection<String> columnNames,
       Serializer<K> keySerializer, Serializer<N> nameSerializer, Serializer<V> valueSerializer) throws Exception {
 
     if (db_logger.isDebugEnabled()) {
