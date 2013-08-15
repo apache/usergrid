@@ -29,11 +29,7 @@ import static org.usergrid.mq.QueuePosition.CONSUMER;
 import static org.usergrid.mq.QueuePosition.END;
 import static org.usergrid.mq.QueuePosition.LAST;
 import static org.usergrid.mq.QueuePosition.START;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.addMessageToMutator;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.addQueueToMutator;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.deserializeMessage;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.deserializeQueue;
-import static org.usergrid.mq.cassandra.CassandraMQUtils.getQueueShardRowKey;
+import static org.usergrid.mq.cassandra.CassandraMQUtils.*;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.indexValueCode;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.toIndexableValue;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.validIndexableValue;
@@ -98,25 +94,12 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
-import org.usergrid.mq.CounterQuery;
-import org.usergrid.mq.Message;
-import org.usergrid.mq.Query;
+import org.usergrid.mq.*;
 import org.usergrid.mq.Query.CounterFilterPredicate;
-import org.usergrid.mq.QueryProcessor;
 import org.usergrid.mq.QueryProcessor.QuerySlice;
-import org.usergrid.mq.Queue;
-import org.usergrid.mq.QueueManager;
-import org.usergrid.mq.QueueQuery;
-import org.usergrid.mq.QueueResults;
-import org.usergrid.mq.QueueSet;
 import org.usergrid.mq.QueueSet.QueueInfo;
 import org.usergrid.mq.cassandra.QueueIndexUpdate.QueueIndexEntry;
-import org.usergrid.mq.cassandra.io.FilterSearch;
-import org.usergrid.mq.cassandra.io.ConsumerTransaction;
-import org.usergrid.mq.cassandra.io.EndSearch;
-import org.usergrid.mq.cassandra.io.NoTransactionSearch;
-import org.usergrid.mq.cassandra.io.QueueSearch;
-import org.usergrid.mq.cassandra.io.StartSearch;
+import org.usergrid.mq.cassandra.io.*;
 import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.CounterResolution;
@@ -128,6 +111,7 @@ import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 import com.fasterxml.uuid.UUIDComparator;
+import org.usergrid.utils.UUIDUtils;
 
 public class QueueManagerImpl implements QueueManager {
 
@@ -1413,4 +1397,58 @@ public class QueueManagerImpl implements QueueManager {
 
   }
 
+  @Override
+  public boolean hasOutstandingTransactions(String queuePath, UUID consumerId) {
+    UUID queueId = CassandraMQUtils.getQueueId(queuePath);
+
+    //no consumer id set, use the same one as the overall queue
+    if(consumerId == null){
+      consumerId = queueId;
+    }
+
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+
+
+    return new ConsumerTransaction(applicationId, ko, lockManager, cass)
+        .hasOutstandingTransactions(queueId, consumerId);
+  }
+
+
+  @Override
+  public boolean hasMessagesInQueue(String queuePath, UUID consumerId) {
+
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    UUID queueId = CassandraMQUtils.getQueueId(queuePath);
+
+    if(consumerId == null){
+      consumerId = queueId;
+    }
+
+    NoTransactionSearch search = new NoTransactionSearch(ko);
+
+    QueueBounds bounds = search.getQueueBounds(queueId);
+
+    //Queue doesn't exist
+    if(bounds == null){
+      return false;
+    }
+
+    UUID consumerPosition = search.getConsumerQueuePosition(queueId, consumerId);
+
+    //queue exists, but the consumer does not, meaning it's never read from the Q
+    if(consumerPosition == null){
+      return true;
+    }
+
+    //check our consumer position against the newest message.  If it's equal or larger, we're read to the end of the queue
+    //note that this does not take transactions into consideration, just the client pointer relative to the largest
+    //message in the queue
+    return UUIDUtils.compare(consumerPosition, bounds.getNewest() ) > 0;
+
+  }
+
+  @Override
+  public boolean hasPendingReads(String queuePath, UUID consumerId) {
+    return hasOutstandingTransactions(queuePath, consumerId) || hasMessagesInQueue(queuePath, consumerId);
+  }
 }

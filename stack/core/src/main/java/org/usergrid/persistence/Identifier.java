@@ -30,8 +30,8 @@ public class Identifier {
 		UUID, NAME, EMAIL
 	}
 
-	final Type type;
-	final Object value;
+	Type type;
+	Object value;
 
 	static Pattern emailRegEx = Pattern
 			.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}");
@@ -87,6 +87,7 @@ public class Identifier {
 		return new Identifier(Type.EMAIL, email);
 	}
 
+  @JsonIgnore
 	public UUID getUUID() {
 		if (type != Type.UUID) {
 			return null;
@@ -111,6 +112,7 @@ public class Identifier {
 		return type == Type.EMAIL;
 	}
 
+  @JsonIgnore
 	public String getName() {
 		if (type != Type.NAME) {
 			return null;
@@ -182,4 +184,16 @@ public class Identifier {
 		return identifiers;
 	}
 
+  // for serialization
+  public Identifier() { }
+
+  // for serialization
+  public Object getValue() {
+    return value;
+  }
+
+  // for serialization
+  public void setValue(Object value) {
+    this.value = value;
+  }
 }

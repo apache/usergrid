@@ -63,7 +63,6 @@ public class ConsumerTransaction extends NoTransactionSearch {
 
   /**
    * @param ko
-   * @param cassTimestamp
    */
   public ConsumerTransaction(UUID applicationId, Keyspace ko, LockManager lockManager, CassandraService cass) {
     super(ko);
@@ -301,13 +300,6 @@ public class ConsumerTransaction extends NoTransactionSearch {
    */
   protected List<TransactionPointer> getConsumerIds(UUID queueId, UUID consumerId, SearchParam params,
       UUID startTimeUUID) {
-    // create a UUID representing now, we dont' want to read transactions that
-    // are in the future
-
-    //
-    // long time = nowUUID.timestamp();
-
-    // org.springframework.util.Assert.isTrue(startTime == time);
 
     SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
     q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
@@ -331,6 +323,14 @@ public class ConsumerTransaction extends NoTransactionSearch {
     }
 
     return results;
+  }
+
+  public boolean hasOutstandingTransactions(UUID queueId, UUID consumerId) {
+    SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
+    q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
+    q.setKey(getQueueClientTransactionKey(queueId, consumerId));
+    q.setRange(null, null, false, 1);
+    return q.execute().get().getColumns().size() > 0;
   }
 
   /**

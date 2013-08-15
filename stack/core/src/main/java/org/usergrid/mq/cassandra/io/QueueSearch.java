@@ -18,6 +18,8 @@ package org.usergrid.mq.cassandra.io;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
 
+import java.util.UUID;
+
 /**
  * @author tnine
  *
@@ -26,9 +28,6 @@ public interface QueueSearch {
 
   /**
    * Get the results for this queue search
-   * @param String queuePath The queue path
-   * @param queueId
-   * @param consumerId
    * @param query
    * @return
    */

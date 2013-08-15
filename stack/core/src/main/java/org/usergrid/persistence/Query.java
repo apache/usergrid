@@ -351,6 +351,7 @@ public class Query {
         && (identifiers.size() == 1);
   }
 
+  @JsonIgnore
   public Identifier getSingleIdentifier(){
     return identifiers != null && identifiers.size() == 1? identifiers.get(0) : null;
   }
@@ -1151,5 +1152,21 @@ public class Query {
 
   public void setQl(String ql) {
     this.ql = ql;
+  }
+
+  public List<Identifier> getIdentifiers() {
+    return identifiers;
+  }
+
+  public String getConnection() {
+    return connection;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public Level getLevel() {
+    return level;
   }
 }

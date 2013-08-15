@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.locking.LockManager;
+import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -77,19 +78,25 @@ public class ServiceManager {
 	private EntityManager em;
 
 	private ServiceManagerFactory smf;
+  private QueueManager qm;
+
+  private Properties properties;
 
 	// search for commercial packages first for SaaS version
 	public static String[] package_prefixes = { COM_PACKAGE_PREFIX,
 			OSS_PACKAGE_PREFIX };
 
-	boolean searchPython;
-
 	public ServiceManager() {
 	}
 
-	public ServiceManager init(ServiceManagerFactory smf, EntityManager em, Properties properties) {
+	public ServiceManager init(ServiceManagerFactory smf,
+                             EntityManager em,
+                             Properties properties,
+                             QueueManager qm) {
 		this.smf = smf;
 		this.em = em;
+    this.qm = qm;
+    this.properties = properties;
 
 		if (em != null) {
 			try {
@@ -307,25 +314,9 @@ public class ServiceManager {
 		if (cls != null) {
 			Service s = null;
 			try {
-				try {
-					//s = applicationContext.getAutowireCapableBeanFactory().createBean(cls);
-				    s = cls.newInstance();
-				} catch (Exception e) {
-				}
-//			TODO TN I don't think this is used anymore	
-//				if (s == null) {
-//					try {
-//						String cname = cls.getName();
-//                        cls = serviceClassCache.get(cname.concat(IMPL));
-//						s = applicationContext.getAutowireCapableBeanFactory()
-//								.createBean(cls);
-//					} catch (Exception e) {
-//					    //we can't find what we're looking for
-//                        return null;
-//					}
-//				}
+        s = cls.newInstance();
 			} catch (Exception e) {
-                e.printStackTrace();
+        logger.error("cannot instantiate " + cls.getName(), e);
 			}
 			if (s instanceof AbstractService) {
 				AbstractService as = ((AbstractService) s);
@@ -422,5 +413,13 @@ public class ServiceManager {
 
   public LockManager getLockManager() {
     return smf.getLockManager();
+  }
+
+  public QueueManager getQueueManager() {
+    return qm;
+  }
+
+  public Properties getProperties() {
+    return properties;
   }
 }

@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
 
 public abstract class ServiceParameter {
@@ -68,6 +69,9 @@ public abstract class ServiceParameter {
 	public boolean isName() {
 		return false;
 	}
+
+
+  public abstract Identifier getIdentifier();
 
 	public static List<ServiceParameter> addParameter(
 			List<ServiceParameter> parameters, UUID entityId) {
@@ -343,6 +347,11 @@ public abstract class ServiceParameter {
 			return entityId.toString();
 		}
 
+    @Override
+    public Identifier getIdentifier() {
+      return Identifier.from(entityId);
+    }
+
 	}
 
 	public static class NameParameter extends ServiceParameter {
@@ -368,7 +377,11 @@ public abstract class ServiceParameter {
 			return name;
 		}
 
-	}
+    @Override
+    public Identifier getIdentifier() {
+      return Identifier.from(name);
+    }
+  }
 
 	public static class QueryParameter extends ServiceParameter {
 		Query query;
@@ -395,5 +408,10 @@ public abstract class ServiceParameter {
 			}
 			return "";
 		}
+
+    @Override
+    public Identifier getIdentifier() {
+      return null;
+    }
 	}
 }
