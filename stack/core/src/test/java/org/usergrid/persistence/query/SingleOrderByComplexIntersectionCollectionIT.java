@@ -17,44 +17,20 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
 
 
 /**
  * @author tnine
+ * 
  */
 @Concurrent()
-public class AllInConnectionNoType extends AbstractIteratingQueryIT
+public class SingleOrderByComplexIntersectionCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
-    public void allInConnectionNoType() throws Exception {
-        allIn(new ConnectionNoTypeHelper("allInConnectionNoType"));
+    public void singleOrderByComplexIntersectionCollection() throws Exception {
+        singleOrderByComplexIntersection(new CollectionIoHelper("SingleOrderByComplexIntersectionCollectionIT"));
     }
-
-  class ConnectionNoTypeHelper extends ConnectionHelper {
-
-    ConnectionNoTypeHelper(String name) {
-      super(name);
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
-     * (org.usergrid.persistence.Query)
-     */
-    @Override
-    public Results getResults(Query query) throws Exception {
-      query.setConnectionType(CONNECTION);
-      // don't set it on purpose
-      query.setEntityType(null);
-      return em.searchConnectedEntities(rootEntity, query);
-
-    }
-
-  }
-
 }
