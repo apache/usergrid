@@ -87,13 +87,10 @@
               <includes>
                 <include>**/RestTestSuite.java</include>
                 <include>**/RestITSuite.java</include>
-                <include>**/QueueResourceLong*IT.java</include>
-                <include>**/QueueResourceShortIT.java</include>
-                <include>**/ManagementResourceIT.java</include>
-                <include>**/ApplicationResourceIT.java</include>
+                <include>**/*Test.java</include>
+                <include>**/*IT.java</include>
               </includes>
               <excludes>
-                <exclude>**/*Test.java</exclude>
                 <exclude>**/*Concurrent*Suite.java</exclude>
               </excludes>
             </configuration>
