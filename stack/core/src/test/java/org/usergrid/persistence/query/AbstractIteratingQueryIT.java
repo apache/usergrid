@@ -36,7 +36,6 @@ import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.*;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
 import org.usergrid.utils.JsonUtils;
 
 
@@ -55,7 +54,6 @@ public abstract class AbstractIteratingQueryIT
     @ClassRule
     public final static CassandraResource cassandraResource
             = CassandraResource.newWithAvailablePorts("coreManager");
-    protected static PersistenceTestHelper helper;
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
@@ -73,8 +71,6 @@ public abstract class AbstractIteratingQueryIT
     public static void setup() throws Exception
     {
         logger.info( "setup" );
-        helper = new PersistenceTestHelperImpl();
-        helper.setup();
     }
 
 
@@ -82,11 +78,6 @@ public abstract class AbstractIteratingQueryIT
     public static void teardown() throws Exception
     {
         logger.info( "teardown" );
-
-        if ( helper != null )
-        {
-            helper.teardown();
-        }
     }
 
 

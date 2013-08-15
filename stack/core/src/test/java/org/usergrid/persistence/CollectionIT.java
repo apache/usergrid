@@ -46,7 +46,7 @@ import org.usergrid.utils.UUIDUtils;
 public class CollectionIT extends AbstractCoreIT
 {
 
-  private static final Logger logger = LoggerFactory.getLogger( CollectionIT.class );
+  private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
   @Test
   public void testCollection() throws Exception {
@@ -77,13 +77,13 @@ public class CollectionIT extends AbstractCoreIT
     Entity activity = em.create("activity", properties);
     assertNotNull(activity);
 
-    logger.info("" + activity.getClass());
-    logger.info(JsonUtils.mapToFormattedJsonString(activity));
+    LOG.info("" + activity.getClass());
+    LOG.info(JsonUtils.mapToFormattedJsonString(activity));
 
     activity = em.get(activity.getUuid());
 
-    logger.info("" + activity.getClass());
-    logger.info(JsonUtils.mapToFormattedJsonString(activity));
+    LOG.info("" + activity.getClass());
+    LOG.info(JsonUtils.mapToFormattedJsonString(activity));
 
     em.addToCollection(user, "activities", activity);
 
@@ -151,7 +151,7 @@ public class CollectionIT extends AbstractCoreIT
     r = em.searchCollection(user, "activities", query);
     assertEquals(3, r.size());
     entities = r.getEntities();
-    logger.info(JsonUtils.mapToFormattedJsonString(entities));
+    LOG.info(JsonUtils.mapToFormattedJsonString(entities));
     assertEquals(entities.get(0).getUuid(), activity2.getUuid());
     assertEquals(entities.get(1).getUuid(), activity.getUuid());
     assertEquals(entities.get(2).getUuid(), activity3.getUuid());
@@ -344,7 +344,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Results r = em.searchCollection(group, "users", new Query().addEqualityFilter("member.nickname", "ed")
         .withResultsLevel(Results.Level.LINKED_PROPERTIES));
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(1, r.size());
 
     em.removeFromCollection(user1, "groups", group);
@@ -460,7 +460,7 @@ public class CollectionIT extends AbstractCoreIT
     em.addToCollection(user, "activities", em.create("activity", properties));
 
     Results r = em.searchCollection(user, "activities", Query.searchForProperty("verb", "post"));
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(2, r.size());
 
   }
@@ -749,7 +749,7 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void testKeywordsOrQuery() throws Exception {
-    logger.info("testKeywordsOrQuery");
+    LOG.info("testKeywordsOrQuery");
 
     UUID applicationId = createApplication("testOrganization", "testKeywordsOrQuery");
     assertNotNull(applicationId);
@@ -774,14 +774,14 @@ public class CollectionIT extends AbstractCoreIT
 
     Query query = Query.fromQL("select * where keywords contains 'hot' or title contains 'hot'");
     Results r = em.searchCollection(em.getApplicationRef(), "games", query);
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(3, r.size());
 
   }
 
   @Test
   public void testKeywordsAndQuery() throws Exception {
-    logger.info("testKeywordsOrQuery");
+    LOG.info("testKeywordsOrQuery");
 
     UUID applicationId = createApplication("testOrganization", "testKeywordsAndQuery");
     assertNotNull(applicationId);
@@ -806,7 +806,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Query query = Query.fromQL("select * where keywords contains 'new' and title contains 'extreme'");
     Results r = em.searchCollection(em.getApplicationRef(), "games", query);
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(2, r.size());
 
     assertEquals(secondGame.getUuid(), r.getEntities().get(0).getUuid());
@@ -839,7 +839,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Results r = em.searchCollection(em.getApplicationRef(), "objects", query);
 
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
     assertEquals(size, r.size());
 
@@ -912,7 +912,7 @@ public class CollectionIT extends AbstractCoreIT
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -965,7 +965,7 @@ public class CollectionIT extends AbstractCoreIT
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -1018,7 +1018,7 @@ public class CollectionIT extends AbstractCoreIT
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -1069,7 +1069,7 @@ public class CollectionIT extends AbstractCoreIT
     // check they're all the same before deletion
     for (int i = 1; i < 3; i++) {
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -1417,7 +1417,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Results r = em.getCollection(em.getApplicationRef(), "users", null, 50, Level.ALL_PROPERTIES, false);
     
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
     assertEquals(size, r.size());
 
