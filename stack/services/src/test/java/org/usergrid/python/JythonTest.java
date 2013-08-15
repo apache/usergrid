@@ -25,25 +25,11 @@ public class JythonTest {
 	@Test
 	public void testJythonObjectFactory() throws Exception {
 		logger.info("Jython tests disabled");
-
-		/*
-		 * EntityRef e = (EntityRef) PythonUtils.createObject(EntityRef.class,
-		 * "test.test", "Test");
-		 * 
-		 * logger.info(e.getType()); logger.info(e.getId());
-		 */
 	}
+
 
 	@Test
 	public void testJythonBasedService() throws Exception {
 		logger.info("Jython tests disabled");
-
-		/*
-		 * Service s = (Service) PythonUtils.createObject(Service.class,
-		 * "pyusergrid.services.pytest.PytestService", "PytestService");
-		 * 
-		 * logger.info(s.getEntityType()); logger.info(s.getEntityClass());
-		 */
-	}
-
+    }
 }

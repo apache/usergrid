@@ -2,8 +2,10 @@ package org.usergrid.rest.applications.collection.activities;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestIT;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 import java.util.HashMap;
@@ -18,12 +20,15 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class PagingEntitiesTest  extends RestContextTest {
+public class PagingEntitiesTest  extends AbstractRestIT {
+
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
 
   @Test //USERGRID-266
   public void pageThroughConnectedEntities(){
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     long created = 0;
     int maxSize = 1500;
@@ -65,7 +70,7 @@ public class PagingEntitiesTest  extends RestContextTest {
   @Test //USERGRID-1253
   public void pagingQueryReturnCorrectResults() throws Exception{
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     long created = 0;
     int maxSize = 23;

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.locking.zookeeper;
 
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -33,9 +34,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.exception.UGLockException;
+
 
 public class ZookeeperLockManagerTest extends AbstractZooKeeperTest {
 

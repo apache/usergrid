@@ -52,6 +52,7 @@ import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.persistence.schema.CollectionInfo;
 
+
 public class QueryProcessor {
 
   private static final int PAGE_SIZE = 1000;

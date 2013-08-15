@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.locking.singlenode;
 
+
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +32,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+
 
 /**
  * Single Node implementation for {@link LockManager}
@@ -68,15 +70,16 @@ public class SingleNodeLockManagerImpl implements LockManager {
             public ReentrantLock load(String arg0) throws Exception {
               return new ReentrantLock(true);
             }
-          });;
+          });
 
-  /**
-   * Default constructor.
-   */
-  public SingleNodeLockManagerImpl() {
-  }
 
-  /*
+    /**
+     * Default constructor.
+     */
+    public SingleNodeLockManagerImpl() {
+    }
+
+    /*
    * (non-Javadoc)
    * 
    * @see org.usergrid.locking.LockManager#createLock(java.util.UUID,
@@ -94,5 +97,4 @@ public class SingleNodeLockManagerImpl implements LockManager {
     }
 
   }
-
 }

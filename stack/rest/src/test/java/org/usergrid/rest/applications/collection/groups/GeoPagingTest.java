@@ -1,8 +1,10 @@
 package org.usergrid.rest.applications.collection.groups;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestIT;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 import java.util.HashMap;
@@ -18,7 +20,11 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class GeoPagingTest extends RestContextTest {
+public class GeoPagingTest extends AbstractRestIT {
+
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
+
   @Test //("Test uses up to many resources to run reliably") // USERGRID-1403
   public void groupQueriesWithGeoPaging() {
 

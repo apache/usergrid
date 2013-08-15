@@ -1,0 +1,29 @@
+<settings>
+<profiles>
+    <profile>
+      <id>cloudbees-build-parameters</id>
+      <properties>
+        <rest.it.forkCount>1</rest.it.forkCount>
+        <rest.it.heapmax>256m</rest.it.heapmax>
+        <rest.it.heapmin>256m</rest.it.heapmin>
+
+        <core.it.forkCount>1</core.it.forkCount>
+        <core.it.heapmax>384m</core.it.heapmax>
+        <core.it.heapmin>384m</core.it.heapmin>
+
+        <services.it.forkCount>1</services.it.forkCount>
+        <services.it.heapmax>384m</services.it.heapmax>
+        <services.it.heapmin>384m</services.it.heapmin>
+
+        <scheduler.it.forkCount>1</scheduler.it.forkCount>
+        <scheduler.it.heapmax>384m</scheduler.it.heapmax>
+        <scheduler.it.heapmin>384m</scheduler.it.heapmin>
+      </properties>
+    </profile>
+</profiles>
+
+<activeProfiles>
+  <activeProfile>cloudbees-build-parameters</activeProfile>
+</activeProfiles>
+</settings>
+

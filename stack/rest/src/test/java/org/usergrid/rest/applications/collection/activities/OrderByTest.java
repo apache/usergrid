@@ -1,8 +1,10 @@
 package org.usergrid.rest.applications.collection.activities;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
-import org.usergrid.rest.RestContextTest;
+import org.usergrid.rest.AbstractRestIT;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 import java.util.ArrayList;
@@ -20,13 +22,17 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class OrderByTest extends RestContextTest {
+public class OrderByTest extends AbstractRestIT
+{
+
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
 
   @Test
   // USERGRID-1400
   public void orderByShouldNotAffectResults() {
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     long created = 0;
     Map actor = hashMap("displayName", "Erin");
@@ -55,7 +61,7 @@ public class OrderByTest extends RestContextTest {
   // USERGRID-1520
   public void orderByComesBeforeLimitResult() {
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     Map actor = hashMap("displayName", "Erin");
     Map props = new HashMap();
@@ -93,7 +99,7 @@ public class OrderByTest extends RestContextTest {
   // USERGRID-1521
   public void orderByReturnCorrectResults() {
 
-    CustomCollection activities = collection("activities");
+    CustomCollection activities = context.collection("activities");
 
     int size = 200;
 

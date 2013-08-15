@@ -135,6 +135,11 @@
       <artifactId>juli</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+    </dependency>
+
     <!-- SUN, Javax Package, and Other Com/Net Dependencies -->
 
     <dependency>
