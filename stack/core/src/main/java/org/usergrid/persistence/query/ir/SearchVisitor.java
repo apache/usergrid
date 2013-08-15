@@ -12,6 +12,9 @@ import org.usergrid.persistence.cassandra.QueryProcessor;
 import org.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
+import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.cassandra.QueryProcessor;
 import org.usergrid.persistence.query.ir.result.*;
 
 /**
@@ -37,12 +40,12 @@ public abstract class SearchVisitor implements NodeVisitor {
   protected final Stack<ResultIterator> results = new Stack<ResultIterator>();
 
   /**
-   * @param query
+   * @param queryProcessor
    */
-  public SearchVisitor(Query query, QueryProcessor queryProcessor, EntityManager em) {
-    this.query = query;
+  public SearchVisitor(QueryProcessor queryProcessor) {
+    this.query = queryProcessor.getQuery();
     this.queryProcessor = queryProcessor;
-    this.em = em;
+    this.em = queryProcessor.getEntityManager();
   }
 
   /**
@@ -227,7 +230,24 @@ public abstract class SearchVisitor implements NodeVisitor {
    * @throws Exception
    */
   protected abstract IndexScanner secondaryIndexScan(QueryNode node, QuerySlice slice) throws Exception;
-  
-  
+
+  @Override
+  public void visit(UuidIdentifierNode uuidIdentifierNode) {
+    this.results.push(new StaticIdIterator(uuidIdentifierNode.getUuid()));
+  }
+
+
+
+  @Override
+  public void visit(EmailIdentifierNode emailIdentifierNode) throws Exception {
+    EntityRef user = queryProcessor.getEntityManager().getUserByIdentifier(emailIdentifierNode.getIdentifier());
+
+    if(user == null){
+      this.results.push(new EmptyIterator());
+      return;
+    }
+
+    this.results.push(new StaticIdIterator(user.getUuid()));
+  }
 
 }

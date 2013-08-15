@@ -35,6 +35,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.usergrid.persistence.cassandra.QueryProcessor;
+import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
@@ -77,6 +79,9 @@ public class Results implements Iterable<Entity> {
     Query query;
     Object data;
     String dataName;
+
+    private QueryProcessor queryProcessor;
+    private SearchVisitor searchVisitor;
 
     public Results() {
     }
@@ -508,8 +513,8 @@ public class Results implements Iterable<Entity> {
          * connectionTypeAndEntityTypeToEntityMap.keySet()) { Map<String,
          * List<Entity>> m = connectionTypeAndEntityTypeToEntityMap .get(ctype);
          * for (String etype : m.keySet()) { List<Entity> l = m.get(etype); for
-         * (Entity e : l) { if (!eMap.containsKey(e.getId())) { entities.add(e);
-         * eMap.put(e.getId(), e); } } } } return entities; }
+         * (Entity e : l) { if (!eMap.containsKey(e.getUuid())) { entities.add(e);
+         * eMap.put(e.getUuid(), e); } } } } return entities; }
          */
         if (entity != null) {
             entities = new ArrayList<Entity>();
@@ -1177,5 +1182,28 @@ public class Results implements Iterable<Entity> {
             }
         }
     }
+
+  protected QueryProcessor getQueryProcessor() {
+    return queryProcessor;
+  }
+
+  public void setQueryProcessor(QueryProcessor queryProcessor) {
+    this.queryProcessor = queryProcessor;
+  }
+
+  public void setSearchVisitor(SearchVisitor searchVisitor) {
+    this.searchVisitor = searchVisitor;
+  }
+
+  /** uses cursor to get next batch of Results (returns null if no cursor) */
+  public Results getNextPageResults() throws Exception {
+    if (!hasCursor()) return null;
+
+    Query q = new Query(query);
+    q.setCursor(getCursor());
+    queryProcessor.setQuery(q);
+
+    return queryProcessor.getResults(searchVisitor);
+  }
 
 }

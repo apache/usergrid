@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.exceptions.PersistenceException;
 import org.usergrid.persistence.query.ir.AndNode;
@@ -37,14 +38,13 @@ import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.usergrid.persistence.query.tree.QueryFilterParser;
-import org.usergrid.utils.UUIDUtils;
 
-import com.fasterxml.uuid.impl.UUIDUtil;
 
 /**
  * @author tnine
  * 
  */
+@Concurrent()
 public class QueryProcessorTest {
 
   @Test
@@ -58,7 +58,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -83,7 +83,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -108,7 +108,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -133,7 +133,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -158,7 +158,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -183,7 +183,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -211,7 +211,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -239,7 +239,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -267,7 +267,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     WithinNode node = (WithinNode) processor.getFirstNode();
 
@@ -297,7 +297,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -347,7 +347,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     OrNode node = (OrNode) processor.getFirstNode();
 
@@ -394,7 +394,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     OrNode node = (OrNode) processor.getFirstNode();
 
@@ -464,7 +464,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     OrNode rootNode = (OrNode) processor.getFirstNode();
 
@@ -543,7 +543,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     AndNode rootNode = (AndNode) processor.getFirstNode();
 
@@ -592,7 +592,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     NotNode rootNode = (NotNode) processor.getFirstNode();
 
@@ -620,7 +620,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -648,7 +648,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -675,7 +675,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 
@@ -710,7 +710,7 @@ public class QueryProcessorTest {
 
     Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+    QueryProcessor processor = new QueryProcessor(query, null, null);
 
     SliceNode node = (SliceNode) processor.getFirstNode();
 

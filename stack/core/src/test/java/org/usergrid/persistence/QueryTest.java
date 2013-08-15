@@ -23,6 +23,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
 import org.usergrid.persistence.exceptions.QueryParseException;
@@ -30,11 +31,13 @@ import org.usergrid.persistence.query.tree.*;
 
 import static org.junit.Assert.*;
 
+
+@Concurrent()
 public class QueryTest {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);
 
-  @SuppressWarnings("unchecked")
+  
   @Test
   public void testQueryTree() throws Exception {
     logger.info("testQuery");
@@ -207,7 +210,7 @@ public class QueryTest {
       error = qpe.getMessage();
     }
 
-    assertEquals("The query cannot be parsed.  The token 'from' at column 4 on line 1 cannot be parsed", error);
+    assertEquals("The query cannot be parsed. The token 'from' at column 4 on line 1 cannot be parsed", error);
 
   }
 
@@ -247,7 +250,7 @@ public class QueryTest {
       error = qpe.getMessage();
     }
 
-    assertEquals("The query cannot be parsed.  The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
+    assertEquals("The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
 
   }
 

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
+
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
@@ -40,50 +41,56 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.mq.cassandra.QueuesCF;
 import org.usergrid.persistence.entities.Application;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Cassandra-specific setup utilities.
  * 
  * @author edanuff
  */
-public class Setup {
+public class Setup
+{
 
-  private static final Logger logger = LoggerFactory.getLogger(Setup.class);
+    private static final Logger logger = LoggerFactory.getLogger( Setup.class );
 
-  private final org.usergrid.persistence.EntityManagerFactory emf;
-  private final CassandraService cass;
+    private final org.usergrid.persistence.EntityManagerFactory emf;
+    private final CassandraService cass;
 
-  /**
-   * Instantiates a new setup object.
-   * 
-   * @param emf
-   *          the emf
-   * @param cass
-   */
-  Setup(EntityManagerFactoryImpl emf, CassandraService cass) {
-    this.emf = emf;
-    this.cass = cass;
-  }
 
-  /**
-   * Initialize.
-   * 
-   * @throws Exception
-   *           the exception
-   */
-  public synchronized void setup() throws Exception {
-    init();
+    /**
+     * Instantiates a new setup object.
+     *
+     * @param emf the emf
+     * @param cass
+     */
+    public Setup( EntityManagerFactoryImpl emf, CassandraService cass )
+    {
+        this.emf = emf;
+        this.cass = cass;
+    }
 
-    setupSystemKeyspace();
 
-    setupStaticKeyspace();
+    /**
+     * Initialize.
+     *
+     * @throws Exception the exception
+     */
+    public synchronized void setup() throws Exception
+    {
+        init();
 
-    createDefaultApplications();
-  }
+        setupSystemKeyspace();
 
-  public void init() throws Exception {
-    cass.init();
-  }
+        setupStaticKeyspace();
+
+        createDefaultApplications();
+    }
+
+
+    public void init() throws Exception
+    {
+        cass.init();
+    }
+
 
   public void createDefaultApplications() throws Exception {
     // TODO unique check?

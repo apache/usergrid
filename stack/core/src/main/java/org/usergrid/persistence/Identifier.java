@@ -21,6 +21,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.usergrid.utils.UUIDUtils;
 
 public class Identifier {
@@ -93,6 +94,7 @@ public class Identifier {
 		return (UUID) value;
 	}
 
+  @JsonIgnore
 	public boolean isUUID() {
 		return type == Type.UUID;
 	}
@@ -104,6 +106,7 @@ public class Identifier {
 		return (String) value;
 	}
 
+  @JsonIgnore
 	public boolean isEmail() {
 		return type == Type.EMAIL;
 	}
@@ -115,6 +118,7 @@ public class Identifier {
 		return (String) value;
 	}
 
+  @JsonIgnore
 	public boolean isName() {
 		return type == Type.NAME;
 	}

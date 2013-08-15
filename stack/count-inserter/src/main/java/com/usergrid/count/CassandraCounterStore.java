@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulate counter writes to Cassandra
@@ -49,11 +51,20 @@ public class CassandraCounterStore implements CounterStore {
     }
 
     public void save(Collection<Count> counts) {
-        Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
+        Map<String,Count> countHolder = new HashMap<String, Count>();
         for ( Count count : counts ) {
-            mutator.addCounter(count.getKeyNameBytes(), count.getTableName(),
-                    new HCounterColumnImpl(count.getColumnName(), count.getValue(), count.getColumnNameSerializer()));
+          Count c = countHolder.get(count.getCounterName());
+          if ( c != null ) {
+            c.apply(count);
+          } else {
+            countHolder.put(count.getCounterName(), count);
+          }
         }
+      Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
+      for ( Count count : countHolder.values()) {
+      mutator.addCounter(count.getKeyNameBytes(), count.getTableName(),
+                          new HCounterColumnImpl(count.getColumnName(), count.getValue(), count.getColumnNameSerializer()));
+      }
         try {
           mutator.execute();
         } catch (HectorException he) {

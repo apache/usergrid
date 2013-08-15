@@ -22,19 +22,26 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 
-public class EntityTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(EntityTest.class);
+@Concurrent()
+public class EntityTest
+{
+	private static final Logger logger = LoggerFactory.getLogger( EntityTest.class );
+
 
 	@Test
-	public void testEntityClasses() throws Exception {
+    // @Ignore( "Fix this then enable EntityTest.testEntityClasses:45 » ConcurrentModification" )
+	public void testEntityClasses() throws Exception
+    {
 		logger.info("testEntityClasses");
 
 		Schema mapper = Schema.getDefaultSchema();
@@ -64,11 +71,12 @@ public class EntityTest {
 		assertEquals(new UUID(1, 2), entity.getUuid());
 		assertEquals(new UUID(1, 2), entity.getProperty(Schema.PROPERTY_UUID));
 		assertEquals("bar", entity.getProperty("foo"));
-
 	}
+
 
 	@SuppressWarnings("unchecked")
 	@Test
+    // @Ignore( "Fix this and enable: EntityTest.testJson:83 » ConcurrentModification" )
 	public void testJson() throws Exception {
 
 		User user = new User();

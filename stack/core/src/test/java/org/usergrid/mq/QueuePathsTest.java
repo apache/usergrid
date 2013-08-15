@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.mq;
 
+
 import static org.usergrid.mq.Queue.getQueueParentPaths;
 import static org.usergrid.mq.Queue.normalizeQueuePath;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
@@ -22,26 +23,25 @@ import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 
-public class QueuePathsTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(MessagesTest.class);
+@Concurrent()
+public class QueuePathsTest
+{
+	private static final Logger logger = LoggerFactory.getLogger( QueuePathsTest.class );
 
-	public QueuePathsTest() {
-	}
 
 	@Test
-	public void testPaths() throws Exception {
+	public void testPaths() throws Exception
+    {
+		logger.info( normalizeQueuePath( "a/b/c" ) );
+		logger.info( normalizeQueuePath( "a/b/c/" ) );
+		logger.info( normalizeQueuePath( "/a/b/c" ) );
+		logger.info( normalizeQueuePath( "/////a/b/c" ) );
+		logger.info( normalizeQueuePath( "/" ) );
 
-		logger.info(normalizeQueuePath("a/b/c"));
-		logger.info(normalizeQueuePath("a/b/c/"));
-		logger.info(normalizeQueuePath("/a/b/c"));
-		logger.info(normalizeQueuePath("/////a/b/c"));
-		logger.info(normalizeQueuePath("/"));
-
-		logger.info(mapToFormattedJsonString(getQueueParentPaths("/a/b/c")));
-		logger.info(mapToFormattedJsonString(getQueueParentPaths("/")));
-
+		logger.info( mapToFormattedJsonString( getQueueParentPaths( "/a/b/c" ) ) );
+		logger.info( mapToFormattedJsonString( getQueueParentPaths( "/" ) ) );
 	}
-
 }

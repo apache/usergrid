@@ -41,7 +41,7 @@ public class TestContext {
   /**
    * 
    */
-  private TestContext(JerseyTest test) {
+  protected TestContext(JerseyTest test) {
     this.test = test;
   }
 
@@ -86,7 +86,7 @@ public class TestContext {
    * @return
    */
   public TestContext createNewOrgAndUser() {
-    orgUuid = managment().orgs().create(orgName, activeUser);
+    orgUuid = management().orgs().create(orgName, activeUser);
 
     return this;
   }
@@ -97,7 +97,7 @@ public class TestContext {
    * @return
    */
   public TestContext createAppForOrg() {
-    appUuid = managment().orgs().organization(orgName).apps().create(appName);
+    appUuid = management().orgs().organization(orgName).apps().create(appName);
 
     return this;
   }
@@ -163,7 +163,12 @@ public class TestContext {
     return new Application(orgName, appName, root());
   }
 
-  public Management managment() {
+  public CustomCollection collection( String str )
+  {
+    return application().collection( str );
+  }
+
+  public Management management() {
     return new Management(root());
   }
 
@@ -180,5 +185,4 @@ public class TestContext {
   public TestContext initAll() {
     return createNewOrgAndUser().loginUser().createAppForOrg();
   }
-
 }

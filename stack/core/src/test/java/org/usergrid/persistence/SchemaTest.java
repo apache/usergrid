@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+
 import static org.junit.Assert.*;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
@@ -23,30 +24,30 @@ import io.baas.Simple;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.SampleEntity;
 
-public class SchemaTest {
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(SchemaTest.class);
+@Concurrent()
+public class SchemaTest
+{
+    private static final Logger logger = LoggerFactory.getLogger( SchemaTest.class );
 
-  public SchemaTest() {
-  }
 
-  @Test
-  public void testTypes() throws Exception {
+    @Test
+    public void testTypes() throws Exception
+    {
+        logger.info( "" + Schema.getDefaultSchema().getEntityClass( "sample_entity" ) );
+        logger.info( "" + Schema.getDefaultSchema().getEntityType( SampleEntity.class ) );
 
-    logger.info(""
-        + Schema.getDefaultSchema().getEntityClass("sample_entity"));
-    logger.info(""
-        + Schema.getDefaultSchema().getEntityType(SampleEntity.class));
+        SampleEntity entity = new SampleEntity();
+        logger.info( entity.getType() );
+    }
 
-    SampleEntity entity = new SampleEntity();
-    logger.info(entity.getType());
-  }
 
   @Test
   public void testThirdPartyEntityTypes() throws Exception {
@@ -90,14 +91,14 @@ public class SchemaTest {
         .getEntityJsonSchema("test")));
   }
 
-  @Test
-  public void hasPropertyTyped() {
+    @Test
+    // @Ignore( "Fix this and enable: SchemaTest.hasPropertyTyped:97 null" )
+    public void hasPropertyTyped()
+    {
+        assertFalse( Schema.getDefaultSchema().hasProperty( "user", "" ) );
+        assertTrue(Schema.getDefaultSchema().hasProperty("user", "username"));
+    }
 
-    assertFalse(Schema.getDefaultSchema().hasProperty("user", ""));
-
-    assertTrue(Schema.getDefaultSchema().hasProperty("user", "username"));
-
-  }
 
   @Test
   public void hasPropertyDynamic() {
