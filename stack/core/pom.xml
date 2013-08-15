@@ -104,35 +104,35 @@
               <excludes>
                 <exclude>**/*Concurrent*Suite.java</exclude>
 
-                <exclude>HectorLockManagerIT.java</exclude>
-                <exclude>UsergridSystemMonitorIT.java</exclude>
-                <exclude>CollectionIT.java</exclude>
-                <exclude>CounterIT.java</exclude>
-                <exclude>EntityConnectionsIT.java</exclude>
-                <exclude>EntityDictionaryIT.java</exclude>
-                <exclude>EntityManagerIT.java</exclude>
-                <exclude>GeoIT.java</exclude>
-                <exclude>IndexIT.java</exclude>
-                <exclude>MessagesIT.java</exclude>
-                <exclude>PermissionsIT.java</exclude>
-                <exclude>PathQueryIT.java</exclude>
-                <exclude>EntityManagerFactoryImplIT.java</exclude>
+                <exclude>**/HectorLockManagerIT.java</exclude>
+                <exclude>**/UsergridSystemMonitorIT.java</exclude>
+                <exclude>**/CollectionIT.java</exclude>
+                <exclude>**/CounterIT.java</exclude>
+                <exclude>**/EntityConnectionsIT.java</exclude>
+                <exclude>**/EntityDictionaryIT.java</exclude>
+                <exclude>**/EntityManagerIT.java</exclude>
+                <exclude>**/GeoIT.java</exclude>
+                <exclude>**/IndexIT.java</exclude>
+                <exclude>**/MessagesIT.java</exclude>
+                <exclude>**/PermissionsIT.java</exclude>
+                <exclude>**/PathQueryIT.java</exclude>
+                <exclude>**/EntityManagerFactoryImplIT.java</exclude>
 
-                <exclude>ZookeeperLockManagerTest.java</exclude>
-                <exclude>QueuePathsTest.java</exclude>
-                <exclude>QueryProcessorTest.java</exclude>
-                <exclude>SimpleIndexBucketLocatorImplTest.java</exclude>
-                <exclude>EntityTest.java</exclude>
-                <exclude>QueryTest.java</exclude>
-                <exclude>QueryUtilsTest.java</exclude>
-                <exclude>SchemaTest.java</exclude>
-                <exclude>UtilsTest.java</exclude>
-                <exclude>IntersectionIteratorTest.java</exclude>
-                <exclude>SubtractionIteratorTest.java</exclude>
-                <exclude>UnionIteratorTest.java</exclude>
-                <exclude>GrammarTreeTest.java</exclude>
-                <exclude>LongLiteralTest.java</exclude>
-                <exclude>StringLiteralTest.class</exclude>
+                <exclude>**/ZookeeperLockManagerTest.java</exclude>
+                <exclude>**/QueuePathsTest.java</exclude>
+                <exclude>**/QueryProcessorTest.java</exclude>
+                <exclude>**/SimpleIndexBucketLocatorImplTest.java</exclude>
+                <exclude>**/EntityTest.java</exclude>
+                <exclude>**/QueryTest.java</exclude>
+                <exclude>**/QueryUtilsTest.java</exclude>
+                <exclude>**/SchemaTest.java</exclude>
+                <exclude>**/UtilsTest.java</exclude>
+                <exclude>**/IntersectionIteratorTest.java</exclude>
+                <exclude>**/SubtractionIteratorTest.java</exclude>
+                <exclude>**/UnionIteratorTest.java</exclude>
+                <exclude>**/GrammarTreeTest.java</exclude>
+                <exclude>**/LongLiteralTest.java</exclude>
+                <exclude>**/StringLiteralTest.class</exclude>
               </excludes>
             </configuration>
           </plugin>
