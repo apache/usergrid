@@ -22,13 +22,13 @@ import org.usergrid.cassandra.Concurrent;
 
 /**
  * @author tnine
+ * 
  */
 @Concurrent()
-public class IteratingQuery14IT extends AbstractIteratingQueryIT
+public class SingleOrderByComplexUnionCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
-    public void singleOrderByLessThanLimitConnection() throws Exception {
-        singleOrderByLessThanLimit(new ConnectionHelper("singleOrderByLessThanLimitConnection"));
+    public void singleOrderByComplexUnionCollection() throws Exception {
+        singleOrderByComplexUnion(new CollectionIoHelper("singleOrderByComplexUnionCollection"));
     }
-
 }

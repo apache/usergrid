@@ -24,11 +24,10 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  */
 @Concurrent()
-public class IteratingQuery22IT extends AbstractIteratingQueryIT
+public class SingleOrderBySameRangeScanGreaterCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
-    public void singleOrderBySameRangeScanGreaterConnection() throws Exception {
-    singleOrderBySameRangeScanGreater(new ConnectionHelper("singleOrderBySameRangeScanGreaterConnection"));
-}
-
+    public void singleOrderBySameRangeScanGreaterCollection() throws Exception {
+        singleOrderBySameRangeScanGreater(new CollectionIoHelper("singleOrderBySameRangeScanGreaterCollection"));
+    }
 }

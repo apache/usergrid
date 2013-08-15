@@ -27,13 +27,10 @@ import org.usergrid.cassandra.Concurrent;
  * 
  */
 @Concurrent()
-public class IteratingQuery5IT extends AbstractIteratingQueryIT
+public class SingleOrderByNotConnectionIT extends AbstractIteratingQueryIT
 {
-
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQuery5IT.class);
-
     @Test
-    public void singleOrderByComplexIntersectionCollection() throws Exception {
-        singleOrderByComplexIntersection(new CollectionIoHelper("singleOrderByComplexIntersectionCollection"));
+    public void singleOrderByNotConnection() throws Exception {
+        singleOrderByNot(new ConnectionHelper("singleOrderByNotConnection"));
     }
 }

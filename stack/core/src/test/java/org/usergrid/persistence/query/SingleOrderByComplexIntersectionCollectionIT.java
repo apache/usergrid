@@ -19,16 +19,7 @@ package org.usergrid.persistence.query;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 
 /**
@@ -36,13 +27,10 @@ import static org.junit.Assert.*;
  * 
  */
 @Concurrent()
-public class IteratingQuery6IT extends AbstractIteratingQueryIT
+public class SingleOrderByComplexIntersectionCollectionIT extends AbstractIteratingQueryIT
 {
-
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQuery6IT.class);
-
     @Test
-    public void singleOrderByComplexIntersectionConnection() throws Exception {
-        singleOrderByComplexIntersection(new ConnectionHelper("singleOrderByComplexIntersectionConnection"));
+    public void singleOrderByComplexIntersectionCollection() throws Exception {
+        singleOrderByComplexIntersection(new CollectionIoHelper("SingleOrderByComplexIntersectionCollectionIT"));
     }
 }

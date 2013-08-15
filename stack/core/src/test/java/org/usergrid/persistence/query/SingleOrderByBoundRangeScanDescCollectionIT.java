@@ -24,7 +24,7 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  */
 @Concurrent()
-public class IteratingQuery23IT extends AbstractIteratingQueryIT
+public class SingleOrderByBoundRangeScanDescCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void singleOrderByBoundRangeScanDescCollection() throws Exception {

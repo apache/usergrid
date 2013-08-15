@@ -1166,7 +1166,7 @@ public abstract class AbstractIteratingQueryIT
      */
     @Override
     public void doSetup() throws Exception {
-      UUID applicationId = createApplication("IteratingQuery1IT", appName);
+      UUID applicationId = createApplication("SingleOrderByMaxLimitCollection", appName);
       assertNotNull(applicationId);
 
       em = emf.getEntityManager(applicationId);
@@ -1215,14 +1215,14 @@ public abstract class AbstractIteratingQueryIT
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
      * writeEntity(java.lang.String, java.util.Map)
      */
     /*
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
      * doSetup()
      */
     @Override
@@ -1248,7 +1248,7 @@ public abstract class AbstractIteratingQueryIT
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
      * getResults(org.usergrid.persistence.Query)
      */
     @Override
@@ -1261,27 +1261,5 @@ public abstract class AbstractIteratingQueryIT
   }
 
 
-    class ConnectionNoTypeHelper extends ConnectionHelper {
 
-    ConnectionNoTypeHelper(String name) {
-      super(name);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.ConnectionHelper#getResults
-     * (org.usergrid.persistence.Query)
-     */
-    @Override
-    public Results getResults(Query query) throws Exception {
-      query.setConnectionType(CONNECTION);
-      // don't set it on purpose
-      query.setEntityType(null);
-      return em.searchConnectedEntities(rootEntity, query);
-
-    }
-
-  }
 }

@@ -18,17 +18,43 @@ package org.usergrid.persistence.query;
 
 import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
 
 
 /**
  * @author tnine
- * 
  */
 @Concurrent()
-public class IteratingQuery11IT extends AbstractIteratingQueryIT
+public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT
 {
     @Test
-    public void singleOrderByNotCollection() throws Exception {
-        singleOrderByNot(new CollectionIoHelper("singleOrderByNotCollection"));
+    public void allInConnectionNoType() throws Exception {
+        allIn(new ConnectionNoTypeHelper("allInConnectionNoType"));
     }
+
+  class ConnectionNoTypeHelper extends ConnectionHelper {
+
+    ConnectionNoTypeHelper(String name) {
+      super(name);
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
+     * (org.usergrid.persistence.Query)
+     */
+    @Override
+    public Results getResults(Query query) throws Exception {
+      query.setConnectionType(CONNECTION);
+      // don't set it on purpose
+      query.setEntityType(null);
+      return em.searchConnectedEntities(rootEntity, query);
+
+    }
+
+  }
+
 }

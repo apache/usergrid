@@ -17,24 +17,18 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 
 
 /**
  * @author tnine
- * 
  */
 @Concurrent()
-public class IteratingQuery3IT extends AbstractIteratingQueryIT
+public class SingleOrderByBoundRangeScanAscCollectionIT extends AbstractIteratingQueryIT
 {
-
-  private static final Logger logger = LoggerFactory.getLogger(IteratingQuery3IT.class);
-
-
     @Test
-    public void singleOrderByIntersectionCollection() throws Exception {
-        singleOrderByIntersection(new CollectionIoHelper("singleOrderByIntersectionCollection"));
+    public void singleOrderByBoundRangeScanAscCollection() throws Exception {
+        singleOrderByBoundRangeScanAsc(new CollectionIoHelper("singleOrderByBoundRangeScanAscCollection"));
     }
+
 }
