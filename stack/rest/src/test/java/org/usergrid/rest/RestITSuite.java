@@ -12,7 +12,6 @@ import org.usergrid.rest.applications.DevicesResourceIT;
 import org.usergrid.rest.applications.assets.AssetResourceIT;
 import org.usergrid.rest.applications.collection.PagingResourceIT;
 import org.usergrid.rest.applications.events.EventsResourceIT;
-import org.usergrid.rest.applications.queues.QueueResourceIT;
 import org.usergrid.rest.applications.users.*;
 import org.usergrid.rest.filters.ContentTypeResourceIT;
 import org.usergrid.rest.management.ManagementResourceIT;
