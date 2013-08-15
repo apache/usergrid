@@ -15,10 +15,6 @@
  ******************************************************************************/
 package org.usergrid.mq;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,15 +28,13 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.utils.JsonUtils;
 
+import static org.junit.Assert.*;
 
 @Concurrent()
-public class MessagesIT extends AbstractCoreIT
-{
+public class MessagesIT extends AbstractCoreIT {
 	private static final Logger logger = LoggerFactory.getLogger( MessagesIT.class );
 
-
-	public MessagesIT()
-    {
+	public MessagesIT() {
 		super();
 	}
 
@@ -237,4 +231,44 @@ public class MessagesIT extends AbstractCoreIT
 		}
 	}
 
+  @Test
+  public void testTransactions() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testTransactions");
+    assertNotNull(applicationId);
+
+    EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
+    assertNotNull(em);
+
+    logger.info("Creating messages");
+
+    QueueManager qm = geQueueManagerFactory().getQueueManager(applicationId);
+
+    String queuePath = "/foo/bar";
+
+    Message message = new Message();
+    message.setStringProperty("foo", "bar");
+
+    logger.info("Posting message # to queue /foo/bar: " + message.getUuid());
+
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+
+    qm.postToQueue(queuePath, message);
+    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+
+    QueueQuery qq = new QueueQuery();
+    qq.setTimeout(100);
+    qq.setLimit(1);
+    QueueResults qr = qm.getFromQueue(queuePath, qq);
+
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+    assertTrue(qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
+
+    qm.deleteTransaction(queuePath, qr.getMessages().get(0).getTransaction(), qq);
+
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+    assertFalse(qm.hasOutstandingTransactions(queuePath, null));
+    assertFalse(qm.hasPendingReads(queuePath, null));
+  }
 }

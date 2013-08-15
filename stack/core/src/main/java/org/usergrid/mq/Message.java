@@ -131,9 +131,6 @@ public class Message {
 				(Map<String, Class<?>>) cast(MESSAGE_PROPERTIES), properties));
 	}
 
-	public void acknowledge() {
-	}
-
 	@SuppressWarnings("unchecked")
 	public void addCounter(String name, int value) {
 		Map<String, Integer> counters = null;

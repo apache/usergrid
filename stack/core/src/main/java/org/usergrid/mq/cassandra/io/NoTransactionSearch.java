@@ -44,7 +44,6 @@ public class NoTransactionSearch extends AbstractSearch {
   
   /**
    * @param ko
-   * @param cassTimestamp
    */
   public NoTransactionSearch(Keyspace ko) {
     super(ko);

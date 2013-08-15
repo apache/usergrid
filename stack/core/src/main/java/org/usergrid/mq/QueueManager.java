@@ -75,26 +75,26 @@ public interface QueueManager {
 	public QueueSet getChildQueues(String publisherQueuePath,
 			String firstQueuePath, int count);
 
-	public abstract void incrementAggregateQueueCounters(String queuePath,
+	public void incrementAggregateQueueCounters(String queuePath,
 			String category, String counterName, long value);
 
-	public abstract Results getAggregateQueueCounters(String queuePath,
+	public Results getAggregateQueueCounters(String queuePath,
 			String category, String counterName, CounterResolution resolution,
 			long start, long finish, boolean pad);
 
-	public abstract Results getAggregateQueueCounters(String queuePath,
+	public Results getAggregateQueueCounters(String queuePath,
 			CounterQuery query) throws Exception;
 
-	public abstract Set<String> getQueueCounterNames(String queuePath)
+	public Set<String> getQueueCounterNames(String queuePath)
 			throws Exception;
 
-	public abstract void incrementQueueCounters(String queuePath,
+	public void incrementQueueCounters(String queuePath,
 			Map<String, Long> counts);
 
-	public abstract void incrementQueueCounter(String queuePath, String name,
+	public void incrementQueueCounter(String queuePath, String name,
 			long value);
 
-	public abstract Map<String, Long> getQueueCounters(String queuePath)
+	public Map<String, Long> getQueueCounters(String queuePath)
 			throws Exception;
 
 	/**
@@ -103,15 +103,43 @@ public interface QueueManager {
 	 * @param transactionId The transaction id
 	 * @param query
 	 * @return
-	 * @throws TransactionNotFoundException 
+	 * @throws TransactionNotFoundException
 	 */
-	public abstract UUID renewTransaction(String queuePath,UUID transactionId,QueueQuery query) throws TransactionNotFoundException;
-	
+	public UUID renewTransaction(String queuePath,UUID transactionId,QueueQuery query) throws TransactionNotFoundException;
+
 	/**
 	 * Deletes the transaction for the consumer
 	 * @param queuePath The path to the queue
 	 * @param transactionId The transaction id
 	 * @param query
 	 */
-	public abstract void deleteTransaction(String queuePath,UUID transactionId, QueueQuery query);
+	public void deleteTransaction(String queuePath,UUID transactionId, QueueQuery query);
+
+  /**
+   * Determines if there are any outstanding transactions on a queue
+   * @param queuePath The path to the queue
+   * @param consumerId The consumer id
+   */
+  public boolean hasOutstandingTransactions(String queuePath, UUID consumerId);
+
+  /**
+   * Determines if there are any Messages to retrieve in a queue.
+   * DOES NOT INCLUDE TRANSACTIONS!  If you've tried and failed to process
+   * a transaction on the last message in the queue, this will return false
+   *
+   * @param queuePath The path to the queue
+   * @param consumerId The consumer id
+   */
+  public boolean hasMessagesInQueue(String queuePath, UUID consumerId);
+
+  /**
+   * Returns true if there are messages waiting to be consumed or pending transactions
+   * @param queuePath
+   * @param consumerId
+   * @return
+   */
+  public boolean hasPendingReads(String queuePath, UUID consumerId);
+
+
+
 }

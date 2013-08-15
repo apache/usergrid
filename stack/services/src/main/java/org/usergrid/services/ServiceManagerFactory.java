@@ -24,6 +24,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.locking.LockManager;
+import org.usergrid.mq.QueueManager;
+import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 
@@ -35,15 +37,21 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 	private Properties properties;
 	private SchedulerService schedulerService;
   private LockManager lockManager;
+  private QueueManagerFactory qmf;
 
 	private List<ServiceExecutionEventListener> eventListeners;
 	private List<ServiceCollectionEventListener> collectionListeners;
 
-	public ServiceManagerFactory(EntityManagerFactory emf, Properties properties, SchedulerService schedulerService, LockManager lockManager) {
+	public ServiceManagerFactory(EntityManagerFactory emf,
+                               Properties properties,
+                               SchedulerService schedulerService,
+                               LockManager lockManager,
+                               QueueManagerFactory qmf) {
     this.emf = emf;
     this.properties = properties;
     this.schedulerService = schedulerService;
     this.lockManager = lockManager;
+    this.qmf = qmf;
   }
   
 
@@ -52,11 +60,13 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 		if (emf != null) {
 			em = emf.getEntityManager(applicationId);
 		}
+    QueueManager qm = null;
+    if (qmf != null) {
+      qm = qmf.getQueueManager(applicationId);
+    }
 		ServiceManager sm = new ServiceManager();
-		sm.init(this, em, properties);
+		sm.init(this, em, properties, qm);
 		return sm;
-		//return applicationContext.getAutowireCapableBeanFactory()
-		//		.createBean(ServiceManager.class).init(this, em, properties);
 	}
 
 	public List<ServiceExecutionEventListener> getExecutionEventListeners() {

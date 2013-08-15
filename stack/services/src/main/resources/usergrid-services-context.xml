@@ -52,6 +52,7 @@
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="schedulerService"/>
         <constructor-arg ref="lockManager"/>
+        <constructor-arg ref="queueManagerFactory"/>
 	</bean>
 
 	<bean id="applicationCreator"

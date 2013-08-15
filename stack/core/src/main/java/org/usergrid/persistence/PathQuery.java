@@ -14,6 +14,14 @@ public class PathQuery<E> {
 
   /** top level
    * @param head the top-level entity
+   */
+  public PathQuery(EntityRef head) {
+    this.head = head.getUuid();
+    this.query = null;
+  }
+
+  /** top level
+   * @param head the top-level entity
    * @param collectionName the query - must have a collection or connectType value set
    */
   public PathQuery(EntityRef head, Query query) {
