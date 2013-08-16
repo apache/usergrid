@@ -15,8 +15,8 @@ public class PathQueryIT extends AbstractCoreIT
   @Test
   public void testUserDevicePathQuery() throws Exception
   {
-    UUID applicationId = createApplication("testOrganization", "testUserDevicePathQuery");
-    EntityManager em = emf.getEntityManager(applicationId);
+    UUID applicationId = setup.createApplication("testOrganization", "testUserDevicePathQuery");
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     List<Entity> users = new ArrayList<Entity>();
     for (int i = 0; i < 15; i++) {
@@ -79,8 +79,8 @@ public class PathQueryIT extends AbstractCoreIT
   @Test
   public void testGroupUserDevicePathQuery() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testGroupUserDevicePathQuery");
-    EntityManager em = emf.getEntityManager(applicationId);
+    UUID applicationId = setup.createApplication("testOrganization", "testGroupUserDevicePathQuery");
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     List<Entity> groups = new ArrayList<Entity>();
     for (int i = 0; i < 4; i++) {

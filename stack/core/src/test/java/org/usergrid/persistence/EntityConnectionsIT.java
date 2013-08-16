@@ -48,10 +48,10 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
   @Test
   public void testEntityConnectionsSimple() throws Exception {
-    UUID applicationId = createApplication("EntityConnectionsIT", "testEntityConnectionsSimple");
+    UUID applicationId = setup.createApplication("EntityConnectionsIT", "testEntityConnectionsSimple");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     User first = new User();
@@ -87,10 +87,10 @@ public class EntityConnectionsIT extends AbstractCoreIT
   public void testEntityConnections() throws Exception {
     LOG.info("\n\nEntityConnectionsIT.testEntityConnections\n");
 
-    UUID applicationId = createApplication("EntityConnectionsIT", "testEntityConnections");
+    UUID applicationId = setup.createApplication("EntityConnectionsIT", "testEntityConnections");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     LOG.info("\n\nCreating Cat entity A with name of Dylan\n");
@@ -242,7 +242,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
     LOG.info("----------------------------------------------------");
     LOG.info("Checking connections for " + entityId.toString());
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     Entity en = em.get(entityId);
 
     Results results = em.getConnectedEntities(en.getUuid(), null, null, Results.Level.REFS);
@@ -273,7 +273,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
     LOG.info("----------------------------------------------------");
     LOG.info("Checking collection " + collectionName + " for " + entityId.toString());
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     Entity en = em.get(entityId);
 
     int i = 0;
@@ -290,10 +290,10 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
   @Test
   public void testEntityConnectionsMembership() throws Exception {
-    UUID applicationId = createApplication("entityConnectionsTest", "testEntityConnectionsMembership");
+    UUID applicationId = setup.createApplication("entityConnectionsTest", "testEntityConnectionsMembership");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     User first = new User();
