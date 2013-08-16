@@ -49,7 +49,7 @@ public class MessagesIT extends AbstractCoreIT
 	public void testMessages() throws Exception {
 		LOG.info("MessagesIT.testMessages");
 
-		UUID applicationId = createApplication("testOrganization","testMessages");
+		UUID applicationId = setup.createApplication("testOrganization","testMessages");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
@@ -64,7 +64,7 @@ public class MessagesIT extends AbstractCoreIT
 
 		LOG.info("Posting message #1 to queue /foo/bar");
 
-		QueueManager qm = geQueueManagerFactory()
+		QueueManager qm = getQueueManagerFactory()
 				.getQueueManager(applicationId);
 		qm.postToQueue("/foo/bar", message);
 
@@ -123,14 +123,14 @@ public class MessagesIT extends AbstractCoreIT
 	@Test
 	public void testSubscriberSearch() throws Exception {
 
-		UUID applicationId = createApplication("testOrganization","testSubscriberSearch");
+		UUID applicationId = setup.createApplication("testOrganization","testSubscriberSearch");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
 				applicationId);
 		assertNotNull(em);
 
-		QueueManager qm = geQueueManagerFactory()
+		QueueManager qm = getQueueManagerFactory()
 				.getQueueManager(applicationId);
 
 		Map<String, Object> properties = new HashMap<String, Object>();
@@ -187,7 +187,7 @@ public class MessagesIT extends AbstractCoreIT
 	@Test
 	public void testConsumer() throws Exception {
 
-		UUID applicationId = createApplication("testOrganization","testConsumer");
+		UUID applicationId = setup.createApplication("testOrganization","testConsumer");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
@@ -196,7 +196,7 @@ public class MessagesIT extends AbstractCoreIT
 
 		LOG.info("Creating messages");
 
-		QueueManager qm = geQueueManagerFactory()
+		QueueManager qm = getQueueManagerFactory()
 				.getQueueManager(applicationId);
 		Message message;
 

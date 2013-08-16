@@ -58,10 +58,10 @@ public class EntityDictionaryIT extends AbstractCoreIT
 
 		LOG.info("EntityDictionaryIT.testApplicationDictionaries");
 
-		UUID applicationId = createApplication("testOrganization","testApplicationDictionaries");
+		UUID applicationId = setup.createApplication("testOrganization","testApplicationDictionaries");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		em.addToDictionary(em.getApplicationRef(), "oauthproviders", "google",
@@ -78,10 +78,10 @@ public class EntityDictionaryIT extends AbstractCoreIT
     {
 		LOG.info("EntityDictionaryIT.testUserDictionaries");
 
-		UUID applicationId = createApplication("testOrganization","testUserDictionaries");
+		UUID applicationId = setup.createApplication("testOrganization","testUserDictionaries");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
