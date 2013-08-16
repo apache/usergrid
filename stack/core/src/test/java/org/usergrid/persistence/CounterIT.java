@@ -66,10 +66,10 @@ public class CounterIT extends AbstractCoreIT
 		
 		LOG.info("CounterIT.testIncrementAndDecrement");
 		
-		UUID applicationId = createApplication("testOrganization", "testCountersIandD");
+		UUID applicationId = setup.createApplication("testOrganization", "testCountersIandD");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 		
 		Map<String, Long> counters = em.getEntityCounters(applicationId);
@@ -96,10 +96,10 @@ public class CounterIT extends AbstractCoreIT
 	public void testCounters() throws Exception {
 		LOG.info("CounterIT.testCounters");
 
-		UUID applicationId = createApplication("testOrganization","testCounters");
+		UUID applicationId = setup.createApplication("testOrganization","testCounters");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 
@@ -178,7 +178,7 @@ public class CounterIT extends AbstractCoreIT
 
   @Test
   public void testCommunityCounters() throws Exception {
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Group organizationEntity = new Group();
     organizationEntity.setPath("tst-counter");
@@ -186,7 +186,7 @@ public class CounterIT extends AbstractCoreIT
     organizationEntity = em.create(organizationEntity);
 
 
-    UUID applicationId = emf.createApplication("testCounter","testEntityCounters");
+    UUID applicationId = setup.getEmf().createApplication("testCounter","testEntityCounters");
 
     Map<String,Object> properties = new LinkedHashMap<String,Object>();
     properties.put("name", "testCounter/testEntityCounters");
