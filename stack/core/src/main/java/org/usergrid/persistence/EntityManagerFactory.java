@@ -15,10 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
-import org.usergrid.persistence.entities.Group;
 
 import java.util.Map;
 import java.util.UUID;
+
 
 // TODO: Auto-generated Javadoc
 /**
