@@ -68,17 +68,22 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
               <parallel>both</parallel>
-              <forkCount>8</forkCount>
+              <forkCount>${scheduler.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
-              <argLine>-Xmx256m -Xms256m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${scheduler.it.heapmax} -Xms${scheduler.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <includes>
                 <include>**/SchedulerTestSuite.java</include>
                 <include>**/SchedulerRuntime*IT.java</include>
+                <include>**/*IT.java</include>
+                <include>**/*Test.java</include>
               </includes>
               <excludes>
                 <exclude>**/ConcurrentSchedulerITSuite.java</exclude>
                 <exclude>**/ConcurrentSchedulerTestSuite.java</exclude>
-                <exclude>**/*Test.java</exclude>
+                <exclude>**/SchedulerRuntime*IT.java</exclude>
+                <exclude>**/AppArgsTest.java</exclude>
+                <exclude>**/UsergridJobFactoryTest.java</exclude>
+                <exclude>**/BulkJobExecutionUnitTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>

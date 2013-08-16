@@ -87,14 +87,30 @@
               <includes>
                 <include>**/RestTestSuite.java</include>
                 <include>**/RestITSuite.java</include>
-                <include>**/QueueResourceLong*IT.java</include>
-                <include>**/QueueResourceShortIT.java</include>
-                <include>**/ManagementResourceIT.java</include>
-                <include>**/ApplicationResourceIT.java</include>
+                <include>**/*IT.java</include>
+                <include>**/*Test.java</include>
               </includes>
               <excludes>
-                <exclude>**/*Test.java</exclude>
                 <exclude>**/*Concurrent*Suite.java</exclude>
+                <exclude>**/ActivityResourceIT.java</exclude>
+                <exclude>**/AdminEmailEncodingIT.java</exclude>
+                <exclude>**/ApplicationRequestCounterIT.java</exclude>
+                <exclude>**/AssetResourceIT.java</exclude>
+                <exclude>**/BasicIT.java</exclude>
+                <exclude>**/CollectionsResourceIT.java</exclude>
+                <exclude>**/ContentTypeResourceIT.java</exclude>
+                <exclude>**/DevicesResourceIT.java</exclude>
+                <exclude>**/EventsResourceIT.java</exclude>
+                <exclude>**/GroupResourceIT.java</exclude>
+                <exclude>**/MUUserResourceIT.java</exclude>
+                <exclude>**/OrganizationResourceIT.java</exclude>
+                <exclude>**/OrganizationsResourceIT.java</exclude>
+                <exclude>**/OwnershipResourceIT.java</exclude>
+                <exclude>**/PagingResourceIT.java</exclude>
+                <exclude>**/PermissionsResourceIT.java</exclude>
+                <exclude>**/RegistrationIT.java</exclude>
+                <exclude>**/UserResourceIT.java</exclude>
+                <exclude>**/UsersOrganizationsResourceIT.java</exclude>
               </excludes>
             </configuration>
           </plugin>

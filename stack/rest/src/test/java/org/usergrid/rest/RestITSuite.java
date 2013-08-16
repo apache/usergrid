@@ -12,7 +12,6 @@ import org.usergrid.rest.applications.DevicesResourceIT;
 import org.usergrid.rest.applications.assets.AssetResourceIT;
 import org.usergrid.rest.applications.collection.PagingResourceIT;
 import org.usergrid.rest.applications.events.EventsResourceIT;
-import org.usergrid.rest.applications.queues.QueueResourceIT;
 import org.usergrid.rest.applications.users.*;
 import org.usergrid.rest.filters.ContentTypeResourceIT;
 import org.usergrid.rest.management.ManagementResourceIT;
@@ -30,7 +29,6 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
             ActivityResourceIT.class,
             AdminEmailEncodingIT.class,
             ApplicationRequestCounterIT.class,
-//            ApplicationResourceIT.class,         ==> Run alone since it runs long
             AssetResourceIT.class,
             BasicIT.class,
             CollectionsResourceIT.class,
@@ -39,7 +37,6 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
             EventsResourceIT.class,
             GroupResourceIT.class,
             MUUserResourceIT.class,
-//            ManagementResourceIT.class,          ==> Run alone since it runs long
             OrganizationResourceIT.class,
             OrganizationsResourceIT.class,
             OwnershipResourceIT.class,

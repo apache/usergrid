@@ -98,39 +98,44 @@
               <includes>
                 <include>**/*CoreITSuite.java</include>
                 <include>**/*CoreTestSuite.java</include>
-                <include>**/IteratingQuery1IT.java</include>
-                <include>**/IteratingQuery2IT.java</include>
-                <include>**/IteratingQuery3IT.java</include>
-                <include>**/IteratingQuery4IT.java</include>
-                <include>**/IteratingQuery5IT.java</include>
-                <include>**/IteratingQuery6IT.java</include>
-                <include>**/IteratingQuery7IT.java</include>
-                <include>**/IteratingQuery8IT.java</include>
-                <include>**/IteratingQuery9IT.java</include>
-                <include>**/IteratingQuery10IT.java</include>
-                <include>**/IteratingQuery11IT.java</include>
-                <include>**/IteratingQuery12IT.java</include>
-                <include>**/IteratingQuery13IT.java</include>
-                <include>**/IteratingQuery14IT.java</include>
-                <include>**/IteratingQuery15IT.java</include>
-                <include>**/IteratingQuery16IT.java</include>
-                <include>**/IteratingQuery17IT.java</include>
-                <include>**/IteratingQuery18IT.java</include>
-                <include>**/IteratingQuery19IT.java</include>
-                <include>**/IteratingQuery20IT.java</include>
-                <include>**/IteratingQuery21IT.java</include>
-                <include>**/IteratingQuery22IT.java</include>
-                <include>**/IteratingQuery23IT.java</include>
-                <include>**/IteratingQuery24IT.java</include>
-                <include>**/IteratingQuery25IT.java</include>
-                <include>**/IteratingQuery26IT.java</include>
-                <include>**/IteratingQuery27IT.java</include>
-                <include>**/IteratingQuery28IT.java</include>
-                <include>**/IteratingQuery29IT.java</include>
+                <include>**/*IT.java</include>
+                <include>**/*Test.java</include>
               </includes>
               <excludes>
-                <exclude>**/*Test.java</exclude>
                 <exclude>**/*Concurrent*Suite.java</exclude>
+
+                <!-- Need to exclude Suite tests to prevent double execution -->
+                
+                <exclude>**/HectorLockManagerIT.java</exclude>
+                <exclude>**/UsergridSystemMonitorIT.java</exclude>
+                <exclude>**/CollectionIT.java</exclude>
+                <exclude>**/CounterIT.java</exclude>
+                <exclude>**/EntityConnectionsIT.java</exclude>
+                <exclude>**/EntityDictionaryIT.java</exclude>
+                <exclude>**/EntityManagerIT.java</exclude>
+                <exclude>**/GeoIT.java</exclude>
+                <exclude>**/IndexIT.java</exclude>
+                <exclude>**/MessagesIT.java</exclude>
+                <exclude>**/PermissionsIT.java</exclude>
+                <exclude>**/PathQueryIT.java</exclude>
+                <exclude>**/EntityManagerFactoryImplIT.java</exclude>
+
+                <exclude>**/ZookeeperLockManagerTest.java</exclude>
+                <exclude>**/QueuePathsTest.java</exclude>
+                <exclude>**/QueryProcessorTest.java</exclude>
+                <exclude>**/SimpleIndexBucketLocatorImplTest.java</exclude>
+                <exclude>**/EntityTest.java</exclude>
+                <exclude>**/QueryTest.java</exclude>
+                <exclude>**/QueryUtilsTest.java</exclude>
+                <exclude>**/SchemaTest.java</exclude>
+                <exclude>**/UtilsTest.java</exclude>
+                <exclude>**/IntersectionIteratorTest.java</exclude>
+                <exclude>**/SubtractionIteratorTest.java</exclude>
+                <exclude>**/UnionIteratorTest.java</exclude>
+                <exclude>**/GrammarTreeTest.java</exclude>
+                <exclude>**/LongLiteralTest.java</exclude>
+                <exclude>**/StringLiteralTest.java</exclude>
+
               </excludes>
             </configuration>
           </plugin>

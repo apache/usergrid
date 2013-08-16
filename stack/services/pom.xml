@@ -103,12 +103,28 @@
               <includes>
                 <include>**/ServiceITSuite.java</include>
                 <include>**/ServiceTestSuite.java</include>
-                <include>**/TokenServiceIT.java</include>
+                <include>**/*IT.java</include>
                 <include>**/*Test.java</include>
               </includes>
               <excludes>
-                <!-- <exclude>**/*Test.java</exclude> -->
                 <exclude>**/*Concurrent*Suite.java</exclude>
+                <exclude>**/ActivitiesServiceIT.java</exclude>
+                <exclude>**/ApplicationCreatorIT.java</exclude>
+                <exclude>**/ApplicationsServiceIT.java</exclude>
+                <exclude>**/CollectionServiceIT.java</exclude>
+                <exclude>**/ConnectionsServiceIT.java</exclude>
+                <exclude>**/ManagementServiceIT.java</exclude>
+                <exclude>**/EmailFlowIT.java</exclude>
+                <exclude>**/FacebookProviderIT.java</exclude>
+                <exclude>**/GroupServiceIT.java</exclude>
+                <exclude>**/OrganizationIT.java</exclude>
+                <exclude>**/PingIdentityProviderIT.java</exclude>
+                <exclude>**/RoleIT.java</exclude>
+                <exclude>**/RolesServiceIT.java</exclude>
+                <exclude>**/ServiceRequestIT.java</exclude>
+                <exclude>**/ServiceFactoryIT.java</exclude>
+                <exclude>**/ServiceInvocationIT.java</exclude>
+                <exclude>**/UsersServiceIT.class</exclude>
               </excludes>
             </configuration>
           </plugin>
