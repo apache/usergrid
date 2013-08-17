@@ -80,18 +80,21 @@ public class SimpleApplication implements Application, TestRule
     }
 
 
+    @Override
     public void addToCollection( Entity user, String collection, Entity item ) throws Exception
     {
         em.addToCollection( user, collection, item );
     }
 
 
+    @Override
     public Results searchCollection( Entity user, String collection, Query query ) throws Exception
     {
         return  em.searchCollection( user, collection, query );
     }
 
 
+    @Override
     public Entity get( UUID id ) throws Exception
     {
         return em.get( id );
