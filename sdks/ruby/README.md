@@ -36,7 +36,7 @@ Awesome. Let's go!
 For this example, we'll assume you've already set up an organization, application, and user -
 just fill in your own values in the code below.
 
-```
+```ruby
 require 'usergrid_iron'
 
 # fill in your values here!
@@ -88,7 +88,7 @@ superuser credentials below, and follow along!
 (Better yet: If you used the Usergrid launcher and let it initialize your database,
 you shouldn't need to do anything!)
 
-```
+```ruby
   require 'usergrid_iron'
 
   usergrid_api = 'http://localhost:8080'
