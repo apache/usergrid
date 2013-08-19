@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -34,17 +33,14 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
-import org.usergrid.persistence.geo.EntityLocationRefDistanceComparator;
 import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.utils.MapUtils;
-import org.usergrid.utils.UUIDUtils;
-
 
 
 @Concurrent()
 public class GeoIT extends AbstractCoreIT
 {
-    private static final Logger logger = LoggerFactory.getLogger( GeoIT.class );
+    private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
     public GeoIT()
     {
@@ -54,12 +50,12 @@ public class GeoIT extends AbstractCoreIT
 
   @Test
   public void testGeo() throws Exception {
-    logger.info("GeoIT.testGeo");
+    LOG.info("GeoIT.testGeo");
 
-    UUID applicationId = createApplication("testOrganization", "testGeo");
+    UUID applicationId = setup.createApplication("testOrganization", "testGeo");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -75,7 +71,7 @@ public class GeoIT extends AbstractCoreIT
 
     Point center = new Point(37.774277, -122.404744);
     
-    CollectionGeoSearch connSearch = new CollectionGeoSearch(em, indexBucketLocator, cassandraService,
+    CollectionGeoSearch connSearch = new CollectionGeoSearch(em, setup.getIbl(), setup.getCassSvc(),
             em.getApplicationRef(),"users");
     
 
@@ -183,10 +179,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testPointPaging() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testPointPaging");
+    UUID applicationId = setup.createApplication("testOrganization", "testPointPaging");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     // save objects in a diagonal line from -90 -180 to 90 180
@@ -244,10 +240,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testSamePointPaging() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testSamePointPaging");
+    UUID applicationId = setup.createApplication("testOrganization", "testSamePointPaging");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     // save objects in a diagonal line from -90 -180 to 90 180
@@ -290,10 +286,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testDistanceByLimit() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testDistanceByLimit");
+    UUID applicationId = setup.createApplication("testOrganization", "testDistanceByLimit");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     // save objects in a diagonal line from -90 -180 to 90 180
@@ -347,10 +343,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testGeoWithIntersection() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testGeoWithIntersection");
+    UUID applicationId = setup.createApplication("testOrganization", "testGeoWithIntersection");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 100;
@@ -381,7 +377,7 @@ public class GeoIT extends AbstractCoreIT
 
     Query query = Query.fromQL(queryString);
 
-    Results r = null;
+    Results r;
     int count = 0;
 
     do {

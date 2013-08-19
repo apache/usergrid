@@ -47,12 +47,12 @@ public class PermissionsIT extends AbstractCoreIT
 
     @Test
     public void testPermissionTimeout() throws Exception {
-        UUID applicationId = createApplication("permissionsTest",
+        UUID applicationId = setup.createApplication("permissionsTest",
                 "testPermissionTimeout");
 
         assertNotNull(applicationId);
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         String name1 = "rolename1";
         String title1 = "roletitle1";
@@ -98,11 +98,11 @@ public class PermissionsIT extends AbstractCoreIT
     public void testPermissions() throws Exception {
         logger.info("PermissionsIT.testPermissions");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testPermissions");
         assertNotNull(applicationId);
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
         assertNotNull(em);
 
         // em.createRole("admin", null);

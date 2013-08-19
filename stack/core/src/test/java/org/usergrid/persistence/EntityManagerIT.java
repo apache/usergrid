@@ -37,22 +37,24 @@ import org.usergrid.utils.UUIDUtils;
 @Concurrent()
 public class EntityManagerIT extends AbstractCoreIT
 {
+    private static final Logger LOG = LoggerFactory.getLogger(EntityManagerIT.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(EntityManagerIT.class);
 
-    public EntityManagerIT() {
+    public EntityManagerIT()
+    {
         super();
     }
 
+
     @Test
     public void testEntityManager() throws Exception {
-        logger.info("EntityManagerIT.testEntityManagerTest");
+        LOG.info("EntityManagerIT.testEntityManagerTest");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testEntityManagerTest");
         assertNotNull(applicationId);
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
         assertNotNull(em);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -76,8 +78,8 @@ public class EntityManagerIT extends AbstractCoreIT
         assertEquals("userRef.type not expected value", "user",
                 userRef.getType());
 
-        logger.info("user.username: " + user.getProperty("username"));
-        logger.info("user.email: " + user.getProperty("email"));
+        LOG.info("user.username: " + user.getProperty("username"));
+        LOG.info("user.email: " + user.getProperty("email"));
 
         Results results = em.searchCollection(em.getApplicationRef(), "users",
                 new Query().addEqualityFilter("username", "edanuff"));
@@ -90,8 +92,8 @@ public class EntityManagerIT extends AbstractCoreIT
         assertEquals("user.email not expected value", "ed@anuff.com",
                 user.getProperty("email"));
 
-        logger.info("user.username: " + user.getProperty("username"));
-        logger.info("user.email: " + user.getProperty("email"));
+        LOG.info("user.username: " + user.getProperty("username"));
+        LOG.info("user.email: " + user.getProperty("email"));
 
         results = em.searchCollection(em.getApplicationRef(), "users",
                 new Query().addEqualityFilter("email", "ed@anuff.com"));
@@ -104,18 +106,18 @@ public class EntityManagerIT extends AbstractCoreIT
         assertEquals("user.email not expected value", "ed@anuff.com",
                 user.getProperty("email"));
 
-        logger.info("user.username: " + user.getProperty("username"));
-        logger.info("user.email: " + user.getProperty("email"));
+        LOG.info("user.username: " + user.getProperty("username"));
+        LOG.info("user.email: " + user.getProperty("email"));
     }
 
     @Test
     public void testCreateAndGet() throws Exception {
-        logger.info("EntityDaoTest.testCreateAndGet");
+        LOG.info("EntityDaoTest.testCreateAndGet");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testCreateAndGet");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         int i = 0;
         List<Entity> things = new ArrayList<Entity>();
@@ -189,12 +191,12 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @Test
     public void testDictionaries() throws Exception {
-        logger.info("EntityDaoTest.testDictionaries");
+        LOG.info("EntityDaoTest.testDictionaries");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testDictionaries");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("name", "thing");
@@ -209,9 +211,9 @@ public class EntityManagerIT extends AbstractCoreIT
         assertEquals("Wrong number of items in list", 3, set.size());
 
         Iterator<Object> i = set.iterator();
-        logger.info("first item is " + i.next());
-        logger.info("second item is " + i.next());
-        logger.info("third item is " + i.next());
+        LOG.info("first item is " + i.next());
+        LOG.info("second item is " + i.next());
+        LOG.info("third item is " + i.next());
 
         i = set.iterator();
         assertEquals("first item should be alpha", "alpha", i.next());
@@ -233,12 +235,12 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @Test
     public void testProperties() throws Exception {
-        logger.info("EntityDaoTest.testProperties");
+        LOG.info("EntityDaoTest.testProperties");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testProperties");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("name", "testprop");
@@ -262,7 +264,7 @@ public class EntityManagerIT extends AbstractCoreIT
                 props.get("gamma"));
 
         for (Entry<String, Object> entry : props.entrySet()) {
-            logger.info(entry.getKey() + " : " + entry.getValue());
+            LOG.info(entry.getKey() + " : " + entry.getValue());
         }
 
         em.deleteProperty(entity, "alpha");
@@ -274,12 +276,12 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @Test
     public void testCreateAndDelete() throws Exception {
-        logger.info("EntityDaoTest.testCreateAndDelete");
+        LOG.info("EntityDaoTest.testCreateAndDelete");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testCreateAndDelete");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         String name = "test.thing" + UUIDUtils.newTimeUUID();
 
@@ -287,13 +289,13 @@ public class EntityManagerIT extends AbstractCoreIT
         properties.put("name", name);
         properties.put("foo", "bar");
 
-        logger.info("Starting entity create");
+        LOG.info("Starting entity create");
         Entity thing = em.create("thing", properties);
-        logger.info("Entity created");
+        LOG.info("Entity created");
 
-        logger.info("Starting entity delete");
+        LOG.info("Starting entity delete");
         em.delete(thing);
-        logger.info("Entity deleted");
+        LOG.info("Entity deleted");
 
         // now search by username, no results should be returned
 
@@ -306,12 +308,12 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @Test
     public void testCreateAndDeleteUser() throws Exception {
-        logger.info("EntityDaoTest.testCreateAndDeleteUser");
+        LOG.info("EntityDaoTest.testCreateAndDeleteUser");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testCreateAndDeleteUser");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         String name = "test.thing" + UUIDUtils.newTimeUUID();
 
@@ -319,13 +321,13 @@ public class EntityManagerIT extends AbstractCoreIT
         properties.put("username", name);
         properties.put("foo", "bar");
 
-        logger.info("Starting entity create");
+        LOG.info("Starting entity create");
         Entity user = em.create("user", properties);
-        logger.info("Entity created");
+        LOG.info("Entity created");
 
-        logger.info("Starting entity delete");
+        LOG.info("Starting entity delete");
         em.delete(user);
-        logger.info("Entity deleted");
+        LOG.info("Entity deleted");
 
         // now search by username, no results should be returned
 
@@ -340,9 +342,9 @@ public class EntityManagerIT extends AbstractCoreIT
         properties.put("username", name);
         properties.put("foo", "bar");
 
-        logger.info("Starting entity create");
+        LOG.info("Starting entity create");
         user = em.create("user", properties);
-        logger.info("Entity created");
+        LOG.info("Entity created");
 
         r = em.searchCollection(em.getApplicationRef(), "users",
                 new Query().addEqualityFilter("username", name));
@@ -356,11 +358,11 @@ public class EntityManagerIT extends AbstractCoreIT
     @SuppressWarnings("unchecked")
     @Test
     public void testJson() throws Exception {
-        logger.info("EntityDaoTest.testProperties");
+        LOG.info("EntityDaoTest.testProperties");
 
-        UUID applicationId = createApplication("testOrganization", "testJson");
+        UUID applicationId = setup.createApplication("testOrganization", "testJson");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("name", "testprop");
@@ -390,15 +392,15 @@ public class EntityManagerIT extends AbstractCoreIT
     @Test
     @Ignore( "There is a concurrency issue due to counters not being thread safe: see USERGRID-1753" )
     public void testEntityCounters() throws Exception {
-        logger.info("EntityManagerIT#testEntityCounters");
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        LOG.info("EntityManagerIT#testEntityCounters");
+        EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
 
         Group organizationEntity = new Group();
         organizationEntity.setPath("testCounterOrg");
         organizationEntity.setProperty("name", "testCounterOrg");
         organizationEntity = em.create(organizationEntity);
 
-        UUID applicationId = emf.createApplication("testCounterOrg",
+        UUID applicationId = setup.getEmf().createApplication("testCounterOrg",
                 "testEntityCounters");
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -410,16 +412,16 @@ public class EntityManagerIT extends AbstractCoreIT
                 new SimpleEntityRef("group", organizationEntity.getUuid()),
                 "owns", new SimpleEntityRef("application_info", applicationId));
 
-        em = emf.getEntityManager(applicationId);
+        em = setup.getEmf().getEntityManager(applicationId);
         properties = new LinkedHashMap<String, Object>();
         properties.put("username", "edanuff");
         properties.put("email", "ed@anuff.com");
         Entity user = em.create("user", properties);
 
-        em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
         Map<String, Long> counts = em
                 .getEntityCounters(MANAGEMENT_APPLICATION_ID);
-        logger.info("Entity counters: {}", counts);
+        LOG.info("Entity counters: {}", counts);
         assertNotNull(counts);
         assertEquals(4, counts.size());
 
@@ -427,9 +429,9 @@ public class EntityManagerIT extends AbstractCoreIT
                 organizationEntity.getUuid()));
         assertEquals("testCounterOrg", entity.getName());
 
-        em = emf.getEntityManager(applicationId);
+        em = setup.getEmf().getEntityManager(applicationId);
         counts = em.getEntityCounters(applicationId);
-        logger.info("Entity counters: {}", counts);
+        LOG.info("Entity counters: {}", counts);
         assertNotNull(counts);
         assertEquals(3, counts.size());
 
@@ -437,12 +439,12 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @Test
     public void testCreateAndList() throws Exception {
-        logger.info("EntityDaoTest.testCreateAndDelete");
+        LOG.info("EntityDaoTest.testCreateAndDelete");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testCreateAndList");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         String name = "test.thing" + UUIDUtils.newTimeUUID() + 1;
 
@@ -450,9 +452,9 @@ public class EntityManagerIT extends AbstractCoreIT
         properties.put("name", name);
         properties.put("foo", "bar");
 
-        logger.info("Starting entity create");
+        LOG.info("Starting entity create");
         Entity thing1 = em.create("thing", properties);
-        logger.info("Entity created");
+        LOG.info("Entity created");
 
         String name2 = "test.thing" + UUIDUtils.newTimeUUID() + 2;
 
@@ -460,9 +462,9 @@ public class EntityManagerIT extends AbstractCoreIT
         properties.put("name", name2);
         properties.put("foo", "bar");
 
-        logger.info("Starting entity create");
+        LOG.info("Starting entity create");
         Entity thing2 = em.create("thing", properties);
-        logger.info("Entity created");
+        LOG.info("Entity created");
 
         // now search by username, no results should be returned
 
@@ -482,9 +484,9 @@ public class EntityManagerIT extends AbstractCoreIT
     @Test
     public void testCorrectType() throws Exception {
 
-        UUID applicationId = createApplication("testOrganization", "testCorrectType");
+        UUID applicationId = setup.createApplication("testOrganization", "testCorrectType");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("name", "testuser");
@@ -507,12 +509,12 @@ public class EntityManagerIT extends AbstractCoreIT
     }
     @Test
     public void testImmutableForcedPropChange() throws Exception {
-        logger.info("EntityDaoTest.testProperties");
+        LOG.info("EntityDaoTest.testProperties");
 
-        UUID applicationId = createApplication("testOrganization",
+        UUID applicationId = setup.createApplication("testOrganization",
                 "testNamePropChanges");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("name", "one");
@@ -533,9 +535,9 @@ public class EntityManagerIT extends AbstractCoreIT
     @Test
     public void ownershipScopeCorrect() throws Exception {
 
-        UUID applicationId = createApplication("testOrganization", "ownershipScopeCorrect");
+        UUID applicationId = setup.createApplication("testOrganization", "ownershipScopeCorrect");
 
-        EntityManager em = emf.getEntityManager(applicationId);
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
         //first user
         Map<String, Object> userProps = new LinkedHashMap<String, Object>();

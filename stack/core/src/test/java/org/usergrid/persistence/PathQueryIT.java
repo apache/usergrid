@@ -1,26 +1,22 @@
 package org.usergrid.persistence;
 
+
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
-import org.usergrid.utils.JsonUtils;
 
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
-public class PathQueryTest extends AbstractCoreIT {
 
-  private static final Logger logger = LoggerFactory.getLogger(PathQueryTest.class);
+public class PathQueryIT extends AbstractCoreIT
+{
 
   @Test
-  public void testUserDevicePathQuery() throws Exception {
-
-    UUID applicationId = createApplication("testOrganization", "testUserDevicePathQuery");
-    EntityManager em = emf.getEntityManager(applicationId);
+  public void testUserDevicePathQuery() throws Exception
+  {
+    UUID applicationId = setup.createApplication("testOrganization", "testUserDevicePathQuery");
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     List<Entity> users = new ArrayList<Entity>();
     for (int i = 0; i < 15; i++) {
@@ -75,7 +71,6 @@ public class PathQueryTest extends AbstractCoreIT {
     PathQuery<UUID> usersPQ = new PathQuery<UUID>(em.getApplicationRef(), userQuery);
     PathQuery<Entity> devicesPQ = usersPQ.chain(deviceQuery);
     HashSet set = new HashSet(expectedUserQuerySize * expectedDeviceQuerySize);
-//    for (Entity e : devicesPQ) { set.add(e); }
     Iterator<Entity> i = devicesPQ.iterator(em);
     while (i.hasNext()) { set.add(i.next()); }
     assertEquals(expectedUserQuerySize * expectedDeviceQuerySize, set.size());
@@ -84,8 +79,8 @@ public class PathQueryTest extends AbstractCoreIT {
   @Test
   public void testGroupUserDevicePathQuery() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testGroupUserDevicePathQuery");
-    EntityManager em = emf.getEntityManager(applicationId);
+    UUID applicationId = setup.createApplication("testOrganization", "testGroupUserDevicePathQuery");
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     List<Entity> groups = new ArrayList<Entity>();
     for (int i = 0; i < 4; i++) {
@@ -153,7 +148,6 @@ public class PathQueryTest extends AbstractCoreIT {
     PathQuery<Entity> devicesPQ = usersPQ.chain(deviceQuery);
 
     HashSet set = new HashSet(expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize);
-//    for (Entity e : devicesPQ) { set.add(e); }
     Iterator<Entity> i = devicesPQ.iterator(em);
     while (i.hasNext()) { set.add(i.next()); }
     assertEquals(expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize, set.size());

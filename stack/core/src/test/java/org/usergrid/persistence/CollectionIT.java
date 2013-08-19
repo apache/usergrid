@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoIndexException;
+import org.usergrid.Application;
+import org.usergrid.SimpleApplication;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -45,151 +48,143 @@ import org.usergrid.utils.UUIDUtils;
 @Concurrent()
 public class CollectionIT extends AbstractCoreIT
 {
+    private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
-  private static final Logger logger = LoggerFactory.getLogger( CollectionIT.class );
+    @Rule
+    public Application app = new SimpleApplication( setup );
 
-  @Test
-  public void testCollection() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testCollection");
-    assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
-    assertNotNull(em);
+    @Test
+    public void testCollection() throws Exception
+    {
+        app.add( "username", "edanuff" );
+        app.add( "email", "ed@anuff.com" );
 
-    Map<String, Object> properties = new LinkedHashMap<String, Object>();
-    properties.put("username", "edanuff");
-    properties.put("email", "ed@anuff.com");
+        Entity user = app.create( "user" );
+        assertNotNull( user );
 
-    Entity user = em.create("user", properties);
-    assertNotNull(user);
+        app.add( "actor", new LinkedHashMap<String, Object>()
+        { {
+            put( "displayName", "Ed Anuff" );
+            put( "objectType", "person" );
+        } });
+        app.add( "verb", "tweet" );
+        app.add( "content", "I ate a sammich" );
+        app.add( "ordinal", 3 );
 
-    properties = new LinkedHashMap<String, Object>();
-    properties.put("actor", new LinkedHashMap<String, Object>() {
-      {
-        put("displayName", "Ed Anuff");
-        put("objectType", "person");
-      }
-    });
-    properties.put("verb", "tweet");
-    properties.put("content", "I ate a sammich");
-    properties.put("ordinal", 3);
+        Entity activity = app.create( "activity" );
+        assertNotNull( activity );
 
-    Entity activity = em.create("activity", properties);
-    assertNotNull(activity);
+        LOG.info( "" + activity.getClass() );
+        LOG.info( JsonUtils.mapToFormattedJsonString( activity ) );
 
-    logger.info("" + activity.getClass());
-    logger.info(JsonUtils.mapToFormattedJsonString(activity));
+        activity = app.get( activity.getUuid() );
 
-    activity = em.get(activity.getUuid());
+        LOG.info( "Activity class = {}", activity.getClass() );
+        LOG.info( JsonUtils.mapToFormattedJsonString( activity ) );
 
-    logger.info("" + activity.getClass());
-    logger.info(JsonUtils.mapToFormattedJsonString(activity));
+        app.addToCollection( user, "activities", activity );
 
-    em.addToCollection(user, "activities", activity);
+        // test queries on the collection
 
-    // test queries on the collection
+        app.add( "actor", new LinkedHashMap<String, Object>()
+        { {
+            put( "displayName", "Ed Anuff" );
+            put( "objectType", "person" );
+        } });
+        app.add( "verb", "tweet2" );
+        app.add( "content", "I ate a pickle" );
+        app.add( "ordinal", 2 );
+        Entity activity2 = app.create( "activity" );
+        activity2 = app.get( activity2.getUuid() );
+        app.addToCollection( user, "activities", activity2 );
 
-    properties = new LinkedHashMap<String, Object>();
-    properties.put("actor", new LinkedHashMap<String, Object>() {
-      {
-        put("displayName", "Ed Anuff");
-        put("objectType", "person");
-      }
-    });
-    properties.put("verb", "tweet2");
-    properties.put("content", "I ate a pickle");
-    properties.put("ordinal", 2);
-    Entity activity2 = em.create("activity", properties);
-    activity2 = em.get(activity2.getUuid());
-    em.addToCollection(user, "activities", activity2);
+        app.add( "actor", new LinkedHashMap<String, Object>()
+        { {
+            put( "displayName", "Ed Anuff" );
+            put( "objectType", "person" );
+        } });
+        app.add( "verb", "tweet2" );
+        app.add( "content", "I ate an apple" );
+        app.add( "ordinal", 1 );
+        Entity activity3 = app.create( "activity" );
+        activity3 = app.get( activity3.getUuid() );
+        app.addToCollection( user, "activities", activity3 );
 
-    properties = new LinkedHashMap<String, Object>();
-    properties.put("actor", new LinkedHashMap<String, Object>() {
-      {
-        put("displayName", "Ed Anuff");
-        put("objectType", "person");
-      }
-    });
-    properties.put("verb", "tweet2");
-    properties.put("content", "I ate an apple");
-    properties.put("ordinal", 1);
-    Entity activity3 = em.create("activity", properties);
-    activity3 = em.get(activity3.getUuid());
-    em.addToCollection(user, "activities", activity3);
+        // empty query
+        Query query = new Query();
+        Results r = app.searchCollection( user, "activities", query );
+        assertEquals( 3, r.size() ); // success
 
-    // empty query
-    Query query = new Query();
-    Results r = em.searchCollection(user, "activities", query);
-    assertEquals(3, r.size()); // success
+        // query verb
+        query = new Query().addEqualityFilter( "verb", "tweet2" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 2, r.size() );
 
-    // query verb
-    query = new Query().addEqualityFilter("verb", "tweet2");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(2, r.size());
+        // query verb, sort created
+        query = new Query().addEqualityFilter( "verb", "tweet2" );
+        query.addSort( "created" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 2, r.size() );
+        List<Entity> entities = r.getEntities();
+        assertEquals( entities.get( 0 ).getUuid(), activity2.getUuid() );
+        assertEquals( entities.get( 1 ).getUuid(), activity3.getUuid() );
 
-    // query verb, sort created
-    query = new Query().addEqualityFilter("verb", "tweet2");
-    query.addSort("created");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(2, r.size());
-    List<Entity> entities = r.getEntities();
-    assertEquals(entities.get(0).getUuid(), activity2.getUuid());
-    assertEquals(entities.get(1).getUuid(), activity3.getUuid());
+        // query verb, sort ordinal
+        query = new Query().addEqualityFilter( "verb", "tweet2" );
+        query.addSort( "ordinal" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 2, r.size() );
+        entities = r.getEntities();
+        assertEquals( entities.get( 0 ).getUuid(), activity3.getUuid() );
+        assertEquals( entities.get( 1 ).getUuid(), activity2.getUuid() );
 
-    // query verb, sort ordinal
-    query = new Query().addEqualityFilter("verb", "tweet2");
-    query.addSort("ordinal");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(2, r.size());
-    entities = r.getEntities();
-    assertEquals(entities.get(0).getUuid(), activity3.getUuid());
-    assertEquals(entities.get(1).getUuid(), activity2.getUuid());
+        // empty query, sort content
+        query = new Query();
+        query.addSort( "content" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 3, r.size() );
+        entities = r.getEntities();
+        LOG.info( JsonUtils.mapToFormattedJsonString( entities ) );
+        assertEquals( entities.get( 0 ).getUuid(), activity2.getUuid() );
+        assertEquals( entities.get( 1 ).getUuid(), activity.getUuid() );
+        assertEquals( entities.get( 2 ).getUuid(), activity3.getUuid() );
 
-    // empty query, sort content
-    query = new Query();
-    query.addSort("content");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(3, r.size());
-    entities = r.getEntities();
-    logger.info(JsonUtils.mapToFormattedJsonString(entities));
-    assertEquals(entities.get(0).getUuid(), activity2.getUuid());
-    assertEquals(entities.get(1).getUuid(), activity.getUuid());
-    assertEquals(entities.get(2).getUuid(), activity3.getUuid());
+        // empty query, sort verb
+        query = new Query();
+        query.addSort( "verb" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 3, r.size() );
 
-    // empty query, sort verb
-    query = new Query();
-    query.addSort("verb");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(3, r.size());
+        // empty query, sort ordinal
+        query = new Query();
+        query.addSort( "ordinal" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 3, r.size() );
+        entities = r.getEntities();
+        assertEquals( entities.get( 0 ).getUuid(), activity3.getUuid() );
+        assertEquals( entities.get( 1 ).getUuid(), activity2.getUuid() );
+        assertEquals( entities.get( 2 ).getUuid(), activity.getUuid() );
 
-    // empty query, sort ordinal
-    query = new Query();
-    query.addSort("ordinal");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(3, r.size());
-    entities = r.getEntities();
-    assertEquals(entities.get(0).getUuid(), activity3.getUuid());
-    assertEquals(entities.get(1).getUuid(), activity2.getUuid());
-    assertEquals(entities.get(2).getUuid(), activity.getUuid());
+        // query ordinal
+        query = new Query().addEqualityFilter( "ordinal", 2 );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 1, r.size() );
 
-    // query ordinal
-    query = new Query().addEqualityFilter("ordinal", 2);
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(1, r.size());
+        // query ordinal and sort ordinal
+        query = new Query().addEqualityFilter( "ordinal", 2 );
+        query.addSort( "ordinal" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 1, r.size() );
+    }
 
-    // query ordinal and sort ordinal
-    query = new Query().addEqualityFilter("ordinal", 2);
-    query.addSort("ordinal");
-    r = em.searchCollection(user, "activities", query);
-    assertEquals(1, r.size());
-  }
 
   @Test
   public void userFirstNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testFirstName");
+    UUID applicationId = setup.createApplication("testOrganization", "testFirstName");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String firstName = "firstName" + UUIDUtils.newTimeUUID();
@@ -246,10 +241,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void userMiddleNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testMiddleName");
+    UUID applicationId = setup.createApplication("testOrganization", "testMiddleName");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String middleName = "middleName" + UUIDUtils.newTimeUUID();
@@ -278,10 +273,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void userLastNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testLastName");
+    UUID applicationId = setup.createApplication("testOrganization", "testLastName");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String lastName = "lastName" + UUIDUtils.newTimeUUID();
@@ -310,10 +305,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void testGroups() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testGroups");
+    UUID applicationId = setup.createApplication("testOrganization", "testGroups");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -344,7 +339,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Results r = em.searchCollection(group, "users", new Query().addEqualityFilter("member.nickname", "ed")
         .withResultsLevel(Results.Level.LINKED_PROPERTIES));
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(1, r.size());
 
     em.removeFromCollection(user1, "groups", group);
@@ -353,10 +348,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void groupNameSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "groupNameSearch");
+    UUID applicationId = setup.createApplication("testOrganization", "groupNameSearch");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String groupName = "groupName" + UUIDUtils.newTimeUUID();
@@ -385,10 +380,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void groupTitleSearch() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "groupTitleSearch");
+    UUID applicationId = setup.createApplication("testOrganization", "groupTitleSearch");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String titleName = "groupName" + UUIDUtils.newTimeUUID();
@@ -418,10 +413,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void testSubkeys() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testSubkeys");
+    UUID applicationId = setup.createApplication("testOrganization", "testSubkeys");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -460,17 +455,17 @@ public class CollectionIT extends AbstractCoreIT
     em.addToCollection(user, "activities", em.create("activity", properties));
 
     Results r = em.searchCollection(user, "activities", Query.searchForProperty("verb", "post"));
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(2, r.size());
 
   }
 
   @Test
   public void emptyQuery() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testEmptyQuery");
+    UUID applicationId = setup.createApplication("testOrganization", "testEmptyQuery");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String firstName = "firstName" + UUIDUtils.newTimeUUID();
@@ -509,10 +504,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void emptyQueryReverse() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "testEmptyQueryReverse");
+    UUID applicationId = setup.createApplication("testOrganization", "testEmptyQueryReverse");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     String firstName = "firstName" + UUIDUtils.newTimeUUID();
@@ -552,10 +547,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void orQuery() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "orQuery");
+    UUID applicationId = setup.createApplication("testOrganization", "orQuery");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -626,10 +621,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void andQuery() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "andQuery");
+    UUID applicationId = setup.createApplication("testOrganization", "andQuery");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -681,10 +676,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void notQuery() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "notQuery");
+    UUID applicationId = setup.createApplication("testOrganization", "notQuery");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -749,12 +744,12 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void testKeywordsOrQuery() throws Exception {
-    logger.info("testKeywordsOrQuery");
+    LOG.info("testKeywordsOrQuery");
 
-    UUID applicationId = createApplication("testOrganization", "testKeywordsOrQuery");
+    UUID applicationId = setup.createApplication("testOrganization", "testKeywordsOrQuery");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -774,19 +769,19 @@ public class CollectionIT extends AbstractCoreIT
 
     Query query = Query.fromQL("select * where keywords contains 'hot' or title contains 'hot'");
     Results r = em.searchCollection(em.getApplicationRef(), "games", query);
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(3, r.size());
 
   }
 
   @Test
   public void testKeywordsAndQuery() throws Exception {
-    logger.info("testKeywordsOrQuery");
+    LOG.info("testKeywordsOrQuery");
 
-    UUID applicationId = createApplication("testOrganization", "testKeywordsAndQuery");
+    UUID applicationId = setup.createApplication("testOrganization", "testKeywordsAndQuery");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -806,7 +801,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Query query = Query.fromQL("select * where keywords contains 'new' and title contains 'extreme'");
     Results r = em.searchCollection(em.getApplicationRef(), "games", query);
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
     assertEquals(2, r.size());
 
     assertEquals(secondGame.getUuid(), r.getEntities().get(0).getUuid());
@@ -817,10 +812,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void pagingAfterDelete() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "pagingAfterDelete");
+    UUID applicationId = setup.createApplication("testOrganization", "pagingAfterDelete");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 20;
@@ -839,7 +834,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Results r = em.searchCollection(em.getApplicationRef(), "objects", query);
 
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
     assertEquals(size, r.size());
 
@@ -882,10 +877,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void pagingLessThanWithCriteria() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "pagingLessThanWithCriteria");
+    UUID applicationId = setup.createApplication("testOrganization", "pagingLessThanWithCriteria");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 40;
@@ -912,7 +907,7 @@ public class CollectionIT extends AbstractCoreIT
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -935,10 +930,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void pagingGreaterThanWithCriteria() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "pagingGreaterThanWithCriteria");
+    UUID applicationId = setup.createApplication("testOrganization", "pagingGreaterThanWithCriteria");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 40;
@@ -965,7 +960,7 @@ public class CollectionIT extends AbstractCoreIT
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -987,10 +982,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void pagingWithBoundsCriteria() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "pagingWithBoundsCriteria");
+    UUID applicationId = setup.createApplication("testOrganization", "pagingWithBoundsCriteria");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 40;
@@ -1018,7 +1013,7 @@ public class CollectionIT extends AbstractCoreIT
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -1040,10 +1035,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void testPagingWithGetNextResults() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "pagingWithBoundsCriteria2");
+    UUID applicationId = setup.createApplication("testOrganization", "pagingWithBoundsCriteria2");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 40;
@@ -1069,7 +1064,7 @@ public class CollectionIT extends AbstractCoreIT
     // check they're all the same before deletion
     for (int i = 1; i < 3; i++) {
 
-      logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+      LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
 
@@ -1098,10 +1093,10 @@ public class CollectionIT extends AbstractCoreIT
 
     root.put("subentity", subEntity);
 
-    UUID applicationId = createApplication("testOrganization", "subpropertyQuerying");
+    UUID applicationId = setup.createApplication("testOrganization", "subpropertyQuerying");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Entity saved = em.create("test", root);
@@ -1147,10 +1142,10 @@ public class CollectionIT extends AbstractCoreIT
 
     Map<String, Object> jsonData = (Map<String, Object>) JsonUtils.parse(JsonUtils.mapToJsonString(root));
 
-    UUID applicationId = createApplication("testOrganization", "arrayQuerying");
+    UUID applicationId = setup.createApplication("testOrganization", "arrayQuerying");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Entity saved = em.create("test", jsonData);
@@ -1209,10 +1204,10 @@ public class CollectionIT extends AbstractCoreIT
 
     props.put("myString", "My simple string");
 
-    UUID applicationId = createApplication("testOrganization", "stringWithSpaces");
+    UUID applicationId = setup.createApplication("testOrganization", "stringWithSpaces");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Entity saved = em.create("test", props);
@@ -1231,9 +1226,9 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void testSelectTerms() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testSelectTerms");
+    UUID applicationId = setup.createApplication("testOrganization", "testSelectTerms");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
     properties.put("username", "edanuff");
@@ -1260,9 +1255,9 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void testRedefineTerms() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testRedefineTerms");
+    UUID applicationId = setup.createApplication("testOrganization", "testRedefineTerms");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
     properties.put("username", "edanuff");
@@ -1288,9 +1283,9 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void testSelectEmailViaConnection() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testSelectEmail");
+    UUID applicationId = setup.createApplication("testOrganization", "testSelectEmail");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
     properties.put("username", "ed@anuff.com");
@@ -1338,9 +1333,9 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void testNotQueryAnd() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testNotQueryAnd");
+    UUID applicationId = setup.createApplication("testOrganization", "testNotQueryAnd");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
 
     Map<String, Object> location = new LinkedHashMap<String, Object>();
     location.put("Place", "24 Westminster Avenue, Venice, CA 90291, USA");
@@ -1394,10 +1389,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void runtimeTypeCorrect() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "runtimeTypeCorrect");
+    UUID applicationId = setup.createApplication("testOrganization", "runtimeTypeCorrect");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 20;
@@ -1417,7 +1412,7 @@ public class CollectionIT extends AbstractCoreIT
 
     Results r = em.getCollection(em.getApplicationRef(), "users", null, 50, Level.ALL_PROPERTIES, false);
     
-    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+    LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
     assertEquals(size, r.size());
 
@@ -1435,10 +1430,10 @@ public class CollectionIT extends AbstractCoreIT
   @Test
   public void badOrderByBadGrammarAsc() throws Exception {
    
-    UUID applicationId = createApplication("testOrganization", "badOrderByBadGrammarAsc");
+    UUID applicationId = setup.createApplication("testOrganization", "badOrderByBadGrammarAsc");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
     
     String s = "select * where name = 'bob' order by asc";
@@ -1464,10 +1459,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void badOrderByBadGrammarDesc() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "badOrderByBadGrammarDesc");
+    UUID applicationId = setup.createApplication("testOrganization", "badOrderByBadGrammarDesc");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
     
     String s = "select * where name = 'bob' order by desc";
@@ -1493,10 +1488,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void uuidIdentifierTest() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "uuidIdentifierTest");
+    UUID applicationId = setup.createApplication("testOrganization", "uuidIdentifierTest");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -1524,10 +1519,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void nameIdentifierTest() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "nameIdentifierTest");
+    UUID applicationId = setup.createApplication("testOrganization", "nameIdentifierTest");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -1558,10 +1553,10 @@ public class CollectionIT extends AbstractCoreIT
 
   @Test
   public void emailIdentifierTest() throws Exception {
-    UUID applicationId = createApplication("testOrganization", "emailIdentifierTest");
+    UUID applicationId = setup.createApplication("testOrganization", "emailIdentifierTest");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     User user = new User();

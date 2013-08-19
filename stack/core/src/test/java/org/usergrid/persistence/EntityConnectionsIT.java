@@ -37,19 +37,21 @@ import org.usergrid.persistence.entities.User;
 @Concurrent()
 public class EntityConnectionsIT extends AbstractCoreIT
 {
+  private static final Logger LOG = LoggerFactory.getLogger(EntityConnectionsIT.class);
 
-  private static final Logger logger = LoggerFactory.getLogger(EntityConnectionsIT.class);
 
-  public EntityConnectionsIT() {
+  public EntityConnectionsIT()
+  {
     super();
   }
 
+
   @Test
   public void testEntityConnectionsSimple() throws Exception {
-    UUID applicationId = createApplication("EntityConnectionsIT", "testEntityConnectionsSimple");
+    UUID applicationId = setup.createApplication("EntityConnectionsIT", "testEntityConnectionsSimple");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     User first = new User();
@@ -83,76 +85,76 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
   @Test
   public void testEntityConnections() throws Exception {
-    logger.info("\n\nEntityConnectionsIT.testEntityConnections\n");
+    LOG.info("\n\nEntityConnectionsIT.testEntityConnections\n");
 
-    UUID applicationId = createApplication("EntityConnectionsIT", "testEntityConnections");
+    UUID applicationId = setup.createApplication("EntityConnectionsIT", "testEntityConnections");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
-    logger.info("\n\nCreating Cat entity A with name of Dylan\n");
+    LOG.info("\n\nCreating Cat entity A with name of Dylan\n");
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
     properties.put("name", "Dylan");
     Entity catA = em.create("cat", properties);
     assertNotNull(catA);
-    logger.info("\n\nEntity A created with id " + catA.getUuid() + "\n");
+    LOG.info("\n\nEntity A created with id " + catA.getUuid() + "\n");
 
     // Do entity get by id for id of cat entity A
 
-    logger.info("\n\nLooking up cat with id " + catA.getUuid() + "\n");
+    LOG.info("\n\nLooking up cat with id " + catA.getUuid() + "\n");
 
     Entity cat = em.get(catA);
     assertNotNull(cat);
 
-    logger.info("\n\nFound entity " + cat.getUuid() + " of type " + cat.getType() + " with name "
-        + cat.getProperty("name") + "\n");
+    LOG.info("\n\nFound entity " + cat.getUuid() + " of type " + cat.getType() + " with name "
+            + cat.getProperty("name") + "\n");
 
     // Create cat entity B
 
-    logger.info("\n\nCreating cat entity B with name of Nico\n");
+    LOG.info("\n\nCreating cat entity B with name of Nico\n");
     properties = new LinkedHashMap<String, Object>();
     properties.put("name", "Nico");
     Entity catB = em.create("cat", properties);
     assertNotNull(catB);
-    logger.info("\n\nEntity B created with id " + catB.getUuid() + "\n");
+    LOG.info("\n\nEntity B created with id " + catB.getUuid() + "\n");
 
     // Create award entity A
 
-    logger.info("\n\nCreating award entity with name of 'best cat'\n");
+    LOG.info("\n\nCreating award entity with name of 'best cat'\n");
     properties = new LinkedHashMap<String, Object>();
     properties.put("name", "Best Cat Ever");
     Entity awardA = em.create("award", properties);
     assertNotNull(awardA);
-    logger.info("\n\nEntity created with id " + awardA.getUuid() + "\n");
+    LOG.info("\n\nEntity created with id " + awardA.getUuid() + "\n");
 
     // Establish connection from cat A to cat B
 
-    logger.info("\n\nConnecting " + catA.getUuid() + " \"likes\" " + catB.getUuid() + "\n");
+    LOG.info("\n\nConnecting " + catA.getUuid() + " \"likes\" " + catB.getUuid() + "\n");
     em.createConnection(catA, "likes", catB);
 
     // Establish connection from award A to cat B
 
-    logger.info("\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n");
+    LOG.info("\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n");
     em.createConnection(awardA, "awarded", catB);
 
     // List forward connections for cat A
 
     // Thread.sleep(5000);
 
-    logger.info("Find all connections for cat A: " + catA.getUuid());
+    LOG.info("Find all connections for cat A: " + catA.getUuid());
 
     testEntityConnections(applicationId, catA.getUuid(), 1);
 
     // List forward connections for award A
 
-    logger.info("Find all connections for award A: " + awardA.getUuid());
+    LOG.info("Find all connections for award A: " + awardA.getUuid());
 
     testEntityConnections(applicationId, awardA.getUuid(), 1);
 
     // Establish connection from award A to cat A
 
-    logger.info("\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n");
+    LOG.info("\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n");
     em.createConnection(awardA, "awarded", catA);
 
     // List forward connections for cat A
@@ -171,7 +173,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
     testApplicationCollections(applicationId, "awards", 1);
 
-    logger.info("\n\nSearching Award A for recipients with the name Dylan\n");
+    LOG.info("\n\nSearching Award A for recipients with the name Dylan\n");
 
     // T.N. This isn't used anywhere. Removing for this release
     // Results found_entities =
@@ -186,14 +188,14 @@ public class EntityConnectionsIT extends AbstractCoreIT
     // assertNotNull(found_cat_id);
     //
     // Entity found_cat = em.get(found_cat_id);
-    // logger.info("Found cat id: " + found_cat.getUuid());
-    // logger.info("Found cat name: " + found_cat.getProperty("name"));
+    // LOG.info("Found cat id: " + found_cat.getUuid());
+    // LOG.info("Found cat name: " + found_cat.getProperty("name"));
     //
-    // logger.info("\n\nSetting 'foo'='bar' for found recipient (Dylan)\n");
+    // LOG.info("\n\nSetting 'foo'='bar' for found recipient (Dylan)\n");
     //
     // em.setProperty(found_cat, "foo", "bar");
     //
-    // logger.info("\n\nSearching Group A for members with 'foo'='bar'\n");
+    // LOG.info("\n\nSearching Group A for members with 'foo'='bar'\n");
     //
     // found_entities = em.searchConnectedEntitiesForProperty(awardA,
     // "awarded", "cat", "foo", "bar", null, null, 1, false,
@@ -202,11 +204,11 @@ public class EntityConnectionsIT extends AbstractCoreIT
     // assertEquals("Wrong number of results found", 1,
     // found_entities.size());
     //
-    // logger.info("\n\nSetting 'foo'='baz' for found member (Dylan)\n");
+    // LOG.info("\n\nSetting 'foo'='baz' for found member (Dylan)\n");
     //
     // em.setProperty(found_cat, "foo", "baz");
     //
-    // logger.info("\n\nSearching award A for members with 'foo'='bar', expecting to get no results\n");
+    // LOG.info("\n\nSearching award A for members with 'foo'='bar', expecting to get no results\n");
     //
     // found_entities = em.searchConnectedEntitiesForProperty(awardA,
     // "awarded", "cat", "foo", "bar", null, null, 1, false,
@@ -215,7 +217,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
     // assertEquals("Wrong number of results found", 0,
     // found_entities.size());
     //
-    // logger.info("\n\nSearching Group A for members with 'foo'='baz'\n");
+    // LOG.info("\n\nSearching Group A for members with 'foo'='baz'\n");
     //
     // found_entities = em.searchConnectedEntitiesForProperty(awardA,
     // "awarded", "cat", "foo", "baz", null, null, 1, false,
@@ -237,10 +239,10 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
   public Map<String, Map<String, List<UUID>>> testEntityConnections(UUID applicationId, UUID entityId, int expectedCount)
       throws Exception {
-    logger.info("----------------------------------------------------");
-    logger.info("Checking connections for " + entityId.toString());
+    LOG.info("----------------------------------------------------");
+    LOG.info("Checking connections for " + entityId.toString());
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     Entity en = em.get(entityId);
 
     Results results = em.getConnectedEntities(en.getUuid(), null, null, Results.Level.REFS);
@@ -250,11 +252,11 @@ public class EntityConnectionsIT extends AbstractCoreIT
      * connectionType : connections.keySet()) { Map<String, List<UUID>>
      * entityTypeToEntityIds = connections .get(connectionType); for (String
      * entityType : entityTypeToEntityIds.keySet()) { List<UUID> entityIds =
-     * entityTypeToEntityIds.get(entityType); logger.info(connectionType + " " +
-     * entityType + ":"); for (UUID id : entityIds) { logger.info(entityType +
+     * entityTypeToEntityIds.get(entityType); LOG.info(connectionType + " " +
+     * entityType + ":"); for (UUID id : entityIds) { LOG.info(entityType +
      * " " + id.toString()); } } }
      */
-    logger.info("----------------------------------------------------");
+    LOG.info("----------------------------------------------------");
     assertEquals("Expected " + expectedCount + " connections", expectedCount,
         results.getConnections() != null ? results.getConnections().size() : 0);
     // return connections;
@@ -268,18 +270,18 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
   public List<UUID> testEntityCollections(UUID applicationId, UUID entityId, String collectionName, int expectedCount)
       throws Exception {
-    logger.info("----------------------------------------------------");
-    logger.info("Checking collection " + collectionName + " for " + entityId.toString());
+    LOG.info("----------------------------------------------------");
+    LOG.info("Checking collection " + collectionName + " for " + entityId.toString());
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     Entity en = em.get(entityId);
 
     int i = 0;
     Results entities = em.getCollection(en, collectionName, null, 100, Results.Level.IDS, false);
     for (UUID id : entities.getIds()) {
-      logger.info((i++) + " " + id.toString());
+      LOG.info((i++) + " " + id.toString());
     }
-    logger.info("----------------------------------------------------");
+    LOG.info("----------------------------------------------------");
     assertEquals("Expected " + expectedCount + " connections", expectedCount, entities.getIds() != null ? entities
         .getIds().size() : 0);
     // return connections;
@@ -288,10 +290,10 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
   @Test
   public void testEntityConnectionsMembership() throws Exception {
-    UUID applicationId = createApplication("entityConnectionsTest", "testEntityConnectionsMembership");
+    UUID applicationId = setup.createApplication("entityConnectionsTest", "testEntityConnectionsMembership");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     User first = new User();

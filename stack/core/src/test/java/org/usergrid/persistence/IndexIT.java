@@ -47,7 +47,7 @@ import org.usergrid.utils.UUIDUtils;
 @Concurrent()
 public class IndexIT extends AbstractCoreIT
 {
-	private static final Logger logger = LoggerFactory.getLogger(IndexIT.class);
+	private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
 
 	public static final String[] alphabet = { "Alpha", "Bravo", "Charlie",
 			"Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet",
@@ -56,14 +56,15 @@ public class IndexIT extends AbstractCoreIT
 			"X-ray", "Yankee", "Zulu" };
 
 	@Test
-	public void testCollectionOrdering() throws Exception {
-		logger.info("testCollectionOrdering");
+	public void testCollectionOrdering() throws Exception
+    {
+		LOG.info("testCollectionOrdering");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = setup.createApplication("testOrganization",
 				"testCollectionOrdering");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		for (int i = alphabet.length - 1; i >= 0; i--) {
@@ -111,7 +112,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("order by name desc").withCursor(r.getCursor());
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		// logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		// LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		for (Entity entity : r.getEntities()) {
 			i--;
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -130,13 +131,13 @@ public class IndexIT extends AbstractCoreIT
 
 	@Test
 	public void testCollectionFilters() throws Exception {
-		logger.info("testCollectionFilters");
+		LOG.info("testCollectionFilters");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = setup.createApplication("testOrganization",
 				"testCollectionFilters");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		for (int i = alphabet.length - 1; i >= 0; i--) {
@@ -150,7 +151,7 @@ public class IndexIT extends AbstractCoreIT
 
 		Query query = Query.fromQL("name < 'delta'");
 		Results r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		int i = 0;
 		for (Entity entity : r.getEntities()) {
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -160,7 +161,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("name <= 'delta'");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 0;
 		for (Entity entity : r.getEntities()) {
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -170,7 +171,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("name <= 'foxtrot' and name > 'bravo'");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 2;
 		for (Entity entity : r.getEntities()) {
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -180,7 +181,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("name < 'foxtrot' and name > 'bravo'");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 2;
 		for (Entity entity : r.getEntities()) {
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -190,7 +191,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("name < 'foxtrot' and name >= 'bravo'");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 1;
 		for (Entity entity : r.getEntities()) {
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -200,7 +201,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("name <= 'foxtrot' and name >= 'bravo'");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 1;
 		for (Entity entity : r.getEntities()) {
 			assertEquals(alphabet[i], entity.getProperty("name"));
@@ -211,7 +212,7 @@ public class IndexIT extends AbstractCoreIT
 		query = Query
 				.fromQL("name <= 'foxtrot' and name >= 'bravo' order by name desc");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 6;
 		for (Entity entity : r.getEntities()) {
 			i--;
@@ -222,7 +223,7 @@ public class IndexIT extends AbstractCoreIT
 		query = Query
 				.fromQL("name < 'foxtrot' and name > 'bravo' order by name desc");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 5;
 		for (Entity entity : r.getEntities()) {
 			i--;
@@ -233,7 +234,7 @@ public class IndexIT extends AbstractCoreIT
 		query = Query
 				.fromQL("name < 'foxtrot' and name >= 'bravo' order by name desc");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		i = 5;
 		for (Entity entity : r.getEntities()) {
 			i--;
@@ -243,7 +244,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("name = 'foxtrot'");
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		assertEquals(1, r.size());
 
 		long created = r.getEntity().getCreated();
@@ -251,7 +252,7 @@ public class IndexIT extends AbstractCoreIT
 
 		query = Query.fromQL("created = " + created);
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		assertEquals(1, r.size());
 		assertEquals(entityId, r.getEntity().getUuid());
 
@@ -259,13 +260,13 @@ public class IndexIT extends AbstractCoreIT
 
 	@Test
 	public void testSecondarySorts() throws Exception {
-		logger.info("testSecondarySorts");
+		LOG.info("testSecondarySorts");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = setup.createApplication("testOrganization",
 				"testSecondarySorts");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		for (int i = alphabet.length - 1; i >= 0; i--) {
@@ -281,7 +282,7 @@ public class IndexIT extends AbstractCoreIT
 
 		Query query = Query.fromQL("group = 1 order by name desc");
 		Results r = em.searchCollection(em.getApplicationRef(), "items", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 		int i = 6;
 		for (Entity entity : r.getEntities()) {
 			i--;
@@ -296,9 +297,9 @@ public class IndexIT extends AbstractCoreIT
   @Test
   public void testPropertyUpdateWithConnection() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testPropertyUpdateWithConnection");
+    UUID applicationId = setup.createApplication("testOrganization", "testPropertyUpdateWithConnection");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     
 
     Map<String, Object> entity1 = new LinkedHashMap<String, Object>();
@@ -369,9 +370,9 @@ public class IndexIT extends AbstractCoreIT
   @Test
   public void testPropertyUpdateWithConnectionEntityIndexEntryAudit() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit");
+    UUID applicationId = setup.createApplication("testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     
 
     Map<String, Object> entity1 = new LinkedHashMap<String, Object>();

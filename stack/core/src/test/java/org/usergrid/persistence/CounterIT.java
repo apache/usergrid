@@ -43,7 +43,7 @@ import com.usergrid.count.SimpleBatcher;
 public class CounterIT extends AbstractCoreIT
 {
 
-	private static final Logger logger = LoggerFactory.getLogger( CounterIT.class );
+	private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
 
 	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
 	
@@ -64,12 +64,12 @@ public class CounterIT extends AbstractCoreIT
 	@Test
 	public void testIncrementAndDecrement() throws Exception {
 		
-		logger.info("CounterIT.testIncrementAndDecrement");
+		LOG.info("CounterIT.testIncrementAndDecrement");
 		
-		UUID applicationId = createApplication("testOrganization", "testCountersIandD");
+		UUID applicationId = setup.createApplication("testOrganization", "testCountersIandD");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 		
 		Map<String, Long> counters = em.getEntityCounters(applicationId);
@@ -81,7 +81,7 @@ public class CounterIT extends AbstractCoreIT
 		userProperties.put("username", "test-username");
 		userProperties.put("email", "test-email");
 		User user = (User) em.create(uuid, "user", userProperties).toTypedEntity();
-		logger.debug("user={}", user);
+		LOG.debug("user={}", user);
 		
 	
 		counters = em.getEntityCounters(applicationId);
@@ -94,12 +94,12 @@ public class CounterIT extends AbstractCoreIT
 
 	@Test
 	public void testCounters() throws Exception {
-		logger.info("CounterIT.testCounters");
+		LOG.info("CounterIT.testCounters");
 
-		UUID applicationId = createApplication("testOrganization","testCounters");
+		UUID applicationId = setup.createApplication("testOrganization","testCounters");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 
@@ -126,21 +126,21 @@ public class CounterIT extends AbstractCoreIT
 		Results r = em.getAggregateCounters(null, null, null, "visits",
 				CounterResolution.SIX_HOUR, ts, System.currentTimeMillis(),
 				false);
-		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+		LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
 
 		r = em.getAggregateCounters(user1, null, null, "visits",
 				CounterResolution.SIX_HOUR, ts, System.currentTimeMillis(),
 				false);
-		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+		LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
 
 		r = em.getAggregateCounters(user1, null, null, "visits",
 				CounterResolution.SIX_HOUR, ts, System.currentTimeMillis(),
 				true);
-		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+		LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
 
 		r = em.getAggregateCounters(user1, null, null, "visits",
 				CounterResolution.ALL, ts, System.currentTimeMillis(), false);
-		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+		LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
 
 		for (int i = 0; i < 10; i++) {
 			event = new Event();
@@ -152,7 +152,7 @@ public class CounterIT extends AbstractCoreIT
 		r = em.getAggregateCounters(null, null, null, "clicks",
 				CounterResolution.HALF_HOUR, ts, System.currentTimeMillis(),
 				true);
-		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+		LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
 
 		Query query = new Query();
 		query.addCounterFilter("clicks:*:*:*");
@@ -162,13 +162,13 @@ public class CounterIT extends AbstractCoreIT
 		query.setResolution(CounterResolution.SIX_HOUR);
 		query.setPad(true);
 		r = em.getAggregateCounters(query);
-		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+		LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
 
-		logger.info(JsonUtils.mapToJsonString(em.getCounterNames()));
+		LOG.info(JsonUtils.mapToJsonString(em.getCounterNames()));
 	
 		
 		Map<String, Long> counts = em.getApplicationCounters();
-		logger.info("counts map: "+JsonUtils.mapToJsonString(counts));
+		LOG.info("counts map: " + JsonUtils.mapToJsonString(counts));
 
 		assertEquals(new Long(10), counts.get("clicks"));
 		assertEquals(new Long(200), counts.get("visits"));
@@ -178,7 +178,7 @@ public class CounterIT extends AbstractCoreIT
 
   @Test
   public void testCommunityCounters() throws Exception {
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = setup.getEmf().getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Group organizationEntity = new Group();
     organizationEntity.setPath("tst-counter");
@@ -186,7 +186,7 @@ public class CounterIT extends AbstractCoreIT
     organizationEntity = em.create(organizationEntity);
 
 
-    UUID applicationId = emf.createApplication("testCounter","testEntityCounters");
+    UUID applicationId = setup.getEmf().createApplication("testCounter","testEntityCounters");
 
     Map<String,Object> properties = new LinkedHashMap<String,Object>();
     properties.put("name", "testCounter/testEntityCounters");
@@ -212,7 +212,7 @@ public class CounterIT extends AbstractCoreIT
     em.create(event);
    */
     Map<String, Long> counts = em.getApplicationCounters();
-    logger.info(JsonUtils.mapToJsonString(counts));
+    LOG.info(JsonUtils.mapToJsonString(counts));
     assertNotNull(counts.get("admin.logins"));
     assertEquals(1,counts.get("admin.logins").longValue());
     // Q's:
@@ -222,10 +222,10 @@ public class CounterIT extends AbstractCoreIT
     Results r = em.getAggregateCounters(null,null, null, "admin.logins",
             CounterResolution.ALL, ts, System.currentTimeMillis(),
             false);
-    logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+    LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
     assertEquals(1, r.getCounters().get(0).getValues().get(0).getValue());
     //counts = em.getEntityCounters(organizationEntity.getUuid());
-    //logger.info(JsonUtils.mapToJsonString(counts));
+    //LOG.info(JsonUtils.mapToJsonString(counts));
     Query query = new Query();
     query.addCounterFilter("admin.logins:*:*:*");
     query.setStartTime(ts);
@@ -233,7 +233,7 @@ public class CounterIT extends AbstractCoreIT
     query.setResolution(CounterResolution.SIX_HOUR);
     //query.setPad(true);
     r = em.getAggregateCounters(query);
-    logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+    LOG.info(JsonUtils.mapToJsonString(r.getCounters()));
     assertEquals(1, r.getCounters().get(0).getValues().get(0).getValue());
 
   }
