@@ -236,7 +236,7 @@ public class MessagesIT extends AbstractCoreIT
     @Test
     public void testTransactions() throws Exception {
 
-        UUID applicationId = createApplication("testOrganization", "testTransactions");
+        UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
         assertNotNull(applicationId);
 
         EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
@@ -244,7 +244,7 @@ public class MessagesIT extends AbstractCoreIT
 
         LOG.info("Creating messages");
 
-        QueueManager qm = geQueueManagerFactory().getQueueManager(applicationId);
+        QueueManager qm = getQueueManagerFactory().getQueueManager(applicationId);
 
         String queuePath = "/foo/bar";
 
