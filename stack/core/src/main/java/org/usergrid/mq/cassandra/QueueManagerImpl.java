@@ -1392,9 +1392,13 @@ public class QueueManagerImpl implements QueueManager {
    */
   @Override
   public void deleteTransaction(String queuePath, UUID transactionId, QueueQuery query) {
+    this.commitTransaction(queuePath, transactionId, query);
+  }
+
+  @Override
+  public void commitTransaction(String queuePath, UUID transactionId, QueueQuery query) {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
     new ConsumerTransaction(applicationId, ko, lockManager, cass).deleteTransaction(queuePath, transactionId, query);
-
   }
 
   @Override
@@ -1407,7 +1411,6 @@ public class QueueManagerImpl implements QueueManager {
     }
 
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
-
 
     return new ConsumerTransaction(applicationId, ko, lockManager, cass)
         .hasOutstandingTransactions(queueId, consumerId);
