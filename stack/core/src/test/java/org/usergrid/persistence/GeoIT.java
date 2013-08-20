@@ -52,10 +52,10 @@ public class GeoIT extends AbstractCoreIT
   public void testGeo() throws Exception {
     LOG.info("GeoIT.testGeo");
 
-    UUID applicationId = createApplication("testOrganization", "testGeo");
+    UUID applicationId = setup.createApplication("testOrganization", "testGeo");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -71,7 +71,7 @@ public class GeoIT extends AbstractCoreIT
 
     Point center = new Point(37.774277, -122.404744);
     
-    CollectionGeoSearch connSearch = new CollectionGeoSearch(em, indexBucketLocator, cassandraService,
+    CollectionGeoSearch connSearch = new CollectionGeoSearch(em, setup.getIbl(), setup.getCassSvc(),
             em.getApplicationRef(),"users");
     
 
@@ -179,10 +179,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testPointPaging() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testPointPaging");
+    UUID applicationId = setup.createApplication("testOrganization", "testPointPaging");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     // save objects in a diagonal line from -90 -180 to 90 180
@@ -240,10 +240,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testSamePointPaging() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testSamePointPaging");
+    UUID applicationId = setup.createApplication("testOrganization", "testSamePointPaging");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     // save objects in a diagonal line from -90 -180 to 90 180
@@ -286,10 +286,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testDistanceByLimit() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testDistanceByLimit");
+    UUID applicationId = setup.createApplication("testOrganization", "testDistanceByLimit");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     // save objects in a diagonal line from -90 -180 to 90 180
@@ -343,10 +343,10 @@ public class GeoIT extends AbstractCoreIT
   @Test
   public void testGeoWithIntersection() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testGeoWithIntersection");
+    UUID applicationId = setup.createApplication("testOrganization", "testGeoWithIntersection");
     assertNotNull(applicationId);
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     assertNotNull(em);
 
     int size = 100;

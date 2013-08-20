@@ -104,6 +104,8 @@
               <excludes>
                 <exclude>**/*Concurrent*Suite.java</exclude>
 
+                <!-- Need to exclude Suite tests to prevent double execution -->
+
                 <exclude>**/HectorLockManagerIT.java</exclude>
                 <exclude>**/UsergridSystemMonitorIT.java</exclude>
                 <exclude>**/CollectionIT.java</exclude>
@@ -132,7 +134,7 @@
                 <exclude>**/UnionIteratorTest.java</exclude>
                 <exclude>**/GrammarTreeTest.java</exclude>
                 <exclude>**/LongLiteralTest.java</exclude>
-                <exclude>**/StringLiteralTest.class</exclude>
+                <exclude>**/StringLiteralTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>

@@ -60,11 +60,11 @@ public class IndexIT extends AbstractCoreIT
     {
 		LOG.info("testCollectionOrdering");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = setup.createApplication("testOrganization",
 				"testCollectionOrdering");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		for (int i = alphabet.length - 1; i >= 0; i--) {
@@ -133,11 +133,11 @@ public class IndexIT extends AbstractCoreIT
 	public void testCollectionFilters() throws Exception {
 		LOG.info("testCollectionFilters");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = setup.createApplication("testOrganization",
 				"testCollectionFilters");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		for (int i = alphabet.length - 1; i >= 0; i--) {
@@ -262,11 +262,11 @@ public class IndexIT extends AbstractCoreIT
 	public void testSecondarySorts() throws Exception {
 		LOG.info("testSecondarySorts");
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = setup.createApplication("testOrganization",
 				"testSecondarySorts");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		EntityManager em = setup.getEmf().getEntityManager(applicationId);
 		assertNotNull(em);
 
 		for (int i = alphabet.length - 1; i >= 0; i--) {
@@ -297,9 +297,9 @@ public class IndexIT extends AbstractCoreIT
   @Test
   public void testPropertyUpdateWithConnection() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testPropertyUpdateWithConnection");
+    UUID applicationId = setup.createApplication("testOrganization", "testPropertyUpdateWithConnection");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     
 
     Map<String, Object> entity1 = new LinkedHashMap<String, Object>();
@@ -370,9 +370,9 @@ public class IndexIT extends AbstractCoreIT
   @Test
   public void testPropertyUpdateWithConnectionEntityIndexEntryAudit() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit");
+    UUID applicationId = setup.createApplication("testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit");
 
-    EntityManager em = emf.getEntityManager(applicationId);
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
     
 
     Map<String, Object> entity1 = new LinkedHashMap<String, Object>();

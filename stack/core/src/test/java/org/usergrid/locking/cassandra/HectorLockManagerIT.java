@@ -55,8 +55,6 @@ public class HectorLockManagerIT extends AbstractCoreIT
     @BeforeClass
     public static void setup() throws Exception
     {
-        AbstractCoreIT.setup();
-
         HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
         hlockManager.setCluster(CoreITSuite.cassandraResource.getBean( CassandraService.class ).getCluster() );
         hlockManager.setKeyspaceName( "Locks" );

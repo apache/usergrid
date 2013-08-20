@@ -44,7 +44,7 @@ public class MessagesIT extends AbstractCoreIT
 	public void testMessages() throws Exception {
 		LOG.info("MessagesIT.testMessages");
 
-		UUID applicationId = createApplication("testOrganization","testMessages");
+		UUID applicationId = setup.createApplication("testOrganization","testMessages");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
@@ -59,7 +59,7 @@ public class MessagesIT extends AbstractCoreIT
 
 		LOG.info("Posting message #1 to queue /foo/bar");
 
-		QueueManager qm = geQueueManagerFactory()
+		QueueManager qm = getQueueManagerFactory()
 				.getQueueManager(applicationId);
 		qm.postToQueue("/foo/bar", message);
 
@@ -118,14 +118,14 @@ public class MessagesIT extends AbstractCoreIT
 	@Test
 	public void testSubscriberSearch() throws Exception {
 
-		UUID applicationId = createApplication("testOrganization","testSubscriberSearch");
+		UUID applicationId = setup.createApplication("testOrganization","testSubscriberSearch");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
 				applicationId);
 		assertNotNull(em);
 
-		QueueManager qm = geQueueManagerFactory()
+		QueueManager qm = getQueueManagerFactory()
 				.getQueueManager(applicationId);
 
 		Map<String, Object> properties = new HashMap<String, Object>();
@@ -182,7 +182,7 @@ public class MessagesIT extends AbstractCoreIT
 	@Test
 	public void testConsumer() throws Exception {
 
-		UUID applicationId = createApplication("testOrganization","testConsumer");
+		UUID applicationId = setup.createApplication("testOrganization","testConsumer");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
@@ -191,7 +191,7 @@ public class MessagesIT extends AbstractCoreIT
 
 		LOG.info("Creating messages");
 
-		QueueManager qm = geQueueManagerFactory()
+		QueueManager qm = getQueueManagerFactory()
 				.getQueueManager(applicationId);
 		Message message;
 
@@ -232,44 +232,48 @@ public class MessagesIT extends AbstractCoreIT
 		}
 	}
 
-  @Test
-  public void testTransactions() throws Exception {
 
-    UUID applicationId = createApplication("testOrganization", "testTransactions");
-    assertNotNull(applicationId);
+    @Test
+    public void testTransactions() throws Exception {
 
-    EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
-    assertNotNull(em);
+        UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
+        assertNotNull(applicationId);
+
 
     LOG.info("Creating messages");
+        EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
+        assertNotNull(em);
 
-    QueueManager qm = geQueueManagerFactory().getQueueManager(applicationId);
+        LOG.info("Creating messages");
 
-    String queuePath = "/foo/bar";
+        QueueManager qm = getQueueManagerFactory().getQueueManager(applicationId);
 
-    Message message = new Message();
-    message.setStringProperty("foo", "bar");
+        String queuePath = "/foo/bar";
 
-    LOG.info("Posting message # to queue /foo/bar: " + message.getUuid());
+        Message message = new Message();
+        message.setStringProperty("foo", "bar");
 
-    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+        LOG.info("Posting message # to queue /foo/bar: " + message.getUuid());
 
-    qm.postToQueue(queuePath, message);
-    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+        assertFalse(qm.hasMessagesInQueue(queuePath, null));
 
-    QueueQuery qq = new QueueQuery();
-    qq.setTimeout(100);
-    qq.setLimit(1);
-    QueueResults qr = qm.getFromQueue(queuePath, qq);
+        qm.postToQueue(queuePath, message);
+        assertTrue(qm.hasMessagesInQueue(queuePath, null));
 
-    assertFalse(qm.hasMessagesInQueue(queuePath, null));
-    assertTrue(qm.hasOutstandingTransactions(queuePath, null));
-    assertTrue(qm.hasPendingReads(queuePath, null));
+        QueueQuery qq = new QueueQuery();
+        qq.setTimeout(100);
+        qq.setLimit(1);
+        QueueResults qr = qm.getFromQueue(queuePath, qq);
 
-    qm.deleteTransaction(queuePath, qr.getMessages().get(0).getTransaction(), qq);
+        assertFalse(qm.hasMessagesInQueue(queuePath, null));
+        assertTrue(qm.hasOutstandingTransactions(queuePath, null));
+        assertTrue(qm.hasPendingReads(queuePath, null));
 
-    assertFalse(qm.hasMessagesInQueue(queuePath, null));
-    assertFalse(qm.hasOutstandingTransactions(queuePath, null));
-    assertFalse(qm.hasPendingReads(queuePath, null));
-  }
+        qm.deleteTransaction(queuePath, qr.getMessages().get(0).getTransaction(), qq);
+
+        assertFalse(qm.hasMessagesInQueue(queuePath, null));
+        assertFalse(qm.hasOutstandingTransactions(queuePath, null));
+        assertFalse(qm.hasPendingReads(queuePath, null));
+    }
+
 }

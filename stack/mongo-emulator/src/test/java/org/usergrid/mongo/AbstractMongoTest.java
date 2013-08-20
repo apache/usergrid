@@ -28,10 +28,10 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 
-public abstract class AbstractMongoTest {
 
-	private static Logger logger = LoggerFactory
-			.getLogger(AbstractMongoTest.class);
+public abstract class AbstractMongoTest
+{
+	private static Logger LOG = LoggerFactory.getLogger(AbstractMongoTest.class);
 
 	static MongoServer server = null;
 	static boolean usersSetup = false;
@@ -42,11 +42,11 @@ public abstract class AbstractMongoTest {
 	EntityManagerFactoryImpl emf;
 	ServiceManagerFactory smf;
 
-	public AbstractMongoTest() {
+
+    public AbstractMongoTest()
+    {
 		super();
-		//emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
 		smf = new ServiceManagerFactory(emf, properties, null, null, null);
-		//smf.setApplicationContext(helper.getApplicationContext());
 	}
 
 
@@ -56,15 +56,13 @@ public abstract class AbstractMongoTest {
 	 * @throws UnknownHostException
 	 * @throws MongoException
 	 */
-	public static DB getDb() throws UnknownHostException, MongoException{
+	public static DB getDb() throws UnknownHostException, MongoException
+    {
 	    Mongo m = new Mongo("localhost", 27017);
         m.setWriteConcern(WriteConcern.SAFE);
 
         DB db = m.getDB("test-organization/test-app");
-//        DB db = m.getDB("test-app");
         db.authenticate("test", "test".toCharArray());
-        
         return db;
 	}
-
 }
