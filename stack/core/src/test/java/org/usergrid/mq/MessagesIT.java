@@ -251,7 +251,7 @@ public class MessagesIT extends AbstractCoreIT
     Message message = new Message();
     message.setStringProperty("foo", "bar");
     LOG.info("Posting message to queue " + queuePath + ": " + message.getUuid());
-    qm.postToQueue(queuePath, message);
+    Message posted1 = qm.postToQueue(queuePath, message);
 
     assertTrue(qm.hasMessagesInQueue(queuePath, null));
     assertFalse(qm.hasOutstandingTransactions(queuePath, null));
@@ -260,7 +260,7 @@ public class MessagesIT extends AbstractCoreIT
     message = new Message();
     message.setStringProperty("foo", "bar");
     LOG.info("Posting message to queue " + queuePath + ": " + message.getUuid());
-    qm.postToQueue(queuePath, message);
+    Message posted2 =qm.postToQueue(queuePath, message);
 
     assertTrue(qm.hasMessagesInQueue(queuePath, null));
     assertFalse(qm.hasOutstandingTransactions(queuePath, null));
@@ -268,9 +268,14 @@ public class MessagesIT extends AbstractCoreIT
 
     // take 1 message
     QueueQuery qq = new QueueQuery();
-    qq.setTimeout(100);
+    qq.setTimeout(60000000);
     qq.setLimit(1);
     QueueResults qr1 = qm.getFromQueue(queuePath, qq);
+
+    assertEquals("Only 1 message returned", 1, qr1.getMessages().size());
+    assertEquals("Expected message 1", posted1.getUuid(), qr1.getLast());
+    assertEquals("Expected message 1", posted1.getUuid(), qr1.getMessages().get(0).getUuid());
+    assertNotNull("Expected transaction id", qr1.getMessages().get(0).getTransaction());
 
     assertTrue(qm.hasMessagesInQueue(queuePath, null));
     assertTrue(qm.hasOutstandingTransactions(queuePath, null));
@@ -279,18 +284,29 @@ public class MessagesIT extends AbstractCoreIT
     // take the 2nd message
     QueueResults qr2 = qm.getFromQueue(queuePath, qq);
 
-    assertTrue(qm.hasMessagesInQueue(queuePath, null));
-    assertTrue(qm.hasOutstandingTransactions(queuePath, null));
+
+    assertEquals("Only 1 message returned", 1, qr2.getMessages().size());
+    assertEquals("Expected message 2", posted2.getUuid(), qr2.getLast());
+    assertEquals("Expected message 2", posted2.getUuid(), qr2.getMessages().get(0).getUuid());
+    assertNotNull("Expected transaction id", qr2.getMessages().get(0).getTransaction());
+
+
+    assertFalse("Both messages have been returned at least once", qm.hasMessagesInQueue(queuePath, null));
+    assertTrue("Two outstanding transactions left", qm.hasOutstandingTransactions(queuePath, null));
     assertTrue(qm.hasPendingReads(queuePath, null));
 
     // commit the 1st transaction
     qm.deleteTransaction(queuePath, qr1.getMessages().get(0).getTransaction(), qq);
 
-    assertTrue(qm.hasMessagesInQueue(queuePath, null));
-    assertTrue(qm.hasOutstandingTransactions(queuePath, null));
+    assertFalse("Both messages have been returned at least once", qm.hasMessagesInQueue(queuePath, null));
+    assertTrue("One outstanding transaction is left", qm.hasOutstandingTransactions(queuePath, null));
     assertTrue(qm.hasPendingReads(queuePath, null));
 
     // commit the 2nd transaction
     qm.deleteTransaction(queuePath, qr2.getMessages().get(0).getTransaction(), qq);
+
+    assertFalse("Both messages have been returned at least once", qm.hasMessagesInQueue(queuePath, null));
+    assertFalse("Both transactions have been removed", qm.hasOutstandingTransactions(queuePath, null));
+    assertFalse("Both messages and transactions have been returned", qm.hasPendingReads(queuePath, null));
   }
 }

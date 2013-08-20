@@ -347,6 +347,11 @@ public class ConsumerTransaction extends NoTransactionSearch {
    */
   protected void deleteTransactionPointers(List<TransactionPointer> pointers, int maxIndex, UUID queueId,
       UUID consumerId) {
+
+    if(maxIndex == 0 || pointers.size() == 0){
+      return;
+    }
+
     Mutator<ByteBuffer> mutator = createMutator(ko, be);
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
 
