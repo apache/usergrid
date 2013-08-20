@@ -16,6 +16,17 @@
 package org.usergrid.persistence.query;
 
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
+
+import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -27,7 +38,6 @@ import org.usergrid.persistence.*;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.utils.JsonUtils;
 
-import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -71,17 +81,6 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public EntityManagerFactory getEntityManagerFactory()
-    {
-        return emf;
-    }
-
-
-    public QueueManagerFactory geQueueManagerFactory()
-    {
-        return qmf;
-    }
-
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception
     {
@@ -91,12 +90,6 @@ public abstract class AbstractIteratingQueryIT
         }
 
         return emf.createApplication( organizationName, applicationName );
-    }
-
-
-    public void dump( Object obj )
-    {
-        dump( "Object", obj );
     }
 
 
@@ -995,6 +988,215 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(size, count);
 
   }
+  
+
+  protected void multiOrderBy(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 2000;
+    int queryLimit = Query.MAX_LIMIT;
+
+    // the number of entities that should be written including an intersection
+
+    Set<Entity> sortedResults = new TreeSet<Entity>(new Comparator<Entity>() {
+
+      @Override
+      public int compare(Entity o1, Entity o2) {
+       boolean o1Boolean = (Boolean) o1.getProperty("boolean");
+       boolean o2Boolean = (Boolean) o2.getProperty("boolean");
+       
+       if(o1Boolean != o2Boolean){
+         if(o1Boolean){
+           return -1;
+         }
+         
+         return 1;
+       }
+       
+       int o1Index = (Integer) o1.getProperty("index");
+       int o2Index = (Integer) o2.getProperty("index");
+       
+       if(o1Index > o2Index){
+         return 1;
+       }else if (o2Index > o1Index){
+         return -1;
+       }
+       
+       return 0;
+       
+      }
+    });
+
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      String name = String.valueOf(i);
+      boolean bool = i %2 == 0;
+      entity.put("name", name);
+      entity.put("boolean", bool);
+      
+      /**
+       * we want them to be ordered from the "newest" time uuid to the oldec since we 
+       * have a low cardinality value as the first second clause.  This way the test
+       *won't accidentally pass b/c the UUID ordering matches the index ordering.  If we were
+       *to reverse the value of index (size-i) the test would pass incorrectly
+       */
+      
+      entity.put("index", i);
+      
+      Entity saved = io.writeEntity(entity);
+      
+      sortedResults.add(saved);
+
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL("select * order by boolean desc, index asc");
+    query.setLimit(queryLimit);
+
+    int count = 0;
+
+    Results results;
+
+    start = System.currentTimeMillis();
+    
+    Iterator<Entity> itr = sortedResults.iterator();
+
+    do {
+
+      // now do simple ordering, should be returned in order
+      results = io.getResults(query);
+
+      for (int i = 0; i < results.size(); i++) {
+        Entity expected = itr.next();
+        Entity returned = results.getEntities().get(i);
+        
+        assertEquals("Order incorrect", expected.getName(), returned.getName());
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.getCursor() != null);
+
+    stop = System.currentTimeMillis();
+
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+    assertEquals(sortedResults.size(), count);
+  }
+
+  protected void multiOrderByComplexUnion(IoHelper io) throws Exception {
+
+    io.doSetup();
+
+    int size = 2000;
+    int queryLimit = Query.MAX_LIMIT;
+
+    // the number of entities that should be written including an intersection
+    int intersectIncrement = 5;
+    int secondIncrement = 9;
+
+    long start = System.currentTimeMillis();
+
+    logger.info("Writing {} entities.", size);
+
+    Set<Entity> sortedResults = new TreeSet<Entity>(new Comparator<Entity>() {
+
+      @Override
+      public int compare(Entity o1, Entity o2) {
+        long o1Index = (Long) o1.getProperty("created");
+        long o2Index = (Long) o2.getProperty("created");
+
+        if(o1Index > o2Index){
+          return 1;
+        }else if (o2Index > o1Index){
+          return -1;
+        }
+
+
+        boolean o1Boolean = (Boolean) o1.getProperty("intersect");
+        boolean o2Boolean = (Boolean) o2.getProperty("intersect");
+
+        if(o1Boolean != o2Boolean){
+          if(o1Boolean){
+            return -1;
+          }
+
+          return 1;
+        }
+
+
+
+        return 0;
+
+      }
+    });
+
+    for (int i = 0; i < size; i++) {
+      Map<String, Object> entity = new HashMap<String, Object>();
+
+      String name = String.valueOf(i);
+      boolean intersect1 = i % intersectIncrement == 0;
+      boolean intersect2 = i % secondIncrement == 0;
+      entity.put("name", name);
+      // if we hit the increment, set this to true
+
+      entity.put("intersect", intersect1);
+      entity.put("intersect2", intersect2);
+      Entity e = io.writeEntity(entity);
+
+      if (intersect1 || intersect2) {
+        sortedResults.add(e);
+      }
+
+    }
+
+    long stop = System.currentTimeMillis();
+
+    logger.info("Writes took {} ms", stop - start);
+
+    Query query = Query.fromQL("select * where intersect = true OR intersect2 = true order by created, intersect desc");
+    query.setLimit(queryLimit);
+
+    int count = 0;
+
+    Results results;
+
+    start = System.currentTimeMillis();
+
+    Iterator<Entity> expected = sortedResults.iterator();
+
+    do {
+
+      // now do simple ordering, should be returned in order
+      results = io.getResults(query);
+
+      for (Entity result: results.getEntities()) {
+        assertEquals(expected.next(), result);
+        count++;
+      }
+
+      query.setCursor(results.getCursor());
+
+    } while (results.getCursor() != null);
+
+    stop = System.currentTimeMillis();
+
+    logger.info("Query took {} ms to return {} entities", stop - start, count);
+
+    assertEquals(sortedResults.size(), count);
+  }
+
 
   /**
    * Interface to abstract actually doing I/O targets. The same test logic can
@@ -1066,7 +1268,7 @@ public abstract class AbstractIteratingQueryIT
      */
     @Override
     public void doSetup() throws Exception {
-      UUID applicationId = createApplication("IteratingQuery1IT", appName);
+      UUID applicationId = createApplication("SingleOrderByMaxLimitCollection", appName);
       assertNotNull(applicationId);
 
       em = emf.getEntityManager(applicationId);
@@ -1115,14 +1317,14 @@ public abstract class AbstractIteratingQueryIT
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
      * writeEntity(java.lang.String, java.util.Map)
      */
     /*
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
      * doSetup()
      */
     @Override
@@ -1148,7 +1350,7 @@ public abstract class AbstractIteratingQueryIT
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.CollectionIoHelper#
+     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
      * getResults(org.usergrid.persistence.Query)
      */
     @Override
@@ -1161,27 +1363,5 @@ public abstract class AbstractIteratingQueryIT
   }
 
 
-    class ConnectionNoTypeHelper extends ConnectionHelper {
 
-    ConnectionNoTypeHelper(String name) {
-      super(name);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.IteratingQuery1IT.ConnectionHelper#getResults
-     * (org.usergrid.persistence.Query)
-     */
-    @Override
-    public Results getResults(Query query) throws Exception {
-      query.setConnectionType(CONNECTION);
-      // don't set it on purpose
-      query.setEntityType(null);
-      return em.searchConnectedEntities(rootEntity, query);
-
-    }
-
-  }
 }

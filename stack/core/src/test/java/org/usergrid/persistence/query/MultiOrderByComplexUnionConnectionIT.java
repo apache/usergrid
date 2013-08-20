@@ -13,48 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.exceptions;
+package org.usergrid.persistence.query;
+
+
+import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
 
 
 /**
- * An exception thrown when a query cannot be parsed
  * @author tnine
- *
+ * 
  */
-public class QueryParseException extends RuntimeException {
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 
-     */
-    public QueryParseException() {
-        super();
+@Concurrent()
+public class MultiOrderByComplexUnionConnectionIT extends AbstractIteratingQueryIT
+{
+    @Test
+    public void multiOrderByComplexUnionConnection() throws Exception {
+      multiOrderByComplexUnion(new CollectionIoHelper("multiOrderByComplexUnionConnection"));
     }
-
-    /**
-     * @param arg0
-     * @param arg1
-     */
-    public QueryParseException(String arg0, Throwable arg1) {
-        super(arg0, arg1);
-    }
-
-    /**
-     * @param arg0
-     */
-    public QueryParseException(String arg0) {
-        super(arg0);
-    }
-
-    /**
-     * @param arg0
-     */
-    public QueryParseException(Throwable arg0) {
-        super(arg0);
-    }
-
 }

@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
+import org.usergrid.persistence.cassandra.IndexUpdate;
 import org.usergrid.utils.UUIDUtils;
 
 
@@ -32,14 +33,6 @@ import org.usergrid.utils.UUIDUtils;
 public class UUIDIndexSliceParser implements SliceParser<UUID> {
 
   private static final UUIDSerializer SERIALIZER = UUIDSerializer.get();
-  
-  /* (non-Javadoc)
-   * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-   */
-  @Override
-  public int compare(UUID first, UUID second) {
-    return UUIDUtils.compare(first, second);
-  }
 
   /* (non-Javadoc)
    * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
@@ -55,6 +48,11 @@ public class UUIDIndexSliceParser implements SliceParser<UUID> {
   @Override
   public UUID getUUID(UUID value) {
     return value;
+  }
+
+  @Override
+  public Object getValue(UUID value) {
+    throw new UnsupportedOperationException("Getting the value is not supported on uuid lists");
   }
 
   /* (non-Javadoc)

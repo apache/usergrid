@@ -39,6 +39,7 @@
     <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties
     </usergrid-custom-spring-test-properties>
+    <antlr.version>3.4</antlr.version>
   </properties>
 
   <licenses>
@@ -728,7 +729,7 @@
       <dependency>
         <groupId>org.antlr</groupId>
         <artifactId>antlr-runtime</artifactId>
-        <version>3.4</version>
+        <version>${antlr.version}</version>
       </dependency>
 
       <dependency>
@@ -1264,7 +1265,7 @@
         <plugin>
           <groupId>org.antlr</groupId>
           <artifactId>antlr3-maven-plugin</artifactId>
-          <version>3.4</version>
+          <version>${antlr.version}</version>
         </plugin>
 
         <plugin>

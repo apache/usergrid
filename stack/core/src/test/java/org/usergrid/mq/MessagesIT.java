@@ -239,6 +239,8 @@ public class MessagesIT extends AbstractCoreIT
         UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
         assertNotNull(applicationId);
 
+
+    LOG.info("Creating messages");
         EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
         assertNotNull(em);
 
@@ -273,4 +275,5 @@ public class MessagesIT extends AbstractCoreIT
         assertFalse(qm.hasOutstandingTransactions(queuePath, null));
         assertFalse(qm.hasPendingReads(queuePath, null));
     }
+
 }

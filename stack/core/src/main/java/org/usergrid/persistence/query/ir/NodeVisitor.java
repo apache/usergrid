@@ -73,6 +73,11 @@ public interface NodeVisitor {
   public void visit(UuidIdentifierNode uuidIdentifierNode);
 
   /**
+   * @param orderByNode
+   * @throws Exception
+   */
+  public void visit(OrderByNode orderByNode) throws Exception;
+  /**
    * Visit the email id node
    * @param emailIdentifierNode
    */

@@ -13,48 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.exceptions;
+package org.usergrid.persistence.query;
+
+
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
 
 
 /**
- * An exception thrown when a query cannot be parsed
  * @author tnine
- *
+ * 
  */
-public class QueryParseException extends RuntimeException {
+@Concurrent()
+public class SingleOrderByMaxLimitConnectionIT extends AbstractIteratingQueryIT
+{
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 
-     */
-    public QueryParseException() {
-        super();
-    }
-
-    /**
-     * @param arg0
-     * @param arg1
-     */
-    public QueryParseException(String arg0, Throwable arg1) {
-        super(arg0, arg1);
-    }
-
-    /**
-     * @param arg0
-     */
-    public QueryParseException(String arg0) {
-        super(arg0);
-    }
-
-    /**
-     * @param arg0
-     */
-    public QueryParseException(Throwable arg0) {
-        super(arg0);
+    @Test
+    public void singleOrderByMaxLimitConnection() throws Exception {
+        singleOrderByMaxLimit(new ConnectionHelper("singleOrderByMaxLimitConnection"));
     }
 
 }

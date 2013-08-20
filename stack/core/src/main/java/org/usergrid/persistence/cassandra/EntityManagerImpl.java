@@ -2267,7 +2267,59 @@ public class EntityManagerImpl implements EntityManager {
 		return props;
 	}
 
-	@Override
+  @Override
+  public List<Entity> getPartialEntities(Collection<UUID> ids, Collection<String> fields) throws Exception {
+
+    List<Entity> entities = new ArrayList<Entity>(ids.size());
+
+    if (ids == null || ids.size() == 0) {
+      return entities;
+    }
+
+    fields.add(PROPERTY_UUID);
+    fields.add(PROPERTY_TYPE);
+
+    Rows<UUID, String, ByteBuffer> results = null;
+
+    results = cass.getRows(cass.getApplicationKeyspace(applicationId),
+        ENTITY_PROPERTIES, ids, fields, ue, se, be);
+
+    if (results == null) {
+      return entities;
+    }
+
+    for(Row<UUID, String, ByteBuffer> row : results){
+
+
+      Map<String, Object> properties = deserializeEntityProperties(results.getByKey(row.getKey()).getColumnSlice().getColumns(), true, false );
+
+      //Could get a tombstoned row if the index is behind, just ignore it
+      if (properties == null) {
+        logger.warn("Received row key {} with no type or properties, skipping", row.getKey());
+        continue;
+      }
+
+      UUID id = uuid(properties.get(PROPERTY_UUID));
+      String type = string(properties.get(PROPERTY_TYPE));
+
+      if (id == null || type == null) {
+        logger.warn("Error retrieving entity with key {} no type or id deseriazable, skipping", row.getKey());
+        continue;
+      }
+
+      Entity entity = EntityFactory.newEntity(id, type);
+      entity.setProperties(properties);
+
+      entities.add(entity);
+    }
+
+
+
+    return entities;
+  }
+
+
+  @Override
 	public void setProperty(EntityRef entityRef, String propertyName,
 			Object propertyValue) throws Exception {
 

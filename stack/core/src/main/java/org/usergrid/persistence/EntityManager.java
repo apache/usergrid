@@ -253,6 +253,17 @@ public interface EntityManager {
     public Object getProperty(EntityRef entityRef, String propertyName)
             throws Exception;
 
+  /**
+   * Do a single load of all entities with the given properties.  Efficient if you have a subset
+   * of properties, and know the ids of them.  The entity UUID is in the key, the runtime subtype of Entity
+   * is in the value.  Note that if an entity cannot be loaded (id doesn't exist) it is simply ignored
+   *
+   * @param ids
+   * @param properties
+   * @return
+   */
+    public List<Entity> getPartialEntities(Collection<UUID> ids, Collection<String> properties) throws Exception;
+
     /**
      * Gets the properties for the specified entity property.
      * 
