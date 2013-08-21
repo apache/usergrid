@@ -2,11 +2,12 @@ package org.usergrid.security.providers;
 
 
 import org.junit.*;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.ServiceTestRule;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
@@ -32,7 +33,7 @@ public class FacebookProviderIT {
   public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
   @ClassRule
-  public static ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
+  public static ServiceITSetup setup = new ServiceITSetupImpl(ServiceITSuite.cassandraResource);
 
   @BeforeClass
   public static void setup() throws Exception

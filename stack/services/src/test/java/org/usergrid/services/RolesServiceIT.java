@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -22,17 +23,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.entities.Role;
+
 
 /**
  * @author tnine
@@ -46,14 +45,12 @@ public class RolesServiceIT extends AbstractServiceIT {
      * @throws Exception
      */
     @Test
-    public void createNewRolePost() throws Exception {
-        UUID applicationId = createApplication("testOrganization", "createNewRolePost");
-        assertNotNull(applicationId);
-
-        createAndTestRoles(applicationId, ServiceAction.POST, "manager", "Manager Title", 600000l);
-        createAndTestPermission(applicationId, ServiceAction.POST, "manager", "access:/**");
-
+    public void createNewRolePost() throws Exception
+    {
+        createAndTestRoles( ServiceAction.POST, "manager", "Manager Title", 600000l );
+        createAndTestPermission( ServiceAction.POST, "manager", "access:/**" );
     }
+
 
     /**
      * Happy path test
@@ -63,101 +60,67 @@ public class RolesServiceIT extends AbstractServiceIT {
     @Test
     public void createNewRolePut() throws Exception {
 
-        UUID applicationId = createApplication("testOrganization", "createNewRolePut");
-        assertNotNull(applicationId);
-
-        createAndTestRoles(applicationId, ServiceAction.PUT, "manager", "Manager Title", 600000l);
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/**");
+        createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
     }
 
+
     @Test(expected = IllegalArgumentException.class)
-    public void noRoleName() throws Exception {
-
-        UUID applicationId = createApplication("testOrganization", "noRoleName");
-        assertNotNull(applicationId);
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
-        Map<String, Object> props = new HashMap<String, Object>();
-        props.put("title", "Manager Title");
-        props.put("inactivity", 600000l);
+    public void noRoleName() throws Exception
+    {
+        app.add( "title", "Manager Title" );
+        app.add( "inactivity", 600000l );
 
         // test creating a new role
-        testRequest(sm, ServiceAction.POST, 1, props, "roles");
-
+        app.testRequest( ServiceAction.POST, 1, "roles" );
     }
 
+
     @Test(expected = IllegalArgumentException.class)
-    public void noPermissionsOnPost() throws Exception {
-
-        UUID applicationId = createApplication("testOrganization", "noPermissionsOnPost");
-        assertNotNull(applicationId);
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
-        Map<String, Object> props = new HashMap<String, Object>();
-        props.put("name", "manager");
-        props.put("title", "Manager Title");
-        props.put("inactivity", 600000l);
+    public void noPermissionsOnPost() throws Exception
+    {
+        app.add( "name", "manager" );
+        app.add( "title", "Manager Title" );
+        app.add( "inactivity", 600000l );
 
         // test creating a new role
-        ServiceResults results = testRequest(sm, ServiceAction.POST, 1, props, "roles");
+        ServiceResults results = app.testRequest( ServiceAction.POST, 1, "roles" );
 
         // check the results
-        Entity roleEntity = results.getEntities().get(0);
+        Entity roleEntity = results.getEntities().get( 0 );
 
-        assertEquals("manager", roleEntity.getProperty("name"));
-        assertEquals("Manager Title", roleEntity.getProperty("title"));
-        assertEquals(600000l, roleEntity.getProperty("inactivity"));
+        assertEquals( "manager", roleEntity.getProperty( "name" ) );
+        assertEquals( "Manager Title", roleEntity.getProperty("title" ) );
+        assertEquals( 600000l, roleEntity.getProperty( "inactivity" ) );
 
-        props = new HashMap<String, Object>();
-        props.put("misspelledpermission", "access:/**");
-
-        // now grant permissions
-        results = invokeService(sm, ServiceAction.POST, props, "roles", "manager", "permissions");
+        app.add( "misspelledpermission", "access:/**" );
+        app.invokeService( ServiceAction.POST, "roles", "manager", "permissions");
     }
+
 
     @Test(expected = IllegalArgumentException.class)
-    public void noPermissionsOnPut() throws Exception {
-
-        UUID applicationId = createApplication("testOrganization", "noPermissionsOnPut");
-        assertNotNull(applicationId);
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
-        Map<String, Object> props = new HashMap<String, Object>();
-        props.put("name", "manager");
-        props.put("title", "Manager Title");
-        props.put("inactivity", 600000l);
+    public void noPermissionsOnPut() throws Exception
+    {
+        app.add( "name", "manager" );
+        app.add( "title", "Manager Title" );
+        app.add( "inactivity", 600000l );
 
         // test creating a new role
-        ServiceResults results = testRequest(sm, ServiceAction.POST, 1, props, "roles");
+        ServiceResults results = app.testRequest( ServiceAction.POST, 1, "roles");
 
         // check the results
-        Entity roleEntity = results.getEntities().get(0);
+        Entity roleEntity = results.getEntities().get( 0 );
 
-        assertEquals("manager", roleEntity.getProperty("name"));
-        assertEquals("Manager Title", roleEntity.getProperty("title"));
-        assertEquals(600000l, roleEntity.getProperty("inactivity"));
+        assertEquals( "manager", roleEntity.getProperty( "name" ) );
+        assertEquals( "Manager Title", roleEntity.getProperty( "title" ) );
+        assertEquals( 600000l, roleEntity.getProperty( "inactivity" ) );
 
-        props = new HashMap<String, Object>();
-        props.put("misspelledpermission", "access:/**");
+        app.add( "misspelledpermission", "access:/**" );
 
         // now grant permissions
-        results = invokeService(sm, ServiceAction.PUT, props, "roles", "manager", "permissions");
+        app.invokeService( ServiceAction.PUT, "roles", "manager", "permissions" );
     }
+
 
     /**
      * Test deleting all permissions
@@ -166,227 +129,182 @@ public class RolesServiceIT extends AbstractServiceIT {
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void deletePermissions() throws Exception {
-
-        UUID applicationId = createApplication("testOrganization", "deletePermissions");
-        assertNotNull(applicationId);
-
-        createAndTestRoles(applicationId, ServiceAction.PUT, "manager", "Manager Title", 600000l);
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/**");
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/places/**");
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/faces/names/**");
+    public void deletePermissions() throws Exception
+    {
+        createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/places/**" );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/faces/names/**" );
 
         // we know we created the role successfully, now delete it
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
         // check it appears in the application roles
 
         Query query = new Query();
-        query.setPermissions(Collections.singletonList( "access:/places/**"));
+        query.setPermissions( Collections.singletonList( "access:/places/**" ) );
         
         // now grant permissions
-        ServiceResults results = invokeService(sm, ServiceAction.DELETE, null, "roles", "manager", "permissions", query);
+        ServiceResults results = app.invokeService( ServiceAction.DELETE, "roles", "manager", "permissions", query );
 
         // check the results has the data element.
         Set<String> data = (Set<String>) results.getData();
 
-        assertTrue(data.contains("access:/**"));
-        assertTrue(data.contains("access:/faces/names/**"));
-        assertFalse(data.contains("access:/places/**"));
+        assertTrue( data.contains( "access:/**" ) );
+        assertTrue( data.contains( "access:/faces/names/**" ) );
+        assertFalse( data.contains( "access:/places/**" ) );
 
         // check our permissions are there
-        Set<String> permissions = em.getRolePermissions("manager");
+        Set<String> permissions = app.getRolePermissions("manager");
 
         assertTrue(permissions.contains("access:/**"));
         assertTrue(data.contains("access:/faces/names/**"));
         assertFalse(data.contains("access:/places/**"));
 
         query = new Query();
-        query.setPermissions(Collections.singletonList( "access:/faces/names/**"));
+        query.setPermissions( Collections.singletonList( "access:/faces/names/**" ) );
       
         
-        results = invokeService(sm, ServiceAction.DELETE, null, "roles", "manager", "permissions", query);
+        results = app.invokeService( ServiceAction.DELETE, "roles", "manager", "permissions", query );
 
         // check the results has the data element.
-        data = (Set<String>) results.getData();
+        data = ( Set<String> ) results.getData();
 
-        assertTrue(data.contains("access:/**"));
-        assertFalse(data.contains("access:/faces/names/**"));
-        assertFalse(data.contains("access:/places/**"));
+        assertTrue( data.contains( "access:/**" ) );
+        assertFalse( data.contains( "access:/faces/names/**" ) );
+        assertFalse( data.contains( "access:/places/**" ) );
 
         // check our permissions are there
-        permissions = em.getRolePermissions("manager");
+        permissions = app.getRolePermissions( "manager" );
 
-        assertTrue(permissions.contains("access:/**"));
-        assertFalse(data.contains("access:/faces/names/**"));
-        assertFalse(data.contains("access:/places/**"));
+        assertTrue( permissions.contains( "access:/**" ) );
+        assertFalse( data.contains( "access:/faces/names/**" ) );
+        assertFalse( data.contains( "access:/places/**" ) );
         
         
         query = new Query();
-        query.setPermissions(Collections.singletonList("access:/**"));
+        query.setPermissions( Collections.singletonList( "access:/**" ) );
         
-        results = invokeService(sm, ServiceAction.DELETE, null, "roles", "manager", "permissions", query);
+        results = app.invokeService( ServiceAction.DELETE, "roles", "manager", "permissions", query );
 
         // check the results has the data element.
-        data = (Set<String>) results.getData();
+        data = ( Set<String> ) results.getData();
 
-        assertFalse(data.contains("access:/**"));
-        assertFalse(data.contains("access:/faces/names/**"));
-        assertFalse(data.contains("access:/places/**"));
+        assertFalse( data.contains( "access:/**" ) );
+        assertFalse( data.contains( "access:/faces/names/**" ) );
+        assertFalse( data.contains( "access:/places/**" ) );
 
         // check our permissions are there
-        permissions = em.getRolePermissions("manager");
+        permissions = app.getRolePermissions( "manager" );
 
-        assertFalse(permissions.contains("access:/**"));
-        assertFalse(data.contains("access:/faces/names/**"));
-        assertFalse(data.contains("access:/places/**"));
+        assertFalse( permissions.contains( "access:/**" ) );
+        assertFalse( data.contains( "access:/faces/names/**" ) );
+        assertFalse( data.contains( "access:/places/**" ) );
 
 
     }
     
+
     /**
      * Test deleting all permissions
      * 
      * @throws Exception
      */
     @Test
-    public void deleteRoles() throws Exception {
-
-        UUID applicationId = createApplication("testOrganization", "deleteRoles");
-        assertNotNull(applicationId);
-
-        createAndTestRoles(applicationId, ServiceAction.PUT, "manager", "Manager Title", 600000l);
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/**");
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/places/**");
-        createAndTestPermission(applicationId, ServiceAction.PUT, "manager", "access:/faces/names/**");
+    public void deleteRoles() throws Exception
+    {
+        createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/places/**" );
+        createAndTestPermission( ServiceAction.PUT, "manager", "access:/faces/names/**" );
 
         // we know we created the role successfully, now delete it
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
         // check it appears in the application roles
 
         // now grant permissions
-        ServiceResults results = invokeService(sm, ServiceAction.DELETE, null, "roles", "manager");
+        ServiceResults results = app.invokeService( ServiceAction.DELETE, "roles", "manager" );
 
-        assertEquals(1, results.size());
+        assertEquals( 1, results.size() );
+
         // check the results has the data element.
-        
-        Role role = em.get(em.getAlias("role", "manager"), Role.class);
-        assertNull(role);
+        Role role = app.get( app.getAlias( "role", "manager" ), Role.class );
+        assertNull( role );
      
-        
         // check our permissions are there
-        Set<String> permissions = em.getRolePermissions("manager");
-
-        assertEquals(0, permissions.size());
-        
-       
-
+        Set<String> permissions = app.getRolePermissions( "manager" );
+        assertEquals( 0, permissions.size() );
     }
+
 
     /**
      * Create the role with the action and info and test it's created
      * successfully
      * 
-     * @param applicationId
-     * @param action
+     * @param action the action to take
      * @throws Exception
      */
-    private void createAndTestRoles(UUID applicationId, ServiceAction action, String roleName, String roleTitle,
-            long inactivity) throws Exception {
+    private void createAndTestRoles( ServiceAction action, String roleName, String roleTitle, long inactivity)
+            throws Exception
+    {
+        app.add( "name", roleName );
 
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
+        app.add( "title", roleTitle );
 
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
-        Map<String, Object> props = new HashMap<String, Object>();
-
-        props.put("name", roleName);
-
-        props.put("title", roleTitle);
-
-        props.put("inactivity", inactivity);
+        app.add( "inactivity", inactivity );
 
         // test creating a new role
-        ServiceResults results = testRequest(sm, action, 1, props, "roles");
+        ServiceResults results = app.testRequest( action, 1, "roles" );
 
         // check the results
-        Entity roleEntity = results.getEntities().get(0);
+        Entity roleEntity = results.getEntities().get( 0 );
 
-        assertEquals(roleName, roleEntity.getProperty("name"));
-        assertEquals(roleTitle, roleEntity.getProperty("title"));
-        assertEquals(inactivity, roleEntity.getProperty("inactivity"));
+        assertEquals(roleName, roleEntity.getProperty( "name" ) );
+        assertEquals(roleTitle, roleEntity.getProperty( "title" ) );
+        assertEquals(inactivity, roleEntity.getProperty( "inactivity" ) );
 
         // check the role is correct at the application level
-        Map<String, Role> roles = em.getRolesWithTitles(Collections.singleton(roleName));
+        Map<String, Role> roles = app.getRolesWithTitles( Collections.singleton( roleName ) );
 
-        Role role = roles.get(roleName);
+        Role role = roles.get( roleName );
 
-        assertNotNull(role);
-        assertEquals(roleName, role.getName());
-        assertEquals(roleTitle, role.getTitle());
-        assertEquals(inactivity, role.getInactivity().longValue());
+        assertNotNull( role );
+        assertEquals( roleName, role.getName() );
+        assertEquals( roleTitle, role.getTitle() );
+        assertEquals( inactivity, role.getInactivity().longValue() );
     }
+
 
     /**
      * Create the permission and text it exists correctly
      * 
-     * @param applicationId
-     * @param action
-     * @param roleName
-     * @param grant
+     * @param action the action to take
+     * @param roleName the name of the role
+     * @param grant the permission to grant
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private void createAndTestPermission(UUID applicationId, ServiceAction action, String roleName, String grant)
-            throws Exception {
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-        assertNotNull(sm);
-
-        EntityManager em = sm.getEntityManager();
-        assertNotNull(em);
-
-        // check it appears in the application roles
-
-        Map<String, Object> props = new HashMap<String, Object>();
-
-        props.put("permission", grant);
+    private void createAndTestPermission( ServiceAction action, String roleName, String grant ) throws Exception
+    {
+        app.add( "permission", grant );
 
         // now grant permissions
-        ServiceResults results = invokeService(sm, action, props, "roles", roleName, "permissions");
+        ServiceResults results = app.invokeService( action, "roles", roleName, "permissions" );
 
         // check the results has the data element.
-        Set<String> data = (Set<String>) results.getData();
+        Set<String> data = ( Set<String> ) results.getData();
 
-        assertTrue(data.contains(grant));
+        assertTrue( data.contains( grant ) );
 
         // check our permissions are there
-        Set<String> permissions = em.getRolePermissions(roleName);
+        Set<String> permissions = app.getRolePermissions( roleName );
 
-        assertTrue(permissions.contains(grant));
+        assertTrue( permissions.contains( grant ) );
         
         
         //perform a  GET and make sure it's present
-        results = invokeService(sm, ServiceAction.GET, props, "roles", roleName, "permissions");
+        results = app.invokeService( ServiceAction.GET, "roles", roleName, "permissions" );
 
         // check the results has the data element.
-        data = (Set<String>) results.getData();
+        data = ( Set<String> ) results.getData();
 
-        assertTrue(data.contains(grant));
-        
+        assertTrue( data.contains( grant ) );
     }
-
 }
