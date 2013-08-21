@@ -1774,14 +1774,6 @@
   </reporting>
 
   <repositories>
-    <repository>
-      <id>usergrid-dependencies-snapshots</id>
-      <name>Usergrid s3 dependencies snapshots repository</name>
-      <url>https://usergrid-maven.s3.amazonaws.com/dependencies-snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
 
     <repository>
       <id>usergrid-dependencies</id>
@@ -1789,46 +1781,7 @@
       <url>https://usergrid-maven.s3.amazonaws.com/dependencies</url>
     </repository>
 
-    <repository>
-      <id>maven2-repository.dev.java.net</id>
-      <name>Java.net Maven 2 Repository</name>
-      <url>http://download.java.net/maven/2</url>
-      <layout>default</layout>
-    </repository>
-
-    <repository>
-      <id>repository-hector-dev.forge.cloudbees.com</id>
-      <name>Hector Dev Snapshots</name>
-      <url>https://repository-hector-dev.forge.cloudbees.com/snapshot/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
-      <id>codehaus</id>
-      <name>codehaus</name>
-      <url>http://repository.codehaus.org/</url>
-    </repository>
-
-    <repository>
-      <id>nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
 
   </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>maven2-repository.dev.java.net</id>
-      <name>Java.net Repository for Maven</name>
-      <url>http://download.java.net/maven/2</url>
-      <layout>default</layout>
-    </pluginRepository>
-  </pluginRepositories>
 
 </project>
