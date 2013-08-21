@@ -18,19 +18,19 @@ import java.util.UUID;
 import static junit.framework.Assert.assertNotNull;
 
 
-public class SimpleApplication implements Application, TestRule
+public class CoreApplication implements Application, TestRule
 {
-    private final static Logger LOG = LoggerFactory.getLogger( SimpleApplication.class );
+    private final static Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
 
-    private UUID id;
-    private String appName;
-    private String orgName;
-    private ITSetup setup;
-    private EntityManager em;
-    private Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    protected UUID id;
+    protected String appName;
+    protected String orgName;
+    protected CoreITSetup setup;
+    protected EntityManager em;
+    protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
 
-    public SimpleApplication( ITSetup setup )
+    public CoreApplication(CoreITSetup setup)
     {
         this.setup = setup;
     }
@@ -124,13 +124,13 @@ public class SimpleApplication implements Application, TestRule
     }
 
 
-    private void after( Description description )
+    protected void after( Description description )
     {
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
     }
 
 
-    private void before( Description description ) throws Exception
+    protected void before( Description description ) throws Exception
     {
         orgName = description.getClassName();
         appName = description.getMethodName();

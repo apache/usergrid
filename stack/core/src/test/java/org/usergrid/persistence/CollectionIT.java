@@ -35,12 +35,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
+import org.usergrid.CoreApplication;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoIndexException;
 import org.usergrid.Application;
-import org.usergrid.SimpleApplication;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -51,7 +51,7 @@ public class CollectionIT extends AbstractCoreIT
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
     @Rule
-    public Application app = new SimpleApplication( setup );
+    public Application app = new CoreApplication( setup );
 
 
     @Test

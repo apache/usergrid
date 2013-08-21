@@ -59,6 +59,8 @@ import org.apache.commons.lang.text.StrSubstitutor;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
@@ -84,7 +86,7 @@ public class EmailFlowIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceTestRule setup = new ServiceTestRule( cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
 
 
 	@Test

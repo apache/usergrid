@@ -14,6 +14,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
@@ -39,7 +41,7 @@ public class TokenServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
+    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
 
     @BeforeClass
     public static void setup() throws Exception {

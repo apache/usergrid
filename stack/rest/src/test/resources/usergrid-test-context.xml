@@ -38,7 +38,7 @@
     <!-- The default schema manager -->
     <!--
     <bean class="org.usergrid.persistence.CoreSchemaManager">
-        <constructor-arg ref="setup"/>
+        <constructor-arg ref="svcSetup"/>
         <constructor-arg ref="cassandraCluster"/>
     </bean>
     -->

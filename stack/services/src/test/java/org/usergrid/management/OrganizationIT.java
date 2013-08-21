@@ -24,6 +24,8 @@ import java.util.UUID;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
@@ -40,7 +42,7 @@ public class OrganizationIT
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
+    public static ServiceITSetup setup = new ServiceITSetupImpl(ServiceITSuite.cassandraResource);
 
 
 	@Test

@@ -11,6 +11,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.ClearShiroSubject;
@@ -32,7 +34,7 @@ public class ApplicationCreatorIT
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceTestRule setup = new ServiceTestRule( cassandraResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
 
     @Test
     public void testCreateSampleApplication() throws Exception

@@ -113,7 +113,7 @@ public class RegistrationIT extends AbstractRestIT
 
 
         // assertEquals(ActivationState.ACTIVATED,
-        // setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
+        // svcSetup.getMgmtSvc().handleConfirmationTokenForAdminUser(
         // owner_uuid, token));
 
         String response = resource().path(
@@ -280,7 +280,7 @@ public class RegistrationIT extends AbstractRestIT
         setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
-        // setup an admin user
+        // svcSetup an admin user
         String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
 		UserInfo adminUser = setup.getMgmtSvc().createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
                 true, false);

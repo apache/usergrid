@@ -26,6 +26,8 @@ import org.apache.shiro.subject.Subject;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
@@ -44,7 +46,7 @@ public class RoleIT
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
+    public static ServiceITSetup setup = new ServiceITSetupImpl(ServiceITSuite.cassandraResource);
 
 
 	@Test

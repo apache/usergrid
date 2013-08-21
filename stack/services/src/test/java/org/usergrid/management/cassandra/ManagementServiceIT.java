@@ -17,12 +17,13 @@ import java.util.UUID;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.ServiceTestRule;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
@@ -56,7 +57,7 @@ public class ManagementServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceTestRule setup = new ServiceTestRule( cassandraResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
 
     @BeforeClass
     public static void setup() throws Exception {
