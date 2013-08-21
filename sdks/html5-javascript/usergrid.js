@@ -691,7 +691,7 @@ Usergrid.Client.prototype.getLoggedInUser = function (callback) {
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
 Usergrid.Client.prototype.isLoggedIn = function () {
-  if (this.getToken()) {
+  if (this.getToken() && this.getToken() != null) {
     return true;
   }
   return false;
