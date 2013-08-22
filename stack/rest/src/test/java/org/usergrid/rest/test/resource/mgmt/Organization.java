@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import org.usergrid.rest.test.resource.EntityResource;
 import org.usergrid.rest.test.resource.NamedResource;
+import org.usergrid.rest.test.resource.app.UsersCollection;
 
 
 /**
@@ -50,7 +51,10 @@ public class Organization extends EntityResource {
   public ApplicationsCollection apps(){
     return new ApplicationsCollection(this);
   }
- 
+
+  public UsersCollection users(){
+    return new UsersCollection(this);
+  }
 
   
   

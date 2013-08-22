@@ -79,6 +79,13 @@ public class TestContext {
     return this;
   }
 
+  public String getOrgName() {
+    return orgName;
+  }
+
+  public String getAppName() {
+    return appName;
+  }
 
   /**
    * Creates the org specified
