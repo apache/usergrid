@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.entities.Activity;
 import org.usergrid.persistence.entities.Role;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -52,21 +53,17 @@ public class ServiceApplication extends CoreApplication
     }
 
 
+    public void add( Activity activity )
+    {
+        this.properties.putAll( activity.getProperties() );
+    }
+
+
     public ServiceResults testRequest( ServiceAction action,
                                        int expectedCount,
                                        Object... params) throws Exception
     {
-        ServiceResults results;
-
-        if ( properties.isEmpty() )
-        {
-            results = invokeService( action, null, params );
-        }
-        else
-        {
-            results = invokeService( action, properties, params );
-        }
-
+        ServiceResults results = invokeService( action, params );
         assertNotNull(results);
         assertEquals( expectedCount, results.getEntities().size() );
         dumpResults( results );
