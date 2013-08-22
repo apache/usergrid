@@ -18,6 +18,8 @@ package org.usergrid.mongo;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.services.ServiceManagerFactory;
 
@@ -28,6 +30,8 @@ import com.mongodb.WriteConcern;
 
 public abstract class AbstractMongoTest
 {
+	private static Logger LOG = LoggerFactory.getLogger(AbstractMongoTest.class);
+
 	static MongoServer server = null;
 	static boolean usersSetup = false;
 	protected static Properties properties;
@@ -38,10 +42,10 @@ public abstract class AbstractMongoTest
 	ServiceManagerFactory smf;
 
 
-	public AbstractMongoTest()
+    public AbstractMongoTest()
     {
 		super();
-		smf = new ServiceManagerFactory( emf, properties, null, null, null );
+		smf = new ServiceManagerFactory(emf, properties, null, null, null);
 	}
 
 
