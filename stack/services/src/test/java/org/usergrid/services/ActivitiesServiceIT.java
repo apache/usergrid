@@ -18,7 +18,6 @@ package org.usergrid.services;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +25,6 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.entities.Activity;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 
 @Concurrent()
@@ -40,89 +36,81 @@ public class ActivitiesServiceIT extends AbstractServiceIT
 	@Test
 	public void testActivites() throws Exception
     {
-        app.add("username", "edanuff");
-        app.add("email", "ed@anuff.com");
+        app.add( "username", "edanuff" );
+        app.add( "email", "ed@anuff.com" );
 
+        Entity userA = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
+        assertNotNull( userA );
 
-        Map<String,Object> properties = new LinkedHashMap<String, Object>();
+        app.add( "username", "djacobs" );
+        app.add( "email", "djacobs@gmail.com" );
 
-		Entity userA = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
-		assertNotNull( userA );
+        Entity userB = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
+        assertNotNull( userB );
 
-		app.add("username", "djacobs");
-        app.add("email", "djacobs@gmail.com");
+        app.add( "username", "natpo" );
+        app.add( "email", "npodrazik@gmail.com" );
 
-		Entity userB = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
-		assertNotNull(userB);
+        Entity userC = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
+        assertNotNull( userC );
 
-		app.add("username", "natpo");
-        app.add("email", "npodrazik@gmail.com");
-
-		Entity userC = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
-		assertNotNull(userC);
-
-		app.testRequest(ServiceAction.POST, 1, "users", userB.getUuid(), "connections", "following", userA.getUuid() );
-
-		app.testRequest(ServiceAction.POST, 1, "users", userC.getUuid(), "connections", "following", userA.getUuid() );
-
-        Activity activity = Activity.newActivity( Activity.VERB_POST, null, "I ate a sammich",
-                null, userA, null, "tweet", null, null );
-        properties.putAll( activity.getProperties() );
-		app.putAll( properties );
-
-		Entity activityEntity = app.testRequest( ServiceAction.POST, 1, "users",
-                userA.getUuid(), "activities" ).getEntity();
-		assertNotNull( activityEntity );
-
-		app.testRequest( ServiceAction.GET, 1, "users", userA.getUuid(), "activities" );
-
-		app.testRequest( ServiceAction.GET, 1, "activities" );
-
-		app.testRequest( ServiceAction.GET, 1, "users", userB.getUuid(), "feed" );
-
-		app.testRequest( ServiceAction.GET, 1, "users", userC.getUuid(), "feed" );
-
-        activity = Activity.newActivity(Activity.VERB_POST, null, "I ate another sammich",
-                null, userA, null, "tweet", null, null );
-        properties.putAll( activity.getProperties() );
-        app.putAll( properties );
-
-		activityEntity = app.testRequest(ServiceAction.POST, 1, "users", userA.getUuid(), "activities").getEntity();
-		assertNotNull( activityEntity );
-
-        activity = Activity.newActivity( Activity.VERB_POST, null, "I ate a cookie", null, userA, null,
-                "tweet", null, null );
-        properties.putAll( activity.getProperties() );
-        app.putAll( properties );
-
-		activityEntity = app.testRequest( ServiceAction.POST, 1, "users", userA.getUuid(), "activities" ).getEntity();
-		assertNotNull(activityEntity);
-
-		activity = Activity.newActivity( Activity.VERB_CHECKIN, null, "I'm at the cookie shop", null, userA, null,
-                Activity.OBJECT_TYPE_PLACE, "Cookie Shop", null );
-        properties.putAll( activity.getProperties() );
-        app.putAll( properties );
-
-		activityEntity = app.testRequest( ServiceAction.POST, 1, "users", userA.getUuid(), "activities").getEntity();
-		assertNotNull(activityEntity);
-
-		app.testRequest(ServiceAction.GET, 4, "users", userC.getUuid(), "feed");
-
-		app.testRequest(ServiceAction.GET, 2, "users", userC.getUuid(), "feed",
-                Query.fromQL("select * where content contains 'cookie'"));
-
-		app.testRequest(ServiceAction.GET, 1, "users", userC.getUuid(), "feed",
-                Query.fromQL("select * where verb='post' and content contains 'cookie'"));
-
-		app.add("username", "finn");
-		app.add("email", "finn@ooo.com");
-
-		Entity userD = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
-		assertNotNull(userD);
-
-		app.testRequest(ServiceAction.POST, 1, "users", userD.getUuid(),
+        app.testRequest( ServiceAction.POST, 1, "users", userB.getUuid(),
                 "connections", "following", userA.getUuid());
 
-		app.testRequest(ServiceAction.GET, 4, "users", userD.getUuid(), "feed");
+        app.testRequest( ServiceAction.POST, 1, "users", userC.getUuid(),
+                "connections", "following", userA.getUuid());
+
+        app.testRequest( ServiceAction.GET, 0, "users", userA.getUuid(), "activities" );
+        app.add( Activity.newActivity( Activity.VERB_POST, null,
+                "I ate a sammich", null, userA, null, "tweet", null, null ) );
+
+        Entity activity = app.testRequest( ServiceAction.POST, 1, "users", userA.getUuid(),
+                "activities" ).getEntity();
+        assertNotNull( activity );
+
+        app.testRequest( ServiceAction.GET, 1, "users", userA.getUuid(), "activities" );
+
+        app.testRequest( ServiceAction.GET, 1, null, "activities" );
+
+        app.testRequest( ServiceAction.GET, 1, null, "users", userB.getUuid(), "feed" );
+
+        app.testRequest( ServiceAction.GET, 1, null, "users", userC.getUuid(), "feed" );
+
+        app.add( Activity.newActivity(Activity.VERB_POST, null, "I ate another sammich",
+                        null, userA, null, "tweet", null, null ) );
+
+        activity = app.testRequest( ServiceAction.POST, 1, "users", userA.getUuid(), "activities" ).getEntity();
+        assertNotNull( activity );
+
+        app.add( Activity.newActivity( Activity.VERB_POST, null, "I ate a cookie", null,
+                userA, null, "tweet", null, null ) );
+
+        activity = app.testRequest( ServiceAction.POST, 1, "users", userA.getUuid(), "activities").getEntity();
+        assertNotNull( activity );
+
+        app.add( Activity.newActivity(Activity.VERB_CHECKIN, null, "I'm at the cookie shop", null, userA, null,
+                Activity.OBJECT_TYPE_PLACE, "Cookie Shop", null ) );
+
+        activity = app.testRequest( ServiceAction.POST, 1, "users", userA.getUuid(), "activities" ).getEntity();
+        assertNotNull( activity );
+
+        app.testRequest( ServiceAction.GET, 4, null, "users", userC.getUuid(), "feed" );
+
+        app.testRequest( ServiceAction.GET, 2, null, "users", userC.getUuid(), "feed",
+                Query.fromQL("select * where content contains 'cookie'" ) );
+
+        app.testRequest( ServiceAction.GET, 1, "users", userC.getUuid(), "feed",
+                Query.fromQL( "select * where verb='post' and content contains 'cookie'" ) );
+
+        app.add( "username", "finn" );
+        app.add( "email", "finn@ooo.com" );
+
+        Entity userD = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
+        assertNotNull( userD );
+
+        app.testRequest( ServiceAction.POST, 1, "users", userD.getUuid(), "connections",
+                "following", userA.getUuid() );
+
+        app.testRequest( ServiceAction.GET, 4, null, "users", userD.getUuid(), "feed" );
 	}
 }
