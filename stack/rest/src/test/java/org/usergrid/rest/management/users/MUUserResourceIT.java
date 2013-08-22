@@ -9,6 +9,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
@@ -17,6 +18,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestIT;
+import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
 
 /**
@@ -34,7 +37,11 @@ public class MUUserResourceIT extends AbstractRestIT {
 
     private Logger logger = LoggerFactory.getLogger(MUUserResourceIT.class);
 
-    @Test
+  @Rule
+  public TestContextSetup context = new TestContextSetup( this );
+
+
+  @Test
     public void updateManagementUser() throws Exception {
         Map<String, String> payload = hashMap("email",
                 "uort-user-1@apigee.com").map("username", "uort-user-1")
@@ -288,5 +295,20 @@ public class MUUserResourceIT extends AbstractRestIT {
 
     Long changeTime3 = node.get("passwordChanged").getLongValue();
     assertEquals(changeTime2, changeTime3);
+  }
+
+  /**
+   * USERGRID-1960
+   */
+  @Test
+  public void listOrgUsersByName(){
+    JsonNode response = context.management().orgs().organization(context.getOrgName()).users().get();
+
+    //get the response and verify our user is there
+    JsonNode adminNode = response.get("data").get(0);
+    assertEquals(context.getActiveUser().getEmail(), adminNode.get("email").asText());
+    assertEquals(context.getActiveUser().getUser(), adminNode.get("username").asText());
+
+
   }
 }
