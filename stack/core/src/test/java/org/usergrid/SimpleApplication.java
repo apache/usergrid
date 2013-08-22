@@ -143,4 +143,3 @@ public class SimpleApplication implements Application, TestRule
         LOG.info( "Created new application {} in organization {}", appName, orgName );
     }
 }
-
