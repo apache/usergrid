@@ -40,8 +40,8 @@ public class CollectionServiceIT extends AbstractServiceIT
     @Test
 	public void testUsersCollectionWithGroupIdName() throws Exception
     {
-        app.add( "path", "cst-test-group/cst-test-group" );
-		app.add( "title", "Collection Test group" );
+        app.put( "path", "cst-test-group/cst-test-group" );
+		app.put( "title", "Collection Test group" );
 
 		Entity group = app.testRequest( ServiceAction.POST, 1, "groups").getEntity();
 		assertNotNull(group);
@@ -50,8 +50,8 @@ public class CollectionServiceIT extends AbstractServiceIT
 
 		app.testRequest( ServiceAction.GET, 1, "groups" );
 
-		app.add( "username", "edanuff" );
-		app.add( "email", "ed@anuff.com" );
+		app.put( "username", "edanuff" );
+		app.put( "email", "ed@anuff.com" );
 
 		Entity user = app.testRequest( ServiceAction.POST, 1, "users").getEntity();
 		assertNotNull(user);
@@ -78,7 +78,7 @@ public class CollectionServiceIT extends AbstractServiceIT
 			// ok
 		}
 
-		app.add( "group-size", "10" );
+		app.put( "group-size", "10" );
 
 		try
         {
@@ -150,14 +150,14 @@ public class CollectionServiceIT extends AbstractServiceIT
 	@Test
 	public void testGenericEntityCollectionWithIdName() throws Exception
     {
-		app.add( "name", "Tom" );
+		app.put( "name", "Tom" );
 
 		Entity cat = app.testRequest( ServiceAction.POST, 1, "cats" ).getEntity();
 		assertNotNull( cat );
 
 		app.testRequest( ServiceAction.GET, 1, "cats", "Tom" );
 
-		app.add( "name", "Danny" );
+		app.put( "name", "Danny" );
 
 		Entity dog = app.testRequest( ServiceAction.POST, 1, "dogs").getEntity();
 		assertNotNull( dog );
@@ -184,7 +184,7 @@ public class CollectionServiceIT extends AbstractServiceIT
 			// ok
 		}
 
-		app.add( "color", "black" );
+		app.put( "color", "black" );
 
 		try
         {
@@ -253,13 +253,13 @@ public class CollectionServiceIT extends AbstractServiceIT
         Assert.assertEquals( entity.getName(), "danny" );
 
         // try PUT on cats with a name in properties w/ difference capitalization
-        app.add( "name", "Danny2" );
+        app.put( "name", "Danny2" );
         results = app.testRequest( ServiceAction.PUT, 1, "cats", "Danny2" );
         entity = results.getEntity();
         Assert.assertEquals( entity.getName(), "Danny2" );
 
         // try PUT on cats with a completely different name in properties
-        app.add( "name", "Jimmy" );
+        app.put( "name", "Jimmy" );
         results = app.testRequest( ServiceAction.PUT, 1, "cats", "Danny3" );
         entity = results.getEntity();
         Assert.assertEquals( entity.getName(), "danny3" );

@@ -32,8 +32,8 @@ public class UsersServiceIT extends AbstractServiceIT
         app.grantRolePermission("admin", "users:access:*");
         app.grantRolePermission("admin", "groups:access:*");
 
-        app.add( "username", "edanuff" );
-        app.add( "email", "ed@anuff.com" );
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
 
         Entity user = app.create( "user" );
         assertNotNull( user );

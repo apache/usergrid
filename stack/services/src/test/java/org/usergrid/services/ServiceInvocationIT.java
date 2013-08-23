@@ -38,8 +38,8 @@ public class ServiceInvocationIT extends AbstractServiceIT
     {
 		LOG.info( "testServices" );
 
-		app.add( "username", "edanuff" );
-		app.add( "email", "ed@anuff.com" );
+		app.put( "username", "edanuff" );
+		app.put( "email", "ed@anuff.com" );
 
 		Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
 		assertNotNull( user );
@@ -51,11 +51,11 @@ public class ServiceInvocationIT extends AbstractServiceIT
 		app.testRequest( ServiceAction.GET, 1, "users",
 				Query.fromQL( "select * where username='edanuff'" ) );
 
-		app.add( "foo", "bar" );
+		app.put( "foo", "bar" );
 
 		app.testRequest( ServiceAction.PUT, 1, "users", user.getUuid() );
 
-		app.add( "name", "nico" );
+		app.put( "name", "nico" );
 
 		app.testRequest( ServiceAction.POST, 1, "cats" );
 
@@ -99,15 +99,15 @@ public class ServiceInvocationIT extends AbstractServiceIT
 
         app.testRequest( ServiceAction.GET, 3, null, "users", "edanuff", "connections" );
 
-		app.add( "color", "blacknwhite" );
+		app.put( "color", "blacknwhite" );
 
 		app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", cat.getUuid() );
 
-		app.add( "eats", "petfood" );
+		app.put( "eats", "petfood" );
 
 		app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "cats", "dylan" );
 
-		app.add( "Todays special", "Coffee" );
+		app.put( "Todays special", "Coffee" );
 
 		app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "restaurants",
                 Query.fromQL("select * where name='Brickhouse'" ) );
@@ -120,7 +120,7 @@ public class ServiceInvocationIT extends AbstractServiceIT
 		app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );
 
 		UUID uuid = UUID.randomUUID();
-		app.add( "visits", 5 );
+		app.put( "visits", 5 );
 		app.testRequest( ServiceAction.PUT, 1, "devices", uuid );
 
 	}

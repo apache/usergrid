@@ -29,8 +29,8 @@ public class GroupServiceIT extends AbstractServiceIT
     @Test
     public void testGroups() throws Exception
     {
-        app.add( "path", "test/test" );
-        app.add( "title", "Test group" );
+        app.put( "path", "test/test" );
+        app.put( "title", "Test group" );
 
         Entity group = app.testRequest( ServiceAction.POST, 1, "groups" ).getEntity();
         assertNotNull( group );
@@ -41,8 +41,8 @@ public class GroupServiceIT extends AbstractServiceIT
 
         app.testRequest( ServiceAction.GET, 1, "groups" );
 
-        app.add( "username", "edanuff" );
-        app.add( "email", "ed@anuff.com" );
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
 
         Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( user );
@@ -64,7 +64,7 @@ public class GroupServiceIT extends AbstractServiceIT
     @Test
     public void testPermissions() throws Exception
     {
-        app.add( "path", "mmmeow" );
+        app.put( "path", "mmmeow" );
 
         Entity group = app.create( "group" );
         assertNotNull( group );

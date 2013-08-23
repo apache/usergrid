@@ -36,20 +36,20 @@ public class ActivitiesServiceIT extends AbstractServiceIT
 	@Test
 	public void testActivites() throws Exception
     {
-        app.add( "username", "edanuff" );
-        app.add( "email", "ed@anuff.com" );
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
 
         Entity userA = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( userA );
 
-        app.add( "username", "djacobs" );
-        app.add( "email", "djacobs@gmail.com" );
+        app.put( "username", "djacobs" );
+        app.put( "email", "djacobs@gmail.com" );
 
         Entity userB = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( userB );
 
-        app.add( "username", "natpo" );
-        app.add( "email", "npodrazik@gmail.com" );
+        app.put( "username", "natpo" );
+        app.put( "email", "npodrazik@gmail.com" );
 
         Entity userC = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( userC );
@@ -102,8 +102,8 @@ public class ActivitiesServiceIT extends AbstractServiceIT
         app.testRequest( ServiceAction.GET, 1, "users", userC.getUuid(), "feed",
                 Query.fromQL( "select * where verb='post' and content contains 'cookie'" ) );
 
-        app.add( "username", "finn" );
-        app.add( "email", "finn@ooo.com" );
+        app.put( "username", "finn" );
+        app.put( "email", "finn@ooo.com" );
 
         Entity userD = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( userD );

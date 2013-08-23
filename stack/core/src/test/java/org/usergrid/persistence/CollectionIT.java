@@ -57,20 +57,22 @@ public class CollectionIT extends AbstractCoreIT
     @Test
     public void testCollection() throws Exception
     {
-        app.add( "username", "edanuff" );
-        app.add( "email", "ed@anuff.com" );
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
 
         Entity user = app.create( "user" );
         assertNotNull( user );
 
-        app.add( "actor", new LinkedHashMap<String, Object>()
-        { {
-            put( "displayName", "Ed Anuff" );
-            put( "objectType", "person" );
-        } });
-        app.add( "verb", "tweet" );
-        app.add( "content", "I ate a sammich" );
-        app.add( "ordinal", 3 );
+        app.put( "actor", new LinkedHashMap<String, Object>()
+        {
+            {
+                put( "displayName", "Ed Anuff" );
+                put( "objectType", "person" );
+            }
+        } );
+        app.put( "verb", "tweet" );
+        app.put( "content", "I ate a sammich" );
+        app.put( "ordinal", 3 );
 
         Entity activity = app.create( "activity" );
         assertNotNull( activity );
@@ -87,26 +89,30 @@ public class CollectionIT extends AbstractCoreIT
 
         // test queries on the collection
 
-        app.add( "actor", new LinkedHashMap<String, Object>()
-        { {
-            put( "displayName", "Ed Anuff" );
-            put( "objectType", "person" );
-        } });
-        app.add( "verb", "tweet2" );
-        app.add( "content", "I ate a pickle" );
-        app.add( "ordinal", 2 );
+        app.put( "actor", new LinkedHashMap<String, Object>()
+        {
+            {
+                put( "displayName", "Ed Anuff" );
+                put( "objectType", "person" );
+            }
+        } );
+        app.put( "verb", "tweet2" );
+        app.put( "content", "I ate a pickle" );
+        app.put( "ordinal", 2 );
         Entity activity2 = app.create( "activity" );
         activity2 = app.get( activity2.getUuid() );
         app.addToCollection( user, "activities", activity2 );
 
-        app.add( "actor", new LinkedHashMap<String, Object>()
-        { {
-            put( "displayName", "Ed Anuff" );
-            put( "objectType", "person" );
-        } });
-        app.add( "verb", "tweet2" );
-        app.add( "content", "I ate an apple" );
-        app.add( "ordinal", 1 );
+        app.put( "actor", new LinkedHashMap<String, Object>()
+        {
+            {
+                put( "displayName", "Ed Anuff" );
+                put( "objectType", "person" );
+            }
+        } );
+        app.put( "verb", "tweet2" );
+        app.put( "content", "I ate an apple" );
+        app.put( "ordinal", 1 );
         Entity activity3 = app.create( "activity" );
         activity3 = app.get( activity3.getUuid() );
         app.addToCollection( user, "activities", activity3 );

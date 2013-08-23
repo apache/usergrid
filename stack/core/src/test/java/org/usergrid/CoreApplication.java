@@ -11,6 +11,7 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +34,27 @@ public class CoreApplication implements Application, TestRule
     public CoreApplication(CoreITSetup setup)
     {
         this.setup = setup;
+    }
+
+
+    @Override
+    public void putAll( Map<String, Object> properties )
+    {
+        this.properties.putAll( properties );
+    }
+
+
+    @Override
+    public Object get( String key )
+    {
+        return properties.get( key );
+    }
+
+
+    @Override
+    public Map<String,Object> getProperties()
+    {
+        return properties;
     }
 
 
@@ -67,7 +89,7 @@ public class CoreApplication implements Application, TestRule
 
 
     @Override
-    public Object add( String property, Object value )
+    public Object put( String property, Object value )
     {
         return properties.put( property, value );
     }

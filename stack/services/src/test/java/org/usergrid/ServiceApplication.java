@@ -47,40 +47,40 @@ public class ServiceApplication extends CoreApplication
     }
 
 
-    public void putAll( Map<String, Object> properties )
-    {
-        this.properties.putAll( properties );
-    }
-
-
     public void add( Activity activity )
     {
         this.properties.putAll( activity.getProperties() );
     }
 
 
-    public ServiceResults testRequest( ServiceAction action,
-                                       int expectedCount,
-                                       Object... params) throws Exception
+    public ServiceResults testRequest( ServiceAction action, int expectedCount, Object... params ) throws Exception
+    {
+        return testRequest( action, expectedCount, true, params );
+    }
+
+
+    public ServiceResults testRequest( ServiceAction action, int expectedCount, boolean clear, Object... params )
+            throws Exception
     {
         ServiceResults results = invokeService( action, params );
         assertNotNull(results);
         assertEquals( expectedCount, results.getEntities().size() );
         dumpResults( results );
 
-        properties.clear();
+        if ( clear )
+        {
+            properties.clear();
+        }
 
         return results;
     }
 
 
-    public ServiceResults invokeService( ServiceAction action, Object... params )
-            throws Exception
+    public ServiceResults invokeService( ServiceAction action, Object... params ) throws Exception
     {
         ServiceRequest request = sm.newRequest( action, parameters( params ), payload( properties ) );
 
         LOG.info( "Request: {} {}", action, request.toString() );
-
         dumpProperties( properties );
         ServiceResults results = request.execute();
         assertNotNull( results );
@@ -110,7 +110,7 @@ public class ServiceApplication extends CoreApplication
 
     public Entity doCreate( String entityType, String name ) throws Exception
     {
-        add( "name", name );
+        put( "name", name );
 
         return testRequest( ServiceAction.POST, 1, pluralize( entityType ) ).getEntity();
     }

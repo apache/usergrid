@@ -68,8 +68,8 @@ public class RolesServiceIT extends AbstractServiceIT {
     @Test(expected = IllegalArgumentException.class)
     public void noRoleName() throws Exception
     {
-        app.add( "title", "Manager Title" );
-        app.add( "inactivity", 600000l );
+        app.put( "title", "Manager Title" );
+        app.put( "inactivity", 600000l );
 
         // test creating a new role
         app.testRequest( ServiceAction.POST, 1, "roles" );
@@ -79,9 +79,9 @@ public class RolesServiceIT extends AbstractServiceIT {
     @Test(expected = IllegalArgumentException.class)
     public void noPermissionsOnPost() throws Exception
     {
-        app.add( "name", "manager" );
-        app.add( "title", "Manager Title" );
-        app.add( "inactivity", 600000l );
+        app.put( "name", "manager" );
+        app.put( "title", "Manager Title" );
+        app.put( "inactivity", 600000l );
 
         // test creating a new role
         ServiceResults results = app.testRequest( ServiceAction.POST, 1, "roles" );
@@ -93,7 +93,7 @@ public class RolesServiceIT extends AbstractServiceIT {
         assertEquals( "Manager Title", roleEntity.getProperty("title" ) );
         assertEquals( 600000l, roleEntity.getProperty( "inactivity" ) );
 
-        app.add( "misspelledpermission", "access:/**" );
+        app.put( "misspelledpermission", "access:/**" );
         app.invokeService( ServiceAction.POST, "roles", "manager", "permissions");
     }
 
@@ -101,9 +101,9 @@ public class RolesServiceIT extends AbstractServiceIT {
     @Test(expected = IllegalArgumentException.class)
     public void noPermissionsOnPut() throws Exception
     {
-        app.add( "name", "manager" );
-        app.add( "title", "Manager Title" );
-        app.add( "inactivity", 600000l );
+        app.put( "name", "manager" );
+        app.put( "title", "Manager Title" );
+        app.put( "inactivity", 600000l );
 
         // test creating a new role
         ServiceResults results = app.testRequest( ServiceAction.POST, 1, "roles");
@@ -115,7 +115,7 @@ public class RolesServiceIT extends AbstractServiceIT {
         assertEquals( "Manager Title", roleEntity.getProperty( "title" ) );
         assertEquals( 600000l, roleEntity.getProperty( "inactivity" ) );
 
-        app.add( "misspelledpermission", "access:/**" );
+        app.put( "misspelledpermission", "access:/**" );
 
         // now grant permissions
         app.invokeService( ServiceAction.PUT, "roles", "manager", "permissions" );
@@ -244,11 +244,11 @@ public class RolesServiceIT extends AbstractServiceIT {
     private void createAndTestRoles( ServiceAction action, String roleName, String roleTitle, long inactivity)
             throws Exception
     {
-        app.add( "name", roleName );
+        app.put( "name", roleName );
 
-        app.add( "title", roleTitle );
+        app.put( "title", roleTitle );
 
-        app.add( "inactivity", inactivity );
+        app.put( "inactivity", inactivity );
 
         // test creating a new role
         ServiceResults results = app.testRequest( action, 1, "roles" );
@@ -283,7 +283,7 @@ public class RolesServiceIT extends AbstractServiceIT {
     @SuppressWarnings("unchecked")
     private void createAndTestPermission( ServiceAction action, String roleName, String grant ) throws Exception
     {
-        app.add( "permission", grant );
+        app.put( "permission", grant );
 
         // now grant permissions
         ServiceResults results = app.invokeService( action, "roles", roleName, "permissions" );

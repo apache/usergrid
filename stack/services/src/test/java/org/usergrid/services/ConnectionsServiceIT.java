@@ -34,16 +34,16 @@ public class ConnectionsServiceIT extends AbstractServiceIT
 	@Test
 	public void testUserConnections() throws Exception
     {
-		app.add( "username", "conn-user1" );
-		app.add( "email", "conn-user1@apigee.com" );
+		app.put( "username", "conn-user1" );
+		app.put( "email", "conn-user1@apigee.com" );
 
 		Entity user1 = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
 		assertNotNull( user1 );
 
 		app.testRequest( ServiceAction.GET, 1, "users", "conn-user1" );
 
-		app.add( "username", "conn-user2" );
-		app.add( "email", "conn-user2@apigee.com" );
+		app.put( "username", "conn-user2" );
+		app.put( "email", "conn-user2@apigee.com" );
 
 		Entity user2 = app.testRequest( ServiceAction.POST, 1, "users").getEntity();
 		assertNotNull( user2 );
@@ -77,8 +77,8 @@ public class ConnectionsServiceIT extends AbstractServiceIT
 
 
         // POST users/conn-user1/manages/user2/user
-        app.add( "username", "conn-user3" );
-        app.add( "email", "conn-user3@apigee.com" );
+        app.put( "username", "conn-user3" );
+        app.put( "email", "conn-user3@apigee.com" );
         app.testRequest( ServiceAction.POST, 1, "users", "conn-user1", "manages", "user" );
 	}
 }
