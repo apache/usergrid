@@ -86,7 +86,7 @@ public class IndexMultiBucketSetLoader {
 
         // trim if we're over size
         if (resultsTree.size() > resultSize) {
-          resultsTree.remove(resultsTree.last());
+          resultsTree.pollLast();
         }
       }
 

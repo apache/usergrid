@@ -108,12 +108,21 @@ public interface QueueManager {
 	public UUID renewTransaction(String queuePath,UUID transactionId,QueueQuery query) throws TransactionNotFoundException;
 
 	/**
-	 * Deletes the transaction for the consumer
+	 * Deletes the transaction for the consumer. Synonymous with "commit."
+   * @see #commitTransaction(String, java.util.UUID, QueueQuery)
 	 * @param queuePath The path to the queue
 	 * @param transactionId The transaction id
 	 * @param query
 	 */
 	public void deleteTransaction(String queuePath,UUID transactionId, QueueQuery query);
+
+  /**
+   * Commits the Transaction for the consumer.
+   * @param queuePath The path to the queue
+   * @param transactionId The transaction id
+   * @param query
+   */
+  public void commitTransaction(String queuePath,UUID transactionId, QueueQuery query);
 
   /**
    * Determines if there are any outstanding transactions on a queue

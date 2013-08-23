@@ -236,44 +236,77 @@ public class MessagesIT extends AbstractCoreIT
     @Test
     public void testTransactions() throws Exception {
 
-        UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
-        assertNotNull(applicationId);
+    UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
+    assertNotNull(applicationId);
+
+    QueueManager qm = getQueueManagerFactory().getQueueManager(applicationId);
+
+    String queuePath = "/foo/bar";
+
+    assertFalse(qm.hasMessagesInQueue(queuePath, null));
+    assertFalse(qm.hasOutstandingTransactions(queuePath, null));
+    assertFalse(qm.hasPendingReads(queuePath, null));
+
+    // create 2 messages
+    Message message = new Message();
+    message.setStringProperty("foo", "bar");
+    LOG.info("Posting message to queue " + queuePath + ": " + message.getUuid());
+    Message posted1 = qm.postToQueue(queuePath, message);
+
+    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+    assertFalse(qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
+
+    message = new Message();
+    message.setStringProperty("foo", "bar");
+    LOG.info("Posting message to queue " + queuePath + ": " + message.getUuid());
+    Message posted2 =qm.postToQueue(queuePath, message);
+
+    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+    assertFalse(qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
+
+    // take 1 message
+    QueueQuery qq = new QueueQuery();
+    qq.setTimeout(60000000);
+    qq.setLimit(1);
+    QueueResults qr1 = qm.getFromQueue(queuePath, qq);
+
+    assertEquals("Only 1 message returned", 1, qr1.getMessages().size());
+    assertEquals("Expected message 1", posted1.getUuid(), qr1.getLast());
+    assertEquals("Expected message 1", posted1.getUuid(), qr1.getMessages().get(0).getUuid());
+    assertNotNull("Expected transaction id", qr1.getMessages().get(0).getTransaction());
+
+    assertTrue(qm.hasMessagesInQueue(queuePath, null));
+    assertTrue(qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
+
+    // take the 2nd message
+    QueueResults qr2 = qm.getFromQueue(queuePath, qq);
 
 
-    LOG.info("Creating messages");
-        EntityManager em = getEntityManagerFactory().getEntityManager(applicationId);
-        assertNotNull(em);
+    assertEquals("Only 1 message returned", 1, qr2.getMessages().size());
+    assertEquals("Expected message 2", posted2.getUuid(), qr2.getLast());
+    assertEquals("Expected message 2", posted2.getUuid(), qr2.getMessages().get(0).getUuid());
+    assertNotNull("Expected transaction id", qr2.getMessages().get(0).getTransaction());
 
-        LOG.info("Creating messages");
 
-        QueueManager qm = getQueueManagerFactory().getQueueManager(applicationId);
+    assertFalse("Both messages have been returned at least once", qm.hasMessagesInQueue(queuePath, null));
+    assertTrue("Two outstanding transactions left", qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
 
-        String queuePath = "/foo/bar";
+    // commit the 1st transaction
+    qm.deleteTransaction(queuePath, qr1.getMessages().get(0).getTransaction(), qq);
 
-        Message message = new Message();
-        message.setStringProperty("foo", "bar");
+    assertFalse("Both messages have been returned at least once", qm.hasMessagesInQueue(queuePath, null));
+    assertTrue("One outstanding transaction is left", qm.hasOutstandingTransactions(queuePath, null));
+    assertTrue(qm.hasPendingReads(queuePath, null));
 
-        LOG.info("Posting message # to queue /foo/bar: " + message.getUuid());
+    // commit the 2nd transaction
+    qm.deleteTransaction(queuePath, qr2.getMessages().get(0).getTransaction(), qq);
 
-        assertFalse(qm.hasMessagesInQueue(queuePath, null));
-
-        qm.postToQueue(queuePath, message);
-        assertTrue(qm.hasMessagesInQueue(queuePath, null));
-
-        QueueQuery qq = new QueueQuery();
-        qq.setTimeout(100);
-        qq.setLimit(1);
-        QueueResults qr = qm.getFromQueue(queuePath, qq);
-
-        assertFalse(qm.hasMessagesInQueue(queuePath, null));
-        assertTrue(qm.hasOutstandingTransactions(queuePath, null));
-        assertTrue(qm.hasPendingReads(queuePath, null));
-
-        qm.deleteTransaction(queuePath, qr.getMessages().get(0).getTransaction(), qq);
-
-        assertFalse(qm.hasMessagesInQueue(queuePath, null));
-        assertFalse(qm.hasOutstandingTransactions(queuePath, null));
-        assertFalse(qm.hasPendingReads(queuePath, null));
-    }
-
+    assertFalse("Both messages have been returned at least once", qm.hasMessagesInQueue(queuePath, null));
+    assertFalse("Both transactions have been removed", qm.hasOutstandingTransactions(queuePath, null));
+    assertFalse("Both messages and transactions have been returned", qm.hasPendingReads(queuePath, null));
+  }
 }
