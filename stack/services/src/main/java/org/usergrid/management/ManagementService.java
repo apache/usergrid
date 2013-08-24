@@ -397,4 +397,6 @@ public interface ManagementService {
    */
   public Group getOrganizationProps(UUID orgId) throws Exception;
   
+  public Object registerAppWithAPM (OrganizationInfo orgInfo, ApplicationInfo appInfo) throws Exception;
+  
 }

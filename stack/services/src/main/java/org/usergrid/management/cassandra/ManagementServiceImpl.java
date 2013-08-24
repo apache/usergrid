@@ -2698,4 +2698,11 @@ public class ManagementServiceImpl implements ManagementService {
   public void setSaltProvider(SaltProvider saltProvider) {
     this.saltProvider = saltProvider;
   }
+
+@Override
+public Object registerAppWithAPM(OrganizationInfo orgInfo, ApplicationInfo appInfo) throws Exception {
+	// TODO Auto-generated method stub
+	return null;
+	
+}
 }
