@@ -15,47 +15,23 @@
  ******************************************************************************/
 package org.usergrid.services;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.util.UUID;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.EntityManager;
 
 
 @Concurrent()
-public class ApplicationsServiceIT extends AbstractServiceIT {
-
-    private static final Logger logger = LoggerFactory
-            .getLogger(ApplicationsServiceIT.class);
-
+public class ApplicationsServiceIT extends AbstractServiceIT
+{
     @Test
-    public void testPermissions() throws Exception {
-        logger.info("PermissionsIT.testPermissions");
+    public void testPermissions() throws Exception
+    {
+        app.createRole( "manager", null, 0 );
+        app.createRole( "member", null, 0 );
 
-        UUID applicationId = createApplication("testOrganization",
-                "testPermissions");
-        assertNotNull(applicationId);
+        app.grantRolePermission( "admin", "users:access:*" );
+        app.grantRolePermission( "admin", "groups:access:*" );
 
-        EntityManager em = setup.getEmf().getEntityManager(applicationId);
-        assertNotNull(em);
-
-        // em.createRole("admin", null);
-        em.createRole("manager", null, 0);
-        em.createRole("member", null, 0);
-
-        em.grantRolePermission("admin", "users:access:*");
-        em.grantRolePermission("admin", "groups:access:*");
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-
-
-        testDataRequest(sm, ServiceAction.GET, null, "roles", "admin",
-                "permissions");
-
+        app.testDataRequest( ServiceAction.GET, "roles", "admin", "permissions" );
     }
-
 }

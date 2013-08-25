@@ -17,7 +17,7 @@ public abstract class AbstractCoreIT
 
 
     @ClassRule
-    public static ITSetup setup = new ITSetup();
+    public static CoreITSetup setup = new CoreITSetupImpl( CoreITSuite.cassandraResource );
 
 
     public AbstractCoreIT()

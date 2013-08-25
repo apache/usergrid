@@ -35,12 +35,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
+import org.usergrid.CoreApplication;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.NoIndexException;
 import org.usergrid.Application;
-import org.usergrid.SimpleApplication;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -51,26 +51,28 @@ public class CollectionIT extends AbstractCoreIT
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
     @Rule
-    public Application app = new SimpleApplication( setup );
+    public Application app = new CoreApplication( setup );
 
 
     @Test
     public void testCollection() throws Exception
     {
-        app.add( "username", "edanuff" );
-        app.add( "email", "ed@anuff.com" );
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
 
         Entity user = app.create( "user" );
         assertNotNull( user );
 
-        app.add( "actor", new LinkedHashMap<String, Object>()
-        { {
-            put( "displayName", "Ed Anuff" );
-            put( "objectType", "person" );
-        } });
-        app.add( "verb", "tweet" );
-        app.add( "content", "I ate a sammich" );
-        app.add( "ordinal", 3 );
+        app.put( "actor", new LinkedHashMap<String, Object>()
+        {
+            {
+                put( "displayName", "Ed Anuff" );
+                put( "objectType", "person" );
+            }
+        } );
+        app.put( "verb", "tweet" );
+        app.put( "content", "I ate a sammich" );
+        app.put( "ordinal", 3 );
 
         Entity activity = app.create( "activity" );
         assertNotNull( activity );
@@ -87,26 +89,30 @@ public class CollectionIT extends AbstractCoreIT
 
         // test queries on the collection
 
-        app.add( "actor", new LinkedHashMap<String, Object>()
-        { {
-            put( "displayName", "Ed Anuff" );
-            put( "objectType", "person" );
-        } });
-        app.add( "verb", "tweet2" );
-        app.add( "content", "I ate a pickle" );
-        app.add( "ordinal", 2 );
+        app.put( "actor", new LinkedHashMap<String, Object>()
+        {
+            {
+                put( "displayName", "Ed Anuff" );
+                put( "objectType", "person" );
+            }
+        } );
+        app.put( "verb", "tweet2" );
+        app.put( "content", "I ate a pickle" );
+        app.put( "ordinal", 2 );
         Entity activity2 = app.create( "activity" );
         activity2 = app.get( activity2.getUuid() );
         app.addToCollection( user, "activities", activity2 );
 
-        app.add( "actor", new LinkedHashMap<String, Object>()
-        { {
-            put( "displayName", "Ed Anuff" );
-            put( "objectType", "person" );
-        } });
-        app.add( "verb", "tweet2" );
-        app.add( "content", "I ate an apple" );
-        app.add( "ordinal", 1 );
+        app.put( "actor", new LinkedHashMap<String, Object>()
+        {
+            {
+                put( "displayName", "Ed Anuff" );
+                put( "objectType", "person" );
+            }
+        } );
+        app.put( "verb", "tweet2" );
+        app.put( "content", "I ate an apple" );
+        app.put( "ordinal", 1 );
         Entity activity3 = app.create( "activity" );
         activity3 = app.get( activity3.getUuid() );
         app.addToCollection( user, "activities", activity3 );

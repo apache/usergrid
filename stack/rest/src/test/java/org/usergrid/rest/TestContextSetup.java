@@ -12,7 +12,7 @@ import org.usergrid.rest.test.security.TestAdminUser;
 /**
  * A self configuring TestContext which sets itself up it implements TestRule.
  * With a @Rule annotation, an instance of this Class as a public member in any
- * test class or abstract test class will auto setup itself before each test.
+ * test class or abstract test class will auto svcSetup itself before each test.
  */
 public class TestContextSetup extends TestContext implements TestRule
 {

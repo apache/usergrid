@@ -21,14 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.Schema.TYPE_APPLICATION;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Schema;
@@ -39,289 +33,298 @@ import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 
 @Concurrent()
-public class CollectionServiceIT extends AbstractServiceIT {
-    private static final Logger LOG = LoggerFactory
-			.getLogger(CollectionServiceIT.class);
-    private static final String TEST_ORGANIZATION = "testOrganizationCST";
-    private static final String TEST_APPLICATION = "testCollectionCST";
+public class CollectionServiceIT extends AbstractServiceIT
+{
     public static final String CST_TEST_GROUP = "cst-test-group";
 
     @Test
-	public void testUsersCollectionWithGroupIdName() throws Exception {
-        LOG.info( "Please make use of the logger folks :-)" );
-		UUID applicationId = createApplication(TEST_ORGANIZATION,
-                TEST_APPLICATION);
+	public void testUsersCollectionWithGroupIdName() throws Exception
+    {
+        app.put( "path", "cst-test-group/cst-test-group" );
+		app.put( "title", "Collection Test group" );
 
-		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-
-
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
-        properties.put("path", "cst-test-group/cst-test-group");
-		properties.put("title", "Collection Test group");
-
-		Entity group = testRequest(sm, ServiceAction.POST, 1, properties,
-				"groups").getEntity();
+		Entity group = app.testRequest( ServiceAction.POST, 1, "groups").getEntity();
 		assertNotNull(group);
 
-		testRequest(sm, ServiceAction.GET, 1, null, "groups", CST_TEST_GROUP,
-                CST_TEST_GROUP);
+		app.testRequest( ServiceAction.GET, 1, "groups", CST_TEST_GROUP, CST_TEST_GROUP );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "groups");
+		app.testRequest( ServiceAction.GET, 1, "groups" );
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+		app.put( "username", "edanuff" );
+		app.put( "email", "ed@anuff.com" );
 
-		Entity user = testRequest(sm, ServiceAction.POST, 1, properties,
-				"users").getEntity();
+		Entity user = app.testRequest( ServiceAction.POST, 1, "users").getEntity();
 		assertNotNull(user);
 
-		try {
+		try
+        {
 			// try GET on users with group id
-			testRequest(sm, ServiceAction.GET, 0, null, "users",
-					group.getUuid());
+			app.testRequest( ServiceAction.GET, 0, "users", group.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try GET on users with group name
-			testRequest(sm, ServiceAction.GET, 0, null, "users", CST_TEST_GROUP);
+			app.testRequest( ServiceAction.GET, 0, "users", CST_TEST_GROUP );
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		}
+        catch ( ServiceResourceNotFoundException srnfe )
+        {
 			// ok
 		}
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("group-size", "10");
+		app.put( "group-size", "10" );
 
-		try {
+		try
+        {
 			// try POST on users with group id
-			testRequest(sm, ServiceAction.POST, 0, properties, "users",
-					group.getUuid());
+			app.testRequest( ServiceAction.POST, 0, "users", group.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try POST on users with group name
-			testRequest(sm, ServiceAction.POST, 0, properties, "users",
-                    CST_TEST_GROUP);
+			app.testRequest( ServiceAction.POST, 0, "users", CST_TEST_GROUP );
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		}
+        catch ( ServiceResourceNotFoundException srnfe )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try PUT on users with group id
-			testRequest(sm, ServiceAction.PUT, 0, properties, "users",
-					group.getUuid());
+			app.testRequest( ServiceAction.PUT, 0, "users", group.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try PUT on users with group name
-			testRequest(sm, ServiceAction.PUT, 0, properties, "users",
-                    CST_TEST_GROUP);
+			app.testRequest( ServiceAction.PUT, 0, "users", CST_TEST_GROUP );
 			Assert.fail();
-		} catch (RequiredPropertyNotFoundException srnfe) {
+		}
+        catch ( RequiredPropertyNotFoundException srnfe )
+        {
 			// ok
 		}
 
 		try {
 			// try DELETE on users with group id
-			testRequest(sm, ServiceAction.DELETE, 0, null, "users",
-					group.getUuid());
+			app.testRequest( ServiceAction.DELETE, 0, "users", group.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try DELETE on users with group name
-			testRequest(sm, ServiceAction.DELETE, 0, null, "users",
-                    CST_TEST_GROUP);
+			app.testRequest( ServiceAction.DELETE, 0, "users", CST_TEST_GROUP );
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		}
+        catch ( ServiceResourceNotFoundException srnfe )
+        {
 			// ok
 		}
-
 	}
 
+
 	@Test
-	public void testGenericEntityCollectionWithIdName() throws Exception {
+	public void testGenericEntityCollectionWithIdName() throws Exception
+    {
+		app.put( "name", "Tom" );
 
-		UUID applicationId = createApplication(TEST_ORGANIZATION,
-				"testCatsDogs");
+		Entity cat = app.testRequest( ServiceAction.POST, 1, "cats" ).getEntity();
+		assertNotNull( cat );
 
-		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
+		app.testRequest( ServiceAction.GET, 1, "cats", "Tom" );
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "Tom");
+		app.put( "name", "Danny" );
 
-		Entity cat = testRequest(sm, ServiceAction.POST, 1, properties, "cats")
-				.getEntity();
-		assertNotNull(cat);
+		Entity dog = app.testRequest( ServiceAction.POST, 1, "dogs").getEntity();
+		assertNotNull( dog );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "cats", "Tom");
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "Danny");
-
-		Entity dog = testRequest(sm, ServiceAction.POST, 1, properties, "dogs")
-				.getEntity();
-		assertNotNull(dog);
-
-		try {
+		try
+        {
 			// try GET on cats with dog id
-			testRequest(sm, ServiceAction.GET, 0, null, "cats", dog.getUuid());
+			app.testRequest( ServiceAction.GET, 0, "cats", dog.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try GET on cats with dog name
-			testRequest(sm, ServiceAction.GET, 0, null, "cats", "Danny");
+			app.testRequest( ServiceAction.GET, 0, "cats", "Danny");
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		}
+        catch ( ServiceResourceNotFoundException srnfe )
+        {
 			// ok
 		}
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("color", "black");
+		app.put( "color", "black" );
 
-		try {
+		try
+        {
 			// try POST on cats with dogs id
-			testRequest(sm, ServiceAction.POST, 0, properties, "cats",
-					dog.getUuid());
+			app.testRequest( ServiceAction.POST, 0, "cats", dog.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try POST on cats with dogs name
-			testRequest(sm, ServiceAction.POST, 0, properties, "cats", "Danny");
+			app.testRequest( ServiceAction.POST, 0, "cats", "Danny");
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		}
+        catch ( ServiceResourceNotFoundException srnfe )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try PUT on users with dogs id
-			testRequest(sm, ServiceAction.PUT, 0, properties, "cats",
-					dog.getUuid());
+			app.testRequest( ServiceAction.PUT, 0, "cats", dog.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try DELETE on cats with dogs id
-			testRequest(sm, ServiceAction.DELETE, 0, null, "cats",
-					dog.getUuid());
+			app.testRequest( ServiceAction.DELETE, 0, "cats", dog.getUuid() );
 			Assert.fail();
-		} catch (UnexpectedEntityTypeException uee) {
+		}
+        catch ( UnexpectedEntityTypeException uee )
+        {
 			// ok
 		}
 
-		try {
+		try
+        {
 			// try DELETE on cats with dogs name
-			testRequest(sm, ServiceAction.DELETE, 0, null, "cats", "Danny");
+			app.testRequest( ServiceAction.DELETE, 0, "cats", "Danny" );
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		}
+        catch ( ServiceResourceNotFoundException srnfe )
+        {
 			// ok
 		}
 
-    // try PUT on cats with a new UUID
-    ServiceResults results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "99999990-600c-11e2-b414-14109fd49581");
-    Entity entity = results.getEntity();
-    Assert.assertEquals(entity.getUuid().toString(), "99999990-600c-11e2-b414-14109fd49581");
+        // try PUT on cats with a new UUID
+        final String catsUuid = "99999990-600c-11e2-b414-14109fd49581";
+        ServiceResults results = app.testRequest( ServiceAction.PUT, 1, "cats", catsUuid );
+        Entity entity = results.getEntity();
+        Assert.assertEquals( entity.getUuid().toString(), catsUuid );
 
-    // try PUT on cats with a name w/o name in properties
-    properties.remove("name");
-    results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "Danny");
-    entity = results.getEntity();
-    Assert.assertEquals(entity.getName(), "danny");
+        // try PUT on cats with a name w/o name in properties
+        results = app.testRequest( ServiceAction.PUT, 1, "cats", "Danny" );
+        entity = results.getEntity();
+        Assert.assertEquals( entity.getName(), "danny" );
 
-    // try PUT on cats with a name in properties w/ difference capitalization
-    properties.put("name", "Danny2");
-    results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "Danny2");
-    entity = results.getEntity();
-    Assert.assertEquals(entity.getName(), "Danny2");
+        // try PUT on cats with a name in properties w/ difference capitalization
+        app.put( "name", "Danny2" );
+        results = app.testRequest( ServiceAction.PUT, 1, "cats", "Danny2" );
+        entity = results.getEntity();
+        Assert.assertEquals( entity.getName(), "Danny2" );
 
-    // try PUT on cats with a completely different name in properties
-    properties.put("name", "Jimmy");
-    results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "Danny3");
-    entity = results.getEntity();
-    Assert.assertEquals(entity.getName(), "danny3");
-  }
+        // try PUT on cats with a completely different name in properties
+        app.put( "name", "Jimmy" );
+        results = app.testRequest( ServiceAction.PUT, 1, "cats", "Danny3" );
+        entity = results.getEntity();
+        Assert.assertEquals( entity.getName(), "danny3" );
+    }
+
 
 	@Test
-	public void testEmptyCollection() throws Exception {
-		UUID applicationId = createApplication("testOrganization",
-				"testEmptyCollections");
-
-		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
+	public void testEmptyCollection() throws Exception
+    {
 		// Generic collection first call
-		Entity cat = testRequest(sm, ServiceAction.POST, 0, properties, "cats")
-				.getEntity();
-		assertNull(cat);
+		Entity cat = app.testRequest( ServiceAction.POST, 0, "cats" ).getEntity();
+		assertNull( cat );
 
-		CollectionInfo info = Schema.getDefaultSchema().getCollection(
-				TYPE_APPLICATION, "cats");
+		CollectionInfo info = Schema.getDefaultSchema().getCollection( TYPE_APPLICATION, "cats" );
 
-		assertNotNull(info);
+		assertNotNull( info );
 
-		assertEquals("cats", info.getName());
+		assertEquals( "cats", info.getName() );
 
 		// call second time
-		cat = testRequest(sm, ServiceAction.POST, 0, properties, "cats")
-				.getEntity();
-		assertNull(cat);
+		cat = app.testRequest( ServiceAction.POST, 0, "cats" ).getEntity();
+		assertNull( cat );
 
 		// users core collections - username required
-		try {
-
-			  testRequest(sm, ServiceAction.POST, 0, properties, "users");
+		try
+        {
+			app.testRequest( ServiceAction.POST, 0, "users" );
 			Assert.fail();
-		} catch (RequiredPropertyNotFoundException rpnfe) {
+		}
+        catch ( RequiredPropertyNotFoundException rpnfe )
+        {
 			//ok
 		}
 
 		// groups core collections - path required
-		try {
+		try
+        {
 
-			  testRequest(sm, ServiceAction.POST, 0, properties, "groups");
+			app.testRequest( ServiceAction.POST, 0, "groups" );
 			Assert.fail();
-		} catch (IllegalArgumentException iae) {
+		}
+        catch ( IllegalArgumentException iae )
+        {
 			//ok
 		}
 
 		// roles core collections - role name required
-		try {
-
-			  testRequest(sm, ServiceAction.POST, 0, properties, "roles");
+		try
+        {
+            app.testRequest( ServiceAction.POST, 0, "roles" );
 			Assert.fail();
-		} catch (IllegalArgumentException iae) {
+		}
+        catch ( IllegalArgumentException iae )
+        {
 			//ok
 		}
 
 		// events core collections - timestamp required
-		try {
-			testRequest(sm, ServiceAction.POST, 0, properties, "events");
-		} catch(RequiredPropertyNotFoundException rpnfe) {
+		try
+        {
+			app.testRequest( ServiceAction.POST, 0, "events" );
+		}
+        catch( RequiredPropertyNotFoundException rpnfe )
+        {
 			//ok
 		}
 	}
-
 }
