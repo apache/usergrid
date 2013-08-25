@@ -164,4 +164,10 @@ public class CoreApplication implements Application, TestRule
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
     }
+
+
+    public EntityManager getEm()
+    {
+        return em;
+    }
 }

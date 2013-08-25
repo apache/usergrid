@@ -201,4 +201,10 @@ public class ServiceApplication extends CoreApplication
     {
         em.grantGroupRolePermission( id, role, permission );
     }
+
+
+    public ServiceManager getSm()
+    {
+        return sm;
+    }
 }
