@@ -1,11 +1,11 @@
 package org.usergrid;
 
 
-import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.IndexBucketLocator;
@@ -15,18 +15,26 @@ import org.usergrid.utils.JsonUtils;
 import java.util.UUID;
 
 
-public class ITSetup implements TestRule
+public class CoreITSetupImpl implements CoreITSetup
 {
-    public static final boolean USE_DEFAULT_APPLICATION = false;
-    private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
+    private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
     protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
+    protected CassandraResource cassandraResource;
+    protected boolean enabled = false;
 
 
-    public Statement apply( Statement base, Description description )
+    public CoreITSetupImpl( CassandraResource cassandraResource )
+    {
+        this.cassandraResource = cassandraResource;
+    }
+
+
+    @Override
+    public Statement apply(Statement base, Description description)
     {
         return statement( base, description );
     }
@@ -62,11 +70,20 @@ public class ITSetup implements TestRule
     protected void before( Description description ) throws Throwable
     {
         LOG.info( "Setting up for {}", description.getDisplayName() );
+        initialize();
+    }
 
-        emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
-        qmf = CoreITSuite.cassandraResource.getBean( QueueManagerFactory.class );
-        indexBucketLocator = CoreITSuite.cassandraResource.getBean( IndexBucketLocator.class );
-        cassandraService = CoreITSuite.cassandraResource.getBean( CassandraService.class );
+
+    private void initialize()
+    {
+        if ( ! enabled )
+        {
+            emf = cassandraResource.getBean( EntityManagerFactory.class );
+            qmf = cassandraResource.getBean( QueueManagerFactory.class );
+            indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
+            cassandraService = cassandraResource.getBean( CassandraService.class );
+            enabled = true;
+        }
     }
 
 
@@ -79,30 +96,55 @@ public class ITSetup implements TestRule
     }
 
 
+    @Override
     public EntityManagerFactory getEmf()
     {
+        if ( emf == null )
+        {
+            initialize();
+        }
+
         return emf;
     }
 
 
+    @Override
     public QueueManagerFactory getQmf()
     {
+        if ( qmf == null )
+        {
+            initialize();
+        }
+
         return qmf;
     }
 
 
+    @Override
     public IndexBucketLocator getIbl()
     {
+        if ( indexBucketLocator == null )
+        {
+            initialize();
+        }
+
         return indexBucketLocator;
     }
 
 
+    @Override
     public CassandraService getCassSvc()
     {
+        if ( cassandraService == null )
+        {
+            initialize();
+        }
+
         return cassandraService;
     }
 
 
+    @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception
     {
         if ( USE_DEFAULT_APPLICATION )
@@ -110,16 +152,21 @@ public class ITSetup implements TestRule
             return CassandraService.DEFAULT_APPLICATION_ID;
         }
 
+        if ( emf == null )
+        {
+            emf = cassandraResource.getBean( EntityManagerFactory.class );
+        }
+
         return emf.createApplication( organizationName, applicationName );
     }
 
 
+    @Override
     public void dump( String name, Object obj )
     {
-        if ( obj != null )
+        if ( obj != null && LOG.isInfoEnabled() )
         {
-            LOG.info(name + ":\n" + JsonUtils.mapToFormattedJsonString(obj));
+            LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
         }
     }
-
 }

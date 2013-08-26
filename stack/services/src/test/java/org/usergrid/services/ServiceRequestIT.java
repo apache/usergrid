@@ -30,10 +30,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.ServiceITSetup;
+import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.management.ServiceTestRule;
 
 
 @Concurrent()
@@ -46,7 +47,7 @@ public class ServiceRequestIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceTestRule setup = new ServiceTestRule(ServiceITSuite.cassandraResource);
+    public ServiceITSetup setup = new ServiceITSetupImpl(ServiceITSuite.cassandraResource);
 
 	@Test
 	public void testPaths() throws Exception {

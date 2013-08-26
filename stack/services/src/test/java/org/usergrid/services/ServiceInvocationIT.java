@@ -29,161 +29,122 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 
-public class ServiceInvocationIT extends AbstractServiceIT {
-
-	public static final Logger logger = LoggerFactory
-			.getLogger(ServiceInvocationIT.class);
+public class ServiceInvocationIT extends AbstractServiceIT
+{
+	private static final Logger LOG = LoggerFactory.getLogger( ServiceInvocationIT.class );
 
 	@Test
-	public void testServices() throws Exception {
-		logger.info("testServices");
+	public void testServices() throws Exception
+    {
+		LOG.info( "testServices" );
 
-		UUID applicationId = createApplication("ServiceInvocationIT",
-				"testServices");
+		app.put( "username", "edanuff" );
+		app.put( "email", "ed@anuff.com" );
 
-		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
+		Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
+		assertNotNull( user );
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+		app.testRequest( ServiceAction.GET, 1, "users");
 
-		Entity user = testRequest(sm, ServiceAction.POST, 1, properties,
-				"users").getEntity();
-		assertNotNull(user);
+		app.testRequest( ServiceAction.GET, 1, "users", user.getUuid() );
 
-		// test collection
-		// /application/00000000-0000-0000-0000-000000000001/users
-		// Service application = sm.getService(Application.ENTITY_TYPE);
+		app.testRequest( ServiceAction.GET, 1, "users",
+				Query.fromQL( "select * where username='edanuff'" ) );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "users");
+		app.put( "foo", "bar" );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "users", user.getUuid());
+		app.testRequest( ServiceAction.PUT, 1, "users", user.getUuid() );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "users",
-				Query.fromQL("select * where username='edanuff'"));
+		app.put( "name", "nico" );
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("foo", "bar");
+		app.testRequest( ServiceAction.POST, 1, "cats" );
 
-		testRequest(sm, ServiceAction.PUT, 1, properties, "users",
-				user.getUuid());
+		app.testRequest( ServiceAction.GET, 0, "users", user.getUuid(), "messages" );
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "nico");
-
-		testRequest(sm, ServiceAction.POST, 1, properties, "cats");
-
-		testRequest(sm, ServiceAction.GET, 0, null, "users", user.getUuid(),
-				"messages");
-
-		testRequest(sm, ServiceAction.GET, 0, null, "users",
+		app.testRequest( ServiceAction.GET, 0, "users",
 				Query.fromQL("select * where username='edanuff'"), "messages");
 
-		Entity cat = doCreate(sm, "cat", "dylan");
+		Entity cat = app.doCreate( "cat", "dylan" );
 
-		testRequest(sm, ServiceAction.GET, 2, null, "cats");
+		app.testRequest( ServiceAction.GET, 2, "cats" );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "cats",
+		app.testRequest( ServiceAction.GET, 1, "cats",
 				Query.fromQL("select * where name='dylan'"));
 
-		testRequest(sm, ServiceAction.POST, 1, null, "users", "edanuff",
-				"likes", cat.getUuid());
+		app.testRequest( ServiceAction.POST, 1, null, "users", "edanuff",
+				"likes", cat.getUuid() );
 
-		Entity restaurant = doCreate(sm, "restaurant", "Brickhouse");
+		Entity restaurant = app.doCreate( "restaurant", "Brickhouse" );
 
-		sm.getEntityManager().createConnection(user, "likes", restaurant);
+		app.createConnection( user, "likes", restaurant );
 
-		restaurant = doCreate(sm, "restaurant", "Axis Cafe");
+		restaurant = app.doCreate( "restaurant", "Axis Cafe" );
 
-		testRequest(sm, ServiceAction.GET, 2, null, "restaurants");
+		app.testRequest( ServiceAction.GET, 2, "restaurants" );
 
-		testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
-				"connections", "likes", restaurant.getUuid());
+		app.testRequest( ServiceAction.POST, 1, "users", user.getUuid(),
+				"connections", "likes", restaurant.getUuid() );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "users", "edanuff",
-				"likes", "cats");
+		app.testRequest( ServiceAction.GET, 1, "users", "edanuff", "likes", "cats" );
 
-		testRequest(sm, ServiceAction.GET, 3, null, "users", "edanuff", "likes");
+		app.testRequest( ServiceAction.GET, 3, "users", "edanuff", "likes" );
 
-		testRequest(sm, ServiceAction.GET, 2, null, "users", "edanuff",
-				"likes", "restaurants");
+        app.testRequest( ServiceAction.GET, 2, "users", "edanuff", "likes", "restaurants" );
 
-		testRequest(sm, ServiceAction.GET, 1, null, "users", "edanuff",
-				"likes", "restaurants",
+        app.testRequest( ServiceAction.GET, 1, "users", "edanuff", "likes", "restaurants",
 				Query.fromQL("select * where name='Brickhouse'"));
 
-		testRequest(sm, ServiceAction.GET, 1, null, "users", "edanuff",
+        app.testRequest( ServiceAction.GET, 1, "users", "edanuff",
 				"likes", Query.fromQL("select * where name='axis*'"));
 
-		testRequest(sm, ServiceAction.GET, 3, null, "users", "edanuff",
-				"connections");
+        app.testRequest( ServiceAction.GET, 3, null, "users", "edanuff", "connections" );
 
-//		testRequest(sm, ServiceAction.GET, 1, null, "entities", cat.getUuid(),
-//				"connecting");
+		app.put( "color", "blacknwhite" );
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("color", "blacknwhite");
+		app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", cat.getUuid() );
 
-		testRequest(sm, ServiceAction.PUT, 1, properties, "users", "edanuff",
-				"likes", cat.getUuid());
+		app.put( "eats", "petfood" );
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("eats", "petfood");
+		app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "cats", "dylan" );
 
-		testRequest(sm, ServiceAction.PUT, 1, properties, "users", "edanuff",
-				"likes", "cats", "dylan");
+		app.put( "Todays special", "Coffee" );
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("Todays special", "Coffee");
+		app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "restaurants",
+                Query.fromQL("select * where name='Brickhouse'" ) );
 
-		testRequest(sm, ServiceAction.PUT, 1, properties, "users", "edanuff",
-				"likes", "restaurants",
-				Query.fromQL("select * where name='Brickhouse'"));
+		app.testRequest( ServiceAction.DELETE, 1, null, "users", user.getUuid(),
+				"connections", "likes", restaurant.getUuid() );
 
-		testRequest(sm, ServiceAction.DELETE, 1, null, "users", user.getUuid(),
-				"connections", "likes", restaurant.getUuid());
+		app.testRequest( ServiceAction.GET, 2, null, "users", "edanuff", "connections" );
 
-		testRequest(sm, ServiceAction.GET, 2, null, "users", "edanuff",
-				"connections");
-
-		testRequest(sm, ServiceAction.GET, 1, null, "users", "edanuff",
-				"likes", "restaurants");
+		app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );
 
 		UUID uuid = UUID.randomUUID();
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("visits", 5);
-		testRequest(sm, ServiceAction.PUT, 1, properties, "devices", uuid);
+		app.put( "visits", 5 );
+		app.testRequest( ServiceAction.PUT, 1, "devices", uuid );
 
 	}
 
 	@Test
-	public void testBatchCreate() throws Exception {
-		logger.info("testBatchCreate");
-
-		UUID applicationId = createApplication("testOrganization",
-				"testBatchCreate");
-
-		ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-
+	public void testBatchCreate() throws Exception
+    {
 		List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "test_user_1");
-		properties.put("email", "user1@test.com");
-		batch.add(properties);
+		properties.put( "username", "test_user_1" );
+		properties.put( "email", "user1@test.com" );
+		batch.add( properties );
 
 		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "test_user_2");
-		batch.add(properties);
+		properties.put( "username", "test_user_2" );
+		batch.add( properties );
 
 		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "test_user_3");
-		batch.add(properties);
+		properties.put( "username", "test_user_3" );
+		batch.add( properties );
 
-		Entity user = testBatchRequest(sm, ServiceAction.POST, 3, batch,
-				"users").getEntity();
-		assertNotNull(user);
-
+		Entity user = app.testBatchRequest( ServiceAction.POST, 3, batch,
+				"users" ).getEntity();
+		assertNotNull( user );
 	}
-
 }

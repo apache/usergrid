@@ -28,7 +28,6 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 
-
 public abstract class AbstractMongoTest
 {
 	private static Logger LOG = LoggerFactory.getLogger(AbstractMongoTest.class);

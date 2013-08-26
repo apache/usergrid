@@ -15,109 +15,69 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+
 import static org.junit.Assert.assertNotNull;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
+
 
 @Concurrent()
-public class GroupServiceIT extends AbstractServiceIT {
-
-    private static final Logger logger = LoggerFactory
-            .getLogger(GroupServiceIT.class);
-
+public class GroupServiceIT extends AbstractServiceIT
+{
     @Test
-    public void testGroups() throws Exception {
+    public void testGroups() throws Exception
+    {
+        app.put( "path", "test/test" );
+        app.put( "title", "Test group" );
 
-        UUID applicationId = createApplication("testOrganization", "testGroups");
+        Entity group = app.testRequest( ServiceAction.POST, 1, "groups" ).getEntity();
+        assertNotNull( group );
 
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
+        app.testRequest( ServiceAction.GET, 1, "groups", "test", "test" );
 
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put("path", "test/test");
-        properties.put("title", "Test group");
+        app.testRequest( ServiceAction.GET, 0, "groups", "test", "test", "messages" );
 
-        Entity group = testRequest(sm, ServiceAction.POST, 1, properties,
-                "groups").getEntity();
-        assertNotNull(group);
+        app.testRequest( ServiceAction.GET, 1, "groups" );
 
-        testRequest(sm, ServiceAction.GET, 1, null, "groups", "test", "test");
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
 
-        testRequest(sm, ServiceAction.GET, 0, null, "groups", "test", "test",
-                "messages");
+        Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
+        assertNotNull( user );
 
-        testRequest(sm, ServiceAction.GET, 1, null, "groups");
+        app.testRequest( ServiceAction.GET, 0, "groups", "test", "test", "users" );
 
-        properties = new LinkedHashMap<String, Object>();
-        properties.put("username", "edanuff");
-        properties.put("email", "ed@anuff.com");
+        app.testRequest( ServiceAction.POST, 1, "groups", "test", "test", "users", user.getUuid() );
 
-        Entity user = testRequest(sm, ServiceAction.POST, 1, properties,
-                "users").getEntity();
-        assertNotNull(user);
+        app.testRequest( ServiceAction.GET, 1, "groups", "test", "test", "users" );
 
-        testRequest(sm, ServiceAction.GET, 0, null, "groups", "test", "test",
-                "users");
+        app.testRequest( ServiceAction.GET, 1, "users", user.getUuid(), "groups" );
 
-        testRequest(sm, ServiceAction.POST, 1, null, "groups", "test", "test",
-                "users", user.getUuid());
+        app.testRequest( ServiceAction.GET, 0, "users", user.getUuid(), "activities" );
 
-        testRequest(sm, ServiceAction.GET, 1, null, "groups", "test", "test",
-                "users");
-
-        testRequest(sm, ServiceAction.GET, 1, null, "users", user.getUuid(),
-                "groups");
-
-        testRequest(sm, ServiceAction.GET, 0, null, "users", user.getUuid(),
-                "activities");
-
-        testRequest(sm, ServiceAction.GET, 0, null, "groups", group.getUuid(),
-                "users", user.getUuid(), "activities");
+        app.testRequest( ServiceAction.GET, 0, "groups", group.getUuid(), "users", user.getUuid(), "activities" );
 
     }
 
     @Test
-    public void testPermissions() throws Exception {
-        logger.info("PermissionsIT.testPermissions");
+    public void testPermissions() throws Exception
+    {
+        app.put( "path", "mmmeow" );
 
-        UUID applicationId = createApplication("testOrganization",
-                "testPermissions2");
-        assertNotNull(applicationId);
+        Entity group = app.create( "group" );
+        assertNotNull( group );
 
-        EntityManager em = setup.getEmf().getEntityManager(applicationId);
-        assertNotNull(em);
+        app.createGroupRole( group.getUuid(), "admin", 0 );
+        app.createGroupRole( group.getUuid(), "author", 0 );
 
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put("path", "mmmeow");
+        app.grantGroupRolePermission( group.getUuid(), "admin", "users:access:*" );
+        app.grantGroupRolePermission( group.getUuid(), "admin", "groups:access:*" );
+        app.grantGroupRolePermission( group.getUuid(), "author", "assets:access:*" );
 
-        Entity group = em.create("group", properties);
-        assertNotNull(group);
-
-        em.createGroupRole(group.getUuid(), "admin", 0);
-        em.createGroupRole(group.getUuid(), "author", 0);
-
-        em.grantGroupRolePermission(group.getUuid(), "admin", "users:access:*");
-        em.grantGroupRolePermission(group.getUuid(), "admin", "groups:access:*");
-        em.grantGroupRolePermission(group.getUuid(), "author",
-                "assets:access:*");
-
-        ServiceManager sm = setup.getSmf().getServiceManager(applicationId);
-
-        testDataRequest(sm, ServiceAction.GET, null, "groups", group.getUuid(),
-                "rolenames");
-
-        testDataRequest(sm, ServiceAction.GET, null, "groups", group.getUuid(),
-                "roles", "admin", "permissions");
-
-        testDataRequest(sm, ServiceAction.GET, null, "groups", group.getUuid(),
-                "roles", "author", "permissions");
+        app.testDataRequest( ServiceAction.GET, "groups", group.getUuid(), "rolenames" );
+        app.testDataRequest( ServiceAction.GET, "groups", group.getUuid(), "roles", "admin", "permissions" );
+        app.testDataRequest( ServiceAction.GET, "groups", group.getUuid(), "roles", "author", "permissions" );
     }
 }

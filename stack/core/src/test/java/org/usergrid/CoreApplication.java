@@ -11,6 +11,7 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,21 +19,42 @@ import java.util.UUID;
 import static junit.framework.Assert.assertNotNull;
 
 
-public class SimpleApplication implements Application, TestRule
+public class CoreApplication implements Application, TestRule
 {
-    private final static Logger LOG = LoggerFactory.getLogger( SimpleApplication.class );
+    private final static Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
 
-    private UUID id;
-    private String appName;
-    private String orgName;
-    private ITSetup setup;
-    private EntityManager em;
-    private Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    protected UUID id;
+    protected String appName;
+    protected String orgName;
+    protected CoreITSetup setup;
+    protected EntityManager em;
+    protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
 
-    public SimpleApplication( ITSetup setup )
+    public CoreApplication(CoreITSetup setup)
     {
         this.setup = setup;
+    }
+
+
+    @Override
+    public void putAll( Map<String, Object> properties )
+    {
+        this.properties.putAll( properties );
+    }
+
+
+    @Override
+    public Object get( String key )
+    {
+        return properties.get( key );
+    }
+
+
+    @Override
+    public Map<String,Object> getProperties()
+    {
+        return properties;
     }
 
 
@@ -67,7 +89,7 @@ public class SimpleApplication implements Application, TestRule
 
 
     @Override
-    public Object add( String property, Object value )
+    public Object put( String property, Object value )
     {
         return properties.put( property, value );
     }
@@ -124,13 +146,13 @@ public class SimpleApplication implements Application, TestRule
     }
 
 
-    private void after( Description description )
+    protected void after( Description description )
     {
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
     }
 
 
-    private void before( Description description ) throws Exception
+    protected void before( Description description ) throws Exception
     {
         orgName = description.getClassName();
         appName = description.getMethodName();
@@ -142,5 +164,10 @@ public class SimpleApplication implements Application, TestRule
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
     }
-}
 
+
+    public EntityManager getEm()
+    {
+        return em;
+    }
+}
