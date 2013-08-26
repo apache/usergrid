@@ -151,7 +151,6 @@ public class MUUserResourceIT extends AbstractRestIT {
     }
 
   @Test
- // @Ignore("Doesn't run in maven build env.  Need to resolve jstl classloading issue")
   public void checkPasswordReset() throws Exception {
 
     String email = "test@usergrid.com";
