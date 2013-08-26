@@ -1329,7 +1329,7 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public Map<String, Object> getAdminUserOrganizationData(UUID userId) throws Exception {
     UserInfo user = getAdminUserByUuid(userId);
-    return getAdminUserOrganizationData(user);
+    return getAdminUserOrganizationData(user, true);
   }
 
   @Override
@@ -1339,7 +1339,7 @@ public class ManagementServiceImpl implements ManagementService {
   }
 
   @Override
-  public Map<String, Object> getAdminUserOrganizationData(UserInfo user) throws Exception {
+  public Map<String, Object> getAdminUserOrganizationData(UserInfo user, boolean deep) throws Exception {
 
     Map<String, Object> json = new HashMap<String, Object>();
 
@@ -1348,7 +1348,7 @@ public class ManagementServiceImpl implements ManagementService {
     Map<String, Map<String, Object>> jsonOrganizations = new HashMap<String, Map<String, Object>>();
     json.put("organizations", jsonOrganizations);
 
-    Map<UUID, String> organizations = null;
+    Map<UUID, String> organizations;
 
     boolean superuser_enabled = parseBoolean(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
     String superuser_username = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
@@ -1367,15 +1367,17 @@ public class ManagementServiceImpl implements ManagementService {
       jsonOrganization.put(PROPERTY_UUID, organization.getKey());
       jsonOrganization.put("properties", getOrganizationByUuid(organization.getKey()).getProperties());
 
-      BiMap<UUID, String> applications = getApplicationsForOrganization(organization.getKey());
-      jsonOrganization.put("applications", applications.inverse());
+      if (deep) {
+        BiMap<UUID, String> applications = getApplicationsForOrganization(organization.getKey());
+        jsonOrganization.put("applications", applications.inverse());
 
-      List<UserInfo> users = getAdminUsersForOrganization(organization.getKey());
-      Map<String, Object> jsonUsers = new HashMap<String, Object>();
-      for (UserInfo u : users) {
-        jsonUsers.put(u.getUsername(), u);
+        List<UserInfo> users = getAdminUsersForOrganization(organization.getKey());
+        Map<String, Object> jsonUsers = new HashMap<String, Object>();
+        for (UserInfo u : users) {
+          jsonUsers.put(u.getUsername(), u);
+        }
+        jsonOrganization.put("users", jsonUsers);
       }
-      jsonOrganization.put("users", jsonUsers);
     }
 
     return json;

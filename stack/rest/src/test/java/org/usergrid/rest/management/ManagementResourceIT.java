@@ -312,20 +312,36 @@ public class ManagementResourceIT extends AbstractRestIT {
   }
 
   @Test
-    public void meToken() throws Exception {
-      JsonNode node = resource().path("/management/me").queryParam("grant_type", "password")
-              .queryParam("username", "test@usergrid.com").queryParam("password", "test")
-              .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+  public void meToken() throws Exception {
+    JsonNode node = resource().path("/management/me").queryParam("grant_type", "password")
+            .queryParam("username", "test@usergrid.com").queryParam("password", "test")
+            .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
-      logNode(node);
-      String token = node.get("access_token").getTextValue();
+    logNode(node);
+    String token = node.get("access_token").getTextValue();
+    assertNotNull(token);
 
-      assertNotNull(token);
+    node = resource().path("/management/me").queryParam("access_token", token)
+            .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+    logNode(node);
 
-      node = resource().path("/management/me").queryParam("access_token", token)
-              .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-      logNode(node);
-    }
+    assertNotNull(node.get("passwordChanged"));
+    assertNotNull(node.get("access_token"));
+    assertNotNull(node.get("expires_in"));
+    JsonNode userNode = node.get("user");
+    assertNotNull(userNode);
+    assertNotNull(userNode.get("uuid"));
+    assertNotNull(userNode.get("username"));
+    assertNotNull(userNode.get("email"));
+    assertNotNull(userNode.get("name"));
+    assertNotNull(userNode.get("properties"));
+    JsonNode orgsNode = userNode.get("organizations");
+    assertNotNull(orgsNode);
+    JsonNode orgNode = orgsNode.get("test-organization");
+    assertNotNull(orgNode);
+    assertNotNull(orgNode.get("name"));
+    assertNotNull(orgNode.get("properties"));
+  }
 
   @Test
   public void meTokenPost() throws Exception {
