@@ -161,7 +161,7 @@ public interface ManagementService {
 	public UserInfo getAdminUserInfoFromAccessToken(String token)
 			throws Exception;
 
-	public Map<String, Object> getAdminUserOrganizationData(UserInfo user)
+	public Map<String, Object> getAdminUserOrganizationData(UserInfo user, boolean deep)
 			throws Exception;
 
 	public Map<String, Object> getAdminUserOrganizationData(UUID userId)
