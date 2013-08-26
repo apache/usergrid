@@ -151,7 +151,6 @@ public class MUUserResourceIT extends AbstractRestIT {
     }
 
   @Test
-  @Ignore("Doesn't run in maven build env.  Need to resolve jstl classloading issue")
   public void checkPasswordReset() throws Exception {
 
     String email = "test@usergrid.com";
@@ -180,6 +179,36 @@ public class MUUserResourceIT extends AbstractRestIT {
         .post(String.class, formData);
 
     assertTrue(html.contains("invalid token"));
+  }
+
+  @Test
+  public void passwordResetIncorrectUserName() throws Exception {
+
+    String email = "test@usergrid.com";
+    UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail(email);
+    String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser(userInfo.getUuid(), 15000);
+
+    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userInfo.getUuid(), resetToken));
+
+    Form formData = new Form();
+    formData.add("token", resetToken);
+    formData.add("password1", "sesame");
+    formData.add("password2", "sesame");
+
+    String html = resource()
+        .path("/management/users/" +"noodle"+userInfo.getUsername() + "/resetpw")
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .post(String.class, formData);
+
+    assertTrue(html.contains("Incorrect username entered"));
+
+    html = resource()
+        .path("/management/users/" +userInfo.getUsername() + "/resetpw")
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .post(String.class, formData);
+
+    assertTrue(html.contains("password set"));
+
   }
 
   @Test
