@@ -31,11 +31,9 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.SampleEntity;
 
 
-@Concurrent()
 public class SchemaTest
 {
     private static final Logger LOG = LoggerFactory.getLogger( SchemaTest.class );
-
 
     @Test
     public void testTypes() throws Exception
@@ -91,11 +89,10 @@ public class SchemaTest
   }
 
     @Test
-    // @Ignore( "Fix this and enable: SchemaTest.hasPropertyTyped:97 null" )
     public void hasPropertyTyped()
     {
         assertFalse( Schema.getDefaultSchema().hasProperty( "user", "" ) );
-        assertTrue(Schema.getDefaultSchema().hasProperty("user", "username"));
+        assertTrue( Schema.getDefaultSchema().hasProperty( "user", "username" ) );
     }
 
 

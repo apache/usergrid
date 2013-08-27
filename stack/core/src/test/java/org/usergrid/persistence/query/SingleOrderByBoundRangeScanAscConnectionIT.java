@@ -23,11 +23,10 @@ import org.usergrid.cassandra.Concurrent;
 /**
  * @author tnine
  */
-@Concurrent()
 public class SingleOrderByBoundRangeScanAscConnectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void singleOrderByBoundRangeScanAscConnection() throws Exception {
-        singleOrderByBoundRangeScanAsc(new ConnectionHelper("singleOrderByBoundRangeScanAscConnection"));
+        singleOrderByBoundRangeScanAsc(new ConnectionHelper());
     }
 }

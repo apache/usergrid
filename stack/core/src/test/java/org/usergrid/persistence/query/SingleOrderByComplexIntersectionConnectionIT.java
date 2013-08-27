@@ -35,12 +35,11 @@ import static org.junit.Assert.*;
  * @author tnine
  * 
  */
-@Concurrent()
 public class SingleOrderByComplexIntersectionConnectionIT extends AbstractIteratingQueryIT
 {
 
     @Test
     public void singleOrderByComplexIntersectionConnection() throws Exception {
-        singleOrderByComplexIntersection(new ConnectionHelper("singleOrderByComplexIntersectionConnection"));
+        singleOrderByComplexIntersection(new ConnectionHelper());
     }
 }

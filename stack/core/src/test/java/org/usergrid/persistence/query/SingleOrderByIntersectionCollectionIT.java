@@ -31,6 +31,6 @@ public class SingleOrderByIntersectionCollectionIT extends AbstractIteratingQuer
 {
     @Test
     public void singleOrderByIntersectionCollection() throws Exception {
-        singleOrderByIntersection(new CollectionIoHelper("singleOrderByIntersectionCollection"));
+        singleOrderByIntersection(new CollectionIoHelper());
     }
 }

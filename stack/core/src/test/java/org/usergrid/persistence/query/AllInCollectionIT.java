@@ -23,12 +23,11 @@ import org.usergrid.cassandra.Concurrent;
 /**
  * @author tnine
  */
-@Concurrent()
 public class AllInCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void allInCollection() throws Exception {
-        allIn(new CollectionIoHelper("allInCollection"));
+        allIn(new CollectionIoHelper());
     }
 
 }

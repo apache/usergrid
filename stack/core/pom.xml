@@ -10,11 +10,12 @@
 
   <properties>
     <!-- Up to 30x parallelism can be used -->
-    <core.it.forkCount>4</core.it.forkCount>
+    <core.it.forkCount>2</core.it.forkCount>
+    <core.it.suite.concurrency>5</core.it.suite.concurrency>
 
     <!-- This seems to be a safe figure -->
-    <core.it.heapmax>384m</core.it.heapmax>
-    <core.it.heapmin>384m</core.it.heapmin>
+    <core.it.heapmax>1024m</core.it.heapmax>
+    <core.it.heapmin>1024m</core.it.heapmin>
   </properties>
 
 
@@ -39,42 +40,6 @@
 
   <profiles>
     <profile>
-      <id>unit</id>
-      <activation>
-        <property>
-          <name>unit</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
-
-              <includes>
-                <include>**/CoreTestSuite.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*ITSuite.java</exclude>
-                <exclude>**/*ConcurrentCore*Suite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
       <id>default</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -84,6 +49,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
+
             <configuration>
               <systemPropertyVariables>
                 <storage-config>${basedir}/src/test/conf</storage-config>
@@ -95,14 +61,14 @@
               <reuseForks>false</reuseForks>
 
               <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+
               <includes>
-                <include>**/*CoreITSuite.java</include>
-                <include>**/*CoreTestSuite.java</include>
+                <include>**/ConcurrentCore*Suite.java</include>
                 <include>**/*IT.java</include>
                 <include>**/*Test.java</include>
               </includes>
               <excludes>
-                <exclude>**/*Concurrent*Suite.java</exclude>
+                <exclude>**/Core*Suite.java</exclude>
 
                 <!-- Need to exclude Suite tests to prevent double execution -->
 
@@ -135,6 +101,9 @@
                 <exclude>**/GrammarTreeTest.java</exclude>
                 <exclude>**/LongLiteralTest.java</exclude>
                 <exclude>**/StringLiteralTest.java</exclude>
+
+                <!-- excludes all the iterator query integration tests -->
+                <exclude>**/org/usergrid/persistence/query/*IT.java</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -150,108 +119,73 @@
           <value>true</value>
         </property>
       </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
 
-              <parallel>both</parallel>
-              <forkCount>${core.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
+              <configuration>
+                <systemPropertyVariables>
+                  <storage-config>${basedir}/src/test/conf</storage-config>
+                  <target.directory>${project.build.directory}</target.directory>
+                  <suite.concurrency>${core.it.suite.concurrency}</suite.concurrency>
+                </systemPropertyVariables>
 
-              <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
-              <includes>
-                <include>**/*CoreITSuite.java</include>
-                <include>**/*CoreTestSuite.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/*Concurrent*Suite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
+                <parallel>both</parallel>
+                <forkCount>${core.it.forkCount}</forkCount>
+                <reuseForks>false</reuseForks>
 
-    <profile>
-      <id>unit-concurrent</id>
-      <activation>
-        <property>
-          <name>unit-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+                <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
+                <includes>
+                  <include>**/ConcurrentCore*Suite.java</include>
+                  <include>**/*IT.java</include>
+                  <include>**/*Test.java</include>
+                </includes>
+                <excludes>
+                    <exclude>**/ConcurrentCoreIteratorITSuite.java</exclude>
+                    <exclude>**/Core*Suite.java</exclude>
 
-              <includes>
-                <include>**/*ConcurrentCoreTestSuite.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/CoreITSuite.java</exclude>
-                <exclude>**/CoreTestSuite.java</exclude>
-                <exclude>**/*ConcurrentCoreITSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
+                  <!-- Need to exclude Suite tests to prevent double execution -->
 
-    <profile>
-      <id>integ-concurrent</id>
-      <activation>
-        <property>
-          <name>integ-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+                  <exclude>**/HectorLockManagerIT.java</exclude>
+                  <exclude>**/UsergridSystemMonitorIT.java</exclude>
+                  <exclude>**/CollectionIT.java</exclude>
+                  <exclude>**/CounterIT.java</exclude>
+                  <exclude>**/EntityConnectionsIT.java</exclude>
+                  <exclude>**/EntityDictionaryIT.java</exclude>
+                  <exclude>**/EntityManagerIT.java</exclude>
+                  <exclude>**/GeoIT.java</exclude>
+                  <exclude>**/IndexIT.java</exclude>
+                  <exclude>**/MessagesIT.java</exclude>
+                  <exclude>**/PermissionsIT.java</exclude>
+                  <exclude>**/PathQueryIT.java</exclude>
+                  <exclude>**/EntityManagerFactoryImplIT.java</exclude>
 
-              <includes>
-                <include>**/*ConcurrentCoreITSuite.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/CoreITSuite.java</exclude>
-                <exclude>**/CoreTestSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
+                  <exclude>**/ZookeeperLockManagerTest.java</exclude>
+                  <exclude>**/QueuePathsTest.java</exclude>
+                  <exclude>**/QueryProcessorTest.java</exclude>
+                  <exclude>**/SimpleIndexBucketLocatorImplTest.java</exclude>
+                  <exclude>**/EntityTest.java</exclude>
+                  <exclude>**/QueryTest.java</exclude>
+                  <exclude>**/QueryUtilsTest.java</exclude>
+                  <exclude>**/SchemaTest.java</exclude>
+                  <exclude>**/UtilsTest.java</exclude>
+                  <exclude>**/IntersectionIteratorTest.java</exclude>
+                  <exclude>**/SubtractionIteratorTest.java</exclude>
+                  <exclude>**/UnionIteratorTest.java</exclude>
+                  <exclude>**/GrammarTreeTest.java</exclude>
+                  <exclude>**/LongLiteralTest.java</exclude>
+                  <exclude>**/StringLiteralTest.java</exclude>
+
+                  <!-- excludes all the iterator query integration tests -->
+                  <exclude>**/org/usergrid/persistence/query/*IT.java</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
     </profile>
   </profiles>
 

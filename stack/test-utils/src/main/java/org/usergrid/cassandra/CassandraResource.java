@@ -80,13 +80,15 @@ public class CassandraResource extends ExternalResource
     private CassandraDaemon cassandraDaemon;
     private SchemaManager schemaManager;
 
+    private static CassandraResource instance;
+
 
     /**
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the default SchemaManager for Cassandra.
      */
     @SuppressWarnings( "UnusedDeclaration" )
-    public CassandraResource() throws IOException
+    CassandraResource() throws IOException
     {
         this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT );
     }
@@ -96,8 +98,11 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    public CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort )
+    CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort )
     {
+        LOG.info( "Creating CassandraResource using {} for the ClassLoader.",
+                Thread.currentThread().getContextClassLoader() );
+
         this.schemaManagerName = schemaManagerName;
         this.rpcPort = rpcPort;
         this.storagePort = storagePort;
@@ -119,7 +124,7 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    public CassandraResource( int rpcPort, int storagePort, int sslStoragePort ) throws IOException
+    CassandraResource( int rpcPort, int storagePort, int sslStoragePort ) throws IOException
     {
         this( null, rpcPort, storagePort, sslStoragePort );
     }
@@ -422,28 +427,36 @@ public class CassandraResource extends ExternalResource
      */
     public static CassandraResource newWithAvailablePorts( String schemaManagerName )
     {
-        int rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT
-                + RandomUtils.nextInt( 1000 ) );
-        int storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT
-                + RandomUtils.nextInt( 1000 ) );
-        int sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT
-                + RandomUtils.nextInt( 1000 ) );
-
-        if ( rpcPort == storagePort )
+        synchronized ( lock )
         {
-            storagePort++;
-            storagePort = AvailablePortFinder.getNextAvailable( storagePort );
-        }
+            if ( instance != null )
+            {
+                return instance;
+            }
 
-        if ( sslStoragePort == storagePort )
-        {
-            sslStoragePort++;
-            sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
-        }
+            int rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT
+                    + RandomUtils.nextInt( 1000 ) );
+            int storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT
+                    + RandomUtils.nextInt( 1000 ) );
+            int sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT
+                    + RandomUtils.nextInt( 1000 ) );
 
-        return new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort );
+            if ( rpcPort == storagePort )
+            {
+                storagePort++;
+                storagePort = AvailablePortFinder.getNextAvailable( storagePort );
+            }
+
+            if ( sslStoragePort == storagePort )
+            {
+                sslStoragePort++;
+                sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
+            }
+
+            instance = new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort );
+            return instance;
+        }
     }
-
 
     /**
      * Creates a new instance of the CassandraResource with rpc and storage
@@ -478,13 +491,14 @@ public class CassandraResource extends ExternalResource
         String comp = RandomStringUtils.randomAlphanumeric(7);
         tmpdir = new File( basedir, comp );
 
-        LOG.info( "Creating temporary directory: {}", tmpdir );
         if ( tmpdir.exists() )
         {
+            LOG.info( "Deleting directory: {}", tmpdir );
             FileUtils.forceDelete( tmpdir );
         }
         else
         {
+            LOG.info( "Creating temporary directory: {}", tmpdir );
             FileUtils.forceMkdir( tmpdir );
         }
 

@@ -449,40 +449,49 @@ public class Schema {
     
     @SuppressWarnings("unchecked")
     public void scanEntities() {
-     	for( String path : entitiesScanPath ) {
-    		ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
-    		        true);
-    		provider.addIncludeFilter(new AssignableTypeFilter(
-    		        TypedEntity.class));
+        synchronized ( entitiesScanPath )
+        {
+            for( String path : entitiesScanPath ) {
+                ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
+                        true);
+                provider.addIncludeFilter(new AssignableTypeFilter(
+                        TypedEntity.class));
 
-    		Set<BeanDefinition> components = provider
-    		        .findCandidateComponents(path);
-    		for (BeanDefinition component : components) {
-    		    try {
-    		        Class<?> cls = Class.forName(component.getBeanClassName());
-    		        if (Entity.class.isAssignableFrom(cls)) {
-    		            registerEntity((Class<? extends Entity>) cls);
-    		        }
-    		    } catch (ClassNotFoundException e) {
-    		        logger.error("Unable to get entity class ", e);
-    		    }
-    		}
-    		registerEntity(DynamicEntity.class);
-     	}
+                Set<BeanDefinition> components = provider
+                        .findCandidateComponents(path);
+                for (BeanDefinition component : components) {
+                    try {
+                        Class<?> cls = Class.forName(component.getBeanClassName());
+                        if (Entity.class.isAssignableFrom(cls)) {
+                            registerEntity((Class<? extends Entity>) cls);
+                        }
+                    } catch (ClassNotFoundException e) {
+                        logger.error("Unable to get entity class ", e);
+                    }
+                }
+                registerEntity(DynamicEntity.class);
+            }
+        }
     }
     
     public void addEntitiesPackage(String entityPackage) {
     	if( !entitiesPackage.contains(entityPackage) ) {
     		entitiesPackage.add(entityPackage);
     		String path = entityPackage.replaceAll("\\.","/");
-    		entitiesScanPath.add(path);
+            synchronized ( entitiesScanPath )
+            {
+    		    entitiesScanPath.add(path);
+            }
     	}
     }
      
     public void removeEntitiesPackage(String entityPackage) {
     	entitiesPackage.remove(entityPackage);
     	String path = entityPackage.replaceAll("\\.","/");
-    	entitiesScanPath.remove(path);
+        synchronized ( entitiesScanPath )
+        {
+    	    entitiesScanPath.remove(path);
+        }
     }
      
     @SuppressWarnings("unchecked")

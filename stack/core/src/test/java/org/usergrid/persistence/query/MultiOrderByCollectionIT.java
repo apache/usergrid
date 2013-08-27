@@ -23,12 +23,11 @@ import org.usergrid.cassandra.Concurrent;
 /**
  * @author tnine
  */
-@Concurrent()
 public class MultiOrderByCollectionIT extends AbstractIteratingQueryIT
 {
   @Test
   public void multiOrderByCollection() throws Exception {
-    multiOrderBy(new CollectionIoHelper("multiOrderByCollection"));
+    multiOrderBy(new CollectionIoHelper());
   }
 
 }

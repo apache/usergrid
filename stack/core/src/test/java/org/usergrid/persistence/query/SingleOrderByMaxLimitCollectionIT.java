@@ -24,12 +24,11 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  * 
  */
-@Concurrent()
 public class SingleOrderByMaxLimitCollectionIT extends AbstractIteratingQueryIT
 {
 
     @Test
     public void singleOrderByMaxLimitCollection() throws Exception {
-        singleOrderByMaxLimit(new CollectionIoHelper("singleOrderByMaxLimitCollection"));
+        singleOrderByMaxLimit(new CollectionIoHelper());
     }
 }

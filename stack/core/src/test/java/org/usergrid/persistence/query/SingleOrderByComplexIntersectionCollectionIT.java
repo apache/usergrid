@@ -26,11 +26,10 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  * 
  */
-@Concurrent()
 public class SingleOrderByComplexIntersectionCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void singleOrderByComplexIntersectionCollection() throws Exception {
-        singleOrderByComplexIntersection(new CollectionIoHelper("SingleOrderByComplexIntersectionCollectionIT"));
+        singleOrderByComplexIntersection(new CollectionIoHelper());
     }
 }
