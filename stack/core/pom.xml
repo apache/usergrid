@@ -198,7 +198,7 @@
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
-              <forkMode>once</forkMode>
+              <forkMode>none</forkMode>
               <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
 
