@@ -29,7 +29,7 @@ public class MultiOrderByConnectionIT extends AbstractIteratingQueryIT
 
   @Test
   public void multOrderByConnection() throws Exception {
-    multiOrderBy(new ConnectionHelper("multOrderByConnection"));
+    multiOrderBy(new ConnectionHelper());
   }
 
 }

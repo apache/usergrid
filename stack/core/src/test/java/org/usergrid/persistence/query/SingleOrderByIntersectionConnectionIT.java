@@ -31,6 +31,6 @@ public class SingleOrderByIntersectionConnectionIT extends AbstractIteratingQuer
 {
     @Test
     public void singleOrderByIntersectionConnection() throws Exception {
-        singleOrderByIntersection(new ConnectionHelper("singleOrderByIntersectionConnection"));
+        singleOrderByIntersection(new ConnectionHelper());
     }
 }

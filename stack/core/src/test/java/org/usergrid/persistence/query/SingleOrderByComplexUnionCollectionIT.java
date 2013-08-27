@@ -24,11 +24,10 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  * 
  */
-@Concurrent()
 public class SingleOrderByComplexUnionCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void singleOrderByComplexUnionCollection() throws Exception {
-        singleOrderByComplexUnion(new CollectionIoHelper("singleOrderByComplexUnionCollection"));
+        singleOrderByComplexUnion(new CollectionIoHelper());
     }
 }

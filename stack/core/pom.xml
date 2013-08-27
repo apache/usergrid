@@ -227,27 +227,28 @@
         </property>
       </activation>
       <build>
-          <resources>
-             <resource>
-                  <directory>src/main/resources</directory>
-                  <filtering>true</filtering>
-                  <includes>
-                    <include>**/*.xml</include>
-                  </includes>
-                </resource>
-              </resources>
+        <resources>
+          <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+            <includes>
+              <include>**/*.xml</include>
+            </includes>
+          </resource>
+        </resources>
 
-              <testResources>
-                <testResource>
-                  <directory>src/test/resources</directory>
-                  <filtering>true</filtering>
-                  <includes>
-                    <include>**/*.yaml</include>
-                    <include>**/*.xml</include>
-                    <include>**/*.properties</include>
-                  </includes>
-                </testResource>
-              </testResources>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources</directory>
+            <filtering>true</filtering>
+            <includes>
+              <include>**/*.yaml</include>
+              <include>**/*.xml</include>
+              <include>**/*.properties</include>
+            </includes>
+          </testResource>
+        </testResources>
+
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -257,11 +258,11 @@
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
-              <forkMode>none</forkMode>
+              <forkMode>once</forkMode>
               <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
               <includes>
-                <include>**/*ConcurrentCoreITSuite.java</include>
+                <include>**/*ConcurrentCore*ITSuite.java</include>
               </includes>
               <excludes>
                 <exclude>**/*IT.java</exclude>

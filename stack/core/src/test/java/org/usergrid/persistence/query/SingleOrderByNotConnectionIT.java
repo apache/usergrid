@@ -26,11 +26,10 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  * 
  */
-@Concurrent()
 public class SingleOrderByNotConnectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void singleOrderByNotConnection() throws Exception {
-        singleOrderByNot(new ConnectionHelper("singleOrderByNotConnection"));
+        singleOrderByNot(new ConnectionHelper());
     }
 }

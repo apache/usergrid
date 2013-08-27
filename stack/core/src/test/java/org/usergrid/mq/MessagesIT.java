@@ -17,7 +17,6 @@ package org.usergrid.mq;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -25,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.EntityManager;
 import org.usergrid.utils.JsonUtils;
 
 import static org.junit.Assert.*;
@@ -44,23 +42,13 @@ public class MessagesIT extends AbstractCoreIT
 	public void testMessages() throws Exception {
 		LOG.info("MessagesIT.testMessages");
 
-		UUID applicationId = setup.createApplication("testOrganization","testMessages");
-		assertNotNull(applicationId);
-
-		EntityManager em = getEntityManagerFactory().getEntityManager(
-				applicationId);
-		assertNotNull(em);
-
-		LOG.info("Creating message #1");
-
 		Message message = new Message();
 		message.setStringProperty("foo", "bar");
 		LOG.info(JsonUtils.mapToFormattedJsonString(message));
 
 		LOG.info("Posting message #1 to queue /foo/bar");
 
-		QueueManager qm = getQueueManagerFactory()
-				.getQueueManager(applicationId);
+		QueueManager qm = app.getQm();
 		qm.postToQueue("/foo/bar", message);
 
 		LOG.info("Getting message #1");
@@ -117,16 +105,7 @@ public class MessagesIT extends AbstractCoreIT
 
 	@Test
 	public void testSubscriberSearch() throws Exception {
-
-		UUID applicationId = setup.createApplication("testOrganization","testSubscriberSearch");
-		assertNotNull(applicationId);
-
-		EntityManager em = getEntityManagerFactory().getEntityManager(
-				applicationId);
-		assertNotNull(em);
-
-		QueueManager qm = getQueueManagerFactory()
-				.getQueueManager(applicationId);
+		QueueManager qm = app.getQm();
 
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("foo", "alpha");
@@ -181,18 +160,9 @@ public class MessagesIT extends AbstractCoreIT
 
 	@Test
 	public void testConsumer() throws Exception {
-
-		UUID applicationId = setup.createApplication("testOrganization","testConsumer");
-		assertNotNull(applicationId);
-
-		EntityManager em = getEntityManagerFactory().getEntityManager(
-				applicationId);
-		assertNotNull(em);
-
 		LOG.info("Creating messages");
 
-		QueueManager qm = getQueueManagerFactory()
-				.getQueueManager(applicationId);
+		QueueManager qm = app.getQm();
 		Message message;
 
 		for (int i = 0; i < 10; i++) {
@@ -235,11 +205,7 @@ public class MessagesIT extends AbstractCoreIT
 
     @Test
     public void testTransactions() throws Exception {
-
-    UUID applicationId = setup.createApplication("testOrganization", "testTransactions");
-    assertNotNull(applicationId);
-
-    QueueManager qm = getQueueManagerFactory().getQueueManager(applicationId);
+    QueueManager qm = app.getQm();
 
     String queuePath = "/foo/bar";
 

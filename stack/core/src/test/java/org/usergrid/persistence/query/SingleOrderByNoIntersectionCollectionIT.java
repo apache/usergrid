@@ -24,11 +24,10 @@ import org.usergrid.cassandra.Concurrent;
  * @author tnine
  * 
  */
-@Concurrent()
 public class SingleOrderByNoIntersectionCollectionIT extends AbstractIteratingQueryIT
 {
     @Test
     public void singleOrderByNoIntersectionCollection() throws Exception {
-        singleOrderByNoIntersection(new CollectionIoHelper("singleOrderByNoIntersectionCollection"));
+        singleOrderByNoIntersection(new CollectionIoHelper());
     }
 }

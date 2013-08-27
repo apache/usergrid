@@ -24,19 +24,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
-import org.junit.Test;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraResource;
-import org.usergrid.mq.QueueManagerFactory;
+import org.usergrid.ConcurrentCoreIteratorITSuite;
+import org.usergrid.CoreApplication;
+import org.usergrid.CoreITSetup;
+import org.usergrid.CoreITSetupImpl;
 import org.usergrid.persistence.*;
-import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.utils.JsonUtils;
 
 
 import static org.junit.Assert.*;
@@ -48,58 +45,15 @@ import static org.junit.Assert.*;
  */
 public abstract class AbstractIteratingQueryIT
 {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractIteratingQueryIT.class);
-    public static final boolean USE_DEFAULT_APPLICATION = false;
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractIteratingQueryIT.class);
 
     @ClassRule
-    public final static CassandraResource cassandraResource
-            = CassandraResource.newWithAvailablePorts("coreManager");
+    public static CoreITSetup setup = new CoreITSetupImpl( ConcurrentCoreIteratorITSuite.cassandraResource );
 
-    protected EntityManagerFactory emf;
-    protected QueueManagerFactory qmf;
-
-
-    public AbstractIteratingQueryIT()
-    {
-        logger.info( "Initializing test ..." );
-        emf = cassandraResource.getBean( EntityManagerFactory.class );
-        qmf = cassandraResource.getBean( QueueManagerFactory.class );
-    }
+    @Rule
+    public CoreApplication app = new CoreApplication( setup );
 
 
-    @BeforeClass
-    public static void setup() throws Exception
-    {
-        logger.info( "setup" );
-    }
-
-
-    @AfterClass
-    public static void teardown() throws Exception
-    {
-        logger.info( "teardown" );
-    }
-
-
-
-    public UUID createApplication( String organizationName, String applicationName ) throws Exception
-    {
-        if ( USE_DEFAULT_APPLICATION )
-        {
-            return CassandraService.DEFAULT_APPLICATION_ID;
-        }
-
-        return emf.createApplication( organizationName, applicationName );
-    }
-
-
-    public void dump( String name, Object obj )
-    {
-        if ( obj != null )
-        {
-            logger.info( name + ":\n" + JsonUtils.mapToFormattedJsonString(obj) );
-        }
-    }
 
 
   public void singleOrderByMaxLimit(IoHelper io) throws Exception {
@@ -111,7 +65,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -122,7 +76,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("created");
@@ -149,7 +103,7 @@ public abstract class AbstractIteratingQueryIT
     } while (results.getCursor() != null);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(size, count);
 
@@ -170,7 +124,7 @@ public abstract class AbstractIteratingQueryIT
 
     List<String> expected = new ArrayList<String>(size / intersectIncrement);
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -193,7 +147,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("created");
@@ -222,7 +176,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(expected.size(), count);
   }
@@ -241,7 +195,7 @@ public abstract class AbstractIteratingQueryIT
 
     io.doSetup();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expectedResults = new ArrayList<String>(size / secondIncrement);
 
@@ -266,7 +220,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("created");
@@ -296,7 +250,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(expectedResults.size(), count);
   }
@@ -313,7 +267,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -327,7 +281,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("created");
@@ -344,7 +298,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, 0);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, 0 );
 
     assertEquals(0, results.size());
   }
@@ -362,7 +316,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expectedResults = new ArrayList<String>(size / secondIncrement);
 
@@ -387,7 +341,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = Query.fromQL("select * where intersect = true OR intersect2 = true order by created");
     query.setLimit(queryLimit);
@@ -414,7 +368,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(expectedResults.size(), count);
   }
@@ -433,7 +387,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expectedResults = new ArrayList<String>(size / secondIncrement);
 
@@ -458,7 +412,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = Query.fromQL("select * where NOT (intersect = true AND intersect2 = true) order by created");
     query.setLimit(queryLimit);
@@ -485,7 +439,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(expectedResults.size(), count);
   }
@@ -502,7 +456,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(matchMax);
 
@@ -524,7 +478,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("created");
@@ -546,7 +500,7 @@ public abstract class AbstractIteratingQueryIT
     assertTrue(results.getCursor() == null);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(expected.size(), count);
 
@@ -563,7 +517,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(size);
 
@@ -580,7 +534,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("index desc");
@@ -593,7 +547,7 @@ public abstract class AbstractIteratingQueryIT
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = null;
+    Results results;
 
     do {
 
@@ -611,7 +565,7 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(expected.size()-delta+1, count);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
   }
   
@@ -626,7 +580,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(size);
 
@@ -643,7 +597,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("index desc");
@@ -656,7 +610,7 @@ public abstract class AbstractIteratingQueryIT
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = null;
+    Results results;
 
     do {
 
@@ -674,7 +628,7 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(expected.size()-delta, count);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
   }
   
@@ -690,7 +644,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(size);
 
@@ -707,7 +661,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("index desc");
@@ -719,7 +673,7 @@ public abstract class AbstractIteratingQueryIT
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = null;
+    Results results;
 
     do {
 
@@ -737,7 +691,7 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(expected.size()-startValue, count);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
   }
   
@@ -753,7 +707,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(size);
 
@@ -770,7 +724,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.addSort("index desc");
@@ -782,7 +736,7 @@ public abstract class AbstractIteratingQueryIT
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = null;
+    Results results;
 
     do {
 
@@ -800,7 +754,7 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(expected.size()-startValue-1, count);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
   }
   
@@ -817,7 +771,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(size);
 
@@ -834,7 +788,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = Query.fromQL(String.format("select * where index >= %d AND index <= %d order by index desc", startValue, endValue));
     query.setLimit(queryLimit);
@@ -845,7 +799,7 @@ public abstract class AbstractIteratingQueryIT
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = null;
+    Results results;
 
     do {
 
@@ -863,7 +817,7 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(expected.size()-startValue - delta + 1, count);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
   }
   
@@ -880,7 +834,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     List<String> expected = new ArrayList<String>(size);
 
@@ -897,7 +851,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = Query.fromQL(String.format("select * where index >= %d AND index <= %d order by index asc", startValue, endValue));
     query.setLimit(queryLimit);
@@ -908,7 +862,7 @@ public abstract class AbstractIteratingQueryIT
     start = System.currentTimeMillis();
 
     // now do simple ordering, should be returned in order
-    Results results = null;
+    Results results;
 
     do {
 
@@ -926,7 +880,7 @@ public abstract class AbstractIteratingQueryIT
     assertEquals(expected.size()-startValue - delta + 1, count);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
   }
   
@@ -935,7 +889,7 @@ public abstract class AbstractIteratingQueryIT
    * Tests that when an empty query is issued, we page through all entities
    * correctly
    * 
-   * @param io
+   * @param io the io helper
    * @throws Exception
    */
   public void allIn(IoHelper io) throws Exception {
@@ -946,7 +900,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -957,7 +911,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = new Query();
     query.setLimit(100);
@@ -983,7 +937,7 @@ public abstract class AbstractIteratingQueryIT
     } while (results.getCursor() != null);
 
     stop = System.currentTimeMillis();
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(size, count);
 
@@ -1031,7 +985,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> entity = new HashMap<String, Object>();
@@ -1058,7 +1012,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = Query.fromQL("select * order by boolean desc, index asc");
     query.setLimit(queryLimit);
@@ -1090,7 +1044,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(sortedResults.size(), count);
   }
@@ -1108,7 +1062,7 @@ public abstract class AbstractIteratingQueryIT
 
     long start = System.currentTimeMillis();
 
-    logger.info("Writing {} entities.", size);
+    LOG.info( "Writing {} entities.", size );
 
     Set<Entity> sortedResults = new TreeSet<Entity>(new Comparator<Entity>() {
 
@@ -1163,7 +1117,7 @@ public abstract class AbstractIteratingQueryIT
 
     long stop = System.currentTimeMillis();
 
-    logger.info("Writes took {} ms", stop - start);
+    LOG.info( "Writes took {} ms", stop - start );
 
     Query query = Query.fromQL("select * where intersect = true OR intersect2 = true order by created, intersect desc");
     query.setLimit(queryLimit);
@@ -1192,7 +1146,7 @@ public abstract class AbstractIteratingQueryIT
 
     stop = System.currentTimeMillis();
 
-    logger.info("Query took {} ms to return {} entities", stop - start, count);
+    LOG.info( "Query took {} ms to return {} entities", stop - start, count );
 
     assertEquals(sortedResults.size(), count);
   }
@@ -1206,17 +1160,9 @@ public abstract class AbstractIteratingQueryIT
    * 
    */
   private interface IoHelper {
-
-    /**
-     * Sets the entity manager to user
-     * 
-     * @param em
-     */
-    public void setEntityManager(EntityManager em);
-
     /**
      * Perform any setup required
-     * 
+     *
      * @throws Exception
      */
     public void doSetup() throws Exception;
@@ -1224,7 +1170,7 @@ public abstract class AbstractIteratingQueryIT
     /**
      * Write the entity to the data store
      * 
-     * @param entity
+     * @param entity the entity
      * @throws Exception
      */
     public Entity writeEntity(Map<String, Object> entity) throws Exception;
@@ -1232,72 +1178,30 @@ public abstract class AbstractIteratingQueryIT
     /**
      * Get the results for the query
      * 
-     * @param query
-     * @return
+     * @param query the query to get results for
+     * @return the results of the query
      * @throws Exception
      */
     public Results getResults(Query query) throws Exception;
 
   }
 
-  class CollectionIoHelper implements IoHelper {
+  class CollectionIoHelper implements IoHelper
+  {
+      @Override
+      public void doSetup() throws Exception
+      {
+      }
 
-    protected EntityManager em;
-    private String appName;
 
-    CollectionIoHelper(String appName) {
-      this.appName = appName;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.IoHelper2#setEntityManager(org.usergrid
-     * .persistence.EntityManager)
-     */
-    @Override
-    public void setEntityManager(EntityManager em) {
-      this.em = em;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.usergrid.persistence.query.IoHelper2#doSetup()
-     */
-    @Override
-    public void doSetup() throws Exception {
-      UUID applicationId = createApplication("SingleOrderByMaxLimitCollection", appName);
-      assertNotNull(applicationId);
-
-      em = emf.getEntityManager(applicationId);
-      assertNotNull(em);
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.IoHelper2#writeEntity(java.lang.String,
-     * java.util.Map)
-     */
-    @Override
+      @Override
     public Entity writeEntity(Map<String, Object> entity) throws Exception {
-      return em.create("test", entity);
+      return app.getEm().create( "test", entity );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.IoHelper2#getResults(org.usergrid.persistence
-     * .Query)
-     */
     @Override
     public Results getResults(Query query) throws Exception {
-      return em.searchCollection(em.getApplicationRef(), "tests", query);
+      return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
     }
   }
 
@@ -1309,39 +1213,18 @@ public abstract class AbstractIteratingQueryIT
     protected static final String CONNECTION = "connection";
     protected Entity rootEntity;
 
-    ConnectionHelper(String name) {
-      super(name);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
-     * writeEntity(java.lang.String, java.util.Map)
-     */
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
-     * doSetup()
-     */
     @Override
     public void doSetup() throws Exception {
-      super.doSetup();
-
       Map<String, Object> data = new HashMap<String, Object>();
       data.put("name", "rootentity");
-      rootEntity = em.create("root", data);
+      rootEntity = app.getEm().create( "root", data );
     }
 
     @Override
     public Entity writeEntity(Map<String, Object> entity) throws Exception {
       // write to the collection
       Entity created = super.writeEntity(entity);
-
-      em.createConnection(rootEntity, CONNECTION, created);
+      app.getEm().createConnection( rootEntity, CONNECTION, created );
 
       return created;
     }
@@ -1357,11 +1240,8 @@ public abstract class AbstractIteratingQueryIT
     public Results getResults(Query query) throws Exception {
       query.setConnectionType(CONNECTION);
       query.setEntityType("test");
-      return em.searchConnectedEntities(rootEntity, query);
+      return app.getEm().searchConnectedEntities( rootEntity, query );
     }
 
   }
-
-
-
 }
