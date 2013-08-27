@@ -15,6 +15,7 @@ end
 
 def format_collection(collection, headers=nil)
   if collection && collection.size > 0
+    save_headers = headers ? headers.clone : nil
     save_response collection.response
     metadata = collection_metadata collection, headers
     table border: $settings.table_border? do
@@ -35,7 +36,7 @@ def format_collection(collection, headers=nil)
       end
     end
     if collection.cursor && agree('Next Page? (Y/N)') {|q| q.default = 'Y'}
-      format_collection(collection.next_page, headers)
+      format_collection(collection.next_page, save_headers)
     end
   else
     puts "0 results"
