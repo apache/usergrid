@@ -231,6 +231,11 @@ public class UserResource extends AbstractContextResource {
 		try {
 			this.token = token;
 
+//      if(user == null) {
+//        errorMsg = "Incorrect username entered";
+//        return handleViewable("resetpw_set_form",this);
+//      }
+
 			if ((password1 != null) || (password2 != null)) {
 				if (management.checkPasswordResetTokenForAdminUser(
 						user.getUuid(), token)) {
