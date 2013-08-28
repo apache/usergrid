@@ -71,7 +71,7 @@ import org.usergrid.persistence.query.SingleOrderBySameRangeScanLessThanEqualCon
         SingleOrderBySameRangeScanLessThanEqualCollectionIT.class,
         SingleOrderBySameRangeScanLessThanEqualConnectionIT.class
     } )
-@Concurrent( threads = 15 )
+@Concurrent ( threads = 15 )
 public class ConcurrentCoreIteratorITSuite
 {
     @ClassRule

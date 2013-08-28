@@ -47,7 +47,7 @@ import org.usergrid.system.UsergridSystemMonitorIT;
 @RunWith( ConcurrentSuite.class )
 @Suite.SuiteClasses(
     {
-        HectorLockManagerIT.class,
+//        HectorLockManagerIT.class,
         UsergridSystemMonitorIT.class,
         CollectionIT.class,
         CounterIT.class,

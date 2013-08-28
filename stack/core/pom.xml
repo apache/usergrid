@@ -54,6 +54,7 @@
               <systemPropertyVariables>
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
+                <suite.concurrency>${core.it.suite.concurrency}</suite.concurrency>
               </systemPropertyVariables>
 
               <parallel>both</parallel>
@@ -72,7 +73,7 @@
 
                 <!-- Need to exclude Suite tests to prevent double execution -->
 
-                <exclude>**/HectorLockManagerIT.java</exclude>
+                <!-- <exclude>**/HectorLockManagerIT.java</exclude> -->
                 <exclude>**/UsergridSystemMonitorIT.java</exclude>
                 <exclude>**/CollectionIT.java</exclude>
                 <exclude>**/CounterIT.java</exclude>
