@@ -159,6 +159,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * as discarded
      */
     try {
+      logger.debug("deleteJob {}", jobId);
       em.delete(new SimpleEntityRef("jobData", jobId));
     } catch (Exception e) {
       throw new JobRuntimeException(e);
@@ -218,8 +219,6 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         // the Q.
         logger.error("Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job loss",
             new Object[] { jobName, jobUuid, statsUuid, e });
-        continue;
-
       }
 
     }
@@ -229,11 +228,15 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
   @Override
   public void heartbeat(JobRuntime execution, long delay) {
+    logger.debug("renew transaction {}", execution.getTransactionId());
     try {
-      UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(),
-          new QueueQuery().withTimeout(delay));
+      synchronized (execution) {
+        UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(),
+            new QueueQuery().withTimeout(delay));
 
-      execution.setTransactionId(newId);
+        execution.setTransactionId(newId);
+        logger.debug("renewed transaction {}", newId);
+      }
     } catch (TransactionNotFoundException e) {
       logger.error("Could not renew transaction", e);
       throw new JobRuntimeException("Could not renew transaction during heartbeat", e);
@@ -278,8 +281,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
       // we're done. Mark the transaction as complete and delete the job info
       if (jobStatus == Status.COMPLETED) {
-        logger.info("Job {} is complete", data.getJobName());
+        logger.info("Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId());
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
+        logger.debug("delete job data {}", data.getUuid());
         em.delete(data);
       }
       

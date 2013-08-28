@@ -2125,7 +2125,7 @@ public class EntityManagerImpl implements EntityManager {
 	public EntityRef getRef(UUID entityId) throws Exception {
 		String entityType = getEntityType(entityId);
 		if (entityType == null) {
-			logger.warn("Unable to get type for entity " + entityId);
+			logger.warn("Unable to get type for entity " + entityId, new Exception());
 			return null;
 		}
 		return ref(entityType, entityId);
