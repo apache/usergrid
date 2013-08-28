@@ -58,7 +58,7 @@ public abstract class OnlyOnceJob implements Job {
 
     Lock lock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, String.format("/jobs/%s", lockId));
 
-    // the job is still running somewhere else. Try again in 10 seconds
+    // the job is still running somewhere else. Try again in getDelay() milliseconds
     if (!lock.tryLock(0, TimeUnit.MILLISECONDS)) {
       execution.delay(getDelay(execution));
       return;
