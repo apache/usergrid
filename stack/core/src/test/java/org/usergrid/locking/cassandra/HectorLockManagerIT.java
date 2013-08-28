@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
+import org.usergrid.ConcurrentCoreITSuite;
 import org.usergrid.CoreITSuite;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.locking.Lock;
@@ -56,7 +57,7 @@ public class HectorLockManagerIT extends AbstractCoreIT
     public static void setup() throws Exception
     {
         HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
-        hlockManager.setCluster(CoreITSuite.cassandraResource.getBean( CassandraService.class ).getCluster() );
+        hlockManager.setCluster( setup.getCassSvc().getCluster() );
         hlockManager.setKeyspaceName( "Locks" );
         hlockManager.setLockTtl( 2000 );
         hlockManager.setNumberOfLockObserverThreads( 1 );
@@ -168,8 +169,7 @@ public class HectorLockManagerIT extends AbstractCoreIT
    */
     private boolean lockInDifferentThread( final UUID application, final UUID entity )
     {
-        Future<Boolean> status = pool.submit(new Callable<Boolean>()
-        {
+        Callable<Boolean> callable = new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception
             {
@@ -187,7 +187,9 @@ public class HectorLockManagerIT extends AbstractCoreIT
 
                 return locked;
             }
-        });
+        };
+
+        Future<Boolean> status = pool.submit( callable );
 
         boolean wasLocked = true;
 
