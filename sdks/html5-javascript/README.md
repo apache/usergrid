@@ -102,11 +102,11 @@ The syntax for this Javascript SDK and the Usergrid Node module are almost exact
 ##About the samples
 This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
 
-<http://apigee.github.com/usergrid-javascript-sdk/>
+<http://apigee.github.io/usergrid-javascript-sdk>
 
 **Note:** All the sample code in this file is pulled directly from the "test" example, so you can rest-assured that it will work! You can run them yourself here:
 
-<http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html>
+<http://apigee.github.io/usergrid-javascript-sdk/examples/test/test.html>
 
 
 ##Installing
