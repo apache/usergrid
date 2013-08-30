@@ -9,7 +9,6 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
@@ -28,17 +27,66 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
+import org.usergrid.security.AuthPrincipalInfo;
+import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.security.tokens.TokenCategory;
+import org.usergrid.utils.UUIDUtils;
+
 
 /**
  * @author zznate
  */
 @Concurrent()
-public class MUUserResourceIT extends AbstractRestIT {
+public class MUUserResourceIT extends AbstractRestIT
+{
+    private Logger LOG = LoggerFactory.getLogger(MUUserResourceIT.class);
 
-    private Logger logger = LoggerFactory.getLogger(MUUserResourceIT.class);
 
-  @Rule
-  public TestContextSetup context = new TestContextSetup( this );
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
+
+
+    /**
+     * Tests mixed case creation of an administrative user, and failures to authenticate
+     * against management interfaces when case is different from user creation case.
+     *
+     * From USERGRID-2075
+     */
+    @Test
+    public void testCaseSensitivityAdminUser() throws Exception
+    {
+        LOG.info( "Starting testCaseSensitivityAdminUser()" );
+        UserInfo mixcaseUser = setup.getMgmtSvc().createAdminUser( "AKarasulu", "Alex Karasulu",
+                "AKarasulu@Apache.org", "test", true, false );
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo( AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(),
+                UUIDUtils.newTimeUUID() );
+        OrganizationInfo organizationInfo = setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
+        String tokenStr = mgmtToken( "AKarasulu@Apache.org","test" );
+        LOG.info( "User creation successful: token = {}", tokenStr );
+
+        JsonNode exactCaseNode = resource().path("/management/users/AKarasulu@Apache.org")
+            .queryParam( "access_token", tokenStr )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .get( JsonNode.class );
+        logNode( exactCaseNode );
+
+        LOG.info( "When using the exact case for the user the operation passes." );
+
+        try
+        {
+            JsonNode node = resource().path("/management/users/akarasulu@apache.org")
+                .queryParam( "access_token", tokenStr )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .get( JsonNode.class );
+            logNode( node );
+        }
+        catch ( Exception e )
+        {
+            LOG.error( "When using all lower case we have a failure", e );
+        }
+    }
 
 
   @Test
@@ -68,7 +116,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         logNode(node);
 
         payload = hashMap("company","Usergrid");
-        logger.info("sending PUT for company update");
+        LOG.info( "sending PUT for company update" );
         node = resource().path(String.format("/management/users/%s",userId))
                                 .queryParam("access_token",token)
                                 .type(MediaType.APPLICATION_JSON_TYPE)
