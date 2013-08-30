@@ -23,6 +23,10 @@ var successCount = 0;
 var logError = true;
 var errorCount = 0;
 var logNotice = true;
+var _username = 'marty2';
+var _email = 'marty2@timetravel.com';
+var _password = 'password2';
+var _newpassword = 'password3';
 
 var client = new Usergrid.Client({
 	orgName:'yourorgname',
@@ -30,6 +34,8 @@ var client = new Usergrid.Client({
 	logging: true, //optional - turn on logging, off by default
 	buildCurl: true //optional - turn on curl commands, off by default
 });
+
+client.logout();
 
 function runner(step, arg, arg2){
 	step++;
@@ -116,19 +122,19 @@ function runner(step, arg, arg2){
 			refreshUser(step, arg);
 			break;
 		case 21:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': log user in');
 			loginUser(step, arg);
 			break;
 		case 22:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': change users password');
 			changeUsersPassword(step, arg);
 			break;
 		case 23:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': log user out');
 			logoutUser(step, arg);
 			break;
 		case 24:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': relogin user');
 			reloginUser(step, arg);
 			break;
 		case 25:
@@ -285,7 +291,7 @@ function makeNewDog(step) {
 
 	var options = {
 		type:'dogs',
-		name:'Dino'
+		name:'Rocky'
 	}
 
 	client.createEntity(options, function (err, dog) {
@@ -538,10 +544,11 @@ function cleanupAllDogs(step){
 	});
 }
 
+
 function prepareDatabaseForNewUser(step) {
 	var options = {
 		method:'DELETE',
-		endpoint:'users/marty'
+		endpoint:'users/'+_username
 	};
 	client.request(options, function (err, data) {
 		if (err) {
@@ -555,9 +562,9 @@ function prepareDatabaseForNewUser(step) {
 	});
 }
 
-function createUser(step) {
 
-	client.signup('marty', 'mysecurepassword', 'marty@timetravel.com', 'Marty McFly',
+function createUser(step) {
+	client.signup(_username, _password, _email, 'Marty McFly',
 		function (err, marty) {
 			if (err){
 				error('user not created');
@@ -590,7 +597,7 @@ function getExistingUser(step, marty) {
 
 	var options = {
 		type:'users',
-		username:'marty'
+		username:_username
 	}
 	client.getEntity(options, function(err, existingUser){
 		if (err){
@@ -599,7 +606,7 @@ function getExistingUser(step, marty) {
 			success('existing user was retrieved');
 
 			var username = existingUser.get('username');
-			if (username === 'marty'){
+			if (username === _username){
 				success('got existing user username');
 			} else {
 				error('could not get existing user username');
@@ -625,8 +632,8 @@ function refreshUser(step, marty) {
 }
 
 function loginUser(step, marty) {
-	username = 'marty';
-	password = 'mysecurepassword';
+	username = _username;
+	password = _password;
 	client.login(username, password,
 		function (err) {
 			if (err) {
@@ -663,8 +670,8 @@ function loginUser(step, marty) {
 
 function changeUsersPassword(step, marty) {
 
-	marty.set('oldpassword', 'mysecurepassword');
-	marty.set('newpassword', 'mynewsecurepassword');
+	marty.set('oldpassword', _password);
+	marty.set('newpassword', _newpassword);
 	marty.save(function(err){
 		if (err){
 			error('user password not updated');
@@ -693,8 +700,8 @@ function logoutUser(step, marty) {
 
 function reloginUser(step, marty) {
 
-	username = 'marty';
-	password = 'mynewsecurepassword';
+	username = _username
+	password = _newpassword;
 	client.login(username, password,
 		function (err) {
 		if (err) {
