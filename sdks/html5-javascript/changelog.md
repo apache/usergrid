@@ -1,5 +1,12 @@
 ##Change log
 
+###0.10.7
+- Bug fixes
+- most calls now return the raw data as the last parameter (called data)
+- added some management functions for authentication
+- added some methods to pull related data and append to an entity
+- helper method to remove an entity from a collection without hitting the database (you would use the .destroy method if you do want to hit the db)
+
 ###0.10.4
 
 - Added new functions for creating, getting, and deleting connections
