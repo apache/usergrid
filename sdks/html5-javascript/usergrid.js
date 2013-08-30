@@ -197,6 +197,32 @@ Usergrid.Client.prototype.request = function (options, callback) {
 }
 
 /*
+ *  function for building asset urls
+ *
+ *  @method buildAssetURL
+ *  @public
+ *  @params {string} uuid
+ *  @return {string} assetURL
+ */
+ Usergrid.Client.prototype.buildAssetURL = function(uuid) {
+   var self = this;
+   var qs = {};
+   var assetURL = this.URI + '/' + this.orgName + '/' + this.appName + '/assets/' + uuid + '/data';
+ 
+   if (self.getToken()) {
+     qs['access_token'] = self.getToken();
+   }
+ 
+   //append params to the path
+   var encoded_params = encodeParams(qs);
+   if (encoded_params) {
+     assetURL += "?" + encoded_params;
+   }
+
+   return assetURL;
+ }
+
+/*
  *  Main function for creating new groups. Call this directly.
  *
  *  @method createGroup
@@ -850,10 +876,10 @@ Usergrid.Client.prototype.getDisplayImage = function (email, picture, size) {
 
 /*
 *  A class to Model a Usergrid Entity.
-*  Set the type of entity in the 'data' json object
+*  Set the type and uuid of entity in the 'data' json object
 *
 *  @constructor
-*  @param {object} options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
+*  @param {object} options {client:client, data:{'type':'collection_type', uuid:'uuid', 'key':'value'}}
 */
 Usergrid.Entity = function(options) {
   if (options) {
