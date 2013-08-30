@@ -356,7 +356,7 @@ public class SubjectUtils {
 			return user.getUuid().equals(identifier.getUUID());
 		}
 		if (identifier.isEmail()) {
-			return user.getEmail().equals(identifier.getEmail());
+			return user.getEmail().equalsIgnoreCase(identifier.getEmail());
 		}
 		if (identifier.isName()) {
 			return user.getUsername().equals(identifier.getName());
