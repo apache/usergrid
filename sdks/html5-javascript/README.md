@@ -52,23 +52,19 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 ##Version
 
-Current Version: **0.10.4**
+Current Version: **0.10.7**
 
 See change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
 
 ##Comments / questions
-Please feel free to send comments or questions:
+For help using this SDK, reach out on the Usergrid google group:
 
-	twitter: @rockerston
-	email: rod at apigee.com
+https://groups.google.com/forum/?hl=en#!forum/usergrid
 
-Or just open github issues.  I truly want to know what you think, and will address all suggestions / comments / concerns.
+Or just open github issues. 
 
-Thank you!
-
-Rod
 
 
 ##Overview
