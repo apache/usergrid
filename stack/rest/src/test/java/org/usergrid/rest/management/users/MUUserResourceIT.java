@@ -14,6 +14,7 @@ import javax.mail.Message;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
@@ -61,31 +62,15 @@ public class MUUserResourceIT extends AbstractRestIT
         AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo( AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(),
                 UUIDUtils.newTimeUUID() );
         OrganizationInfo organizationInfo = setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
-        String tokenStr = mgmtToken( "AKarasulu@Apache.org","test" );
-        LOG.info( "User creation successful: token = {}", tokenStr );
+        String tokenStr = mgmtToken( "akarasulu@apache.org","test" );
 
-        JsonNode exactCaseNode = resource().path("/management/users/AKarasulu@Apache.org")
+        // Should succeed even when we use all lowercase
+        JsonNode node = resource().path("/management/users/akarasulu@apache.org")
             .queryParam( "access_token", tokenStr )
             .accept( MediaType.APPLICATION_JSON )
             .type( MediaType.APPLICATION_JSON_TYPE )
             .get( JsonNode.class );
-        logNode( exactCaseNode );
-
-        LOG.info( "When using the exact case for the user the operation passes." );
-
-        try
-        {
-            JsonNode node = resource().path("/management/users/akarasulu@apache.org")
-                .queryParam( "access_token", tokenStr )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .get( JsonNode.class );
-            logNode( node );
-        }
-        catch ( Exception e )
-        {
-            LOG.error( "When using all lower case we have a failure", e );
-        }
+        logNode( node );
     }
 
 
