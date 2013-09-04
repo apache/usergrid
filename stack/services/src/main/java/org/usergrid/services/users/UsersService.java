@@ -46,16 +46,18 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
+import org.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
-public class UsersService extends AbstractCollectionService {
+public class UsersService extends AbstractCollectionService
+{
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(UsersService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UsersService.class);
 
-    public UsersService() {
+    public UsersService()
+    {
         super();
-        logger.info("/users");
+        LOG.info("/users");
 
         makeConnectionPrivate("following");
 
@@ -68,23 +70,28 @@ public class UsersService extends AbstractCollectionService {
 
     }
 
-  @Override
-  public ServiceResults getItemByName(ServiceContext context, String name) throws Exception {
-    String nameProperty = Schema.getDefaultSchema().aliasProperty(
-  				getEntityType());
-  		if (nameProperty == null) {
+    @Override
+    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception
+    {
+        String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
+
+  		if ( nameProperty == null )
+        {
   			nameProperty = "name";
   		}
-      EntityRef entity = null;
-      Identifier id = Identifier.from(name);
-      if ( id != null ) {
-        entity = em.getUserByIdentifier(id);
-      }
 
-  		if (entity == null) {
-        logger.info("miss on entityType: {} with name: {}", getEntityType(), name);
-  			throw new ServiceResourceNotFoundException(context);
-  		}
+        EntityRef entity = null;
+        Identifier id = Identifier.from(name);
+
+        if ( id != null )
+        {
+            entity = em.getUserByIdentifier(id);
+        }
+
+  		if ( entity == null )
+        {
+            throw new ServiceResourceNotFoundException( context );
+        }
 
   		if (!context.moreParameters()) {
   			entity = em.get(entity);

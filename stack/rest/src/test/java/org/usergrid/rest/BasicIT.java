@@ -37,7 +37,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class BasicIT extends AbstractRestIT {
 
-	private static Logger log = LoggerFactory.getLogger(BasicIT.class);
+	private static final Logger LOG = LoggerFactory.getLogger(BasicIT.class);
 
 	public BasicIT() throws Exception {
 		super();
@@ -49,8 +49,29 @@ public class BasicIT extends AbstractRestIT {
 				.accept(MediaType.APPLICATION_JSON).get(String.class);
 		assertTrue(isNotBlank(json));
 
-		log.info(json);
+		LOG.info( json );
 	}
+
+
+    @Test
+    public void testNonexistentUserAccessViaGuest()
+    {
+        JsonNode node = null;
+
+        try
+        {
+            WebResource resource = resource();
+            resource.path( "/test-organization/test-app/users/foobarNonexistent" );
+            resource.accept( MediaType.APPLICATION_JSON );
+            node = resource.get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            logNode( node );
+            assertEquals( "Guests should not be able to get a 404", 401, e.getResponse().getStatus() );
+        }
+    }
+
 
 	@Test
 	public void testToken() {
