@@ -16,19 +16,29 @@
 package org.usergrid.rest.exceptions;
 
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
+import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 @Provider
 public class ServiceResourceNotFoundExceptionMapper extends
-		AbstractExceptionMapper<ServiceResourceNotFoundException> {
+		AbstractExceptionMapper<ServiceResourceNotFoundException>
+{
 
 	@Override
-	public Response toResponse(ServiceResourceNotFoundException e) {
-		return toResponse(NOT_FOUND, e);
+	public Response toResponse(ServiceResourceNotFoundException e)
+    {
+        if ( SubjectUtils.getSubjectUserId() == null )
+        {
+            return toResponse( UNAUTHORIZED, e );
+        }
+        else
+        {
+            return toResponse( NOT_FOUND, e );
+        }
 	}
-
 }
