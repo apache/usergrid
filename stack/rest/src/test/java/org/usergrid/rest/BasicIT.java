@@ -53,6 +53,49 @@ public class BasicIT extends AbstractRestIT {
 	}
 
 
+    /**
+     * For USERGRID-2099 where putting an entity into a generic collection is
+     * resulting in a CCE when the name is a UUID string.
+     */
+    @Test
+    public void testGenericCollectionEntityNameUuid() throws Exception
+    {
+        JsonNode node = null;
+
+        String token = userToken( "ed@anuff.com", "sesame" );
+        WebResource resource = resource().path( "/test-organization/test-app/suspects" )
+                .queryParam( "access_token", token );
+        node = resource.accept( MediaType.APPLICATION_JSON ).post( JsonNode.class );
+
+
+        String uuid = "4dadf156-c82f-4eb7-a437-3e574441c4db";
+
+        // Notice for 'name' we replace the dash in uuid string
+        // with 0's making it no longer conforms to a uuid
+        Map<String,String> payload = hashMap( "hair", "brown" ).map( "sex", "male" )
+      		.map( "eyes", "green" ).map( "name", uuid.replace( '-', '0' ) )
+      		.map( "build", "thin").map( "height", "6 4" );
+
+        node = resource.queryParam( "access_token", token )
+            .accept( MediaType.APPLICATION_JSON )
+      		.type( MediaType.APPLICATION_JSON_TYPE )
+      		.post( JsonNode.class, payload );
+
+        logNode( node );
+
+        // Now this should pass with the corrections made to USERGRID-2099 which
+        // disables conversion of uuid strings into UUID objects in JsonUtils
+        payload = hashMap( "hair", "red" ).map( "sex", "female" )
+            .map( "eyes", "blue" ).map( "name", uuid )
+            .map( "build", "heavy" ).map( "height", "5 9" );
+
+        node = resource.accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .post( JsonNode.class, payload );
+
+        logNode( node );
+    }
+
     @Test
     public void testNonexistentUserAccessViaGuest()
     {

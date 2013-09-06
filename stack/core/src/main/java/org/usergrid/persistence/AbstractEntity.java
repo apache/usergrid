@@ -109,8 +109,17 @@ public abstract class AbstractEntity implements Entity {
 
 	@Override
 	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getName() {
-		return (String) getProperty(PROPERTY_NAME);
+	public String getName()
+    {
+        Object value = getProperty( PROPERTY_NAME );
+
+        if ( value instanceof UUID )
+        {
+            // fixes existing data that uses UUID in USERGRID-2099
+            return value.toString();
+        }
+
+		return ( String ) value;
 	}
 
 	@Override
