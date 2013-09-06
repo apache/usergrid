@@ -219,7 +219,13 @@ public class JsonUtils {
 			Map<Object, Object> m = (Map<Object, Object>) obj;
             Object o;
             UUID uuid;
-			for (Object k : m.keySet()) {
+			for ( Object k : m.keySet() )
+            {
+                if ( k instanceof String && ( ( String ) k ).equalsIgnoreCase( "name" ) )
+                {
+                    continue;
+                }
+
 				o = m.get(k);
 				uuid = tryConvertToUUID(o);
 				if (uuid != null) {
