@@ -889,6 +889,7 @@ Usergrid.Entity.prototype.fetch = function (callback) {
 *
 */
 Usergrid.Entity.prototype.destroy = function (callback) {
+  var self = this;
   var type = this.get('type');
   if (isUUID(this.get('uuid'))) {
     type += '/' + this.get('uuid');
@@ -901,7 +902,6 @@ Usergrid.Entity.prototype.destroy = function (callback) {
       callback(true, error);
     }
   }
-  var self = this;
   var options = {
     method:'DELETE',
     endpoint:type
