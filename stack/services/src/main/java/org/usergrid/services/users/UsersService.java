@@ -66,7 +66,7 @@ public class UsersService extends AbstractCollectionService
         addReplaceParameters(Arrays.asList("$id", "followers"),
                 Arrays.asList("\\0", "connecting", "following"));
 
-        declareEntityDictionaries(Arrays.asList("roles", "permissions"));
+        declareEntityDictionaries(Arrays.asList("rolenames", "permissions"));
 
     }
 
@@ -171,9 +171,9 @@ public class UsersService extends AbstractCollectionService
     public ServiceResults getEntityDictionary(ServiceContext context,
             List<EntityRef> refs, String dictionary) throws Exception {
 
-        if ("roles".equalsIgnoreCase(dictionary)) {
+        if ("rolenames".equalsIgnoreCase(dictionary)) {
             EntityRef entityRef = refs.get(0);
-            checkPermissionsForEntitySubPath(context, entityRef, "roles");
+            checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
             if (context.parameterCount() == 0) {
 
@@ -230,9 +230,9 @@ public class UsersService extends AbstractCollectionService
             List<EntityRef> refs, String dictionary, ServicePayload payload)
             throws Exception {
 
-        if ("roles".equalsIgnoreCase(dictionary)) {
+        if ("rolenames".equalsIgnoreCase(dictionary)) {
             EntityRef entityRef = refs.get(0);
-            checkPermissionsForEntitySubPath(context, entityRef, "roles");
+            checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
             if (context.parameterCount() == 0) {
 
@@ -254,9 +254,9 @@ public class UsersService extends AbstractCollectionService
     public ServiceResults deleteEntityDictionary(ServiceContext context,
             List<EntityRef> refs, String dictionary) throws Exception {
 
-        if ("roles".equalsIgnoreCase(dictionary)) {
+        if ("rolenames".equalsIgnoreCase(dictionary)) {
             EntityRef entityRef = refs.get(0);
-            checkPermissionsForEntitySubPath(context, entityRef, "roles");
+            checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
             if (context.parameterCount() == 1) {
 

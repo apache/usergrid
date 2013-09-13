@@ -47,7 +47,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 		super();
 		logger.info("/groups");
 
-    declareEntityDictionaries(Arrays.asList("roles", "permissions"));
+    declareEntityDictionaries(Arrays.asList("rolenames", "permissions"));
   }
 
 	@Override
@@ -95,9 +95,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
                                             List<EntityRef> refs,
                                             String dictionary) throws Exception {
 
-    if ("roles".equalsIgnoreCase(dictionary)) {
+    if ("rolenames".equalsIgnoreCase(dictionary)) {
       EntityRef entityRef = refs.get(0);
-      checkPermissionsForEntitySubPath(context, entityRef, "roles");
+      checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
       if (context.parameterCount() == 0) {
 
@@ -153,9 +153,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
                                             String dictionary,
                                             ServicePayload payload) throws Exception {
 
-    if ("roles".equalsIgnoreCase(dictionary)) {
+    if ("rolenames".equalsIgnoreCase(dictionary)) {
       EntityRef entityRef = refs.get(0);
-      checkPermissionsForEntitySubPath(context, entityRef, "roles");
+      checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
       if (context.parameterCount() == 0) {
 
@@ -177,9 +177,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
   public ServiceResults deleteEntityDictionary(ServiceContext context,
                                                List<EntityRef> refs, String dictionary) throws Exception {
 
-    if ("roles".equalsIgnoreCase(dictionary)) {
+    if ("rolenames".equalsIgnoreCase(dictionary)) {
       EntityRef entityRef = refs.get(0);
-      checkPermissionsForEntitySubPath(context, entityRef, "roles");
+      checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
       if (context.parameterCount() == 1) {
 
