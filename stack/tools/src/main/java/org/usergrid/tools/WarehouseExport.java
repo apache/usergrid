@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.usergrid.persistence.Schema.getDefaultSchema;
 
-/*
+/**
 Exports all known (non-Dynamic) fields from Schema that are primitive, Date, or String into a pipe-delimited file.
 Also includes (hard-coded for now) fields from Notification, Notifier, and Receipt.
 With no -startTime, scans the existing *.csv files in the output directory and starts from last end date found.
@@ -288,7 +288,7 @@ public class WarehouseExport extends ExportingToolBase {
 
   private void exportApplicationsForOrg(Entry<UUID, String> orgIdAndName, String queryString) throws Exception {
 
-    LOG.info("organization: {} / {}" + orgIdAndName.getValue(), orgIdAndName.getKey());
+    LOG.info("organization: {} / {}", orgIdAndName.getValue(), orgIdAndName.getKey());
 
     String orgName = orgIdAndName.getValue();
 
