@@ -46,7 +46,6 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
-import org.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class UsersService extends AbstractCollectionService
@@ -66,8 +65,9 @@ public class UsersService extends AbstractCollectionService
         addReplaceParameters(Arrays.asList("$id", "followers"),
                 Arrays.asList("\\0", "connecting", "following"));
 
-        declareEntityDictionaries(Arrays.asList("rolenames", "permissions"));
+        declareEntityDictionary(new EntityDictionaryEntry("rolenames", "rolenames"));
 
+        declareEntityDictionaries(Arrays.asList("permissions"));
     }
 
     @Override

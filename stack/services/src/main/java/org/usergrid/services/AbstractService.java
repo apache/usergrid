@@ -77,7 +77,7 @@ public abstract class AbstractService implements Service {
   protected Map<List<String>, List<String>> replaceParameters;
 
   protected Set<String> serviceCommands;
-  protected Set<String> entityDictionaries;
+  protected Set<EntityDictionaryEntry> entityDictionaries;
   protected Set<String> metadataTypes;
   protected Set<String> entityCommands;
 
@@ -231,18 +231,27 @@ public abstract class AbstractService implements Service {
     serviceCommands.addAll(commands);
   }
 
-  public void declareEntityDictionary(String dictionary) {
+  public void declareEntityDictionary(EntityDictionaryEntry dictionary) {
     if (entityDictionaries == null) {
-      entityDictionaries = new LinkedHashSet<String>();
+      entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
     }
     entityDictionaries.add(dictionary);
   }
 
+  public void declareEntityDictionary(String dictionary) {
+    if (entityDictionaries == null) {
+      entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
+    }
+    entityDictionaries.add(new EntityDictionaryEntry(dictionary));
+  }
+
   public void declareEntityDictionaries(List<String> dictionaries) {
     if (entityDictionaries == null) {
-      entityDictionaries = new LinkedHashSet<String>();
+      entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
     }
-    entityDictionaries.addAll(dictionaries);
+    for (String dict : dictionaries) {
+      entityDictionaries.add(new EntityDictionaryEntry(dict));
+    }
   }
 
   public void declareMetadataType(String type) {
@@ -336,8 +345,8 @@ public abstract class AbstractService implements Service {
 
     if (entityDictionaries != null) {
       Map<String, Object> m = new LinkedHashMap<String, Object>();
-      for (String n : entityDictionaries) {
-        m.put(n, path + "/" + n);
+      for (EntityDictionaryEntry dict : entityDictionaries) {
+        m.put(dict.getName(), path + "/" + dict.getPath());
       }
       metadata.put("sets", m);
     }
@@ -812,7 +821,7 @@ public abstract class AbstractService implements Service {
   }
 
   public boolean hasEntityDictionary(String dictionary) {
-    return (entityDictionaries != null) && (dictionary != null) && entityDictionaries.contains(dictionary);
+    return (entityDictionaries != null) && (dictionary != null) && entityDictionaries.contains(new EntityDictionaryEntry(dictionary));
   }
 
   public String checkForEntityDictionaries(ServiceContext context) {
@@ -827,7 +836,7 @@ public abstract class AbstractService implements Service {
     String name = null;
     if (context.firstParameterIsName()) {
       name = context.firstParameter().getName();
-      if (entityDictionaries.contains(name)) {
+      if (entityDictionaries.contains(new EntityDictionaryEntry(name))) {
         return name;
       }
     }
@@ -886,7 +895,7 @@ public abstract class AbstractService implements Service {
   public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
       throws Exception {
 
-    if (entityDictionaries.contains(dictionary)) {
+    if (entityDictionaries.contains(new EntityDictionaryEntry(dictionary))) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, dictionary);
       Set<String> items = cast(em.getDictionaryAsSet(entityRef, dictionary));
@@ -1126,4 +1135,41 @@ public abstract class AbstractService implements Service {
       + "Requested path: {} \n" + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n"
       + "-------------------------------------------------------------------";
 
+
+  /** 
+   * Purpose is to enable entity dictionary entries to have a name and path that are different.
+   */
+  protected static class EntityDictionaryEntry {
+    private String name;
+    private String path;
+
+      public EntityDictionaryEntry(String name) {
+        this.name = this.path = name;
+      }
+
+      public EntityDictionaryEntry(String name, String path) {
+          this.name = name;
+          this.path = path;
+      }
+      public String getName() {
+          return name;
+      }
+
+      public void setName(String name) {
+          this.name = name;
+      }
+
+      public String getPath() {
+          return path;
+      }
+
+      public void setPath(String path) {
+          this.path = path;
+      }
+
+      @Override
+      public boolean equals(Object other) {
+          return this == other ? true : ((EntityDictionaryEntry)other).getName().equals(this.getName());
+      }
+  }
 }
