@@ -61,10 +61,10 @@ public class RolesService extends AbstractCollectionService {
      * .services.ServiceContext, java.util.List, java.lang.String)
      */
     @Override
-    public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+    public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
             throws Exception {
 
-        if ("permissions".equalsIgnoreCase(dictionary)) {
+        if ("permissions".equalsIgnoreCase(dictionary.getName())) {
             EntityRef ref = refs.get(0);
             
             checkPermissionsForEntitySubPath(context, ref, "/permissions");
@@ -92,7 +92,7 @@ public class RolesService extends AbstractCollectionService {
      * org.usergrid.services.ServicePayload)
      */
     @Override
-    public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+    public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary,
             ServicePayload payload) throws Exception {
         return postEntityDictionary(context, refs, dictionary, payload);
     }
@@ -106,10 +106,10 @@ public class RolesService extends AbstractCollectionService {
      * org.usergrid.services.ServicePayload)
      */
     @Override
-    public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+    public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary,
             ServicePayload payload) throws Exception {
 
-        if ("permissions".equalsIgnoreCase(dictionary)) {
+        if ("permissions".equalsIgnoreCase(dictionary.getName())) {
 
             EntityRef ref = refs.get(0);
             
@@ -142,10 +142,10 @@ public class RolesService extends AbstractCollectionService {
      * .services.ServiceContext, java.util.List, java.lang.String)
      */
     @Override
-    public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+    public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
             throws Exception {
 
-        if ("permissions".equalsIgnoreCase(dictionary)) {
+        if ("permissions".equalsIgnoreCase(dictionary.getName())) {
           
 
             EntityRef ref = refs.get(0);

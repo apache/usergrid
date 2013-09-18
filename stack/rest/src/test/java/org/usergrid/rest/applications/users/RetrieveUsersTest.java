@@ -54,11 +54,13 @@ public class RetrieveUsersTest extends AbstractRestIT {
     props.put("username","Nina");
 
     JsonNode response = users.create(props);
+    log.info("**********************");
+    log.info(response.toString());
     JsonNode entity = response.get("entities").get(0);
     JsonNode metadata = entity.get("metadata");
     JsonNode sets = metadata.get("sets");
     JsonNode rolenames = sets.get("rolenames");
-    Assert.assertTrue(rolenames.asText().endsWith("/roles"));
+    Assert.assertTrue("rolenames URL ends with /roles", rolenames.asText().endsWith("/roles"));
   }
 
 }

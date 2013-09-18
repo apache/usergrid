@@ -564,7 +564,7 @@ public abstract class AbstractService implements Service {
       return handleServiceCommand(context, serviceCommand);
     }
 
-    String entityDictionary = checkForEntityDictionaries(context);
+    EntityDictionaryEntry entityDictionary = checkForEntityDictionaries(context);
     String entityCommand = checkForEntityCommands(context);
 
     if (context.isByQuery()) {
@@ -824,7 +824,7 @@ public abstract class AbstractService implements Service {
     return (entityDictionaries != null) && (dictionary != null) && entityDictionaries.contains(new EntityDictionaryEntry(dictionary));
   }
 
-  public String checkForEntityDictionaries(ServiceContext context) {
+  public EntityDictionaryEntry checkForEntityDictionaries(ServiceContext context) {
     if (entityDictionaries == null) {
       return null;
     }
@@ -836,8 +836,10 @@ public abstract class AbstractService implements Service {
     String name = null;
     if (context.firstParameterIsName()) {
       name = context.firstParameter().getName();
-      if (entityDictionaries.contains(new EntityDictionaryEntry(name))) {
-        return name;
+      for (EntityDictionaryEntry entry : entityDictionaries) {
+        if (entry.getName().equalsIgnoreCase(name)) {
+          return entry;
+        }
       }
     }
 
@@ -845,7 +847,7 @@ public abstract class AbstractService implements Service {
 
   }
 
-  public ServiceResults handleEntityDictionary(ServiceContext context, ServiceResults results, String dictionary)
+  public ServiceResults handleEntityDictionary(ServiceContext context, ServiceResults results, EntityDictionaryEntry dictionary)
       throws Exception {
     if (dictionary != null) {
       if (results.size() == 1) {
@@ -857,7 +859,7 @@ public abstract class AbstractService implements Service {
     return results;
   }
 
-  public ServiceResults handleEntityDictionary(ServiceContext context, EntityRef ref, String dictionary)
+  public ServiceResults handleEntityDictionary(ServiceContext context, EntityRef ref, EntityDictionaryEntry dictionary)
       throws Exception {
     if (ref == null) {
       throw new UnsupportedServiceOperationException(context);
@@ -867,7 +869,7 @@ public abstract class AbstractService implements Service {
     return handleEntityDictionary(context, refs, dictionary);
   }
 
-  public ServiceResults handleEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults handleEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
     if ((refs == null) || (refs.size() == 0)) {
       throw new UnsupportedServiceOperationException(context);
@@ -892,13 +894,13 @@ public abstract class AbstractService implements Service {
     throw new ServiceInvocationException(context, "Request action unhandled " + context.getAction());
   }
 
-  public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
 
-    if (entityDictionaries.contains(new EntityDictionaryEntry(dictionary))) {
+    if (entityDictionaries.contains(dictionary)) {
       EntityRef entityRef = refs.get(0);
-      checkPermissionsForEntitySubPath(context, entityRef, dictionary);
-      Set<String> items = cast(em.getDictionaryAsSet(entityRef, dictionary));
+      checkPermissionsForEntitySubPath(context, entityRef, dictionary.getPath());
+      Set<String> items = cast(em.getDictionaryAsSet(entityRef, dictionary.getName()));
 
       return new ServiceResults(this, context, Type.GENERIC, Results.fromData(items), null, null);
     }
@@ -906,22 +908,22 @@ public abstract class AbstractService implements Service {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+  public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary,
       ServicePayload payload) throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+  public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary,
       ServicePayload payload) throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults headEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults headEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
@@ -1137,11 +1139,11 @@ public abstract class AbstractService implements Service {
 
 
   /** 
-   * Purpose is to enable entity dictionary entries to have a name and path that are different.
+   * Purpose is to enable entity dictionary entries to have name not equal to path segment. 
    */
   protected static class EntityDictionaryEntry {
     private String name;
-    private String path;
+    private String path; // path segment used in URL
 
       public EntityDictionaryEntry(String name) {
         this.name = this.path = name;
@@ -1155,21 +1157,8 @@ public abstract class AbstractService implements Service {
           return name;
       }
 
-      public void setName(String name) {
-          this.name = name;
-      }
-
       public String getPath() {
           return path;
-      }
-
-      public void setPath(String path) {
-          this.path = path;
-      }
-
-      @Override
-      public boolean equals(Object other) {
-          return this == other ? true : ((EntityDictionaryEntry)other).getName().equals(this.getName());
       }
   }
 }
