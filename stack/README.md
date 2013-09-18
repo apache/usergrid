@@ -47,7 +47,7 @@ The same trick would work if you used a local copy of the portal code served fro
 ## Getting Started with the HTTP API
 
 Start by creating an Organization. It’s the top-level structure in Usergrid:
-all Apps and Administrators must belong to an Organziation. Here’s how you create one:
+all Apps and Administrators must belong to an Organization. Here’s how you create one:
 
     curl -X POST  \
          -d 'organization=myfirstorg&username=myadmin&name=Admin&email=admin@example.com&password=password' \
@@ -55,7 +55,7 @@ all Apps and Administrators must belong to an Organziation. Here’s how you cre
 
 You can see that creating an Organization creates an Administrator in the process. Let’s authenticate as him:
 
-    curl 'http://localhost:8080/management/token?grant_type=password&username=nate&password=password'
+    curl 'http://localhost:8080/management/token?grant_type=password&username=myadmin&password=password'
 
 This will return an access\_token. We’ll use this to authenticate the next two calls.
 Next, let’s create an Application:
@@ -69,13 +69,14 @@ Next, let’s create an Application:
 
     curl -H "Authorization: Bearer [the management token from above]" \
          -X POST "http://localhost:8080/myfirstorg/myapp/users" \
-         -d '{ "username":"myuser", "password":"password", "email":"user@example.com" }'
+         -d '{ "username":"myuser", "password":"mypassword", "email":"user@example.com" }'
 
 Let’s now generate an access token for this Application User:
+
     curl 'http://localhost:8080/myfirstorg/myapp/token?grant_type=password&username=myuser&password=mypassword'
 
 This will also send back an access\_token, but limited in scope.
-Let’s use it to create a collectioon with some data in it:
+Let’s use it to create a collection with some data in it:
 
     curl -H "Authorization: Bearer [the user token]" \
          -X POST -d '[ { "cat":"fluffy" }, { "fish": { "gold":2, "oscar":1 } } ]' \
