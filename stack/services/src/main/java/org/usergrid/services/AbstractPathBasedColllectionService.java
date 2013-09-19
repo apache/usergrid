@@ -83,7 +83,7 @@ public class AbstractPathBasedColllectionService extends
 					if (parameter instanceof NameParameter) {
 						String name = parameter.getName();
 						if ((entityDictionaries != null)
-								&& (entityDictionaries.contains(name))) {
+								&& (entityDictionaries.contains(new EntityDictionaryEntry(name)))) {
 							break;
 						}
 						if (Schema.getDefaultSchema().hasCollection(

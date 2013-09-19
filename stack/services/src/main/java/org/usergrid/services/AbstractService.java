@@ -77,7 +77,7 @@ public abstract class AbstractService implements Service {
   protected Map<List<String>, List<String>> replaceParameters;
 
   protected Set<String> serviceCommands;
-  protected Set<String> entityDictionaries;
+  protected Set<EntityDictionaryEntry> entityDictionaries;
   protected Set<String> metadataTypes;
   protected Set<String> entityCommands;
 
@@ -231,18 +231,27 @@ public abstract class AbstractService implements Service {
     serviceCommands.addAll(commands);
   }
 
-  public void declareEntityDictionary(String dictionary) {
+  public void declareEntityDictionary(EntityDictionaryEntry dictionary) {
     if (entityDictionaries == null) {
-      entityDictionaries = new LinkedHashSet<String>();
+      entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
     }
     entityDictionaries.add(dictionary);
   }
 
+  public void declareEntityDictionary(String dictionary) {
+    if (entityDictionaries == null) {
+      entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
+    }
+    entityDictionaries.add(new EntityDictionaryEntry(dictionary));
+  }
+
   public void declareEntityDictionaries(List<String> dictionaries) {
     if (entityDictionaries == null) {
-      entityDictionaries = new LinkedHashSet<String>();
+      entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
     }
-    entityDictionaries.addAll(dictionaries);
+    for (String dict : dictionaries) {
+      entityDictionaries.add(new EntityDictionaryEntry(dict));
+    }
   }
 
   public void declareMetadataType(String type) {
@@ -336,8 +345,8 @@ public abstract class AbstractService implements Service {
 
     if (entityDictionaries != null) {
       Map<String, Object> m = new LinkedHashMap<String, Object>();
-      for (String n : entityDictionaries) {
-        m.put(n, path + "/" + n);
+      for (EntityDictionaryEntry dict : entityDictionaries) {
+        m.put(dict.getName(), path + "/" + dict.getPath());
       }
       metadata.put("sets", m);
     }
@@ -555,7 +564,7 @@ public abstract class AbstractService implements Service {
       return handleServiceCommand(context, serviceCommand);
     }
 
-    String entityDictionary = checkForEntityDictionaries(context);
+    EntityDictionaryEntry entityDictionary = checkForEntityDictionaries(context);
     String entityCommand = checkForEntityCommands(context);
 
     if (context.isByQuery()) {
@@ -812,10 +821,18 @@ public abstract class AbstractService implements Service {
   }
 
   public boolean hasEntityDictionary(String dictionary) {
-    return (entityDictionaries != null) && (dictionary != null) && entityDictionaries.contains(dictionary);
+    if (entityDictionaries == null) {
+      return false;
+    }
+    for (EntityDictionaryEntry entry : entityDictionaries) {
+      if (entry.getName().equalsIgnoreCase(dictionary)) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  public String checkForEntityDictionaries(ServiceContext context) {
+  public EntityDictionaryEntry checkForEntityDictionaries(ServiceContext context) {
     if (entityDictionaries == null) {
       return null;
     }
@@ -827,8 +844,10 @@ public abstract class AbstractService implements Service {
     String name = null;
     if (context.firstParameterIsName()) {
       name = context.firstParameter().getName();
-      if (entityDictionaries.contains(name)) {
-        return name;
+      for (EntityDictionaryEntry entry : entityDictionaries) {
+        if (entry.getName().equalsIgnoreCase(name)) {
+          return entry;
+        }
       }
     }
 
@@ -836,7 +855,7 @@ public abstract class AbstractService implements Service {
 
   }
 
-  public ServiceResults handleEntityDictionary(ServiceContext context, ServiceResults results, String dictionary)
+  public ServiceResults handleEntityDictionary(ServiceContext context, ServiceResults results, EntityDictionaryEntry dictionary)
       throws Exception {
     if (dictionary != null) {
       if (results.size() == 1) {
@@ -848,7 +867,7 @@ public abstract class AbstractService implements Service {
     return results;
   }
 
-  public ServiceResults handleEntityDictionary(ServiceContext context, EntityRef ref, String dictionary)
+  public ServiceResults handleEntityDictionary(ServiceContext context, EntityRef ref, EntityDictionaryEntry dictionary)
       throws Exception {
     if (ref == null) {
       throw new UnsupportedServiceOperationException(context);
@@ -858,7 +877,7 @@ public abstract class AbstractService implements Service {
     return handleEntityDictionary(context, refs, dictionary);
   }
 
-  public ServiceResults handleEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults handleEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
     if ((refs == null) || (refs.size() == 0)) {
       throw new UnsupportedServiceOperationException(context);
@@ -883,36 +902,38 @@ public abstract class AbstractService implements Service {
     throw new ServiceInvocationException(context, "Request action unhandled " + context.getAction());
   }
 
-  public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
 
-    if (entityDictionaries.contains(dictionary)) {
-      EntityRef entityRef = refs.get(0);
-      checkPermissionsForEntitySubPath(context, entityRef, dictionary);
-      Set<String> items = cast(em.getDictionaryAsSet(entityRef, dictionary));
+    for (EntityDictionaryEntry entry : entityDictionaries) {
+      if (entry.getName().equalsIgnoreCase(dictionary.getName())) {
+        EntityRef entityRef = refs.get(0);
+        checkPermissionsForEntitySubPath(context, entityRef, entry.getPath());
+        Set<String> items = cast(em.getDictionaryAsSet(entityRef, entry.getName()));
 
-      return new ServiceResults(this, context, Type.GENERIC, Results.fromData(items), null, null);
+        return new ServiceResults(this, context, Type.GENERIC, Results.fromData(items), null, null);
+      }
     }
 
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+  public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary,
       ServicePayload payload) throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+  public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary,
       ServicePayload payload) throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
 
-  public ServiceResults headEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+  public ServiceResults headEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
     throw new UnsupportedServiceOperationException(context);
   }
@@ -1126,4 +1147,28 @@ public abstract class AbstractService implements Service {
       + "Requested path: {} \n" + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n"
       + "-------------------------------------------------------------------";
 
+
+  /** 
+   * Purpose is to enable entity dictionary entries to have name not equal to path segment. 
+   */
+  protected static class EntityDictionaryEntry {
+    private String name;
+    private String path; // path segment used in URL
+
+      public EntityDictionaryEntry(String name) {
+        this.name = this.path = name;
+      }
+
+      public EntityDictionaryEntry(String name, String path) {
+          this.name = name;
+          this.path = path;
+      }
+      public String getName() {
+          return name;
+      }
+
+      public String getPath() {
+          return path;
+      }
+  }
 }

@@ -47,7 +47,10 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 		super();
 		logger.info("/groups");
 
-    declareEntityDictionaries(Arrays.asList("rolenames", "permissions"));
+    // rolenames is the one case of Entity Dictionary name not equal to path segment
+    declareEntityDictionary(new EntityDictionaryEntry("rolenames", "roles"));
+
+    declareEntityDictionaries(Arrays.asList("permissions"));
   }
 
 	@Override
@@ -93,9 +96,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
   @Override
   public ServiceResults getEntityDictionary(ServiceContext context,
                                             List<EntityRef> refs,
-                                            String dictionary) throws Exception {
+                                            EntityDictionaryEntry dictionary) throws Exception {
 
-    if ("rolenames".equalsIgnoreCase(dictionary)) {
+    if ("rolenames".equalsIgnoreCase(dictionary.getName())) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
@@ -113,7 +116,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
         return getApplicationRolePermissions(roleName);
       }
 
-    } else if ("permissions".equalsIgnoreCase(dictionary)) {
+    } else if ("permissions".equalsIgnoreCase(dictionary.getName())) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 
@@ -126,10 +129,10 @@ public class GroupsService extends AbstractPathBasedColllectionService {
   @Override
   public ServiceResults postEntityDictionary(ServiceContext context,
                                              List<EntityRef> refs,
-                                             String dictionary,
+                                             EntityDictionaryEntry dictionary,
                                              ServicePayload payload) throws Exception {
 
-    if ("permissions".equalsIgnoreCase(dictionary)) {
+    if ("permissions".equalsIgnoreCase(dictionary.getName())) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 
@@ -150,10 +153,10 @@ public class GroupsService extends AbstractPathBasedColllectionService {
   @Override
   public ServiceResults putEntityDictionary(ServiceContext context,
                                             List<EntityRef> refs,
-                                            String dictionary,
+                                            EntityDictionaryEntry dictionary,
                                             ServicePayload payload) throws Exception {
 
-    if ("rolenames".equalsIgnoreCase(dictionary)) {
+    if ("rolenames".equalsIgnoreCase(dictionary.getName())) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
@@ -175,9 +178,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 
   @Override
   public ServiceResults deleteEntityDictionary(ServiceContext context,
-                                               List<EntityRef> refs, String dictionary) throws Exception {
+                                               List<EntityRef> refs, EntityDictionaryEntry dictionary) throws Exception {
 
-    if ("rolenames".equalsIgnoreCase(dictionary)) {
+    if ("rolenames".equalsIgnoreCase(dictionary.getName())) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
@@ -191,7 +194,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
         return deleteGroupRole(entityRef.getUuid(), roleName);
 
       }
-    } else if ("permissions".equalsIgnoreCase(dictionary)) {
+    } else if ("permissions".equalsIgnoreCase(dictionary.getName())) {
       EntityRef entityRef = refs.get(0);
       checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 

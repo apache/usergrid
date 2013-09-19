@@ -34,7 +34,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.jclouds.rest.ResourceNotFoundException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
@@ -47,6 +46,8 @@ import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component("org.usergrid.rest.management.organizations.applications.ApplicationsResource")
 @Scope("prototype")
@@ -55,6 +56,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
         "application/ecmascript", "text/jscript" })
 public class ApplicationsResource extends AbstractContextResource {
 
+  private static final Logger logger = LoggerFactory.getLogger(ApplicationsResource.class);
 
 	OrganizationInfo organization;
 
@@ -141,7 +143,8 @@ public class ApplicationsResource extends AbstractContextResource {
 				.getApplicationInfo(appName);
 
 		if(application == null){
-		  throw new EntityNotFoundException(String.format("Application %s does not exist for organization %s", applicationName,organization.getName() ));
+		  throw new EntityNotFoundException(String.format(
+        "Application %s does not exist for organization %s", applicationName,organization.getName()));
 		}
 		
 		return getSubResource(ApplicationResource.class).init(organization,
