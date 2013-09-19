@@ -47,10 +47,10 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 		super();
 		logger.info("/groups");
 
-        // rolenames is the one case of Entity Dictionary name not equal to path segment
-        declareEntityDictionary(new EntityDictionaryEntry("rolenames", "roles"));
+    // rolenames is the one case of Entity Dictionary name not equal to path segment
+    declareEntityDictionary(new EntityDictionaryEntry("rolenames", "roles"));
 
-        declareEntityDictionaries(Arrays.asList("permissions"));
+    declareEntityDictionaries(Arrays.asList("permissions"));
   }
 
 	@Override
