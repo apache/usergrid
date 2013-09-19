@@ -24,9 +24,7 @@ import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,9 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.usergrid.persistence.AggregateCounter;
-import org.usergrid.persistence.AggregateCounterSet;
-import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -251,7 +246,7 @@ public class ServiceResource extends AbstractContextResource {
                     throws Exception {
 
         logger.debug("ServiceResource.executeGet");
-
+        
         ApiResponse response = createApiResponse();
 
         response.setAction("get");
