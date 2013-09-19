@@ -7,7 +7,6 @@ import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Assert;
@@ -54,8 +53,6 @@ public class RetrieveUsersTest extends AbstractRestIT {
     props.put("username","Nina");
 
     JsonNode response = users.create(props);
-    log.info("**********************");
-    log.info(response.toString());
     JsonNode entity = response.get("entities").get(0);
     JsonNode metadata = entity.get("metadata");
     JsonNode sets = metadata.get("sets");
