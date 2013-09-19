@@ -821,7 +821,15 @@ public abstract class AbstractService implements Service {
   }
 
   public boolean hasEntityDictionary(String dictionary) {
-    return (entityDictionaries != null) && (dictionary != null) && entityDictionaries.contains(new EntityDictionaryEntry(dictionary));
+    if (entityDictionaries == null) {
+      return false;
+    }
+    for (EntityDictionaryEntry entry : entityDictionaries) {
+      if (entry.getName().equalsIgnoreCase(dictionary)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public EntityDictionaryEntry checkForEntityDictionaries(ServiceContext context) {
@@ -897,12 +905,14 @@ public abstract class AbstractService implements Service {
   public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
       throws Exception {
 
-    if (entityDictionaries.contains(dictionary)) {
-      EntityRef entityRef = refs.get(0);
-      checkPermissionsForEntitySubPath(context, entityRef, dictionary.getPath());
-      Set<String> items = cast(em.getDictionaryAsSet(entityRef, dictionary.getName()));
+    for (EntityDictionaryEntry entry : entityDictionaries) {
+      if (entry.getName().equalsIgnoreCase(dictionary.getName())) {
+        EntityRef entityRef = refs.get(0);
+        checkPermissionsForEntitySubPath(context, entityRef, entry.getPath());
+        Set<String> items = cast(em.getDictionaryAsSet(entityRef, entry.getName()));
 
-      return new ServiceResults(this, context, Type.GENERIC, Results.fromData(items), null, null);
+        return new ServiceResults(this, context, Type.GENERIC, Results.fromData(items), null, null);
+      }
     }
 
     throw new UnsupportedServiceOperationException(context);
