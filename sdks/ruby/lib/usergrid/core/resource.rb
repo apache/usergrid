@@ -58,6 +58,12 @@ module Usergrid
       put(updates, {params: options})
     end
 
+    # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
+    def delete_query(query=nil, options={})
+      options = options.merge({ql: query}) if query
+      delete({params: options})
+    end
+
     def entity
       get unless response
       response.entity

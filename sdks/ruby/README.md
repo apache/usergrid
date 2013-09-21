@@ -181,6 +181,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.9.2
+* New features
+  1. delete_query (batch delete by query)
+
 ### 0.9.1
 * New features
   1. may now login using credentials: application.login_credentials() or organization.login_credentials()

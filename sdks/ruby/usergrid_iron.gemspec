@@ -3,7 +3,7 @@ require File.expand_path('../lib/usergrid/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Scott Ganyo"]
-  gem.email         = ["sganyo@apigee.com"]
+  gem.email         = ["scott@ganyo.com"]
   gem.description   = %q{Low-level gem to access Usergrid / Apigee App Services}
   gem.summary       = %q{Usergrid_iron enables simple, low-level Ruby access to Apigee's App Services
                         (aka Usergrid) REST API with minimal dependencies.}

@@ -60,6 +60,14 @@ module Usergrid
     end
 
     # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
+    def delete_query(query=nil, options={})
+      options = options.symbolize_keys
+      query_params = query ? options.merge({ql: query}) : options
+      self.delete({params: query_params })
+      self
+    end
+
+    # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
     def query(query=nil, options={})
       options = options.symbolize_keys
       query_params = query ? options.merge({ql: query}) : options

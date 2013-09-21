@@ -52,4 +52,25 @@ describe Usergrid::Entity do
     Usergrid::Resource::RESERVED.each { |a| hash.should_not have_key(a) }
   end
 
+  it "should be able to delete itself" do
+    user = create_random_user @application
+    name = user.name
+    user.delete
+    u = @application['users'].entities.detect {|e| e.name == "#{name}"}
+    u.should be_nil
+  end
+
+  it "should be able to update and delete by query" do
+    dog = (@application.create_dog name: 'Vex').entity
+
+    @application['dogs'].update_query({foo: 'bar'}, "select * where name = \'#{dog.name}\'")
+    dog.get
+    dog.foo.should eq('bar')
+
+    @application['dogs'].delete_query "select * where name = \'#{dog.name}\'"
+
+    dog = @application['dogs'].entities.detect {|e| e.name == "#{dog.name}"}
+    dog.should be_nil
+  end
+
 end

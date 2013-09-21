@@ -78,6 +78,14 @@ describe Usergrid::Collection do
     entity.name.should eq @entity_data[4][:name]
   end
 
+  it "should be able to delete based on a query" do
+    @collection.delete_query "select * where name = \'#{@entity_data[5][:name]}\'"
+    @collection.query
+    entity = @collection.detect { |e| e['name'] == "#{@entity_data[5][:name]}" }
+    entity.should be_nil
+    @entity_data.delete @entity_data[5]
+  end
+
   it "should be able to iterate within the page" do
     @collection.query
     @collection.cursor.should_not be_nil
