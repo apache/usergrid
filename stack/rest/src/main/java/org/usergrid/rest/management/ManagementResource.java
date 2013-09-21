@@ -55,6 +55,7 @@ import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
+import org.usergrid.management.exceptions.UnconfirmedAdminUserException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
@@ -177,12 +178,15 @@ public class ManagementResource extends AbstractContextResource {
               }
             } catch (UnactivatedAdminUserException uaue) {
               errorDescription = "user not activated";
-              logger.error("failed token check", uaue);
+              logger.error(errorDescription, uaue);
             } catch (DisabledAdminUserException daue) {
               errorDescription = "user disabled";
-              logger.error("failed token check", daue);
+              logger.error(errorDescription, daue);
+            } catch (UnconfirmedAdminUserException uaue) {
+              errorDescription = "user has not been confirmed";
+              logger.error(errorDescription, uaue);
             } catch (Exception e1) {
-              logger.error("failed token check", e1);
+              logger.error(errorDescription, e1);
             }
           } else if ("client_credentials".equals(grant_type)) {
             try {

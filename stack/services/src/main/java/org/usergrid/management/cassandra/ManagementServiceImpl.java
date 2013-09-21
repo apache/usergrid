@@ -1144,6 +1144,10 @@ public class ManagementServiceImpl implements ManagementService {
       if (userInfo.isDisabled()) {
         throw new DisabledAdminUserException();
       }
+      if ( !user.confirmed() )
+      {
+          throw new UnconfirmedAdminUserException();
+      }
       return userInfo;
     }
     logger.info("password compare fail for {}", name);
