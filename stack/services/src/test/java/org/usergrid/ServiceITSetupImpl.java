@@ -131,6 +131,20 @@ public class ServiceITSetupImpl extends  CoreITSetupImpl implements ServiceITSet
 
 
     @Override
+    public Object set( String key, String value )
+    {
+        return properties.setProperty( key, value );
+    }
+
+
+    @Override
+    public String get( String key )
+    {
+        return properties.getProperty( key );
+    }
+
+
+    @Override
     public SignInProviderFactory getProviderFactory()
     {
         return providerFactory;

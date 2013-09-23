@@ -22,5 +22,24 @@ public interface ServiceITSetup extends CoreITSetup
 
     Properties getProps();
 
+    /**
+     * Convenience method to set a property in the Properties object returned
+     * by getProps();
+     *
+     * @param key the property key
+     * @param value the value of the property to set
+     * @return the previous value of the property
+     */
+    Object set( String key, String value );
+
+    /**
+     * Convenience method to get a property in the Properties object returned
+     * by getProps().
+     *
+     * @param key the property key
+     * @return value the value of the property
+     */
+    String get( String key );
+
     SignInProviderFactory getProviderFactory();
 }

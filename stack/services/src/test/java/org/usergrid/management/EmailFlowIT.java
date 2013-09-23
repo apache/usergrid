@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.management;
 
+
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,10 +74,9 @@ import org.usergrid.persistence.entities.User;
 
 @Ignore
 @Concurrent()
-public class EmailFlowIT {
-
-    private static final Logger logger = LoggerFactory
-			.getLogger(EmailFlowIT.class);
+public class EmailFlowIT
+{
+    private static final Logger LOG = LoggerFactory.getLogger(EmailFlowIT.class);
     private static final String ORGANIZATION_NAME = "email-test-org-1";
     public static final String ORGANIZATION_NAME_2 = "email-test-org-2";
 
@@ -90,194 +90,130 @@ public class EmailFlowIT {
 
 
 	@Test
-	public void testCreateOrganizationAndAdminWithConfirmationOnly()
-			throws Exception {
+	public void testCreateOrganizationAndAdminWithConfirmationOnly() throws Exception
+    {
+        setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+        setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+        setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+        setup.set( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+        setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
-		setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-                "false");
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-                "false");
-        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-                "true");
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-                "sysadmin-1@mockserver.com");
-        setup.getProps().setProperty(PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION,
-                "true");
+		OrganizationOwnerInfo org_owner = createOwnerAndOrganization( ORGANIZATION_NAME, "test-user-1", "Test User",
+                "test-user-1@mockserver.com", "testpassword", false, false );
+		assertNotNull( org_owner );
 
-		OrganizationOwnerInfo org_owner = setup.getMgmtSvc()
-				.createOwnerAndOrganization(ORGANIZATION_NAME, "test-user-1",
-                        "Test User", "test-user-1@mockserver.com",
-                        "testpassword", false, false);
-		assertNotNull(org_owner);
+		List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-1@mockserver.com" );
 
-		List<Message> inbox = org.jvnet.mock_javamail.Mailbox
-				.get("test-user-1@mockserver.com");
+		assertFalse( inbox.isEmpty() );
 
-		assertFalse(inbox.isEmpty());
-
-		MockImapClient client = new MockImapClient("mockserver.com",
-				"test-user-1", "somepassword");
+		MockImapClient client = new MockImapClient( "mockserver.com", "test-user-1", "somepassword" );
 		client.processMail();
 
-		Message account_confirmation_message = inbox.get(0);
-		assertEquals("User Account Confirmation: test-user-1@mockserver.com",
-				account_confirmation_message.getSubject());
+		Message confirmation = inbox.get( 0 );
+		assertEquals( "User Account Confirmation: test-user-1@mockserver.com", confirmation.getSubject() );
 
-		String token = getTokenFromMessage(account_confirmation_message);
-		logger.info(token);
+		String token = getTokenFromMessage( confirmation );
+		LOG.info( token );
 
-		assertEquals(
-				ActivationState.ACTIVATED,
-                setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
-                        org_owner.owner.getUuid(), token));
+		assertEquals( ActivationState.ACTIVATED, setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
+                        org_owner.owner.getUuid(), token) );
 
-		Message account_activation_message = inbox.get(1);
-		assertEquals("User Account Activated",
-				account_activation_message.getSubject());
+		Message activation = inbox.get( 1 );
+		assertEquals( "User Account Activated", activation.getSubject() );
 
-		client = new MockImapClient("mockserver.com", "test-user-1",
-				"somepassword");
+		client = new MockImapClient( "mockserver.com", "test-user-1", "somepassword" );
 		client.processMail();
 	}
+
 
 	@Test
-	public void testCreateOrganizationAndAdminWithConfirmationAndActivation()
-			throws Exception {
+	public void testCreateOrganizationAndAdminWithConfirmationAndActivation() throws Exception
+    {
+        setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "true" );
+        setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+        setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+        setup.set( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-2@mockserver.com" );
 
-        setup.getProps()
-				.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "true");
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-                "false");
-        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-                "true");
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-                "sysadmin-2@mockserver.com");
+		OrganizationOwnerInfo org_owner = setup.getMgmtSvc().createOwnerAndOrganization( ORGANIZATION_NAME_2, "test-user-2", "Test User", "test-user-2@mockserver.com", "testpassword", false, false );
+		assertNotNull( org_owner );
 
-		OrganizationOwnerInfo org_owner = setup.getMgmtSvc()
-				.createOwnerAndOrganization(ORGANIZATION_NAME_2, "test-user-2",
-                        "Test User", "test-user-2@mockserver.com",
-                        "testpassword", false, false);
-		assertNotNull(org_owner);
+		List<Message> user_inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-2@mockserver.com" );
 
-		List<Message> user_inbox = org.jvnet.mock_javamail.Mailbox
-				.get("test-user-2@mockserver.com");
+		assertFalse( user_inbox.isEmpty() );
 
-		assertFalse(user_inbox.isEmpty());
+		Message confirmation = user_inbox.get( 0 );
+		assertEquals( "User Account Confirmation: test-user-2@mockserver.com", confirmation.getSubject() );
 
-		Message account_confirmation_message = user_inbox.get(0);
-		assertEquals("User Account Confirmation: test-user-2@mockserver.com",
-				account_confirmation_message.getSubject());
+		String token = getTokenFromMessage( confirmation );
+		LOG.info( token );
 
-		String token = getTokenFromMessage(account_confirmation_message);
-		logger.info(token);
+		assertEquals( ActivationState.CONFIRMED_AWAITING_ACTIVATION,
+                setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token ) );
 
-		assertEquals(
-				ActivationState.CONFIRMED_AWAITING_ACTIVATION,
-                setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
-                        org_owner.owner.getUuid(), token));
+		confirmation = user_inbox.get( 1 );
+		assertEquals( "User Account Confirmed", confirmation.getSubject() );
 
-		Message account_confirmed_message = user_inbox.get(1);
-		assertEquals("User Account Confirmed",
-				account_confirmed_message.getSubject());
+		List<Message> sysadmin_inbox = org.jvnet.mock_javamail.Mailbox.get( "sysadmin-2@mockserver.com" );
+		assertFalse( sysadmin_inbox.isEmpty() );
 
-		List<Message> sysadmin_inbox = org.jvnet.mock_javamail.Mailbox
-				.get("sysadmin-2@mockserver.com");
-		assertFalse(sysadmin_inbox.isEmpty());
+		Message activation = sysadmin_inbox.get( 0 );
+		assertEquals( "Request For Admin User Account Activation test-user-2@mockserver.com", activation.getSubject() );
 
-		Message account_activation_message = sysadmin_inbox.get(0);
-		assertEquals(
-				"Request For Admin User Account Activation test-user-2@mockserver.com",
-				account_activation_message.getSubject());
+		token = getTokenFromMessage( activation );
+		LOG.info( token );
 
-		token = getTokenFromMessage(account_activation_message);
-		logger.info(token);
+		assertEquals( ActivationState.ACTIVATED, setup.getMgmtSvc().handleActivationTokenForAdminUser(
+                        org_owner.owner.getUuid(), token ) );
 
-		assertEquals(
-				ActivationState.ACTIVATED,
-                setup.getMgmtSvc().handleActivationTokenForAdminUser(
-                        org_owner.owner.getUuid(), token));
+		Message account_activated_message = user_inbox.get( 2 );
+		assertEquals( "User Account Activated", activation.getSubject() );
 
-		Message account_activated_message = user_inbox.get(2);
-		assertEquals("User Account Activated",
-				account_activated_message.getSubject());
-
-		MockImapClient client = new MockImapClient("mockserver.com",
-				"test-user-2", "somepassword");
+		MockImapClient client = new MockImapClient( "mockserver.com", "test-user-2", "somepassword" );
 		client.processMail();
-
 	}
 
-	public String getTokenFromMessage(Message msg) throws IOException,
-			MessagingException {
-		String body = ((MimeMultipart) msg.getContent()).getBodyPart(0)
-				.getContent().toString();
-        // TODO better token extraction
-		// this is going to get the wrong string if the first part is not
-		// text/plain and the url isn't the last character in the email
-		return StringUtils.substringAfterLast(body, "token=");
-	}
-
-  @Test
-  public void skipAllEmailConfiguration() throws Exception {
-      setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-              "false");
-      setup.getProps().setProperty(PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION,
-              "false");
-      setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
-      setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-              "false");
-    OrganizationOwnerInfo ooi = setup.getMgmtSvc().createOwnerAndOrganization("org-skipallemailtest",
-            "user-skipallemailtest", "name-skipallemailtest",
-            "nate+skipallemailtest@apigee.com", "password");
-    EntityManager em = setup.getEmf().getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
-    User user = em.get(ooi.getOwner().getUuid(), User.class);
-    assertTrue(user.activated());
-    assertFalse(user.disabled());
-    assertTrue(user.confirmed());
-  }
-
-	@Test
-	public void testEmailStrings() {
-
-		testProperty(PROPERTIES_EMAIL_ADMIN_ACTIVATED, false);
-		testProperty(PROPERTIES_EMAIL_ADMIN_CONFIRMATION, true);
-		testProperty(PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET, true);
-		testProperty(PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION, true);
-		testProperty(PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED, true);
-		testProperty(PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION, true);
-		testProperty(PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION, true);
-		testProperty(PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION, true);
-		testProperty(PROPERTIES_EMAIL_USER_ACTIVATED, false);
-		testProperty(PROPERTIES_EMAIL_USER_CONFIRMATION, true);
-		testProperty(PROPERTIES_EMAIL_USER_PASSWORD_RESET, true);
-		testProperty(PROPERTIES_EMAIL_USER_PIN_REQUEST, true);
-
-	}
-
-	public void testProperty(String propertyName, boolean containsSubstitution) {
-
-		String propertyValue = setup.getProps().getProperty(propertyName);
-		assertTrue(propertyName + " was not found", isNotBlank(propertyValue));
-		logger.info(propertyName + "=" + propertyValue);
-
-		if (containsSubstitution) {
-			Map<String, String> valuesMap = new HashMap<String, String>();
-			valuesMap.put("reset_url", "test-url");
-			valuesMap.put("organization_name", "test-org");
-			valuesMap.put("activation_url", "test-url");
-			valuesMap.put("confirmation_url", "test-url");
-			valuesMap.put("user_email", "test-email");
-			valuesMap.put("pin", "test-pin");
-			StrSubstitutor sub = new StrSubstitutor(valuesMap);
-			String resolvedString = sub.replace(propertyValue);
-			assertNotSame(propertyValue, resolvedString);
-		}
-	}
 
     @Test
-    public void testAppUserActivationResetpwdMail() throws Exception {
+    public void skipAllEmailConfiguration() throws Exception
+    {
+        setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+        setup.set( PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION, "false" );
+        setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+        setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
+
+        OrganizationOwnerInfo ooi = setup.getMgmtSvc().createOwnerAndOrganization( "org-skipallemailtest",
+            "user-skipallemailtest", "name-skipallemailtest", "nate+skipallemailtest@apigee.com", "password" );
+
+        EntityManager em = setup.getEmf().getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        User user = em.get( ooi.getOwner().getUuid(), User.class );
+        assertTrue( user.activated() );
+        assertFalse( user.disabled() );
+        assertTrue( user.confirmed() );
+    }
 
 
+    @Test
+	public void testEmailStrings()
+    {
+    	testProperty( PROPERTIES_EMAIL_ADMIN_ACTIVATED, false );
+		testProperty( PROPERTIES_EMAIL_ADMIN_CONFIRMATION, true );
+		testProperty( PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET, true );
+		testProperty( PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION, true );
+		testProperty( PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED, true );
+		testProperty( PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION, true );
+		testProperty( PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION, true );
+		testProperty( PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION, true );
+		testProperty( PROPERTIES_EMAIL_USER_ACTIVATED, false );
+		testProperty( PROPERTIES_EMAIL_USER_CONFIRMATION, true );
+		testProperty( PROPERTIES_EMAIL_USER_PASSWORD_RESET, true );
+		testProperty( PROPERTIES_EMAIL_USER_PIN_REQUEST, true );
+
+	}
+
+
+    @Test
+    public void testAppUserActivationResetpwdMail() throws Exception
+    {
     	ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
 		User user = setupAppUser(appInfo.getId(),"registration_requires_admin_approval", Boolean.TRUE,
 				"testAppUserMailUrl", "testAppUserMailUrl@test.com", false);
@@ -298,12 +234,12 @@ public class EmailFlowIT {
 
 		// activation url ok
 		String mailContent = (String)((MimeMultipart)account_activation_message.getContent()).getBodyPart(1).getContent();
-	    logger.info(mailContent);
+	    LOG.info( mailContent );
 	    assertTrue(StringUtils.contains(mailContent, activation_url));
 
 	    // token ok
 	    String token = getTokenFromMessage(account_activation_message);
-		logger.info(token);
+		LOG.info( token );
 		ActivationState activeState = setup.getMgmtSvc().handleActivationTokenForAppUser(appInfo.getId(), user.getUuid(), token);
 		assertEquals(ActivationState.ACTIVATED, activeState);
 
@@ -324,17 +260,17 @@ public class EmailFlowIT {
 
 		// resetpwd url ok
 		mailContent = (String)((MimeMultipart)password_reset_message.getContent()).getBodyPart(1).getContent();
-	    logger.info(mailContent);
+	    LOG.info( mailContent );
 	    assertTrue(StringUtils.contains(mailContent, reset_url));
 
 	    // token ok
 	    token = getTokenFromMessage(password_reset_message);
-		logger.info(token);
+		LOG.info( token );
 	    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAppUser(appInfo.getId(), user.getUuid(), token));
 
-      // ensure revoke works
+        // ensure revoke works
         setup.getMgmtSvc().revokeAccessTokenForAppUser(token);
-      assertFalse(setup.getMgmtSvc().checkPasswordResetTokenForAppUser(appInfo.getId(), user.getUuid(), token));
+        assertFalse(setup.getMgmtSvc().checkPasswordResetTokenForAppUser(appInfo.getId(), user.getUuid(), token));
     }
 
     @Test
@@ -361,28 +297,77 @@ public class EmailFlowIT {
 
 		// confirmation url ok
 		String mailContent = (String)((MimeMultipart)account_confirmation_message.getContent()).getBodyPart(1).getContent();
-	    logger.info(mailContent);
+	    LOG.info( mailContent );
 	    assertTrue(StringUtils.contains(mailContent, confirmation_url));
 
 	    // token ok
 	    String token = getTokenFromMessage(account_confirmation_message);
-		logger.info(token);
+		LOG.info( token );
 		ActivationState activeState = setup.getMgmtSvc().handleConfirmationTokenForAppUser(appInfo.getId(), user.getUuid(), token);
         assertEquals(ActivationState.CONFIRMED_AWAITING_ACTIVATION, activeState);
     }
 
-    private User setupAppUser(UUID appId, String property, Object value , String username, String email, boolean activated) throws Exception {
+
+    /////////////////////////////
+    // Private Utility Methods //
+    /////////////////////////////
+
+
+    private OrganizationOwnerInfo createOwnerAndOrganization( String orgName, String userName, String display,
+                                                              String email, String password, boolean disabled,
+                                                              boolean active ) throws Exception
+    {
+        return setup.getMgmtSvc().createOwnerAndOrganization(
+                orgName, userName, display, email, password, disabled, active );
+    }
+
+
+	private String getTokenFromMessage( Message msg ) throws IOException, MessagingException
+    {
+		String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
+        // TODO better token extraction
+		// this is going to get the wrong string if the first part is not
+		// text/plain and the url isn't the last character in the email
+		return StringUtils.substringAfterLast( body, "token=" );
+	}
+
+
+	private void testProperty( String propertyName, boolean containsSubstitution )
+    {
+    	String propertyValue = setup.get( propertyName );
+		assertTrue(propertyName + " was not found", isNotBlank( propertyValue ) );
+		LOG.info( propertyName + "=" + propertyValue );
+
+		if ( containsSubstitution )
+        {
+            Map<String, String> valuesMap = new HashMap<String, String>();
+			valuesMap.put( "reset_url", "test-url" );
+			valuesMap.put( "organization_name", "test-org" );
+			valuesMap.put( "activation_url", "test-url" );
+			valuesMap.put( "confirmation_url", "test-url" );
+			valuesMap.put( "user_email", "test-email" );
+			valuesMap.put( "pin", "test-pin" );
+			StrSubstitutor sub = new StrSubstitutor( valuesMap );
+			String resolvedString = sub.replace( propertyValue );
+			assertNotSame( propertyValue, resolvedString );
+		}
+	}
+
+
+    private User setupAppUser( UUID appId, String property, Object value, String username, String email,
+                               boolean activated ) throws Exception
+    {
     	org.jvnet.mock_javamail.Mailbox.clearAll();
 
-    	EntityManager em = setup.getEmf().getEntityManager(appId);
+    	EntityManager em = setup.getEmf().getEntityManager( appId );
 
-        em.setProperty(new SimpleEntityRef(Application.ENTITY_TYPE, appId), property, value);
+        em.setProperty(new SimpleEntityRef( Application.ENTITY_TYPE, appId ), property, value );
 
         Map<String, Object> userProps = new LinkedHashMap<String, Object>();
-		userProps.put("username", username);
-		userProps.put("email", email);
-		userProps.put("activated", activated);
+		userProps.put( "username", username );
+		userProps.put( "email", email );
+		userProps.put( "activated", activated );
 
-        return em.create(User.ENTITY_TYPE, User.class, userProps);
+        return em.create( User.ENTITY_TYPE, User.class, userProps );
     }
 }
