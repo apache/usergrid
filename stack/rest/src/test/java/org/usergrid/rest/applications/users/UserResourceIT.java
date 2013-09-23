@@ -58,7 +58,6 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author zznate
  * @author tnine
  */
-@Ignore
 @Concurrent()
 public class UserResourceIT extends AbstractRestIT {
 
@@ -101,7 +100,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void nameQueryByUUIDs() throws Exception {
         UserRepo.INSTANCE.load(resource(), access_token);
 
-        String ql = "name = 'John*'";
+        String ql = "select uuid name = 'John*'";
 
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
         OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
@@ -668,7 +667,8 @@ public class UserResourceIT extends AbstractRestIT {
         //query the second role, it should work
         path = String.format("/test-organization/test-app/roles/%s/users", roleId2);
         
-        node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+        node = resource().path(path).queryParam("access_token", access_token)
+                .queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         
         assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
@@ -678,7 +678,8 @@ public class UserResourceIT extends AbstractRestIT {
         //query the first role, it should work
         path = String.format("/test-organization/test-app/roles/%s/users", roleId1);
         
-        node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+        node = resource().path(path).queryParam("access_token", access_token)
+                .queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         
         assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
@@ -689,19 +690,17 @@ public class UserResourceIT extends AbstractRestIT {
         
         node = resource().path(path).queryParam("access_token", access_token)
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
-        
+
         //query the first role, it should 404
         path = String.format("/test-organization/test-app/roles/%s/users", roleId1);
         
         try{
-          node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+          node = resource().path(path).queryParam("access_token", access_token)
+                  .queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
               .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         }catch(UniformInterfaceException e){
           assertEquals(Status.NOT_FOUND, e.getResponse().getClientResponseStatus());
         }
-        
-        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
-        
         
         //query the second role, it should work
         path = String.format("/test-organization/test-app/roles/%s/users", roleId2);
@@ -1190,7 +1189,7 @@ public class UserResourceIT extends AbstractRestIT {
             log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
-        assertEquals(Status.FORBIDDEN, status);
+        assertEquals(Status.UNAUTHORIZED, status);
 
         try{
             resource().path("/test-organization/test-app/users/test_2/token").queryParam("access_token", user_token_from_client_credentials)
