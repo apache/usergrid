@@ -22,7 +22,7 @@ import java.util.Properties;
 /**
  * A {@link org.junit.rules.TestRule} that sets up services.
  */
-public class ServiceITSetupImpl extends  CoreITSetupImpl implements ServiceITSetup
+public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetup
 {
     private static final Logger LOG = LoggerFactory.getLogger( ServiceITSetupImpl.class );
 

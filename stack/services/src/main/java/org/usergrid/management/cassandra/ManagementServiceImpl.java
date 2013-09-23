@@ -155,7 +155,7 @@ import com.google.common.collect.HashBiMap;
 
 public class ManagementServiceImpl implements ManagementService {
 
-  /**
+    /**
    * Key for the user's pin
    */
   protected static final String USER_PIN = "pin";
@@ -192,8 +192,11 @@ public class ManagementServiceImpl implements ManagementService {
   public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
   private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
+    public static final String REGISTRATION_REQUIRES_ADMIN_APPROVAL = "registration_requires_admin_approval";
+    public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
+    public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
 
-  protected ServiceManagerFactory smf;
+    protected ServiceManagerFactory smf;
 
   protected EntityManagerFactory emf;
 
@@ -2243,7 +2246,7 @@ public class ManagementServiceImpl implements ManagementService {
   public boolean newAppUsersNeedAdminApproval(UUID applicationId) throws Exception {
     EntityManager em = emf.getEntityManager(applicationId);
     Boolean registration_requires_admin_approval = (Boolean) em.getProperty(new SimpleEntityRef(
-        Application.ENTITY_TYPE, applicationId), "registration_requires_admin_approval");
+        Application.ENTITY_TYPE, applicationId), REGISTRATION_REQUIRES_ADMIN_APPROVAL );
     return registration_requires_admin_approval != null ? registration_requires_admin_approval.booleanValue() : false;
   }
 
@@ -2251,7 +2254,7 @@ public class ManagementServiceImpl implements ManagementService {
   public boolean newAppUsersRequireConfirmation(UUID applicationId) throws Exception {
     EntityManager em = emf.getEntityManager(applicationId);
     Boolean registration_requires_email_confirmation = (Boolean) em.getProperty(new SimpleEntityRef(
-        Application.ENTITY_TYPE, applicationId), "registration_requires_email_confirmation");
+        Application.ENTITY_TYPE, applicationId), REGISTRATION_REQUIRES_EMAIL_CONFIRMATION );
     return registration_requires_email_confirmation != null ? registration_requires_email_confirmation.booleanValue()
         : false;
   }
@@ -2259,7 +2262,7 @@ public class ManagementServiceImpl implements ManagementService {
   public boolean notifyAdminOfNewAppUsers(UUID applicationId) throws Exception {
     EntityManager em = emf.getEntityManager(applicationId);
     Boolean notify_admin_of_new_users = (Boolean) em.getProperty(new SimpleEntityRef(Application.ENTITY_TYPE,
-        applicationId), "notify_admin_of_new_users");
+        applicationId), NOTIFY_ADMIN_OF_NEW_USERS );
     return notify_admin_of_new_users != null ? notify_admin_of_new_users.booleanValue() : false;
   }
 
@@ -2275,27 +2278,36 @@ public class ManagementServiceImpl implements ManagementService {
     }
   }
 
-  @Override
-  public ActivationState handleConfirmationTokenForAppUser(UUID applicationId, UUID userId, String token)
-      throws Exception {
-    AuthPrincipalInfo principal = getPrincipalFromAccessToken(token, TOKEN_TYPE_CONFIRM, APPLICATION_USER);
-    if ((principal != null) && userId.equals(principal.getUuid())) {
-      EntityManager em = emf.getEntityManager(applicationId);
-      User user = em.get(userId, User.class);
-      confirmAppUser(applicationId, user.getUuid());
-      if (newAppUsersNeedAdminApproval(applicationId)) {
-        sendAppUserConfirmedAwaitingActivationEmail(applicationId, user);
-        sendAdminRequestAppUserActivationEmail(applicationId, user);
-        return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
-      } else {
-        activateAppUser(applicationId, principal.getUuid());
-        sendAppUserActivatedEmail(applicationId, user);
-        sendAdminNewAppUserActivatedNotificationEmail(applicationId, user);
-        return ActivationState.ACTIVATED;
-      }
+    @Override
+    public ActivationState handleConfirmationTokenForAppUser( UUID applicationId, UUID userId, String token )
+        throws Exception
+    {
+        AuthPrincipalInfo principal = getPrincipalFromAccessToken( token, TOKEN_TYPE_CONFIRM, APPLICATION_USER );
+
+        if ( ( principal != null ) && userId.equals( principal.getUuid() ) )
+        {
+            EntityManager em = emf.getEntityManager( applicationId );
+            User user = em.get( userId, User.class );
+            confirmAppUser( applicationId, user.getUuid() );
+
+            if ( newAppUsersNeedAdminApproval( applicationId ) )
+            {
+                sendAppUserConfirmedAwaitingActivationEmail( applicationId, user );
+                sendAdminRequestAppUserActivationEmail( applicationId, user );
+                return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
+            }
+            else
+            {
+                activateAppUser( applicationId, principal.getUuid() );
+                sendAppUserActivatedEmail( applicationId, user );
+                sendAdminNewAppUserActivatedNotificationEmail( applicationId, user );
+                return ActivationState.ACTIVATED;
+            }
+        }
+
+        return ActivationState.UNKNOWN;
     }
-    return ActivationState.UNKNOWN;
-  }
+
 
   @Override
   public ActivationState handleActivationTokenForAppUser(UUID applicationId, UUID userId, String token)
@@ -2376,10 +2388,13 @@ public class ManagementServiceImpl implements ManagementService {
     em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId), "activated", true);
   }
 
-  public void confirmAppUser(UUID applicationId, UUID userId) throws Exception {
-    EntityManager em = emf.getEntityManager(applicationId);
-    em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId), "confirmed", true);
-  }
+
+    public void confirmAppUser( UUID applicationId, UUID userId ) throws Exception
+    {
+        EntityManager em = emf.getEntityManager( applicationId );
+        em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "confirmed", true );
+    }
+
 
   @Override
   public void setAppUserPassword(UUID applicationId, UUID userId, String newPassword) throws Exception {
