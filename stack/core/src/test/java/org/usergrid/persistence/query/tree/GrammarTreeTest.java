@@ -494,21 +494,6 @@ public class GrammarTreeTest {
 
         assertEquals("target", identifiers.get("source"));
     }
-
-    @Test
-    // USERGRID-1715
-    public void selectUuidHasSubjects() throws RecognitionException {
-
-        String queryString = "select uuid where a = 1 or b > 2";
-
-        ANTLRStringStream in = new ANTLRStringStream(queryString);
-        QueryFilterLexer lexer = new QueryFilterLexer(in);
-        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-        QueryFilterParser parser = new QueryFilterParser(tokens);
-
-        Query query = parser.ql().query;
-        assertTrue(query.hasSelectSubjects());
-    }
     
     @Test
     public void containsOr() throws Exception{
