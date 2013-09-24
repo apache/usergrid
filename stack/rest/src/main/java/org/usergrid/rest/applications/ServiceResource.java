@@ -199,15 +199,15 @@ public class ServiceResource extends AbstractContextResource {
                 .getFirst("tree"));
         boolean collectionGet = false;
         if(action==ServiceAction.GET) {
-        	collectionGet = (getServiceParameters().size()==1 && InflectionUtils.isPlural(getServiceParameters().get(0)))? true : false;
+        	collectionGet = (getServiceParameters().size()==1 
+            && InflectionUtils.isPlural(getServiceParameters().get(0)))? true : false;
         }
         addQueryParams(getServiceParameters(), ui);
-        ServiceRequest r = services.newRequest(action, tree,
-                getServiceParameters(), payload);
+        ServiceRequest r = services.newRequest(action, tree, getServiceParameters(), payload);
         response.setServiceRequest(r);
         ServiceResults results = r.execute();
         if (results != null) {
-            if (results.hasData()) {
+            if (results.hasData()) { 
                 response.setData(results.getData());
             }
             if (results.getServiceMetadata() != null) {
@@ -215,8 +215,6 @@ public class ServiceResource extends AbstractContextResource {
             }
             Query query = r.getLastQuery();
             if (query != null) {
-                query = new Query(query);
-                query.setIdsOnly(false);
                 if (query.hasSelectSubjects()) {
                     response.setList(query.getSelectionResults(results));
                     response.setCount(response.getList().size());
@@ -225,7 +223,7 @@ public class ServiceResource extends AbstractContextResource {
                     return results;
                 }
             }
-            if(collectionGet) {
+            if (collectionGet) {
             	response.setCount(results.size());
             }
 

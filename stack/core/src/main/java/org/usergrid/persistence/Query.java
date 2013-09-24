@@ -409,7 +409,7 @@ public class Query {
     return false;
   }
 
-  public void setIdsOnly(boolean idsOnly) {
+  private void setIdsOnly(boolean idsOnly) {
     if (idsOnly) {
       selectAssignments = new LinkedHashMap<String, String>();
       selectAssignments.put(PROPERTY_UUID, PROPERTY_UUID);

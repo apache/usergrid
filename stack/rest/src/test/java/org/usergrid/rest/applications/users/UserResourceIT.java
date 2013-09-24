@@ -17,12 +17,10 @@ package org.usergrid.rest.applications.users;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +32,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1250,7 +1247,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         // should update a field
         JsonNode response = resource().path("/test-organization/test-app/users/"+randomName)
-                        .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
+            .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
                         .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         logNode(response);
         assertNotNull(getEntity(response, 0));
@@ -1268,8 +1265,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         logNode(response);
         response = resource().path("/test-organization/test-app/users/"+randomName)
-                                .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
-                                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+            .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         assertNotNull(getEntity(response, 0));
         logNode(response);
@@ -1290,8 +1287,8 @@ public class UserResourceIT extends AbstractRestIT {
           .type(MediaType.APPLICATION_JSON_TYPE)
           .get(JsonNode.class);
         assertNotNull("Entities must exist", response.get("entities"));
-        assertEquals("Must match default entity count", 1, response.get("entities").size()); 
-        assertEquals("Must be a user", "user", response.get("entities").get(0).get("type").asText()); 
+        assertTrue("Must be some entities", response.get("entities").size() > 0); 
+        assertEquals("Must be users","user", response.get("entities").get(0).get("type").asText()); 
         assertNull("List must not exist", response.get("list"));
       }
 
@@ -1303,7 +1300,7 @@ public class UserResourceIT extends AbstractRestIT {
           .type(MediaType.APPLICATION_JSON_TYPE)
           .get(JsonNode.class);
         assertNotNull("List must exist", response.get("list"));
-        assertEquals("Default list count", 1, response.get("list")); 
+        assertTrue("Must be some list items", response.get("list").size() > 0); 
         assertNull("Entities must not exist", response.get("entries"));
       }
     }
