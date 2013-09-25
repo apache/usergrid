@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +25,7 @@ import java.util.regex.Pattern;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.usergrid.utils.UUIDUtils;
 
-public class Identifier {
+public class Identifier implements Serializable {
 
 	public enum Type {
 		UUID, NAME, EMAIL
@@ -100,6 +101,7 @@ public class Identifier {
 		return type == Type.UUID;
 	}
 
+  @JsonIgnore
 	public String getEmail() {
 		if (type != Type.EMAIL) {
 			return null;
@@ -131,7 +133,7 @@ public class Identifier {
 
 	@Override
 	public String toString() {
-		return value.toString();
+		return value != null ? value.toString() : null;
 	}
 
 	@Override
@@ -194,6 +196,9 @@ public class Identifier {
 
   // for serialization
   public void setValue(Object value) {
+    if (isUUID() && value instanceof String) {
+      value = UUID.fromString((String)value);
+    }
     this.value = value;
   }
 }
