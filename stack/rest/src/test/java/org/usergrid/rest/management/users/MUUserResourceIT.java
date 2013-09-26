@@ -139,12 +139,50 @@ public class MUUserResourceIT extends AbstractRestIT
         .get(JsonNode.class);
     logNode(node);
 
+    JsonNode applications = node.findValue("applications");
+    assertNotNull(applications);
+    JsonNode users = node.findValue("users");
+    assertNotNull(users);
+
     JsonNode securityLevel = node.findValue("securityLevel");
     assertNotNull(securityLevel);
     assertEquals(5L, securityLevel.asLong());
   }
 
   @Test
+  public void getUserShallow() throws Exception {
+
+    // set an organization property
+    HashMap<String,Object> payload = new HashMap<String,Object>();
+    Map<String, Object> properties = new HashMap<String,Object>();
+    properties.put("securityLevel", 5);
+    payload.put(OrganizationsResource.ORGANIZATION_PROPERTIES, properties);
+    JsonNode node = resource().path("/management/organizations/test-organization")
+        .queryParam("access_token", superAdminToken())
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .put(JsonNode.class, payload);
+
+    // ensure the organization property is included
+    node = resource().path("/management/users/test@usergrid.com")
+        .queryParam("access_token",adminAccessToken)
+        .queryParam("shallow","true")
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    logNode(node);
+
+    JsonNode applications = node.findValue("applications");
+    assertNull(applications);
+    JsonNode users = node.findValue("users");
+    assertNull(users);
+
+    JsonNode securityLevel = node.findValue("securityLevel");
+    assertNotNull(securityLevel);
+    assertEquals(5L, securityLevel.asLong());
+  }
+
+    @Test
     public void reactivateMultipleSend() throws Exception {
 
         JsonNode node = resource().path("/management/organizations")
