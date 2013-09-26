@@ -1,7 +1,6 @@
 package org.usergrid.rest.applications.users;
 
 import static org.junit.Assert.*;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +14,9 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import static org.usergrid.utils.MapUtils.hashMap;
 
 /**
  * @author zznate
@@ -22,6 +24,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  */
 @Concurrent()
 public class CollectionsResourceIT extends AbstractRestIT {
+
+  private static Logger log = LoggerFactory.getLogger(CollectionsResourceIT.class);
 
   @Test
   public void postToBadPath() {
@@ -141,5 +145,33 @@ public class CollectionsResourceIT extends AbstractRestIT {
     assertEquals(id, returnedId);
 
     assertEquals(1, queryResponse.get("entities").size());
+  }
+
+  /**
+   * Test to verify "name property returns twice in AppServices response" is fixed.
+   * https://apigeesc.atlassian.net/browse/USERGRID-2318
+   */
+  @Test
+  public void testNoDuplicateFields() {
+
+    Map<String, String> payload =
+      hashMap("type", "app_user")
+      .map("name", "fred");
+
+    JsonNode node = resource().path("/test-organization/test-app/app_users")
+      .queryParam("access_token", access_token)
+      .accept(MediaType.APPLICATION_JSON)
+      .type(MediaType.APPLICATION_JSON_TYPE)
+      .post(JsonNode.class, payload);
+
+    // have to look at raw response data, Jackson will remove dups
+    String s = resource().path("/test-organization/test-app/app_users/fred")
+      .queryParam("access_token", access_token)
+      .accept(MediaType.APPLICATION_JSON)
+      .type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+
+    int firstFred = s.indexOf("fred");
+    int secondFred = s.indexOf("fred", firstFred + 4);
+    assertEquals(-1, secondFred);
   }
 }
