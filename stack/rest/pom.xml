@@ -565,5 +565,13 @@
       <artifactId>usergrid-java-client</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-services</artifactId>
+      <version>0.0.28-SNAPSHOT</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
   </dependencies>
 </project>

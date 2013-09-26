@@ -16,6 +16,7 @@
 package org.usergrid.rest.management;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -47,6 +48,7 @@ import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,67 +147,104 @@ public class ManagementResource extends AbstractContextResource {
             String grant_type, String username,
             String password, String client_id,
             String client_secret, long ttl,
-            String callback, boolean loadAdminData) throws Exception {
+            String callback, boolean loadAdminData) throws Exception
+    {
+        UserInfo user = null;
 
-      UserInfo user = null;
-      try {
-        if ( SubjectUtils.getUser() != null ) {
-          user = SubjectUtils.getUser();
+        try
+        {
+            if ( SubjectUtils.getUser() != null )
+            {
+                user = SubjectUtils.getUser();
+            }
+
+            logger.info("ManagementResource.getAccessToken with username: {}", username);
+
+            String errorDescription = "invalid username or password";
+
+            if ( user == null )
+            {
+                if ( authorization != null )
+                {
+                    String type = stringOrSubstringBeforeFirst(authorization, ' ').toUpperCase();
+
+                    if ( "BASIC".equals( type ) )
+                    {
+                        String token = stringOrSubstringAfterFirst(authorization, ' ');
+                        String[] values = Base64.decodeToString(token).split(":");
+
+                        if ( values.length >= 2 )
+                        {
+                            client_id = values[0].toLowerCase();
+                            client_secret = values[1];
+                        }
+                    }
+                }
+
+
+            // do checking for different grant types
+            if ( GrantType.PASSWORD.toString().equals( grant_type ) )
+            {
+                try
+                {
+                    user = management.verifyAdminUserPasswordCredentials( username, password );
+
+                    if ( user != null )
+                    {
+                        logger.info("found user from verify: {}", user.getUuid());
+                    }
+                }
+                catch ( UnactivatedAdminUserException uaue )
+                {
+                    errorDescription = "user not activated";
+                    logger.error(errorDescription, uaue);
+                }
+                catch ( DisabledAdminUserException daue )
+                {
+                    errorDescription = "user disabled";
+                    logger.error(errorDescription, daue);
+                }
+                catch (UnconfirmedAdminUserException uaue)
+                {
+                    errorDescription = "User must be confirmed to authenticate";
+                    logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" );
+
+                    OAuthResponse response = OAuthResponse.errorResponse( SC_FORBIDDEN )
+                          .setError( OAuthError.TokenResponse.INVALID_GRANT )
+                          .setErrorDescription( errorDescription ).buildJSONMessage();
+                    return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                          .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+                }
+                catch (Exception e1)
+                {
+                    logger.error(errorDescription, e1);
+                }
+            }
+            else if ( "client_credentials".equals( grant_type ) )
+            {
+                try
+                {
+                    AccessInfo access_info = management.authorizeClient(client_id, client_secret, ttl);
+                    if ( access_info != null )
+                    {
+
+                        return Response.status(SC_OK).type(jsonMediaType(callback))
+                            .entity( wrapWithCallback( access_info, callback ) ).build();
+                    }
+                }
+                catch ( Exception e1 )
+                {
+                    logger.error("failed authorizeClient", e1);
+                }
+            }
         }
-        logger.info("ManagementResource.getAccessToken with username: {}", username);
 
-        String errorDescription = "invalid username or password";
-        if ( user == null ) {
-          if (authorization != null) {
-            String type = stringOrSubstringBeforeFirst(authorization, ' ').toUpperCase();
-            if ("BASIC".equals(type)) {
-              String token = stringOrSubstringAfterFirst(authorization, ' ');
-              String[] values = Base64.decodeToString(token).split(":");
-              if (values.length >= 2) {
-                client_id = values[0].toLowerCase();
-                client_secret = values[1];
-              }
-            }
-          }
-
-
-          // do checking for different grant types
-          if (GrantType.PASSWORD.toString().equals(grant_type)) {
-            try {
-              user = management.verifyAdminUserPasswordCredentials(username, password);
-              if (user != null) {
-                logger.info("found user from verify: {}", user.getUuid());
-              }
-            } catch (UnactivatedAdminUserException uaue) {
-              errorDescription = "user not activated";
-              logger.error(errorDescription, uaue);
-            } catch (DisabledAdminUserException daue) {
-              errorDescription = "user disabled";
-              logger.error(errorDescription, daue);
-            } catch (UnconfirmedAdminUserException uaue) {
-              errorDescription = "user has not been confirmed";
-              logger.error(errorDescription, uaue);
-            } catch (Exception e1) {
-              logger.error(errorDescription, e1);
-            }
-          } else if ("client_credentials".equals(grant_type)) {
-            try {
-              AccessInfo access_info = management.authorizeClient(client_id, client_secret, ttl);
-              if (access_info != null) {
-                return Response.status(SC_OK).type(jsonMediaType(callback))
-                        .entity(wrapWithCallback(access_info, callback)).build();
-              }
-            } catch (Exception e1) {
-              logger.error("failed authorizeClient", e1);
-            }
-          }
-        }
-
-        if (user == null) {
-          OAuthResponse response = OAuthResponse.errorResponse(SC_BAD_REQUEST)
-                  .setError(OAuthError.TokenResponse.INVALID_GRANT)
+        if ( user == null )
+        {
+            OAuthResponse response = OAuthResponse.errorResponse(SC_BAD_REQUEST)
+                  .setError( OAuthError.TokenResponse.INVALID_GRANT )
                   .setErrorDescription(errorDescription).buildJSONMessage();
-          return Response.status(response.getResponseStatus()).type(jsonMediaType(callback))
+            return Response.status(response.getResponseStatus()).type(jsonMediaType(callback))
                   .entity(wrapWithCallback(response.getBody(), callback)).build();
         }
 

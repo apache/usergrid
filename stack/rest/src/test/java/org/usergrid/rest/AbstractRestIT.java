@@ -269,7 +269,8 @@ public abstract class AbstractRestIT extends JerseyTest
      *
      * @return
      */
-    protected String mgmtToken(String user, String password) {
+    protected String mgmtToken(String user, String password)
+    {
         JsonNode node = resource().path("/management/token").queryParam("grant_type", "password")
                 .queryParam("username", user).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
                 .get(JsonNode.class);

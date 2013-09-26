@@ -112,7 +112,7 @@ public class EmailFlowIT
                 "test-user-1@mockserver.com", "testpassword", false, false );
 		assertNotNull( org_owner );
 
-		List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-1@mockserver.com" );
+		List<Message> inbox = Mailbox.get( "test-user-1@mockserver.com" );
 
 		assertFalse( inbox.isEmpty() );
 
