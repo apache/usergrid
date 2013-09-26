@@ -76,31 +76,30 @@ public class MUUserResourceIT extends AbstractRestIT
         JsonNode node = resource().path("/management/users/akarasulu@apache.org")
             .queryParam( "access_token", tokenStr )
             .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
             .get( JsonNode.class );
         logNode( node );
     }
 
 
-//    @Test
-//    public void testUnconfirmedAdminLogin() throws Exception
-//    {
-//        String orgName = this.getClass().getName();
-//        String appName = "testUnconfirmedAdminLogin";
-//        String userName = "TestUser";
-//        String email = "test-user-46@mockserver.com";
-//        String passwd = "testpassword";
-//        OrganizationOwnerInfo orgOwner;
-//
-//        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
-//      	assertNotNull( orgOwner );
-//
-//        // curl 'http://localhost:8080/management/token?grant_type=password&username=myadmin&password=password'
-//        String token = mgmtToken( userName, passwd );
-//
-//    }
+    @Test
+    public void testUnconfirmedAdminLogin() throws Exception
+    {
+        String orgName = this.getClass().getName();
+        String appName = "testUnconfirmedAdminLogin";
+        String userName = "TestUser";
+        String email = "test-user-46@mockserver.com";
+        String passwd = "testpassword";
+        OrganizationOwnerInfo orgOwner;
+
+        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
+      	assertNotNull( orgOwner );
+
+        String token = mgmtToken( userName, passwd );
+    }
 
 
-  @Test
+    @Test
     public void updateManagementUser() throws Exception {
         Map<String, String> payload = hashMap("email",
                 "uort-user-1@apigee.com").map("username", "uort-user-1")
