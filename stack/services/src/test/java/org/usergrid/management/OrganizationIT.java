@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.usergrid.ServiceITSetup;
 import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
@@ -42,11 +43,12 @@ public class OrganizationIT
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl(ServiceITSuite.cassandraResource);
+    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
 
 
-	@Test
-	public void testCreateOrganization() throws Exception {
+    @Test
+	public void testCreateOrganization() throws Exception
+    {
 		UserInfo user = setup.getMgmtSvc().createAdminUser("edanuff2", "Ed Anuff",
                 "ed@anuff.com2", "test", false, false);
 		assertNotNull(user);
@@ -97,8 +99,8 @@ public class OrganizationIT
 		assertNotNull(principal);
 		assertEquals(user.getUuid(), principal.getUuid());
 
-		UserInfo new_user = setup.getMgmtSvc().createAdminUser("test-user-1",
-                "Test User", "test-user-1@mockserver.com", "testpassword",
+		UserInfo new_user = setup.getMgmtSvc().createAdminUser("test-user-133",
+                "Test User", "test-user-133@mockserver.com", "testpassword",
                 true, true);
 		assertNotNull(new_user);
 

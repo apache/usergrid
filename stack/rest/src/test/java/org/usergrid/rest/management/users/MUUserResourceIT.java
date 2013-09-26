@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.HashMap;
@@ -11,20 +12,27 @@ import java.util.List;
 import java.util.Map;
 
 import javax.mail.Message;
+import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
+import org.usergrid.management.ActivationState;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
@@ -68,10 +76,28 @@ public class MUUserResourceIT extends AbstractRestIT
         JsonNode node = resource().path("/management/users/akarasulu@apache.org")
             .queryParam( "access_token", tokenStr )
             .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
             .get( JsonNode.class );
         logNode( node );
     }
+
+
+//    @Test
+//    public void testUnconfirmedAdminLogin() throws Exception
+//    {
+//        String orgName = this.getClass().getName();
+//        String appName = "testUnconfirmedAdminLogin";
+//        String userName = "TestUser";
+//        String email = "test-user-46@mockserver.com";
+//        String passwd = "testpassword";
+//        OrganizationOwnerInfo orgOwner;
+//
+//        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
+//      	assertNotNull( orgOwner );
+//
+//        // curl 'http://localhost:8080/management/token?grant_type=password&username=myadmin&password=password'
+//        String token = mgmtToken( userName, passwd );
+//
+//    }
 
 
   @Test

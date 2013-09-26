@@ -299,7 +299,7 @@ public class EmailFlowIT
 
 
     /**
-     * Tests
+     * Tests to make sure a normal user must be activated by the admin after confirmation.
      */
     @Test
     public void testAppUserConfirmationMail() throws Exception
