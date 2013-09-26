@@ -46,7 +46,6 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
-import org.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class UsersService extends AbstractCollectionService
@@ -66,8 +65,10 @@ public class UsersService extends AbstractCollectionService
         addReplaceParameters(Arrays.asList("$id", "followers"),
                 Arrays.asList("\\0", "connecting", "following"));
 
-        declareEntityDictionaries(Arrays.asList("rolenames", "permissions"));
+        // rolenames is the one case of Entity Dictionary name not equal to path segment
+        declareEntityDictionary(new EntityDictionaryEntry("rolenames", "roles"));
 
+        declareEntityDictionaries(Arrays.asList("permissions"));
     }
 
     @Override
@@ -169,9 +170,9 @@ public class UsersService extends AbstractCollectionService
 
     @Override
     public ServiceResults getEntityDictionary(ServiceContext context,
-            List<EntityRef> refs, String dictionary) throws Exception {
+            List<EntityRef> refs, EntityDictionaryEntry dictionary) throws Exception {
 
-        if ("rolenames".equalsIgnoreCase(dictionary)) {
+        if ("rolenames".equalsIgnoreCase(dictionary.getName())) {
             EntityRef entityRef = refs.get(0);
             checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
@@ -189,7 +190,7 @@ public class UsersService extends AbstractCollectionService
                 return getApplicationRolePermissions(roleName);
             }
 
-        } else if ("permissions".equalsIgnoreCase(dictionary)) {
+        } else if ("permissions".equalsIgnoreCase(dictionary.getName())) {
             EntityRef entityRef = refs.get(0);
             checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 
@@ -203,10 +204,10 @@ public class UsersService extends AbstractCollectionService
 
     @Override
     public ServiceResults postEntityDictionary(ServiceContext context,
-            List<EntityRef> refs, String dictionary, ServicePayload payload)
+            List<EntityRef> refs, EntityDictionaryEntry dictionary, ServicePayload payload)
             throws Exception {
 
-        if ("permissions".equalsIgnoreCase(dictionary)) {
+        if ("permissions".equalsIgnoreCase(dictionary.getName())) {
             EntityRef entityRef = refs.get(0);
             checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 
@@ -227,10 +228,10 @@ public class UsersService extends AbstractCollectionService
 
     @Override
     public ServiceResults putEntityDictionary(ServiceContext context,
-            List<EntityRef> refs, String dictionary, ServicePayload payload)
+            List<EntityRef> refs, EntityDictionaryEntry dictionary, ServicePayload payload)
             throws Exception {
 
-        if ("rolenames".equalsIgnoreCase(dictionary)) {
+        if ("rolenames".equalsIgnoreCase(dictionary.getName())) {
             EntityRef entityRef = refs.get(0);
             checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
@@ -252,9 +253,9 @@ public class UsersService extends AbstractCollectionService
 
     @Override
     public ServiceResults deleteEntityDictionary(ServiceContext context,
-            List<EntityRef> refs, String dictionary) throws Exception {
+            List<EntityRef> refs, EntityDictionaryEntry dictionary) throws Exception {
 
-        if ("rolenames".equalsIgnoreCase(dictionary)) {
+        if ("rolenames".equalsIgnoreCase(dictionary.getName())) {
             EntityRef entityRef = refs.get(0);
             checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
 
@@ -268,7 +269,7 @@ public class UsersService extends AbstractCollectionService
                 return deleteUserRole(entityRef.getUuid(), roleName);
 
             }
-        } else if ("permissions".equalsIgnoreCase(dictionary)) {
+        } else if ("permissions".equalsIgnoreCase(dictionary.getName())) {
             EntityRef entityRef = refs.get(0);
             checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 

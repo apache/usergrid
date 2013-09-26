@@ -498,7 +498,6 @@ public class GrammarTreeTest {
     @Test
     public void containsOr() throws Exception{
         String queryString = "select * where keywords contains 'hot' or title contains 'hot'";
-        
 
         ANTLRStringStream in = new ANTLRStringStream(queryString);
         QueryFilterLexer lexer = new QueryFilterLexer(in);
@@ -524,10 +523,6 @@ public class GrammarTreeTest {
         
         assertEquals("hot", right.getString().getValue());
         assertEquals("hot", right.getString().getEndValue());
-        
-        
-        
-        
     }
 
     
@@ -547,14 +542,11 @@ public class GrammarTreeTest {
         
         assertEquals("title", rootNode.getProperty().getValue());
         assertEquals("hot", ((StringLiteral)rootNode.getLiteral()).getValue());
-        
-        
     }
     
     @Test
     public void uuidParse() throws RecognitionException{
       String queryString = "select * where  title = c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0";
-      
 
       ANTLRStringStream in = new ANTLRStringStream(queryString);
       QueryFilterLexer lexer = new QueryFilterLexer(in);
@@ -566,7 +558,8 @@ public class GrammarTreeTest {
       Equal rootNode = (Equal) query.getRootOperand();
       
       assertEquals("title", rootNode.getProperty().getValue());
-      assertEquals(UUID.fromString("c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0"), ((UUIDLiteral)rootNode.getLiteral()).getValue());
+      assertEquals(UUID.fromString("c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0"), 
+              ((UUIDLiteral)rootNode.getLiteral()).getValue());
     }
     
 
@@ -583,9 +576,8 @@ public class GrammarTreeTest {
             error = qpe.getMessage();
         }
 
-        assertEquals("The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error);
+        assertEquals("The query cannot be parsed. The token '<EOF>' "
+                + "at column 13 on line 1 cannot be parsed", error);
 
     }
-  
-
 }

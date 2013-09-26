@@ -8,7 +8,7 @@ A highly-scalable data platform for mobile applications.
 ## Requirements
 
 * JDK 1.6 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-* Maven (http://maven.apache.org/)
+* Maven >= 3.0.4 (http://maven.apache.org/)
 
 ## Building
 

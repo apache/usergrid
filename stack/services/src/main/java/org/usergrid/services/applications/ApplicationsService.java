@@ -40,8 +40,7 @@ import org.usergrid.services.ServiceResults.Type;
 
 public class ApplicationsService extends AbstractService {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(ApplicationsService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationsService.class);
 
     public ApplicationsService() {
         super();
@@ -61,7 +60,7 @@ public class ApplicationsService extends AbstractService {
             return handleServiceMetadata(context, metadataType);
         }
 
-        String entityDictionary = checkForEntityDictionaries(context);
+        EntityDictionaryEntry entityDictionary = checkForEntityDictionaries(context);
         String entityCommand = checkForEntityCommands(context);
 
         results = invokeItemWithId(context, sm.getApplicationId());
@@ -86,10 +85,10 @@ public class ApplicationsService extends AbstractService {
     }
 
     @Override
-    public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+    public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, EntityDictionaryEntry dictionary)
             throws Exception {
 
-        if ("counters".equals(dictionary)) {
+        if ("counters".equalsIgnoreCase(dictionary.getName())) {
             checkPermissionsForPath(context, "/counters");
 
             if (context.parameterCount() == 0) {
@@ -179,6 +178,7 @@ public class ApplicationsService extends AbstractService {
     }
 
     public ServiceResults getApplicationCounters(Query query) throws Exception {
+
         Results counters = em.getAggregateCounters(query);
         ServiceResults results = simpleServiceResults(Type.COUNTERS);
         if (counters != null) {

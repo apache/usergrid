@@ -24,9 +24,7 @@ import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,9 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.usergrid.persistence.AggregateCounter;
-import org.usergrid.persistence.AggregateCounterSet;
-import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -204,15 +199,15 @@ public class ServiceResource extends AbstractContextResource {
                 .getFirst("tree"));
         boolean collectionGet = false;
         if(action==ServiceAction.GET) {
-        	collectionGet = (getServiceParameters().size()==1 && InflectionUtils.isPlural(getServiceParameters().get(0)))? true : false;
+        	collectionGet = (getServiceParameters().size()==1 
+            && InflectionUtils.isPlural(getServiceParameters().get(0)))? true : false;
         }
         addQueryParams(getServiceParameters(), ui);
-        ServiceRequest r = services.newRequest(action, tree,
-                getServiceParameters(), payload);
+        ServiceRequest r = services.newRequest(action, tree, getServiceParameters(), payload);
         response.setServiceRequest(r);
         ServiceResults results = r.execute();
         if (results != null) {
-            if (results.hasData()) {
+            if (results.hasData()) { 
                 response.setData(results.getData());
             }
             if (results.getServiceMetadata() != null) {
@@ -220,8 +215,6 @@ public class ServiceResource extends AbstractContextResource {
             }
             Query query = r.getLastQuery();
             if (query != null) {
-                query = new Query(query);
-                query.setIdsOnly(false);
                 if (query.hasSelectSubjects()) {
                     response.setList(query.getSelectionResults(results));
                     response.setCount(response.getList().size());
@@ -230,7 +223,7 @@ public class ServiceResource extends AbstractContextResource {
                     return results;
                 }
             }
-            if(collectionGet) {
+            if (collectionGet) {
             	response.setCount(results.size());
             }
 
@@ -251,7 +244,7 @@ public class ServiceResource extends AbstractContextResource {
                     throws Exception {
 
         logger.debug("ServiceResource.executeGet");
-
+        
         ApiResponse response = createApiResponse();
 
         response.setAction("get");
