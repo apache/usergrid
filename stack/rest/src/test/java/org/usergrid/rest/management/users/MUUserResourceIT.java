@@ -95,6 +95,10 @@ public class MUUserResourceIT extends AbstractRestIT
         orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
       	assertNotNull( orgOwner );
 
+      String returnedUsername = orgOwner.getOwner().getUsername();
+
+      assertEquals(userName, returnedUsername);
+
         String token = mgmtToken( userName, passwd );
     }
 
