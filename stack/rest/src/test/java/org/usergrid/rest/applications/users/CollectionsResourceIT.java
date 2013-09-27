@@ -14,9 +14,11 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.usergrid.utils.MapUtils.hashMap;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author zznate
@@ -152,26 +154,36 @@ public class CollectionsResourceIT extends AbstractRestIT {
    * https://apigeesc.atlassian.net/browse/USERGRID-2318
    */
   @Test
-  public void testNoDuplicateFields() {
+  public void testNoDuplicateFields() throws Exception {
 
-    Map<String, String> payload =
-      hashMap("type", "app_user")
-      .map("name", "fred");
+    UUID entityId = null;
+    {
+      // create an "app_user" object with name fred
+      Map<String, String> payload =
+        hashMap("type", "app_user")
+        .map("name", "fred");
 
-    JsonNode node = resource().path("/test-organization/test-app/app_users")
-      .queryParam("access_token", access_token)
-      .accept(MediaType.APPLICATION_JSON)
-      .type(MediaType.APPLICATION_JSON_TYPE)
-      .post(JsonNode.class, payload);
+      JsonNode node = resource().path("/test-organization/test-app/app_users")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .post(JsonNode.class, payload);
+      
+      String uuidString = node.get("entities").get(0).get("uuid").asText();
+      entityId = UUIDUtils.tryGetUUID(uuidString);
+    }
 
-    // have to look at raw response data, Jackson will remove dups
-    String s = resource().path("/test-organization/test-app/app_users/fred")
-      .queryParam("access_token", access_token)
-      .accept(MediaType.APPLICATION_JSON)
-      .type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    {
+      // check REST API response for duplicate name property
+      // have to look at raw response data, Jackson will remove dups
+      String s = resource().path("/test-organization/test-app/app_users/fred")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 
-    int firstFred = s.indexOf("fred");
-    int secondFred = s.indexOf("fred", firstFred + 4);
-    assertEquals(-1, secondFred);
+      int firstFred = s.indexOf("fred");
+      int secondFred = s.indexOf("fred", firstFred + 4);
+      Assert.assertEquals("Should not be more than one name property", -1, secondFred); 
+    }
   }
 }
