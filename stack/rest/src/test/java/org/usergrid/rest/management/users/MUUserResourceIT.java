@@ -4,27 +4,43 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.Concurrent;
+import org.usergrid.management.ActivationState;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.MockImapClient;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
@@ -37,7 +53,6 @@ import org.usergrid.utils.UUIDUtils;
 /**
  * @author zznate
  */
-@Concurrent()
 public class MUUserResourceIT extends AbstractRestIT
 {
     private Logger LOG = LoggerFactory.getLogger(MUUserResourceIT.class);
@@ -74,7 +89,100 @@ public class MUUserResourceIT extends AbstractRestIT
     }
 
 
-  @Test
+    @Test
+    public void testUnconfirmedAdminLogin() throws Exception
+    {
+        // Setup properties to require confirmation of users
+        // -------------------------------------------
+        setup.getProps().setProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+        setup.getProps().setProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+        setup.getProps().setProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+        setup.getProps().setProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+        setup.getProps().setProperty( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
+
+        // Setup org/app/user variables and create them
+        // -------------------------------------------
+        String orgName = this.getClass().getName();
+        String appName = "testUnconfirmedAdminLogin";
+        String userName = "TestUser";
+        String email = "test-user-46@mockserver.com";
+        String passwd = "testpassword";
+        OrganizationOwnerInfo orgOwner;
+
+        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, userName, appName, email, passwd, false, false );
+      	assertNotNull( orgOwner );
+        String returnedUsername = orgOwner.getOwner().getUsername();
+        assertEquals( userName, returnedUsername );
+
+        // Attempt to authenticate but this should fail
+        // -------------------------------------------
+        JsonNode node;
+        try
+        {
+            node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                .queryParam( "username", userName )
+                .queryParam( "password", passwd )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( JsonNode.class );
+
+            fail( "Unconfirmed users should not be authorized to authenticate." );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            node = e.getResponse().getEntity( JsonNode.class );
+            assertEquals( "invalid_grant", node.get( "error" ).getTextValue() );
+            assertEquals( "User must be confirmed to authenticate", node.get( "error_description" ).getTextValue() );
+            LOG.info( "Unconfirmed user was not authorized to authenticate!" );
+        }
+
+        // Confirm the getting account confirmation email for unconfirmed user
+        // -------------------------------------------
+        List<Message> inbox = Mailbox.get( email );
+        assertFalse( inbox.isEmpty() );
+
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+        client.processMail();
+
+        Message confirmation = inbox.get( 0 );
+        assertEquals( "User Account Confirmation: " + email, confirmation.getSubject() );
+
+        // Extract the token to confirm the user
+        // -------------------------------------------
+        String token = getTokenFromMessage( confirmation );
+        LOG.info( token );
+
+        ActivationState state = setup.getMgmtSvc()
+              .handleConfirmationTokenForAdminUser( orgOwner.getOwner().getUuid(), token );
+        assertEquals( ActivationState.ACTIVATED, state );
+
+        Message activation = inbox.get( 1 );
+        assertEquals( "User Account Activated", activation.getSubject() );
+
+        client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+        client.processMail();
+
+        // Attempt to authenticate again but this time should pass
+        // -------------------------------------------
+
+        node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+            .queryParam( "username", userName )
+            .queryParam( "password", passwd )
+            .accept( MediaType.APPLICATION_JSON )
+            .get( JsonNode.class );
+
+        assertNotNull( node );
+        LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
+    }
+
+
+    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException
+    {
+   		String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
+   		return StringUtils.substringAfterLast( body, "token=" );
+   	}
+
+
+    @Test
     public void updateManagementUser() throws Exception {
         Map<String, String> payload = hashMap("email",
                 "uort-user-1@apigee.com").map("username", "uort-user-1")

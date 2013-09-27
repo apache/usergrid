@@ -36,13 +36,11 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
             DevicesResourceIT.class,
             EventsResourceIT.class,
             GroupResourceIT.class,
-            MUUserResourceIT.class,
             OrganizationResourceIT.class,
             OrganizationsResourceIT.class,
             OwnershipResourceIT.class,
             PagingResourceIT.class,
             PermissionsResourceIT.class,
-            RegistrationIT.class,
             UserResourceIT.class,
             UsersOrganizationsResourceIT.class
     } )

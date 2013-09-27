@@ -102,13 +102,11 @@
                 <exclude>**/DevicesResourceIT.java</exclude>
                 <exclude>**/EventsResourceIT.java</exclude>
                 <exclude>**/GroupResourceIT.java</exclude>
-                <exclude>**/MUUserResourceIT.java</exclude>
                 <exclude>**/OrganizationResourceIT.java</exclude>
                 <exclude>**/OrganizationsResourceIT.java</exclude>
                 <exclude>**/OwnershipResourceIT.java</exclude>
                 <exclude>**/PagingResourceIT.java</exclude>
                 <exclude>**/PermissionsResourceIT.java</exclude>
-                <exclude>**/RegistrationIT.java</exclude>
                 <exclude>**/UserResourceIT.java</exclude>
                 <exclude>**/UsersOrganizationsResourceIT.java</exclude>
               </excludes>
@@ -564,6 +562,14 @@
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-java-client</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-services</artifactId>
+      <version>0.0.28-SNAPSHOT</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
     </dependency>
   </dependencies>
 </project>
