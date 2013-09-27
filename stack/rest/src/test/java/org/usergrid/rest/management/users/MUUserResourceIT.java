@@ -53,7 +53,6 @@ import org.usergrid.utils.UUIDUtils;
 /**
  * @author zznate
  */
-@Concurrent()
 public class MUUserResourceIT extends AbstractRestIT
 {
     private Logger LOG = LoggerFactory.getLogger(MUUserResourceIT.class);
