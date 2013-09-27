@@ -193,30 +193,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
     {
-      // check for duplicate name field in persisted Entity
-      JsonNode node = resource().path("/test-organization/test-app")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-      String uuid = node.get("application").asText();
-      UUID applicationId = UUID.fromString(uuid);
-
-      EntityManagerFactory emf = setup.getEmf();
-      EntityManager em = emf.getEntityManager(applicationId);
-
-      Entity entity = em.get(entityId);
-      Assert.assertNotNull(entity);
-      log.debug("DMJ Properties");
-      for (String key : entity.getProperties().keySet()) {
-        log.debug("   {} = {}", key, entity.getProperties().get(key));
-      }
-      log.debug("DMJ Dynamic Properties");
-      for (String key : entity.getDynamicProperties().keySet()) {
-        log.debug("   {} = {}", key, entity.getDynamicProperties().get(key));
-      }
-    }
-
-    {
       // check REST API response for duplicate name property
       // have to look at raw response data, Jackson will remove dups
       String s = resource().path("/test-organization/test-app/app_users/fred")
