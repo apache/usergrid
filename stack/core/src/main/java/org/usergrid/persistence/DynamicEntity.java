@@ -17,9 +17,8 @@ package org.usergrid.persistence;
 
 import java.util.Map;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.usergrid.persistence.annotations.EntityProperty;
 import org.usergrid.utils.UUIDUtils;
 
@@ -32,6 +31,9 @@ import org.usergrid.utils.UUIDUtils;
  */
 @XmlRootElement
 public class DynamicEntity extends AbstractEntity {
+
+	@EntityProperty(indexed = true, fulltextIndexed = false, required = false, mutable = true, aliasProperty = true, basic = true)
+	protected String name;
 
 	protected String type;
 
@@ -87,4 +89,13 @@ public class DynamicEntity extends AbstractEntity {
 		this.type = type;
 	}
 
+	@Override
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2013 Apigee Corporation
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
 import static org.junit.Assert.*;
@@ -17,6 +32,10 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
+import static org.usergrid.rest.AbstractRestIT.setup;
 import static org.usergrid.utils.MapUtils.hashMap;
 import org.usergrid.utils.UUIDUtils;
 
@@ -171,6 +190,30 @@ public class CollectionsResourceIT extends AbstractRestIT {
       
       String uuidString = node.get("entities").get(0).get("uuid").asText();
       entityId = UUIDUtils.tryGetUUID(uuidString);
+    }
+
+    {
+      // check for duplicate name field in persisted Entity
+      JsonNode node = resource().path("/test-organization/test-app")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+      String uuid = node.get("application").asText();
+      UUID applicationId = UUID.fromString(uuid);
+
+      EntityManagerFactory emf = setup.getEmf();
+      EntityManager em = emf.getEntityManager(applicationId);
+
+      Entity entity = em.get(entityId);
+      Assert.assertNotNull(entity);
+      log.debug("DMJ Properties");
+      for (String key : entity.getProperties().keySet()) {
+        log.debug("   {} = {}", key, entity.getProperties().get(key));
+      }
+      log.debug("DMJ Dynamic Properties");
+      for (String key : entity.getDynamicProperties().keySet()) {
+        log.debug("   {} = {}", key, entity.getDynamicProperties().get(key));
+      }
     }
 
     {
