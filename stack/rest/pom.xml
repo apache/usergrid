@@ -102,13 +102,11 @@
                 <exclude>**/DevicesResourceIT.java</exclude>
                 <exclude>**/EventsResourceIT.java</exclude>
                 <exclude>**/GroupResourceIT.java</exclude>
-                <exclude>**/MUUserResourceIT.java</exclude>
                 <exclude>**/OrganizationResourceIT.java</exclude>
                 <exclude>**/OrganizationsResourceIT.java</exclude>
                 <exclude>**/OwnershipResourceIT.java</exclude>
                 <exclude>**/PagingResourceIT.java</exclude>
                 <exclude>**/PermissionsResourceIT.java</exclude>
-                <exclude>**/RegistrationIT.java</exclude>
                 <exclude>**/UserResourceIT.java</exclude>
                 <exclude>**/UsersOrganizationsResourceIT.java</exclude>
               </excludes>
