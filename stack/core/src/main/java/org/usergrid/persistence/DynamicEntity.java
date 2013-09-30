@@ -90,7 +90,6 @@ public class DynamicEntity extends AbstractEntity {
 	}
 
 	@Override
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	public String getName() {
 		return name;
 	}
