@@ -60,6 +60,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOU
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
 import static org.usergrid.persistence.Schema.*;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
@@ -152,6 +153,7 @@ import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -1141,14 +1143,15 @@ public class ManagementServiceImpl implements ManagementService {
 
     if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
       userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
-      if (!userInfo.isActivated()) {
+      if (!userInfo.isActivated() 
+        && parseBoolean(properties.getProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION))) {
         throw new UnactivatedAdminUserException();
       }
       if (userInfo.isDisabled()) {
         throw new DisabledAdminUserException();
       }
-      if ( !user.confirmed() )
-      {
+      if ( !user.confirmed() 
+        && parseBoolean(properties.getProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS))) {
           throw new UnconfirmedAdminUserException();
       }
       return userInfo;
