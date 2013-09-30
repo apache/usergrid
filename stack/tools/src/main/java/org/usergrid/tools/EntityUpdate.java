@@ -28,7 +28,19 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 /**
  * Tools class which takes a json file as an input.  Each property in the input is then set into each entity that is returned from the query.
  * Used for performing data migrations.  It requires an app name or ID, the collection name, the input update file and the query to find
- * all matches to update
+ * all matches to update. For instance, to set every admin to approved = true and confirmed = true.  You would have this json file.
+ *
+ * <pre>
+    {
+      "activated":true,
+      "confirmed":true
+      }
+  </pre>
+
+ And execute the following options
+
+ EntityUpdate -host 127.0.0.1:9160 -app 00000000-0000-0000-0000-000000000001 -col users -query "select * where activated = false or confirmed = false" -update update.json
+
  *
  * @author tnine
  */
