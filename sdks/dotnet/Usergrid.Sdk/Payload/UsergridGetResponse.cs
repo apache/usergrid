@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Usergrid.Sdk.Model
+namespace Usergrid.Sdk.Payload
 {
     public class UsergridGetResponse<T>
     {
         [JsonProperty(PropertyName = "cursor")] 
-        public string Cursor;
+		internal string Cursor;
         [JsonProperty(PropertyName = "entities")] 
-        public IList<T> Entities;
+		internal IList<T> Entities;
     }
 }

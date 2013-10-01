@@ -1,19 +1,19 @@
 ﻿using Newtonsoft.Json;
 
-namespace Usergrid.Sdk.Model
+namespace Usergrid.Sdk.Payload
 {
-    public class ClientIdLoginPayload
+	internal class ClientIdLoginPayload
     {
         [JsonProperty(PropertyName = "grant_type")]
-        public string GrantType
+		internal string GrantType
         {
             get { return "client_credentials"; }
         }
 
         [JsonProperty(PropertyName = "client_id")]
-        public string ClientId { get; set; }
+		internal string ClientId { get; set; }
 
         [JsonProperty(PropertyName = "client_secret")]
-        public string ClientSecret { get; set; }
+		internal string ClientSecret { get; set; }
     }
 }

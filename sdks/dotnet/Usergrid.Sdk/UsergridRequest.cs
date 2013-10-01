@@ -1,51 +1,76 @@
-﻿using RestSharp;
+﻿using System.Collections.Generic;
+using RestSharp;
 
 namespace Usergrid.Sdk
 {
-    public class UsergridRequest : IUsergridRequest
+    internal class UsergridRequest : IUsergridRequest
     {
-        private readonly string _organization;
         private readonly string _application;
-        private readonly RestClient _restClient;
+        private readonly string _organization;
+        private readonly IRestClient _restClient;
 
-        public UsergridRequest(string baseUri, string organization, string application)
+        public UsergridRequest(string baseUri, string organization, string application, IRestClient restClient = null)
         {
             _organization = organization;
             _application = application;
-            _restClient = new RestClient(baseUri);
+            _restClient = restClient ?? new RestClient(baseUri);
         }
 
-        public IRestResponse<T> Execute<T>(string resource, Method method, object body = null, string accessToken=null) where T : new()
+        public string AccessToken { get; set; }
+
+        public IRestResponse<T> ExecuteJsonRequest<T>(string resource, Method method, object body = null) where T : new()
         {
-            var request = GetRequest(resource, method, body, accessToken);
+            RestRequest request = GetRequest(resource, method);
+            AddBodyAsJson(body, request);
             IRestResponse<T> response = _restClient.Execute<T>(request);
-            return    response;
+            return response;
         }
 
-        public IRestResponse Execute(string resource, Method method, object body = null, string accessToken = null) 
+        public IRestResponse ExecuteJsonRequest(string resource, Method method, object body = null)
         {
-            var request = GetRequest(resource, method, body, accessToken);
+            RestRequest request = GetRequest(resource, method);
+            AddBodyAsJson(body, request);
             IRestResponse response = _restClient.Execute(request);
-            return    response;
+            return response;
         }
 
-        private RestRequest GetRequest(string resource, Method method, object body, string accessToken)
+        public IRestResponse ExecuteMultipartFormDataRequest(string resource, Method method, IDictionary<string, object> formParameters, IDictionary<string, string> fileParameters)
+        {
+            RestRequest request = GetRequest(resource, method);
+            foreach (var parameter in formParameters)
+            {
+                request.AddParameter(parameter.Key, parameter.Value, ParameterType.GetOrPost);
+            }
+            foreach (var parameter in fileParameters)
+            {
+                request.AddFile(parameter.Key, parameter.Value);
+            }
+
+            IRestResponse response = _restClient.Execute(request);
+            return response;
+        }
+
+        private RestRequest GetRequest(string resource, Method method)
         {
             var request = new RestRequest(string.Format("{0}/{1}{2}", _organization, _application, resource), method);
-            request.JsonSerializer = new RestSharpJsonDeserializer();
-            AddAuthorizationHeader(accessToken, request);
-			if (body != null)
-			{
-				request.RequestFormat = DataFormat.Json;
-            	request.AddBody(body);
-			}
+            AddAuthorizationHeader(request);
             return request;
         }
 
-        private void AddAuthorizationHeader(string accessToken, RestRequest request)
+        private static void AddBodyAsJson(object body, RestRequest request)
         {
-            if (accessToken != null)
-                request.AddHeader("Authorization", string.Format("Bearer {0}", accessToken));
+            if (body != null)
+            {
+                request.JsonSerializer = new RestSharpJsonSerializer();
+                request.RequestFormat = DataFormat.Json;
+                request.AddBody(body);
+            }
+        }
+
+        private void AddAuthorizationHeader(RestRequest request)
+        {
+            if (AccessToken != null)
+                request.AddHeader("Authorization", string.Format("Bearer {0}", AccessToken));
         }
     }
 }

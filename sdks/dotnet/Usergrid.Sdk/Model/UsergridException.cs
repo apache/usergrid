@@ -1,7 +1,7 @@
 using System;
 using Usergrid.Sdk.Model;
 
-namespace Usergrid.Sdk
+namespace Usergrid.Sdk.Model
 {
     public class UsergridException : Exception
     {

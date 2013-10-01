@@ -15,5 +15,10 @@
     <copyright />
     <language>en-US</language>
     <tags>REST HTTP API JSON XML</tags>
+    <references>
+      <reference file="RestSharp.dll" />
+      <reference file="RestSharp.WindowsPhone.dll" />
+      <reference file="RestSharp.Silverlight.dll" />
+    </references>
   </metadata>
 </package>

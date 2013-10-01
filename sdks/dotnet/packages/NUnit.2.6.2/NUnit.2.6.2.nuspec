@@ -24,5 +24,8 @@ The nunit.mocks assembly is now provided by the NUnit.Mocks package. The pnunit.
     <copyright />
     <language>en-US</language>
     <tags>test testing tdd framework fluent assert theory plugin addin</tags>
+    <references>
+      <reference file="nunit.framework.dll" />
+    </references>
   </metadata>
 </package>

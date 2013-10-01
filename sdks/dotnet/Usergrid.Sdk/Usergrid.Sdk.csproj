@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{CBFABD92-5DDC-4857-8742-C5404B679A3F}</ProjectGuid>
+    <ProjectGuid>{437D108F-528C-4B2A-B399-06CF02DEB08B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Usergrid.Sdk</RootNamespace>
@@ -31,12 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="RestSharp">
-      <HintPath>..\packages\RestSharp.104.1\lib\net4\RestSharp.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,20 +38,59 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="RestSharp">
+      <HintPath>..\packages\RestSharp.104.1\lib\net4\RestSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthType.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="IClient.cs" />
     <Compile Include="IUsergridRequest.cs" />
-    <Compile Include="Model\ClientIdLoginPayload.cs" />
-    <Compile Include="Model\LoginResponse.cs" />
+    <Compile Include="Manager\INotificationsManager.cs" />
+    <Compile Include="Manager\NotificationsManager.cs" />
+    <Compile Include="Model\Connection.cs" />
+    <Compile Include="Model\UsergridEntity.cs" />
     <Compile Include="Model\UsergridError.cs" />
-    <Compile Include="Model\UsergridGetResponse.cs" />
-    <Compile Include="Model\UserLoginPayload.cs" />
+    <Compile Include="Model\UsergridNotifier.cs" />
+    <Compile Include="Payload\AndroidNotifierPayload.cs" />
+    <Compile Include="Payload\CancelNotificationPayload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RestSharpJsonDeserializer.cs" />
-    <Compile Include="UsergridException.cs" />
+    <Compile Include="RestSharpJsonSerializer.cs" />
     <Compile Include="UsergridRequest.cs" />
+    <Compile Include="Model\UsergridUser.cs" />
+    <Compile Include="Model\UsergridGroup.cs" />
+    <Compile Include="Payload\UserLoginPayload.cs" />
+    <Compile Include="Payload\ChangePasswordPayload.cs" />
+    <Compile Include="Payload\ClientIdLoginPayload.cs" />
+    <Compile Include="Payload\LoginResponse.cs" />
+    <Compile Include="Payload\UsergridGetResponse.cs" />
+    <Compile Include="Manager\EntityManager.cs" />
+    <Compile Include="Manager\IAuthenticationManager.cs" />
+    <Compile Include="Manager\IConnectionManager.cs" />
+    <Compile Include="Manager\IEntityManager.cs" />
+    <Compile Include="Manager\ManagerBase.cs" />
+    <Compile Include="Model\UsergridException.cs" />
+    <Compile Include="Model\AuthType.cs" />
+    <Compile Include="Manager\AuthenticationManager.cs" />
+    <Compile Include="Manager\ConnectionManager.cs" />
+    <Compile Include="Model\UsergridCollection.cs" />
+    <Compile Include="Model\UsergridEntitySerializer.cs" />
+    <Compile Include="Model\UsergridActivity.cs" />
+    <Compile Include="Model\UsergridActor.cs" />
+    <Compile Include="Model\UsergridImage.cs" />
+    <Compile Include="Model\UnixDateTimeHelper.cs" />
+    <Compile Include="Model\INotificationRecipients.cs" />
+    <Compile Include="Model\NotificationRecipients.cs" />
+    <Compile Include="Model\Notification.cs" />
+    <Compile Include="Model\AndroidNotification.cs" />
+    <Compile Include="Model\AppleNotification.cs" />
+    <Compile Include="Payload\NotificationPayload.cs" />
+    <Compile Include="Model\NotificationSchedulerSettings.cs" />
+    <Compile Include="Model\UsergridDevice.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -70,4 +103,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup />
 </Project>
