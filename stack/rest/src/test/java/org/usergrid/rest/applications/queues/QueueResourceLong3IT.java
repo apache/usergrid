@@ -99,8 +99,6 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
         testMessages(queue, transHandler, new NoLastCommand());
 
-        long start = System.currentTimeMillis();
-
         transHandler.assertResults();
 
         List<String> originalMessageIds = transHandler.getMessageIds();
@@ -115,7 +113,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
         incrementHandler.assertResults();
 
         // now sleep until our timeout expires
-        Thread.sleep(timeout - (System.currentTimeMillis() - start));
+        Thread.sleep(timeout);
 
         // renew the transactions, then read. We shouldn't get any messages.
         List<String> returned = transHandler.getMessageIds();
@@ -143,18 +141,14 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
         incrementHandler.assertResults();
 
-        start = System.currentTimeMillis();
-
         // sleep again before testing the transactions time out (since we're not
         // renewing them)
-        Thread.sleep(timeout - (System.currentTimeMillis() - start));
+        Thread.sleep(timeout);
 
         // now re-read our messages, we should get them all again
         transHandler = new TransactionResponseHandler(count);
 
         testMessages(queue, transHandler, new NoLastCommand());
-
-        start = System.currentTimeMillis();
 
         transHandler.assertResults();
 
@@ -179,7 +173,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
         // now sleep again we shouldn't have any messages since we acked all the
         // transactions
-        Thread.sleep(timeout - (System.currentTimeMillis() - start));
+        Thread.sleep(timeout);
 
         incrementHandler = new IncrementHandler(0);
 
