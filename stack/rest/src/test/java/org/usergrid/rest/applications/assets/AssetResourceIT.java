@@ -166,7 +166,7 @@ public class AssetResourceIT extends AbstractRestIT {
   public void multipartPutFormOnDynamicEntity() throws Exception {
     UserRepo.INSTANCE.load(resource(), access_token);
 
-    Map<String, String> payload = hashMap("name", "assetname2");
+    Map<String, String> payload = hashMap("foo", "bar");
 
     JsonNode node = resource().path("/test-organization/test-app/foos")
         .queryParam("access_token", access_token)
@@ -182,7 +182,7 @@ public class AssetResourceIT extends AbstractRestIT {
     // set file & assetname
     byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
     FormDataMultiPart form = new FormDataMultiPart()
-        .field("name", "assetname3")
+        .field("foo", "bar2")
         .field("file", data, MediaType.MULTIPART_FORM_DATA_TYPE);
 
     node = resource().path("/test-organization/test-app/foos/" + uuid)
@@ -202,8 +202,8 @@ public class AssetResourceIT extends AbstractRestIT {
     assertEquals(7979, node.findValue("content-length").getIntValue());
     idNode = node.get("entities").get(0).get("uuid");
     assertEquals(uuid, idNode.getTextValue());
-    JsonNode nameNode = node.get("entities").get(0).get("name");
-    assertEquals("assetname3", nameNode.getTextValue());
+    JsonNode nameNode = node.get("entities").get(0).get("foo");
+    assertEquals("bar2", nameNode.getTextValue());
 
     // get data
     InputStream is = resource().path("/test-organization/test-app/foos/" + uuid)
