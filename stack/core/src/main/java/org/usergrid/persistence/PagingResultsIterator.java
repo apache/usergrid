@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /** iterates over a Results object, crossing page boundaries automatically */
-public class PagingResultsIterator implements Iterator {
+public class PagingResultsIterator implements Iterator, Iterable {
 
   private Results results;
   private Iterator currentPageIterator;
@@ -82,5 +82,10 @@ public class PagingResultsIterator implements Iterator {
       throw new RuntimeException(e);
     }
     return initCurrentPageIterator();
+  }
+
+  @Override
+  public Iterator iterator() {
+    return this;
   }
 }
