@@ -1,3 +1,16 @@
+/*******************************************************************************
+ * Copyright 2012 Apigee Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ ******************************************************************************/
 package org.usergrid.rest.management.users;
 
 import static org.junit.Assert.*;
@@ -9,7 +22,6 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_NOTIFY_ADM
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.io.IOException;
@@ -23,7 +35,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
@@ -33,20 +44,16 @@ import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.ActivationState;
-import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.MockImapClient;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
-import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.utils.UUIDUtils;
 
 
