@@ -1,75 +1,77 @@
 package org.usergrid.services.assets.data;
 
-import java.io.File;
-import java.util.Collection;
+import java.io.*;
+import java.util.Collections;
+import java.util.Map;
 
-import javax.ws.rs.core.MediaType;
-
+import org.apache.tika.detect.DefaultDetector;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.entities.Asset;
+import org.usergrid.persistence.Entity;
 
-import eu.medsea.mimeutil.MimeException;
-import eu.medsea.mimeutil.MimeType;
-import eu.medsea.mimeutil.MimeUtil2;
-
-/**
- * Detect the mime type of an Asset
- * @author zznate
- */
+/** Detect the mime type of an Asset */
 public final class AssetMimeHandler {
-  private static final Logger logger = LoggerFactory.getLogger(AssetMimeHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AssetMimeHandler.class);
 
-  private final MimeUtil2 mimeUtil;
+  private Detector detector;
 
   AssetMimeHandler() {
-    mimeUtil = new MimeUtil2();
-    mimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector");
+    detector = new DefaultDetector();
   }
 
   private static AssetMimeHandler INSTANCE;
 
   public static AssetMimeHandler get() {
-    if ( INSTANCE == null ) {
+    if (INSTANCE == null) {
       INSTANCE = new AssetMimeHandler();
     }
     return INSTANCE;
   }
 
   /**
-   * Get the Mime type of an Asset based on it's type. If the Asset already has
-   * the "content-type" property set, we return that. Otherwise the mimeutil library
+   * Get the Mime type of an Asset based on its type. If the Asset already has
+   * the "content-type" property set, we return that. Otherwise the Apache Tika library
    * is used to do file type detection.
    *
-   * @param asset
-   * @param type
-   * @param <T>
    * @return A string representation of the content type suitable for use in an
-   * HTTP header. Eg. "image/jpeg" for a jpeg image.
+   *         HTTP header. Eg. "image/jpeg" for a jpeg image.
    */
-  public <T> String getMimeType(Asset asset, T type) {
-    String contentType = MediaType.APPLICATION_OCTET_STREAM;
-    if ( asset.getProperty(AssetUtils.CONTENT_TYPE) != null ) {
-      contentType = asset.getProperty(AssetUtils.CONTENT_TYPE).toString();
-    } else {
-      Collection col;
-      if ( type instanceof byte[] ) {
-        col = mimeUtil.getMimeTypes((byte[])type);
-      } else if ( type instanceof File) {
-        col = mimeUtil.getMimeTypes((File)type);
-      } else {
-        return contentType;
-      }
-      if ( !col.isEmpty() ) {
-        try {
-          MimeType mime = ((MimeType)col.iterator().next());
-          contentType = mime.toString();
-          asset.setProperty(AssetUtils.CONTENT_TYPE,contentType);
-        } catch(MimeException me) {
-          logger.error("could not sniff mime type for asset {}", asset.getUuid());
-        }
-      }
+  public <T> String getMimeType(Entity entity, T type) {
+
+    Map<String, Object> fileMetadata = AssetUtils.getFileMetadata(entity);
+    if (fileMetadata.get(AssetUtils.CONTENT_TYPE) != null) {
+      return (String)fileMetadata.get(AssetUtils.CONTENT_TYPE);
     }
-    return contentType;
+
+    MediaType mediaType = MediaType.OCTET_STREAM;
+    try {
+      if (type instanceof byte[]) {
+
+        ByteArrayInputStream bais = new ByteArrayInputStream((byte[])type);
+        mediaType = detector.detect(bais, null);
+
+      } else if (type instanceof File) {
+
+        InputStream fis = new BufferedInputStream(new FileInputStream((File)type));
+        try {
+          mediaType = detector.detect(fis, new Metadata());
+        } finally {
+          fis.close();
+        }
+
+      } else {
+        return mediaType.toString();
+      }
+
+      fileMetadata.put(AssetUtils.CONTENT_TYPE, mediaType.toString());
+    }
+    catch (IOException e) {
+      LOG.error("error detecting mime type", e);
+    }
+
+    return mediaType.toString();
   }
 }

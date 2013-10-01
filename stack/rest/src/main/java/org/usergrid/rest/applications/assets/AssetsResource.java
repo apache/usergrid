@@ -133,7 +133,9 @@ public class AssetsResource extends ServiceResource {
     EntityManager em = emf.getEntityManager(getApplicationId());
 
     Asset asset = em.get(assetId, Asset.class);
+    Map<String, Object> fileMetadata = AssetUtils.getFileMetadata(asset);
 
+    // todo: use fileMetadata
     // return a 302 if not modified
     Date moded = AssetUtils.fromIfModifiedSince(modifiedSince);
     if ( moded != null ) {
@@ -155,10 +157,10 @@ public class AssetsResource extends ServiceResource {
 
     logger.info("AssetResource.findAsset read inputStream, composing response");
     Response.ResponseBuilder responseBuilder = Response.ok(is)
-            .type(asset.getProperty("content-type").toString())
+            .type(fileMetadata.get("content-type").toString())
             .lastModified(new Date(asset.getModified()));
-    if ( asset.getProperty(AssetUtils.E_TAG) != null ) {
-      responseBuilder.tag((String)asset.getProperty(AssetUtils.E_TAG));
+    if (fileMetadata.get(AssetUtils.E_TAG) != null) {
+      responseBuilder.tag((String)fileMetadata.get(AssetUtils.E_TAG));
     }
     if ( StringUtils.isNotBlank(range)) {
       logger.info("Range header was not blank, sending back Content-Range");

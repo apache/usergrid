@@ -365,11 +365,6 @@
       <artifactId>jersey-json</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>eu.medsea.mimeutil</groupId>
-      <artifactId>mime-util</artifactId>
-    </dependency>
-
     <!-- Codehaus, JClouds, Spring and Other Org Dependencies -->
 
     <dependency>
@@ -388,32 +383,32 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds</groupId>
+      <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-blobstore</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds</groupId>
+      <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds</groupId>
+      <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-allblobstore</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-netty</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-apachehc</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-log4j</artifactId>
       <exclusions>
         <exclusion>
@@ -424,7 +419,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-slf4j</artifactId>
     </dependency>
 
@@ -438,6 +433,10 @@
          <artifactId>slf4j-api</artifactId>
      </dependency>
 
+     <dependency>
+         <groupId>org.apache.tika</groupId>
+         <artifactId>tika-core</artifactId>
+     </dependency>
 
 
       <!-- Testing and Logging Dependencies -->

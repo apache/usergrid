@@ -15,56 +15,44 @@
  ******************************************************************************/
 package org.usergrid.rest.applications;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.usergrid.services.ServiceParameter.addParameter;
-import static org.usergrid.services.ServicePayload.batchPayload;
-import static org.usergrid.services.ServicePayload.idListPayload;
-import static org.usergrid.services.ServicePayload.payload;
-import static org.usergrid.utils.JsonUtils.mapToJsonString;
-import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriInfo;
-
+import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.core.provider.EntityHolder;
+import com.sun.jersey.multipart.BodyPart;
+import com.sun.jersey.multipart.BodyPartEntity;
+import com.sun.jersey.multipart.FormDataBodyPart;
+import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.entities.Asset;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.applications.assets.AssetsResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
-import org.usergrid.services.ServiceAction;
-import org.usergrid.services.ServiceManager;
-import org.usergrid.services.ServiceParameter;
-import org.usergrid.services.ServicePayload;
-import org.usergrid.services.ServiceRequest;
-import org.usergrid.services.ServiceResults;
+import org.usergrid.services.*;
+import org.usergrid.services.assets.data.AssetUtils;
+import org.usergrid.services.assets.data.BinaryStore;
 import org.usergrid.utils.InflectionUtils;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.core.provider.EntityHolder;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.io.InputStream;
+import java.util.*;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.services.ServiceParameter.addParameter;
+import static org.usergrid.services.ServicePayload.*;
+import static org.usergrid.utils.JsonUtils.mapToJsonString;
+import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
 
 @Component
 @Scope("prototype")
@@ -73,8 +61,11 @@ import com.sun.jersey.core.provider.EntityHolder;
     "application/ecmascript", "text/jscript" })
 public class ServiceResource extends AbstractContextResource {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(ServiceResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceResource.class);
+    private static final String FILE_FIELD_NAME = "file";
+
+    @Autowired
+    private BinaryStore binaryStore;
 
     protected ServiceManager services;
 
@@ -152,11 +143,24 @@ public class ServiceResource extends AbstractContextResource {
 
     }
 
+    @Path("file")
+    public AbstractContextResource getFileResource(@Context UriInfo ui) throws Exception {
+      LOG.debug("in assets in ServiceResource");
+      addParameter(getServiceParameters(), "assets");
+
+      PathSegment ps = getFirstPathSegment("assets");
+      if (ps != null) {
+        addMatrixParams(getServiceParameters(), ui, ps);
+      }
+
+      return getSubResource(AssetsResource.class);
+    }
+
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public AbstractContextResource addIdParameter(@Context UriInfo ui,
             @PathParam("entityId") PathSegment entityId) throws Exception {
 
-        logger.debug("ServiceResource.addIdParameter");
+        LOG.debug("ServiceResource.addIdParameter");
 
         UUID itemId = UUID.fromString(entityId.getPath());
 
@@ -171,9 +175,9 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addNameParameter(@Context UriInfo ui,
             @PathParam("itemName") PathSegment itemName) throws Exception {
 
-        logger.debug("ServiceResource.addNameParameter");
+        LOG.debug("ServiceResource.addNameParameter");
 
-        logger.debug("Current segment is {}",  itemName.getPath());
+        LOG.debug("Current segment is {}", itemName.getPath());
 
         if (itemName.getPath().startsWith("{")) {
             Query query = Query.fromJsonString(itemName.getPath());
@@ -193,10 +197,9 @@ public class ServiceResource extends AbstractContextResource {
             ApiResponse response, ServiceAction action, ServicePayload payload)
                     throws Exception {
 
-        logger.debug("ServiceResource.executeServiceRequest");
+        LOG.debug("ServiceResource.executeServiceRequest");
 
-        boolean tree = "true".equalsIgnoreCase(ui.getQueryParameters()
-                .getFirst("tree"));
+        boolean tree = "true".equalsIgnoreCase(ui.getQueryParameters().getFirst("tree"));
         boolean collectionGet = false;
         if(action==ServiceAction.GET) {
         	collectionGet = (getServiceParameters().size()==1 
@@ -231,8 +234,7 @@ public class ServiceResource extends AbstractContextResource {
 
         }
 
-        httpServletRequest.setAttribute("applicationId",
-                services.getApplicationId());
+        httpServletRequest.setAttribute("applicationId", services.getApplicationId());
 
         return results;
     }
@@ -243,7 +245,7 @@ public class ServiceResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
 
-        logger.debug("ServiceResource.executeGet");
+        LOG.debug("ServiceResource.executeGet");
         
         ApiResponse response = createApiResponse();
 
@@ -287,7 +289,7 @@ public class ServiceResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
 
-        logger.debug("ServiceResource.executePost");
+        LOG.debug("ServiceResource.executePost");
 
         Object json = body.getEntity();
 
@@ -313,8 +315,7 @@ public class ServiceResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
 
-        logger.debug("ServiceResource.executePut");
-
+        LOG.debug("ServiceResource.executePut");
 
         ApiResponse response = createApiResponse();
         response.setAction("put");
@@ -336,7 +337,7 @@ public class ServiceResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
 
-        logger.debug("ServiceResource.executeDelete");
+        LOG.debug("ServiceResource.executeDelete");
 
         ApiResponse response = createApiResponse();
         response.setAction("delete");
@@ -423,5 +424,184 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+  /***************** the following is file attachment (Asset) support **********************/
 
+  @POST
+  @RequireApplicationAccess
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  public JSONWithPadding executeMultiPartPost(@Context UriInfo ui,
+                                              @QueryParam("callback") @DefaultValue("callback") String callback,
+                                              FormDataMultiPart multiPart) throws Exception {
+
+    LOG.debug("ServiceResource.executeMultiPartPost");
+    return executeMultiPart(ui, callback, multiPart, ServiceAction.POST);
+  }
+
+  @PUT
+  @RequireApplicationAccess
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  public JSONWithPadding executeMultiPartPut(@Context UriInfo ui,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback,
+                                             FormDataMultiPart multiPart) throws Exception {
+
+    LOG.debug("ServiceResource.executeMultiPartPut");
+    return executeMultiPart(ui, callback, multiPart, ServiceAction.PUT);
+  }
+
+  private JSONWithPadding executeMultiPart(UriInfo ui,
+                                           String callback,
+                                           FormDataMultiPart multiPart,
+                                           ServiceAction serviceAction) throws Exception {
+
+    // collect form data values
+    List<BodyPart> bodyParts = multiPart.getBodyParts();
+    HashMap<String,Object> data = new HashMap<String,Object>();
+    for (BodyPart bp : bodyParts) {
+      FormDataBodyPart bodyPart = (FormDataBodyPart)bp;
+      if (bodyPart.getMediaType().equals(MediaType.TEXT_PLAIN_TYPE)) {
+        data.put(bodyPart.getName(), bodyPart.getValue());
+      } else {
+        LOG.info("skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType());
+      }
+    }
+
+    FormDataBodyPart fileBodyPart = multiPart.getField(FILE_FIELD_NAME);
+
+    if (data.isEmpty() && fileBodyPart != null) { // ensure entity is created even if there are no properties
+      data.put(AssetUtils.FILE_METADATA, new HashMap());
+    }
+
+    // process entity
+    ApiResponse response = createApiResponse();
+    response.setAction(serviceAction.name().toLowerCase());
+    response.setApplication(services.getApplication());
+    response.setParams(ui.getQueryParameters());
+    ServicePayload payload = getPayload(data);
+    ServiceResults serviceResults = executeServiceRequest(ui, response, serviceAction, payload);
+
+    // process file part
+    if (fileBodyPart != null) {
+      InputStream fileInput = ((BodyPartEntity)fileBodyPart.getEntity()).getInputStream();
+      if (fileInput != null) {
+        Entity entity = serviceResults.getEntity();
+        EntityManager em = emf.getEntityManager(getApplicationId());
+        binaryStore.write(getApplicationId(), entity, fileInput);
+        em.update(entity);
+        serviceResults.setEntity(entity);
+      }
+    }
+
+    return new JSONWithPadding(response, callback);
+  }
+
+  @PUT
+  @RequireApplicationAccess
+  @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+  public Response uploadDataStreamPut(@Context UriInfo ui,
+                                      InputStream uploadedInputStream) throws Exception {
+    return uploadDataStream(ui, uploadedInputStream);
+  }
+
+  @POST
+  @RequireApplicationAccess
+  @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+  public Response uploadDataStream(@Context UriInfo ui,
+                                   InputStream uploadedInputStream) throws Exception {
+
+    ApiResponse response = createApiResponse();
+    response.setAction("get");
+    response.setApplication(services.getApplication());
+    response.setParams(ui.getQueryParameters());
+    ServiceResults serviceResults = executeServiceRequest(ui, response, ServiceAction.GET, null);
+
+    Entity entity = serviceResults.getEntity();
+    binaryStore.write(getApplicationId(), entity, uploadedInputStream);
+
+    EntityManager em = emf.getEntityManager(getApplicationId());
+    em.update(entity);
+    return Response.status(200).build();
+  }
+
+  @GET
+  @RequireApplicationAccess
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  public Response executeStreamGet(@Context UriInfo ui,
+                                   @PathParam("entityId") PathSegment entityId,
+                                   @HeaderParam("range") String rangeHeader,
+                                   @HeaderParam("if-modified-since") String modifiedSince) throws Exception {
+
+    LOG.debug("ServiceResource.executeStreamGet");
+
+    ApiResponse response = createApiResponse();
+    response.setAction("get");
+    response.setApplication(services.getApplication());
+    response.setParams(ui.getQueryParameters());
+    ServiceResults serviceResults = executeServiceRequest(ui, response, ServiceAction.GET, null);
+    Entity entity = serviceResults.getEntity();
+
+    LOG.info("In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
+        new Object[]{entityId, rangeHeader, modifiedSince});
+
+    Map<String, Object> fileMetadata = AssetUtils.getFileMetadata(entity);
+
+    // todo: make this the file-metadata modified
+    // return a 302 if not modified
+    Date modified = AssetUtils.fromIfModifiedSince(modifiedSince);
+    if (modified != null) {
+      if (entity.getModified() - modified.getTime() < 0) {
+        return Response.status(Response.Status.NOT_MODIFIED).build();
+      }
+    }
+
+    boolean range = StringUtils.isNotBlank(rangeHeader);
+    long start = 0, end = 0, contentLength = 0;
+    InputStream inputStream;
+
+    if (range) { // honor range request, calculate start & end
+
+      String rangeValue = rangeHeader.trim().substring("bytes=".length());
+      contentLength = (Long)fileMetadata.get(AssetUtils.CONTENT_LENGTH);
+      end = contentLength - 1;
+      if (rangeValue.startsWith("-")) {
+        start = contentLength - 1 - Long.parseLong(rangeValue.substring("-".length()));
+      } else {
+        String[] startEnd = rangeValue.split("-");
+        long parsedStart = Long.parseLong(startEnd[0]);
+        if (parsedStart > start && parsedStart < end) {
+          start = parsedStart;
+        }
+        if (startEnd.length > 1) {
+          long parsedEnd = Long.parseLong(startEnd[1]);
+          if (parsedEnd > start && parsedEnd < end) {
+            end = parsedEnd;
+          }
+        }
+      }
+
+      inputStream = binaryStore.read(getApplicationId(), entity, start, end - start);
+
+    } else { // no range
+
+      inputStream = binaryStore.read(getApplicationId(), entity);
+    }
+
+    // return 404 if not found
+    if (inputStream == null) {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    Response.ResponseBuilder responseBuilder = Response.ok(inputStream)
+        .type((String)fileMetadata.get(AssetUtils.CONTENT_TYPE))
+        .lastModified(new Date(entity.getModified()));
+
+    if (fileMetadata.get(AssetUtils.E_TAG) != null) {
+      responseBuilder.tag((String)fileMetadata.get(AssetUtils.E_TAG));
+    }
+
+    if (range) {
+      responseBuilder.header("Content-Range", "bytes " + start + "-" + end + "/" + contentLength);
+    }
+
+    return responseBuilder.build();
+  }
 }
