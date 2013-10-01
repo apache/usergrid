@@ -6,7 +6,7 @@ Directions for use
 2. In the organization that is created for you, create a user and give that user administrative privileges
 3. Create an app in the organization
 4. In the app, create as many test users as you like
-5. Clone the following branch for the Usergrid sdk: https://github.com/apigee/usergrid-.net-sdk/tree/spike-thick-client and build it
+5. Clone the following branch for the Usergrid sdk: https://github.com/apigee/usergrid-.net-sdk and build it
 6. Clone this repository.  Open the Messagee solution file in the top level folder.  Add references to the .dll files located in the UsergridSdk\bin\debug folder to the project
 7. Build Messagee
 8. Run the solution.  On the main screen choose the Settings menu item and input the admin user credentials, the org name and the application name
