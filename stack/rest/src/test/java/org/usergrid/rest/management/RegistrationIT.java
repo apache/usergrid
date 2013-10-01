@@ -1,5 +1,4 @@
-/**
- * *****************************************************************************
+/*******************************************************************************
  * Copyright 2012 Apigee Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -11,8 +10,7 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *****************************************************************************
- */
+ ******************************************************************************/
 package org.usergrid.rest.management;
 
 import static org.junit.Assert.assertEquals;
@@ -45,7 +43,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
@@ -62,7 +59,6 @@ public class RegistrationIT extends AbstractRestIT {
 
   private static final Logger logger = LoggerFactory.getLogger(RegistrationIT.class);
 
-  @Ignore
   @Test
   public void postCreateOrgAndAdmin() throws Exception {
 
@@ -123,17 +119,15 @@ public class RegistrationIT extends AbstractRestIT {
       assertEquals("user not activated", body.findPath("error_description").getTextValue());
     }
 
-        // assertEquals(ActivationState.ACTIVATED,
+    // assertEquals(ActivationState.ACTIVATED,
     // svcSetup.getMgmtSvc().handleConfirmationTokenForAdminUser(
     // owner_uuid, token));
-    String response = resource().path(
-            "/management/users/" + owner_uuid + "/confirm").get(
-                    String.class);
+    String response = resource()
+      .path("/management/users/" + owner_uuid + "/confirm").get(String.class);
     logger.info(response);
 
     Message account_activation_message = inbox.get(1);
-    assertEquals("User Account Activated",
-            account_activation_message.getSubject());
+    assertEquals("User Account Activated", account_activation_message.getSubject());
 
   }
 
