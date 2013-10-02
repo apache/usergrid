@@ -1,5 +1,5 @@
 desc 'non-idempotent create or update (post is usually create)'
-arg_name 'url [data]'
+arg_name '[path] [data]'
 
 command :post,:create do |c|
   c.flag [:d,:data], :desc => 'does nothing: for ease of conversion from curl'

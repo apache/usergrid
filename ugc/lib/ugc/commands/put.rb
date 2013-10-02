@@ -1,5 +1,5 @@
 desc 'idempotent create or update (put is usually an update)'
-arg_name 'url [data]'
+arg_name '[path] [data]'
 
 command :put,:update do |c|
   c.flag [:d,:data], :desc => 'does nothing: for ease of conversion from curl'

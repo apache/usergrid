@@ -21,7 +21,7 @@ ugc enables convenient terminal access to Apigee's App Services (aka Usergrid).
 
     $ gem install ugc
     
-Note: Requires Ruby 1.9.3+ or Ruby 2.0. If you have issues, check your version:
+Note: Requires Ruby 1.9.3+ or Ruby 2.0+. If you have issues, check your version:
 
 	$ ruby -v
 	
@@ -177,6 +177,14 @@ Note: with ugc, you can also use extended sql syntax...
 If you specify column names in your query, you will be unable to reference the returned rows by @1 reference in later commands. (The current Usergrid implementation doesn't return any metadata for the entries.) In addition, for your safety the history will be cleared so that you don't inadvertently reference entities from a previous list.
 
 ## Release notes
+
+### 0.9.8
+* New features
+  1. logout (remove access_token)
+  2. no longer force log in - as it's not always necessary
+  3. get (ls) command now defaults to list collections when no arguments
+* Bug fixes
+  1. updated to work with latest gli (> 2.6)
 
 ### 0.9.7
 * Bug Fixes

@@ -99,7 +99,11 @@ module Ugc
     private
 
     def set_profile(prop, value)
-      profile[prop] = value
+      if value
+        profile[prop] = value
+      else
+        profile.delete prop
+      end
       save_profile
     end
 

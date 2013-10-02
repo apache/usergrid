@@ -30,5 +30,23 @@ module Ugc
       end
     end
 
+    def list_collections
+      app = $application.entity
+      collections = app['metadata']['collections']
+      table border: $settings.table_border? do
+        row header: true do
+          collections.first[1].each_key do |k|
+            column k
+          end
+        end
+        collections.each_value do |coll|
+          row do
+            coll.each_value do |v|
+              column v
+            end
+          end
+        end
+      end
+    end
   end
 end

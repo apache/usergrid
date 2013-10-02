@@ -2,44 +2,24 @@ desc 'retrieve and display a collection or entity'
 
 command :get,:show,:ls,:list do |c|
 
-  c.desc 'url'
-  c.command [:url] do |c2|
+  c.desc '[path]'
+  c.command [:path] do |c2|
 
     c2.action do |global_options,options,args|
-      help_now! unless args[0]
 
-      resource = $context[args[0]]
-      if $settings.show_curl?
-        puts_curl(:get, resource)
+      if args[0] && args[0] != 'collections' && args[0] != '/'
+        resource = $context[args[0]]
+        if $settings.show_curl?
+          puts_curl(:get, resource)
+        else
+          format_response resource.get
+        end
       else
-        format_response resource.get
+        $application.list_collections
       end
     end
   end
 
-  c.desc 'collections'
-  c.command [:collections] do |c2|
-
-    c2.action do |global_options,options,args|
-      app = $application.entity
-      collections = app['metadata']['collections']
-      table border: $settings.table_border? do
-        row header: true do
-          collections.first[1].each_key do |k|
-            column k
-          end
-        end
-        collections.each_value do |coll|
-          row do
-            coll.each_value do |v|
-              column v
-            end
-          end
-        end
-      end
-    end
-  end
-
-  c.default_command :url
+  c.default_command :path
 
 end
