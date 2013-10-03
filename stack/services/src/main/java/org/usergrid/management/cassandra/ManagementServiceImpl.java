@@ -60,7 +60,6 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOU
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
 import static org.usergrid.persistence.Schema.*;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
@@ -153,7 +152,6 @@ import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -743,8 +741,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     writeUserMongoPassword(MANAGEMENT_APPLICATION_ID, user, mongoPassword);
 
-    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID, user.getUuid(), user.getUsername(), user.getName(),
-        user.getEmail(), user.getActivated(), user.getDisabled(), user.getDynamicProperties());
+    UserInfo userInfo = new UserInfo(
+        MANAGEMENT_APPLICATION_ID, 
+        user.getUuid(), 
+        user.getUsername(), 
+        user.getName(),
+        user.getEmail(), 
+        user.getConfirmed(), 
+        user.getActivated(), 
+        user.getDisabled(), 
+        user.getDynamicProperties());
 
     // special case for sysadmin only
     if (!user.getEmail().equals(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL))) {
@@ -846,9 +852,16 @@ public class ManagementServiceImpl implements ManagementService {
     if (entity == null) {
       return null;
     }
-    return new UserInfo(applicationId, entity.getUuid(), (String) entity.getProperty("username"), entity.getName(),
-        (String) entity.getProperty("email"), ConversionUtils.getBoolean(entity.getProperty("activated")),
-        ConversionUtils.getBoolean(entity.getProperty("disabled")), entity.getDynamicProperties());
+    return new UserInfo(
+        applicationId, 
+        entity.getUuid(), 
+        (String) entity.getProperty("username"), 
+        entity.getName(),
+        (String) entity.getProperty("email"), 
+        ConversionUtils.getBoolean(entity.getProperty("confirmed")),
+        ConversionUtils.getBoolean(entity.getProperty("activated")),
+        ConversionUtils.getBoolean(entity.getProperty("disabled")), 
+        entity.getDynamicProperties());
   }
 
   public UserInfo getUserInfo(UUID applicationId, Map<String, Object> properties) {
@@ -1143,8 +1156,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
       userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
-      if ( !user.confirmed() && properties.newAdminUsersRequireConfirmation()) {
-          throw new UnconfirmedAdminUserException();
+      logger.debug("confirmed {} requireConfirmation {}", 
+              userInfo.isConfirmed(), newAdminUsersRequireConfirmation());
+      logger.debug("activated {} requireActivation {}", 
+              userInfo.isActivated(), newAdminUsersNeedSysAdminApproval());
+      if ( !userInfo.isConfirmed() && newAdminUsersRequireConfirmation()) {
+        throw new UnconfirmedAdminUserException();
       }
       if (!userInfo.isActivated() && newAdminUsersNeedSysAdminApproval()) {
         throw new UnactivatedAdminUserException();
@@ -2120,7 +2137,9 @@ public class ManagementServiceImpl implements ManagementService {
     em.setProperty(new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()), "activated", true);
     List<UserInfo> users = getAdminUsersForOrganization(organization.getUuid());
     for (UserInfo user : users) {
-      if (!user.isActivated()) {
+      boolean confirmed = user.isConfirmed() || !newAdminUsersRequireConfirmation();
+      boolean shouldActivate = confirmed && !newAdminUsersRequireConfirmation(); 
+      if (shouldActivate) { 
         activateAdminUser(user.getUuid());
       }
     }

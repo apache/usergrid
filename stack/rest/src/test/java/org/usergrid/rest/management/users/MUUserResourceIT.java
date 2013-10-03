@@ -107,6 +107,9 @@ public class MUUserResourceIT extends AbstractRestIT
         setup.getProps().setProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
         setup.getProps().setProperty( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
+        assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
+        assertFalse(setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval());
+
         // Setup org/app/user variables and create them
         // -------------------------------------------
         String orgName = this.getClass().getName();
@@ -116,10 +119,16 @@ public class MUUserResourceIT extends AbstractRestIT
         String passwd = "testpassword";
         OrganizationOwnerInfo orgOwner;
 
-        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, userName, appName, email, passwd, false, false );
+        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization(
+                orgName, userName, appName, email, passwd, false, false );
       	assertNotNull( orgOwner );
         String returnedUsername = orgOwner.getOwner().getUsername();
         assertEquals( userName, returnedUsername );
+
+        UserInfo adminUserInfo = setup.getMgmtSvc().getAdminUserByUsername(userName);
+        assertNotNull(adminUserInfo);
+        assertFalse("adminUser should not be activated yet", adminUserInfo.isActivated());
+        assertFalse("adminUser should not be confirmed yet", adminUserInfo.isConfirmed());
 
         // Attempt to authenticate but this should fail
         // -------------------------------------------
@@ -173,6 +182,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
         node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
             .queryParam( "username", userName )
+                G
             .queryParam( "password", passwd )
             .accept( MediaType.APPLICATION_JSON )
             .get( JsonNode.class );
