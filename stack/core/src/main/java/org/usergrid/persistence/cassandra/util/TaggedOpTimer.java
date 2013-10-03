@@ -17,7 +17,7 @@ public class TaggedOpTimer implements HOpTimer {
     }
 
     @Override
-    public Object start() {
+    public Object start(String tagName) {
         // look for our threadLocal. if not present, return this.
         return traceTagManager.timerInstance();
     }

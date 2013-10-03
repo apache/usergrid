@@ -46,18 +46,19 @@ public final class AssetMimeHandler {
       return (String)fileMetadata.get(AssetUtils.CONTENT_TYPE);
     }
 
+    Metadata metadata = new Metadata();
     MediaType mediaType = MediaType.OCTET_STREAM;
     try {
       if (type instanceof byte[]) {
 
         ByteArrayInputStream bais = new ByteArrayInputStream((byte[])type);
-        mediaType = detector.detect(bais, null);
+        mediaType = detector.detect(bais, metadata);
 
       } else if (type instanceof File) {
 
         InputStream fis = new BufferedInputStream(new FileInputStream((File)type));
         try {
-          mediaType = detector.detect(fis, new Metadata());
+          mediaType = detector.detect(fis, metadata);
         } finally {
           fis.close();
         }

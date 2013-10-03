@@ -97,7 +97,7 @@
 
               <argLine>-Xmx${services.it.heapmax} -Xms${services.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
-                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
 
               <includes>
@@ -153,7 +153,7 @@
               <forkMode>once</forkMode>
               <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
-                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
 
               <includes>
@@ -194,7 +194,7 @@
               <forkMode>once</forkMode>
               <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
-                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
 
               <includes>
@@ -254,12 +254,12 @@
           </systemPropertyVariables>
 
           <parallel>both</parallel>
-          <forkCount>4</forkCount>
+          <forkCount>${services.it.forkCount}</forkCount>
           <reuseForks>false</reuseForks>
 
           <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
           <argLine>
-            -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+            -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
           </argLine>
 
           <includes>

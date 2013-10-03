@@ -15,23 +15,14 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra.index;
 
-import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import org.apache.cassandra.config.ConfigurationException;
+import me.prettyprint.hector.api.beans.HColumn;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.db.marshal.TypeParser;
-import org.apache.cassandra.thrift.CassandraServer;
 import org.usergrid.persistence.cassandra.ApplicationCF;
 import org.usergrid.persistence.cassandra.CassandraService;
 
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * @author tnine
@@ -104,7 +95,7 @@ public class IndexMultiBucketSetLoader {
       // should never happen, this will blow up during development if this fails
       try {
         dynamicComposite = TypeParser.parse(cf.getComparator());
-      } catch (ConfigurationException e) {
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }

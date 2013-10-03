@@ -8,13 +8,13 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.thrift.CassandraDaemon;
 import org.junit.rules.ExternalResource;
 
 import org.springframework.context.ConfigurableApplicationContext;

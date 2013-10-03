@@ -26,7 +26,7 @@ public class TraceTagUnitTest {
     public void createAttachDetach() throws Exception {
         TraceTag traceTag = traceTagManager.create("testtag1");
         traceTagManager.attach(traceTag);
-        TimedOpTag timedOpTag = (TimedOpTag)taggedOpTimer.start();
+        TimedOpTag timedOpTag = (TimedOpTag)taggedOpTimer.start("op-tag-name");
         Thread.currentThread().sleep(500);
         taggedOpTimer.stop(timedOpTag,"op-tag-name",true);
         assertTrue(timedOpTag.getElapsed() >= 500);

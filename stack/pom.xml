@@ -20,10 +20,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <amber-version>0.22-incubating</amber-version>
-    <cassandra-version>1.1.6</cassandra-version>
-    <hector-om-version>2.0-01</hector-om-version>
-    <hector-version>1.1-2-1</hector-version>
-    <hector-test-version>1.1-2</hector-test-version>
+    <cassandra-version>1.2.10</cassandra-version>
+    <hector-om-version>3.0-03</hector-om-version>
+    <hector-version>1.1-4</hector-version>
+    <hector-test-version>1.1-4</hector-test-version>
     <jackson-version>1.9.9</jackson-version>
     <jclouds.version>1.6.2-incubating</jclouds.version>
     <jersey-version>1.17</jersey-version>
@@ -634,7 +634,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>12.0</version>
+        <version>15.0</version>
       </dependency>
 
       <dependency>
@@ -677,7 +677,7 @@
       </dependency>
 
       <dependency>
-        <groupId>org.usergrid</groupId>
+        <groupId>org.hectorclient</groupId>
         <artifactId>hector-core</artifactId>
         <version>${hector-version}</version>
         <exclusions>
@@ -964,19 +964,19 @@
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4</artifactId>
-        <version>1.5</version>
+        <version>1.5.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4-rule-agent</artifactId>
-        <version>1.5</version>
+        <version>1.5.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-api-mockito</artifactId>
-        <version>1.5</version>
+        <version>1.5.1</version>
       </dependency>
 
       <dependency>
