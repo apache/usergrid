@@ -182,7 +182,6 @@ public class MUUserResourceIT extends AbstractRestIT
 
         node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
             .queryParam( "username", userName )
-                G
             .queryParam( "password", passwd )
             .accept( MediaType.APPLICATION_JSON )
             .get( JsonNode.class );
