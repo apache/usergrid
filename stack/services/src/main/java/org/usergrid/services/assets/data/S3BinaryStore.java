@@ -39,7 +39,7 @@ public class S3BinaryStore implements BinaryStore {
   private static final long FIVE_MB = (FileUtils.ONE_MB * 5);
 
   private final BlobStoreContext context;
-  private String bucketName = "usergrid-test";
+  private String bucketName;
   private ExecutorService executor = Executors.newFixedThreadPool(10);
 
   @Autowired
@@ -52,6 +52,7 @@ public class S3BinaryStore implements BinaryStore {
         .buildView(BlobStoreContext.class);
 
     // Create Container (the bucket in s3)
+    this.bucketName = bucketName;
     BlobStore blobStore = context.getBlobStore();
     blobStore.createContainerInLocation(null, bucketName);
   }
