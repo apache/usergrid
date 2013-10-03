@@ -26,12 +26,11 @@ import java.util.concurrent.TimeUnit;
 
 import me.prettyprint.hector.testutils.EmbeddedSchemaLoader;
 
-import org.apache.cassandra.config.ConfigurationException;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.commitlog.CommitLog;
 import org.apache.cassandra.io.util.FileUtils;
+import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.cassandra.service.StorageService;
-import org.apache.cassandra.thrift.CassandraDaemon;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +67,7 @@ public class EmbeddedServerHelper {
 	 * @throws InterruptedException
 	 */
 	public void setup() throws TTransportException, IOException,
-			InterruptedException, ConfigurationException {
+			InterruptedException {
 
 		// delete tmp dir first
 		rmdir(TMP);
@@ -87,7 +86,7 @@ public class EmbeddedServerHelper {
 	}
 
 	public void start() throws TTransportException, IOException,
-			InterruptedException, ConfigurationException {
+			InterruptedException {
         if ( executor == null ) {
             executor = Executors.newSingleThreadExecutor();
             System.setProperty("cassandra.config", "file:" + TMP + yamlFile);
@@ -100,7 +99,7 @@ public class EmbeddedServerHelper {
             executor.execute(new CassandraRunner());
             log.info("Started executor");
         } else {
-            cassandraDaemon.startRPCServer();
+            cassandraDaemon.start();
         }
 
 
@@ -123,7 +122,7 @@ public class EmbeddedServerHelper {
 	}
 
     public void stop() {
-        cassandraDaemon.stopRPCServer();
+        cassandraDaemon.stop();
     }
 
 	private static void rmdir(String dir) throws IOException {
@@ -201,11 +200,7 @@ public class EmbeddedServerHelper {
 	}
 
 	public static void mkdirs() {
-		try {
 			DatabaseDescriptor.createAllDirectories();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	public static void loadSchemaFromYaml() {
