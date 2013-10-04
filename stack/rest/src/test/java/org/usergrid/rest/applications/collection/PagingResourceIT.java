@@ -44,7 +44,6 @@ import org.usergrid.rest.test.resource.app.CustomEntity;
  * Simple tests to test querying at the REST tier
  */
 @Concurrent()
-@Ignore( "Seems to be breaking the build here: http://goo.gl/BkIYju" )
 public class PagingResourceIT extends AbstractRestIT {
 
 
@@ -130,6 +129,47 @@ public class PagingResourceIT extends AbstractRestIT {
 
     // we paged them all
     assertEquals(created.size() - 1, index);
+
+  }
+
+
+  @Test
+  public void colletionBatchDeleting() throws Exception {
+
+    CustomCollection things = context.application().collection("things");
+
+    int size = 40;
+
+    List<Map<String, String>> created = new ArrayList<Map<String, String>>(size);
+
+    for (int i = 0; i < size; i++) {
+      Map<String, String> entity = hashMap("name", String.valueOf(i));
+      things.create(entity);
+
+      created.add(entity);
+    }
+
+
+    ApiResponse response ;
+    int deletePageSize = 10;
+
+    things = things.withLimit(deletePageSize);
+
+    for(int i = 0; i < size/deletePageSize; i ++){
+      response = parse(things.delete());
+
+      assertEquals("Only 10 entities should have been deleted", 10, response.getEntityCount());
+    }
+
+    response = parse(things.get());
+
+    assertEquals( "All entities should have been removed", 0, response.getEntityCount());
+
+    //now do 1 more delete, we should get any results
+
+    response = parse(things.delete());
+
+    assertEquals("No more entities deleted", 0, response.getEntityCount());
 
   }
 

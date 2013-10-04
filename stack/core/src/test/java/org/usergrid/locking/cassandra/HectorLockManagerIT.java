@@ -27,11 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.AbstractCoreIT;
@@ -58,7 +54,7 @@ public class HectorLockManagerIT extends AbstractCoreIT
     {
         HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
         hlockManager.setCluster( setup.getCassSvc().getCluster() );
-        hlockManager.setKeyspaceName( "Locks" );
+        hlockManager.setKeyspaceName( "Locks_Test" );
         hlockManager.setLockTtl( 2000 );
         hlockManager.setNumberOfLockObserverThreads( 1 );
         hlockManager.setReplicationFactor( 1 );
@@ -68,16 +64,16 @@ public class HectorLockManagerIT extends AbstractCoreIT
 	}
 
 
-    @Before
-    public void start()
+    @BeforeClass
+    public static void start()
     {
         // Create a different thread to lock the same node, that is held by the main thread.
         pool = Executors.newFixedThreadPool(1);
     }
 
 
-    @After
-    public void tearDown() throws Exception
+    @AfterClass
+    public static void tearDown() throws Exception
     {
         pool.shutdownNow();
     }
