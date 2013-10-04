@@ -378,7 +378,7 @@ public class ApplicationResource extends ServiceResource {
 	@POST
 	@Path("credentials")
 	@RequireApplicationAccess
-	@Produces(MediaType.TEXT_HTML)
+	@Produces(MediaType.APPLICATION_JSON)
 	public JSONWithPadding generateKeys(@Context UriInfo ui,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 					throws Exception {
@@ -390,14 +390,13 @@ public class ApplicationResource extends ServiceResource {
 		}
 
 		ClientCredentialsInfo kp = new ClientCredentialsInfo(
-				management.getClientIdForApplication(services
-						.getApplicationId()),
-						management.newClientSecretForApplication(services
-								.getApplicationId()));
+			management.getClientIdForApplication(services.getApplicationId()),
+			management.newClientSecretForApplication(services.getApplicationId()));
 
-		return new JSONWithPadding(createApiResponse().withCredentials(kp)
-				.withAction("generate application keys").withSuccess(),
-				callback);
+		return new JSONWithPadding(createApiResponse()
+      .withCredentials(kp)
+			.withAction("generate application keys")
+      .withSuccess(), callback);
 	}
 
 	@GET
