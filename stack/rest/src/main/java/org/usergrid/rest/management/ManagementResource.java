@@ -212,6 +212,7 @@ public class ManagementResource extends AbstractContextResource {
                     OAuthResponse response = OAuthResponse.errorResponse( SC_FORBIDDEN )
                           .setError( OAuthError.TokenResponse.INVALID_GRANT )
                           .setErrorDescription( errorDescription ).buildJSONMessage();
+
                     return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                           .entity( wrapWithCallback( response.getBody(), callback ) ).build();
                 }

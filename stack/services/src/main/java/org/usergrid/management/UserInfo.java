@@ -17,6 +17,7 @@ package org.usergrid.management;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.persistence.Schema.PROPERTY_ACTIVATED;
+import static org.usergrid.persistence.Schema.PROPERTY_CONFIRMED;
 import static org.usergrid.persistence.Schema.PROPERTY_DISABLED;
 import static org.usergrid.persistence.Schema.PROPERTY_EMAIL;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
@@ -41,20 +42,22 @@ public class UserInfo {
 	private final String name;
 	private final String email;
 	private final boolean activated;
+	private final boolean confirmed;
 	private final boolean disabled;
     private final Map<String,Object> properties;
 
-	public UserInfo(UUID applicationId, UUID id, String username, String name,
-			String email, boolean activated, boolean disabled,
-            Map<String,Object> properties) {
+	public UserInfo(
+      UUID applicationId, UUID id, String username, String name, String email, 
+      boolean confirmed, boolean activated, boolean disabled, Map<String,Object> properties) {
 		this.applicationId = applicationId;
 		this.id = id;
 		this.username = username;
 		this.name = name;
 		this.email = email;
+    this.confirmed = confirmed;
 		this.activated = activated;
 		this.disabled = disabled;
-        this.properties = properties;
+    this.properties = properties;
 	}
 
 	public UserInfo(UUID applicationId, Map<String, Object> properties) {
@@ -63,9 +66,10 @@ public class UserInfo {
 		username = string(properties.remove(PROPERTY_USERNAME));
 		name = string(properties.remove(PROPERTY_NAME));
 		email = string(properties.remove(PROPERTY_EMAIL));
+		confirmed = getBoolean(properties.remove(PROPERTY_CONFIRMED));
 		activated = getBoolean(properties.remove(PROPERTY_ACTIVATED));
 		disabled = getBoolean(properties.remove(PROPERTY_DISABLED));
-        this.properties = properties;
+    this.properties = properties;
 	}
 
 	public UUID getApplicationId() {
@@ -123,5 +127,9 @@ public class UserInfo {
     public Map<String,Object> getProperties() {
         return properties;
     }
+
+  public boolean isConfirmed() {
+    return confirmed;
+  }
 
 }

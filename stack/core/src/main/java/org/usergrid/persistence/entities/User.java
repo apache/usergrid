@@ -195,7 +195,7 @@ public class User extends TypedEntity {
         this.deactivated = deactivated;
     }
 
-    public boolean confirmed() {
+  public boolean confirmed() {
 		return (confirmed != null) && confirmed;
 	}
 
