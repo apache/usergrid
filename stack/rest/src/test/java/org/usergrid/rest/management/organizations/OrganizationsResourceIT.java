@@ -39,14 +39,14 @@ public class OrganizationsResourceIT extends AbstractRestIT {
 
     @Test
     public void createOrgAndOwner() throws Exception {
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-                "false");
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-                "false");
-        setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-                "false");
-        setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-                "sysadmin-1@mockserver.com");
+
+      Map<String, String> originalProperties = getRemoteTestProperties();
+
+      try {
+        setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+        setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+        setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
+        setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
         Map<String, Object> organizationProperties = new HashMap<String,Object>();
         organizationProperties.put("securityLevel", 5);
@@ -100,6 +100,10 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             .type(MediaType.APPLICATION_JSON_TYPE)
             .get(JsonNode.class);
         Assert.assertEquals(5, node.get("organization").get(OrganizationsResource.ORGANIZATION_PROPERTIES).get("securityLevel").asInt());
+
+      } finally {
+          setTestProperties(originalProperties);
+      }
     }
 
     @Test

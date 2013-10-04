@@ -62,72 +62,75 @@ public class RegistrationIT extends AbstractRestIT {
   @Test
   public void postCreateOrgAndAdmin() throws Exception {
 
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-            "true");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-            "sysadmin-1@mockserver.com");
+    Map<String, String> originalProperties = getRemoteTestProperties();
 
-    JsonNode node = postCreateOrgAndAdmin("test-org-1", "test-user-1",
-            "Test User", "test-user-1@mockserver.com", "testpassword");
-
-    UUID owner_uuid = UUID.fromString(node.findPath("data")
-            .findPath("owner").findPath("uuid").getTextValue());
-
-    List<Message> inbox = org.jvnet.mock_javamail.Mailbox
-            .get("test-user-1@mockserver.com");
-
-    assertFalse(inbox.isEmpty());
-
-    Message account_confirmation_message = inbox.get(0);
-    assertEquals("User Account Confirmation: test-user-1@mockserver.com",
-            account_confirmation_message.getSubject());
-
-    String token = getTokenFromMessage(account_confirmation_message);
-    logger.info(token);
-
-    setup.getMgmtSvc().disableAdminUser(owner_uuid);
     try {
-      resource().path("/management/token")
-              .queryParam("grant_type", "password")
-              .queryParam("username", "test-user-1")
-              .queryParam("password", "testpassword")
-              .accept(MediaType.APPLICATION_JSON)
-              .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-      fail("request for disabled user should fail");
-    } catch (UniformInterfaceException uie) {
-      ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
-      JsonNode body = uie.getResponse().getEntity(JsonNode.class);
-      assertEquals("user disabled", body.findPath("error_description").getTextValue());
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
+      setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+
+      JsonNode node = postCreateOrgAndAdmin("test-org-1", "test-user-1",
+              "Test User", "test-user-1@mockserver.com", "testpassword");
+
+      UUID owner_uuid = UUID.fromString(node.findPath("data")
+              .findPath("owner").findPath("uuid").getTextValue());
+
+      List<Message> inbox = org.jvnet.mock_javamail.Mailbox
+              .get("test-user-1@mockserver.com");
+
+      assertFalse(inbox.isEmpty());
+
+      Message account_confirmation_message = inbox.get(0);
+      assertEquals("User Account Confirmation: test-user-1@mockserver.com",
+              account_confirmation_message.getSubject());
+
+      String token = getTokenFromMessage(account_confirmation_message);
+      logger.info(token);
+
+      setup.getMgmtSvc().disableAdminUser(owner_uuid);
+      try {
+        resource().path("/management/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test-user-1")
+                .queryParam("password", "testpassword")
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        fail("request for disabled user should fail");
+      } catch (UniformInterfaceException uie) {
+        ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
+        JsonNode body = uie.getResponse().getEntity(JsonNode.class);
+        assertEquals("user disabled", body.findPath("error_description").getTextValue());
+      }
+
+      setup.getMgmtSvc().deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
+      try {
+        resource().path("/management/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test-user-1")
+                .queryParam("password", "testpassword")
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        fail("request for deactivated user should fail");
+      } catch (UniformInterfaceException uie) {
+        ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
+        JsonNode body = uie.getResponse().getEntity(JsonNode.class);
+        assertEquals("user not activated", body.findPath("error_description").getTextValue());
+      }
+
+      // assertEquals(ActivationState.ACTIVATED,
+      // svcSetup.getMgmtSvc().handleConfirmationTokenForAdminUser(
+      // owner_uuid, token));
+      String response = resource()
+        .path("/management/users/" + owner_uuid + "/confirm").get(String.class);
+      logger.info(response);
+
+      Message account_activation_message = inbox.get(1);
+      assertEquals("User Account Activated", account_activation_message.getSubject());
+
+    } finally {
+        setTestProperties(originalProperties);
     }
-
-    setup.getMgmtSvc().deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
-    try {
-      resource().path("/management/token")
-              .queryParam("grant_type", "password")
-              .queryParam("username", "test-user-1")
-              .queryParam("password", "testpassword")
-              .accept(MediaType.APPLICATION_JSON)
-              .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-      fail("request for deactivated user should fail");
-    } catch (UniformInterfaceException uie) {
-      ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
-      JsonNode body = uie.getResponse().getEntity(JsonNode.class);
-      assertEquals("user not activated", body.findPath("error_description").getTextValue());
-    }
-
-    // assertEquals(ActivationState.ACTIVATED,
-    // svcSetup.getMgmtSvc().handleConfirmationTokenForAdminUser(
-    // owner_uuid, token));
-    String response = resource()
-      .path("/management/users/" + owner_uuid + "/confirm").get(String.class);
-    logger.info(response);
-
-    Message account_activation_message = inbox.get(1);
-    assertEquals("User Account Activated", account_activation_message.getSubject());
 
   }
 
@@ -184,139 +187,147 @@ public class RegistrationIT extends AbstractRestIT {
   @Test
   public void putAddToOrganizationFail() throws Exception {
 
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-            "sysadmin-1@mockserver.com");
+    Map<String, String> originalProperties = getRemoteTestProperties();
 
-    String t = adminToken();
-    MultivaluedMap formData = new MultivaluedMapImpl();
-    formData.add("foo", "bar");
     try {
-      resource()
-              .path("/management/organizations/test-organization/users/test-admin-null@mockserver.com")
-              .queryParam("access_token", t)
-              .accept(MediaType.APPLICATION_JSON)
-              .type(MediaType.APPLICATION_FORM_URLENCODED)
-              .put(JsonNode.class, formData);
-    } catch (UniformInterfaceException e) {
-      assertEquals("Should receive a 400 Not Found", 400, e.getResponse()
-              .getStatus());
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+
+      String t = adminToken();
+      MultivaluedMap formData = new MultivaluedMapImpl();
+      formData.add("foo", "bar");
+      try {
+        resource()
+                .path("/management/organizations/test-organization/users/test-admin-null@mockserver.com")
+                .queryParam("access_token", t)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_FORM_URLENCODED)
+                .put(JsonNode.class, formData);
+      } catch (UniformInterfaceException e) {
+        assertEquals("Should receive a 400 Not Found", 400, e.getResponse()
+                .getStatus());
+      }
+    } finally {
+        setTestProperties(originalProperties);
     }
+
   }
 
   @Test
   public void postAddToOrganization() throws Exception {
 
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-            "sysadmin-1@mockserver.com");
+    Map<String, String> originalProperties = getRemoteTestProperties();
 
-    String t = adminToken();
-    postAddAdminToOrg("test-organization", "test-admin@mockserver.com",
-            "password", t);
+    try {
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+
+      String t = adminToken();
+      postAddAdminToOrg("test-organization", "test-admin@mockserver.com", "password", t);
+    } finally {
+        setTestProperties(originalProperties);
+    }
 
   }
 
   @Test
   public void addNewAdminUserWithNoPwdToOrganization() throws Exception {
 
-    Mailbox.clearAll();
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-            "sysadmin-1@mockserver.com");
+    Map<String, String> originalProperties = getRemoteTestProperties();
 
-    // this should send resetpwd  link in email to newly added org admin user(that did not exist 
-    ///in usergrid) and "User Invited To Organization" email
-    String adminToken = adminToken();
-    JsonNode node = postAddAdminToOrg(
-            "test-organization", "test-admin-nopwd@mockserver.com", "", adminToken);
-    String uuid = node.get("data").get("user").get("uuid").getTextValue();
-    UUID userId = UUID.fromString(uuid);
+    try {
+      Mailbox.clearAll();
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
-    String subject = "Password Reset";
-    String reset_url = String.format(setup.getProps().getProperty(PROPERTIES_ADMIN_RESETPW_URL), uuid);
-    String invited = "User Invited To Organization";
+      // this should send resetpwd  link in email to newly added org admin user(that did not exist 
+      ///in usergrid) and "User Invited To Organization" email
+      String adminToken = adminToken();
+      JsonNode node = postAddAdminToOrg(
+              "test-organization", "test-admin-nopwd@mockserver.com", "", adminToken);
+      String uuid = node.get("data").get("user").get("uuid").getTextValue();
+      UUID userId = UUID.fromString(uuid);
 
-    Message[] msgs = getMessages("mockserver.com", "test-admin-nopwd", "password");
+      String subject = "Password Reset";
+      String reset_url = String.format(setup.getProps().getProperty(PROPERTIES_ADMIN_RESETPW_URL), uuid);
+      String invited = "User Invited To Organization";
 
-    // 1 Invite and 1 resetpwd
-    assertTrue(msgs.length == 2);
+      Message[] msgs = getMessages("mockserver.com", "test-admin-nopwd", "password");
 
-    //email subject
-    assertEquals(subject, msgs[0].getSubject());
-    assertEquals(invited, msgs[1].getSubject());
+      // 1 Invite and 1 resetpwd
+      assertTrue(msgs.length == 2);
 
-    // reseturl
-    String mailContent = (String) ((MimeMultipart) 
-            msgs[0].getContent()).getBodyPart(1).getContent();
-    logger.info(mailContent);
-    assertTrue(StringUtils.contains(mailContent, reset_url));
+      //email subject
+      assertEquals(subject, msgs[0].getSubject());
+      assertEquals(invited, msgs[1].getSubject());
 
-    //token
-    String token = getTokenFromMessage(msgs[0]);
-    assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userId, token));
+      // reseturl
+      String mailContent = (String) ((MimeMultipart) 
+              msgs[0].getContent()).getBodyPart(1).getContent();
+      logger.info(mailContent);
+      assertTrue(StringUtils.contains(mailContent, reset_url));
+
+      //token
+      String token = getTokenFromMessage(msgs[0]);
+      assertTrue(setup.getMgmtSvc().checkPasswordResetTokenForAdminUser(userId, token));
+    } finally {
+        setTestProperties(originalProperties);
+    }    
   }
 
   @Test
   public void addExistingAdminUserToOrganization() throws Exception {
 
-    Mailbox.clearAll();
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
-            "false");
-    setup.getProps().setProperty(PROPERTIES_SYSADMIN_EMAIL,
-            "sysadmin-1@mockserver.com");
+    Map<String, String> originalProperties = getRemoteTestProperties();
 
-    // svcSetup an admin user
-    String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
-    UserInfo adminUser = setup.getMgmtSvc().createAdminUser(
-            adminUserEmail, adminUserEmail, adminUserEmail, "password1",
-            true, false);
-    assertNotNull(adminUser);
-    Message[] msgs = getMessages("otherorg.com", "AdminUserFromOtherOrg", "password1");
-    assertEquals(1, msgs.length);
+    try {
+      Mailbox.clearAll();
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
-		// add existing admin user to org
-    // this should NOT send resetpwd  link in email to newly added org admin user(that 
-    // already exists in usergrid)
-    // only "User Invited To Organization" email
-    String adminToken = adminToken();
-    JsonNode node = postAddAdminToOrg(
-            "test-organization", "AdminUserFromOtherOrg@otherorg.com", "password1", adminToken);
-    String uuid = node.get("data").get("user").get("uuid").getTextValue();
-    UUID userId = UUID.fromString(uuid);
+      // svcSetup an admin user
+      String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
+      UserInfo adminUser = setup.getMgmtSvc().createAdminUser(
+              adminUserEmail, adminUserEmail, adminUserEmail, "password1",
+              true, false);
+      assertNotNull(adminUser);
+      Message[] msgs = getMessages("otherorg.com", "AdminUserFromOtherOrg", "password1");
+      assertEquals(1, msgs.length);
 
-    assertEquals(adminUser.getUuid(), userId);
+      // add existing admin user to org
+      // this should NOT send resetpwd  link in email to newly added org admin user(that 
+      // already exists in usergrid)
+      // only "User Invited To Organization" email
+      String adminToken = adminToken();
+      JsonNode node = postAddAdminToOrg(
+              "test-organization", "AdminUserFromOtherOrg@otherorg.com", "password1", adminToken);
+      String uuid = node.get("data").get("user").get("uuid").getTextValue();
+      UUID userId = UUID.fromString(uuid);
 
-    String resetpwd = "Password Reset";
-    String invited = "User Invited To Organization";
+      assertEquals(adminUser.getUuid(), userId);
 
-    msgs = getMessages("otherorg.com", "AdminUserFromOtherOrg", "password1");
+      String resetpwd = "Password Reset";
+      String invited = "User Invited To Organization";
 
-    // only 1 invited msg
-    assertEquals(2, msgs.length);
+      msgs = getMessages("otherorg.com", "AdminUserFromOtherOrg", "password1");
 
-    //email subject
-    assertNotSame(resetpwd, msgs[1].getSubject());
-    assertEquals(invited, msgs[1].getSubject());
+      // only 1 invited msg
+      assertEquals(2, msgs.length);
+
+      //email subject
+      assertNotSame(resetpwd, msgs[1].getSubject());
+      assertEquals(invited, msgs[1].getSubject());
+    } finally {
+        setTestProperties(originalProperties);
+    }         
   }
 
   private Message[] getMessages(String host, String user, String password) 

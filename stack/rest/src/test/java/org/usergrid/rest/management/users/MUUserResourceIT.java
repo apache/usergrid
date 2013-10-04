@@ -101,93 +101,101 @@ public class MUUserResourceIT extends AbstractRestIT
     {
         // Setup properties to require confirmation of users
         // -------------------------------------------
-        setup.getProps().setProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
-        setup.getProps().setProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
-        setup.getProps().setProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.getProps().setProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
-        setup.getProps().setProperty( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
-        assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
-        assertFalse(setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval());
+        Map<String, String> originalProperties = getRemoteTestProperties();
 
-        // Setup org/app/user variables and create them
-        // -------------------------------------------
-        String orgName = this.getClass().getName();
-        String appName = "testUnconfirmedAdminLogin";
-        String userName = "TestUser";
-        String email = "test-user-46@mockserver.com";
-        String passwd = "testpassword";
-        OrganizationOwnerInfo orgOwner;
+        try {
+          setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+          setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+          setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+          setTestProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+          setTestProperty( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
-        orgOwner = setup.getMgmtSvc().createOwnerAndOrganization(
-                orgName, userName, appName, email, passwd, false, false );
-      	assertNotNull( orgOwner );
-        String returnedUsername = orgOwner.getOwner().getUsername();
-        assertEquals( userName, returnedUsername );
+          assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
+          assertFalse(setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval());
 
-        UserInfo adminUserInfo = setup.getMgmtSvc().getAdminUserByUsername(userName);
-        assertNotNull(adminUserInfo);
-        assertFalse("adminUser should not be activated yet", adminUserInfo.isActivated());
-        assertFalse("adminUser should not be confirmed yet", adminUserInfo.isConfirmed());
+          // Setup org/app/user variables and create them
+          // -------------------------------------------
+          String orgName = this.getClass().getName();
+          String appName = "testUnconfirmedAdminLogin";
+          String userName = "TestUser";
+          String email = "test-user-46@mockserver.com";
+          String passwd = "testpassword";
+          OrganizationOwnerInfo orgOwner;
 
-        // Attempt to authenticate but this should fail
-        // -------------------------------------------
-        JsonNode node;
-        try
-        {
-            node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", userName )
-                .queryParam( "password", passwd )
-                .accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+          orgOwner = setup.getMgmtSvc().createOwnerAndOrganization(
+                  orgName, userName, appName, email, passwd, false, false );
+          assertNotNull( orgOwner );
+          String returnedUsername = orgOwner.getOwner().getUsername();
+          assertEquals( userName, returnedUsername );
 
-            fail( "Unconfirmed users should not be authorized to authenticate." );
+          UserInfo adminUserInfo = setup.getMgmtSvc().getAdminUserByUsername(userName);
+          assertNotNull(adminUserInfo);
+          assertFalse("adminUser should not be activated yet", adminUserInfo.isActivated());
+          assertFalse("adminUser should not be confirmed yet", adminUserInfo.isConfirmed());
+
+          // Attempt to authenticate but this should fail
+          // -------------------------------------------
+          JsonNode node;
+          try
+          {
+              node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                  .queryParam( "username", userName )
+                  .queryParam( "password", passwd )
+                  .accept( MediaType.APPLICATION_JSON )
+                  .get( JsonNode.class );
+
+              fail( "Unconfirmed users should not be authorized to authenticate." );
+          }
+          catch ( UniformInterfaceException e )
+          {
+              node = e.getResponse().getEntity( JsonNode.class );
+              assertEquals( "invalid_grant", node.get( "error" ).getTextValue() );
+              assertEquals( "User must be confirmed to authenticate", node.get( "error_description" ).getTextValue() );
+              LOG.info( "Unconfirmed user was not authorized to authenticate!" );
+          }
+
+          // Confirm the getting account confirmation email for unconfirmed user
+          // -------------------------------------------
+          List<Message> inbox = Mailbox.get( email );
+          assertFalse( inbox.isEmpty() );
+
+          MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+          client.processMail();
+
+          Message confirmation = inbox.get( 0 );
+          assertEquals( "User Account Confirmation: " + email, confirmation.getSubject() );
+
+          // Extract the token to confirm the user
+          // -------------------------------------------
+          String token = getTokenFromMessage( confirmation );
+          LOG.info( token );
+
+          ActivationState state = setup.getMgmtSvc()
+                .handleConfirmationTokenForAdminUser( orgOwner.getOwner().getUuid(), token );
+          assertEquals( ActivationState.ACTIVATED, state );
+
+          Message activation = inbox.get( 1 );
+          assertEquals( "User Account Activated", activation.getSubject() );
+
+          client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+          client.processMail();
+
+          // Attempt to authenticate again but this time should pass
+          // -------------------------------------------
+
+          node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+              .queryParam( "username", userName )
+              .queryParam( "password", passwd )
+              .accept( MediaType.APPLICATION_JSON )
+              .get( JsonNode.class );
+
+          assertNotNull( node );
+          LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
+
+        } finally {
+          setTestProperties(originalProperties);
         }
-        catch ( UniformInterfaceException e )
-        {
-            node = e.getResponse().getEntity( JsonNode.class );
-            assertEquals( "invalid_grant", node.get( "error" ).getTextValue() );
-            assertEquals( "User must be confirmed to authenticate", node.get( "error_description" ).getTextValue() );
-            LOG.info( "Unconfirmed user was not authorized to authenticate!" );
-        }
-
-        // Confirm the getting account confirmation email for unconfirmed user
-        // -------------------------------------------
-        List<Message> inbox = Mailbox.get( email );
-        assertFalse( inbox.isEmpty() );
-
-        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
-        client.processMail();
-
-        Message confirmation = inbox.get( 0 );
-        assertEquals( "User Account Confirmation: " + email, confirmation.getSubject() );
-
-        // Extract the token to confirm the user
-        // -------------------------------------------
-        String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
-
-        ActivationState state = setup.getMgmtSvc()
-              .handleConfirmationTokenForAdminUser( orgOwner.getOwner().getUuid(), token );
-        assertEquals( ActivationState.ACTIVATED, state );
-
-        Message activation = inbox.get( 1 );
-        assertEquals( "User Account Activated", activation.getSubject() );
-
-        client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
-        client.processMail();
-
-        // Attempt to authenticate again but this time should pass
-        // -------------------------------------------
-
-        node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-            .queryParam( "username", userName )
-            .queryParam( "password", passwd )
-            .accept( MediaType.APPLICATION_JSON )
-            .get( JsonNode.class );
-
-        assertNotNull( node );
-        LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
     }
 
 
