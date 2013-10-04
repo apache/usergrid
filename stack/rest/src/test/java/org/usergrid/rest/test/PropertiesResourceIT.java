@@ -39,7 +39,7 @@ public class PropertiesResourceIT extends AbstractRestIT {
   public void testBasicOperation() {
 
     // set property locally
-    setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
+    setup.getMgmtSvc().getProperties().put(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
 
     // verify that it is set locally
     Assert.assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
