@@ -157,8 +157,23 @@ public class ApplicationResourceIT extends AbstractRestIT {
     String mgmtToken = adminToken();
 
     JsonNode node = resource().path("/test-organization/test-app/credentials")
-            .queryParam("access_token", mgmtToken).accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+            .queryParam("access_token", mgmtToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(JsonNode.class);
+    assertEquals("ok", node.get("status").getTextValue());
+    logNode(node);
+  }
+
+  @Test
+  public void testResetAppCredentials() {
+    String mgmtToken = adminToken();
+
+    JsonNode node = resource().path("/test-organization/test-app/credentials")
+            .queryParam("access_token", mgmtToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .post(JsonNode.class);
     assertEquals("ok", node.get("status").getTextValue());
     logNode(node);
   }
