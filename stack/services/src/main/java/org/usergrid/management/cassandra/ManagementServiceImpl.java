@@ -1161,14 +1161,17 @@ public class ManagementServiceImpl implements ManagementService {
 
     if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
       userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
-      logger.debug("confirmed {} requireConfirmation {}", 
-              userInfo.isConfirmed(), newAdminUsersRequireConfirmation());
-      logger.debug("activated {} requireActivation {}", 
-              userInfo.isActivated(), newAdminUsersNeedSysAdminApproval());
+
+//      logger.debug("confirmed {} requireConfirmation {}", 
+//              userInfo.isConfirmed(), newAdminUsersRequireConfirmation());
+//
+//      logger.debug("activated {} requireActivation {}", 
+//              userInfo.isActivated(), newAdminUsersNeedSysAdminApproval());
+
       if ( !userInfo.isConfirmed() && newAdminUsersRequireConfirmation()) {
         throw new UnconfirmedAdminUserException();
       }
-      if (!userInfo.isActivated() && newAdminUsersNeedSysAdminApproval()) {
+      if (!userInfo.isActivated()) {
         throw new UnactivatedAdminUserException();
       }
       if (userInfo.isDisabled()) {
