@@ -154,6 +154,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 public class ManagementServiceImpl implements ManagementService {
+  private static final Logger logger = LoggerFactory.getLogger(ManagementServiceImpl.class);
 
     /**
    * Key for the user's pin
@@ -187,16 +188,15 @@ public class ManagementServiceImpl implements ManagementService {
 
   public static final String APPLICATION_INFO = "application_info";
 
-  private static final Logger logger = LoggerFactory.getLogger(ManagementServiceImpl.class);
 
   public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
   private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
-    public static final String REGISTRATION_REQUIRES_ADMIN_APPROVAL = "registration_requires_admin_approval";
-    public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
-    public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
+  public static final String REGISTRATION_REQUIRES_ADMIN_APPROVAL = "registration_requires_admin_approval";
+  public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
+  public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
 
-    protected ServiceManagerFactory smf;
+  protected ServiceManagerFactory smf;
 
   protected EntityManagerFactory emf;
 
@@ -229,6 +229,11 @@ public class ManagementServiceImpl implements ManagementService {
   @Autowired
   public void setProperties(Properties properties) {
     this.properties = new AccountCreationPropsImpl(properties);
+  }
+
+  /** For testing purposes only */
+  public Properties getProperties() {
+    return properties.properties;
   }
 
   @Autowired
