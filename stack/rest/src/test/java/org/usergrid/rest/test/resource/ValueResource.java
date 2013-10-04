@@ -76,8 +76,8 @@ public abstract class ValueResource extends NamedResource {
   }
 
 
-  public void delete (Map<String,?> entity) {
-    deleteInternal();
+  public JsonNode delete () {
+    return deleteInternal();
   }
 
   /**
@@ -294,6 +294,10 @@ public abstract class ValueResource extends NamedResource {
     
     if(start != null){
       resource = resource.queryParam("start", start.toString());
+    }
+
+    if(limit != null){
+      resource = resource.queryParam("limit", limit.toString());
     }
 
     return jsonMedia(resource).delete(JsonNode.class);

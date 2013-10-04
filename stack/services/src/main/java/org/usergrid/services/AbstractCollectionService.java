@@ -38,8 +38,6 @@ import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class AbstractCollectionService extends AbstractService {
 
-  private static final int MAX_NOTIFICATION_MATRIX_QUERY_SIZE = 10000000; // 10 M
-
   private static final Logger logger = LoggerFactory.getLogger(AbstractCollectionService.class);
 
   public AbstractCollectionService() {
@@ -490,18 +488,18 @@ public class AbstractCollectionService extends AbstractService {
 
     query = new Query(query);
     query.setResultsLevel(Level.ALL_PROPERTIES);
-    query.setLimit(1000);
+    query.setLimit(query.getLimit());
+
     if (!query.isReversedSet()) {
       query.setReversed(isCollectionReversed(context));
     }
+
     if(!query.isSortSet()){
       query.addSort(getCollectionSort(context));
     }
 
+
     Results r = em.searchCollection(context.getOwner(), context.getCollectionName(), query);
-    if (r.isEmpty()) {
-      throw new ServiceResourceNotFoundException(context);
-    }
 
     importEntities(context, r);
 

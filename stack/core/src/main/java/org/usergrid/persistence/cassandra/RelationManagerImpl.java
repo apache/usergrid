@@ -118,6 +118,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.util.Assert;
 import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Results.Level;
@@ -175,6 +176,13 @@ public class RelationManagerImpl implements RelationManager {
 
   public RelationManagerImpl init(EntityManagerImpl em, CassandraService cass, UUID applicationId,
       EntityRef headEntity, IndexBucketLocator indexBucketLocator) {
+
+    Assert.notNull(em, "Entity manager cannot be null");
+    Assert.notNull(cass, "Cassandra service cassnot be null");
+    Assert.notNull(applicationId, "Application Id cannot be null");
+    Assert.notNull(headEntity, "Head entity cannot be null");
+    Assert.notNull(indexBucketLocator, "Index bucket locator cannot be null");
+
     this.em = em;
     this.applicationId = applicationId;
     this.cass = cass;
@@ -188,7 +196,7 @@ public class RelationManagerImpl implements RelationManager {
     return em.getApplicationContext();
   }
 
-  RelationManagerImpl getRelationManager(EntityRef headEntity) {
+  private RelationManagerImpl getRelationManager(EntityRef headEntity) {
     RelationManagerImpl rmi = new RelationManagerImpl();
     rmi.init(em, cass, applicationId, headEntity, indexBucketLocator);
     return rmi;
@@ -198,7 +206,7 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   /** side effect: converts headEntity into an Entity if it is an EntityRef! */
-  Entity getHeadEntity() throws Exception {
+  private Entity getHeadEntity() throws Exception {
     Entity entity = null;
     if (headEntity instanceof Entity) {
       entity = (Entity) headEntity;
