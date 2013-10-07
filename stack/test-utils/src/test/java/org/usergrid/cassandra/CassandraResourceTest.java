@@ -31,6 +31,7 @@ public class CassandraResourceTest
         int rpcPort;
         int storagePort;
         int sslStoragePort;
+        int nativeTransportPort;
 
         do
         {
@@ -53,7 +54,14 @@ public class CassandraResourceTest
         while ( sslStoragePort == CassandraResource.DEFAULT_SSL_STORAGE_PORT || storagePort == sslStoragePort );
         LOG.info( "Setting ssl_storage_port to {}", sslStoragePort );
 
-        final CassandraResource cassandraResource = new CassandraResource( rpcPort, storagePort, sslStoragePort );
+        do
+        {
+            nativeTransportPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT + 1 );
+        }
+        while ( nativeTransportPort == CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT || sslStoragePort == nativeTransportPort );
+        LOG.info( "Setting native_transport_port to {}", nativeTransportPort );
+
+        final CassandraResource cassandraResource = new CassandraResource( rpcPort, storagePort, sslStoragePort, nativeTransportPort );
 
         cassandraResource.before();
 

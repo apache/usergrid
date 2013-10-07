@@ -12,6 +12,7 @@ import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
+import org.jboss.netty.channel.ChannelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ import org.junit.rules.ExternalResource;
 
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.usergrid.NoExitSecurityManager;
 import org.yaml.snakeyaml.Yaml;
 
 
@@ -56,6 +58,7 @@ public class CassandraResource extends ExternalResource
     public static final int DEFAULT_RPC_PORT= 9160;
     public static final int DEFAULT_STORAGE_PORT = 7000;
     public static final int DEFAULT_SSL_STORAGE_PORT = 7001;
+    public static final int DEFAULT_NATIVE_TRANSPORT_PORT = 9042;
 
     public static final String PROPERTIES_FILE = "project.properties";
     public static final String TARGET_DIRECTORY_KEY = "target.directory";
@@ -63,6 +66,7 @@ public class CassandraResource extends ExternalResource
     public static final String COMMIT_FILE_DIR_KEY = "commitlog_directory";
     public static final String SAVED_CACHES_DIR_KEY = "saved_caches_directory";
 
+    public static final String NATIVE_TRANSPORT_PORT_KEY = "native_transport_port";
     public static final String RPC_PORT_KEY = "rpc_port";
     public static final String STORAGE_PORT_KEY = "storage_port";
     public static final String SSL_STORAGE_PORT_KEY = "ssl_storage_port";
@@ -76,11 +80,14 @@ public class CassandraResource extends ExternalResource
     private int rpcPort = DEFAULT_RPC_PORT;
     private int storagePort = DEFAULT_STORAGE_PORT;
     private int sslStoragePort = DEFAULT_SSL_STORAGE_PORT;
+    private int nativeTransportPort = DEFAULT_NATIVE_TRANSPORT_PORT;
+
     private ConfigurableApplicationContext applicationContext;
     private CassandraDaemon cassandraDaemon;
     private SchemaManager schemaManager;
 
     private static CassandraResource instance;
+    private Thread shutdown;
 
 
     /**
@@ -90,7 +97,7 @@ public class CassandraResource extends ExternalResource
     @SuppressWarnings( "UnusedDeclaration" )
     CassandraResource() throws IOException
     {
-        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT );
+        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT, DEFAULT_NATIVE_TRANSPORT_PORT );
     }
 
 
@@ -98,7 +105,7 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort )
+    CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort )
     {
         LOG.info( "Creating CassandraResource using {} for the ClassLoader.",
                 Thread.currentThread().getContextClassLoader() );
@@ -107,6 +114,7 @@ public class CassandraResource extends ExternalResource
         this.rpcPort = rpcPort;
         this.storagePort = storagePort;
         this.sslStoragePort = sslStoragePort;
+        this.nativeTransportPort = nativeTransportPort;
 
         try
         {
@@ -124,9 +132,9 @@ public class CassandraResource extends ExternalResource
      * Creates a Cassandra starting ExternalResource for JUnit test cases
      * which uses the specified SchemaManager for Cassandra.
      */
-    CassandraResource( int rpcPort, int storagePort, int sslStoragePort ) throws IOException
+    CassandraResource( int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort ) throws IOException
     {
-        this( null, rpcPort, storagePort, sslStoragePort );
+        this( null, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
     }
 
 
@@ -160,6 +168,12 @@ public class CassandraResource extends ExternalResource
     public int getSslStoragePort()
     {
         return sslStoragePort;
+    }
+
+
+    public int getNativeTransportPort()
+    {
+        return nativeTransportPort;
     }
 
 
@@ -226,6 +240,8 @@ public class CassandraResource extends ExternalResource
         sb.append( STORAGE_PORT_KEY ).append( " = " ).append( storagePort );
         sb.append( "\n" );
         sb.append( SSL_STORAGE_PORT_KEY ).append( " = " ).append( sslStoragePort );
+        sb.append( "\n" );
+        sb.append( NATIVE_TRANSPORT_PORT_KEY ).append( " = " ).append( nativeTransportPort );
         sb.append( "\n" );
         sb.append( DATA_FILE_DIR_KEY ).append( " = " ).append( new File( tempDir, "data" ).toString() );
         sb.append( "\n" );
@@ -297,6 +313,7 @@ public class CassandraResource extends ExternalResource
             map.put( RPC_PORT_KEY, getRpcPort() );
             map.put( STORAGE_PORT_KEY, getStoragePort() );
             map.put( SSL_STORAGE_PORT_KEY, getSslStoragePort() );
+            map.put( NATIVE_TRANSPORT_PORT_KEY, getNativeTransportPort() );
             map.put( COMMIT_FILE_DIR_KEY, new File( tempDir, "commitlog" ).toString() );
             map.put( DATA_FILE_DIR_KEY, new String [] { new File( tempDir, "data" ).toString() } );
             map.put( SAVED_CACHES_DIR_KEY, new File(tempDir, "saved_caches").toString());
@@ -312,6 +329,12 @@ public class CassandraResource extends ExternalResource
             System.setProperty( "log4j.configuration", "log4j.properties" );
             System.setProperty( "cassandra.ring_delay_ms", "100" );
             System.setProperty( "cassandra.config", newYamlUrl.toString() );
+
+            while ( ! AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 )
+            {
+                rpcPort++;
+            }
+
             System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
             System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
             System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
@@ -352,38 +375,56 @@ public class CassandraResource extends ExternalResource
     {
         super.after();
 
-        LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
-
-        if ( schemaManager != null )
+        shutdown = new Thread(  )
         {
-            LOG.info( "Destroying schemaManager..." );
-            try
+            @Override
+            public void run()
             {
-                schemaManager.destroy();
-            }
-            catch ( Exception e )
-            {
-                LOG.error( "Ignoring failures while dropping keyspaces: {}", e.getMessage() );
-            }
+                try
+                {
+                    Thread.currentThread().sleep( 100L );
+                }
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
 
-            LOG.info( "SchemaManager destroyed..." );
-        }
+                LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
 
-        applicationContext.stop();
-        LOG.info( "ApplicationContext stopped..." );
+                if ( schemaManager != null )
+                {
+                    LOG.info( "Destroying schemaManager..." );
+                    try
+                    {
+                        schemaManager.destroy();
+                    }
+                    catch ( Exception e )
+                    {
+                        LOG.error( "Ignoring failures while dropping keyspaces: {}", e.getMessage() );
+                    }
 
-        try
-        {
-            if ( cassandraDaemon != null )
-            {
-                LOG.info( "Deactivating CassandraDaemon..." );
-                cassandraDaemon.deactivate();
+                    LOG.info( "SchemaManager destroyed..." );
+                }
+
+                applicationContext.stop();
+                LOG.info( "ApplicationContext stopped..." );
+
+                try
+                {
+                    if ( cassandraDaemon != null )
+                    {
+                        LOG.info( "Deactivating CassandraDaemon..." );
+                        cassandraDaemon.deactivate();
+                    }
+                }
+                catch ( Exception ex )
+                {
+                    ex.printStackTrace();
+                }
             }
-        }
-        catch ( Exception ex )
-        {
-            ex.printStackTrace();
-        }
+        };
+
+        shutdown.start();
     }
 
 
@@ -427,6 +468,9 @@ public class CassandraResource extends ExternalResource
      */
     public static CassandraResource newWithAvailablePorts( String schemaManagerName )
     {
+        // Uncomment to test for Surefire Failures
+        // System.setSecurityManager( new NoExitSecurityManager( System.getSecurityManager() ) );
+
         synchronized ( lock )
         {
             if ( instance != null )
@@ -439,6 +483,8 @@ public class CassandraResource extends ExternalResource
             int storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT
                     + RandomUtils.nextInt( 1000 ) );
             int sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT
+                    + RandomUtils.nextInt( 1000 ) );
+            int nativeTransportPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT
                     + RandomUtils.nextInt( 1000 ) );
 
             if ( rpcPort == storagePort )
@@ -453,7 +499,7 @@ public class CassandraResource extends ExternalResource
                 sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
             }
 
-            instance = new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort );
+            instance = new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
             return instance;
         }
     }
