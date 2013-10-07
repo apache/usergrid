@@ -193,7 +193,7 @@ row_cache_save_period: 0
 row_cache_provider: SerializingCacheProvider
 
 # saved caches
-saved_caches_directory: /var/lib/cassandra/saved_caches
+saved_caches_directory: ./tmp/saved_caches
 
 # commitlog_sync may be either "periodic" or "batch." 
 # When in batch mode, Cassandra won't ack writes until the commit log
