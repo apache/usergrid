@@ -83,7 +83,15 @@ public class ServiceInfoTest
 
 	public void testServiceInfo(String s, String... classes) {
 		ServiceInfo info = ServiceInfo.getServiceInfo(s);
-		logger.info(JsonUtils.mapToFormattedJsonString(info));
+    try {
+		  if (info != null) { 
+        logger.info(JsonUtils.mapToFormattedJsonString(info));
+      } else {
+        logger.info("info = " + info);
+      }
+    } catch (Throwable t) {
+      logger.error("Error logging object " + info.toString());
+    }
 		int i = 0;
 		for (String pattern : info.getPatterns()) {
 			String className = ServiceInfo.getClassName(pattern);
