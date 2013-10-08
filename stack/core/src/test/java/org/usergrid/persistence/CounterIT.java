@@ -46,22 +46,22 @@ public class CounterIT extends AbstractCoreIT
 	private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
 
 	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
-	
-	public CounterIT()
-    {
-		super();
-	}
+
+  public CounterIT() {
+    super();
+  }
 
 
-	@Before
-	public void getSubmitter(){
-	    //set the batcher to block the submit so we wait for results when testing
-	    SimpleBatcher batcher = CoreITSuite.cassandraResource.getBean(SimpleBatcher.class);
-	    
-	    batcher.setBlockingSubmit(true);
-	}
-	
-	@Test
+  @Before
+  public void getSubmitter() {
+    //set the batcher to block the submit so we wait for results when testing
+    SimpleBatcher batcher = CoreITSuite.cassandraResource.getBean(SimpleBatcher.class);
+
+    batcher.setBlockingSubmit(true);
+    batcher.setBatchSize(1);
+  }
+
+  @Test
 	public void testIncrementAndDecrement() throws Exception {
 		
 		LOG.info("CounterIT.testIncrementAndDecrement");

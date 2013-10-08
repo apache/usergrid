@@ -110,6 +110,7 @@ public class ManagementServiceIT {
     SimpleBatcher batcher = cassandraResource.getBean(SimpleBatcher.class);
 
     batcher.setBlockingSubmit(true);
+    batcher.setBatchSize(1);
 
     setup.getMgmtSvc().countAdminUserAction(adminUser, "login");
 
