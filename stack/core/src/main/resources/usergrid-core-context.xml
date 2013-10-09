@@ -33,9 +33,14 @@
 
 	<bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
 		<constructor-arg value="${cassandra.url}" />
-		<property name="clockResolution" ref="microsecondsTimeResolution" />
-    <property name="opTimer" ref="taggedOpTimer"/>
+        <!-- set the pool size if it's available.  If not go with 50 -->
+        <property name="maxActive" value="${cassandra.connections:20}"/>
+        <property name="clockResolution" ref="microsecondsTimeResolution" />
+        <property name="opTimer" ref="taggedOpTimer"/>
 	</bean>
+
+
+
 
 	<bean id="cassandraCluster" class="me.prettyprint.cassandra.service.ThriftCluster">
 		<constructor-arg value="${cassandra.cluster}" />
