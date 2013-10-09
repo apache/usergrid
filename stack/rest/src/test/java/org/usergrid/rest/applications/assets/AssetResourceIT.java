@@ -1,13 +1,10 @@
 package org.usergrid.rest.applications.assets;
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
-import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -235,7 +232,7 @@ public class AssetResourceIT extends AbstractRestIT {
         .type(MediaType.MULTIPART_FORM_DATA)
         .put(JsonNode.class, form);
     logNode(node);
-    assertNotEquals(lastModified, node.findValue(AssetUtils.LAST_MODIFIED).getLongValue());
+    Assert.assertTrue(lastModified != node.findValue(AssetUtils.LAST_MODIFIED).getLongValue());
   }
 
   @Test
