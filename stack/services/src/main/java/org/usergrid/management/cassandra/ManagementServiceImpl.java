@@ -154,6 +154,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 public class ManagementServiceImpl implements ManagementService {
+  private static final Logger logger = LoggerFactory.getLogger(ManagementServiceImpl.class);
 
     /**
    * Key for the user's pin
@@ -187,16 +188,15 @@ public class ManagementServiceImpl implements ManagementService {
 
   public static final String APPLICATION_INFO = "application_info";
 
-  private static final Logger logger = LoggerFactory.getLogger(ManagementServiceImpl.class);
 
   public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
   private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
-    public static final String REGISTRATION_REQUIRES_ADMIN_APPROVAL = "registration_requires_admin_approval";
-    public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
-    public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
+  public static final String REGISTRATION_REQUIRES_ADMIN_APPROVAL = "registration_requires_admin_approval";
+  public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
+  public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
 
-    protected ServiceManagerFactory smf;
+  protected ServiceManagerFactory smf;
 
   protected EntityManagerFactory emf;
 
@@ -229,6 +229,11 @@ public class ManagementServiceImpl implements ManagementService {
   @Autowired
   public void setProperties(Properties properties) {
     this.properties = new AccountCreationPropsImpl(properties);
+  }
+
+  /** For testing purposes only */
+  public Properties getProperties() {
+    return properties.properties;
   }
 
   @Autowired
@@ -741,8 +746,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     writeUserMongoPassword(MANAGEMENT_APPLICATION_ID, user, mongoPassword);
 
-    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID, user.getUuid(), user.getUsername(), user.getName(),
-        user.getEmail(), user.getActivated(), user.getDisabled(), user.getDynamicProperties());
+    UserInfo userInfo = new UserInfo(
+        MANAGEMENT_APPLICATION_ID, 
+        user.getUuid(), 
+        user.getUsername(), 
+        user.getName(),
+        user.getEmail(), 
+        user.getConfirmed(), 
+        user.getActivated(), 
+        user.getDisabled(), 
+        user.getDynamicProperties());
 
     // special case for sysadmin only
     if (!user.getEmail().equals(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL))) {
@@ -844,9 +857,16 @@ public class ManagementServiceImpl implements ManagementService {
     if (entity == null) {
       return null;
     }
-    return new UserInfo(applicationId, entity.getUuid(), (String) entity.getProperty("username"), entity.getName(),
-        (String) entity.getProperty("email"), ConversionUtils.getBoolean(entity.getProperty("activated")),
-        ConversionUtils.getBoolean(entity.getProperty("disabled")), entity.getDynamicProperties());
+    return new UserInfo(
+        applicationId, 
+        entity.getUuid(), 
+        (String) entity.getProperty("username"), 
+        entity.getName(),
+        (String) entity.getProperty("email"), 
+        ConversionUtils.getBoolean(entity.getProperty("confirmed")),
+        ConversionUtils.getBoolean(entity.getProperty("activated")),
+        ConversionUtils.getBoolean(entity.getProperty("disabled")), 
+        entity.getDynamicProperties());
   }
 
   public UserInfo getUserInfo(UUID applicationId, Map<String, Object> properties) {
@@ -1141,15 +1161,21 @@ public class ManagementServiceImpl implements ManagementService {
 
     if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
       userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
+
+//      logger.debug("confirmed {} requireConfirmation {}", 
+//              userInfo.isConfirmed(), newAdminUsersRequireConfirmation());
+//
+//      logger.debug("activated {} requireActivation {}", 
+//              userInfo.isActivated(), newAdminUsersNeedSysAdminApproval());
+
+      if ( !userInfo.isConfirmed() && newAdminUsersRequireConfirmation()) {
+        throw new UnconfirmedAdminUserException();
+      }
       if (!userInfo.isActivated()) {
         throw new UnactivatedAdminUserException();
       }
       if (userInfo.isDisabled()) {
         throw new DisabledAdminUserException();
-      }
-      if ( !user.confirmed() )
-      {
-          throw new UnconfirmedAdminUserException();
       }
       return userInfo;
     }
@@ -2119,7 +2145,9 @@ public class ManagementServiceImpl implements ManagementService {
     em.setProperty(new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()), "activated", true);
     List<UserInfo> users = getAdminUsersForOrganization(organization.getUuid());
     for (UserInfo user : users) {
-      if (!user.isActivated()) {
+      boolean confirmed = user.isConfirmed() || !newAdminUsersRequireConfirmation();
+      boolean shouldActivate = confirmed && !newAdminUsersRequireConfirmation(); 
+      if (shouldActivate) { 
         activateAdminUser(user.getUuid());
       }
     }

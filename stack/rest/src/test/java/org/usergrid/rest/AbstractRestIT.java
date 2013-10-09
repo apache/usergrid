@@ -49,6 +49,7 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 
 /**
  * Base class for testing Usergrid Jersey-based REST API. Implementations should
@@ -356,5 +357,52 @@ public abstract class AbstractRestIT extends JerseyTest
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE);
+    }
+
+    /**
+     * Sets a management service property locally and remotely.
+     */
+    public void setTestProperty(String key, String value) {
+
+      // set the value locally (in the Usergrid instance here in the JUnit classloader
+      setup.getMgmtSvc().getProperties().setProperty(key, value);
+
+      // set the value remotely (in the Usergrid instance running in Jetty classloader)
+      Map<String, String> props = new HashMap<String, String>();
+      props.put(key, value);
+      resource().path("/testproperties")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type( MediaType.APPLICATION_JSON_TYPE)
+        .post(props);
+    }
+
+    /**
+     * Set a management service properties locally and remotely.
+     */
+    public void setTestProperties(Map<String, String> props) {
+
+      // set the values locally (in the Usergrid instance here in the JUnit classloader
+       for (String key : props.keySet()) {
+         setup.getMgmtSvc().getProperties().setProperty(key, props.get(key));
+       }
+
+      // set the values remotely (in the Usergrid instance running in Jetty classloader)
+       resource().path("/testproperties")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type( MediaType.APPLICATION_JSON_TYPE)
+        .post(props);
+    }
+
+    /**
+     * Get all management service properties from th Jetty instance of the service. 
+     */
+    public Map<String, String> getRemoteTestProperties() {
+      return resource().path("/testproperties")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type( MediaType.APPLICATION_JSON_TYPE)
+        .get(Map.class);
     }
 }

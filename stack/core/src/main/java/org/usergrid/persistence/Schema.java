@@ -107,6 +107,7 @@ public class Schema {
     public static final String PROPERTY_ACTIVATED = "activated";
     public static final String PROPERTY_COLLECTION_NAME = "collectionName";
     public static final String PROPERTY_CREATED = "created";
+    public static final String PROPERTY_CONFIRMED= "confirmed";
     public static final String PROPERTY_DISABLED = "disabled";
     public static final String PROPERTY_UUID = "uuid";
     public static final String PROPERTY_EMAIL = "email";

@@ -392,6 +392,7 @@ public class EntityManagerImpl implements EntityManager {
 
 		if (getDefaultSchema()
 				.isPropertyIndexed(entity.getType(), propertyName)) {
+      //this call is incorrect.  The current entity is NOT the head entity
 			getRelationManager(entity).batchUpdatePropertyIndexes(batch,
 					propertyName, propertyValue, entitySchemaHasProperty,
 					noRead, timestampUuid);

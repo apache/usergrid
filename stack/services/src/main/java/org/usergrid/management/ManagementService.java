@@ -32,6 +32,7 @@ import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.services.ServiceResults;
 
 import com.google.common.collect.BiMap;
+import java.util.Properties;
 
 public interface ManagementService {
 
@@ -398,5 +399,7 @@ public interface ManagementService {
   public Group getOrganizationProps(UUID orgId) throws Exception;
   
   public Object registerAppWithAPM (OrganizationInfo orgInfo, ApplicationInfo appInfo) throws Exception;
-  
+
+  /** For testing purposes only */
+  public Properties getProperties();
 }
