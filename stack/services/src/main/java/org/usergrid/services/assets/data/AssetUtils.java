@@ -23,6 +23,7 @@ public class AssetUtils {
   public static final String CONTENT_DISPOSITION = "content-disposition";
   public static final String E_TAG = "etag";
   public static final String CHECKSUM = "checksum";
+  public static final String LAST_MODIFIED = "last-modified";
 
   /**
    * Returns the key for the bucket in the following form:
@@ -60,8 +61,32 @@ public class AssetUtils {
     if (metadata == null) {
       metadata = new HashMap<String,Object>();
       entity.setProperty(AssetUtils.FILE_METADATA, metadata);
+      addLegacyMetadata(entity, metadata);
+    }
+    // must always have a last modified. if not in the metadata, grab the entity's
+    if (metadata.get(LAST_MODIFIED) == null) {
+      metadata.put(LAST_MODIFIED, entity.getModified());
     }
     return metadata;
+  }
+
+  /** @deprecated for legacy use */
+  private static void addLegacyMetadata(Entity entity, Map<String,Object> metadata) {
+    if (entity.getProperty(CONTENT_TYPE) != null) {
+      metadata.put(CONTENT_TYPE, entity.getProperty(CONTENT_TYPE));
+    }
+    if (entity.getProperty(CONTENT_LENGTH) != null) {
+      metadata.put(CONTENT_LENGTH, entity.getProperty(CONTENT_LENGTH));
+    }
+    if (entity.getProperty(CONTENT_DISPOSITION) != null) {
+      metadata.put(CONTENT_DISPOSITION, entity.getProperty(CONTENT_DISPOSITION));
+    }
+    if (entity.getProperty(E_TAG) != null) {
+      metadata.put(E_TAG, entity.getProperty(E_TAG));
+    }
+    if (entity.getProperty(CHECKSUM) != null) {
+      metadata.put(CHECKSUM, entity.getProperty(CHECKSUM));
+    }
   }
 
   /***

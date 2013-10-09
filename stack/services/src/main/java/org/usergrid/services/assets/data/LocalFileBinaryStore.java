@@ -34,8 +34,6 @@ public class LocalFileBinaryStore implements BinaryStore {
   /**
    * Common method of contructing the file object based on the configured repos
    * and {@link org.usergrid.persistence.entities.Asset#getPath()}
-   * @param asset
-   * @return
    */
   private File path(UUID appId, Entity entity) {
     return new File(reposLocation, AssetUtils.buildAssetKey(appId, entity));
@@ -52,6 +50,7 @@ public class LocalFileBinaryStore implements BinaryStore {
 
     Map<String,Object> fileMetadata = AssetUtils.getFileMetadata(entity);
     fileMetadata.put(AssetUtils.CONTENT_LENGTH, size);
+    fileMetadata.put(AssetUtils.LAST_MODIFIED, System.currentTimeMillis());
 
     // if we were successful, write the mime type
     if ( file.exists() ) {
@@ -73,8 +72,6 @@ public class LocalFileBinaryStore implements BinaryStore {
    * Deletes the asset if it is a file. Does nothing if
    * {@link org.usergrid.persistence.entities.Asset#getPath()}
    * represents a directory.
-   *
-   * @param asset
    */
   @Override
   public void delete(UUID appId, Entity entity) {

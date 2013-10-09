@@ -28,6 +28,7 @@ import org.usergrid.persistence.annotations.EntityDictionary;
 
 /**
  * Asset entity for representing file-like objects.
+ * @deprecated
  */
 @XmlRootElement
 public class Asset extends TypedEntity {

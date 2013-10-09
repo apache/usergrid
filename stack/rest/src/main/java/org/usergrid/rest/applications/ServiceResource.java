@@ -344,7 +344,13 @@ public class ServiceResource extends AbstractContextResource {
         response.setApplication(services.getApplication());
         response.setParams(ui.getQueryParameters());
 
-        executeServiceRequest(ui, response, ServiceAction.DELETE, null);
+        ServiceResults sr = executeServiceRequest(ui, response, ServiceAction.DELETE, null);
+
+        for (Entity entity : sr.getEntities()) {
+          if (entity.getProperty(AssetUtils.FILE_METADATA) != null) {
+            binaryStore.delete(services.getApplicationId(), entity);
+          }
+        }
 
         return new JSONWithPadding(response, callback);
     }
@@ -524,7 +530,7 @@ public class ServiceResource extends AbstractContextResource {
 
   @GET
   @RequireApplicationAccess
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @Produces(MediaType.WILDCARD)
   public Response executeStreamGet(@Context UriInfo ui,
                                    @PathParam("entityId") PathSegment entityId,
                                    @HeaderParam("range") String rangeHeader,
@@ -544,11 +550,11 @@ public class ServiceResource extends AbstractContextResource {
 
     Map<String, Object> fileMetadata = AssetUtils.getFileMetadata(entity);
 
-    // todo: make this the file-metadata modified
     // return a 302 if not modified
     Date modified = AssetUtils.fromIfModifiedSince(modifiedSince);
     if (modified != null) {
-      if (entity.getModified() - modified.getTime() < 0) {
+      Long lastModified = (Long)fileMetadata.get(AssetUtils.LAST_MODIFIED);
+      if (lastModified - modified.getTime() < 0) {
         return Response.status(Response.Status.NOT_MODIFIED).build();
       }
     }
@@ -590,9 +596,10 @@ public class ServiceResource extends AbstractContextResource {
       return Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    Long lastModified = (Long)fileMetadata.get(AssetUtils.LAST_MODIFIED);
     Response.ResponseBuilder responseBuilder = Response.ok(inputStream)
         .type((String)fileMetadata.get(AssetUtils.CONTENT_TYPE))
-        .lastModified(new Date(entity.getModified()));
+        .lastModified(new Date(lastModified));
 
     if (fileMetadata.get(AssetUtils.E_TAG) != null) {
       responseBuilder.tag((String)fileMetadata.get(AssetUtils.E_TAG));

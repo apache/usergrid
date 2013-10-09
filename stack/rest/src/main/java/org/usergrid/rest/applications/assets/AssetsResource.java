@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * @author zznate
+ * @deprecated
  */
 @Component("org.usergrid.rest.applications.assets.AssetsResource")
 @Scope("prototype")

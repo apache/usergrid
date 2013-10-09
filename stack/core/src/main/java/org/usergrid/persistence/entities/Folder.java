@@ -28,6 +28,7 @@ import org.usergrid.persistence.annotations.EntityDictionary;
 
 /**
  * Asset entity for representing folder-like objects.
+ * @deprecated
  */
 @XmlRootElement
 public class Folder extends TypedEntity {
