@@ -37,11 +37,8 @@
         <property name="maxActive" value="${cassandra.connections:20}"/>
         <property name="clockResolution" ref="microsecondsTimeResolution" />
         <property name="opTimer" ref="taggedOpTimer"/>
-        <property name="loadBalancingPolicy" ref="balancerPolicy"/>
 	</bean>
 
-    <!-- connect to the least active node -->
-    <bean id="balancerPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
 
 
