@@ -178,6 +178,12 @@ If you specify column names in your query, you will be unable to reference the r
 
 ## Release notes
 
+### 0.9.9
+* Bug Fixes
+  1. fix setting profile & target configurations
+* Misc
+  1. Add license to gem
+
 ### 0.9.8
 * New features
   1. logout (remove access_token)

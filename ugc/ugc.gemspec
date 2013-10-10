@@ -8,6 +8,7 @@ spec = Gem::Specification.new do |s|
   s.homepage = 'http://ganyo.com'
   s.platform = Gem::Platform::RUBY
   s.summary = 'Usergrid Command Line'
+  s.license = 'Apache License, Version 2.0'
   s.files = `git ls-files`.split($\)
   s.require_paths << 'lib'
   s.has_rdoc = true

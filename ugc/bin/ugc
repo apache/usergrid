@@ -43,7 +43,8 @@ pre do |global_options,command,options,args|
 
   $settings = Ugc::Settings.new global_options
   if not $settings.configured?
-    raise "not configured"
+    raise "not configured" unless command.name == :profile or command.parent.name == :target
+    true
   elsif command.name == :login
     true
   else
