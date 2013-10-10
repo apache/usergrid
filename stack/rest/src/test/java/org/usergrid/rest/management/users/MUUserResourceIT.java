@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ActivationState;
 import org.usergrid.management.MockImapClient;
 import org.usergrid.management.OrganizationInfo;
@@ -197,6 +198,80 @@ public class MUUserResourceIT extends AbstractRestIT
           setTestProperties(originalProperties);
         }
     }
+
+  @Test
+  public void testSystemAdminNeedsNoConfirmation() throws Exception {
+
+    Map<String, String> originalProperties = getRemoteTestProperties();
+
+    try {
+      // require comfirmation of new admin users
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
+
+      assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
+      assertFalse(setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval());
+      
+      String sysadminUsername = (String)setup.getMgmtSvc().getProperties().get(
+        AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+
+      String sysadminPassword = (String)setup.getMgmtSvc().getProperties().get(
+        AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
+
+      // sysadmin login should suceed despite confirmation setting
+      JsonNode node;
+      try {
+        node = resource().path("/management/token").queryParam("grant_type", "password")
+          .queryParam("username", sysadminUsername)
+          .queryParam("password", sysadminPassword)
+          .accept(MediaType.APPLICATION_JSON)
+          .get(JsonNode.class);
+
+      } catch (UniformInterfaceException e) {
+        fail("Sysadmin should need no confirmation");
+      }
+    } finally {
+      setTestProperties(originalProperties);
+    }
+  }
+
+  @Test
+  public void testTestUserNeedsNoConfirmation() throws Exception {
+
+    Map<String, String> originalProperties = getRemoteTestProperties();
+
+    try {
+      // require comfirmation of new admin users
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+      setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
+      setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
+
+      assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
+      assertFalse(setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval());
+      
+      String testUserUsername = (String)setup.getMgmtSvc().getProperties().get(
+        AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL);
+
+      String testUserPassword = (String)setup.getMgmtSvc().getProperties().get(
+        AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD);
+
+      // test user login should suceed despite confirmation setting
+      JsonNode node;
+      try {
+        node = resource().path("/management/token").queryParam("grant_type", "password")
+          .queryParam("username", testUserUsername)
+          .queryParam("password", testUserPassword)
+          .accept(MediaType.APPLICATION_JSON)
+          .get(JsonNode.class);
+
+      } catch (UniformInterfaceException e) {
+        fail("Test User should need no confirmation");
+      }
+    } finally {
+      setTestProperties(originalProperties);
+    }
+  }
 
 
     private String getTokenFromMessage( Message msg ) throws IOException, MessagingException
