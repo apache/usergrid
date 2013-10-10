@@ -1162,7 +1162,16 @@ public class ManagementServiceImpl implements ManagementService {
     if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
       userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 
-      if (!properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL).equals(userInfo.getEmail())) {
+      boolean userIsSuperAdmin = 
+        properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL).equals(userInfo.getEmail());
+
+      boolean testUserEnabled = 
+        parseBoolean(properties.getProperty(PROPERTIES_SETUP_TEST_ACCOUNT));
+
+      boolean userIsTestUser = !testUserEnabled ? false :  
+        properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL).equals(userInfo.getEmail());
+
+      if (!userIsSuperAdmin && !userIsTestUser) {
         
         if ( !userInfo.isConfirmed() && newAdminUsersRequireConfirmation()) {
           throw new UnconfirmedAdminUserException();
