@@ -30,89 +30,98 @@ Partial Class SettingsForm
         Me.org = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.app = New System.Windows.Forms.TextBox()
-        Me.Button1 = New System.Windows.Forms.Button()
+        Me.btnSave = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(25, 36)
+        Me.Label1.Location = New System.Drawing.Point(33, 44)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(60, 13)
+        Me.Label1.Size = New System.Drawing.Size(79, 17)
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "User Name"
         '
         'userName
         '
-        Me.userName.Location = New System.Drawing.Point(91, 33)
+        Me.userName.Location = New System.Drawing.Point(121, 41)
+        Me.userName.Margin = New System.Windows.Forms.Padding(4)
         Me.userName.Name = "userName"
-        Me.userName.Size = New System.Drawing.Size(135, 20)
+        Me.userName.Size = New System.Drawing.Size(179, 22)
         Me.userName.TabIndex = 1
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(28, 75)
+        Me.Label2.Location = New System.Drawing.Point(37, 92)
+        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(53, 13)
+        Me.Label2.Size = New System.Drawing.Size(69, 17)
         Me.Label2.TabIndex = 2
         Me.Label2.Text = "Password"
         '
         'password
         '
-        Me.password.Location = New System.Drawing.Point(91, 75)
+        Me.password.Location = New System.Drawing.Point(121, 92)
+        Me.password.Margin = New System.Windows.Forms.Padding(4)
         Me.password.Name = "password"
-        Me.password.PasswordChar = Global.Microsoft.VisualBasic.ChrW(35)
-        Me.password.Size = New System.Drawing.Size(135, 20)
+        Me.password.PasswordChar = Global.Microsoft.VisualBasic.ChrW(46)
+        Me.password.Size = New System.Drawing.Size(179, 22)
         Me.password.TabIndex = 3
         '
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(28, 109)
+        Me.Label3.Location = New System.Drawing.Point(37, 134)
+        Me.Label3.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(24, 13)
+        Me.Label3.Size = New System.Drawing.Size(32, 17)
         Me.Label3.TabIndex = 4
         Me.Label3.Text = "Org"
         '
         'org
         '
-        Me.org.Location = New System.Drawing.Point(91, 109)
+        Me.org.Location = New System.Drawing.Point(121, 134)
+        Me.org.Margin = New System.Windows.Forms.Padding(4)
         Me.org.Name = "org"
-        Me.org.Size = New System.Drawing.Size(135, 20)
+        Me.org.Size = New System.Drawing.Size(179, 22)
         Me.org.TabIndex = 5
         '
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(28, 144)
+        Me.Label4.Location = New System.Drawing.Point(37, 177)
+        Me.Label4.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(26, 13)
+        Me.Label4.Size = New System.Drawing.Size(33, 17)
         Me.Label4.TabIndex = 6
         Me.Label4.Text = "App"
         '
         'app
         '
-        Me.app.Location = New System.Drawing.Point(91, 144)
+        Me.app.Location = New System.Drawing.Point(121, 177)
+        Me.app.Margin = New System.Windows.Forms.Padding(4)
         Me.app.Name = "app"
-        Me.app.Size = New System.Drawing.Size(135, 20)
+        Me.app.Size = New System.Drawing.Size(179, 22)
         Me.app.TabIndex = 7
         '
-        'Button1
+        'btnSave
         '
-        Me.Button1.Location = New System.Drawing.Point(91, 206)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(91, 23)
-        Me.Button1.TabIndex = 8
-        Me.Button1.Text = "Save Settings"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.btnSave.Location = New System.Drawing.Point(121, 254)
+        Me.btnSave.Margin = New System.Windows.Forms.Padding(4)
+        Me.btnSave.Name = "btnSave"
+        Me.btnSave.Size = New System.Drawing.Size(121, 28)
+        Me.btnSave.TabIndex = 8
+        Me.btnSave.Text = "Save Settings"
+        Me.btnSave.UseVisualStyleBackColor = True
         '
         'SettingsForm
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(425, 262)
-        Me.Controls.Add(Me.Button1)
+        Me.ClientSize = New System.Drawing.Size(567, 322)
+        Me.Controls.Add(Me.btnSave)
         Me.Controls.Add(Me.app)
         Me.Controls.Add(Me.Label4)
         Me.Controls.Add(Me.org)
@@ -121,6 +130,7 @@ Partial Class SettingsForm
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.userName)
         Me.Controls.Add(Me.Label1)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "SettingsForm"
         Me.Text = "Settings"
         Me.ResumeLayout(False)
@@ -135,5 +145,5 @@ Partial Class SettingsForm
     Friend WithEvents org As System.Windows.Forms.TextBox
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents app As System.Windows.Forms.TextBox
-    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents btnSave As System.Windows.Forms.Button
 End Class

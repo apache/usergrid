@@ -8,8 +8,7 @@ Public Class AddBookForm
         b.title = title.Text
         b.author = author.Text
         Settings.client.CreateEntity(Of Book)("books", b)
-        Form1.clearBooks()
-        Form1.updateBooks()
+        MainWindow.updateBooks()
         Me.Close()
     End Sub
 

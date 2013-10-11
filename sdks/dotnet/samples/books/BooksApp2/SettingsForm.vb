@@ -2,7 +2,7 @@
 
 Public Class SettingsForm
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         Settings.userName = userName.Text
         Settings.password = password.Text
         Settings.org = org.Text
