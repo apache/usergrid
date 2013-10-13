@@ -33,6 +33,7 @@ namespace new_project_template
                 {
                     Book b = books[i];
                     Console.WriteLine(j + "\t\t" + b.title + "\t\t\t" + b.author);
+                    j++;
                 }
                 books = client.GetNextEntities<Book>("books");
             } while (books.Count > 0);
