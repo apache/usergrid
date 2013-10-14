@@ -60,7 +60,10 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	}
 
 	public Response toResponse(int status, E e) {
-		logger.error("Error in request (" + status + ")", e);
+    if (status >= 500) {
+      // only log real errors as errors
+		  logger.error("Error in request (" + status + ")", e);
+    }
 		ApiResponse response = new ApiResponse();
 		AuthErrorInfo authError = AuthErrorInfo.getForException(e);
 		if (authError != null) {
