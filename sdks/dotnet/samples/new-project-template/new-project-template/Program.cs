@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,21 +9,23 @@ namespace new_project_template
     class Book : Usergrid.Sdk.Model.UsergridEntity
     {
         public string title { get; set; }
-        public string author { get; set; }
     }
 
     class Program
     {
         static void Main(string[] args)
         {
-            var client = new Usergrid.Sdk.Client("mmalloy@apigee.com", "testapp");
-            client.Login("mmalloy@apigee.com", "makeithappen2012", Usergrid.Sdk.Model.AuthType.User);
+            //Start by replacing <org name> with your App Services organization name!
+            var client = new Usergrid.Sdk.Client(<org name>, "sandbox");
+            
+            //Uncomment this line if you are not using your App Services 'sandbox' application
+            //client.Login(<login id>, <password>, Usergrid.Sdk.Model.AuthType.User);
 
             //
             // Print out the books from the books collection
             //
 
-            Console.WriteLine("Book Number\tBook Title\t\t\tBookAuthor");
+            Console.WriteLine("Book Number\tBook Title");
             Console.WriteLine("===========\t==========\t\t\t==========");
             var books = client.GetEntities<Book>("books");
             int j = 1;
@@ -32,7 +34,8 @@ namespace new_project_template
                 for (int i = 0; i < books.Count; i++)
                 {
                     Book b = books[i];
-                    Console.WriteLine(j + "\t\t" + b.title + "\t\t\t" + b.author);
+                    Console.WriteLine(j + "\t\t" + b.title);
+                    j++;
                 }
                 books = client.GetNextEntities<Book>("books");
             } while (books.Count > 0);
@@ -41,20 +44,18 @@ namespace new_project_template
             // Create a new book and add it to the database
             //
             Book newBook = new Book();
-            newBook.title = "A Sample Title";
-            newBook.author = "A Sample Author";
+            newBook.title = "The Old Man and the Sea";
             client.CreateEntity<Book>("books", newBook);
 
             //
             // Change/Update Entities
             //
-            books = client.GetEntities<Book>("books", 10, "where title contains 'Sample'");
+            books = client.GetEntities<Book>("books", 10, null);
             for (int k = 0; k < books.Count; k++)
             {
                 Book b = books[k];
                 Book updatedBook = new Book();
                 updatedBook.title = "Another Title";
-                updatedBook.author = "Another Author";
                 client.UpdateEntity<Book>("books", b.Uuid, updatedBook);
             }
 
