@@ -12,6 +12,9 @@
 	<context:component-scan base-package="org.usergrid.persistence" />
 	<context:annotation-config />
 
+    <aop:config proxy-target-class="true"/>
+
+
 	
 	<bean id="propertyPlaceholderConfigurer"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">

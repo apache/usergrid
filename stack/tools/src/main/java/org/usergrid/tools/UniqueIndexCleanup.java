@@ -28,11 +28,8 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
@@ -47,8 +44,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
@@ -65,11 +62,14 @@ import org.usergrid.persistence.schema.CollectionInfo;
  * a forced re-index is triggered
  * 
  * USERGRID-323
+ *
+ *
+ * UniqueIndexCleanup -app [appid] -col [collectionname]
  * 
  * @author tnine
  * 
  */
-public class EntityIndexCleanup extends ToolBase {
+public class UniqueIndexCleanup extends ToolBase {
 
   /**
      * 
@@ -78,17 +78,48 @@ public class EntityIndexCleanup extends ToolBase {
 
   public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
-  private static final Logger logger = LoggerFactory.getLogger(EntityIndexCleanup.class);
+
+
+  private static final Logger logger = LoggerFactory.getLogger(UniqueIndexCleanup.class);
+
+  /**
+   *
+   */
+  private static final String APPLICATION_ARG = "app";
+
+  /**
+   *
+   */
+  private static final String COLLECTION_ARG = "col";
+
+
 
   @Override
   @SuppressWarnings("static-access")
   public Options createOptions() {
 
+
+    Options options = new Options();
+
     Option hostOption = OptionBuilder.withArgName("host").hasArg().isRequired(true).withDescription("Cassandra host")
         .create("host");
 
-    Options options = new Options();
+
     options.addOption(hostOption);
+
+
+    Option appOption = OptionBuilder.withArgName(APPLICATION_ARG).hasArg()
+        .isRequired(false).withDescription("application id or app name")
+        .create(APPLICATION_ARG);
+
+
+    options.addOption(appOption);
+
+    Option collectionOption = OptionBuilder.withArgName(COLLECTION_ARG).hasArg()
+        .isRequired(false).withDescription("colleciton name")
+        .create(COLLECTION_ARG);
+
+    options.addOption(collectionOption);
 
     return options;
   }
@@ -105,12 +136,12 @@ public class EntityIndexCleanup extends ToolBase {
 
     logger.info("Starting entity cleanup");
 
-//    List<UUID> ids = null;
-//    Query query = new Query();
-//    query.setLimit(PAGE_SIZE);
-//    String lastCursor = null;
+    Map<String, UUID> apps = getApplications(emf, line);
 
-    for (Entry<String, UUID> app : emf.getApplications().entrySet()) {
+
+
+
+    for (Entry<String, UUID> app : apps.entrySet()) {
 
       logger.info("Starting cleanup for app {}", app.getKey());
 
@@ -133,10 +164,10 @@ public class EntityIndexCleanup extends ToolBase {
       UUID timestampUuid = newTimeUUID();
       long timestamp = getTimestampInMicros(timestampUuid);
 
-      Set<String> collectionNames = em.getApplicationCollections();
+
   
       // go through each collection and audit the values
-      for (String collectionName : collectionNames) {
+      for (String collectionName : getCollectionNames(em, line)) {
 
 
         IndexScanner scanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
@@ -211,6 +242,7 @@ public class EntityIndexCleanup extends ToolBase {
                 }
                 
                 if(entries.size() > 1){
+                  logger.info("Found more than 1 entity referencing unique index for property '{}' with value '{}'", prop, propValue);
                   reIndex = true;
                 }
 
@@ -229,7 +261,9 @@ public class EntityIndexCleanup extends ToolBase {
                 m.execute();
                 continue;
               }
-              
+
+
+              logger.info("Reindex complete for entity with id '{} ", id);
               em.update(entity);
               
               //now execute the cleanup. This way if the above update fails, we still have enough data to run again later
@@ -245,6 +279,44 @@ public class EntityIndexCleanup extends ToolBase {
     
     logger.info("Completed audit of apps");
 
+  }
+
+  private Map<String,UUID> getApplications(EntityManagerFactory emf, CommandLine line) throws Exception {
+    String appName = line.getOptionValue(APPLICATION_ARG);
+
+    if(appName == null){
+      return emf.getApplications();
+    }
+
+    ApplicationInfo app = managementService.getApplicationInfo(Identifier.from(appName));
+
+    if (app == null) {
+      logger.error("Could not find application with id or name {}", appName);
+      System.exit(3);
+    }
+
+
+    Map<String, UUID> apps = new HashMap<String, UUID>();
+
+    apps.put(app.getName(), app.getId());
+
+    return apps;
+  }
+
+
+  private Set<String> getCollectionNames(EntityManager em, CommandLine line) throws Exception {
+
+    String collectionName = line.getOptionValue(COLLECTION_ARG);
+
+    if(collectionName == null){
+      return em.getApplicationCollections();
+    }
+
+
+    Set<String> names = new HashSet<String>();
+    names.add(collectionName);
+
+    return names;
   }
 
   private List<HColumn<ByteBuffer, ByteBuffer>> scanIndexForAllTypes(Keyspace ko, IndexBucketLocator indexBucketLocator,
