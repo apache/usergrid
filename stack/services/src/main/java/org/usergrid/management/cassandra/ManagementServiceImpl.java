@@ -1162,20 +1162,27 @@ public class ManagementServiceImpl implements ManagementService {
     if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
       userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 
-//      logger.debug("confirmed {} requireConfirmation {}", 
-//              userInfo.isConfirmed(), newAdminUsersRequireConfirmation());
-//
-//      logger.debug("activated {} requireActivation {}", 
-//              userInfo.isActivated(), newAdminUsersNeedSysAdminApproval());
+      boolean userIsSuperAdmin = 
+        properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL).equals(userInfo.getEmail());
 
-      if ( !userInfo.isConfirmed() && newAdminUsersRequireConfirmation()) {
-        throw new UnconfirmedAdminUserException();
-      }
-      if (!userInfo.isActivated()) {
-        throw new UnactivatedAdminUserException();
-      }
-      if (userInfo.isDisabled()) {
-        throw new DisabledAdminUserException();
+      boolean testUserEnabled = 
+        parseBoolean(properties.getProperty(PROPERTIES_SETUP_TEST_ACCOUNT));
+
+      boolean userIsTestUser = !testUserEnabled ? false :  
+        properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL).equals(userInfo.getEmail());
+
+      if (!userIsSuperAdmin && !userIsTestUser) {
+        
+        if ( !userInfo.isConfirmed() && newAdminUsersRequireConfirmation()) {
+          throw new UnconfirmedAdminUserException();
+        }
+        if (!userInfo.isActivated()) {
+          throw new UnactivatedAdminUserException();
+        }
+        if (userInfo.isDisabled()) {
+          throw new DisabledAdminUserException();
+        }
+
       }
       return userInfo;
     }
