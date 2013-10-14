@@ -16,8 +16,8 @@ namespace new_project_template
     {
         static void Main(string[] args)
         {
-            var client = new Usergrid.Sdk.Client("mmalloy@apigee.com", "testapp");
-            client.Login("mmalloy@apigee.com", "makeithappen2012", Usergrid.Sdk.Model.AuthType.User);
+            var client = new Usergrid.Sdk.Client(<org name>, <app name>);
+            client.Login(<login id>, <password>, Usergrid.Sdk.Model.AuthType.User);
 
             //
             // Print out the books from the books collection
