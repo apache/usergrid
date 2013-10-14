@@ -16,7 +16,7 @@ namespace new_project_template
         static void Main(string[] args)
         {
             //Start by replacing <org name> with your App Services organization name!
-            var client = new Usergrid.Sdk.Client(<org name>, "sandbox");
+            var client = new Usergrid.Sdk.Client( <org name>, "sandbox");
             
             //Uncomment this line if you are not using your App Services 'sandbox' application
             //client.Login(<login id>, <password>, Usergrid.Sdk.Model.AuthType.User);
@@ -26,7 +26,7 @@ namespace new_project_template
             //
 
             Console.WriteLine("Book Number\tBook Title");
-            Console.WriteLine("===========\t==========\t\t\t==========");
+            Console.WriteLine("===========\t==========");
             var books = client.GetEntities<Book>("books");
             int j = 1;
             do
