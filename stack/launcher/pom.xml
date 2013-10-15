@@ -21,6 +21,8 @@
         <includes>
           <include>**/*.xml</include>
           <include>**/*.png</include>
+          <include>**/*.handlers</include>
+          <include>**/*.schemas</include>
         </includes>
       </resource>
     </resources>
@@ -58,6 +60,7 @@
             <configuration>
               <excludeArtifactIds>junit,AppleJavaExtensions</excludeArtifactIds>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>**/spring.handlers</excludes>
             </configuration>
           </execution>
         </executions>
