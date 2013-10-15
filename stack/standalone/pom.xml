@@ -32,9 +32,9 @@
           <include>**/*.xml</include>
           <include>**/*.yaml</include>
           <include>**/*.properties</include>
-          <include>**/*.handlers</include>
-          <include>**/*.schemas</include>
-          <include>**/META-INF/services/**</include>
+          <include>**/spring.handlers</include>
+          <include>**/spring.schemas</include>
+          <include>**/services/**</include>
         </includes>
       </resource>
     </resources>
@@ -76,8 +76,7 @@
             <configuration>
               <excludeArtifactIds>junit</excludeArtifactIds>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
-              <excludes>**/spring.handlers</excludes>
-              <excludes>**/spring.schemas</excludes>
+              <excludes>**/spring.handlers, **/spring.schemas, **/META-INF/services/**</excludes>
             </configuration>
           </execution>
         </executions>

@@ -21,8 +21,11 @@
         <includes>
           <include>**/*.xml</include>
           <include>**/*.png</include>
-          <include>**/*.handlers</include>
-          <include>**/*.schemas</include>
+          <include>**/*.yaml</include>
+          <include>**/*.properties</include>
+          <include>**/spring.handlers</include>
+          <include>**/spring.schemas</include>
+          <include>**/services/**</include>
         </includes>
       </resource>
     </resources>
@@ -60,7 +63,7 @@
             <configuration>
               <excludeArtifactIds>junit,AppleJavaExtensions</excludeArtifactIds>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
-              <excludes>**/spring.handlers</excludes>
+              <excludes>**/spring.handlers, **/spring.schemas, **/META-INF/services/**</excludes>
             </configuration>
           </execution>
         </executions>
