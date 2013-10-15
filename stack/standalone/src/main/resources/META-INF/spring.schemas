@@ -27,3 +27,4 @@ http\://www.springframework.org/schema/util/spring-util-2.0.xsd=org/springframew
 http\://www.springframework.org/schema/util/spring-util-2.5.xsd=org/springframework/beans/factory/xml/spring-util-2.5.xsd
 http\://www.springframework.org/schema/util/spring-util-3.0.xsd=org/springframework/beans/factory/xml/spring-util-3.0.xsd
 http\://www.springframework.org/schema/util/spring-util.xsd=org/springframework/beans/factory/xml/spring-util-3.0.xsd
+http\://www.hazelcast.com/schema/config/hazelcast-spring.xsd=hazelcast-spring.xsd
