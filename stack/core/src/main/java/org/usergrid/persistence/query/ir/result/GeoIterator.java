@@ -16,13 +16,7 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 
@@ -246,6 +240,14 @@ public class GeoIterator implements ResultIterator {
 
     cache.setNextCursor(sliceHash, buff);
 
+  }
+
+  /**
+   * Get the last cells searched in the iteraton
+   * @return
+   */
+  public List<String> getLastCellsSearched(){
+    return Collections.unmodifiableList(lastCellsSearched);
   }
 
   private void parseCursor() {
