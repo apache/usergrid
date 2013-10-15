@@ -49,6 +49,20 @@
       <groupId>org.apache.cassandra</groupId>
       <artifactId>cassandra-all</artifactId>
       <scope>test</scope>
+      <!-- Exclude the old and problematic Snappy -->
+      <exclusions>
+        <exclusion>
+          <artifactId>snappy-java</artifactId>
+          <groupId>org.xerial.snappy</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Include the slighly newer and less problematic snappy -->
+    <dependency>
+      <artifactId>snappy-java</artifactId>
+      <groupId>org.xerial.snappy</groupId>
+      <version>1.0.5</version>
     </dependency>
 
     <dependency>

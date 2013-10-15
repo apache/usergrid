@@ -290,6 +290,20 @@
     <dependency>
       <groupId>org.apache.cassandra</groupId>
       <artifactId>cassandra-all</artifactId>
+      <!-- Exclude the old and problematic Snappy -->
+      <exclusions>
+        <exclusion>
+          <artifactId>snappy-java</artifactId>
+          <groupId>org.xerial.snappy</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Include the slighly newer and less problematic snappy -->
+    <dependency>
+      <artifactId>snappy-java</artifactId>
+      <groupId>org.xerial.snappy</groupId>
+      <version>1.0.5</version>
     </dependency>
 
     <dependency>
@@ -476,6 +490,12 @@
       <artifactId>usergrid-test-utils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>snappy-java</artifactId>
+          <groupId>org.xerial.snappy</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
