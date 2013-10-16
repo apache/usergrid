@@ -24,25 +24,21 @@
   </reporting>
 
   <build>
+
     <resources>
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <includes>
           <include>**/*.xml</include>
+          <include>**/*.yaml</include>
+          <include>**/*.properties</include>
+          <include>**/spring.handlers</include>
+          <include>**/spring.schemas</include>
+          <include>**/services/**</include>
         </includes>
       </resource>
     </resources>
-
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.xml</include>
-        </includes>
-      </testResource>
-    </testResources>
 
     <plugins>
       <plugin>
@@ -66,10 +62,11 @@
             <id>copy</id>
             <phase>prepare-package</phase>
             <goals>
-              <goal>copy-dependencies</goal>
+              <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>**/spring.handlers, **/spring.schemas, **/META-INF/services/**</excludes>
             </configuration>
           </execution>
         </executions>
@@ -82,10 +79,13 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.usergrid.tools.CommandLoader</mainClass>
+              <mainClass>org.usergrid.tools.Command</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
+          <excludes>
+            <exclude>*.jar</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
