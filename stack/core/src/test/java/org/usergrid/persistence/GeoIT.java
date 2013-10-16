@@ -406,7 +406,7 @@ public class GeoIT extends AbstractCoreIT {
   @Test
   public void testDenseSearch() throws Exception {
 
-    UUID applicationId = setup.createApplication("testOrganization", "testDistanceByLimit");
+    UUID applicationId = setup.createApplication("testOrganization", "testDenseSearch");
     assertNotNull(applicationId);
 
     EntityManager em = setup.getEmf().getEntityManager(applicationId);
