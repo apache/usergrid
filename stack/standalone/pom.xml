@@ -32,6 +32,9 @@
           <include>**/*.xml</include>
           <include>**/*.yaml</include>
           <include>**/*.properties</include>
+          <include>**/spring.handlers</include>
+          <include>**/spring.schemas</include>
+          <include>**/services/**</include>
         </includes>
       </resource>
     </resources>
@@ -68,11 +71,12 @@
             <id>copy</id>
             <phase>prepare-package</phase>
             <goals>
-              <goal>copy-dependencies</goal>
+              <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
               <excludeArtifactIds>junit</excludeArtifactIds>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>**/spring.handlers, **/spring.schemas, **/META-INF/services/**</excludes>
             </configuration>
           </execution>
         </executions>
@@ -85,10 +89,13 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.usergrid.standalone.ServerLoader</mainClass>
+              <mainClass>org.usergrid.standalone.Server</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
+          <excludes>
+            <exclude>*.jar</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
