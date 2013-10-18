@@ -219,11 +219,10 @@ public class RelationManagerImpl implements RelationManager {
 
   /**
    * Gets the connections.
-   * 
-   * @param applicationId
-   *          the application id
+   *
    * @param connection
-   *          the connection
+   *          the connection to use
+   * @param includeConnectionEntities True if we are to include the connected entites
    * @return list of connections
    * @throws Exception
    *           the exception
@@ -319,35 +318,15 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Batch update collection index.
    * 
-   * @param batch
-   *          the batch
-   * @param applicationId
-   *          the application id
-   * @param ownerType
-   *          the owner type
-   * @param ownerId
-   *          the owner id
-   * @param jointOwnerId
-   *          the joint owner id
+   * @param indexUpdate The update to apply
+   *
+   * @param owner The entity that is the owner context of this entity update.  Can either be an application, or another entity
+   *
    * @param collectionName
    *          the collection name
-   * @param entityType
-   *          the entity type
-   * @param entityId
-   *          the entity id
-   * @param entityProperties
-   *          the entity properties
-   * @param entryName
-   *          the entry name
-   * @param entryValue
-   *          the entry value
-   * @param isSet
-   *          the is set
-   * @param removeSetEntry
-   *          the remove set entry
-   * @param timestamp
-   *          the timestamp
-   * @return batch
+   *
+   * @return The indexUpdate with batch mutations
+   *
    * @throws Exception
    *           the exception
    */
@@ -511,24 +490,12 @@ public class RelationManagerImpl implements RelationManager {
    * 
    * @param batch
    *          the batch
-   * @param applicationId
-   *          the application id
-   * @param ownerType
-   *          the owner type
-   * @param ownerId
-   *          the owner id
-   * @param jointOwnerId
-   *          the joint owner id
    * @param collectionName
    *          the collection name
-   * @param entityType
-   *          the entity type
-   * @param entityId
-   *          the entity id
-   * @param entityProperties
-   *          the entity properties
-   * @param timestamp
-   *          the timestamp
+   * @param entity
+   *          The entity to add to the batch
+   * @param timestampUuid The timestamp of this update in a time uuid
+   *
    * @return batch
    * @throws Exception
    *           the exception
@@ -632,25 +599,18 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Batch remove from collection.
    * 
+   ** Batch add to collection.
+   *
    * @param batch
    *          the batch
-   * @param applicationId
-   *          the application id
-   * @param ownerType
-   *          the owner type
-   * @param ownerId
-   *          the owner id
    * @param collectionName
    *          the collection name
-   * @param entityType
-   *          the entity type
-   * @param entityId
-   *          the entity id
-   * @param entityProperties
-   *          the entity properties
-   * @param timestamp
-   *          the timestamp
-   * @return batch
+   * @param entity
+   *          The entity to add to the batch
+   * @param timestampUuid The timestamp of this update in a time uuid
+   *
+   * @return The mutation with the delete operations added
+   *
    * @throws Exception
    *           the exception
    */
@@ -832,23 +792,9 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Batch update connection index.
    * 
-   * @param batch
-   *          the batch
-   * @param applicationId
-   *          the application id
-   * @param connection
-   *          the connection
-   * @param entryName
-   *          the entry name
-   * @param entryValue
-   *          the entry value
-   * @param isSet
-   *          the is set
-   * @param removeListEntry
-   *          the remove set entry
-   * @param timestamp
-   *          the timestamp
-   * @return batch
+   * @param  indexUpdate The update operation to perform
+   * @param connection The connection to update
+   * @return The index with the batch mutation udpated
    * @throws Exception
    *           the exception
    */
@@ -928,21 +874,8 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Batch update backword connections property indexes.
    * 
-   * @param batch
-   *          the batch
-   * @param applicationId
-   *          the application id
-   * @param itemType
-   *          the item type
-   * @param itemId
-   *          the item id
-   * @param propertyName
-   *          the property name
-   * @param propertyValue
-   *          the property value
-   * @param timestamp
-   *          the timestamp
-   * @return batch
+   * @param indexUpdate The update to run for incoming connections
+   * @return The index update to run
    * @throws Exception
    *           the exception
    */
@@ -973,25 +906,8 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Batch update backword connections set indexes.
    * 
-   * @param batch
-   *          the batch
-   * @param applicationId
-   *          the application id
-   * @param itemType
-   *          the item type
-   * @param itemId
-   *          the item id
-   * @param setName
-   *          the set name
-   * @param property
-   *          the property
-   * @param elementValue
-   *          the set value
-   * @param removeFromSet
-   *          the remove from set
-   * @param timestamp
-   *          the timestamp
-   * @return batch
+   * @param indexUpdate The index to update in the dictionary
+   * @return The index update
    * @throws Exception
    *           the exception
    */
@@ -1438,261 +1354,6 @@ public class RelationManagerImpl implements RelationManager {
 
   }
 
-  /**
-   * Process index results.
-   * 
-   * @param results
-   *          the results
-   * @param compositeResults
-   *          the composite results
-   * @param compositeOffset
-   *          the composite offset
-   * @param connectionType
-   *          the connection type
-   * @param entityType
-   *          the entity type
-   * @param outputList
-   *          the output list
-   * @param outputDetails
-   *          the output details
-   * @throws Exception
-   *           the exception
-   */
-  public Results getIndexResults(IndexScanner scanner, boolean compositeResults, String connectionType,
-      String entityType, Level level, int maxResults) throws Exception {
-
-    if (scanner == null) {
-      return null;
-    }
-
-    Set<UUID> idSet = new LinkedHashSet<UUID>();
-    List<UUID> ids = null;
-    List<EntityRef> refs = null;
-    Map<UUID, Map<String, Object>> metadata = new LinkedHashMap<UUID, Map<String, Object>>();
-
-    if (level.ordinal() > REFS.ordinal()) {
-      level = REFS;
-    }
-
-    if (compositeResults && (level != IDS)) {
-      refs = new ArrayList<EntityRef>();
-    } else {
-      ids = new ArrayList<UUID>();
-    }
-
-    int last = maxResults + 1;
-
-    Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> pages = scanner.iterator();
-
-    while (pages.hasNext() && (refs.size() < last || ids.size() < last)) {
-      Iterator<HColumn<ByteBuffer, ByteBuffer>> cols = pages.next().iterator();
-
-      for (int i = 0; i < last && cols.hasNext(); i++) {
-
-        HColumn<ByteBuffer, ByteBuffer> result = cols.next();
-
-        UUID connectedEntityId = null;
-        String cType = connectionType;
-        String eType = entityType;
-        UUID associatedEntityId = null;
-
-        if (compositeResults) {
-          List<Object> objects = DynamicComposite.fromByteBuffer(result.getName().duplicate());
-          connectedEntityId = (UUID) objects.get(2);
-          if (refs != null) {
-            if ((connectionType == null) || (entityType == null)) {
-              if (connectionType != null) {
-                eType = StringUtils.ifString(objects.get(3));
-              } else if (entityType != null) {
-                cType = StringUtils.ifString(objects.get(3));
-              } else {
-                cType = StringUtils.ifString(objects.get(3));
-                eType = StringUtils.ifString(objects.get(4));
-              }
-            }
-          }
-        } else {
-          connectedEntityId = uuid(result.getName());
-        }
-
-        ByteBuffer v = result.getValue();
-        if ((v != null) && (v.remaining() >= 16)) {
-          associatedEntityId = uuid(result.getValue());
-        }
-
-        if ((refs != null) && (eType != null)) {
-          if (!idSet.contains(connectedEntityId)) {
-            refs.add(new SimpleEntityRef(eType, connectedEntityId));
-            idSet.add(connectedEntityId);
-          } else {
-            logger.error("Duplicate entity uuid (" + connectedEntityId
-                + ") found in index results, discarding but index appears inconsistent...");
-          }
-        }
-
-        if (ids != null) {
-          if (!idSet.contains(connectedEntityId)) {
-            ids.add(connectedEntityId);
-            idSet.add(connectedEntityId);
-          } else {
-            logger.error(
-                "Duplicate entity uuid ({}) found in index results, discarding but index appears inconsistent...",
-                connectedEntityId);
-          }
-        }
-
-        if (cType != null) {
-          MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CONNECTION, cType);
-        }
-
-        String cursor = encodeBase64URLSafeString(bytes(result.getName()));
-        if (cursor != null) {
-          MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_CURSOR, cursor);
-        }
-
-        if (associatedEntityId != null) {
-          MapUtils.putMapMap(metadata, connectedEntityId, PROPERTY_ASSOCIATED, associatedEntityId);
-        }
-
-      }
-
-    }
-
-    Results r = null;
-
-    if ((refs != null) && (refs.size() > 0)) {
-      r = fromRefList(refs);
-    } else if ((ids != null) && (ids.size() > 0)) {
-      r = fromIdList(ids);
-    } else {
-      r = new Results();
-    }
-
-    if (metadata.size() > 0) {
-      r.setMetadata(metadata);
-    }
-
-    return r;
-  }
-
-  /**
-   * Search index.
-   * 
-   * @param applicationId
-   *          the application id
-   * @param indexKey
-   *          the index key
-   * @param searchName
-   *          the search name
-   * @param searchStartValue
-   *          the search start value
-   * @param searchFinishValue
-   *          the search finish value
-   * @param startResult
-   *          the start result
-   * @param count
-   *          the count
-   * @return the list
-   * @throws Exception
-   *           the exception
-   */
-  @Metered(group = "core", name = "RelationManager_searchIndex")
-  public List<HColumn<ByteBuffer, ByteBuffer>> searchIndex(Object indexKey, String searchName, Object searchStartValue,
-      Object searchFinishValue, UUID startResult, String cursor, int count, boolean reversed) throws Exception {
-
-    searchStartValue = toIndexableValue(searchStartValue);
-    searchFinishValue = toIndexableValue(searchFinishValue);
-
-    if (NULL_ID.equals(startResult)) {
-      startResult = null;
-    }
-
-    List<HColumn<ByteBuffer, ByteBuffer>> results = null;
-
-    Object index_key = key(indexKey, searchName);
-    Object start = null;
-    Object finish = null;
-
-    if ("*".equals(searchStartValue)) {
-      if (isNotBlank(cursor)) {
-        byte[] cursorBytes = decodeBase64(cursor);
-        if (reversed) {
-          finish = cursorBytes;
-        } else {
-          start = cursorBytes;
-        }
-      }
-
-    } else if (StringUtils.isString(searchStartValue) && StringUtils.isStringOrNull(searchFinishValue)) {
-      String strStartValue = searchStartValue.toString().toLowerCase().trim();
-
-      String strFinishValue = strStartValue;
-      if (searchFinishValue != null) {
-        strFinishValue = searchFinishValue.toString().toLowerCase().trim();
-      }
-
-      if (strStartValue.endsWith("*")) {
-        strStartValue = removeEnd(strStartValue, "*");
-        finish = new DynamicComposite(indexValueCode(""), strStartValue + "\uFFFF");
-        if (isBlank(strStartValue)) {
-          strStartValue = "\0000";
-        }
-      } else {
-        finish = new DynamicComposite(indexValueCode(""), strFinishValue + "\u0000");
-      }
-
-      if (startResult != null) {
-        start = new DynamicComposite(indexValueCode(strStartValue), strStartValue, startResult);
-      } else {
-        start = new DynamicComposite(indexValueCode(strStartValue), strStartValue);
-      }
-
-      if (isNotBlank(cursor)) {
-        byte[] cursorBytes = decodeBase64(cursor);
-        // if (Composite.validate(0, cursorBytes, false)) {
-        start = cursorBytes;
-        // }
-      }
-
-    } else if (StringUtils.isString(searchFinishValue)) {
-
-      String strFinishValue = searchFinishValue.toString().toLowerCase().trim();
-
-      finish = new DynamicComposite(indexValueCode(strFinishValue), strFinishValue);
-
-      if (isNotBlank(cursor)) {
-        byte[] cursorBytes = decodeBase64(cursor);
-        // if (Composite.validate(0, cursorBytes, false)) {
-        start = cursorBytes;
-        // }
-      }
-
-    } else if (searchStartValue != null) {
-      if (searchFinishValue == null) {
-        searchFinishValue = searchStartValue;
-      }
-      if (startResult != null) {
-        start = new DynamicComposite(indexValueCode(searchStartValue), searchStartValue, startResult);
-      } else {
-        start = new DynamicComposite(indexValueCode(searchStartValue), searchStartValue);
-      }
-      finish = new DynamicComposite(indexValueCode(searchFinishValue), searchFinishValue);
-      setEqualityFlag((DynamicComposite) finish, ComponentEquality.GREATER_THAN_EQUAL);
-
-      if (isNotBlank(cursor)) {
-        byte[] cursorBytes = decodeBase64(cursor);
-        // if (Composite.validate(0, cursorBytes, false)) {
-        start = cursorBytes;
-        // }
-      }
-
-    }
-
-    results = cass.getColumns(cass.getApplicationKeyspace(applicationId), ENTITY_INDEX, index_key, start, finish,
-        count, reversed);
-
-    return results;
-  }
 
   private IndexScanner searchIndex(Object indexKey, QuerySlice slice, int pageSize) throws Exception {
 
@@ -1710,10 +1371,10 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Search the collection index using all the buckets for the given collection
    * 
-   * @param indexKey
-   * @param slice
-   * @param count
-   * @param collectionName
+   * @param indexKey The index key to read
+   * @param slice  Slice set in the query
+   * @param collectionName The name of the collection to search
+   * @param pageSize The page size to load when iterating
    * @return
    * @throws Exception
    */
@@ -1754,7 +1415,7 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   /**
-   * @param c
+   * @param connectionName The name of hte connection
    * @param entity
    * @return
    * @throws Exception
