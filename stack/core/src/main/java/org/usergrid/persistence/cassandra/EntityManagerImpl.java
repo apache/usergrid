@@ -275,22 +275,15 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Batch dictionary property.
 	 *
-	 * @param batch
-	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
-	 * @param properties
-	 *            the properties
-	 * @param propertyName
-	 *            the property name
+	 * @param batch The batch to set the property into
+	 *
+   * @param entity The entity that owns the property
+   * @param propertyName
+   *            the property name
 	 * @param propertyValue
 	 *            the property value
-	 * @param timestamp
-	 *            the timestamp
+	 * @param timestampUuid The update timestamp as a uuid
+   *
 	 * @return batch
 	 * @throws Exception
 	 *             the exception
@@ -425,18 +418,11 @@ public class EntityManagerImpl implements EntityManager {
 	 *
 	 * @param batch
 	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
-	 * @param entityProperties
-	 *            the entity properties
+	 * @param entity The owning entity reference
 	 * @param properties
-	 *            the properties
-	 * @param timestamp
-	 *            the timestamp
+	 *            the properties to set
+	 * @param timestampUuid
+	 *            the timestamp of the update operation as a time uuid
 	 * @return batch
 	 * @throws Exception
 	 *             the exception
@@ -461,23 +447,14 @@ public class EntityManagerImpl implements EntityManager {
 	 *
 	 * @param batch
 	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
-	 * @param properties
-	 *            the properties
+	 * @param entity The owning entity
 	 * @param dictionaryName
 	 *            the dictionary name
-	 * @param property
-	 *            the property
 	 * @param elementValue
 	 *            the dictionary value
-	 * @param removeFromSet
-	 *            the remove from set
-	 * @param timestamp
+	 * @param removeFromDictionary
+	 *           True to delete from the dictionary
+	 * @param timestampUuid
 	 *            the timestamp
 	 * @return batch
 	 * @throws Exception
@@ -896,11 +873,6 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Creates a new entity.
-	 *
-	 * @param <A>
-	 *            the generic type
-	 * @param applicationId
-	 *            the application id
 	 * @param entityType
 	 *            the entity type
 	 * @param entityClass
@@ -1243,8 +1215,6 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the type.
 	 *
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
 	 * @return entity type
@@ -1313,14 +1283,8 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the specified entity.
 	 *
-	 * @param <A>
-	 *            the generic type
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
-	 * @param entityType
-	 *            the entity type
 	 * @param entityClass
 	 *            the entity class
 	 * @return entity
@@ -1369,16 +1333,8 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the specified list of entities.
 	 *
-	 * @param <A>
-	 *            the generic type
-	 * @param applicationId
-	 *            the application id
 	 * @param entityIds
 	 *            the entity ids
-	 * @param includeProperties
-	 *            the include properties
-	 * @param entityType
-	 *            the entity type
 	 * @param entityClass
 	 *            the entity class
 	 * @return entity
@@ -1386,8 +1342,7 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
   @Metered(group="core", name="EntityManager_getEntities")
-	public <A extends Entity> List<A> getEntities(Collection<UUID> entityIds,
-			String entityType, Class<A> entityClass) throws Exception {
+	public <A extends Entity> List<A> getEntities(Collection<UUID> entityIds, Class<A> entityClass) throws Exception {
 
 		List<A> entities = new ArrayList<A>();
 
@@ -1592,18 +1547,10 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the set.
 	 *
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
+	 * @param entity
+	 *            The owning entity
 	 * @param dictionaryName
 	 *            the dictionary name
-	 * @param joint
-	 *            the joint
-	 * @param property
-	 *            the property
 	 * @return contents of dictionary property
 	 * @throws Exception
 	 *             the exception
@@ -1669,8 +1616,6 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Update properties.
 	 *
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
 	 * @param properties
@@ -2165,7 +2110,7 @@ public class EntityManagerImpl implements EntityManager {
 	@Override
 	public Results get(Collection<UUID> entityIds, Results.Level resultsLevel)
 			throws Exception {
-		List<? extends Entity> results = getEntities(entityIds, null, null);
+		List<? extends Entity> results = getEntities(entityIds, null);
 		return Results.fromEntities(results);
 	}
 	
@@ -2176,21 +2121,21 @@ public class EntityManagerImpl implements EntityManager {
    */
   @Override
   public Results get(Collection<UUID> entityIds) throws Exception {
-    return fromEntities(getEntities(entityIds, null, null));
+    return fromEntities(getEntities(entityIds, null));
   }
 
   @Override
 	public Results get(Collection<UUID> entityIds,
 			Class<? extends Entity> entityClass, Results.Level resultsLevel)
 			throws Exception {
-		return fromEntities(getEntities(entityIds, null, entityClass));
+		return fromEntities(getEntities(entityIds, entityClass));
 	}
 
 	@Override
 	public Results get(Collection<UUID> entityIds, String entityType,
 			Class<? extends Entity> entityClass, Results.Level resultsLevel)
 			throws Exception {
-		return fromEntities(getEntities(entityIds, entityType, entityClass));
+		return fromEntities(getEntities(entityIds, entityClass));
 	}
 
 	public Results loadEntities(Results results, Results.Level resultsLevel,
@@ -2206,7 +2151,7 @@ public class EntityManagerImpl implements EntityManager {
 			return results;
 		}
 
-		results.setEntities(getEntities(results.getIds(), null,null));
+		results.setEntities(getEntities(results.getIds(),null));
 
 		if (resultsLevel == Results.Level.LINKED_PROPERTIES) {
 			List<Entity> entities = results.getEntities();
@@ -2224,7 +2169,7 @@ public class EntityManagerImpl implements EntityManager {
 				}
 			}
 			List<DynamicEntity> linked = getEntities(new ArrayList<UUID>(
-					associatedIds.values()), null, null);
+					associatedIds.values()), null);
 			for (DynamicEntity l : linked) {
 				Map<String, Object> p = l.getDynamicProperties();
 				if ((p != null) && (p.size() > 0)) {
