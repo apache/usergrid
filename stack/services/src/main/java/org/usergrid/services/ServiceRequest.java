@@ -177,15 +177,15 @@ public class ServiceRequest {
 		return parent.getOwner();
 	}
 
-	public ServiceResults execute() throws Exception {
-        try {
-		    return execute(null);
-        }
-        catch (RuntimeException e) {
-            logger.error(debugString());
-            throw e;
-        }
-	}
+  public ServiceResults execute() throws Exception {
+    try {
+      return execute(null);
+    } catch (RuntimeException e) {
+      // don't log as error because some exceptions are not actually errors, e.g. resource not found
+      logger.debug(debugString());
+      throw e;
+    }
+  }
 
     private String debugString() {
         StringBuffer sb = new StringBuffer();
