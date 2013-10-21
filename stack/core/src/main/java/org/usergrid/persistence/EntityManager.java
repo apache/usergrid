@@ -101,29 +101,31 @@ public interface EntityManager {
 
     public void createApplicationCollection(String entityType) throws Exception;
 
-//    public UUID createAlias(UUID id, String aliasType, String alias)
-//            throws Exception;
-//
-//    public UUID createAlias(EntityRef ref, String aliasType, String alias)
-//            throws Exception;
-
-//    public UUID createAlias(UUID ownerId, EntityRef ref, String aliasType,
-//            String alias) throws Exception;
-
-    public void deleteAlias(String aliasType, String alias) throws Exception;
-
-    public void deleteAlias(UUID ownerId, String aliasType, String alias)
-            throws Exception;
-
     public EntityRef getAlias(String aliasType, String alias) throws Exception;
 
-    public EntityRef getAlias(UUID ownerId, String aliasType, String alias)
+  /**
+   * Get the entity ref from the value
+   * @param ownerId The owner Id of the collection
+   * @param collectionName The name of the collection
+   * @param aliasValue The value of the alias
+   * @return
+   * @throws Exception
+   */
+    public EntityRef getAlias(UUID ownerId, String collectionName, String aliasValue)
             throws Exception;
 
     public Map<String, EntityRef> getAlias(String aliasType,
             List<String> aliases) throws Exception;
 
-    public Map<String, EntityRef> getAlias(UUID ownerId, String aliasType,
+  /**
+   * Get aliases from the index with the given value
+   * @param ownerId The id of the collection owner
+   * @param collectionName The name of the collection
+   * @param aliases The alias property
+   * @return
+   * @throws Exception
+   */
+    public Map<String, EntityRef> getAlias(UUID ownerId, String collectionName,
             List<String> aliases) throws Exception;
 
     /**
