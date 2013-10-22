@@ -11,7 +11,7 @@ available.  From within Visual Studio, choose Project > Add Reference and be sur
 Then, you will need to add references to the GMap.Net libraries
 - GMap.NET.Core.dll
 - GMap.NET.WindowsForm.dll
-Both of these libraries are included as part of this distribution
+These files can be found off the Hot Build page at http://greatmaps.codeplex.com/releases/view/73162
 Next, install the Geocoding NuGet library by typing "Install-Package Geocoder" in the Package Manager
 
 In the file Form1.cs, change the org and app names to match your account.  Note that it is assumed you are using a sandbox account that does not
