@@ -43,7 +43,9 @@ public class ConnectedIndexScanner implements IndexScanner {
   private final boolean reversed;
   private final int pageSize;
   private final String dictionaryType;
-  private final ConnectionRefImpl connection;
+  private final UUID entityId;
+  private final String connectionType;
+
   /**
    * Pointer to our next start read
    */
@@ -65,16 +67,17 @@ public class ConnectedIndexScanner implements IndexScanner {
   private boolean hasMore = true;
 
   public ConnectedIndexScanner(CassandraService cass, String dictionaryType, UUID applicationId,
-      ConnectionRefImpl connection, ByteBuffer start, boolean reversed, int pageSize) {
+      UUID entityId, String connectionType , ByteBuffer start, boolean reversed, int pageSize) {
 
     // create our start and end ranges
     this.scanStart = start;
     this.cass = cass;
     this.applicationId = applicationId;
+    this.entityId = entityId;
+    this.connectionType = connectionType;
     this.start = scanStart;
     this.reversed = reversed;
     this.pageSize = pageSize;
-    this.connection = connection;
     this.dictionaryType = dictionaryType;
 
   }
@@ -93,11 +96,7 @@ public class ConnectedIndexScanner implements IndexScanner {
   /**
    * Search the collection index using all the buckets for the given collection.
    * Load the next page. Return false if nothing was loaded, true otherwise
-   * 
-   * @param indexKey
-   * @param slice
-   * @param count
-   * @param collectionName
+   *
    * @return
    * @throws Exception
    */
@@ -114,14 +113,9 @@ public class ConnectedIndexScanner implements IndexScanner {
     // and start paging at the next entity, otherwise we'll just load the page
     // size we need
     int selectSize = pageSize + 1;
-    //
-    // addInsertToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
-    // key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
-    // connection.getConnectionType(), connection.getConnectedEntityType()),
-    //
-    Object key = null;
 
-    key = key(connection.getConnectingEntityId(), dictionaryType, connection.getConnectionType());
+
+    Object key = key(entityId, dictionaryType, connectionType);
     
 
     List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(cass.getApplicationKeyspace(applicationId),

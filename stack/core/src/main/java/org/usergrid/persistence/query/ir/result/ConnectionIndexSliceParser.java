@@ -32,7 +32,7 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
 
   private final String connectedEntityType;
   /**
-   * @param connectedEntityType
+   * @param connectedEntityType Could be null if we want to return all types
    */
   public ConnectionIndexSliceParser(String connectedEntityType) {
     this.connectedEntityType = connectedEntityType;
@@ -54,12 +54,11 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
       return null;
     }
     
-    //we're checking a loopback, skip it
-    if(Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
+    //we're checking a loopback and it wasn't specified, skip it
+    if(Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType) && !Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
       return null;
     }
-    
-    
+
     
     return composite;
   }

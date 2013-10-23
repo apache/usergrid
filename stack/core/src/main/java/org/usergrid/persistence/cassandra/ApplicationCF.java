@@ -56,13 +56,6 @@ public enum ApplicationCF implements CFEnum {
    */
 	ENTITY_METADATA("Entity_Metadata", "BytesType"),
 
-
-	/**
-	 * The index that contains a list of all entities from their source entity.
-	 */
-	ENTITY_CONNECTIONS("Entity_Connections", "BytesType", null,
-			ConnectionRefImpl.getIndexes()),
-
 	/**
 	 * Contains all secondary indexes for entities
 	 */

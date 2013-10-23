@@ -170,7 +170,7 @@ public abstract class SearchVisitor implements NodeVisitor {
       orderIterator = new OrderByIterator(slice, orderByNode.getSecondarySorts(), subResults, em, queryProcessor.getPageSizeHint(orderByNode));
     }
 
-    //we don't have multi field sorting, we can simply do inersection with a single scan range
+    //we don't have multi field sorting, we can simply do intersection with a single scan range
     else{
 
       IndexScanner scanner;

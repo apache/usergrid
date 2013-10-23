@@ -17,18 +17,9 @@ package org.usergrid.persistence.cassandra;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
-import static me.prettyprint.hector.api.factory.HFactory.createIndexedSlicesQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMultigetSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.removeEnd;
 import static org.usergrid.persistence.Results.fromIdList;
-import static org.usergrid.persistence.Results.fromRefList;
-import static org.usergrid.persistence.Results.Level.IDS;
-import static org.usergrid.persistence.Results.Level.REFS;
 import static org.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -36,10 +27,7 @@ import static org.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
 import static org.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
 import static org.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
 import static org.usergrid.persistence.Schema.INDEX_CONNECTIONS;
-import static org.usergrid.persistence.Schema.PROPERTY_ASSOCIATED;
 import static org.usergrid.persistence.Schema.PROPERTY_COLLECTION_NAME;
-import static org.usergrid.persistence.Schema.PROPERTY_CONNECTION;
-import static org.usergrid.persistence.Schema.PROPERTY_CURSOR;
 import static org.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
 import static org.usergrid.persistence.Schema.PROPERTY_ITEM;
 import static org.usergrid.persistence.Schema.PROPERTY_ITEM_TYPE;
@@ -47,7 +35,6 @@ import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_TITLE;
 import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.usergrid.persistence.Schema.TYPE_CONNECTION;
 import static org.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.usergrid.persistence.Schema.TYPE_MEMBER;
 import static org.usergrid.persistence.Schema.TYPE_ROLE;
@@ -55,7 +42,6 @@ import static org.usergrid.persistence.Schema.defaultCollectionName;
 import static org.usergrid.persistence.Schema.getDefaultSchema;
 import static org.usergrid.persistence.SimpleEntityRef.ref;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_CONNECTIONS;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -66,6 +52,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batch
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
 import static org.usergrid.persistence.cassandra.ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE;
+import static org.usergrid.persistence.cassandra.ConnectionRefImpl.getConnections;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
@@ -74,7 +61,6 @@ import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 import static org.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
 import static org.usergrid.utils.ClassUtils.cast;
-import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
@@ -88,9 +74,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -99,21 +83,14 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.OrderedRows;
-import me.prettyprint.hector.api.beans.Row;
-import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.MultigetSliceQuery;
-import me.prettyprint.hector.api.query.QueryResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +105,7 @@ import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.entities.Group;
+import org.usergrid.persistence.exceptions.PersistenceException;
 import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
@@ -138,12 +116,7 @@ import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
-import org.usergrid.persistence.query.ir.result.ConnectionIterator;
-import org.usergrid.persistence.query.ir.result.ConnectionRefLoader;
-import org.usergrid.persistence.query.ir.result.EntityResultsLoader;
 import org.usergrid.persistence.query.ir.result.GeoIterator;
-import org.usergrid.persistence.query.ir.result.IDLoader;
-import org.usergrid.persistence.query.ir.result.ResultsLoader;
 import org.usergrid.persistence.query.ir.result.SliceIterator;
 import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.usergrid.persistence.query.ir.*;
@@ -151,7 +124,6 @@ import org.usergrid.persistence.query.ir.result.*;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
-import org.usergrid.utils.StringUtils;
 
 import com.yammer.metrics.annotation.Metered;
 
@@ -217,103 +189,7 @@ public class RelationManagerImpl implements RelationManager {
     return entity;
   }
 
-  /**
-   * Gets the connections.
-   *
-   * @param connection
-   *          the connection to use
-   * @param includeConnectionEntities True if we are to include the connected entites
-   * @return list of connections
-   * @throws Exception
-   *           the exception
-   */
-  @SuppressWarnings("deprecation")
-  public List<ConnectionRefImpl> getConnections(ConnectionRefImpl connection, boolean includeConnectionEntities)
-      throws Exception {
-    Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
-    IndexedSlicesQuery<UUID, String, ByteBuffer> q = createIndexedSlicesQuery(ko, ue, se, be);
-    q.setColumnFamily(ENTITY_CONNECTIONS.toString());
-    q.setColumnNames(ConnectionRefImpl.getColumnNames());
-    connection.addIndexExpressionsToQuery(q);
-    QueryResult<OrderedRows<UUID, String, ByteBuffer>> r = q.execute();
-    OrderedRows<UUID, String, ByteBuffer> rows = r.get();
-    List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
-    logger.debug("{} indexed connection row(s) retrieved", rows.getCount());
-    for (Row<UUID, String, ByteBuffer> row : rows) {
-      UUID entityId = row.getKey();
-
-      logger.debug("Indexed connection {} found", entityId.toString());
-
-      ConnectionRefImpl c = ConnectionRefImpl.loadFromColumns(row.getColumnSlice().getColumns());
-
-      String entityType = c.getConnectedEntityType();
-      if (!includeConnectionEntities && TYPE_CONNECTION.equalsIgnoreCase(entityType)) {
-        logger.debug("Skipping loopback connection {}", entityId.toString());
-        continue;
-      }
-      connections.add(c);
-    }
-
-    logger.debug("Returing {} connection(s)", connections.size());
-    return connections;
-  }
-
-  @SuppressWarnings("deprecation")
-  public List<ConnectionRefImpl> getConnectionsWithEntity(UUID participatingEntityId) throws Exception {
-    Keyspace ko = cass.getApplicationKeyspace(applicationId);
-
-    List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
-    List<String> idColumns = ConnectionRefImpl.getIdColumnNames();
-
-    for (String idColumn : idColumns) {
-      IndexedSlicesQuery<UUID, String, ByteBuffer> q = createIndexedSlicesQuery(ko, ue, se, be);
-      q.setColumnFamily(ENTITY_CONNECTIONS.toString());
-      q.setColumnNames(ConnectionRefImpl.getColumnNames());
-      q.addEqualsExpression(idColumn, bytebuffer(participatingEntityId));
-      QueryResult<OrderedRows<UUID, String, ByteBuffer>> r = q.execute();
-      OrderedRows<UUID, String, ByteBuffer> rows = r.get();
-      for (Row<UUID, String, ByteBuffer> row : rows) {
-        UUID entityId = row.getKey();
-
-        logger.debug("Indexed Connection {} found", entityId.toString());
-
-        ConnectionRefImpl c = ConnectionRefImpl.loadFromColumns(row.getColumnSlice().getColumns());
-
-        connections.add(c);
-      }
-    }
-
-    return connections;
-  }
-
-  public List<ConnectionRefImpl> getConnections(List<UUID> connectionIds) throws Exception {
-
-    List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
-
-    Map<UUID, ConnectionRefImpl> resultSet = new LinkedHashMap<UUID, ConnectionRefImpl>();
-
-    Keyspace ko = cass.getApplicationKeyspace(applicationId);
-    MultigetSliceQuery<UUID, String, ByteBuffer> q = createMultigetSliceQuery(ko, ue, se, be);
-    q.setColumnFamily(ENTITY_CONNECTIONS.toString());
-    q.setKeys(connectionIds);
-    q.setColumnNames(ConnectionRefImpl.getColumnNamesSet().toArray(new String[0]));
-    QueryResult<Rows<UUID, String, ByteBuffer>> r = q.execute();
-    Rows<UUID, String, ByteBuffer> rows = r.get();
-
-    for (Row<UUID, String, ByteBuffer> row : rows) {
-      ConnectionRefImpl connection = ConnectionRefImpl.loadFromColumns(row.getColumnSlice().getColumns());
-
-      resultSet.put(row.getKey(), connection);
-    }
-
-    for (UUID connectionId : connectionIds) {
-      ConnectionRefImpl connection = resultSet.get(connectionId);
-      connections.add(connection);
-    }
-
-    return connections;
-  }
 
   /**
    * Batch update collection index.
@@ -892,15 +768,45 @@ public class RelationManagerImpl implements RelationManager {
       }
     }
 
-    List<ConnectionRefImpl> connections = getConnections(ConnectionRefImpl.toConnectedEntity(indexUpdate.getEntity()),
-        true);
 
-    for (ConnectionRefImpl connection : connections) {
 
-      batchUpdateConnectionIndex(indexUpdate, connection);
+    //TODO T.N USERGRID-2441
+
+    PagingResultsIterator itr = getReversedConnectionsIterator(indexUpdate.getEntity().getUuid());
+
+
+    for (Object connection : itr) {
+
+      batchUpdateConnectionIndex(indexUpdate, (ConnectionRefImpl)connection);
     }
 
     return indexUpdate;
+  }
+
+  /**
+   * Get a paging results iterator.  Should return an iterator for all results
+   *
+   * @param entityId
+   * @return
+   * @throws Exception
+   */
+  private PagingResultsIterator getReversedConnectionsIterator(UUID entityId) throws Exception {
+
+    Query query = new Query();
+    query.setResultsLevel(Level.REFS);
+
+    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(null, null, entityId, false));
+
+    QueryProcessor qp = new QueryProcessor(new Query(), null, em);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+
+    //TODO T.N USERGRID-2441
+
+    PagingResultsIterator itr = new PagingResultsIterator(qp.getResults(visitor));
+
+    return itr;
+
+
   }
 
   /**
@@ -918,19 +824,21 @@ public class RelationManagerImpl implements RelationManager {
 
     boolean entityHasDictionary = getDefaultSchema().isDictionaryIndexedInConnections(
         indexUpdate.getEntity().getType(), indexUpdate.getEntryName());
+
     if (!entityHasDictionary) {
       return indexUpdate;
     }
 
-    List<ConnectionRefImpl> connections = getConnections(ConnectionRefImpl.toConnectedEntity(indexUpdate.getEntity()),
-        true);
+    PagingResultsIterator itr = getReversedConnectionsIterator(indexUpdate.getEntity().getUuid());
 
-    for (ConnectionRefImpl connection : connections) {
 
-      batchUpdateConnectionIndex(indexUpdate, connection);
+    for (Object connection : itr) {
+
+      batchUpdateConnectionIndex(indexUpdate, (ConnectionRefImpl)connection);
     }
 
     return indexUpdate;
+
   }
 
   @SuppressWarnings("unchecked")
@@ -952,8 +860,6 @@ public class RelationManagerImpl implements RelationManager {
     Map<String, Object> columns = connection.toColumnMap();
 
     if (disconnect) {
-      addDeleteToMutator(batch, ENTITY_CONNECTIONS, connection_id, timestamp, columns.keySet().toArray());
-
       addDeleteToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
           key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES, connection.getConnectionType()),
           asList(connection.getConnectedEntityId(), connection.getConnectedEntityType()), timestamp);
@@ -964,14 +870,27 @@ public class RelationManagerImpl implements RelationManager {
 
       // delete the connection path if there will be no connections left
       boolean delete = true;
-      for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectingEntityId())) {
-        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType())) {
-          if (!c.getConnectedEntity().getUuid().equals(connection.getConnectedEntity().getUuid())) {
+
+      PagingResultsIterator itr = new PagingResultsIterator(getConnectedEntities(connection.getConnectedEntity(), null, null, Level.REFS));
+
+      ConnectionRefImpl c;
+
+      while(itr.hasNext()){
+        c = (ConnectionRefImpl) itr.next();
+        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType()) &&!c.getConnectedEntity().getUuid().equals(connection.getConnectedEntity().getUuid())) {
             delete = false;
             break;
-          }
         }
+
       }
+//      for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectingEntityId())) {
+//        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType())) {
+//          if (!c.getConnectedEntity().getUuid().equals(connection.getConnectedEntity().getUuid())) {
+//            delete = false;
+//            break;
+//          }
+//        }
+//      }
       if (delete) {
         addDeleteToMutator(batch, ENTITY_DICTIONARIES,
             key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES), connection.getConnectionType(),
@@ -980,14 +899,27 @@ public class RelationManagerImpl implements RelationManager {
 
       // delete the connection path if there will be no connections left
       delete = true;
-      for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectedEntityId())) {
-        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType())) {
-          if (!c.getConnectingEntity().getUuid().equals(connection.getConnectingEntity().getUuid())) {
+
+
+      itr = new PagingResultsIterator(getConnectingEntities(connection.getConnectedEntity(), null, null, Level.REFS));
+
+      while(itr.hasNext()){
+        c = (ConnectionRefImpl) itr.next();
+        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType()) && !c.getConnectingEntity().getUuid().equals(connection.getConnectingEntity().getUuid())) {
             delete = false;
             break;
-          }
         }
+
       }
+
+//      for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectedEntityId())) {
+//        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType())) {
+//          if (!c.getConnectingEntity().getUuid().equals(connection.getConnectingEntity().getUuid())) {
+//            delete = false;
+//            break;
+//          }
+//        }
+//      }
       if (delete) {
         addDeleteToMutator(batch, ENTITY_DICTIONARIES,
             key(connection.getConnectedEntityId(), DICTIONARY_CONNECTING_TYPES), connection.getConnectionType(),
@@ -995,8 +927,6 @@ public class RelationManagerImpl implements RelationManager {
       }
 
     } else {
-      addInsertToMutator(batch, ENTITY_CONNECTIONS, connection_id, columns, timestamp);
-
       addInsertToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
           key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES, connection.getConnectionType()),
           asList(connection.getConnectedEntityId(), connection.getConnectedEntityType()), timestamp, timestamp);
@@ -1061,12 +991,6 @@ public class RelationManagerImpl implements RelationManager {
       }
     }
 
-    if (disconnect) {
-      cass.deleteRow(cass.getApplicationKeyspace(applicationId), ENTITY_CONNECTIONS, connection_id, timestamp);
-
-      // TODO any more rows to delete?
-    }
-
     return batch;
   }
 
@@ -1095,12 +1019,25 @@ public class RelationManagerImpl implements RelationManager {
 
   @Metered(group = "core", name = "RelationManager_batchDisconnect")
   public void batchDisconnect(Mutator<ByteBuffer> batch, UUID timestampUuid) throws Exception {
-    List<ConnectionRefImpl> connections = getConnectionsWithEntity(headEntity.getUuid());
-    if (connections != null) {
-      for (ConnectionRefImpl connection : connections) {
-        batchUpdateEntityConnection(batch, true, connection, timestampUuid);
-      }
+
+
+    PagingResultsIterator itr = new PagingResultsIterator(getConnectingEntities(headEntity, null, null, Level.REFS));
+
+    ConnectionRefImpl connection;
+
+    while(itr.hasNext()){
+      connection = (ConnectionRefImpl) itr.next();
+
+      batchUpdateEntityConnection(batch, true, connection, timestampUuid);
+
     }
+//
+//    List<ConnectionRefImpl> connections = getConnectionsWithEntity(headEntity.getUuid());
+//    if (connections != null) {
+//      for (ConnectionRefImpl connection : connections) {
+//        batchUpdateEntityConnection(batch, true, connection, timestampUuid);
+//      }
+//    }
   }
 
   public IndexUpdate batchStartIndexUpdate(Mutator<ByteBuffer> batch, Entity entity, String entryName,
@@ -1423,12 +1360,40 @@ public class RelationManagerImpl implements RelationManager {
   public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
-    ConnectionRefImpl ref = new ConnectionRefImpl(this.headEntity, connectionName, entity);
+    Object key = key(this.headEntity.getUuid(), DICTIONARY_CONNECTING_ENTITIES, connectionName);
 
-    HColumn<String, UUID> col = cass.getColumn(ko, ENTITY_CONNECTIONS, ref.getUuid(),
-        ConnectionRefImpl.CONNECTED_ENTITY_ID, se, ue);
+    DynamicComposite start = new DynamicComposite(entity.getUuid());
 
-    return col != null && entity.getUuid().equals(col.getValue());
+    List<HColumn<ByteBuffer, ByteBuffer>> cols =  cass.getColumns(ko, ENTITY_COMPOSITE_DICTIONARIES, key, start, null, 1, false );
+
+    if(cols == null || cols.size() == 0){
+      return false;
+    }
+
+    UUID returnedUUID = (UUID) DynamicComposite.fromByteBuffer(cols.get(0).getName()).get(0);
+
+    return entity.getUuid().equals(returnedUUID);
+
+
+//    addDeleteToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
+//        key(connection.getConnectedEntityId(), DICTIONARY_CONNECTING_ENTITIES, connection.getConnectionType()),
+//        asList(connection.getConnectingEntityId(), connection.getConnectingEntityType()), timestamp);
+//
+//
+//    ConnectionRefImpl ref = new ConnectionRefImpl(this.headEntity, connectionName, entity);
+//
+//
+//
+//
+//
+//
+//    HColumn<String, UUID> col = cass.getColumn(ko, ENTITY_CONNECTIONS, ref.getUuid(),
+//        ConnectionRefImpl.CONNECTED_ENTITY_ID, se, ue);
+//
+//
+//    getConnectedEntities(this.headEntity, connectionName, )
+//
+//    return col != null && entity.getUuid().equals(col.getValue());
   }
 
   @Override
@@ -1475,20 +1440,6 @@ public class RelationManagerImpl implements RelationManager {
         .withStartResult(startResult);
 
     return searchCollection(collectionName, query);
-  }
-
-  @Override
-  @Metered(group = "core", name = "RelationManager_getCollectionSize")
-  public long getCollectionSize(String collectionName) throws Exception {
-    long result = 0;
-
-    for (String bucketId : indexBucketLocator.getBuckets(applicationId, IndexType.COLLECTION, collectionName)) {
-
-      result += cass.countColumns(cass.getApplicationKeyspace(applicationId), ENTITY_ID_SETS,
-          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName, bucketId));
-    }
-
-    return result;
   }
 
   @Override
@@ -1820,34 +1771,40 @@ public class RelationManagerImpl implements RelationManager {
     updateEntityConnection(true, new ConnectionRefImpl(connectionRef));
   }
 
-  @Override
-  @Metered(group = "core", name = "RelationManager_connectionExists")
-  public boolean connectionExists(ConnectionRef connectionRef) throws Exception {
-    List<ConnectionRefImpl> connections = getConnections(new ConnectionRefImpl(connectionRef), true);
-
-    if (connections.size() > 0) {
-      // TODO check here, are ghost tombstone rows a problem?
-      return true;
-    }
-
-    return false;
-  }
 
   @Override
   @Metered(group = "core", name = "RelationManager_getConnectionTypes_entity_id")
   public Set<String> getConnectionTypes(UUID connectedEntityId) throws Exception {
-    Set<String> connection_types = new TreeSet<String>(CASE_INSENSITIVE_ORDER);
+    // Add connection type to connections set
+//    addInsertToMutator(batch, ENTITY_DICTIONARIES,
+//        key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES), connection.getConnectionType(), null,
+//        timestamp);
+//
+//    // Add connection type to connections set
+//    addInsertToMutator(batch, ENTITY_DICTIONARIES,
+//        key(connection.getConnectedEntityId(), DICTIONARY_CONNECTING_TYPES), connection.getConnectionType(), null,
+//        timestamp);
+//
+//
+//    Object key = key(connectedEntityId, DICTIONARY_CONNECTED_TYPES);
 
-    List<ConnectionRefImpl> connections = getConnections(new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(
-        NULL_ID), new ConnectedEntityRefImpl(connectedEntityId)), false);
+    Set<String> connections = cast(em.getDictionaryAsSet(new SimpleEntityRef(connectedEntityId), Schema.DICTIONARY_CONNECTED_TYPES));
 
-    for (ConnectionRefImpl connection : connections) {
-      if ((connection.getConnectionType() != null) && (connection.getFirstPairedConnectedEntityId() == null)) {
-        connection_types.add(connection.getConnectionType());
-      }
-    }
+    return connections;
 
-    return connection_types;
+//    Set<String> connection_types = new TreeSet<String>(CASE_INSENSITIVE_ORDER);
+//
+//    //TODO T.N. get this from the dictionary
+//    List<ConnectionRefImpl> connections = getConnections(new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(
+//        NULL_ID), new ConnectedEntityRefImpl(connectedEntityId)), false);
+//
+//    for (ConnectionRefImpl connection : connections) {
+//      if ((connection.getConnectionType() != null) && (connection.getFirstPairedConnectedEntityId() == null)) {
+//        connection_types.add(connection.getConnectionType());
+//      }
+//    }
+//
+//    return connection_types;
   }
 
   // <<<<<<< HEAD
@@ -1874,12 +1831,31 @@ public class RelationManagerImpl implements RelationManager {
   public Results getConnectedEntities(String connectionType, String connectedEntityType, Results.Level resultsLevel)
       throws Exception {
 
-    List<ConnectionRefImpl> connections = getConnections(new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(
-        NULL_ID), new ConnectedEntityRefImpl(connectionType, connectedEntityType, null)), false);
+    return getConnectedEntities(headEntity, connectionType, connectedEntityType, resultsLevel);
 
-    Results results = Results.fromConnections(connections);
-    results = em.loadEntities(results, resultsLevel, 0);
-    return results;
+  }
+
+  /**
+   * Get all edges that are from the sourceEntity
+   * @param sourceEntity The source entity to search edges in
+   * @param connectionType The type of connection.  If not specified, all connections are returned
+   * @param connectedEntityType The connected entity type, if not specified all types are returned
+   * @param resultsLevel The results level to return
+   * @return
+   * @throws Exception
+   */
+  private Results getConnectedEntities(EntityRef sourceEntity, String connectionType, String connectedEntityType, Level resultsLevel) throws Exception {
+    Query query = new Query();
+    query.setResultsLevel(resultsLevel);
+
+    ConnectionRefImpl connectionRef =  new ConnectionRefImpl(new SimpleEntityRef(connectedEntityType, null), connectionType, sourceEntity);
+//        EntityRef connectedEntity) {
+//    ConnectionRefImpl connectionRef = new ConnectionRefImpl(new ConnectedEntityRefImpl(connectionType, connectedEntityType, null, true), sourceEntity );
+
+    QueryProcessor qp = new QueryProcessor(query, null, em);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+
+    return qp.getResults(visitor);
   }
 
   @Override
@@ -1887,19 +1863,32 @@ public class RelationManagerImpl implements RelationManager {
   public Results getConnectingEntities(String connectionType, String connectedEntityType, Results.Level resultsLevel)
       throws Exception {
 
-    List<ConnectionRefImpl> connections = getConnections(new ConnectionRefImpl(ref(), new ConnectedEntityRefImpl(
-        NULL_ID), new ConnectedEntityRefImpl(connectionType, null, headEntity.getUuid())), false);
-
-    Results results = Results.fromConnections(connections, false);
-    results = em.loadEntities(results, resultsLevel, 0);
-    return results;
+    return getConnectingEntities(headEntity, connectionType, connectedEntityType, resultsLevel);
   }
 
-  @Override
-  public List<ConnectedEntityRef> getConnections(Query query) throws Exception {
 
-    return null;
+  /**
+   * Get all edges that are to the targetEntity
+   * @param targetEntity The target entity to search edges in
+   * @param connectionType The type of connection.  If not specified, all connections are returned
+   * @param connectedEntityType The connected entity type, if not specified all types are returned
+   * @param resultsLevel The results level to return
+   * @return
+   * @throws Exception
+   */
+  private Results getConnectingEntities(EntityRef targetEntity, String connectionType, String connectedEntityType, Level resultsLevel) throws Exception {
+    Query query = new Query();
+    query.setResultsLevel(resultsLevel);
+
+    ConnectionRefImpl connectionRef = new ConnectionRefImpl(targetEntity, new ConnectedEntityRefImpl(connectionType, connectedEntityType, null, false));
+
+    QueryProcessor qp = new QueryProcessor(query, null, em);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+
+    return qp.getResults(visitor);
   }
+
+
 
   @Override
   @Metered(group = "core", name = "RelationManager_searchConnectedEntities")
@@ -1928,25 +1917,6 @@ public class RelationManagerImpl implements RelationManager {
     return getConnectionIndexes(new ConnectionRefImpl(headEntity, connectionType, null));
   }
 
-  @Override
-  public Object getAssociatedProperty(AssociatedEntityRef associatedEntityRef, String propertyName) throws Exception {
-
-    return em.getProperty(associatedEntityRef, propertyName);
-  }
-
-  @Override
-  public Map<String, Object> getAssociatedProperties(AssociatedEntityRef associatedEntityRef) throws Exception {
-
-    return em.getProperties(associatedEntityRef);
-  }
-
-  @Override
-  public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef, String propertyName, Object propertyValue)
-      throws Exception {
-
-    em.setProperty(associatedEntityRef, propertyName, propertyValue);
-
-  }
 
   private static final UUIDIndexSliceParser UUID_PARSER = new UUIDIndexSliceParser();
 
@@ -2141,20 +2111,41 @@ public class RelationManagerImpl implements RelationManager {
 
       boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
 
-      if (connection.getConnectionType() != null) {
-        ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
-            connection.getConnectedEntityType());
+      //TODO TN. I don't think we need the connection type below do we, we should always have a connection type...
 
-        IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
-            connection, start, slice.isReversed(), size);
+      UUID entityIdToUse = connection.getConnectedEntityId();
 
-        this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
-      }
+      //change our type depending on which direction we're loading
+      String dictionaryType = connection.isSource() ? DICTIONARY_CONNECTED_ENTITIES : DICTIONARY_CONNECTING_ENTITIES;
 
-      // no connection type defined, get all connections
-      else {
-        this.results.push(new ConnectionIterator(headEntity, slice, RelationManagerImpl.this));
-      }
+      String connectionType = connection.getConnectionType();
+
+
+      ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
+          connection.getConnectedEntityType());
+
+      IndexScanner connectionScanner = new ConnectedIndexScanner(cass, dictionaryType , applicationId,
+          entityIdToUse, connectionType, start, slice.isReversed(), size);
+
+      this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
+
+
+//      if (connection.getConnectionType() != null) {
+////TODO TN. I don't think we need the connection type below do we, we should always have a connection type...
+//
+//        ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
+//            connection.getConnectedEntityType());
+//
+//        IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
+//            connection, start, slice.isReversed(), size);
+//
+//        this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
+//      }
+//
+//      // no connection type defined, get all connections
+//      else {
+////        this.results.push(new ConnectionIterator(headEntity, slice, RelationManagerImpl.this));
+//      }
 
     }
 

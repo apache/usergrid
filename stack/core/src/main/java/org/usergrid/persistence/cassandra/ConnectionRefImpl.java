@@ -240,10 +240,7 @@ public class ConnectionRefImpl implements ConnectionRef {
 		this.connectedEntity = connectedEntity;
 	}
 
-	public static ConnectionRefImpl toConnectedEntity(
-			ConnectedEntityRef connectedEntity) {
-		return new ConnectionRefImpl(ref(), connectedEntity);
-	}
+
 
 	public static ConnectionRefImpl toConnectedEntity(EntityRef entityRef) {
 		return new ConnectionRefImpl(ref(), new ConnectedEntityRefImpl(
@@ -347,7 +344,12 @@ public class ConnectionRefImpl implements ConnectionRef {
 		return connectedEntity.getUuid();
 	}
 
-	private UUID id;
+  @Override
+  public boolean isSource() {
+    return connectedEntity.isSource();
+  }
+
+  private UUID id;
 
 	/**
 	 * @return connection id

@@ -771,8 +771,7 @@ public class EntityManagerImpl implements EntityManager {
 		if (!is_application) {
 			// Add entity to collection
 
-			collection = schema.getCollection(TYPE_APPLICATION,
-					collection_name);
+
 			if(!emptyPropertyMap) {
 				addInsertToMutator(m, ENTITY_ID_SETS, collection_key, itemId, null,
 					timestamp);
@@ -849,12 +848,6 @@ public class EntityManagerImpl implements EntityManager {
 				continue;
 			}
 
-			if (!is_application
-					&& !isPropertyValueUniqueForEntity(applicationId,
-							entityType, prop_name, propertyValue)) {
-				throw new DuplicateUniquePropertyExistsException(entityType,
-						prop_name, propertyValue);
-			}
 
 			if (User.ENTITY_TYPE.equals(entityType) && "me".equals(prop_name)) {
 				throw new DuplicateUniquePropertyExistsException(entityType,
@@ -2742,29 +2735,10 @@ public class EntityManagerImpl implements EntityManager {
 		getRelationManager(connectionRef).deleteConnection(connectionRef);
 	}
 
-	@Override
-	public boolean connectionExists(ConnectionRef connectionRef)
-			throws Exception {
-		return getRelationManager(connectionRef)
-				.connectionExists(connectionRef);
-	}
-
-	@Override
-	public Set<String> getConnectionTypes(UUID entityId, UUID connectedEntityId)
-			throws Exception {
-		return getRelationManager(ref(entityId)).getConnectionTypes(
-				connectedEntityId);
-	}
 
 	@Override
 	public Set<String> getConnectionTypes(EntityRef ref) throws Exception {
 		return getRelationManager(ref).getConnectionTypes();
-	}
-
-	@Override
-	public Set<String> getConnectionTypes(EntityRef ref,
-			boolean filterConnection) throws Exception {
-		return getRelationManager(ref).getConnectionTypes(filterConnection);
 	}
 
 	@Override
@@ -2781,26 +2755,6 @@ public class EntityManagerImpl implements EntityManager {
 				connectionType, connectedEntityType, resultsLevel);
 	}
 
-	@Override
-	public List<ConnectedEntityRef> getConnections(UUID entityId, Query query)
-			throws Exception {
-		return getRelationManager(ref(entityId)).getConnections(query);
-	}
-
-	// T.N. This isn't used anywhere. Removing for this release
-	// @Override
-	// public Results searchConnectedEntitiesForProperty(
-	// EntityRef connectingEntity, String connectionType,
-	// String connectedEntityType, String propertyName,
-	// Object searchStartValue, Object searchFinishValue,
-	// UUID startResult, int count, boolean reversed, Level resultsLevel)
-	// throws Exception {
-	// return getRelationManager(connectingEntity)
-	// .searchConnectedEntitiesForProperty(connectionType,
-	// connectedEntityType, propertyName, searchStartValue,
-	// searchFinishValue, startResult, count, reversed,
-	// resultsLevel);
-	// }
 
 	@Override
 	public Results searchConnectedEntities(EntityRef connectingEntity,
@@ -2809,28 +2763,6 @@ public class EntityManagerImpl implements EntityManager {
 		// TODO Todd Ed the query type and connection type needs set here.
 		return getRelationManager(connectingEntity).searchConnectedEntities(
 				query);
-	}
-
-	@Override
-	public Object getAssociatedProperty(
-			AssociatedEntityRef associatedEntityRef, String propertyName)
-			throws Exception {
-		return getRelationManager(associatedEntityRef).getAssociatedProperty(
-				associatedEntityRef, propertyName);
-	}
-
-	@Override
-	public Map<String, Object> getAssociatedProperties(
-			AssociatedEntityRef associatedEntityRef) throws Exception {
-		return getRelationManager(associatedEntityRef).getAssociatedProperties(
-				associatedEntityRef);
-	}
-
-	@Override
-	public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
-			String propertyName, Object propertyValue) throws Exception {
-		getRelationManager(associatedEntityRef).setAssociatedProperty(
-				associatedEntityRef, propertyName, propertyValue);
 	}
 
 
