@@ -1,4 +1,5 @@
 .idea
+.sonar-ide.properties
 atlassian-ide-plugin.xml
 s101plugin.state
 *.DS_Store
