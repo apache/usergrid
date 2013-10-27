@@ -1340,12 +1340,13 @@
           <version>2.1</version>
         </plugin>
 
+<!--
         <plugin>
           <groupId>com.structure101.java</groupId>
           <artifactId>maven-structure101-plugin</artifactId>
           <version>1.1</version>
         </plugin>
-
+-->
         <plugin>
           <groupId>org.antlr</groupId>
           <artifactId>antlr3-maven-plugin</artifactId>
@@ -1787,6 +1788,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.10</version>
+        <configuration>
+          <configLocation>usergrid/checkstyle.xml</configLocation>
+        </configuration>
         <dependencies>
           <dependency>
             <groupId>${project.groupId}</groupId>
