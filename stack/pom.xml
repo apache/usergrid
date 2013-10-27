@@ -17,14 +17,59 @@
   <packaging>pom</packaging>
 
   <properties>
+    <!-- =================================================================== -->
+    <!-- Properties: Deployment Setting Defaults                             -->
+    <!-- =================================================================== -->
+       <!-- NOTE: override from the CLI or settings.xml                 -->
+       <!-- NOTE: add server credentials config via settings            -->
+       <!-- NOTE: <settings>                                            -->
+       <!-- NOTE:   <servers>                                           -->
+       <!-- NOTE:     <server>                                          -->
+       <!-- NOTE:       <id>usergrid.releases</id>                      -->
+       <!-- NOTE:       <username>akarasulu</username>                  -->
+       <!-- NOTE:       <password>*********</password>                  -->
+       <!-- NOTE:     </server>                                         -->
+       <!-- NOTE:     <server>                                          -->
+       <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
+       <!-- NOTE:       <username>akarasulu</username>                  -->
+       <!-- NOTE:       <password>*********</password>                  -->
+       <!-- NOTE:     </server>                                         -->
+       <!-- NOTE:   </servers>                                          -->
+       <!-- NOTE:                                                       -->
+       <!-- NOTE:   <profiles>                                          -->
+       <!-- NOTE:     <profile>                                         -->
+       <!-- NOTE:       <id>deployment</id>                             -->
+       <!-- NOTE:       <properties>                                    -->
+       <!-- NOTE:         <release.repository.url>                      -->
+       <!-- NOTE:           https://to/your/custom/releases/repository  -->
+       <!-- NOTE:         </release.repository.url>                     -->
+       <!-- NOTE:         <snapshot.repository.url>                     -->
+       <!-- NOTE:           https://to/your/custom/snapshots/repository -->
+       <!-- NOTE:         </shapshot.repository.url>                    -->
+       <!-- NOTE:       </properties>                                   -->
+       <!-- NOTE:     </profile>                                        -->
+       <!-- NOTE:   </profiles>                                         -->
+       <!-- NOTE:                                                       -->
+       <!-- NOTE:   <activeProfiles>                                    -->
+       <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
+       <!-- NOTE:   </activeProfiles>                                   -->
+       <!-- NOTE: </settings>                                           -->
+
+    <snapshot.repository.url>
+      https://repository.apache.org/content/repositories/snapshots
+    </snapshot.repository.url>
+    <release.repository.url>
+      https://repository.apache.org/service/local/staging/deploy/maven2
+    </release.repository.url>
+    
+    <!-- =================================================================== -->
+    <!-- Properties: General Settings -->
+    <!-- =================================================================== -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <!-- Structure101 Settings -->
-    <structure101repository>target</structure101repository>
-    <project>usergrid</project>
-    <structure101Disabled>false</structure101Disabled>
-    <architecture-analysis>all</architecture-analysis>
-
+    <!-- =================================================================== -->
+    <!-- Properties: Dependency Settings -->
+    <!-- =================================================================== -->
     <amber-version>0.22-incubating</amber-version>
     <cassandra-version>1.1.6</cassandra-version>
     <hector-om-version>2.0-01</hector-om-version>
@@ -77,6 +122,10 @@
       <id>chakrayel</id>
       <name>Chakra Yeleswarapu</name>
     </developer>
+    <developer>
+      <id>tonuquq</id>
+      <name>Alex Karasulu</name>
+    </developer>
   </developers>
 
   <scm>
@@ -84,6 +133,22 @@
     <developerConnection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</developerConnection>
     <url>git@github.com:apigee/usergrid-stack-internal.git</url>
   </scm>
+
+  <distributionManagement>
+    <!-- Versioned (non-snapshot) releases are published to this repository -->
+    <repository>
+      <id>usergrid.releases</id>
+      <name>Usergrid Releases</name>
+      <url>${release.repository.url}</url>
+    </repository>
+
+    <!-- Snapshots (not-releases) are published to this repository -->
+    <snapshotRepository>
+      <id>usergrid.snapshots</id>
+      <name>Usergrid Snapshots</name>
+      <url>${snapshot.repository.url}</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <modules>
     <module>config</module>
