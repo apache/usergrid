@@ -72,16 +72,8 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -94,7 +86,6 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
@@ -105,7 +96,6 @@ import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.entities.Group;
-import org.usergrid.persistence.exceptions.PersistenceException;
 import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
@@ -141,8 +131,6 @@ public class RelationManagerImpl implements RelationManager {
   public static final ByteBufferSerializer be = new ByteBufferSerializer();
   public static final UUIDSerializer ue = new UUIDSerializer();
   public static final LongSerializer le = new LongSerializer();
-  private static final UUID NULL_ID = new UUID(0, 0);
-
   public RelationManagerImpl() {
   }
 
@@ -150,9 +138,10 @@ public class RelationManagerImpl implements RelationManager {
       EntityRef headEntity, IndexBucketLocator indexBucketLocator) {
 
     Assert.notNull(em, "Entity manager cannot be null");
-    Assert.notNull(cass, "Cassandra service cassnot be null");
+    Assert.notNull(cass, "Cassandra service cannot be null");
     Assert.notNull(applicationId, "Application Id cannot be null");
     Assert.notNull(headEntity, "Head entity cannot be null");
+    Assert.notNull(headEntity.getUuid(), "Head entity uuid cannot be null");
     Assert.notNull(indexBucketLocator, "Index bucket locator cannot be null");
 
     this.em = em;
@@ -164,9 +153,6 @@ public class RelationManagerImpl implements RelationManager {
     return this;
   }
 
-  public ApplicationContext getApplicationContext() {
-    return em.getApplicationContext();
-  }
 
   private RelationManagerImpl getRelationManager(EntityRef headEntity) {
     RelationManagerImpl rmi = new RelationManagerImpl();
@@ -791,14 +777,15 @@ public class RelationManagerImpl implements RelationManager {
    * @throws Exception
    */
   private PagingResultsIterator getReversedConnectionsIterator(UUID entityId) throws Exception {
-
     Query query = new Query();
     query.setResultsLevel(Level.REFS);
 
-    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(null, null, entityId, false));
+    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, null, new SimpleEntityRef(entityId));
 
-    QueryProcessor qp = new QueryProcessor(new Query(), null, em);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+    final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory(connectionRef);
+
+    QueryProcessor qp = new QueryProcessor(new Query(), null, em, factory);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef, false);
 
     //TODO T.N USERGRID-2441
 
@@ -810,7 +797,7 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   /**
-   * Batch update backword connections set indexes.
+   * Batch update backward connections set indexes.
    * 
    * @param indexUpdate The index to update in the dictionary
    * @return The index update
@@ -856,8 +843,6 @@ public class RelationManagerImpl implements RelationManager {
 
     // Create connection for requested params
 
-    Object connection_id = connection.getUuid();
-    Map<String, Object> columns = connection.toColumnMap();
 
     if (disconnect) {
       addDeleteToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
@@ -1360,7 +1345,7 @@ public class RelationManagerImpl implements RelationManager {
   public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
-    Object key = key(this.headEntity.getUuid(), DICTIONARY_CONNECTING_ENTITIES, connectionName);
+    Object key = key(this.headEntity.getUuid(), DICTIONARY_CONNECTED_ENTITIES, connectionName);
 
     DynamicComposite start = new DynamicComposite(entity.getUuid());
 
@@ -1678,9 +1663,11 @@ public class RelationManagerImpl implements RelationManager {
 
     query.setEntityType(collection.getType());
 
+    final CollectionResultsLoaderFactory factory = new CollectionResultsLoaderFactory();
+
     // we have something to search with, visit our tree and evaluate the
     // results
-    QueryProcessor qp = new QueryProcessor(query, collection, em);
+    QueryProcessor qp = new QueryProcessor(query, collection, em, factory);
     SearchCollectionVisitor visitor = new SearchCollectionVisitor(qp);
 
     return qp.getResults(visitor);
@@ -1831,6 +1818,8 @@ public class RelationManagerImpl implements RelationManager {
   public Results getConnectedEntities(String connectionType, String connectedEntityType, Results.Level resultsLevel)
       throws Exception {
 
+
+
     return getConnectedEntities(headEntity, connectionType, connectedEntityType, resultsLevel);
 
   }
@@ -1848,12 +1837,15 @@ public class RelationManagerImpl implements RelationManager {
     Query query = new Query();
     query.setResultsLevel(resultsLevel);
 
-    ConnectionRefImpl connectionRef =  new ConnectionRefImpl(new SimpleEntityRef(connectedEntityType, null), connectionType, sourceEntity);
+    ConnectionRefImpl connectionRef =  new ConnectionRefImpl(sourceEntity, connectionType, new SimpleEntityRef(connectedEntityType, null));
 //        EntityRef connectedEntity) {
 //    ConnectionRefImpl connectionRef = new ConnectionRefImpl(new ConnectedEntityRefImpl(connectionType, connectedEntityType, null, true), sourceEntity );
 
-    QueryProcessor qp = new QueryProcessor(query, null, em);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+
+    final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory(connectionRef);
+
+    QueryProcessor qp = new QueryProcessor(query, null, em, factory);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef, true);
 
     return qp.getResults(visitor);
   }
@@ -1865,6 +1857,8 @@ public class RelationManagerImpl implements RelationManager {
 
     return getConnectingEntities(headEntity, connectionType, connectedEntityType, resultsLevel);
   }
+
+
 
 
   /**
@@ -1880,10 +1874,11 @@ public class RelationManagerImpl implements RelationManager {
     Query query = new Query();
     query.setResultsLevel(resultsLevel);
 
-    ConnectionRefImpl connectionRef = new ConnectionRefImpl(targetEntity, new ConnectedEntityRefImpl(connectionType, connectedEntityType, null, false));
+    final ConnectionRefImpl connectionRef = new ConnectionRefImpl(new SimpleEntityRef(connectedEntityType, null), connectionType, targetEntity);
+    final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory(connectionRef);
 
-    QueryProcessor qp = new QueryProcessor(query, null, em);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+    QueryProcessor qp = new QueryProcessor(query, null, em, factory);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef, false);
 
     return qp.getResults(visitor);
   }
@@ -1903,11 +1898,12 @@ public class RelationManagerImpl implements RelationManager {
 
     headEntity = em.validate(headEntity);
 
-    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(connectionType,
-        connectedEntityType, null));
+    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, connectionType,  new SimpleEntityRef(connectedEntityType, null));
 
-    QueryProcessor qp = new QueryProcessor(query, null, em);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef);
+    final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory(connectionRef);
+
+    QueryProcessor qp = new QueryProcessor(query, null, em, factory);
+    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef, true);
 
     return qp.getResults(visitor);
   }
@@ -2035,12 +2031,19 @@ public class RelationManagerImpl implements RelationManager {
     private final ConnectionRefImpl connection;
 
     /**
-     * @param queryProcessor
-     * @param connection
+     * True if we should search from source->target edges.  False if we should search from target<-source edges
      */
-    public SearchConnectionVisitor(QueryProcessor queryProcessor, ConnectionRefImpl connection) {
+    private final boolean outgoing;
+
+    /**
+     * @param queryProcessor They query processor to use
+     * @param connection The connection refernce
+     * @param  outgoing The direction to search.  True if we should search from source->target edges.  False if we should search from target<-source edges
+     */
+    public SearchConnectionVisitor(QueryProcessor queryProcessor, ConnectionRefImpl connection, boolean outgoing) {
       super(queryProcessor);
       this.connection = connection;
+      this.outgoing = outgoing;
     }
 
  
@@ -2113,19 +2116,50 @@ public class RelationManagerImpl implements RelationManager {
 
       //TODO TN. I don't think we need the connection type below do we, we should always have a connection type...
 
-      UUID entityIdToUse = connection.getConnectedEntityId();
+      UUID entityIdToUse;
 
       //change our type depending on which direction we're loading
-      String dictionaryType = connection.isSource() ? DICTIONARY_CONNECTED_ENTITIES : DICTIONARY_CONNECTING_ENTITIES;
+      String dictionaryType;
 
-      String connectionType = connection.getConnectionType();
+      //the target type
+      String targetType;
+
+      //this is on the "source" side of the edge
+      if(outgoing){
+//        entityIdToUse = connection.getConnectedEntityId();
+        entityIdToUse = connection.getConnectingEntityId();
+        dictionaryType = DICTIONARY_CONNECTED_ENTITIES;
+//        targetType = connection.getConnectingEntityType();
+        targetType = connection.getConnectedEntityType();
+      }
+      //we're on the target side of the edge
+      else{
+//        entityIdToUse = connection.getConnectingEntityId();
+        entityIdToUse = connection.getConnectedEntityId();
+        dictionaryType = DICTIONARY_CONNECTING_ENTITIES;
+//        targetType = connection.getConnectedEntityType();
+        targetType = connection.getConnectingEntityType();
+      }
+
+      final String connectionType = connection.getConnectionType();
 
 
-      ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
-          connection.getConnectedEntityType());
+      final ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(targetType);
+
+
+      final Iterator<String> connectionTypes;
+
+      if (connectionType != null) {
+        connectionTypes = Collections.singleton(connectionType).iterator();
+      }
+
+      //we need to iterate all connection types
+      else {
+        connectionTypes = new ConnectionTypesIterator(cass, applicationId, entityIdToUse, outgoing, size);
+      }
 
       IndexScanner connectionScanner = new ConnectedIndexScanner(cass, dictionaryType , applicationId,
-          entityIdToUse, connectionType, start, slice.isReversed(), size);
+          entityIdToUse, connectionTypes, start, slice.isReversed(), size);
 
       this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
 

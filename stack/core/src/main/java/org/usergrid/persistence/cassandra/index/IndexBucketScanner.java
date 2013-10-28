@@ -112,12 +112,8 @@ public class IndexBucketScanner implements IndexScanner {
   /**
    * Search the collection index using all the buckets for the given collection.
    * Load the next page. Return false if nothing was loaded, true otherwise
-   * 
-   * @param indexKey
-   * @param slice
-   * @param count
-   * @param collectionName
-   * @return
+   *
+   * @return True if the data could be loaded
    * @throws Exception
    */
 

@@ -19,10 +19,5 @@ public interface ConnectedEntityRef extends EntityRef {
 
 	public String getConnectionType();
 
-  /**
-   * Returns true if this connection definition is from the source node of the directed edge to the target node
-   * @return
-   */
-  public boolean isSource();
 
 }

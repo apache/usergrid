@@ -72,7 +72,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
     em.createConnection(firstUserEntity, "likes", secondUserEntity);
 
-    Results r = em.getConnectedEntities(first.getUuid(), "likes", null, Level.IDS);
+    Results r = em.getConnectedEntities(firstUserEntity.getUuid(), "likes", null, Level.IDS);
 
     List<ConnectionRef> connections = r.getConnections();
 
@@ -175,65 +175,6 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
     LOG.info("\n\nSearching Award A for recipients with the name Dylan\n");
 
-    // T.N. This isn't used anywhere. Removing for this release
-    // Results found_entities =
-    // em.searchConnectedEntitiesForProperty(awardA,
-    // "awarded", "cat", "name", "Dylan", null, null, 1, false,
-    // Results.Level.IDS);
-    // assertNotNull(found_entities);
-    // assertEquals("Wrong number of results found", 1,
-    // found_entities.size());
-    //
-    // UUID found_cat_id = found_entities.getId();
-    // assertNotNull(found_cat_id);
-    //
-    // Entity found_cat = em.get(found_cat_id);
-    // LOG.info("Found cat id: " + found_cat.getUuid());
-    // LOG.info("Found cat name: " + found_cat.getProperty("name"));
-    //
-    // LOG.info("\n\nSetting 'foo'='bar' for found recipient (Dylan)\n");
-    //
-    // em.setProperty(found_cat, "foo", "bar");
-    //
-    // LOG.info("\n\nSearching Group A for members with 'foo'='bar'\n");
-    //
-    // found_entities = em.searchConnectedEntitiesForProperty(awardA,
-    // "awarded", "cat", "foo", "bar", null, null, 1, false,
-    // Results.Level.IDS);
-    // assertNotNull(found_entities);
-    // assertEquals("Wrong number of results found", 1,
-    // found_entities.size());
-    //
-    // LOG.info("\n\nSetting 'foo'='baz' for found member (Dylan)\n");
-    //
-    // em.setProperty(found_cat, "foo", "baz");
-    //
-    // LOG.info("\n\nSearching award A for members with 'foo'='bar', expecting to get no results\n");
-    //
-    // found_entities = em.searchConnectedEntitiesForProperty(awardA,
-    // "awarded", "cat", "foo", "bar", null, null, 1, false,
-    // Results.Level.IDS);
-    // assertNotNull(found_entities);
-    // assertEquals("Wrong number of results found", 0,
-    // found_entities.size());
-    //
-    // LOG.info("\n\nSearching Group A for members with 'foo'='baz'\n");
-    //
-    // found_entities = em.searchConnectedEntitiesForProperty(awardA,
-    // "awarded", "cat", "foo", "baz", null, null, 1, false,
-    // Results.Level.IDS);
-    // assertNotNull(found_entities);
-    // assertEquals("Wrong number of results found", 1,
-    // found_entities.size());
-    //
-    // em.deleteConnection(em.connectionRef(awardA, "awarded", catA));
-    //
-    // found_entities = em.searchConnectedEntitiesForProperty(awardA,
-    // "awarded", "cat", "foo", "baz", null, null, 1, false,
-    // Results.Level.IDS);
-    // assertNotNull(found_entities);
-    // assertEquals("Wrong number of results found", 0,
-    // found_entities.size());
 
   }
 
@@ -246,19 +187,10 @@ public class EntityConnectionsIT extends AbstractCoreIT
     Entity en = em.get(entityId);
 
     Results results = em.getConnectedEntities(en.getUuid(), null, null, Results.Level.REFS);
-    /*
-     * Map<String, Map<String, List<UUID>>> connections = results
-     * .getConnectionTypeAndEntityTypeToEntityIdMap(); for (String
-     * connectionType : connections.keySet()) { Map<String, List<UUID>>
-     * entityTypeToEntityIds = connections .get(connectionType); for (String
-     * entityType : entityTypeToEntityIds.keySet()) { List<UUID> entityIds =
-     * entityTypeToEntityIds.get(entityType); LOG.info(connectionType + " " +
-     * entityType + ":"); for (UUID id : entityIds) { LOG.info(entityType +
-     * " " + id.toString()); } } }
-     */
+
+
     LOG.info("----------------------------------------------------");
-    assertEquals("Expected " + expectedCount + " connections", expectedCount,
-        results.getConnections() != null ? results.getConnections().size() : 0);
+    assertEquals("Expected " + expectedCount + " connections", expectedCount,  results.getConnections().size());
     // return connections;
     return null;
   }

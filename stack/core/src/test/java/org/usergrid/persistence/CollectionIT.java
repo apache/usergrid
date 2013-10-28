@@ -1328,7 +1328,7 @@ public class CollectionIT extends AbstractCoreIT
 
     r = em.searchConnectedEntities(foo, query);
 
-    assertTrue(r.size() == 1);
+    assertEquals("connection must match", 1, r.size());
 
     // selection results should be a list of lists
     entity = r.getEntity();

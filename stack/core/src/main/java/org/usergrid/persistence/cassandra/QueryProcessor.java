@@ -40,21 +40,26 @@ public class QueryProcessor {
 
   private static final Schema SCHEMA = getDefaultSchema();
 
+  private final CollectionInfo collectionInfo;
+  private final EntityManager em;
+  private final ResultsLoaderFactory loaderFactory;
+
   private Operand rootOperand;
   private List<SortPredicate> sorts;
   private CursorCache cursorCache;
   private QueryNode rootNode;
   private String entityType;
-  private CollectionInfo collectionInfo;
+
   private int size;
   private Query query;
   private int pageSizeHint;
-  private EntityManager em;
 
-  public QueryProcessor(Query query, CollectionInfo collectionInfo, EntityManager em) throws PersistenceException {
+
+  public QueryProcessor(Query query, CollectionInfo collectionInfo, EntityManager em, ResultsLoaderFactory loaderFactory) throws PersistenceException {
     setQuery(query);
     this.collectionInfo = collectionInfo;
     this.em = em;
+    this.loaderFactory = loaderFactory;
     process();
   }
 
@@ -234,8 +239,8 @@ public class QueryProcessor {
       }
     }
 
-    ResultsLoader loader = getResultsLoader(em, query);
-    Results results = loader.getResults(entityIds);
+    final ResultsLoader loader = loaderFactory.getResultsLoader(em, query, query.getResultsLevel());
+    final Results results = loader.getResults(entityIds);
 
     if (results == null) {
       return null;
@@ -252,16 +257,7 @@ public class QueryProcessor {
 
   }
 
-  private ResultsLoader getResultsLoader(EntityManager em, Query query) {
-    switch (query.getResultsLevel()) {
-      case IDS:
-        return new IDLoader();
-      case REFS:
-        return new ConnectionRefLoader(query.getEntityType());
-      default:
-        return new EntityResultsLoader(em);
-    }
-  }
+
 
   private class TreeEvaluator implements QueryVisitor {
 

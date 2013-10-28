@@ -2760,7 +2760,6 @@ public class EntityManagerImpl implements EntityManager {
 	public Results searchConnectedEntities(EntityRef connectingEntity,
 			Query query) throws Exception {
 
-		// TODO Todd Ed the query type and connection type needs set here.
 		return getRelationManager(connectingEntity).searchConnectedEntities(
 				query);
 	}

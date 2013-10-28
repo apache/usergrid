@@ -55,7 +55,7 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
     }
     
     //we're checking a loopback and it wasn't specified, skip it
-    if(Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType) && !Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
+    if((connectedEntityType != null && !connectedEntityType.equalsIgnoreCase(connectedType))  ||  Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
       return null;
     }
 

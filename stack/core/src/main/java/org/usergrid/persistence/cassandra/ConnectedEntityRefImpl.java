@@ -25,38 +25,32 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		ConnectedEntityRef {
 
 	final String connectionType;
-  final boolean source;
 
 	public ConnectedEntityRefImpl() {
 		super(null, null);
 		connectionType = null;
-    this.source = true;
 	}
 
 	public ConnectedEntityRefImpl(UUID entityId) {
 		super(null, entityId);
 		connectionType = null;
-    this.source = true;
 	}
 
 	public ConnectedEntityRefImpl(EntityRef ref) {
 		super(ref);
 		connectionType = null;
-    this.source = true;
 	}
 
 	public ConnectedEntityRefImpl(String connectionType,
 			EntityRef connectedEntity) {
 		super(connectedEntity.getType(), connectedEntity.getUuid());
 		this.connectionType = connectionType;
-    this.source = true;
 	}
 
 	public ConnectedEntityRefImpl(String connectionType, String entityType,
 			UUID entityId) {
 		super(entityType, entityId);
 		this.connectionType = connectionType;
-    this.source = true;
 	}
 
   /**
@@ -70,7 +64,6 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
                                 UUID entityId, boolean source) {
     super(entityType, entityId);
     this.connectionType = connectionType;
-    this.source = source;
   }
 
 	@Override
@@ -78,10 +71,6 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		return connectionType;
 	}
 
-
-  public boolean isSource() {
-    return source;
-  }
 
   public static String getConnectionType(ConnectedEntityRef connection) {
 		if (connection == null) {
