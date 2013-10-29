@@ -1,20 +1,13 @@
 package org.usergrid.persistence.query.ir;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
-
-import me.prettyprint.hector.api.beans.DynamicComposite;
 
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.cassandra.QueryProcessor;
-import org.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.cassandra.QueryProcessor;
 import org.usergrid.persistence.query.ir.result.*;
 
 /**
@@ -29,7 +22,7 @@ import org.usergrid.persistence.query.ir.result.*;
  */
 public abstract class SearchVisitor implements NodeVisitor {
 
-  private static final CollectionIndexSliceParser COLLECTION_PARSER = new CollectionIndexSliceParser();
+  private static final SecondaryIndexSliceParser COLLECTION_PARSER = new SecondaryIndexSliceParser();
 
   protected final Query query;
 
@@ -164,7 +157,7 @@ public abstract class SearchVisitor implements NodeVisitor {
       //only order by with no query, start scanning the first field
       if(subResults == null){
         QuerySlice firstFieldSlice = new QuerySlice(slice.getPropertyName(), -1);
-        subResults = new SliceIterator<DynamicComposite>(slice, secondaryIndexScan(orderByNode, firstFieldSlice), COLLECTION_PARSER, slice.hasCursor());
+        subResults = new SliceIterator(slice, secondaryIndexScan(orderByNode, firstFieldSlice), COLLECTION_PARSER, slice.hasCursor());
       }
 
       orderIterator = new OrderByIterator(slice, orderByNode.getSecondarySorts(), subResults, em, queryProcessor.getPageSizeHint(orderByNode));
@@ -181,7 +174,7 @@ public abstract class SearchVisitor implements NodeVisitor {
         scanner = secondaryIndexScan(orderByNode, slice);
       }
 
-      SliceIterator<DynamicComposite> joinSlice = new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice.hasCursor());
+      SliceIterator joinSlice = new SliceIterator(slice, scanner, COLLECTION_PARSER, slice.hasCursor());
 
       IntersectionIterator union = new IntersectionIterator(queryProcessor.getPageSizeHint(orderByNode));
       union.addIterator(joinSlice);
@@ -212,7 +205,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     for (QuerySlice slice : node.getAllSlices()) {
       IndexScanner scanner = secondaryIndexScan(node, slice);
 
-      intersections.addIterator(new SliceIterator<DynamicComposite>(slice, scanner, COLLECTION_PARSER, slice
+      intersections.addIterator(new SliceIterator(slice, scanner, COLLECTION_PARSER, slice
           .hasCursor()));
     }
 

@@ -24,7 +24,7 @@ public class EmptyIterator implements ResultIterator {
   }
 
   @Override
-  public Iterator<Set<UUID>> iterator() {
+  public Iterator<Set<ScanColumn>> iterator() {
     return this;
   }
 
@@ -34,7 +34,7 @@ public class EmptyIterator implements ResultIterator {
   }
 
   @Override
-  public Set<UUID> next() {
+  public Set<ScanColumn> next() {
     return null;
   }
 

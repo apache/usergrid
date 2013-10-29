@@ -1983,7 +1983,7 @@ public class RelationManagerImpl implements RelationManager {
       UUID startId = null;
 
       if (slice.hasCursor()) {
-        startId = UUID_PARSER.parse(slice.getCursor());
+        startId = UUID_PARSER.parse(slice.getCursor()).getUUID();
       }
 
       boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
@@ -1992,7 +1992,7 @@ public class RelationManagerImpl implements RelationManager {
           key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startId, null,
           queryProcessor.getPageSizeHint(node), query.isReversed(), indexBucketLocator, applicationId, collectionName);
 
-      this.results.push(new SliceIterator<UUID>(slice, indexScanner, UUID_PARSER, skipFirst));
+      this.results.push(new SliceIterator(slice, indexScanner, UUID_PARSER, skipFirst));
     }
 
     /*
@@ -2166,7 +2166,7 @@ public class RelationManagerImpl implements RelationManager {
       IndexScanner connectionScanner = new ConnectedIndexScanner(cass, dictionaryType , applicationId,
           entityIdToUse, connectionTypes, start, slice.isReversed(), size);
 
-      this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
+      this.results.push(new SliceIterator(slice, connectionScanner, connectionParser, skipFirst));
 
     }
 

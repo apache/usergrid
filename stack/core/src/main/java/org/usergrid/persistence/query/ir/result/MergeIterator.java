@@ -29,13 +29,13 @@ public abstract class MergeIterator implements ResultIterator {
   /**
    * kept private on purpose so advance must return the correct value
    */
-  private Set<UUID> next;
+  private Set<ScanColumn> next;
   
   /**
    * Pointer to the last set.  Equal to "next" when returned.  Used to retain results
    * after "next" is set to null 
    */
-  private Set<UUID> last;
+  private Set<ScanColumn> last;
   /**
    * The size of the pages
    */
@@ -58,7 +58,7 @@ public abstract class MergeIterator implements ResultIterator {
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<Set<UUID>> iterator() {
+  public Iterator<Set<ScanColumn>> iterator() {
     return this;
   }
 
@@ -97,12 +97,12 @@ public abstract class MergeIterator implements ResultIterator {
    * @see java.util.Iterator#next()
    */
   @Override
-  public Set<UUID> next() {
+  public Set<ScanColumn> next() {
     if(next == null){
       doAdvance();
     }
     
-    Set<UUID> returnVal = next;
+    Set<ScanColumn> returnVal = next;
 
     next = null;
 
@@ -140,7 +140,7 @@ public abstract class MergeIterator implements ResultIterator {
   /**
    * Advance the iterator to the next value.  Can return an empty set with signals no values
    */
-  protected abstract Set<UUID> advance();
+  protected abstract Set<ScanColumn> advance();
   
   /**
    * Perform the reset if required

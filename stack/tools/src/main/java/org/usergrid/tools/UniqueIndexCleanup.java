@@ -51,6 +51,7 @@ import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.query.ir.result.ScanColumn;
 import org.usergrid.persistence.query.ir.result.SliceIterator;
 import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.usergrid.persistence.schema.CollectionInfo;
@@ -168,12 +169,12 @@ public class UniqueIndexCleanup extends ToolBase {
             key(applicationId, DICTIONARY_COLLECTIONS, collectionName), null, null,
             PAGE_SIZE, false, indexBucketLocator, applicationId, collectionName);
 
-        SliceIterator<UUID> itr = new SliceIterator<UUID>(null, scanner, new UUIDIndexSliceParser(), false);
+        SliceIterator itr = new SliceIterator(null, scanner, new UUIDIndexSliceParser(), false);
 
 
         while (itr.hasNext()) {
 
-          Set<UUID> ids = itr.next();
+          Set<ScanColumn> ids = itr.next();
 
           CollectionInfo collection = getDefaultSchema().getCollection("application", collectionName);
 
@@ -186,7 +187,8 @@ public class UniqueIndexCleanup extends ToolBase {
           logger.info("Auditing {} entities for collection {} in app {}", new Object[]{ids.size(), collectionName,
               app.getValue()});
 
-          for (UUID id : ids) {
+          for (ScanColumn col : ids) {
+            final UUID id = col.getUUID();
             boolean reIndex = false;
 
             Mutator<ByteBuffer> m = createMutator(ko, be);

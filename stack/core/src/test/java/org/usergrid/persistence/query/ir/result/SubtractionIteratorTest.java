@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
+import static org.usergrid.persistence.query.ir.result.IteratorHelper.*;
 
 /**
  * @author tnine
@@ -57,10 +58,10 @@ public class SubtractionIteratorTest {
     sub.setSubtractIterator(subtract);
 
     // now make sure it's right, only 2 and 8 aren't intersected
-    Set<UUID> page = sub.next();
+    Set<ScanColumn> page = sub.next();
     
-    assertTrue(page.contains(id2));
-    assertTrue(page.contains(id4));
+    assertTrue(page.contains(uuidColumn(id2)));
+    assertTrue(page.contains(uuidColumn(id4)));
     
     assertEquals(2, page.size());
     
@@ -97,9 +98,9 @@ public class SubtractionIteratorTest {
 
     // now make sure it's right, only 2 and 8 aren't intersected
     
-    Set<UUID> page = sub.next();
+    Set<ScanColumn> page = sub.next();
     
-    assertTrue(page.contains(id2));
+    assertTrue(page.contains(uuidColumn(id2)));
     
     assertEquals(1, page.size());
   }
@@ -171,9 +172,9 @@ public class SubtractionIteratorTest {
     sub.setSubtractIterator(subtract);
     
     assertTrue(sub.hasNext());
-    Set<UUID> page = sub.next();
+    Set<ScanColumn> page = sub.next();
     
-    assertTrue(page.contains(id1));
+    assertTrue(page.contains(uuidColumn(id1)));
     assertEquals(1, page.size());
   }
 

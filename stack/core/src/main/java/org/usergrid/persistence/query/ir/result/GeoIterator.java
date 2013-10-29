@@ -48,28 +48,29 @@ public class GeoIterator implements ResultIterator {
   private final GeoIndexSearcher searcher;
   private final int resultSize;
   private final QuerySlice slice;
-  private final LinkedHashMap<UUID, EntityLocationRef> idOrder;
+  private final LinkedHashMap<UUID, LocationScanColumn> idOrder;
   private final Point center;
   private final double distance;
   private final String propertyName;
   
-  private Set<UUID> toReturn;
+  private Set<ScanColumn> toReturn;
+  private Set<ScanColumn> lastLoaded;
 
   // set when parsing cursor. If the cursor has gone to the end, this will be
   // true, we should return no results
   private boolean done = false;
-  //
-  // private List<Double> distances;
 
   /**
    * Moved and used as part of cursors
    */
-  // private int nextResolution = GeoIndexManager.MAX_RESOLUTION;
-  // private UUID startId;
-  // private double cursorDistance;
   private EntityLocationRef last;
   private List<String> lastCellsSearched;
 
+  /**
+   * counter that's incremented as we load pages. If pages loaded = 1 when
+   * reset, we don't have to reload from cass
+   */
+  private int pagesLoaded = 0;
   
   
   /**
@@ -82,7 +83,8 @@ public class GeoIterator implements ResultIterator {
     this.propertyName = propertyName;
     this.center = center;
     this.distance = distance;
-    this.idOrder = new LinkedHashMap<UUID, EntityLocationRef>(resultSize);
+    this.idOrder = new LinkedHashMap<UUID, LocationScanColumn>(resultSize);
+    this.lastLoaded = new LinkedHashSet<ScanColumn>(resultSize);
     parseCursor();
 
   }
@@ -93,7 +95,7 @@ public class GeoIterator implements ResultIterator {
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<Set<UUID>> iterator() {
+  public Iterator<Set<ScanColumn>> iterator() {
     return this;
   }
 
@@ -115,14 +117,13 @@ public class GeoIterator implements ResultIterator {
     }
 
     idOrder.clear();
+    lastLoaded.clear();
   
 
     SearchResults results;
 
     try {
       results = searcher.proximitySearch(last, lastCellsSearched, center, propertyName, 0, distance, resultSize);
-      
-
     } catch (Exception e) {
       throw new RuntimeException("Unable to search geo locations", e);
     }
@@ -133,23 +134,24 @@ public class GeoIterator implements ResultIterator {
 
     for (int i = 0; i < locations.size(); i++) {
 
-      EntityLocationRef location = locations.get(i);
-      UUID id = location.getUuid();
+      final EntityLocationRef location = locations.get(i);
+      final UUID id = location.getUuid();
 
-      idOrder.put(id, location);
-      // distances.add(distance);
+      final LocationScanColumn locationScan = new LocationScanColumn(location);
+
+      idOrder.put(id, locationScan);
+      lastLoaded.add(locationScan);
 
       last = location;
 
-      // count++;
     }
 
     if (locations.size() < resultSize) {
       done = true;
     }
 
-    if (idOrder.size() > 0) {
-      toReturn = idOrder.keySet();
+    if (lastLoaded.size() > 0) {
+      toReturn = lastLoaded;
     }
   }
 
@@ -159,12 +161,12 @@ public class GeoIterator implements ResultIterator {
    * @see java.util.Iterator#next()
    */
   @Override
-  public Set<UUID> next() {
+  public Set<ScanColumn> next() {
     if (!hasNext()) {
       throw new NoSuchElementException();
     }
 
-    Set<UUID> temp = toReturn;
+    Set<ScanColumn> temp = toReturn;
 
     toReturn = null;
 
@@ -189,7 +191,14 @@ public class GeoIterator implements ResultIterator {
    */
   @Override
   public void reset() {
+    //only 1 iteration was invoked.  Just reset the pointer rather than re-search
+    if (pagesLoaded == 1) {
+      toReturn = lastLoaded;
+      return;
+    }
+
     idOrder.clear();
+    lastLoaded.clear();
     lastCellsSearched = null;
     last = null;
   }
@@ -204,24 +213,30 @@ public class GeoIterator implements ResultIterator {
   @Override
   public void finalizeCursor(CursorCache cache, UUID uuid) {
 
-    EntityLocationRef location = idOrder.get(uuid);
+    LocationScanColumn col =  idOrder.get(uuid);
+
+    if(col == null){
+      return;
+    }
+
+    final EntityLocationRef location = col.location;
 
     if (location == null) {
       return;
     }
 
-    int sliceHash = slice.hashCode();
+    final int sliceHash = slice.hashCode();
 
     // get our next distance
-    double lattitude = location.getLatitude();
+    final double latitude = location.getLatitude();
 
-    double longitude = location.getLongitude();
+    final double longitude = location.getLongitude();
 
     // now create a string value for this
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
 
     builder.append(uuid).append(DELIM);
-    builder.append(lattitude).append(DELIM);
+    builder.append(latitude).append(DELIM);
     builder.append(longitude);
 
     if (lastCellsSearched != null) {
@@ -237,6 +252,7 @@ public class GeoIterator implements ResultIterator {
     }
 
     ByteBuffer buff = STR_SER.toByteBuffer(builder.toString());
+
 
     cache.setNextCursor(sliceHash, buff);
 
@@ -271,8 +287,8 @@ public class GeoIterator implements ResultIterator {
     }
 
     UUID startId = UUID.fromString(parts[0]);
-    double lattitude = Double.parseDouble(parts[1]);
-    double longtitude = Double.parseDouble(parts[2]);
+    double latitude = Double.parseDouble(parts[1]);
+    double longitude = Double.parseDouble(parts[2]);
 
     if (parts.length >= 4) {
       String[] geoCells = parts[3].split(TILE_DELIM);
@@ -280,10 +296,44 @@ public class GeoIterator implements ResultIterator {
       lastCellsSearched = Arrays.asList(geoCells);
     }
 
-    last = new EntityLocationRef((String) null, startId, lattitude, longtitude);
+    last = new EntityLocationRef((String) null, startId, latitude, longitude);
 
   }
 
+
+  private class LocationScanColumn implements ScanColumn{
+
+    private final EntityLocationRef location;
+
+    public LocationScanColumn(EntityLocationRef location){
+      this.location = location;
+    }
+
+    @Override
+    public UUID getUUID() {
+      return location.getUuid();
+    }
+
+    @Override
+    public ByteBuffer getCursorValue() {
+      throw new UnsupportedOperationException("This is not supported for location scan columns.  It requires iterator information");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (!(o instanceof ScanColumn)) return false;
+
+      ScanColumn that = (ScanColumn) o;
+
+      return location.getUuid().equals(that.getUUID());
+    }
+
+    @Override
+    public int hashCode() {
+      return location.getUuid().hashCode();
+    }
+  }
 
 
   

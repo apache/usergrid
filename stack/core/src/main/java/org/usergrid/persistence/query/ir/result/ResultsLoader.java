@@ -34,5 +34,5 @@ public interface ResultsLoader  {
    * @return
    * @throws Exception 
    */
-  public Results getResults(List<UUID> entityIds) throws Exception;
+  public Results getResults(List<ScanColumn> entityIds) throws Exception;
 }

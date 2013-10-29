@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,8 +41,8 @@ public class EntityResultsLoader implements ResultsLoader {
    * @see org.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
    */
   @Override
-  public Results getResults(List<UUID> entityIds) throws Exception {
-    return em.get(entityIds);
+  public Results getResults(List<ScanColumn> entityIds) throws Exception {
+    return em.get(ScanColumnTransformer.getIds(entityIds));
   }
 
 }

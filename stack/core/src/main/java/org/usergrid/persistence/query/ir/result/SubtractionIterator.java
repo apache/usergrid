@@ -71,16 +71,16 @@ public class SubtractionIterator extends MergeIterator {
    * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
    */
   @Override
-  protected Set<UUID> advance() {
+  protected Set<ScanColumn> advance() {
     if (!keepIterator.hasNext()) {
       return null;
     }
 
-    Set<UUID> results = new LinkedHashSet<UUID>(pageSize);
+    Set<ScanColumn> results = new LinkedHashSet<ScanColumn>(pageSize);
 
     while (keepIterator.hasNext() && results.size() < pageSize) {
 
-      Set<UUID> keepPage = keepIterator.next();
+      Set<ScanColumn> keepPage = keepIterator.next();
 
       while (subtractIterator.hasNext() && keepPage.size() > 0) {
         keepPage = Sets.difference(keepPage, subtractIterator.next());

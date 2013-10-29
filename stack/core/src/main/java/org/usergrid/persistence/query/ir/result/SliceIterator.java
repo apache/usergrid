@@ -16,10 +16,7 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -33,11 +30,11 @@ import org.usergrid.persistence.query.ir.QuerySlice;
  * @author tnine
  * 
  */
-public class SliceIterator<T> implements ResultIterator {
+public class SliceIterator implements ResultIterator {
 
-  private final LinkedHashMap<UUID, ByteBuffer> cols;
+  private final LinkedHashMap<UUID, ScanColumn> cols;
   private final QuerySlice slice;
-  private final SliceParser<T> parser;
+  private final SliceParser parser;
   private final IndexScanner scanner;
   private final int pageSize;
   private final boolean skipFirst;
@@ -45,13 +42,17 @@ public class SliceIterator<T> implements ResultIterator {
   /**
    * Pointer to the uuid set until it's returned
    */
-  private Set<UUID> lastResult;
+  private Set<ScanColumn> lastResult;
+
+  /**
+   * The pointer to the last set of parsed columns
+   */
+  private Set<ScanColumn> parsedCols;
 
   /**
    * counter that's incremented as we load pages. If pages loaded = 1 when
    * reset, we don't have to reload from cass
    */
-
   private int pagesLoaded = 0;
 
   /**
@@ -61,13 +62,14 @@ public class SliceIterator<T> implements ResultIterator {
    * @param parser The parser for the scanner results
    * @param skipFirst True if the first record should be skipped, used with cursors
    */
-  public SliceIterator(QuerySlice slice, IndexScanner scanner,  SliceParser<T> parser, boolean skipFirst) {
+  public SliceIterator(QuerySlice slice, IndexScanner scanner,  SliceParser parser, boolean skipFirst) {
     this.slice = slice;
     this.parser = parser;
     this.scanner = scanner;
     this.skipFirst = skipFirst;
     this.pageSize = scanner.getPageSize();
-    this.cols = new LinkedHashMap<UUID, ByteBuffer>(this.pageSize);
+    this.cols = new LinkedHashMap<UUID, ScanColumn>(this.pageSize);
+    this.parsedCols = new LinkedHashSet<ScanColumn>(this.pageSize);
   }
 
   /*
@@ -76,7 +78,7 @@ public class SliceIterator<T> implements ResultIterator {
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<Set<UUID>> iterator() {
+  public Iterator<Set<ScanColumn>> iterator() {
     return this;
   }
 
@@ -109,26 +111,29 @@ public class SliceIterator<T> implements ResultIterator {
     if(skipFirst && pagesLoaded == 0  && results.hasNext()){
       results.next();
     }
+
+    parsedCols.clear();
     
     while (results.hasNext()) {
 
-      ByteBuffer colName = results.next().getName().duplicate();  
-    
-      T parsed = parser.parse(colName);
+      ByteBuffer colName = results.next().getName().duplicate();
+
+      ScanColumn parsed = parser.parse(colName);
       
       //skip this value, the parser has discarded it
       if(parsed == null){
         continue;
       }
-          
-      UUID id = parser.getUUID(parsed);
 
-      cols.put(id, colName);
+      cols.put(parsed.getUUID(), parsed);
+      parsedCols.add(parsed);
     }
 
-    lastResult = cols.keySet();
+
 
     pagesLoaded++;
+
+    lastResult = parsedCols;
 
     return lastResult != null && lastResult.size() > 0;
   }
@@ -139,8 +144,8 @@ public class SliceIterator<T> implements ResultIterator {
    * @see java.util.Iterator#next()
    */
   @Override
-  public Set<UUID> next() {
-    Set<UUID> temp = lastResult;
+  public Set<ScanColumn> next() {
+    Set<ScanColumn> temp = lastResult;
     lastResult = null;
     return temp;
   }
@@ -164,7 +169,7 @@ public class SliceIterator<T> implements ResultIterator {
   public void reset() {
     // Do nothing, we'll just return the first page again
     if (pagesLoaded == 1) {
-      lastResult = cols.keySet();
+      lastResult = parsedCols;
       return;
     }
     scanner.reset();
@@ -180,7 +185,7 @@ public class SliceIterator<T> implements ResultIterator {
   public void finalizeCursor(CursorCache cache, UUID lastLoaded) {
     int sliceHash = slice.hashCode();
 
-    ByteBuffer bytes = cols.get(lastLoaded);
+    ByteBuffer bytes = cols.get(lastLoaded).getCursorValue();
 
     if (bytes == null) {
       return;

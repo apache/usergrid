@@ -31,7 +31,7 @@ import org.usergrid.persistence.cassandra.CursorCache;
  * @author tnine
  *
  */
-public interface ResultIterator extends Iterable<Set<UUID>>, Iterator<Set<UUID>> {
+public interface ResultIterator extends Iterable<Set<ScanColumn>>, Iterator<Set<ScanColumn>> {
   
   
   

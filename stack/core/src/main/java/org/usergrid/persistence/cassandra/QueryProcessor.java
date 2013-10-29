@@ -221,7 +221,7 @@ public class QueryProcessor {
 
     ResultIterator itr = visitor.getResults();
 
-    List<UUID> entityIds = new ArrayList<UUID>(Math.min(size, Query.MAX_LIMIT));
+    List<ScanColumn> entityIds = new ArrayList<ScanColumn>(Math.min(size, Query.MAX_LIMIT));
 
     CursorCache resultsCursor = new CursorCache();
 
@@ -235,7 +235,7 @@ public class QueryProcessor {
       entityIds = entityIds.subList(0, resultSize);
 
       if(resultSize == size){
-        itr.finalizeCursor(resultsCursor, entityIds.get(resultSize-1));
+        itr.finalizeCursor(resultsCursor, entityIds.get(resultSize-1).getUUID());
       }
     }
 

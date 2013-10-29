@@ -47,6 +47,8 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.query.ir.result.ScanColumn;
+import org.usergrid.persistence.query.ir.result.ScanColumnTransformer;
 import org.usergrid.persistence.query.ir.result.SliceIterator;
 import org.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 
@@ -120,15 +122,15 @@ public class EntityCleanup extends ToolBase {
             key(applicationId, DICTIONARY_COLLECTIONS, collectionName), null, null, PAGE_SIZE, false,
             indexBucketLocator, applicationId, collectionName);
 
-        SliceIterator<UUID> itr = new SliceIterator<UUID>(null, scanner, new UUIDIndexSliceParser(), false);
+        SliceIterator itr = new SliceIterator(null, scanner, new UUIDIndexSliceParser(), false);
 
         while (itr.hasNext()) {
 
           // load all entity ids from the index itself.
 
-          Set<UUID> copy = new LinkedHashSet<UUID>(itr.next());
+          Set<ScanColumn> copy = new LinkedHashSet<ScanColumn>(itr.next());
 
-          results = em.get(copy);
+          results = em.get(ScanColumnTransformer.getIds(copy));
           // nothing to do they're the same size so there's no
           // orphaned uuid's in the entity index
           if (copy.size() == results.size()) {
@@ -149,7 +151,9 @@ public class EntityCleanup extends ToolBase {
           Keyspace ko = cass.getApplicationKeyspace(applicationId);
           Mutator<ByteBuffer> m = createMutator(ko, be);
 
-          for (UUID id : copy) {
+          for (ScanColumn col: copy) {
+
+            final UUID id = col.getUUID();
 
             Object collections_key = key(applicationId, Schema.DICTIONARY_COLLECTIONS, collectionName,
                 indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, id, collectionName));

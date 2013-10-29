@@ -36,7 +36,7 @@ public class UnionIterator extends MultiIterator {
    * results that were left from our previous union. These are kept and returned
    * before advancing iterators
    */
-  private Set<UUID> remainderResults;
+  private Set<ScanColumn> remainderResults;
 
   private int currentIndex = -1;
 
@@ -53,7 +53,7 @@ public class UnionIterator extends MultiIterator {
    * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
    */
   @Override
-  protected Set<UUID> advance() {
+  protected Set<ScanColumn> advance() {
     
     int size = iterators.size();
     
@@ -61,13 +61,13 @@ public class UnionIterator extends MultiIterator {
       return null;
     }
 
-    Set<UUID> resultSet = null;
+    Set<ScanColumn> resultSet = null;
 
     if (remainderResults != null) {
       resultSet = remainderResults;
       remainderResults = null;
     } else {
-      resultSet = new LinkedHashSet<UUID>();
+      resultSet = new LinkedHashSet<ScanColumn>();
     }
 
     /**
@@ -95,15 +95,15 @@ public class UnionIterator extends MultiIterator {
 
     // now check if we need to split our results if they went over the page size
     if (resultSet.size() > pageSize) {
-      Set<UUID> returnSet = new LinkedHashSet<UUID>(pageSize);
+      Set<ScanColumn> returnSet = new LinkedHashSet<ScanColumn>(pageSize);
 
-      Iterator<UUID> itr = resultSet.iterator();
+      Iterator<ScanColumn> itr = resultSet.iterator();
 
       for (int i = 0; i < pageSize && itr.hasNext(); i++) {
         returnSet.add(itr.next());
       }
 
-      remainderResults = new LinkedHashSet<UUID>(pageSize);
+      remainderResults = new LinkedHashSet<ScanColumn>(pageSize);
       
       while(itr.hasNext()){
         remainderResults.add(itr.next());

@@ -58,7 +58,7 @@ public class IntersectionIterator extends MultiIterator {
    * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
    */
   @Override
-  protected Set<UUID> advance() {
+  protected Set<ScanColumn> advance() {
     /**
      * Advance our sub iterators until the UUID's all line up
      */
@@ -87,9 +87,9 @@ public class IntersectionIterator extends MultiIterator {
 
   }
 
-  private Set<UUID> merge() {
+  private Set<ScanColumn> merge() {
 
-    Set<UUID> results = new LinkedHashSet<UUID>();
+    Set<ScanColumn> results = new LinkedHashSet<ScanColumn>();
     ResultIterator rootIterator = iterators.get(0);
     
 
@@ -102,7 +102,7 @@ public class IntersectionIterator extends MultiIterator {
     //purposely check size first, that way we avoid another round trip if we can
     while (results.size() < pageSize && rootIterator.hasNext() ) {
 
-      Set<UUID> intersection = rootIterator.next();
+      Set<ScanColumn> intersection = rootIterator.next();
 
       for (int i = 1; i < iterators.size(); i++) {
 
@@ -124,9 +124,9 @@ public class IntersectionIterator extends MultiIterator {
 
   }
 
-  private Set<UUID> merge(Set<UUID> current, ResultIterator child) {
+  private Set<ScanColumn> merge(Set<ScanColumn> current, ResultIterator child) {
 
-    Set<UUID> results = new LinkedHashSet<UUID>(pageSize);
+    Set<ScanColumn> results = new LinkedHashSet<ScanColumn>(pageSize);
 
     while (results.size() < pageSize) {
       if (!child.hasNext()) {

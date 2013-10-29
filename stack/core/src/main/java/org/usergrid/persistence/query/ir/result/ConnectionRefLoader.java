@@ -27,15 +27,25 @@ public class ConnectionRefLoader implements ResultsLoader {
   }
 
   @Override
-  public Results getResults(List<UUID> entityIds) throws Exception {
+  public Results getResults(List<ScanColumn> entityIds) throws Exception {
 
 
     final EntityRef sourceRef = new SimpleEntityRef(sourceType, sourceEntityId);
 
     List<ConnectionRef> refs = new ArrayList<ConnectionRef>(entityIds.size());
-    for (UUID id : entityIds) {
 
-      final EntityRef targetRef = new SimpleEntityRef(targetEntityType, id);
+    for (ScanColumn column : entityIds) {
+
+      SimpleEntityRef targetRef;
+
+      if(column instanceof ConnectionIndexSliceParser.ConnectionColumn){
+        final ConnectionIndexSliceParser.ConnectionColumn connectionColumn = (ConnectionIndexSliceParser.ConnectionColumn) column;
+        targetRef = new SimpleEntityRef(connectionColumn.getTargetType(), connectionColumn.getUUID());
+      }
+
+      else{
+        targetRef = new SimpleEntityRef(targetEntityType, column.getUUID());
+      }
 
       final ConnectionRef ref = new ConnectionRefImpl(sourceRef, connectionType, targetRef);
 

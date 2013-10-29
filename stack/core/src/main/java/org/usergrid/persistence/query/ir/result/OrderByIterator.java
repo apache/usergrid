@@ -89,7 +89,7 @@ public class OrderByIterator extends MergeIterator {
   }
 
   @Override
-  protected Set<UUID> advance() {
+  protected Set<ScanColumn> advance() {
 
     ByteBuffer cursor = slice.getCursor();
 
@@ -111,7 +111,7 @@ public class OrderByIterator extends MergeIterator {
     while (candidates.hasNext()) {
 
 
-      for (UUID id : candidates.next()) {
+      for (ScanColumn id : candidates.next()) {
         entries.add(id);
       }
 
@@ -146,8 +146,7 @@ public class OrderByIterator extends MergeIterator {
   public static final class SortedEntitySet extends TreeSet<Entity> {
 
     private final int maxSize;
-    private final Set<UUID> toLoad = new LinkedHashSet<UUID>();
-    private final Map<UUID, ByteBuffer> cursorVal = new HashMap<UUID, ByteBuffer>();
+    private final Map<UUID, ScanColumn> cursorVal = new HashMap<UUID, ScanColumn>();
     private final EntityManager em;
     private final List<String> fields;
     private final Entity minEntity;
@@ -187,12 +186,12 @@ public class OrderByIterator extends MergeIterator {
 
 
     /** add the id to be loaded, and the dynamiccomposite column that belongs with it */
-    public void add(UUID id) {
-      toLoad.add(id);
+    public void add(ScanColumn col) {
+      cursorVal.put(col.getUUID(), col);
     }
 
     private Entity getPartialEntity(UUID minEntityId) {
-      List<Entity> entities = null;
+      List<Entity> entities;
 
       try {
         entities = em.getPartialEntities(Collections.singletonList(minEntityId), fields);
@@ -210,7 +209,7 @@ public class OrderByIterator extends MergeIterator {
 
     public void load() {
       try {
-        for (Entity e : em.getPartialEntities(toLoad, fields)) {
+        for (Entity e : em.getPartialEntities(cursorVal.keySet(), fields)) {
           add(e);
         }
       } catch (Exception e) {
@@ -218,27 +217,25 @@ public class OrderByIterator extends MergeIterator {
         throw new RuntimeException(e);
       }
 
-      toLoad.clear();
-
     }
 
     /** Turn our sorted entities into a set of ids */
-    public Set<UUID> toIds() {
-      Set<UUID> ids = new LinkedHashSet<UUID>();
-
+    public Set<ScanColumn> toIds() {
       Iterator<Entity> itr = iterator();
 
-      while (itr.hasNext()) {
-        ids.add(itr.next().getUuid());
+      Set<ScanColumn> columns = new LinkedHashSet<ScanColumn>(this.size());
+
+      while(itr.hasNext()){
+
+        UUID id = itr.next().getUuid();
+
+        columns.add(cursorVal.get(id));
       }
 
-      return ids;
+      return columns;
     }
 
-    /** Get the dynamicComposite this id came from */
-    public ByteBuffer getColumn(UUID id) {
-      return cursorVal.get(id);
-    }
+
 
   }
 
