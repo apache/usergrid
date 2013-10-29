@@ -1,5 +1,6 @@
 .idea
 .sonar-ide.properties
+.clover
 atlassian-ide-plugin.xml
 s101plugin.state
 *.DS_Store
