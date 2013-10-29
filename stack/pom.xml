@@ -1685,12 +1685,6 @@
 
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
-          <artifactId>cobertura-maven-plugin</artifactId>
-          <version>2.5.1</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
           <artifactId>dashboard-maven-plugin</artifactId>
           <version>1.0.0-beta-1</version>
         </plugin>
@@ -1813,52 +1807,11 @@
           </execution>
         </executions>
       </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.5.2</version>
-        <configuration>
-          <check/>
-
-          <formats>
-            <format>xml</format>
-            <format>html</format>
-          </formats>
-          <aggregate>true</aggregate>
-          <maxmem>2G</maxmem>
-          <!-- this is 3rd party code, or code dont' deploy in the stack -->
-          <instrumentation>
-            <ignores>
-              <ignore>com.jdotsoft.*</ignore>
-              <ignore>org.usergrid.standalone.*</ignore>
-              <ignore>org.usergrid.websocket.*</ignore>
-              <ignore>org.usergrid.tools.*</ignore>
-              <ignore>org.usergrid.mongo.*</ignore>
-              <ignore>jsp.*</ignore>
-            </ignores>
-            <excludes>
-              <exclude>com/jdotsoft/**</exclude>
-              <exclude>org/usergrid/standalone/**</exclude>
-              <exclude>org/usergrid/websocket/**</exclude>
-              <exclude>org/usergrid/tools/**</exclude>
-              <exclude>org/usergrid/mongo/**</exclude>
-              <exclude>jsp/**</exclude>
-            </excludes>
-          </instrumentation>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 
   <reporting>
     <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.5.2</version>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
