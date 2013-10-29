@@ -80,7 +80,10 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	}
 	
 	public Response toResponse(int status, String jsonResponse) {
-    logger.error("Error in request (" + status + "):\n" + jsonResponse);
+    if (status >= 500) {
+      // only log real errors as errors
+      logger.error("Error in request (" + status + "):\n" + jsonResponse);
+    }
     String callback = httpServletRequest.getParameter("callback");
     if (isJSONP() && isNotBlank(callback)) {
       jsonResponse = wrapJSONPResponse(callback, jsonResponse);
