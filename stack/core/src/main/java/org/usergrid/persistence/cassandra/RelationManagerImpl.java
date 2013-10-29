@@ -130,7 +130,8 @@ public class RelationManagerImpl implements RelationManager {
   public static final StringSerializer se = new StringSerializer();
   public static final ByteBufferSerializer be = new ByteBufferSerializer();
   public static final UUIDSerializer ue = new UUIDSerializer();
-  public static final LongSerializer le = new LongSerializer();
+
+
   public RelationManagerImpl() {
   }
 
@@ -158,9 +159,6 @@ public class RelationManagerImpl implements RelationManager {
     RelationManagerImpl rmi = new RelationManagerImpl();
     rmi.init(em, cass, applicationId, headEntity, indexBucketLocator);
     return rmi;
-    // return applicationContext.getAutowireCapableBeanFactory()
-    // .createBean(RelationManagerImpl.class)
-    // .init(em, cass, applicationId, headEntity, indexBucketLocator);
   }
 
   /** side effect: converts headEntity into an Entity if it is an EntityRef! */
@@ -202,8 +200,6 @@ public class RelationManagerImpl implements RelationManager {
 
     String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, indexedEntity.getUuid(),
         indexedEntity.getType(), indexUpdate.getEntryName());
-
-    CollectionInfo collection = getDefaultSchema().getCollection(owner.getType(), collectionName);
 
     // the root name without the bucket
     // entity_id,collection_name,prop_name,
@@ -734,7 +730,7 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   /**
-   * Batch update backword connections property indexes.
+   * Batch update backward connections property indexes.
    * 
    * @param indexUpdate The update to run for incoming connections
    * @return The index update to run
@@ -755,15 +751,34 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-
-    //TODO T.N USERGRID-2441
-
-    PagingResultsIterator itr = getReversedConnectionsIterator(indexUpdate.getEntity().getUuid());
+    return doBackwardConnectionsUpdate(indexUpdate);
+  }
 
 
-    for (Object connection : itr) {
+  /**
+   * Search each reverse connection type in the graph for connections.  If one is found, update the index appropriately
+   * @param indexUpdate The index update to use
+   * @return The updated index update
+   * @throws Exception
+   */
+  private IndexUpdate doBackwardConnectionsUpdate(IndexUpdate indexUpdate) throws Exception {
+    final Entity targetEntity = indexUpdate.getEntity();
 
-      batchUpdateConnectionIndex(indexUpdate, (ConnectionRefImpl)connection);
+    final ConnectionTypesIterator connectionTypes = new ConnectionTypesIterator(cass, applicationId, targetEntity.getUuid(), false, 100);
+
+    for(String connectionType : connectionTypes){
+
+      PagingResultsIterator itr = getReversedConnectionsIterator(targetEntity, connectionType);
+
+      for (Object connection : itr) {
+
+        final ConnectedEntityRef sourceEntity = (ConnectedEntityRef) connection;
+
+        //we need to create a connection ref from the source entity (found via reverse edge) to the entity we're about to update.  This is the index that needs updated
+        final ConnectionRefImpl connectionRef = new ConnectionRefImpl(sourceEntity, connectionType, indexUpdate.getEntity());
+
+        batchUpdateConnectionIndex(indexUpdate, connectionRef);
+      }
     }
 
     return indexUpdate;
@@ -772,28 +787,12 @@ public class RelationManagerImpl implements RelationManager {
   /**
    * Get a paging results iterator.  Should return an iterator for all results
    *
-   * @param entityId
-   * @return
+   * @param targetEntity The target entity search connections from
+   * @return connectionType The name of the edges to search
    * @throws Exception
    */
-  private PagingResultsIterator getReversedConnectionsIterator(UUID entityId) throws Exception {
-    Query query = new Query();
-    query.setResultsLevel(Level.REFS);
-
-    ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity, null, new SimpleEntityRef(entityId));
-
-    final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory(connectionRef);
-
-    QueryProcessor qp = new QueryProcessor(new Query(), null, em, factory);
-    SearchConnectionVisitor visitor = new SearchConnectionVisitor(qp, connectionRef, false);
-
-    //TODO T.N USERGRID-2441
-
-    PagingResultsIterator itr = new PagingResultsIterator(qp.getResults(visitor));
-
-    return itr;
-
-
+  private PagingResultsIterator getReversedConnectionsIterator(EntityRef targetEntity, String connectionType) throws Exception {
+    return new PagingResultsIterator(getConnectingEntities(targetEntity, connectionType, null, Level.REFS));
   }
 
   /**
@@ -816,15 +815,8 @@ public class RelationManagerImpl implements RelationManager {
       return indexUpdate;
     }
 
-    PagingResultsIterator itr = getReversedConnectionsIterator(indexUpdate.getEntity().getUuid());
 
-
-    for (Object connection : itr) {
-
-      batchUpdateConnectionIndex(indexUpdate, (ConnectionRefImpl)connection);
-    }
-
-    return indexUpdate;
+  return doBackwardConnectionsUpdate(indexUpdate);
 
   }
 
@@ -854,18 +846,29 @@ public class RelationManagerImpl implements RelationManager {
           asList(connection.getConnectingEntityId(), connection.getConnectingEntityType()), timestamp);
 
       // delete the connection path if there will be no connections left
+
       boolean delete = true;
 
-      PagingResultsIterator itr = new PagingResultsIterator(getConnectedEntities(connection.getConnectedEntity(), null, null, Level.REFS));
+      //check out outbound edges of the given type.  If we have more than the 1 specified, we shouldn't delete the connection types from our outbound index
+      PagingResultsIterator itr = new PagingResultsIterator(getConnectedEntities(connection.getConnectingEntity(), connection.getConnectionType(), null, Level.REFS));
 
-      ConnectionRefImpl c;
+      ConnectedEntityRef c;
 
       while(itr.hasNext()){
-        c = (ConnectionRefImpl) itr.next();
-        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType()) &&!c.getConnectedEntity().getUuid().equals(connection.getConnectedEntity().getUuid())) {
+          c = (ConnectedEntityRef) itr.next();
+
+          if(!connection.getConnectedEntityId().equals(c.getUuid())){
             delete = false;
             break;
-        }
+          }
+
+
+
+//        c = (ConnectionRef) itr.next();
+//        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType()) &&!c.getConnectedEntity().getUuid().equals(connection.getConnectedEntity().getUuid())) {
+//            delete = false;
+//            break;
+//        }
 
       }
 //      for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectingEntityId())) {
@@ -886,14 +889,20 @@ public class RelationManagerImpl implements RelationManager {
       delete = true;
 
 
-      itr = new PagingResultsIterator(getConnectingEntities(connection.getConnectedEntity(), null, null, Level.REFS));
+      //check out inbound edges of the given type.  If we have more than the 1 specified, we shouldn't delete the connection types from our outbound index
+      itr = new PagingResultsIterator(getConnectingEntities(connection.getConnectingEntity(), connection.getConnectionType(), null, Level.REFS));
 
       while(itr.hasNext()){
-        c = (ConnectionRefImpl) itr.next();
-        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType()) && !c.getConnectingEntity().getUuid().equals(connection.getConnectingEntity().getUuid())) {
-            delete = false;
-            break;
+        c = (ConnectedEntityRef) itr.next();
+
+        if(!connection.getConnectedEntityId().equals(c.getUuid())){
+          delete = false;
+          break;
         }
+//        if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType()) && !c.getConnectingEntity().getUuid().equals(connection.getConnectingEntity().getUuid())) {
+//            delete = false;
+//            break;
+//        }
 
       }
 
@@ -2114,8 +2123,6 @@ public class RelationManagerImpl implements RelationManager {
 
       boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
 
-      //TODO TN. I don't think we need the connection type below do we, we should always have a connection type...
-
       UUID entityIdToUse;
 
       //change our type depending on which direction we're loading
@@ -2126,18 +2133,15 @@ public class RelationManagerImpl implements RelationManager {
 
       //this is on the "source" side of the edge
       if(outgoing){
-//        entityIdToUse = connection.getConnectedEntityId();
         entityIdToUse = connection.getConnectingEntityId();
         dictionaryType = DICTIONARY_CONNECTED_ENTITIES;
-//        targetType = connection.getConnectingEntityType();
         targetType = connection.getConnectedEntityType();
       }
+
       //we're on the target side of the edge
       else{
-//        entityIdToUse = connection.getConnectingEntityId();
         entityIdToUse = connection.getConnectedEntityId();
         dictionaryType = DICTIONARY_CONNECTING_ENTITIES;
-//        targetType = connection.getConnectedEntityType();
         targetType = connection.getConnectingEntityType();
       }
 
@@ -2149,6 +2153,7 @@ public class RelationManagerImpl implements RelationManager {
 
       final Iterator<String> connectionTypes;
 
+      //use the provided connection type
       if (connectionType != null) {
         connectionTypes = Collections.singleton(connectionType).iterator();
       }
@@ -2162,24 +2167,6 @@ public class RelationManagerImpl implements RelationManager {
           entityIdToUse, connectionTypes, start, slice.isReversed(), size);
 
       this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
-
-
-//      if (connection.getConnectionType() != null) {
-////TODO TN. I don't think we need the connection type below do we, we should always have a connection type...
-//
-//        ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser(
-//            connection.getConnectedEntityType());
-//
-//        IndexScanner connectionScanner = new ConnectedIndexScanner(cass, DICTIONARY_CONNECTED_ENTITIES, applicationId,
-//            connection, start, slice.isReversed(), size);
-//
-//        this.results.push(new SliceIterator<DynamicComposite>(slice, connectionScanner, connectionParser, skipFirst));
-//      }
-//
-//      // no connection type defined, get all connections
-//      else {
-////        this.results.push(new ConnectionIterator(headEntity, slice, RelationManagerImpl.this));
-//      }
 
     }
 

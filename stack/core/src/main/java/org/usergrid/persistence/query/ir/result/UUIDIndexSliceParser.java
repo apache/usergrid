@@ -55,12 +55,5 @@ public class UUIDIndexSliceParser implements SliceParser<UUID> {
     throw new UnsupportedOperationException("Getting the value is not supported on uuid lists");
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#serialize(java.lang.Object)
-   */
-  @Override
-  public ByteBuffer serialize(UUID type) {
-    return SERIALIZER.toByteBuffer(type);
-  }
 
 }

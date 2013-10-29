@@ -31,15 +31,6 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		connectionType = null;
 	}
 
-	public ConnectedEntityRefImpl(UUID entityId) {
-		super(null, entityId);
-		connectionType = null;
-	}
-
-	public ConnectedEntityRefImpl(EntityRef ref) {
-		super(ref);
-		connectionType = null;
-	}
 
 	public ConnectedEntityRefImpl(String connectionType,
 			EntityRef connectedEntity) {
@@ -53,18 +44,7 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		this.connectionType = connectionType;
 	}
 
-  /**
-   * True if this is a conn
-   * @param connectionType The name of the connection
-   * @param entityType The type of the entities to return from the connection
-   * @param entityId The entityId of the source/target
-   * @param source True if this is a connection from the source
-   */
-  public ConnectedEntityRefImpl(String connectionType, String entityType,
-                                UUID entityId, boolean source) {
-    super(entityType, entityId);
-    this.connectionType = connectionType;
-  }
+
 
 	@Override
 	public String getConnectionType() {
@@ -79,18 +59,5 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		return connection.getConnectionType();
 	}
 
-	public static UUID getConnectedEntityId(ConnectedEntityRef connection) {
-		if (connection == null) {
-			return null;
-		}
-		return connection.getUuid();
-	}
-
-	public static String getConnectedEntityType(ConnectedEntityRef connection) {
-		if (connection == null) {
-			return null;
-		}
-		return connection.getType();
-	}
 
 }

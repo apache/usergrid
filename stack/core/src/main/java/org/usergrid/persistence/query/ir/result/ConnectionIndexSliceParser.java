@@ -76,12 +76,4 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
     throw new UnsupportedOperationException("Getting the value is not supported on connections");
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#serialize(java.lang.Object)
-   */
-  @Override
-  public ByteBuffer serialize(DynamicComposite type) {
-    return type.serialize();
-  }
-
 }

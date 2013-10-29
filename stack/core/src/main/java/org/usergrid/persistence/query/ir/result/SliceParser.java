@@ -48,18 +48,4 @@ public interface SliceParser<T> {
    * @return
    */
   public Object getValue(T value);
-//
-//  /**
-//   * Get the type stored in this composite
-//   * @param value
-//   * @return
-//   */
-//  public byte getType(T value);
-  
-  /**
-   * Serialize the parse type back into a byte buffer
-   * @param type
-   * @return
-   */
-  public ByteBuffer serialize(T type);
 }
