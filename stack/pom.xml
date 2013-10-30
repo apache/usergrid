@@ -1399,7 +1399,7 @@
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
-            <encoding>ISO-8859-1</encoding>
+            <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
           </configuration>
         </plugin>
@@ -1711,7 +1711,7 @@
           <optimize>true</optimize>
           <showDeprecation>true</showDeprecation>
           <debug>true</debug>
-          <encoding>ISO-8859-1</encoding>
+          <encoding>UTF-8</encoding>
           <showWarnings>true</showWarnings>
         </configuration>
       </plugin>
