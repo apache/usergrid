@@ -1399,7 +1399,7 @@
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
-            <encoding>ISO-8859-1</encoding>
+            <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
           </configuration>
         </plugin>
@@ -1705,6 +1705,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <optimize>true</optimize>
+          <showDeprecation>true</showDeprecation>
+          <debug>true</debug>
+          <encoding>UTF-8</encoding>
+          <showWarnings>true</showWarnings>
+        </configuration>
       </plugin>
 
       <plugin>
