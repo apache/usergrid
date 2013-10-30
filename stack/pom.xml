@@ -1399,7 +1399,7 @@
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
-            <encoding>ISO-8859-1</encoding>
+            <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
           </configuration>
         </plugin>
@@ -1703,13 +1703,17 @@
       </plugin>
 
       <plugin>
-        <groupId>com.structure101.java</groupId>
-        <artifactId>maven-structure101-plugin</artifactId>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <optimize>true</optimize>
+          <showDeprecation>true</showDeprecation>
+          <debug>true</debug>
+          <encoding>UTF-8</encoding>
+          <showWarnings>true</showWarnings>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -1789,28 +1793,5 @@
       <name>Usergrid s3 dependencies repository</name>
       <url>https://usergrid-maven.s3.amazonaws.com/dependencies</url>
     </repository>
-
-    <repository>
-      <id>structure101</id>
-      <url>http://repository.structure101.com</url>
-      <releases>
-        <checksumPolicy>warn</checksumPolicy>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-    </repository>
   </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>structure101plugin</id>
-      <layout>default</layout>
-      <url>http://repository.structure101.com</url>
-      <releases>
-        <checksumPolicy>warn</checksumPolicy>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-    </pluginRepository>
-  </pluginRepositories>
 </project>
