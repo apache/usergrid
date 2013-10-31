@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
-import org.usergrid.rest.test.resource.app.CustomEntity;
 
 /**
  * @author tnine
@@ -29,7 +28,7 @@ public class CustomCollection extends SetResource {
   }
 
  
-  public CustomEntity entity(String name){
-    return new CustomEntity(name, this);
+  public EntityResource entity(String name){
+    return new EntityResource(name, this);
   }
 }
