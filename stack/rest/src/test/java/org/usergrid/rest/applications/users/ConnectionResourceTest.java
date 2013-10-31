@@ -8,13 +8,14 @@ import org.usergrid.rest.AbstractRestIT;
 import javax.ws.rs.core.MediaType;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.Test;
 import com.sun.jersey.api.client.ClientResponse;
 import org.usergrid.rest.TestContextSetup;
-import org.usergrid.rest.test.resource.app.CustomEntity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import org.usergrid.rest.test.resource.CustomCollection;
@@ -33,7 +34,6 @@ public class ConnectionResourceTest extends AbstractRestIT
   @Test
   public void connectionsQueryTest() {
 
-    CustomEntity items = new CustomEntity("item", null);
 
     CustomCollection activities = context.collection("peeps");
 
@@ -48,7 +48,7 @@ public class ConnectionResourceTest extends AbstractRestIT
     Map<String, Object> objectOfDesire = new LinkedHashMap<String, Object>();
     objectOfDesire.put("codingmunchies", "doritoes");
 
-    JsonNode node = resource().path("/test-organization/test-app/users")
+    resource().path("/test-organization/test-app/users")
         .queryParam("access_token", access_token)
         .accept(MediaType.APPLICATION_JSON)
         .type(MediaType.APPLICATION_JSON_TYPE)
@@ -57,7 +57,7 @@ public class ConnectionResourceTest extends AbstractRestIT
     payload.put("username", "scott");
 
 
-    node = resource().path("/test-organization/test-app/users")
+    resource().path("/test-organization/test-app/users")
         .queryParam("access_token", access_token)
         .accept(MediaType.APPLICATION_JSON)
         .type(MediaType.APPLICATION_JSON_TYPE)
@@ -73,7 +73,7 @@ public class ConnectionResourceTest extends AbstractRestIT
 
     assertEquals(200, toddWant.getStatus());
 
-    node = resource().path("/test-organization/test-app/peeps")
+    JsonNode node = resource().path("/test-organization/test-app/peeps")
         .queryParam("access_token", access_token)
         .accept(MediaType.APPLICATION_JSON)
         .type(MediaType.APPLICATION_JSON_TYPE)
@@ -95,6 +95,61 @@ public class ConnectionResourceTest extends AbstractRestIT
       assertEquals(404, uie.getResponse().getClientResponseStatus().getStatusCode());
       return;
     }
+
+  }
+
+  @Test
+  public void connectionsLoopbackTest() {
+
+    CustomCollection things = context.collection("things");
+
+    UUID thing1Id = getEntityId(things.create(hashMap("name", "thing1")), 0);
+
+    UUID thing2Id = getEntityId(things.create(hashMap("name", "thing2")), 0);
+
+
+    //create the connection
+    things.entity(thing1Id).connection("likes").entity(thing2Id).post();
+
+
+    //test we have the "likes" in our connection meta data response
+
+    JsonNode response = things.entity("thing1").get();
+
+    String url =  getEntity(response, 0).get("metadata").get("connections").get("likes").asText();
+
+
+    assertNotNull("Connection url returned in entity", url);
+
+    //trim off the start /
+    url = url.substring(1);
+
+
+    //now that we know the URl is correct, follow it
+
+    response = context.collection(url).get();
+
+    UUID returnedUUID = getEntityId(response, 0);
+
+    assertEquals(thing2Id, returnedUUID);
+
+
+    //now follow the loopback, which should be pointers to the other entity
+
+    url = getEntity(response, 0).get("metadata").get("connecting").get("likes").asText();
+
+    assertNotNull("Incoming edge URL provited", url);
+
+    //trim off the start /
+    url = url.substring(1);
+
+    //now we should get thing1 from the loopback url
+
+    response =  context.collection(url).get();
+
+    UUID returned = getEntityId(response, 0);
+
+    assertEquals("Should point to thing1 as an incoming entity connection", thing1Id, returned);
 
   }
 
