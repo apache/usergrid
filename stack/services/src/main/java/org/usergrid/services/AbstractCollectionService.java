@@ -356,8 +356,8 @@ public class AbstractCollectionService extends AbstractService {
       return new ServiceResults(this, context, Type.COLLECTION, Results.fromEntities(entities), null, null);
     }
 
-    Entity item = em.createItemInCollection(context.getOwner(), context.getCollectionName(), getEntityType(),
-        context.getProperties());
+    Entity item = em.createItemInCollection(
+      context.getOwner(), context.getCollectionName(), getEntityType(), context.getProperties());
 
     item = importEntity(context, item);
 
