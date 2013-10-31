@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/**
+ * Copyright 2013 Apigee Corporation
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,17 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
+
 package org.usergrid.tools;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
-
 import java.util.Properties;
-
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -45,198 +43,196 @@ import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.cassandra.Setup;
 import org.usergrid.services.ServiceManagerFactory;
 
+/**
+ * Base class for Usergrid Tools commands. Any class that implements this can be called with 
+ * java -jar {jarname} org.usergrid.tools.{classname}.
+ */
 public abstract class ToolBase {
 
-	public static final int MAX_ENTITY_FETCH = 100;
+  public static final int MAX_ENTITY_FETCH = 100;
 
 	/** Verbose option: -v */
-	static final String VERBOSE = "v";
+  static final String VERBOSE = "v";
 
-	boolean isVerboseEnabled = false;
+  boolean isVerboseEnabled = false;
 
-	static final Logger logger = LoggerFactory
-			.getLogger(ToolBase.class);
+  static final Logger logger = LoggerFactory
+          .getLogger(ToolBase.class);
 
-	/**
-     * 
-     */
-    protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
+  protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
 
-	protected EmbeddedServerHelper embedded = null;
+  protected EmbeddedServerHelper embedded = null;
 
-	protected EntityManagerFactory emf;
+  protected EntityManagerFactory emf;
 
-	protected ServiceManagerFactory smf;
+  protected ServiceManagerFactory smf;
 
-	protected ManagementService managementService;
+  protected ManagementService managementService;
 
-	protected Properties properties;
-	
-	protected CassandraService cass;
+  protected Properties properties;
 
-	public void startTool(String[] args) {
-		CommandLineParser parser = new GnuParser();
-		CommandLine line = null;
-		try {
-			line = parser.parse(createOptions(), args);
-		} catch (ParseException exp) {
-			printCliHelp("Parsing failed.  Reason: " + exp.getMessage());
-		}
+  protected CassandraService cass;
 
-		if (line == null) {
-			return;
-		}
+  public void startTool(String[] args) {
+    CommandLineParser parser = new GnuParser();
+    CommandLine line = null;
+    try {
+      line = parser.parse(createOptions(), args);
+    } catch (ParseException exp) {
+      printCliHelp("Parsing failed.  Reason: " + exp.getMessage());
+    }
 
+    if (line == null) {
+      return;
+    }
 
-		if (line.hasOption("host")) {
-			System.setProperty("cassandra.url",
-					line.getOptionValue("host"));
-		}
-		
-		try {
-			runTool(line);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.exit(0);
-	}
+    if (line.hasOption("host")) {
+      System.setProperty("cassandra.url",
+              line.getOptionValue("host"));
+    }
 
-	public void printCliHelp(String message) {
-		System.out.println(message);
-		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("java -jar usergrid-tools-0.0.1-SNAPSHOT.jar "
-				+ getToolName(), createOptions());
-		System.exit(-1);
-	}
+    try {
+      runTool(line);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    System.exit(0);
+  }
 
-	public String getToolName() {
-		return ClassUtils.getShortClassName(this.getClass());
-	}
+  public void printCliHelp(String message) {
+    System.out.println(message);
+    HelpFormatter formatter = new HelpFormatter();
+    formatter.printHelp("java -jar usergrid-tools-0.0.1-SNAPSHOT.jar "
+            + getToolName(), createOptions());
+    System.exit(-1);
+  }
 
-	@SuppressWarnings("static-access")
-	public Options createOptions() {
+  public String getToolName() {
+    return ClassUtils.getShortClassName(this.getClass());
+  }
 
-		Option hostOption = OptionBuilder.withArgName("host").hasArg()
-				.withDescription("Cassandra host").create("host");
+  @SuppressWarnings("static-access")
+  public Options createOptions() {
 
-		Option remoteOption = OptionBuilder.withDescription(
-				"Use remote Cassandra instance").create("remote");
+    Option hostOption = OptionBuilder.withArgName("host").hasArg()
+            .withDescription("Cassandra host").create("host");
 
-		Option verbose = OptionBuilder
-				.withDescription(
-						"Print on the console an echo of the content written to the file")
-				.create(VERBOSE);
+    Option remoteOption = OptionBuilder.withDescription(
+            "Use remote Cassandra instance").create("remote");
 
-		Options options = new Options();
-		options.addOption(hostOption);
-		options.addOption(remoteOption);
-		options.addOption(verbose);
+    Option verbose = OptionBuilder
+            .withDescription(
+                    "Print on the console an echo of the content written to the file")
+            .create(VERBOSE);
 
-		return options;
-	}
+    Options options = new Options();
+    options.addOption(hostOption);
+    options.addOption(remoteOption);
+    options.addOption(verbose);
 
-	public void startEmbedded() throws Exception {
-		// assertNotNull(client);
+    return options;
+  }
 
-		String maven_opts = System.getenv("MAVEN_OPTS");
-		logger.info("Maven options: " + maven_opts);
+  public void startEmbedded() throws Exception {
+    // assertNotNull(client);
 
-		logger.info("Starting Cassandra");
-		embedded = new EmbeddedServerHelper();
-		embedded.setup();
-	}
+    String maven_opts = System.getenv("MAVEN_OPTS");
+    logger.info("Maven options: " + maven_opts);
 
-	public void startSpring() {
+    logger.info("Starting Cassandra");
+    embedded = new EmbeddedServerHelper();
+    embedded.setup();
+  }
+
+  public void startSpring() {
 
 		// copy("/testApplicationContext.xml", TMP);
+    String[] locations = {"toolsApplicationContext.xml"};
+    ApplicationContext ac = new ClassPathXmlApplicationContext(locations);
 
-		String[] locations = { "toolsApplicationContext.xml" };
-		ApplicationContext ac = new ClassPathXmlApplicationContext(locations);
+    AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
+    acbf.autowireBeanProperties(this,
+            AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
+    acbf.initializeBean(this, "testClient");
 
-		AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
-		acbf.autowireBeanProperties(this,
-				AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
-		acbf.initializeBean(this, "testClient");
+    assertNotNull(emf);
+    assertTrue(
+            "EntityManagerFactory is instance of EntityManagerFactoryImpl",
+            emf instanceof EntityManagerFactoryImpl);
 
-		assertNotNull(emf);
-		assertTrue(
-				"EntityManagerFactory is instance of EntityManagerFactoryImpl",
-				emf instanceof EntityManagerFactoryImpl);
+  }
 
-	}
+  public void setupCassandra() throws Exception {
 
-	public void setupCassandra() throws Exception {
+    Setup setup = ((EntityManagerFactoryImpl) emf).getSetup();
+    logger.info("Setting up Usergrid schema");
+    setup.setup();
+    logger.info("Usergrid schema setup");
 
-		Setup setup = ((EntityManagerFactoryImpl) emf).getSetup();
-		logger.info("Setting up Usergrid schema");
-		setup.setup();
-		logger.info("Usergrid schema setup");
+    logger.info("Setting up Usergrid management services");
 
+    managementService.setup();
 
-		logger.info("Setting up Usergrid management services");
+    logger.info("Usergrid management services setup");
+  }
 
-		managementService.setup();
+  public void teardownEmbedded() {
+    logger.info("Stopping Cassandra");
+    EmbeddedServerHelper.teardown();
+  }
 
-		logger.info("Usergrid management services setup");
-	}
+  void setVerbose(CommandLine line) {
+    if (line.hasOption(VERBOSE)) {
+      isVerboseEnabled = true;
+    }
+  }
 
-	public void teardownEmbedded() {
-		logger.info("Stopping Cassandra");
-		EmbeddedServerHelper.teardown();
-	}
+  /**
+   * Log the content in the default logger(info)
+   *
+   * @param content
+   */
+  void echo(String content) {
+    if (isVerboseEnabled) {
+      logger.info(content);
+    }
+  }
 
-	void setVerbose(CommandLine line) {
-		if (line.hasOption(VERBOSE)) {
-			isVerboseEnabled = true;
-		}
-	}
+  /**
+   * Print the object in JSon format.
+   *
+   * @param obj
+   */
+  void echo(Object obj) {
+    echo(mapToFormattedJsonString(obj));
+  }
 
-	/**
-	 * Log the content in the default logger(info)
-	 * 
-	 * @param content
-	 */
-	void echo(String content) {
-		if (isVerboseEnabled) {
-			logger.info(content);
-		}
-	}
+  @Autowired
+  public void setEntityManagerFactory(EntityManagerFactory emf) {
+    this.emf = emf;
+  }
 
-	/**
-	 * Print the object in JSon format.
-	 * 
-	 * @param obj
-	 */
-	void echo(Object obj) {
-		echo(mapToFormattedJsonString(obj));
-	}
+  @Autowired
+  public void setServiceManagerFactory(ServiceManagerFactory smf) {
+    this.smf = smf;
+    logger.info("ManagementResource.setServiceManagerFactory");
+  }
 
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-	}
+  @Autowired
+  public void setManagementService(ManagementService managementService) {
+    this.managementService = managementService;
+  }
 
-	@Autowired
-	public void setServiceManagerFactory(ServiceManagerFactory smf) {
-		this.smf = smf;
-		logger.info("ManagementResource.setServiceManagerFactory");
-	}
+  @Autowired
+  public void setProperties(Properties properties) {
+    this.properties = properties;
+  }
 
-	@Autowired
-	public void setManagementService(ManagementService managementService) {
-		this.managementService = managementService;
-	}
+  @Autowired
+  public void setCassandraService(CassandraService cass) {
+    this.cass = cass;
+  }
 
-	@Autowired
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
-	
-	@Autowired
-	public void setCassandraService(CassandraService cass){
-	    this.cass = cass;
-	}
-
-	public abstract void runTool(CommandLine line) throws Exception;
+  public abstract void runTool(CommandLine line) throws Exception;
 
 }
