@@ -37,4 +37,14 @@
     </plugins>
   </build>
 
+  <dependencies>
+
+    <dependency>
+      <groupId>org.usergrid</groupId>
+      <artifactId>usergrid-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  
+  </dependencies>
+
 </project>

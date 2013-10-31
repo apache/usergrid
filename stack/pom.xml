@@ -166,6 +166,7 @@
     <module>test-utils</module>
     <module>scheduler</module>
     <module>build-tools</module>
+    <module>tools/assembly</module>
     <!--Temporarily removed. This breaks master build <module>query-validator</module> -->
   </modules>
 

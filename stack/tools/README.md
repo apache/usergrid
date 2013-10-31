@@ -9,11 +9,6 @@ First, build Usergrid as you would normally.
     $ cd usergrid-stack
     $ mvn install
     
-Next, build the Usergrid Tools assembly:
-
-    $ cd tools/assembly
-    $ mvn install
-    
 Once you have done that you will find the Usergrid Tools bundle in the tools/assembly/target directory named with the pattern ugtools-X.Y.Z-release.tar.gz where X.Y.Z is the Usergrid version number.
 
 How to install Usergrid Tools
