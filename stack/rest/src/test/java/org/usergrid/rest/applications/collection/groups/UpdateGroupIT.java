@@ -15,6 +15,7 @@
 package org.usergrid.rest.applications.collection.groups;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,11 +47,8 @@ public class UpdateGroupIT extends AbstractRestIT {
       Map<String, Object> groupMap = new HashMap<String, Object>();
       groupMap.put("title", "Old Title");
       groupMap.put("path", groupPath);
-      JsonNode groupJson = resource().path(context.getOrgName() + "/" + context.getAppName() + "/groups")
-        .queryParam("access_token", context.getActiveUser().getToken())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .post(JsonNode.class, groupMap);
+      String path = context.getOrgName() + "/" + context.getAppName() + "/groups"; 
+      JsonNode groupJson = webResourceBuilder(path).post(JsonNode.class, groupMap);
       groupId = groupJson.get("entities").get(0).get("uuid").getTextValue();
 
     } catch (UniformInterfaceException e) {
@@ -63,11 +61,8 @@ public class UpdateGroupIT extends AbstractRestIT {
     try {
       Map<String, Object> group = new HashMap<String, Object>();
       group.put("title", "New Title");
-      resource().path(context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupPath)
-        .queryParam("access_token", context.getActiveUser().getToken())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .put(JsonNode.class, group);
+      String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupPath;
+      webResourceBuilder(path).put(JsonNode.class, group);
 
     } catch (UniformInterfaceException e) {
       fail("Error updating group: " + IOUtils.toString(e.getResponse().getEntityInputStream()));
@@ -79,11 +74,8 @@ public class UpdateGroupIT extends AbstractRestIT {
     try {
       Map<String, Object> group = new HashMap<String, Object>();
       group.put("title", "Even Newer Title");
-      resource().path(context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId)
-        .queryParam("access_token", context.getActiveUser().getToken())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .put(JsonNode.class, group);
+      String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId; 
+      webResourceBuilder(path).put(JsonNode.class, group);
 
     } catch (UniformInterfaceException e) {
       fail("Error updating group: " + IOUtils.toString(e.getResponse().getEntityInputStream()));
@@ -92,12 +84,16 @@ public class UpdateGroupIT extends AbstractRestIT {
     assertTitle(groupId, "Even Newer Title");
   }
 
-  private void assertTitle(String groupId, String title) {
-    JsonNode groupJson = resource().path(context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId)
+  private WebResource.Builder webResourceBuilder(String path) {
+    return resource().path(path)
       .queryParam("access_token", context.getActiveUser().getToken())
       .accept(MediaType.APPLICATION_JSON)
-      .type(MediaType.APPLICATION_JSON_TYPE)
-      .get(JsonNode.class);
+      .type(MediaType.APPLICATION_JSON_TYPE);
+  }
+
+  private void assertTitle(String groupId, String title) {
+    String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId; 
+    JsonNode groupJson = webResourceBuilder(path).get(JsonNode.class);
     Assert.assertEquals(title, groupJson.get("entities").get(0).get("title").getTextValue());
   }
 }
