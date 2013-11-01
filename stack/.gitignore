@@ -44,3 +44,4 @@ core/src/main/java/QueryFilter.tokens
 /release.properties
 *.sfx*
 *.db
+!/tools/src/main/dist/usergrid-custom-tools.properties
