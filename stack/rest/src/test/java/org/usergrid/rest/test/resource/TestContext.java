@@ -1,17 +1,16 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file 
+ * except  in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
+ * License for the specific language governing permissions and limitations 
+ * under the License.
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
@@ -25,10 +24,6 @@ import org.usergrid.rest.test.security.TestUser;
 
 import com.sun.jersey.test.framework.JerseyTest;
 
-/**
- * @author tnine
- * 
- */
 public class TestContext {
 
   private JerseyTest test;
@@ -39,7 +34,7 @@ public class TestContext {
   private UUID appUuid;
 
   /**
-   * 
+   *
    */
   protected TestContext(JerseyTest test) {
     this.test = test;
@@ -47,7 +42,7 @@ public class TestContext {
 
   /**
    * Create a test context
-   * 
+   *
    * @param test
    * @return
    */
@@ -55,20 +50,19 @@ public class TestContext {
     return new TestContext(test);
   }
 
-  
-  public TestUser getActiveUser(){
+  public TestUser getActiveUser() {
     return activeUser;
   }
-  
+
   public TestContext withUser(TestUser user) {
     this.activeUser = user;
     return this;
   }
 
-  public TestContext clearUser(){
+  public TestContext clearUser() {
     return withUser(null);
   }
-  
+
   public TestContext withOrg(String orgName) {
     this.orgName = orgName;
     return this;
@@ -89,7 +83,7 @@ public class TestContext {
 
   /**
    * Creates the org specified
-   * 
+   *
    * @return
    */
   public TestContext createNewOrgAndUser() {
@@ -100,7 +94,7 @@ public class TestContext {
 
   /**
    * Creates the org specified
-   * 
+   *
    * @return
    */
   public TestContext createAppForOrg() {
@@ -109,10 +103,10 @@ public class TestContext {
     return this;
   }
 
-    /**
-   * Create the app if it doesn't exist with the given TestUser. If the app
-   * exists, the user is logged in
-   * 
+  /**
+   * Create the app if it doesn't exist with the given TestUser. If the app exists, the user is
+   * logged in
+   *
    * @return
    */
   public TestContext loginUser() {
@@ -130,7 +124,7 @@ public class TestContext {
 
   /**
    * Get the users resource for the application
-   * 
+   *
    * @return
    */
   public UsersCollection users() {
@@ -139,7 +133,7 @@ public class TestContext {
 
   /**
    * Get the app user resource
-   * 
+   *
    * @param username
    * @return
    */
@@ -163,16 +157,15 @@ public class TestContext {
 
   /**
    * Get the application resource
-   * 
+   *
    * @return
    */
   public Application application() {
     return new Application(orgName, appName, root());
   }
 
-  public CustomCollection collection( String str )
-  {
-    return application().collection( str );
+  public CustomCollection collection(String str) {
+    return application().collection(str);
   }
 
   public Management management() {
@@ -180,13 +173,12 @@ public class TestContext {
   }
 
   protected RootResource root() {
-    return new RootResource(test.resource(), activeUser == null? null: activeUser.getToken());
+    return new RootResource(test.resource(), activeUser == null ? null : activeUser.getToken());
   }
 
   /**
-   * Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1
-   * call.
-   * 
+   * Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call.
+   *
    * @return
    */
   public TestContext initAll() {

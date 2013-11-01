@@ -180,9 +180,9 @@ public class ServiceRequest {
   public ServiceResults execute() throws Exception {
     try {
       return execute(null);
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
       // don't log as error because some exceptions are not actually errors, e.g. resource not found
-      logger.debug(debugString());
+      logger.debug(debugString(), e);
       throw e;
     }
   }
