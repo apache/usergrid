@@ -8,12 +8,12 @@
 
   <files> 
     <file> 
-      <source>../target/usergrid-tools-${artifact.version}.jar</source>
+      <source>target/usergrid-tools-${artifact.version}.jar</source>
       <destName>${artifact.artifactId}.jar</destName>
       <outputDirectory>usergrid-tools-${artifact.version}</outputDirectory>
     </file> 
     <file> 
-      <source>../README.md</source>
+      <source>README.md</source>
       <outputDirectory>usergrid-tools-${artifact.version}</outputDirectory>
     </file> 
   </files>

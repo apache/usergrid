@@ -9,26 +9,26 @@ First, build Usergrid as you would normally.
     $ cd usergrid-stack
     $ mvn install
     
-Once you have done that you will find the Usergrid Tools bundle in the tools/assembly/target directory named with the pattern ugtools-X.Y.Z-release.tar.gz where X.Y.Z is the Usergrid version number.
+Once you have done that you will find the Usergrid Tools bundle in the tools/target directory named with the pattern __usergrid-tools-X.Y.Z-release.tar.gz__ where X.Y.Z is the Usergrid version number.
 
 How to install Usergrid Tools
 ---
 On a UNIX computer with Java installed simply untar and unzip the usergrid-tools archive.
 
     $ cd /usr/share
-    $ tar xzvf ugtools-X.Y.Z-release.tar.gz
+    $ tar xzvf usergrid-toolsX.Y.Z-release.tar.gz
     
 And then you will find the following directory structure (Where X.Y.Z is the version number).
 
-    /usr/share/ugtools-X.Y.Z/
+    /usr/share/usergrid-tools-X.Y.Z/
       README.md
-      ugtools.jar
+      usergrid-tools.jar
       usergrid-export.sh
       usergrid-custom.properties
 
 These are the important files:
 
-* __ugtools.jar__: this is the Usergrid Tools executable
+* __usergrid-tools.jar__: this is the Usergrid Tools executable
 * __usergrid-export.sh__: this is a shell script design to be run as a cron scheduled task
 * __usergrid-custom.properties__: this is the configuration file, refer to the documentation for the tool you are running to learn what properties are required.
 
@@ -39,7 +39,7 @@ To run the Usergrid Tools you need a UNIX machine with Java installed. To run on
 you do something like this:
 
     $ cd usergrid-tools
-    $ java -jar ugtools.jar <toolname>
+    $ java -jar usergrid-tools.jar <toolname>
 
 Where "toolname" is the name of the tool that you wish to run (and the name of a Java class in the org.usergrid.tools package). Each tool is different and may or may not have documentation available.
 
@@ -86,11 +86,11 @@ __Step 3__: Make sure your settings are correct. Test the WarehouseExport and Up
 
 To run database export and upload to S3 do this:
     
-    $ java -jar ugtools.jar WarehouseExport -upload
+    $ java -jar usergrid-tools.jar WarehouseExport -upload
     
 Once that command completes, upsert the data from S3 to Redshift like so:
     
-    $ java -jar ugtools.jar WarehouseUpsert
+    $ java -jar usergrid-tools.jar WarehouseUpsert
     
 __Step 4__: You need to run the export/upsert periodically so that the warehouse always gets fresh data. So, create a cron job that will run daily and will call usergrid-export.sh to export data from your cluster to Amazon Redshift.
 
