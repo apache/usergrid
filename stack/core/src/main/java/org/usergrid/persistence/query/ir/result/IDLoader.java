@@ -2,9 +2,7 @@ package org.usergrid.persistence.query.ir.result;
 
 import org.usergrid.persistence.Results;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class IDLoader implements ResultsLoader {
 

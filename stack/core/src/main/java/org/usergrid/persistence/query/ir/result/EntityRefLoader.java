@@ -15,14 +15,12 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.SimpleEntityRef;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EntityRefLoader implements ResultsLoader {
 

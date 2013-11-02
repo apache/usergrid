@@ -15,10 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import me.prettyprint.hector.api.beans.DynamicComposite;
+
 import java.nio.ByteBuffer;
 import java.util.UUID;
-
-import me.prettyprint.hector.api.beans.DynamicComposite;
 
 /**
  * Parser for reading and writing secondary index composites

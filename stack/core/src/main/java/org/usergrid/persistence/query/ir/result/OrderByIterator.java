@@ -16,8 +16,6 @@
 package org.usergrid.persistence.query.ir.result;
 
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
 import org.apache.commons.collections.comparators.ComparatorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +25,10 @@ import org.usergrid.persistence.EntityPropertyComparator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.SortPredicate;
 import org.usergrid.persistence.cassandra.CursorCache;
-import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.util.PeekingIterator;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-
-import static org.usergrid.persistence.cassandra.IndexUpdate.compareIndexedValues;
 
 /**
  * 1) Take a result set iterator as the child

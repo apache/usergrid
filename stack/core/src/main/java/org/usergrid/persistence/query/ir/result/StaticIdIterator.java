@@ -3,7 +3,10 @@ package org.usergrid.persistence.query.ir.result;
 import org.usergrid.persistence.cassandra.CursorCache;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  *

@@ -15,12 +15,11 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.UUID;
-
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import org.usergrid.persistence.Schema;
 
-import me.prettyprint.hector.api.beans.DynamicComposite;
+import java.nio.ByteBuffer;
+import java.util.UUID;
 
 /**
  * Parser for reading uuid connections from ENTITY_COMPOSITE_DICTIONARIES and DICTIONARY_CONNECTED_ENTITIES type

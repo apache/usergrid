@@ -17,18 +17,6 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.AbstractCoreIT;
-import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 
 /**

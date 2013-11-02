@@ -15,17 +15,16 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.*;
-
 import me.prettyprint.cassandra.serializers.StringSerializer;
-
 import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.GeoIndexSearcher;
 import org.usergrid.persistence.geo.GeoIndexSearcher.SearchResults;
 import org.usergrid.persistence.geo.model.Point;
 import org.usergrid.persistence.query.ir.QuerySlice;
+
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * Simple wrapper around list results until the geo library is updated so

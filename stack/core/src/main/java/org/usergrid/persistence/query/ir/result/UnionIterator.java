@@ -15,14 +15,13 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import com.google.common.collect.Sets;
+import org.usergrid.persistence.cassandra.CursorCache;
+
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
-
-import org.usergrid.persistence.cassandra.CursorCache;
-
-import com.google.common.collect.Sets;
 
 /**
  * Simple iterator to perform Unions

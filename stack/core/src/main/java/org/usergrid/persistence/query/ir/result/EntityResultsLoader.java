@@ -15,12 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Results;
+
+import java.util.List;
 
 /**
  * @author tnine

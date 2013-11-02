@@ -15,13 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.UUID;
-
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
-import org.usergrid.persistence.cassandra.IndexUpdate;
-import org.usergrid.utils.UUIDUtils;
+import java.nio.ByteBuffer;
+import java.util.UUID;
 
 
 /**

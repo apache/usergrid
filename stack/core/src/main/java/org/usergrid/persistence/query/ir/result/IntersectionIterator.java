@@ -15,13 +15,12 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import com.google.common.collect.Sets;
+import org.usergrid.persistence.cassandra.CursorCache;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
-
-import org.usergrid.persistence.cassandra.CursorCache;
-
-import com.google.common.collect.Sets;
 
 /**
  * An iterator that unions 1 or more subsets. It makes the assuming that sub

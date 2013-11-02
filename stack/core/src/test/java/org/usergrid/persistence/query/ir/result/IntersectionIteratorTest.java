@@ -15,18 +15,12 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author tnine

@@ -15,14 +15,13 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.*;
-
 import me.prettyprint.hector.api.beans.HColumn;
-
 import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.query.ir.QuerySlice;
+
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * An iterator that will take all slices and order them correctly

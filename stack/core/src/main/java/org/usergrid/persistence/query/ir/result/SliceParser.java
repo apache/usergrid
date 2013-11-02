@@ -16,8 +16,6 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.UUID;
 
 /**
  * Interface to parse and compare range slices

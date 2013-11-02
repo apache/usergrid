@@ -1,6 +1,9 @@
 package org.usergrid.persistence.query.ir.result;
 
-import org.usergrid.persistence.*;
+import org.usergrid.persistence.ConnectionRef;
+import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.Results;
+import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.ConnectionRefImpl;
 
 import java.util.ArrayList;

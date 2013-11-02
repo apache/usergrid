@@ -17,7 +17,6 @@ package org.usergrid.persistence.query.ir.result;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * @author tnine

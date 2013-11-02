@@ -1,17 +1,11 @@
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
-
+import com.google.common.collect.Iterables;
 import org.junit.Ignore;
 import org.usergrid.persistence.cassandra.CursorCache;
 
-import com.google.common.collect.Iterables;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * Simple iterator for testing that iterates UUIDs in the order returned

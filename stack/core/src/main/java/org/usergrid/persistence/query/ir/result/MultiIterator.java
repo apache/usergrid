@@ -17,9 +17,6 @@ package org.usergrid.persistence.query.ir.result;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
-import org.usergrid.persistence.cassandra.CursorCache;
 
 /**
  * @author tnine
