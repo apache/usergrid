@@ -31,15 +31,6 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		connectionType = null;
 	}
 
-	public ConnectedEntityRefImpl(UUID entityId) {
-		super(null, entityId);
-		connectionType = null;
-	}
-
-	public ConnectedEntityRefImpl(EntityRef ref) {
-		super(ref);
-		connectionType = null;
-	}
 
 	public ConnectedEntityRefImpl(String connectionType,
 			EntityRef connectedEntity) {
@@ -53,30 +44,20 @@ public class ConnectedEntityRefImpl extends SimpleEntityRef implements
 		this.connectionType = connectionType;
 	}
 
+
+
 	@Override
 	public String getConnectionType() {
 		return connectionType;
 	}
 
-	public static String getConnectionType(ConnectedEntityRef connection) {
+
+  public static String getConnectionType(ConnectedEntityRef connection) {
 		if (connection == null) {
 			return null;
 		}
 		return connection.getConnectionType();
 	}
 
-	public static UUID getConnectedEntityId(ConnectedEntityRef connection) {
-		if (connection == null) {
-			return null;
-		}
-		return connection.getUuid();
-	}
-
-	public static String getConnectedEntityType(ConnectedEntityRef connection) {
-		if (connection == null) {
-			return null;
-		}
-		return connection.getType();
-	}
 
 }

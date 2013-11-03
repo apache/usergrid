@@ -15,20 +15,16 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn;
 /**
  * @author tnine
  * 
@@ -87,19 +83,19 @@ public class UnionIteratorTest {
     iter.addIterator(third);
     iter.addIterator(fourth);
 
-    Set<UUID> union = iter.next();
+    Set<ScanColumn> union = iter.next();
 
     // now make sure it's right, only 1, 3 and 8 intersect
-    assertTrue(union.contains(id1));
-    assertTrue(union.contains(id2));
-    assertTrue(union.contains(id3));
-    assertTrue(union.contains(id4));
-    assertTrue(union.contains(id5));
-    assertTrue(union.contains(id6));
-    assertTrue(union.contains(id7));
-    assertTrue(union.contains(id8));
-    assertTrue(union.contains(id9));
-    assertTrue(union.contains(id10));
+    assertTrue(union.contains(uuidColumn(id1)));
+    assertTrue(union.contains(uuidColumn(id2)));
+    assertTrue(union.contains(uuidColumn(id3)));
+    assertTrue(union.contains(uuidColumn(id4)));
+    assertTrue(union.contains(uuidColumn(id5)));
+    assertTrue(union.contains(uuidColumn(id6)));
+    assertTrue(union.contains(uuidColumn(id7)));
+    assertTrue(union.contains(uuidColumn(id8)));
+    assertTrue(union.contains(uuidColumn(id9)));
+    assertTrue(union.contains(uuidColumn(id10)));
   }
 
   @Test
@@ -120,13 +116,13 @@ public class UnionIteratorTest {
     UnionIterator union = new UnionIterator(100);
     union.addIterator(first);
 
-    Set<UUID> ids = union.next();
+    Set<ScanColumn> ids = union.next();
 
     // now make sure it's right, only 1, 3 and 8 intersect
-    assertTrue(ids.contains(id1));
-    assertTrue(ids.contains(id2));
-    assertTrue(ids.contains(id3));
-    assertTrue(ids.contains(id4));
+    assertTrue(ids.contains(uuidColumn(id1)));
+    assertTrue(ids.contains(uuidColumn(id2)));
+    assertTrue(ids.contains(uuidColumn(id3)));
+    assertTrue(ids.contains(uuidColumn(id4)));
 
     assertFalse(union.hasNext());
   }
@@ -153,13 +149,13 @@ public class UnionIteratorTest {
     union.addIterator(first);
     union.addIterator(second);
 
-    Set<UUID> ids = union.next();
+    Set<ScanColumn> ids = union.next();
 
     // now make sure it's right, only 1, 3 and 8 intersect
-    assertTrue(ids.contains(id1));
-    assertTrue(ids.contains(id2));
-    assertTrue(ids.contains(id3));
-    assertTrue(ids.contains(id4));
+    assertTrue(ids.contains(uuidColumn(id1)));
+    assertTrue(ids.contains(uuidColumn(id2)));
+    assertTrue(ids.contains(uuidColumn(id3)));
+    assertTrue(ids.contains(uuidColumn(id4)));
 
     assertFalse(union.hasNext());
   }
@@ -181,7 +177,6 @@ public class UnionIteratorTest {
     int secondIntersection = 200;
 
     int pageSize = 100;
-    int pageCount = size / pageSize;
 
     UUID[] firstSet = new UUID[size];
     UUID[] secondSet = new UUID[size];
@@ -235,9 +230,11 @@ public class UnionIteratorTest {
     while(union.hasNext()) {
 
       // now get the 2nd page
-      Set<UUID> resultSet = union.next();
+      Set<ScanColumn> resultSet = union.next();
 
-      results.removeAll(resultSet);  
+      for(ScanColumn col: resultSet){
+        results.remove(col.getUUID());
+      }
     }
     
     assertTrue(results.isEmpty());

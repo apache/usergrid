@@ -115,12 +115,17 @@ public class EntityInfo {
 		return property.isMutable();
 	}
 
+  /**
+   * A property is unique if it has either been declared as unique, or as an alias property
+   * @param propertyName
+   * @return
+   */
 	public boolean isPropertyUnique(String propertyName) {
 		PropertyInfo property = properties.get(propertyName);
 		if (property == null) {
 			return false;
 		}
-		return property.isUnique();
+		return property.isUnique() || property.isAliasProperty();
 	}
 
 	public boolean isPropertyTimestamp(String propertyName) {

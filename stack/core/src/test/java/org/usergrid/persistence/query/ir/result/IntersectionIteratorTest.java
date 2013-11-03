@@ -15,18 +15,12 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author tnine
@@ -86,17 +80,17 @@ public class IntersectionIteratorTest {
     intersection.addIterator(third);
     intersection.addIterator(fourth);
     
-    Iterator<UUID> union = intersection.next().iterator();
+    Iterator<ScanColumn> union = intersection.next().iterator();
 
     // now make sure it's right, only 1, 3 and 8 intersect
     assertTrue(union.hasNext());
-    assertEquals(id1, union.next());
+    assertEquals(id1, union.next().getUUID());
 
     assertTrue(union.hasNext());
-    assertEquals(id3, union.next());
+    assertEquals(id3, union.next().getUUID());
 
     assertTrue(union.hasNext());
-    assertEquals(id8, union.next());
+    assertEquals(id8, union.next().getUUID());
 
     assertFalse(union.hasNext());
   }
@@ -122,20 +116,20 @@ public class IntersectionIteratorTest {
     // now make sure it's right, only 1, 3 and 8 intersect
     assertTrue(intersection.hasNext());
     
-    Set<UUID> page = intersection.next();
+    Set<ScanColumn> page = intersection.next();
     
-    Iterator<UUID> union = page.iterator();
+    Iterator<ScanColumn> union = page.iterator();
     
-    assertEquals(id1, union.next());
+    assertEquals(id1, union.next().getUUID());
 
     assertTrue(union.hasNext());
-    assertEquals(id2, union.next());
+    assertEquals(id2, union.next().getUUID());
 
     assertTrue(union.hasNext());
-    assertEquals(id3, union.next());
+    assertEquals(id3, union.next().getUUID());
 
     assertTrue(union.hasNext());
-    assertEquals(id4, union.next());
+    assertEquals(id4, union.next().getUUID());
 
     assertFalse(union.hasNext());
   }
@@ -207,13 +201,13 @@ public class IntersectionIteratorTest {
     
     
     Iterator<UUID> expected = results.iterator();
-    Set<UUID> resultSet = intersection.next();
-    Iterator<UUID> union = resultSet.iterator();
+    Set<ScanColumn> resultSet = intersection.next();
+    Iterator<ScanColumn> union = resultSet.iterator();
     
     
     while(union.hasNext()){
       assertTrue(expected.hasNext());
-      assertEquals(expected.next(), union.next());
+      assertEquals(expected.next(), union.next().getUUID());
     }
     
     
@@ -224,7 +218,7 @@ public class IntersectionIteratorTest {
     
     while(union.hasNext()){
       assertTrue(expected.hasNext());
-      assertEquals(expected.next(), union.next());
+      assertEquals(expected.next(), union.next().getUUID());
     }
     
     //no more elements
@@ -244,9 +238,7 @@ public class IntersectionIteratorTest {
     UUID id2 = UUIDUtils.minTimeUUID(2);
     UUID id3 = UUIDUtils.minTimeUUID(3);
     UUID id4 = UUIDUtils.minTimeUUID(4);
-    UUID id5 = UUIDUtils.minTimeUUID(5);
     UUID id6 = UUIDUtils.minTimeUUID(6);
-    UUID id7 = UUIDUtils.minTimeUUID(7);
     UUID id8 = UUIDUtils.minTimeUUID(8);
     UUID id9 = UUIDUtils.minTimeUUID(9);
     UUID id10 = UUIDUtils.minTimeUUID(10);
@@ -283,7 +275,7 @@ public class IntersectionIteratorTest {
     intersection.addIterator(third);
     intersection.addIterator(fourth);
     
-    Iterator<UUID> union = intersection.next().iterator();
+    Iterator<ScanColumn> union = intersection.next().iterator();
 
     // now make sure it's right, only 1, 3 and 8 intersect
     assertFalse(union.hasNext());

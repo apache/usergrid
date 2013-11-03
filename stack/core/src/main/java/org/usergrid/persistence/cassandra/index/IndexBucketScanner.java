@@ -15,30 +15,17 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra.index;
 
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
-
+import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.hector.api.beans.HColumn;
-
-import org.apache.cassandra.config.ConfigurationException;
-import org.apache.cassandra.db.marshal.AbstractType;
-import org.apache.cassandra.db.marshal.TypeParser;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.ApplicationCF;
 import org.usergrid.persistence.cassandra.CassandraService;
 
-import com.yammer.metrics.annotation.Metered;
+import java.nio.ByteBuffer;
+import java.util.*;
+
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 
 /**
  * A simple class to make working with index buckets easier. Scans all buckets
@@ -112,12 +99,8 @@ public class IndexBucketScanner implements IndexScanner {
   /**
    * Search the collection index using all the buckets for the given collection.
    * Load the next page. Return false if nothing was loaded, true otherwise
-   * 
-   * @param indexKey
-   * @param slice
-   * @param count
-   * @param collectionName
-   * @return
+   *
+   * @return True if the data could be loaded
    * @throws Exception
    */
 

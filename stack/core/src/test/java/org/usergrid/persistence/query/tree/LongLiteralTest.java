@@ -15,10 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import static org.junit.Assert.*;
-
 import org.antlr.runtime.CommonToken;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author tnine

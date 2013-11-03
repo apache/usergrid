@@ -19,4 +19,5 @@ public interface ConnectedEntityRef extends EntityRef {
 
 	public String getConnectionType();
 
+
 }

@@ -17,7 +17,6 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
-import org.usergrid.cassandra.Concurrent;
 
 
 /**

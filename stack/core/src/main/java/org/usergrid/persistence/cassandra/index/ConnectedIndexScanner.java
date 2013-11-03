@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,27 +15,18 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra.index;
 
+import com.yammer.metrics.annotation.Metered;
+import me.prettyprint.hector.api.beans.HColumn;
+import org.springframework.util.Assert;
+import org.usergrid.persistence.cassandra.CassandraService;
+
+import java.nio.ByteBuffer;
+import java.util.*;
+
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import me.prettyprint.hector.api.beans.HColumn;
-
-import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.persistence.cassandra.ConnectionRefImpl;
-
-import com.yammer.metrics.annotation.Metered;
-
-/**
- * @author tnine
- * 
- */
+/** @author tnine */
 public class ConnectedIndexScanner implements IndexScanner {
 
   private final CassandraService cass;
@@ -43,39 +34,43 @@ public class ConnectedIndexScanner implements IndexScanner {
   private final boolean reversed;
   private final int pageSize;
   private final String dictionaryType;
-  private final ConnectionRefImpl connection;
-  /**
-   * Pointer to our next start read
-   */
+  private final UUID entityId;
+  private final Iterator<String> connectionTypes;
+
+  /** Pointer to our next start read */
   private ByteBuffer start;
 
-  /**
-   * Set to the original value to start scanning from
-   */
+  /** Set to the original value to start scanning from */
   private ByteBuffer scanStart;
 
-  /**
-   * Iterator for our results from the last page load
-   */
+  /** Iterator for our results from the last page load */
   private LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
 
-  /**
-   * True if our last load loaded a full page size.
-   */
+  /** True if our last load loaded a full page size. */
   private boolean hasMore = true;
 
-  public ConnectedIndexScanner(CassandraService cass, String dictionaryType, UUID applicationId,
-      ConnectionRefImpl connection, ByteBuffer start, boolean reversed, int pageSize) {
+  private String currentConnectionType;
 
+  public ConnectedIndexScanner(CassandraService cass, String dictionaryType, UUID applicationId,
+                               UUID entityId, Iterator<String> connectionTypes, ByteBuffer start, boolean reversed, int pageSize) {
+
+    Assert.notNull(entityId, "Entity id for row key construction must be specified when searching graph indexes");
     // create our start and end ranges
     this.scanStart = start;
     this.cass = cass;
     this.applicationId = applicationId;
+    this.entityId = entityId;
     this.start = scanStart;
     this.reversed = reversed;
     this.pageSize = pageSize;
-    this.connection = connection;
     this.dictionaryType = dictionaryType;
+    this.connectionTypes = connectionTypes;
+
+
+    if(connectionTypes.hasNext()){
+      currentConnectionType = connectionTypes.next();
+    }
+
 
   }
 
@@ -93,13 +88,6 @@ public class ConnectedIndexScanner implements IndexScanner {
   /**
    * Search the collection index using all the buckets for the given collection.
    * Load the next page. Return false if nothing was loaded, true otherwise
-   * 
-   * @param indexKey
-   * @param slice
-   * @param count
-   * @param collectionName
-   * @return
-   * @throws Exception
    */
 
   public boolean load() throws Exception {
@@ -109,38 +97,52 @@ public class ConnectedIndexScanner implements IndexScanner {
       return false;
     }
 
-    // if we skip the first we need to set the load to page size +2, since we'll
-    // discard the first
-    // and start paging at the next entity, otherwise we'll just load the page
-    // size we need
-    int selectSize = pageSize + 1;
-    //
-    // addInsertToMutator(batch, ENTITY_COMPOSITE_DICTIONARIES,
-    // key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
-    // connection.getConnectionType(), connection.getConnectedEntityType()),
-    //
-    Object key = null;
 
-    key = key(connection.getConnectingEntityId(), dictionaryType, connection.getConnectionType());
-    
+    lastResults = new LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>>();
 
-    List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(cass.getApplicationKeyspace(applicationId),
-        ENTITY_COMPOSITE_DICTIONARIES, key, start, null, selectSize, reversed);
+    //go through each connection type until we exhaust the result sets
+    while (currentConnectionType != null) {
 
-    // we loaded a full page, there might be more
-    if (results.size() == selectSize) {
-      hasMore = true;
+      //only load a delta size to get this next page
+      int selectSize = pageSize + 1 - lastResults.size();
 
-      // set the bytebuffer for the next pass
-      start = results.get(results.size() - 1).getName();
+      Object key = key(entityId, dictionaryType, currentConnectionType);
 
-      results.remove(results.size() - 1);
 
-    } else {
-      hasMore = false;
+      List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(cass.getApplicationKeyspace(applicationId),
+          ENTITY_COMPOSITE_DICTIONARIES, key, start, null, selectSize, reversed);
+
+      lastResults.addAll(results);
+
+      // we loaded a full page, there might be more
+      if (results.size() == selectSize) {
+        hasMore = true;
+
+        // set the bytebuffer for the next pass
+        start = results.get(results.size() - 1).getName();
+
+        lastResults.remove(lastResults.size() - 1);
+
+        //we've loaded a full page
+        break;
+
+      } else {
+
+        //we're done, there's no more connection types and we've loaded all cols for this type.
+        if(!connectionTypes.hasNext()){
+          hasMore = false;
+          currentConnectionType = null;
+          break;
+        }
+
+        //we have more connection types, but we've reached the end of this type, keep going in the loop to load the next page
+
+        currentConnectionType = connectionTypes.next();
+
+      }
+
     }
 
-    lastResults = new LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>>(results);
 
     return lastResults != null && lastResults.size() > 0;
 

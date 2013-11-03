@@ -40,6 +40,7 @@
         <property name="maxActive" value="${cassandra.connections:20}"/>
         <property name="clockResolution" ref="microsecondsTimeResolution" />
         <property name="opTimer" ref="taggedOpTimer"/>
+        <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>
 
 
@@ -49,6 +50,8 @@
 		<constructor-arg value="${cassandra.cluster}" />
 		<constructor-arg ref="cassandraHostConfigurator" />
 	</bean>
+
+    <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
 	<!--  locking for a single node -->	
 	<bean name="lockManager" class="org.usergrid.locking.singlenode.SingleNodeLockManagerImpl" />

@@ -1,16 +1,11 @@
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
-
+import com.google.common.collect.Iterables;
 import org.junit.Ignore;
 import org.usergrid.persistence.cassandra.CursorCache;
 
-import com.google.common.collect.Iterables;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * Simple iterator for testing that iterates UUIDs in the order returned
@@ -20,8 +15,8 @@ import com.google.common.collect.Iterables;
 @Ignore("not a test")
 public class InOrderIterator implements ResultIterator {
 
-    private LinkedHashSet<UUID> uuids = new LinkedHashSet<UUID>();
-    private Iterator<List<UUID>> iterator;
+    private LinkedHashSet<ScanColumn> uuids = new LinkedHashSet<ScanColumn>();
+    private Iterator<List<ScanColumn>> iterator;
     private int pageSize = 1000;
     
     public InOrderIterator(int pageSize){
@@ -35,7 +30,7 @@ public class InOrderIterator implements ResultIterator {
      */
     public void add(UUID... ids) {
       for (UUID current : ids) {
-        uuids.add(current);
+        uuids.add(new UUIDIndexSliceParser.UUIDColumn(current, ByteBuffer.allocate(0)));
       }
     }
 
@@ -45,7 +40,7 @@ public class InOrderIterator implements ResultIterator {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<UUID>> iterator() {
+    public Iterator<Set<ScanColumn>> iterator() {
       if(iterator == null){
         reset();
       }
@@ -73,12 +68,12 @@ public class InOrderIterator implements ResultIterator {
      * @see java.util.Iterator#next()
      */
     @Override
-    public Set<UUID> next() {
+    public Set<ScanColumn> next() {
       if(iterator == null){
         reset();
       }
       
-      return new LinkedHashSet<UUID>(iterator.next());
+      return new LinkedHashSet<ScanColumn>(iterator.next());
     }
     
     

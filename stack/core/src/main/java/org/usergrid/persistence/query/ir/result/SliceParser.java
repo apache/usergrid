@@ -16,8 +16,6 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.UUID;
 
 /**
  * Interface to parse and compare range slices
@@ -25,7 +23,7 @@ import java.util.UUID;
  * @author tnine
  *
  */
-public interface SliceParser<T> {
+public interface SliceParser {
 
   /**
    * Parse the slice and return it's parse type.  If null is returned, the column should be considered
@@ -33,33 +31,7 @@ public interface SliceParser<T> {
    * @param buff
    * @return
    */
-  public T parse(ByteBuffer buff);
-  
-  /**
-   * Get the UUID for the value
-   * @param value
-   * @return
-   */
-  public UUID getUUID(T value);
+  public ScanColumn parse(ByteBuffer buff);
 
-  /**
-   * Get the value stored in this composite
-   * @param value
-   * @return
-   */
-  public Object getValue(T value);
-//
-//  /**
-//   * Get the type stored in this composite
-//   * @param value
-//   * @return
-//   */
-//  public byte getType(T value);
-  
-  /**
-   * Serialize the parse type back into a byte buffer
-   * @param type
-   * @return
-   */
-  public ByteBuffer serialize(T type);
+
 }

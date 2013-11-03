@@ -39,6 +39,7 @@ import org.usergrid.CoreApplication;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.persistence.exceptions.NoIndexException;
 import org.usergrid.Application;
 import org.usergrid.utils.JsonUtils;
@@ -1327,7 +1328,7 @@ public class CollectionIT extends AbstractCoreIT
 
     r = em.searchConnectedEntities(foo, query);
 
-    assertTrue(r.size() == 1);
+    assertEquals("connection must match", 1, r.size());
 
     // selection results should be a list of lists
     entity = r.getEntity();
@@ -1587,6 +1588,58 @@ public class CollectionIT extends AbstractCoreIT
     assertNull("No cursor should be present", r.getCursor());
 
     assertEquals("Saved entity returned", createUser, r.getEntity());
+
+  }
+
+
+
+  @Test(expected = DuplicateUniquePropertyExistsException.class)
+  public void duplicateIdentifierTest() throws Exception {
+    UUID applicationId = setup.createApplication("testOrganization", "duplicateIdentifierTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
+    assertNotNull(em);
+
+    User user = new User();
+    user.setUsername("foobar");
+    user.setEmail("foobar@usergrid.org");
+
+    Entity createUser = em.create(user);
+    assertNotNull(createUser);
+
+    //we create 2 entities, otherwise this test will pass when it shouldn't
+    User user2 = new User();
+    user2.setUsername("foobar");
+    user2.setEmail("foobar@usergrid.org");
+    em.create(user2);
+
+
+  }
+
+  @Test(expected = DuplicateUniquePropertyExistsException.class)
+  public void duplicateNameTest() throws Exception {
+    UUID applicationId = setup.createApplication("testOrganization", "duplicateNameTest");
+    assertNotNull(applicationId);
+
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
+    assertNotNull(em);
+
+    DynamicEntity restaurant = new DynamicEntity();
+    restaurant.setName("4peaks");
+
+    Entity createdRestaurant = em.create("restaurant", restaurant.getProperties());
+    assertNotNull(createdRestaurant);
+
+
+
+
+
+    //we create 2 entities, otherwise this test will pass when it shouldn't
+    DynamicEntity restaurant2 = new DynamicEntity();
+    restaurant2.setName("4peaks");
+
+    em.create("restaurant", restaurant2.getProperties());
 
   }
 

@@ -61,7 +61,9 @@ public interface IndexBucketLocator {
      *            The strings and uniquely identify the path to this index. I.E
      *            entityType and propName, collection name etc This string must
      *            remain the same for all reads and writes
-     * @return
+     * @return A bucket to use.  Note that ALL properties for the given entity should be in the same bucket.  This allows us
+     * to shard and execute queries in parallel.  Generally speaking, sharding on entityId is the best strategy, since this
+     * is an immutable value
      */
     public String getBucket(UUID applicationId, IndexType type, UUID entityId,
             String... components);

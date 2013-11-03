@@ -15,23 +15,33 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.SimpleEntityRef;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author tnine
- *
- */
-public interface ResultsLoader  {
+public class EntityRefLoader implements ResultsLoader {
 
-  /**
-   * Load results from the list of uuids.  Should return a Results entity where the 
-   * query cursor can be set
-   * 
-   * @param entityIds
-   * @return
-   * @throws Exception 
+  private String type;
+  
+  public EntityRefLoader(String type) {
+    this.type = type;
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
    */
-  public Results getResults(List<ScanColumn> entityIds) throws Exception;
+  @Override
+  public Results getResults(List<ScanColumn> entityIds) throws Exception {
+    Results r = new Results();
+    List<EntityRef> refs = new ArrayList<EntityRef>(entityIds.size());
+    for (ScanColumn id : entityIds) {
+      refs.add(new SimpleEntityRef(type, id.getUUID()));
+    }
+    r.setRefs(refs);
+    return r;
+  }
+
 }

@@ -15,10 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import me.prettyprint.hector.api.beans.DynamicComposite;
+
 import java.nio.ByteBuffer;
 import java.util.UUID;
-
-import me.prettyprint.hector.api.beans.DynamicComposite;
 
 /**
  * Parser for reading and writing secondary index composites
@@ -26,7 +26,7 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
  * @author tnine
  *
  */
-public class CollectionIndexSliceParser implements SliceParser<DynamicComposite> {
+public class SecondaryIndexSliceParser implements SliceParser{
 
 
 
@@ -34,31 +34,31 @@ public class CollectionIndexSliceParser implements SliceParser<DynamicComposite>
    * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
    */
   @Override
-  public DynamicComposite parse(ByteBuffer buff) {
-    return DynamicComposite.fromByteBuffer(buff.duplicate());
-  }
+  public ScanColumn parse(ByteBuffer buff) {
+    DynamicComposite composite = DynamicComposite.fromByteBuffer(buff.duplicate());
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#getUUID(java.lang.Object)
-   */
-  @Override
-  public UUID getUUID(DynamicComposite value) {
-    return (UUID) value.get(2);
-  }
-
-  @Override
-  public Object getValue(DynamicComposite value) {
-    return value.get(1);
-  }
-
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#serialize(java.lang.Object)
-   */
-  @Override
-  public ByteBuffer serialize(DynamicComposite type) {
-    return type.serialize();
+    return new SecondaryIndexColumn((UUID) composite.get(2), composite.get(1), buff);
   }
 
 
+
+
+  public static class SecondaryIndexColumn extends AbstractScanColumn{
+
+    private final Object value;
+
+    public SecondaryIndexColumn(UUID uuid, Object value, ByteBuffer buff){
+      super(uuid, buff);
+      this.value = value;
+    }
+
+    /**
+     * Get the value from the node
+     * @return
+     */
+    public Object getValue(){
+      return this.value;
+    }
+  }
 
 }
