@@ -153,4 +153,53 @@ public class ConnectionResourceTest extends AbstractRestIT
 
   }
 
+
+
+  @Test
+  public void connectionsUUIDTest() {
+
+    CustomCollection things = context.collection("things");
+
+    UUID thing1Id = getEntityId(things.create(hashMap("name", "thing1")), 0);
+
+    UUID thing2Id = getEntityId(things.create(hashMap("name", "thing2")), 0);
+
+
+    //create the connection
+    things.entity(thing1Id).connection("likes").entity(thing2Id).post();
+
+
+    //test we have the "likes" in our connection meta data response
+
+    JsonNode response = things.entity("thing1").get();
+
+    String url =  getEntity(response, 0).get("metadata").get("connections").get("likes").asText();
+
+
+    assertNotNull("Connection url returned in entity", url);
+
+    //trim off the start /
+    url = url.substring(1);
+
+
+    //now that we know the URl is correct, follow it
+
+    response = context.collection(url).get();
+
+    UUID returnedUUID = getEntityId(response, 0);
+
+    assertEquals(thing2Id, returnedUUID);
+
+    //get on the collection works, now get it directly by uuid
+
+    //now we should get thing1 from the loopback url
+
+    response = things.entity(thing1Id).connection("likes").entity(thing2Id).get();
+
+    UUID returned = getEntityId(response, 0);
+
+    assertEquals("Should point to thing2 as an entity connection", thing2Id, returned);
+
+  }
+
 }
