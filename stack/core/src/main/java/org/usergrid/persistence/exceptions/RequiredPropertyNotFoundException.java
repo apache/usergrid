@@ -17,9 +17,6 @@ package org.usergrid.persistence.exceptions;
 
 public class RequiredPropertyNotFoundException extends PersistenceException {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	final String entityType;
 	final String propertyName;

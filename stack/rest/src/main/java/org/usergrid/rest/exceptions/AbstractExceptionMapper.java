@@ -16,7 +16,7 @@
 package org.usergrid.rest.exceptions;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.rest.utils.JSONPUtils.isJavascript;
@@ -52,7 +52,8 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 
 	@Override
 	public Response toResponse(E e) {
-		return toResponse(BAD_REQUEST, e);
+    // if we don't know what type of error it is then it's a 500
+		return toResponse(INTERNAL_SERVER_ERROR, e);
 	}
 	
 	public Response toResponse(Status status, E e){
@@ -62,7 +63,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	public Response toResponse(int status, E e) {
     if (status >= 500) {
       // only log real errors as errors
-		  logger.error("Error in request (" + status + ")", e);
+		  logger.error(e.getClass().getCanonicalName() + " Server Error (" + status + ")", e);
     }
 		ApiResponse response = new ApiResponse();
 		AuthErrorInfo authError = AuthErrorInfo.getForException(e);
@@ -79,10 +80,10 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 		return toResponse(status.getStatusCode(), jsonResponse);
 	}
 	
-	public Response toResponse(int status, String jsonResponse) {
+	private Response toResponse(int status, String jsonResponse) {
     if (status >= 500) {
       // only log real errors as errors
-      logger.error("Error in request (" + status + "):\n" + jsonResponse);
+      logger.error("Server Error (" + status + "):\n" + jsonResponse);
     }
     String callback = httpServletRequest.getParameter("callback");
     if (isJSONP() && isNotBlank(callback)) {

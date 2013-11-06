@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.security.tokens.exceptions;
+package org.usergrid.rest.exceptions;
 
-public class InvalidTokenException extends TokenException {
 
-	private static final long serialVersionUID = 1L;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import javax.ws.rs.ext.Provider;
+import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 
-	public InvalidTokenException(String arg0, Throwable arg1) {
-		super(arg0, arg1);
+@Provider
+public class RequiredPropertyNotFoundExceptionMapper 
+  extends AbstractExceptionMapper<RequiredPropertyNotFoundException> {
+
+	@Override
+	public Response toResponse(RequiredPropertyNotFoundException e) {
+		return toResponse(BAD_REQUEST, e.getMessage());
 	}
-
-	public InvalidTokenException(String arg0) {
-		super(arg0);
-	}
-
 
 }

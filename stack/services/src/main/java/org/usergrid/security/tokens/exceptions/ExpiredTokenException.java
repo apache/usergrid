@@ -19,19 +19,11 @@ public class ExpiredTokenException extends TokenException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ExpiredTokenException() {
-		super();
-	}
-
 	public ExpiredTokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
 
 	public ExpiredTokenException(String arg0) {
-		super(arg0);
-	}
-
-	public ExpiredTokenException(Throwable arg0) {
 		super(arg0);
 	}
 

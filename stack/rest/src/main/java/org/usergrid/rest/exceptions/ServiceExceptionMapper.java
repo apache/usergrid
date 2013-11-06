@@ -19,8 +19,8 @@ import javax.ws.rs.ext.Provider;
 
 import org.usergrid.services.exceptions.ServiceException;
 
+/** Will map to HTTP 500 INTERNAL_SERVER_ERROR because parent does */
 @Provider
-public class ServiceExceptionMapper extends
-		AbstractExceptionMapper<ServiceException> {
+public class ServiceExceptionMapper extends AbstractExceptionMapper<ServiceException> {
 
 }

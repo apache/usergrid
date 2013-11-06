@@ -21,19 +21,11 @@ public class TokenException extends ManagementException {
 
 	private static final long serialVersionUID = 1L;
 
-	public TokenException() {
-		super();
-	}
-
 	public TokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
 
 	public TokenException(String arg0) {
-		super(arg0);
-	}
-
-	public TokenException(Throwable arg0) {
 		super(arg0);
 	}
 
