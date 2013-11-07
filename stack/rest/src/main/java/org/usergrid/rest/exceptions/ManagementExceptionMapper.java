@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import javax.ws.rs.ext.Provider;
 
 import org.usergrid.management.exceptions.ManagementException;
@@ -22,5 +24,14 @@ import org.usergrid.management.exceptions.ManagementException;
 @Provider
 public class ManagementExceptionMapper extends
 		AbstractExceptionMapper<ManagementException> {
+
+	@Override
+	public Response toResponse(ManagementException e) {
+    String msg = e.getMessage();
+    if (msg == null) {
+      msg = e.getClass().getName();
+    }
+		return toResponse(BAD_REQUEST, msg);
+	}
 
 }

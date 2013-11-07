@@ -209,7 +209,6 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             status = uie.getResponse().getClientResponseStatus();
         }
 
-        assertEquals(Status.BAD_REQUEST, status);
-//        assertEquals("Application delete is not allowed yet", node.get("error_description").asText());
+        assertEquals(Status.NOT_IMPLEMENTED, status);
     }
 }

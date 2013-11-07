@@ -52,7 +52,6 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
@@ -83,6 +82,7 @@ import org.usergrid.security.oauth.ClientCredentialsInfo;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
+import org.usergrid.exception.NotImplementedException;
 
 @Component("org.usergrid.rest.applications.ApplicationResource")
 @Scope("prototype")

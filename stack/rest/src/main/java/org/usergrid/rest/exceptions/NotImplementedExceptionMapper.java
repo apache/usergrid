@@ -28,5 +28,4 @@ public class NotImplementedExceptionMapper extends
 	public Response toResponse(NotImplementedException e) {
 		return toResponse(501, e);
 	}
-
 }

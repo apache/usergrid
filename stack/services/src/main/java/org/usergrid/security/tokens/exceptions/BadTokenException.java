@@ -20,19 +20,11 @@ public class BadTokenException extends TokenException {
 
 	private static final long serialVersionUID = 1L;
 
-	public BadTokenException() {
-		super();
-	}
-
 	public BadTokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
 
 	public BadTokenException(String arg0) {
-		super(arg0);
-	}
-
-	public BadTokenException(Throwable arg0) {
 		super(arg0);
 	}
 
