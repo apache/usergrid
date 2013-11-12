@@ -3,6 +3,8 @@
 .clover
 atlassian-ide-plugin.xml
 s101plugin.state
+s101plugin.properties
+structure-pom.xml
 *.DS_Store
 hector.iml
 releases
