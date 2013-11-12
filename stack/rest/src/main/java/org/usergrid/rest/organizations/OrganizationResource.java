@@ -14,7 +14,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -29,6 +28,7 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.usergrid.exception.NotImplementedException;
 
 @Component("org.usergrid.rest.organizations.OrganizationResource")
 @Scope("prototype")

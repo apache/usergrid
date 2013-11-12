@@ -15,11 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Results;
+
+import java.util.List;
 
 /**
  * @author tnine
@@ -40,8 +39,8 @@ public class EntityResultsLoader implements ResultsLoader {
    * @see org.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
    */
   @Override
-  public Results getResults(List<UUID> entityIds) throws Exception {
-    return em.get(entityIds);
+  public Results getResults(List<ScanColumn> entityIds) throws Exception {
+    return em.get(ScanColumnTransformer.getIds(entityIds));
   }
 
 }

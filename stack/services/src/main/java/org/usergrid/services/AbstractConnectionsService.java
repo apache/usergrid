@@ -300,8 +300,7 @@ public class AbstractConnectionsService extends AbstractService {
 				logger.info("Attempted query of backwards connections");
 				return null;
 			} else {
-				r = em.getConnectingEntities(context.getOwner().getUuid(),
-						query.getEntityType(), query.getConnectionType(), level);
+				r = em.getConnectingEntities(context.getOwner().getUuid(), query.getConnectionType(), query.getEntityType(), level);
 			}
 		} else {
 			r = em.searchConnectedEntities(context.getOwner(), query);

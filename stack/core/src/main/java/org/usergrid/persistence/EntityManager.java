@@ -101,29 +101,31 @@ public interface EntityManager {
 
     public void createApplicationCollection(String entityType) throws Exception;
 
-//    public UUID createAlias(UUID id, String aliasType, String alias)
-//            throws Exception;
-//
-//    public UUID createAlias(EntityRef ref, String aliasType, String alias)
-//            throws Exception;
-
-//    public UUID createAlias(UUID ownerId, EntityRef ref, String aliasType,
-//            String alias) throws Exception;
-
-    public void deleteAlias(String aliasType, String alias) throws Exception;
-
-    public void deleteAlias(UUID ownerId, String aliasType, String alias)
-            throws Exception;
-
     public EntityRef getAlias(String aliasType, String alias) throws Exception;
 
-    public EntityRef getAlias(UUID ownerId, String aliasType, String alias)
+  /**
+   * Get the entity ref from the value
+   * @param ownerId The owner Id of the collection
+   * @param collectionName The name of the collection
+   * @param aliasValue The value of the alias
+   * @return
+   * @throws Exception
+   */
+    public EntityRef getAlias(UUID ownerId, String collectionName, String aliasValue)
             throws Exception;
 
     public Map<String, EntityRef> getAlias(String aliasType,
             List<String> aliases) throws Exception;
 
-    public Map<String, EntityRef> getAlias(UUID ownerId, String aliasType,
+  /**
+   * Get aliases from the index with the given value
+   * @param ownerId The id of the collection owner
+   * @param collectionName The name of the collection
+   * @param aliases The alias property
+   * @return
+   * @throws Exception
+   */
+    public Map<String, EntityRef> getAlias(UUID ownerId, String collectionName,
             List<String> aliases) throws Exception;
 
     /**
@@ -590,41 +592,8 @@ public interface EntityManager {
 
     public void deleteConnection(ConnectionRef connectionRef) throws Exception;
 
-    /**
-     * Returns true if there is a connection between these entities, optionally
-     * matching the specified connection type and/or entity type.
-     * 
-     * @param entity
-     *            an entity reference
-     * @param connectionType
-     *            type of connection or null.
-     * @param connectedEntity
-     *            an entity reference for the connected entit.
-     * @return a list of entities connecting to this one.
-     * @throws Exception
-     *             the exception
-     */
-    public boolean connectionExists(ConnectionRef connectionRef)
-            throws Exception;
-
-    /**
-     * Gets the types of connections between two entities.
-     * 
-     * @param entity
-     *            an entity reference
-     * @param connectedEntity
-     *            a connected.
-     * @return a set of the connection types between the two entities.
-     * @throws Exception
-     *             the exception
-     */
-    public Set<String> getConnectionTypes(UUID entityId, UUID connectedEntityId)
-            throws Exception;
-
     public Set<String> getConnectionTypes(EntityRef ref) throws Exception;
 
-    public Set<String> getConnectionTypes(EntityRef ref,
-            boolean filterConnection) throws Exception;
 
     /**
      * Gets the entities of the specified type connected to the specified
@@ -665,96 +634,11 @@ public interface EntityManager {
             String connectedEntityType, Results.Level resultsLevel)
             throws Exception;
 
-    public List<ConnectedEntityRef> getConnections(UUID entityId, Query query)
-            throws Exception;
 
-    // T.N. This isn't used anywhere. Removing for this release
-    // /**
-    // * Gets the entities connected to the specified entity that match the
-    // * requested property values and optionally the connection type and/or
-    // * entity type.
-    // *
-    // * @param entity
-    // * an entity reference
-    // * @param connectionType
-    // * type of connection or null.
-    // * @param connectedEntityType
-    // * type of entity or null.
-    // * @param propertyName
-    // * a property name in the connected entity.
-    // * @param searchStartValue
-    // * starting value in a range to match.
-    // * @param searchFinishValue
-    // * ending value in a range to match or null for exact match of
-    // * searchStartValue.
-    // * @param startResult
-    // * the start result
-    // * @param count
-    // * the count
-    // * @return a list of connected entities.
-    // * @throws Exception
-    // * the exception
-    // */
-    // public Results searchConnectedEntitiesForProperty(
-    // EntityRef connectingEntity, String connectionType,
-    // String connectedEntityType, String propertyName,
-    // Object searchStartValue, Object searchFinishValue,
-    // UUID startResult, int count, boolean reversed,
-    // Results.Level resultsLevel) throws Exception;
 
     public Results searchConnectedEntities(EntityRef connectingEntity,
             Query query) throws Exception;
 
-    /**
-     * Gets the value for a named connection property. Connection properties are
-     * properties associated with a connection.
-     * 
-     * @param connectionType
-     *            the connection type.
-     * @param connectedEntityId
-     *            a unique entity UUID.
-     * @param propertyName
-     *            the property name to retrieve.
-     * @return the value of the named property or null.
-     * @throws Exception
-     *             the exception
-     */
-    public Object getAssociatedProperty(
-            AssociatedEntityRef associatedEntityRef, String propertyName)
-            throws Exception;
-
-    /**
-     * Gets the connection properties for this entity.
-     * 
-     * @param connectionType
-     *            the connection type.
-     * @param connectedEntityId
-     *            a unique entity UUID.
-     * @return the property values.
-     * @throws Exception
-     *             the exception
-     */
-    public Map<String, Object> getAssociatedProperties(
-            AssociatedEntityRef associatedEntityRef) throws Exception;
-
-    /**
-     * Sets the value for a named connection property. If the property is being
-     * index, the index is updated to remove the old value and add the new
-     * value.
-     * 
-     * @param connectionType
-     *            the connection type.
-     * @param connectedEntityId
-     *            a unique entity UUID.
-     * @param propertyName
-     *            the property to set.
-     * @param propertyValue
-     *            new value for property.
-     * @throws Exception
-     *             the exception
-     */
-    public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
-            String propertyName, Object propertyValue) throws Exception;
 
    // Application roles
 

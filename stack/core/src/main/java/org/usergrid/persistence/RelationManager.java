@@ -30,7 +30,7 @@ public interface RelationManager {
 
   /**
    * Returns true if the entity ref if a member of the owner ref for the current relation manager
-   * @param owner
+   * @param collectionName The name of the collection
    * @param entity
    * @throws Exception 
    */
@@ -96,9 +96,6 @@ public interface RelationManager {
 
 	public void deleteConnection(ConnectionRef connectionRef) throws Exception;
 
-	public boolean connectionExists(ConnectionRef connectionRef)
-			throws Exception;
-
 	public Set<String> getConnectionTypes(UUID connectedEntityId)
 			throws Exception;
 
@@ -107,15 +104,20 @@ public interface RelationManager {
 	public Set<String> getConnectionTypes(boolean filterConnection)
 			throws Exception;
 
+  /**
+   * Get all entities connected to this entity.  Also get all
+   * @param connectionType The type/name of the connection
+   * @param connectedEntityType The type of
+   * @param resultsLevel
+   * @return
+   * @throws Exception
+   */
 	public Results getConnectedEntities(String connectionType,
 			String connectedEntityType, Results.Level resultsLevel)
 			throws Exception;
 
 	public Results getConnectingEntities(String connectionType,
 			String connectedEntityType, Results.Level resultsLevel)
-			throws Exception;
-
-	public List<ConnectedEntityRef> getConnections(Query query)
 			throws Exception;
 
 	// public Results searchConnectedEntitiesForProperty(String connectionType,
@@ -129,18 +131,6 @@ public interface RelationManager {
 
 	public Set<String> getConnectionIndexes(String connectionType)
 			throws Exception;
-
-	public Object getAssociatedProperty(
-			AssociatedEntityRef associatedEntityRef, String propertyName)
-			throws Exception;
-
-	public Map<String, Object> getAssociatedProperties(
-			AssociatedEntityRef associatedEntityRef) throws Exception;
-
-	public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
-			String propertyName, Object propertyValue) throws Exception;
-
-	public long getCollectionSize(String collectionName) throws Exception;
 
 
 }

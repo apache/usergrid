@@ -12,6 +12,7 @@
   <name>Usergrid Tools</name>
   <description>Command line tools for Usergrid system.</description>
   <packaging>jar</packaging>
+  <version>0.0.28-SNAPSHOT</version>
 
   <reporting>
     <plugins>
@@ -24,25 +25,22 @@
   </reporting>
 
   <build>
+
     <resources>
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <includes>
+          <include>**/*.sql</include>
           <include>**/*.xml</include>
+          <include>**/*.yaml</include>
+          <include>**/*.properties</include>
+          <include>**/spring.handlers</include>
+          <include>**/spring.schemas</include>
+          <include>**/services/**</include>
         </includes>
       </resource>
     </resources>
-
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.xml</include>
-        </includes>
-      </testResource>
-    </testResources>
 
     <plugins>
       <plugin>
@@ -66,10 +64,11 @@
             <id>copy</id>
             <phase>prepare-package</phase>
             <goals>
-              <goal>copy-dependencies</goal>
+              <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>**/spring.handlers, **/spring.schemas, **/META-INF/services/**</excludes>
             </configuration>
           </execution>
         </executions>
@@ -82,12 +81,36 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.usergrid.tools.CommandLoader</mainClass>
+              <mainClass>org.usergrid.tools.Command</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
+          <excludes>
+            <exclude>*.jar</exclude>
+          </excludes>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/main/assembly/release.xml</descriptor>
+          </descriptors>
+          <tarLongFileMode>gnu</tarLongFileMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
@@ -162,6 +185,12 @@
       <!-- TODO - should not scope be 'test' ? -->
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>9.1-901.jdbc4</version>
     </dependency>
 
     <!-- Testing and Logging Dependencies -->

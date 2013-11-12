@@ -1,7 +1,6 @@
 package org.usergrid;
 
 
-import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -10,13 +9,13 @@ import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ManagementService;
-import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
 import java.util.Properties;
+import org.usergrid.management.AccountCreationProps;
 
 
 /**

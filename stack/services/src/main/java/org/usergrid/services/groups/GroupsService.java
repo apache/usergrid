@@ -53,14 +53,13 @@ public class GroupsService extends AbstractPathBasedColllectionService {
     declareEntityDictionaries(Arrays.asList("permissions"));
   }
 
-	@Override
-	public ServiceResults postCollection(ServiceContext context)
-			throws Exception {
+  @Override
+  public ServiceResults postCollection(ServiceContext context) throws Exception {
 
     String path = (String)context.getProperty("path");
-    
+
     if(path == null){
-        throw new IllegalArgumentException("You must provide a 'path' property when creating a group");
+      throw new IllegalArgumentException("You must provide a 'path' property when creating a group");
     }
 
     logger.info("Creating group with path {}", path);
@@ -68,8 +67,8 @@ public class GroupsService extends AbstractPathBasedColllectionService {
     Preconditions.checkArgument(matcher.matchesAllOf(path),
             "Illegal characters found in group name: " + path);
 
-		return super.postCollection(context);
-	}
+    return super.postCollection(context);
+  }
 
   public ServiceResults getGroupRoles(UUID groupId) throws Exception {
     Map<String, Role> roles = em.getGroupRolesWithTitles(groupId);

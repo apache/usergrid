@@ -38,7 +38,7 @@ import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
-import org.usergrid.rest.test.resource.app.CustomEntity;
+import org.usergrid.rest.test.resource.EntityResource;
 
 /**
  * Simple tests to test querying at the REST tier
@@ -185,7 +185,7 @@ public class PagingResourceIT extends AbstractRestIT {
 
     String uuid = entity.get("uuid").asText();
 
-    CustomEntity entityRequest = things.entity("thing1").withParam("ql", "").withParam("limit", "");
+    EntityResource entityRequest = things.entity("thing1").withParam("ql", "").withParam("limit", "");
     
     JsonNode returnedEntity = getEntity(entityRequest.get(), 0);
 

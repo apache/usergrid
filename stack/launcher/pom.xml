@@ -21,6 +21,11 @@
         <includes>
           <include>**/*.xml</include>
           <include>**/*.png</include>
+          <include>**/*.yaml</include>
+          <include>**/*.properties</include>
+          <include>**/spring.handlers</include>
+          <include>**/spring.schemas</include>
+          <include>**/services/**</include>
         </includes>
       </resource>
     </resources>
@@ -44,6 +49,7 @@
     </testResources>
 
     <plugins>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -52,11 +58,12 @@
             <id>copy</id>
             <phase>prepare-package</phase>
             <goals>
-              <goal>copy-dependencies</goal>
+              <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
               <excludeArtifactIds>junit,AppleJavaExtensions</excludeArtifactIds>
               <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>**/spring.handlers, **/spring.schemas, **/META-INF/services/**</excludes>
             </configuration>
           </execution>
         </executions>
@@ -68,12 +75,16 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.usergrid.launcher.AppLoader</mainClass>
+              <mainClass>org.usergrid.launcher.App</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
+          <excludes>
+            <exclude>*.jar</exclude>
+          </excludes>
         </configuration>
       </plugin>
+
     </plugins>
   </build>
 

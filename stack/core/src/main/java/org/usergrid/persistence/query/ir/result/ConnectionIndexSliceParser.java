@@ -15,12 +15,11 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.UUID;
-
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import org.usergrid.persistence.Schema;
 
-import me.prettyprint.hector.api.beans.DynamicComposite;
+import java.nio.ByteBuffer;
+import java.util.UUID;
 
 /**
  * Parser for reading uuid connections from ENTITY_COMPOSITE_DICTIONARIES and DICTIONARY_CONNECTED_ENTITIES type
@@ -28,11 +27,11 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
  * @author tnine
  *
  */
-public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite> {
+public class ConnectionIndexSliceParser implements SliceParser {
 
   private final String connectedEntityType;
   /**
-   * @param connectedEntityType
+   * @param connectedEntityType Could be null if we want to return all types
    */
   public ConnectionIndexSliceParser(String connectedEntityType) {
     this.connectedEntityType = connectedEntityType;
@@ -43,7 +42,7 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
    * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
    */
   @Override
-  public DynamicComposite parse(ByteBuffer buff) {
+  public ScanColumn parse(ByteBuffer buff) {
     DynamicComposite composite = DynamicComposite.fromByteBuffer(buff.duplicate());
     
     String connectedType = (String) composite.get(1);
@@ -54,35 +53,34 @@ public class ConnectionIndexSliceParser implements SliceParser<DynamicComposite>
       return null;
     }
     
-    //we're checking a loopback, skip it
-    if(Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
+    //we're checking a loopback and it wasn't specified, skip it
+    if((connectedEntityType != null && !connectedEntityType.equalsIgnoreCase(connectedType))  ||  Schema.TYPE_CONNECTION.equalsIgnoreCase(connectedType)){
       return null;
     }
-    
-    
-    
-    return composite;
+
+    return new ConnectionColumn((UUID) composite.get(0), connectedType, buff);
+//    return composite;
+//    return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#getUUID(java.lang.Object)
-   */
-  @Override
-  public UUID getUUID(DynamicComposite value) {
-    return (UUID) value.get(0);
-  }
 
-  @Override
-  public Object getValue(DynamicComposite value) {
-    throw new UnsupportedOperationException("Getting the value is not supported on connections");
-  }
+  public static class ConnectionColumn extends AbstractScanColumn {
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#serialize(java.lang.Object)
-   */
-  @Override
-  public ByteBuffer serialize(DynamicComposite type) {
-    return type.serialize();
-  }
+    private final String connectedType;
 
+
+    public ConnectionColumn(UUID uuid, String connectedType, ByteBuffer column){
+     super(uuid, column);
+      this.connectedType = connectedType;
+    }
+
+
+    /**
+     * Get the target type from teh column
+     * @return
+     */
+    public String getTargetType(){
+      return connectedType;
+    }
+  }
 }

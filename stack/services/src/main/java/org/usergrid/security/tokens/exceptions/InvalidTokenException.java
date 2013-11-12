@@ -19,10 +19,6 @@ public class InvalidTokenException extends TokenException {
 
 	private static final long serialVersionUID = 1L;
 
-	public InvalidTokenException() {
-		super();
-	}
-
 	public InvalidTokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
@@ -31,8 +27,5 @@ public class InvalidTokenException extends TokenException {
 		super(arg0);
 	}
 
-	public InvalidTokenException(Throwable arg0) {
-		super(arg0);
-	}
 
 }

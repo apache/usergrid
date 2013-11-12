@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -34,18 +35,18 @@ import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.geo.CollectionGeoSearch;
 import org.usergrid.persistence.geo.EntityLocationRef;
 import org.usergrid.persistence.geo.model.Point;
+import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.result.GeoIterator;
 import org.usergrid.utils.MapUtils;
 
 
 @Concurrent()
-public class GeoIT extends AbstractCoreIT
-{
-    private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
+public class GeoIT extends AbstractCoreIT {
+  private static final Logger LOG = LoggerFactory.getLogger(GeoIT.class);
 
-    public GeoIT()
-    {
-        super();
-    }
+  public GeoIT() {
+    super();
+  }
 
 
   @Test
@@ -70,17 +71,18 @@ public class GeoIT extends AbstractCoreIT
     geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user.getUuid(), "location.coordinates", loc);
 
     Point center = new Point(37.774277, -122.404744);
-    
-    CollectionGeoSearch connSearch = new CollectionGeoSearch(em, setup.getIbl(), setup.getCassSvc(),
-            em.getApplicationRef(),"users");
-    
 
-    List<EntityLocationRef> listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, 200, 100).entityLocations;
-    
+    CollectionGeoSearch connSearch = new CollectionGeoSearch(em, setup.getIbl(), setup.getCassSvc(),
+        em.getApplicationRef(), "users");
+
+
+    List<EntityLocationRef> listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0,
+        200, 100).entityLocations;
+
     assertEquals(0, listResults.size());
 
     listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, 400, 100).entityLocations;
-    
+
 
     this.dump(listResults);
 
@@ -97,22 +99,23 @@ public class GeoIT extends AbstractCoreIT
     updatePos(em, user, 37.426373, -122.14108);
 
     center = new Point(37.774277, -122.404744);
-  
+
     listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, 200, 100).entityLocations;
-    
+
     assertEquals(0, listResults.size());
 
     updatePos(em, user, 37.774277, -122.404744);
 
     center = new Point(37.776753, -122.407846);
-  
+
     listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, 1000, 100).entityLocations;
 
     assertEquals(1, listResults.size());
 
     // check at globally large distance
-    
-    listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, Integer.MAX_VALUE, 100).entityLocations;
+
+    listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, Integer.MAX_VALUE,
+        100).entityLocations;
 
     assertEquals(1, listResults.size());
 
@@ -130,14 +133,16 @@ public class GeoIT extends AbstractCoreIT
     assertEquals(1, listResults.size());
 
     // check at globally large distance
-    listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, Integer.MAX_VALUE, 100).entityLocations;
-    
+    listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, Integer.MAX_VALUE,
+        100).entityLocations;
+
     assertEquals(2, listResults.size());
 
     // check at globally large distance (center point close to other entity)
     center = new Point(31.14, 121.27);
-  
-    listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, Integer.MAX_VALUE, 100).entityLocations;
+
+    listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, Integer.MAX_VALUE,
+        100).entityLocations;
 
     assertEquals(2, listResults.size());
 
@@ -148,7 +153,7 @@ public class GeoIT extends AbstractCoreIT
     updatePos(em, user, 37.776753, -122.407846);
 
     center = new Point(37.428526, -122.140916);
-    
+
     listResults = connSearch.proximitySearch(null, null, center, "location.coordinates", 0, 1000, 100).entityLocations;
 
 
@@ -235,7 +240,7 @@ public class GeoIT extends AbstractCoreIT
     // check we got back all 500 entities
     assertEquals(numEntities, count);
   }
-  
+
 
   @Test
   public void testSamePointPaging() throws Exception {
@@ -352,7 +357,7 @@ public class GeoIT extends AbstractCoreIT
     int size = 100;
     int min = 50;
     int max = 90;
-    
+
     List<Entity> created = new ArrayList<Entity>(size);
 
     for (int i = 0; i < size; i++) {
@@ -364,16 +369,17 @@ public class GeoIT extends AbstractCoreIT
       setPos(data, 0, 0);
 
       Entity e = em.create("store", data);
-      
+
       created.add(e);
 
     }
 
     int startDelta = size - min;
 
-//    String queryString = String.format("select * where location within 100 of 0, 0 and index >= %d and index < %d order by index",min, max);
-    
-    String queryString = String.format("select * where index >= %d and index < %d order by index",min, max);
+//    String queryString = String.format("select * where location within 100 of 0,
+// 0 and index >= %d and index < %d order by index",min, max);
+
+    String queryString = String.format("select * where index >= %d and index < %d order by index", min, max);
 
     Query query = Query.fromQL(queryString);
 
@@ -383,20 +389,101 @@ public class GeoIT extends AbstractCoreIT
     do {
 
       r = em.searchCollection(em.getApplicationRef(), "stores", query);
-      
-      for(Entity e : r.getEntities()){
-        assertEquals(created.get(startDelta+count), e);
+
+      for (Entity e : r.getEntities()) {
+        assertEquals(created.get(startDelta + count), e);
         count++;
       }
 
       query.setCursor(r.getCursor());
     } while (r.hasCursor());
-    
-    assertEquals(startDelta-(size-max), count);
+
+    assertEquals(startDelta - (size - max), count);
 
   }
-  
- 
+
+
+  @Test
+  public void testDenseSearch() throws Exception {
+
+    UUID applicationId = setup.createApplication("testOrganization", "testDenseSearch");
+    assertNotNull(applicationId);
+
+    EntityManager em = setup.getEmf().getEntityManager(applicationId);
+    assertNotNull(em);
+
+    // save objects in a diagonal line from -90 -180 to 90 180
+
+    int numEntities = 500;
+
+    float minLattitude = 48.32455f;
+    float maxLattitude = 48.46481f;
+    float minLongitude = 9.89561f;
+    float maxLongitude = 10.0471f;
+
+    float lattitudeDelta = (maxLattitude - minLattitude) / numEntities;
+
+    float longitudeDelta = (maxLongitude - minLongitude) / numEntities;
+
+    for (int i = 0; i < numEntities; i++) {
+      float lattitude = minLattitude + lattitudeDelta * i;
+      float longitude = minLongitude + longitudeDelta * i;
+
+      Map<String, Float> location = MapUtils.hashMap("latitude", lattitude).map("longitude", longitude);
+
+      Map<String, Object> data = new HashMap<String, Object>(2);
+      data.put("name", String.valueOf(i));
+      data.put("location", location);
+
+      em.create("store", data);
+    }
+
+    //do a direct geo iterator test.  We need to make sure that we short circuit on the correct tile.
+
+    float lattitude = 48.38626f;
+    float longtitude = 9.94175f;
+    int distance = 1000;
+    int limit = 8;
+
+
+    QuerySlice slice = new QuerySlice("location", 0);
+
+    GeoIterator itr = new GeoIterator(new CollectionGeoSearch(em, setup.getIbl(),  setup.getCassSvc(), em.getApplicationRef(),
+        "stores"), limit, slice, "location", new Point(lattitude,
+        longtitude), distance);
+
+
+
+    // check we got back all 500 entities
+    assertFalse(itr.hasNext());
+
+    List<String> cells = itr.getLastCellsSearched();
+
+    assertEquals(1, cells.size());
+
+    assertEquals(4, cells.get(0).length());
+
+
+    long startTime = System.currentTimeMillis();
+
+    //now test at the EM level, there should be 0 results.
+    Query query = new Query();
+
+    query.addFilter("location within 1000 of 48.38626, 9.94175");
+    query.setLimit(8);
+
+
+    Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
+
+    assertEquals(0, results.size());
+
+    long endTime = System.currentTimeMillis();
+
+    LOG.info("Runtime took {} milliseconds to search", endTime-startTime);
+
+
+  }
+
 
   public Map<String, Object> getLocation(double latitude, double longitude) throws Exception {
     Map<String, Object> latlong = new LinkedHashMap<String, Object>();

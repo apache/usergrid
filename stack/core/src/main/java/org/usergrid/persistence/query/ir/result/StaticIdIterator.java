@@ -2,7 +2,11 @@ package org.usergrid.persistence.query.ir.result;
 
 import org.usergrid.persistence.cassandra.CursorCache;
 
-import java.util.*;
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  *
@@ -12,7 +16,7 @@ import java.util.*;
  */
 public class StaticIdIterator implements ResultIterator{
 
-  private final Set<UUID> ids;
+  private final Set<ScanColumn> ids;
 
   private boolean returnedOnce = false;
 
@@ -20,7 +24,9 @@ public class StaticIdIterator implements ResultIterator{
    *
    */
   public StaticIdIterator(UUID id) {
-    ids = Collections.singleton(id);
+    final ScanColumn col = new UUIDIndexSliceParser.UUIDColumn(id, ByteBuffer.allocate(0));
+
+    ids = Collections.singleton(col);
   }
 
 
@@ -35,7 +41,7 @@ public class StaticIdIterator implements ResultIterator{
   }
 
   @Override
-  public Iterator<Set<UUID>> iterator() {
+  public Iterator<Set<ScanColumn>> iterator() {
     return this;
   }
 
@@ -45,7 +51,7 @@ public class StaticIdIterator implements ResultIterator{
   }
 
   @Override
-  public Set<UUID> next() {
+  public Set<ScanColumn> next() {
     returnedOnce = true;
     return ids;
   }

@@ -15,11 +15,11 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import org.usergrid.persistence.cassandra.CursorCache;
+
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
-
-import org.usergrid.persistence.cassandra.CursorCache;
 
 /**
  * Interface for iterating slice results per node.  This is to be used to iterate and join or intersect values
@@ -31,7 +31,7 @@ import org.usergrid.persistence.cassandra.CursorCache;
  * @author tnine
  *
  */
-public interface ResultIterator extends Iterable<Set<UUID>>, Iterator<Set<UUID>> {
+public interface ResultIterator extends Iterable<Set<ScanColumn>>, Iterator<Set<ScanColumn>> {
   
   
   

@@ -5,3 +5,4 @@ http\://www.springframework.org/schema/lang=org.springframework.scripting.config
 http\://www.springframework.org/schema/p=org.springframework.beans.factory.xml.SimplePropertyNamespaceHandler
 http\://www.springframework.org/schema/task=org.springframework.scheduling.config.TaskNamespaceHandler
 http\://www.springframework.org/schema/util=org.springframework.beans.factory.xml.UtilNamespaceHandler
+http\://www.hazelcast.com/schema/config=com.hazelcast.spring.HazelcastNamespaceHandler

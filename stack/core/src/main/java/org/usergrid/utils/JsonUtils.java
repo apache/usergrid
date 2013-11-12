@@ -19,7 +19,6 @@ import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -29,10 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.beanutils.PropertyUtils;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.io.JsonStringEncoder;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -41,6 +37,8 @@ import org.codehaus.jackson.schema.JsonSchema;
 import org.codehaus.jackson.smile.SmileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.exception.JsonReadException;
+import org.usergrid.exception.JsonWriteException;
 import org.usergrid.persistence.Entity;
 
 /**
@@ -64,30 +62,29 @@ public class JsonUtils {
         indentObjectMapper.getSerializationConfig().set(Feature.INDENT_OUTPUT, true);
     }
 
-	/**
-	 * @param obj
-	 * @return
-	 */
-	public static String mapToJsonString(Object obj) {
+  /**
+   * Converts object to JSON string, throws runtime exception JsonWriteException on failure.
+   */
+	public static String mapToJsonString(Object obj) { 
+    Exception ex = null;
 		try {
 			return mapper.writeValueAsString(obj);
-		} catch (JsonGenerationException e) {
-		} catch (JsonMappingException e) {
-		} catch (IOException e) {
-		}
-		return "{}";
-
+		} catch (Throwable t) {
+      logger.debug("Error generating JSON", t);
+      throw new JsonWriteException("Error generating JSON", t);
+ 	  }
 	}
 
+	/**
+   * Converts object to JSON string, throws runtime exception JsonWriteException on failure.
+	 */
 	public static String mapToFormattedJsonString(Object obj) {
 		try {
 			return indentObjectMapper.writeValueAsString(obj);
-		} catch (JsonGenerationException e) {
-		} catch (JsonMappingException e) {
-		} catch (IOException e) {
-		}
-		return "{}";
-
+		} catch (Throwable t) {
+      logger.debug("Error generating JSON", t);
+      throw new JsonWriteException("Error generating JSON", t);
+ 	  }
 	}
 
 	public static String schemaToFormattedJsonString(JsonSchema schema) {
@@ -103,14 +100,16 @@ public class JsonUtils {
 		return jsonSchema;
 	}
 
+  /**
+   * Parses JSON string  and returns object, throws runtime exception JsonReadException on failure.
+	 */
 	public static Object parse(String json) {
 		try {
 			return mapper.readValue(json, Object.class);
-		} catch (JsonParseException e) {
-		} catch (JsonMappingException e) {
-		} catch (IOException e) {
-		}
-		return null;
+		} catch (Throwable t) {
+      logger.debug("Error parsing JSON", t);
+      throw new JsonReadException("Error parsing JSON", t);
+ 	  }
 	}
 
 	public static JsonNode getJsonSchemaNode(Class<?> cls) {

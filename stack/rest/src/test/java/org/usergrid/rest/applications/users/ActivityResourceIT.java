@@ -61,12 +61,14 @@ public class ActivityResourceIT extends AbstractRestIT {
 
     @Test
     public void postNullActivityToGroup() {
-      String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
-      String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
-      ApiResponse response = client.postGroupActivity(GROUP, null);
-      assertEquals("required_property_not_found",response.getError()); //
-      assertTrue(response.getException().contains("RequiredPropertyNotFoundException")); // when should we leave this out
+      boolean fail = false;
+      try {
+        client.postGroupActivity(GROUP, null);
+      } catch (Exception e) {
+        fail = true;
+      } 
+      assertTrue(fail);
     }
 
     @Test

@@ -1134,19 +1134,24 @@ public abstract class AbstractService implements Service {
     if (currentUser == null) {
       return;
     }
-    String permission = getPermissionFromPath(em.getApplicationRef().getUuid(), context.getAction().toString()
-        .toLowerCase(), path);
-    boolean permitted = currentUser.isPermitted(permission);
+    String perm = getPermissionFromPath(
+      em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(), path);
+    boolean permitted = currentUser.isPermitted(perm);
     if (logger.isDebugEnabled()) {
-      logger.debug(PATH_MSG, new Object[] { path, context.getAction(), permission, permitted });
+      logger.debug(PATH_MSG, new Object[] { path, context.getAction(), perm, permitted });
     }
-    SubjectUtils.checkPermission(permission);
+    SubjectUtils.checkPermission(perm);
+    Subject subject = SubjectUtils.getSubject();
+    logger.debug("Checked subject {} for perm {}", subject != null ? subject.toString() : "", perm); 
+    logger.debug("------------------------------------------------------------------------------");
   }
 
-  private static final String PATH_MSG = "---- Check permissions for path -----------------------------------\n"
-      + "Requested path: {} \n" + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n"
-      + "-------------------------------------------------------------------";
-
+  private static final String PATH_MSG = 
+      "---- Checked permissions for path --------------------------------------------\n"
+    + "Requested path: {} \n" 
+    + "Requested action: {} \n" 
+    + "Requested permission: {} \n" 
+    + "Permitted: {} \n";
 
   /** 
    * Purpose is to enable entity dictionary entries to have name not equal to path segment. 

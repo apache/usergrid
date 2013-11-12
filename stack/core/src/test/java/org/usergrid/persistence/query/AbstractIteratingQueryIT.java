@@ -16,15 +16,6 @@
 package org.usergrid.persistence.query;
 
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.slf4j.Logger;
@@ -33,10 +24,14 @@ import org.usergrid.ConcurrentCoreIteratorITSuite;
 import org.usergrid.CoreApplication;
 import org.usergrid.CoreITSetup;
 import org.usergrid.CoreITSetupImpl;
-import org.usergrid.persistence.*;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
 
+import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**

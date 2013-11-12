@@ -1,3 +1,16 @@
+/**
+ * Copyright 2013 Apigee Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package org.usergrid.tools;
 
 import java.io.File;
@@ -18,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.utils.ConversionUtils;
 
 /**
+ * Base class for ToolBase implementations that write output to an output directory and file. 
  * @author zznate
  */
 public abstract class ExportingToolBase extends ToolBase {
@@ -26,15 +40,14 @@ public abstract class ExportingToolBase extends ToolBase {
 
   protected static File outputDir;
 
-  /** Output dir option: -outputDir */
+  /**
+   * Output dir option: -outputDir
+   */
   protected static final String OUTPUT_DIR = "outputDir";
 
   protected String baseOutputDirName = "export";
-
   protected UUID orgId;
-
   JsonFactory jsonFactory = new JsonFactory();
-
   protected long startTime = System.currentTimeMillis();
 
   @Override
@@ -68,13 +81,11 @@ public abstract class ExportingToolBase extends ToolBase {
   }
 
   /**
-   * Write the string onto the writer and check if verbose is enabled to log
-   * also an echo of what is being written to the writer.
-   * 
-   * @param out
-   *          PrintWriter
-   * @param content
-   *          string to be written
+   * Write the string onto the writer and check if verbose is enabled to log also an echo of what is
+   * being written to the writer.
+   *
+   * @param out PrintWriter
+   * @param content string to be written
    */
   @SuppressWarnings("unused")
   protected void writeOutput(PrintWriter out, String content) {
@@ -107,7 +118,7 @@ public abstract class ExportingToolBase extends ToolBase {
         return file;
       } else {
         throw new RuntimeException(
-            String.format("Unable to create directory %s.  It already exists as a file", dirName));
+                String.format("Unable to create directory %s.  It already exists as a file", dirName));
       }
     }
 
@@ -121,12 +132,10 @@ public abstract class ExportingToolBase extends ToolBase {
   }
 
   /**
-   * 
-   * @param type
-   *          just a label such us: organization, application.
+   *
+   * @param type just a label such us: organization, application.
    * @param name
-   * @return the file name concatenated with the type and the name of the
-   *         collection
+   * @return the file name concatenated with the type and the name of the collection
    */
   protected String prepareOutputFileName(String type, String name) {
     name = name.replace("/", PATH_REPLACEMENT);

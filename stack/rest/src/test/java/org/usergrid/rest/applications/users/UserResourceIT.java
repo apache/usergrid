@@ -881,9 +881,14 @@ public class UserResourceIT extends AbstractRestIT {
 
     @Test
     public void test_PUT_password_fail() {
-        ApiResponse response = client.changePassword("edanuff", "foo", "bar");
 
-        assertEquals("auth_invalid_username_or_password", response.getError());
+      boolean fail = false;
+      try {
+        client.changePassword("edanuff", "foo", "bar");
+      } catch (Exception e) {
+        fail = true;
+      }
+      assertTrue(fail);
     }
 
     @Test

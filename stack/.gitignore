@@ -1,5 +1,10 @@
 .idea
+.sonar-ide.properties
+.clover
+atlassian-ide-plugin.xml
 s101plugin.state
+s101plugin.properties
+structure-pom.xml
 *.DS_Store
 hector.iml
 releases
@@ -41,3 +46,4 @@ core/src/main/java/QueryFilter.tokens
 /release.properties
 *.sfx*
 *.db
+!/tools/src/main/dist/usergrid-custom-tools.properties

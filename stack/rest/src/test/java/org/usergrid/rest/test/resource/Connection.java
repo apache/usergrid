@@ -15,8 +15,9 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
-import org.usergrid.rest.test.resource.app.CustomEntity;
 import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
+
+import java.util.UUID;
 
 /**
  * @author tnine
@@ -30,8 +31,12 @@ public class Connection extends ValueResource {
   }
 
  
-  public CustomEntity entity(String deviceName){
-    return new CustomEntity(deviceName, this);
+  public EntityResource entity(String deviceName){
+    return new EntityResource(deviceName, this);
+  }
+
+  public EntityResource entity(UUID entityId){
+    return new EntityResource(entityId, this);
   }
   
   public DevicesCollection devices(){

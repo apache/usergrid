@@ -60,19 +60,31 @@ public class GroupResourceIT extends AbstractRestIT {
             return;
         }
 
-        client.createGroup(GROUP);
+        try {
+          client.createGroup(GROUP);
+          groupCreated = true;
+        } catch (Exception e) {
+          log.error("Error creating group " + GROUP, e);
+        }
 
-        groupCreated = true;
     }
 
 //    @Ignore
     @Test
     public void failGroupNameValidation() {
+
       ApiResponse response = client.createGroup("groupName/withslash");
       assertNull(response.getError());
 
-      response = client.createGroup("groupName withspace");
-      assertNotNull(response.getError());
+      {
+        boolean failed = false;
+        try {
+          client.createGroup("groupName withspace");
+        } catch (Exception e) {
+          failed = true;
+        }
+        assertTrue(failed);
+      }
     }
 
     @Test

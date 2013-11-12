@@ -15,10 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.usergrid.persistence.Results;
+
+import java.util.List;
 
 /**
  * @author tnine
@@ -34,5 +33,5 @@ public interface ResultsLoader  {
    * @return
    * @throws Exception 
    */
-  public Results getResults(List<UUID> entityIds) throws Exception;
+  public Results getResults(List<ScanColumn> entityIds) throws Exception;
 }

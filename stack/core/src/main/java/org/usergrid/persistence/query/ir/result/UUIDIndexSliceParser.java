@@ -15,13 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
-import java.util.UUID;
-
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
-import org.usergrid.persistence.cassandra.IndexUpdate;
-import org.usergrid.utils.UUIDUtils;
+import java.nio.ByteBuffer;
+import java.util.UUID;
 
 
 /**
@@ -30,7 +27,7 @@ import org.usergrid.utils.UUIDUtils;
  * @author tnine
  *
  */
-public class UUIDIndexSliceParser implements SliceParser<UUID> {
+public class UUIDIndexSliceParser implements SliceParser {
 
   private static final UUIDSerializer SERIALIZER = UUIDSerializer.get();
 
@@ -38,29 +35,16 @@ public class UUIDIndexSliceParser implements SliceParser<UUID> {
    * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
    */
   @Override
-  public UUID parse(ByteBuffer buff) {
-    return SERIALIZER.fromByteBuffer(buff.duplicate());
+  public ScanColumn parse(ByteBuffer buff) {
+    return new UUIDColumn(SERIALIZER.fromByteBuffer(buff.duplicate()), buff);
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#getUUID(java.lang.Object)
-   */
-  @Override
-  public UUID getUUID(UUID value) {
-    return value;
-  }
 
-  @Override
-  public Object getValue(UUID value) {
-    throw new UnsupportedOperationException("Getting the value is not supported on uuid lists");
-  }
+  public static class UUIDColumn extends AbstractScanColumn{
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.SliceParser#serialize(java.lang.Object)
-   */
-  @Override
-  public ByteBuffer serialize(UUID type) {
-    return SERIALIZER.toByteBuffer(type);
+    public UUIDColumn(UUID uuid, ByteBuffer buffer) {
+      super(uuid, buffer);
+    }
   }
 
 }

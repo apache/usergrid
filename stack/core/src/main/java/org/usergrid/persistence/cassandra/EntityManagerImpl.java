@@ -15,150 +15,35 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
-import static java.util.Arrays.asList;
-import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createIndexedSlicesQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.commons.lang.StringUtils.capitalize;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.usergrid.locking.LockHelper.getUniqueUpdateLock;
-import static org.usergrid.persistence.Results.fromEntities;
-import static org.usergrid.persistence.Results.Level.REFS;
-import static org.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.usergrid.persistence.Schema.COLLECTION_USERS;
-import static org.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
-import static org.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
-import static org.usergrid.persistence.Schema.DICTIONARY_PROPERTIES;
-import static org.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
-import static org.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
-import static org.usergrid.persistence.Schema.DICTIONARY_SETS;
-import static org.usergrid.persistence.Schema.PROPERTY_ASSOCIATED;
-import static org.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.usergrid.persistence.Schema.TYPE_CONNECTION;
-import static org.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.usergrid.persistence.Schema.TYPE_MEMBER;
-import static org.usergrid.persistence.Schema.TYPE_ROLE;
-import static org.usergrid.persistence.Schema.defaultCollectionName;
-import static org.usergrid.persistence.Schema.deserializeEntityProperties;
-import static org.usergrid.persistence.Schema.getDefaultSchema;
-import static org.usergrid.persistence.SimpleEntityRef.getUuid;
-import static org.usergrid.persistence.SimpleEntityRef.ref;
-import static org.usergrid.persistence.SimpleRoleRef.getIdForGroupIdAndRoleName;
-import static org.usergrid.persistence.SimpleRoleRef.getIdForRoleName;
-import static org.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ALIASES;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addPropertyToMutator;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
-import static org.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
-import static org.usergrid.utils.ClassUtils.cast;
-import static org.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.utils.ConversionUtils.getLong;
-import static org.usergrid.utils.ConversionUtils.object;
-import static org.usergrid.utils.ConversionUtils.string;
-import static org.usergrid.utils.ConversionUtils.uuid;
-import static org.usergrid.utils.InflectionUtils.singularize;
-import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
-import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
-import static org.usergrid.utils.UUIDUtils.isTimeBased;
-import static org.usergrid.utils.UUIDUtils.newTimeUUID;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import javax.annotation.Resource;
-
-import me.prettyprint.cassandra.model.IndexedSlicesQuery;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.CounterRow;
-import me.prettyprint.hector.api.beans.CounterRows;
-import me.prettyprint.hector.api.beans.CounterSlice;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.HCounterColumn;
-import me.prettyprint.hector.api.beans.OrderedRows;
-import me.prettyprint.hector.api.beans.Row;
-import me.prettyprint.hector.api.beans.Rows;
+import me.prettyprint.hector.api.beans.*;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.cassandra.QueueManagerFactoryImpl;
-import org.usergrid.persistence.AggregateCounter;
-import org.usergrid.persistence.AggregateCounterSet;
-import org.usergrid.persistence.AssociatedEntityRef;
-import org.usergrid.persistence.CollectionRef;
-import org.usergrid.persistence.ConnectedEntityRef;
-import org.usergrid.persistence.ConnectionRef;
-import org.usergrid.persistence.CounterResolution;
-import org.usergrid.persistence.DynamicEntity;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityFactory;
-import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.Identifier;
-import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.CounterFilterPredicate;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.RoleRef;
-import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.SimpleCollectionRef;
-import org.usergrid.persistence.SimpleEntityRef;
-import org.usergrid.persistence.SimpleRoleRef;
-import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
 import org.usergrid.persistence.cassandra.util.TraceParticipant;
-import org.usergrid.persistence.entities.Application;
-import org.usergrid.persistence.entities.Event;
-import org.usergrid.persistence.entities.Group;
-import org.usergrid.persistence.entities.Role;
-import org.usergrid.persistence.entities.User;
+import org.usergrid.persistence.entities.*;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
@@ -168,9 +53,31 @@ import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
 import org.usergrid.utils.UUIDUtils;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.yammer.metrics.annotation.Metered;
+import javax.annotation.Resource;
+import java.nio.ByteBuffer;
+import java.util.*;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Arrays.asList;
+import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.usergrid.locking.LockHelper.getUniqueUpdateLock;
+import static org.usergrid.persistence.Results.Level.REFS;
+import static org.usergrid.persistence.Results.fromEntities;
+import static org.usergrid.persistence.Schema.*;
+import static org.usergrid.persistence.SimpleEntityRef.getUuid;
+import static org.usergrid.persistence.SimpleEntityRef.ref;
+import static org.usergrid.persistence.SimpleRoleRef.getIdForGroupIdAndRoleName;
+import static org.usergrid.persistence.SimpleRoleRef.getIdForRoleName;
+import static org.usergrid.persistence.cassandra.ApplicationCF.*;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.*;
+import static org.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import static org.usergrid.utils.ClassUtils.cast;
+import static org.usergrid.utils.ConversionUtils.*;
+import static org.usergrid.utils.InflectionUtils.singularize;
+import static org.usergrid.utils.UUIDUtils.*;
 
 /**
  * Cassandra-specific implementation of Datastore
@@ -275,22 +182,15 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Batch dictionary property.
 	 *
-	 * @param batch
-	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
-	 * @param properties
-	 *            the properties
-	 * @param propertyName
-	 *            the property name
+	 * @param batch The batch to set the property into
+	 *
+   * @param entity The entity that owns the property
+   * @param propertyName
+   *            the property name
 	 * @param propertyValue
 	 *            the property value
-	 * @param timestamp
-	 *            the timestamp
+	 * @param timestampUuid The update timestamp as a uuid
+   *
 	 * @return batch
 	 * @throws Exception
 	 *             the exception
@@ -347,37 +247,27 @@ public class EntityManagerImpl implements EntityManager {
 				}
 			}
 
-			if (!isPropertyValueUniqueForEntity(entity.getUuid(),
-					entity.getType(), propertyName, propertyValue)) {
-				throw new DuplicateUniquePropertyExistsException(
-						entity.getType(), propertyName, propertyValue);
-			}
 
-			if (propertyName.equals(defaultSchema.aliasProperty(
-					entity.getType()))) {
-			  Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entity.getType(), propertyName);
-			  
-			  try{
-  				lock.lock();
-  				deleteAliasesForEntity(batch, entity.getUuid(), timestamp-1);
-  				createAlias(batch, applicationId, entity, entity.getType(),
-  						string(propertyValue), timestamp);
-			  }finally{
-			    lock.unlock();
-			  }
-			}
+
 
 			/**
 			 * Unique property, load the old value and remove it, check if it's not a duplicate
 			 */
 			if(defaultSchema.getEntityInfo(entity.getType()).isPropertyUnique(propertyName)){
-			  
+
 			    Lock lock = getUniqueUpdateLock(cass.getLockManager(),applicationId, propertyValue,
                         entity.getType(), propertyName);
 
 			    try {
             lock.lock();
-            
+
+            if (!isPropertyValueUniqueForEntity(entity.getUuid(),
+                entity.getType(), propertyName, propertyValue)) {
+              throw new DuplicateUniquePropertyExistsException(
+                  entity.getType(), propertyName, propertyValue);
+            }
+
+
             String collectionName = Schema.defaultCollectionName(entity.getType());
 
             uniquePropertyDelete(batch, collectionName, entity.getType(), propertyName, propertyValue, entity.getUuid(), timestamp-1);
@@ -425,18 +315,11 @@ public class EntityManagerImpl implements EntityManager {
 	 *
 	 * @param batch
 	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
-	 * @param entityProperties
-	 *            the entity properties
+	 * @param entity The owning entity reference
 	 * @param properties
-	 *            the properties
-	 * @param timestamp
-	 *            the timestamp
+	 *            the properties to set
+	 * @param timestampUuid
+	 *            the timestamp of the update operation as a time uuid
 	 * @return batch
 	 * @throws Exception
 	 *             the exception
@@ -461,23 +344,14 @@ public class EntityManagerImpl implements EntityManager {
 	 *
 	 * @param batch
 	 *            the batch
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
-	 * @param properties
-	 *            the properties
+	 * @param entity The owning entity
 	 * @param dictionaryName
 	 *            the dictionary name
-	 * @param property
-	 *            the property
 	 * @param elementValue
 	 *            the dictionary value
-	 * @param removeFromSet
-	 *            the remove from set
-	 * @param timestamp
+	 * @param removeFromDictionary
+	 *           True to delete from the dictionary
+	 * @param timestampUuid
 	 *            the timestamp
 	 * @return batch
 	 * @throws Exception
@@ -546,15 +420,15 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Returns true if the property is unique, and the entity can be saved.  If it's not unique, false is returned
-	 * @param thisEntity
+	 * @param ownerEntityId
 	 * @param entityType
 	 * @param propertyName
 	 * @param propertyValue
-	 * @return
+	 * @return True if this entity can safely "own" this property name and value unique combination
 	 * @throws Exception
 	 */
 	@Metered(group="core", name="EntityManager_isPropertyValueUniqueForEntity")
-	public boolean isPropertyValueUniqueForEntity(UUID thisEntity,
+	public boolean isPropertyValueUniqueForEntity(UUID ownerEntityId,
 			String entityType, String propertyName, Object propertyValue)
 			throws Exception {
 
@@ -566,51 +440,63 @@ public class EntityManagerImpl implements EntityManager {
 			return true;
 		}
 
-		String collectionName = defaultCollectionName(entityType);
-
-
-    Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, propertyName);
-    List<HColumn<ByteBuffer, ByteBuffer>> cols = null;
-    
-    try {
-      lock.lock();
-
-      Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
-
-      cols = cass.getColumns(cass.getApplicationKeyspace(applicationId),
-          ENTITY_UNIQUE, key, null, null, 2, false);
-
-    } finally {
-
-      lock.unlock();
-    }
-
-		//No columns at all, it's unique
-		if(cols.size() == 0){
-		    return true;
-		}
-
-		//shouldn't happen, but it's an error case
-		if(cols.size() > 1){
-		    logger.error("INDEX CORRUPTION: More than 1 unique value exists for entities in application {} of type {} on property {} with value {}", new Object[]{applicationId, entityType, propertyName, propertyValue});
-		}
-
 		/**
 		 * Doing this in a loop sucks, but we need to account for possibly having more than 1 entry in the index due to corruption.  We need to allow them to update, otherwise
 		 * both entities will be unable to update and must be deleted
 		 */
-		for(HColumn<ByteBuffer, ByteBuffer> col: cols){
-		    UUID id = ue.fromByteBuffer(col.getName());
 
-		    if(thisEntity.equals(id)){
-		        return true;
-		    }
+    Set<UUID> ownerEntityIds = getUUIDsForUniqueProperty(applicationId, entityType, propertyName, propertyValue);
 
-
-		}
-
-		return false;
+    //if there are no entities for this property, we know it's unique.  If there are, we have to make sure the one we were passed is in the set.  otherwise it belongs
+    //to a different entity
+    return ownerEntityIds.size() == 0 || ownerEntityIds.contains(ownerEntityId);
 	}
+
+
+  /**
+   * Return all UUIDs that have this unique value
+   * @param ownerEntityId The entity id that owns this entity collection
+   * @param collectionName The entity collection name
+   * @param propertyName The name of the unique property
+   * @param propertyValue The value of the unique property
+   * @return
+   * @throws Exception
+   */
+  private Set<UUID> getUUIDsForUniqueProperty(UUID ownerEntityId, String collectionName, String propertyName, Object propertyValue) throws Exception {
+
+
+    String collectionNameInternal = defaultCollectionName(collectionName);
+
+    Object key = createUniqueIndexKey(ownerEntityId, collectionNameInternal, propertyName, propertyValue);
+
+    List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(cass.getApplicationKeyspace(applicationId),
+        ENTITY_UNIQUE, key, null, null, 2, false);
+
+
+    //No columns at all, it's unique
+    if(cols.size() == 0){
+      return Collections.emptySet();
+    }
+
+    //shouldn't happen, but it's an error case
+    if(cols.size() > 1){
+      logger.error("INDEX CORRUPTION: More than 1 unique value exists for entities in ownerId {} of type {} on property {} with value {}", new Object[]{ownerEntityId, collectionNameInternal, propertyName, propertyValue});
+    }
+
+    /**
+     * Doing this in a loop sucks, but we need to account for possibly having more than 1 entry in the index due to corruption.  We need to allow them to update, otherwise
+     * both entities will be unable to update and must be deleted
+     */
+
+    Set<UUID> results = new HashSet<UUID>(cols.size());
+
+    for(HColumn<ByteBuffer, ByteBuffer> col: cols){
+      results.add(ue.fromByteBuffer(col.getName()));
+    }
+
+    return results;
+
+  }
 
 	/**
 	 * Add this unique index to the delete
@@ -629,7 +515,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	    //we have an old value.  If the new value is empty, we want to delete the old value.  If the new value is different we want to delete, otherwise we don't issue the delete
 	    if(oldValue != null && (propertyValue == null || !oldValue.equals(propertyValue))){
-	        Object key = createUniqueIndexKey(collectionName, propertyName, oldValue);
+	        Object key = createUniqueIndexKey(applicationId, collectionName, propertyName, oldValue);
 
 	        addDeleteToMutator(m, ENTITY_UNIQUE, key, timestamp, entityId);
 	    }
@@ -646,7 +532,7 @@ public class EntityManagerImpl implements EntityManager {
      * @throws Exception
      */
     private void uniquePropertyWrite(Mutator<ByteBuffer> m, String collectionName, String propertyName, Object propertyValue, UUID entityId, long timestamp) throws Exception{
-        Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
+        Object key = createUniqueIndexKey(applicationId, collectionName, propertyName, propertyValue);
 
         addInsertToMutator(m, ENTITY_UNIQUE, key, entityId, null, timestamp);
     }
@@ -659,104 +545,35 @@ public class EntityManagerImpl implements EntityManager {
 	 * @param value
 	 * @return
 	 */
-	private Object createUniqueIndexKey(String collectionName, String propertyName, Object value){
-	    return key(applicationId, collectionName, propertyName, value);
+	private Object createUniqueIndexKey(UUID ownerId, String collectionName, String propertyName, Object value){
+	    return key(ownerId, collectionName, propertyName, value);
 	}
 
 
-  @Metered(group="core",name="EntityManager_createAlias")
-	public UUID createAlias(Mutator<ByteBuffer> mutator, UUID ownerId, EntityRef ref, String aliasType,
-			String alias, long timestamp) throws Exception {
-
-		UUID entityId = ref.getUuid();
-		String entityType = ref.getType();
-		if (entityType == null) {
-			entityType = getEntityType(entityId);
-		}
-		if (entityType == null) {
-			return null;
-		}
-		if (aliasType == null) {
-			aliasType = entityType;
-		}
-		if (ownerId == null) {
-			ownerId = applicationId;
-		}
-		if (alias == null) {
-			return null;
-		}
-		alias = alias.toLowerCase().trim();
-		UUID keyId = CassandraPersistenceUtils.aliasID(ownerId, aliasType,
-				alias);
-
-
-		addInsertToMutator(mutator, ENTITY_ALIASES, keyId, "entityId", entityId,
-				timestamp);
-		addInsertToMutator(mutator, ENTITY_ALIASES, keyId, "entityType", entityType,
-				timestamp);
-		addInsertToMutator(mutator, ENTITY_ALIASES, keyId, "aliasType", aliasType,
-				timestamp);
-		addInsertToMutator(mutator, ENTITY_ALIASES, keyId, "alias", alias, timestamp);
-
-
-		return keyId;
-	}
-
-	@Override
-  @Metered(group="core", name="EntityManager_deleteAlias")
-	public void deleteAlias(UUID ownerId, String aliasType, String alias)
-			throws Exception {
-		if (ownerId == null) {
-			ownerId = applicationId;
-		}
-		if (aliasType == null) {
-			return;
-		}
-		if (alias == null) {
-			return;
-		}
-		alias = alias.toLowerCase().trim();
-		UUID keyId = CassandraPersistenceUtils.aliasID(ownerId, aliasType,
-				alias);
-		cass.deleteRow(cass.getApplicationKeyspace(applicationId),
-				ENTITY_ALIASES, keyId);
-
-	}
 
 	@Override
   @Metered(group="core", name="EntityManager_getAlias_single")
-	public EntityRef getAlias(UUID ownerId, String aliasType, String alias)
+	public EntityRef getAlias(UUID ownerId, String collectionType, String aliasValue)
 			throws Exception {
-		if (ownerId == null) {
-			ownerId = applicationId;
-		}
-		if (aliasType == null) {
-			return null;
-		}
-		if (alias == null) {
-			return null;
-		}
-		alias = alias.toLowerCase().trim();
-		UUID keyId = CassandraPersistenceUtils.aliasID(ownerId, aliasType,
-				alias);
-		Set<String> columnNames = new LinkedHashSet<String>();
-		columnNames.add("entityId");
-		columnNames.add("entityType");
-		List<HColumn<String, ByteBuffer>> columns = cass.getColumns(
-				cass.getApplicationKeyspace(applicationId), ENTITY_ALIASES,
-				keyId, columnNames, se, be);
 
-		if (columns != null && columns.size() > 0) {
-			Map<String, ByteBuffer> cols = CassandraPersistenceUtils
-					.getColumnMap(columns);
-			String entityType = string(cols.get("entityType"));
-			UUID entityId = uuid(cols.get("entityId"), null);
-			if ((entityId != null) && (entityType != null)) {
-				return ref(entityType, entityId);
-			}
-		}
+    Assert.notNull(ownerId, "ownerId is required");
+    Assert.notNull(collectionType, "collectionType is required");
+    Assert.notNull(aliasValue, "aliasValue is required");
 
-		return null;
+		Map<String, EntityRef> results =  getAlias(ownerId, collectionType, Collections.singletonList(aliasValue) );
+
+    if(results == null || results.size() == 0){
+      return null;
+    }
+
+    //add a warn statement so we can see if we have data migration issues.
+    //TODO When we get an event system, trigger a repair if this is detected
+    if(results.size() > 1){
+      logger.warn("More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists.  This is a duplicate alias, and needs audited", new Object[]{ownerId, collectionType, aliasValue});
+    }
+
+    return results.get(aliasValue);
+
 	}
 
 	@Override
@@ -767,93 +584,29 @@ public class EntityManagerImpl implements EntityManager {
 
 	@Override
   @Metered(group="core", name="EntityManager_getAlias_multi")
-	public Map<String, EntityRef> getAlias(UUID ownerId, String aliasType,
+	public Map<String, EntityRef> getAlias(UUID ownerId, String collectionName,
 			List<String> aliases) throws Exception {
-		if (ownerId == null) {
-			ownerId = applicationId;
-		}
-		if (aliasType == null) {
-			return null;
-		}
-		if (aliases == null) {
-			return null;
-		}
-		List<UUID> keyIds = new ArrayList<UUID>();
-		for (String alias : aliases) {
-			if (alias != null) {
-				alias = alias.toLowerCase().trim();
-				UUID keyId = CassandraPersistenceUtils.aliasID(ownerId,
-						aliasType, alias);
-				keyIds.add(keyId);
-			}
-		}
-		if (keyIds.size() == 0) {
-			return null;
-		}
 
-		Set<String> columnNames = new LinkedHashSet<String>();
-		columnNames.add("entityId");
-		columnNames.add("entityType");
-		columnNames.add("alias");
-		Rows<UUID, String, ByteBuffer> rows = cass.getRows(
-				cass.getApplicationKeyspace(applicationId), ENTITY_ALIASES,
-				keyIds, columnNames, ue, se, be);
+    Assert.notNull(ownerId, "ownerId is required");
+    Assert.notNull(collectionName, "collectionName is required");
+    Assert.notEmpty(aliases, "aliases are required");
 
-		Map<String, EntityRef> aliasedEntities = new HashMap<String, EntityRef>();
-		for (Row<UUID, String, ByteBuffer> row : rows) {
-			ColumnSlice<String, ByteBuffer> slice = row.getColumnSlice();
-			if (slice == null) {
-				continue;
-			}
-			List<HColumn<String, ByteBuffer>> columns = slice.getColumns();
-			if (columns != null) {
-				Map<String, ByteBuffer> cols = CassandraPersistenceUtils
-						.getColumnMap(columns);
-				String entityType = string(cols.get("entityType"));
-				UUID entityId = uuid(cols.get("entityId"), null);
-				String alias = string(cols.get("alias"));
-				if ((entityId != null) && (entityType != null)
-						&& (alias != null)) {
-					aliasedEntities.put(alias, ref(entityType, entityId));
-				}
-			}
-		}
 
-		return aliasedEntities;
+    String propertyName = Schema.getDefaultSchema().aliasProperty(collectionName);
+
+    Map<String, EntityRef> results = new HashMap<String, EntityRef>();
+
+    for(String alias: aliases){
+      for(UUID id: getUUIDsForUniqueProperty(ownerId, collectionName, propertyName, alias )){
+        results.put(alias, new SimpleEntityRef(collectionName, id));
+      }
+    }
+
+    return results;
+
+
 	}
 
-  @Metered(group="core", name="EntityManager_getAliases")
-	public List<UUID> getAliases(UUID entityId) {
-		Keyspace ko = cass.getApplicationKeyspace(applicationId);
-		List<UUID> aliases = new ArrayList<UUID>();
-		IndexedSlicesQuery<UUID, String, UUID> q = createIndexedSlicesQuery(ko,
-				ue, se, ue);
-		q.setColumnFamily(ENTITY_ALIASES.toString());
-		q.setColumnNames("entityId");
-		q.addEqualsExpression("entityId", entityId);
-		QueryResult<OrderedRows<UUID, String, UUID>> r = q.execute();
-		OrderedRows<UUID, String, UUID> rows = r.get();
-		for (Row<UUID, String, UUID> row : rows) {
-			UUID aliasId = row.getKey();
-			aliases.add(aliasId);
-		}
-
-		return aliases;
-	}
-
-
-    @Metered(group="core",name="EntityManager_deleteAliasesForEntity")
-	public void deleteAliasesForEntity(Mutator<ByteBuffer> mutator, UUID entityId, long timestamp)
-			throws Exception {
-		List<UUID> aliases = getAliases(entityId);
-
-		for (UUID alias : aliases) {
-
-		    addDeleteToMutator(mutator, ENTITY_ALIASES, alias, timestamp);
-
-		}
-
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -896,11 +649,6 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Creates a new entity.
-	 *
-	 * @param <A>
-	 *            the generic type
-	 * @param applicationId
-	 *            the application id
 	 * @param entityType
 	 *            the entity type
 	 * @param entityClass
@@ -1023,8 +771,7 @@ public class EntityManagerImpl implements EntityManager {
 		if (!is_application) {
 			// Add entity to collection
 
-			collection = schema.getCollection(TYPE_APPLICATION,
-					collection_name);
+
 			if(!emptyPropertyMap) {
 				addInsertToMutator(m, ENTITY_ID_SETS, collection_key, itemId, null,
 					timestamp);
@@ -1093,9 +840,7 @@ public class EntityManagerImpl implements EntityManager {
 			return entity;
 		}
 
-		String aliasName = schema.aliasProperty(entityType);
-		logger.info("Alias property is {}", aliasName);
-		for (String prop_name : properties.keySet()) {
+			for (String prop_name : properties.keySet()) {
 
 			Object propertyValue = properties.get(prop_name);
 
@@ -1103,50 +848,11 @@ public class EntityManagerImpl implements EntityManager {
 				continue;
 			}
 
-			if (!is_application
-					&& !isPropertyValueUniqueForEntity(applicationId,
-							entityType, prop_name, propertyValue)) {
-				throw new DuplicateUniquePropertyExistsException(entityType,
-						prop_name, propertyValue);
-			}
 
 			if (User.ENTITY_TYPE.equals(entityType) && "me".equals(prop_name)) {
 				throw new DuplicateUniquePropertyExistsException(entityType,
 						prop_name, propertyValue);
 			}
-
-			if (!Schema.isAssociatedEntityType(entityType)
-					&& prop_name.equals(aliasName)) {
-				String aliasValue = propertyValue.toString().toLowerCase()
-						.trim();
-				logger.info("Alias property value for {} is {}", aliasName,
-						aliasValue);
-				createAlias(m, applicationId, ref(entityType, itemId), entityType,
-						aliasValue, timestamp);
-			}
-
-			 /**
-       * Unique property, load the old value and remove it, check if it's not a duplicate
-       */
-      if (schema.getEntityInfo(entity.getType()).isPropertyUnique(prop_name)) {
-        /**
-         * Only lock on the target values. We don't want lock contention if
-         * another node is trying to set the property do a different value
-         */
-        Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, prop_name);
-
-        try {
-          lock.lock();
-
-          String collectionName = Schema.defaultCollectionName(entityType);
-
-          uniquePropertyWrite(m, collectionName, prop_name, propertyValue, itemId, timestamp);
-
-        } finally {
-          lock.unlock();
-        }
-
-      }
 
 			entity.setProperty(prop_name, propertyValue);
 
@@ -1243,8 +949,6 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the type.
 	 *
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
 	 * @return entity type
@@ -1313,14 +1017,8 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the specified entity.
 	 *
-	 * @param <A>
-	 *            the generic type
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
-	 * @param entityType
-	 *            the entity type
 	 * @param entityClass
 	 *            the entity class
 	 * @return entity
@@ -1369,16 +1067,8 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the specified list of entities.
 	 *
-	 * @param <A>
-	 *            the generic type
-	 * @param applicationId
-	 *            the application id
 	 * @param entityIds
 	 *            the entity ids
-	 * @param includeProperties
-	 *            the include properties
-	 * @param entityType
-	 *            the entity type
 	 * @param entityClass
 	 *            the entity class
 	 * @return entity
@@ -1386,8 +1076,7 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
   @Metered(group="core", name="EntityManager_getEntities")
-	public <A extends Entity> List<A> getEntities(Collection<UUID> entityIds,
-			String entityType, Class<A> entityClass) throws Exception {
+	public <A extends Entity> List<A> getEntities(Collection<UUID> entityIds, Class<A> entityClass) throws Exception {
 
 		List<A> entities = new ArrayList<A>();
 
@@ -1592,18 +1281,10 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Gets the set.
 	 *
-	 * @param applicationId
-	 *            the application id
-	 * @param entityType
-	 *            the entity type
-	 * @param entityId
-	 *            the entity id
+	 * @param entity
+	 *            The owning entity
 	 * @param dictionaryName
 	 *            the dictionary name
-	 * @param joint
-	 *            the joint
-	 * @param property
-	 *            the property
 	 * @return contents of dictionary property
 	 * @throws Exception
 	 *             the exception
@@ -1669,8 +1350,6 @@ public class EntityManagerImpl implements EntityManager {
 	/**
 	 * Update properties.
 	 *
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
 	 * @param properties
@@ -1771,8 +1450,6 @@ public class EntityManagerImpl implements EntityManager {
 
 		addDeleteToMutator(m, ENTITY_PROPERTIES, key(entityId), timestamp);
 
-		deleteAliasesForEntity(m, entityId, timestamp);
-
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
 	}
@@ -1845,7 +1522,7 @@ public class EntityManagerImpl implements EntityManager {
 			return new SimpleEntityRef("user", identifier.getUUID());
 		}
 		if (identifier.isName()) {
-			return this.getAlias(null, "user", identifier.getName());
+			return this.getAlias(applicationId, "user", identifier.getName());
 		}
 		if (identifier.isEmail()) {
 
@@ -1861,7 +1538,7 @@ public class EntityManagerImpl implements EntityManager {
 				return r.getRef();
 			} else {
                 // look-aside as it might be an email in the name field
-                return this.getAlias(null, "user",identifier.getEmail());
+                return this.getAlias(applicationId, "user",identifier.getEmail());
             }
 		}
 		return null;
@@ -1877,7 +1554,7 @@ public class EntityManagerImpl implements EntityManager {
 			return new SimpleEntityRef("group", identifier.getUUID());
 		}
 		if (identifier.isName()) {
-			return this.getAlias(null, "group", identifier.getName());
+			return this.getAlias(applicationId, "group", identifier.getName());
 		}
 		return null;
 	}
@@ -2062,13 +1739,8 @@ public class EntityManagerImpl implements EntityManager {
 
 
 	@Override
-	public void deleteAlias(String aliasType, String alias) throws Exception {
-		deleteAlias(null, aliasType, alias);
-	}
-
-	@Override
 	public EntityRef getAlias(String aliasType, String alias) throws Exception {
-		return getAlias(null, aliasType, alias);
+		return getAlias(applicationId, aliasType, alias);
 	}
 
 	@Override
@@ -2165,7 +1837,7 @@ public class EntityManagerImpl implements EntityManager {
 	@Override
 	public Results get(Collection<UUID> entityIds, Results.Level resultsLevel)
 			throws Exception {
-		List<? extends Entity> results = getEntities(entityIds, null, null);
+		List<? extends Entity> results = getEntities(entityIds, null);
 		return Results.fromEntities(results);
 	}
 	
@@ -2176,21 +1848,21 @@ public class EntityManagerImpl implements EntityManager {
    */
   @Override
   public Results get(Collection<UUID> entityIds) throws Exception {
-    return fromEntities(getEntities(entityIds, null, null));
+    return fromEntities(getEntities(entityIds, null));
   }
 
   @Override
 	public Results get(Collection<UUID> entityIds,
 			Class<? extends Entity> entityClass, Results.Level resultsLevel)
 			throws Exception {
-		return fromEntities(getEntities(entityIds, null, entityClass));
+		return fromEntities(getEntities(entityIds, entityClass));
 	}
 
 	@Override
 	public Results get(Collection<UUID> entityIds, String entityType,
 			Class<? extends Entity> entityClass, Results.Level resultsLevel)
 			throws Exception {
-		return fromEntities(getEntities(entityIds, entityType, entityClass));
+		return fromEntities(getEntities(entityIds, entityClass));
 	}
 
 	public Results loadEntities(Results results, Results.Level resultsLevel,
@@ -2206,7 +1878,7 @@ public class EntityManagerImpl implements EntityManager {
 			return results;
 		}
 
-		results.setEntities(getEntities(results.getIds(), null,null));
+		results.setEntities(getEntities(results.getIds(),null));
 
 		if (resultsLevel == Results.Level.LINKED_PROPERTIES) {
 			List<Entity> entities = results.getEntities();
@@ -2224,7 +1896,7 @@ public class EntityManagerImpl implements EntityManager {
 				}
 			}
 			List<DynamicEntity> linked = getEntities(new ArrayList<UUID>(
-					associatedIds.values()), null, null);
+					associatedIds.values()), null);
 			for (DynamicEntity l : linked) {
 				Map<String, Object> p = l.getDynamicProperties();
 				if ((p != null) && (p.size() > 0)) {
@@ -3063,29 +2735,10 @@ public class EntityManagerImpl implements EntityManager {
 		getRelationManager(connectionRef).deleteConnection(connectionRef);
 	}
 
-	@Override
-	public boolean connectionExists(ConnectionRef connectionRef)
-			throws Exception {
-		return getRelationManager(connectionRef)
-				.connectionExists(connectionRef);
-	}
-
-	@Override
-	public Set<String> getConnectionTypes(UUID entityId, UUID connectedEntityId)
-			throws Exception {
-		return getRelationManager(ref(entityId)).getConnectionTypes(
-				connectedEntityId);
-	}
 
 	@Override
 	public Set<String> getConnectionTypes(EntityRef ref) throws Exception {
 		return getRelationManager(ref).getConnectionTypes();
-	}
-
-	@Override
-	public Set<String> getConnectionTypes(EntityRef ref,
-			boolean filterConnection) throws Exception {
-		return getRelationManager(ref).getConnectionTypes(filterConnection);
 	}
 
 	@Override
@@ -3102,56 +2755,13 @@ public class EntityManagerImpl implements EntityManager {
 				connectionType, connectedEntityType, resultsLevel);
 	}
 
-	@Override
-	public List<ConnectedEntityRef> getConnections(UUID entityId, Query query)
-			throws Exception {
-		return getRelationManager(ref(entityId)).getConnections(query);
-	}
-
-	// T.N. This isn't used anywhere. Removing for this release
-	// @Override
-	// public Results searchConnectedEntitiesForProperty(
-	// EntityRef connectingEntity, String connectionType,
-	// String connectedEntityType, String propertyName,
-	// Object searchStartValue, Object searchFinishValue,
-	// UUID startResult, int count, boolean reversed, Level resultsLevel)
-	// throws Exception {
-	// return getRelationManager(connectingEntity)
-	// .searchConnectedEntitiesForProperty(connectionType,
-	// connectedEntityType, propertyName, searchStartValue,
-	// searchFinishValue, startResult, count, reversed,
-	// resultsLevel);
-	// }
 
 	@Override
 	public Results searchConnectedEntities(EntityRef connectingEntity,
 			Query query) throws Exception {
 
-		// TODO Todd Ed the query type and connection type needs set here.
 		return getRelationManager(connectingEntity).searchConnectedEntities(
 				query);
-	}
-
-	@Override
-	public Object getAssociatedProperty(
-			AssociatedEntityRef associatedEntityRef, String propertyName)
-			throws Exception {
-		return getRelationManager(associatedEntityRef).getAssociatedProperty(
-				associatedEntityRef, propertyName);
-	}
-
-	@Override
-	public Map<String, Object> getAssociatedProperties(
-			AssociatedEntityRef associatedEntityRef) throws Exception {
-		return getRelationManager(associatedEntityRef).getAssociatedProperties(
-				associatedEntityRef);
-	}
-
-	@Override
-	public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
-			String propertyName, Object propertyValue) throws Exception {
-		getRelationManager(associatedEntityRef).setAssociatedProperty(
-				associatedEntityRef, propertyName, propertyValue);
 	}
 
 
