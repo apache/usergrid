@@ -946,7 +946,7 @@ public class CassandraService {
     for (Row<K, ByteBuffer, ByteBuffer> row : rows) {
       list.add(row.getKey());
       // K uuid = row.getKey();
-      // if (uuid != UUIDUtils.zeroUUID) {
+      // if (uuid != UUIDUtils.ZERO_UUID) {
       // list.add(uuid);
       // }
     }

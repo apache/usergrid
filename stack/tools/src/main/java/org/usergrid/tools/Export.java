@@ -155,7 +155,7 @@ public class Export extends ExportingToolBase {
       jg.writeStartArray();
       jg.writeObject(nsEntity);
 
-      // Create a generator for the application collections.
+      // Create a GENERATOR for the application collections.
       JsonGenerator collectionsJg = getJsonGenerator(createOutputFile("collections", application.getValue()));
       collectionsJg.writeStartObject();
 

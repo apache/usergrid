@@ -692,7 +692,7 @@ public class EntityManagerImpl implements EntityManager {
 		boolean is_application = TYPE_APPLICATION.equals(eType);
 
 		if (((applicationId == null) || applicationId
-				.equals(UUIDUtils.zeroUUID)) && !is_application) {
+				.equals(UUIDUtils.ZERO_UUID )) && !is_application) {
 			return null;
 		}
 
