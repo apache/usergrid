@@ -1,6 +1,8 @@
 package org.usergrid;
 
 
+import java.util.UUID;
+
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -11,8 +13,6 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.utils.JsonUtils;
-
-import java.util.UUID;
 
 
 public class CoreITSetupImpl implements CoreITSetup
@@ -34,7 +34,7 @@ public class CoreITSetupImpl implements CoreITSetup
 
 
     @Override
-    public Statement apply(Statement base, Description description)
+    public Statement apply( Statement base, Description description )
     {
         return statement( base, description );
     }
@@ -76,7 +76,7 @@ public class CoreITSetupImpl implements CoreITSetup
 
     private void initialize()
     {
-        if ( ! enabled )
+        if ( !enabled )
         {
             emf = cassandraResource.getBean( EntityManagerFactory.class );
             qmf = cassandraResource.getBean( QueueManagerFactory.class );
@@ -87,9 +87,7 @@ public class CoreITSetupImpl implements CoreITSetup
     }
 
 
-    /**
-     * Override to tear down your specific external resource.
-     */
+    /** Override to tear down your specific external resource. */
     protected void after( Description description )
     {
         LOG.info( "Tearing down for {}", description.getDisplayName() );

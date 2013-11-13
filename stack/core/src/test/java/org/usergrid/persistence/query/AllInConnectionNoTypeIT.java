@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,32 +21,33 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
 
-/**
- * @author tnine
- */
+/** @author tnine */
 public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT
 {
     @Test
-    public void allInConnectionNoType() throws Exception {
-        allIn(new ConnectionNoTypeHelper());
+    public void allInConnectionNoType() throws Exception
+    {
+        allIn( new ConnectionNoTypeHelper() );
     }
 
-  class ConnectionNoTypeHelper extends ConnectionHelper {
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
-     * (org.usergrid.persistence.Query)
-     */
-    @Override
-    public Results getResults(Query query) throws Exception {
-      query.setConnectionType(CONNECTION);
-      // don't set it on purpose
-      query.setEntityType(null);
-      return app.getEm().searchConnectedEntities(rootEntity, query);
+    class ConnectionNoTypeHelper extends ConnectionHelper
+    {
 
+        /*
+         * (non-Javadoc)
+         *
+         * @see
+         * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
+         * (org.usergrid.persistence.Query)
+         */
+        @Override
+        public Results getResults( Query query ) throws Exception
+        {
+            query.setConnectionType( CONNECTION );
+            // don't set it on purpose
+            query.setEntityType( null );
+            return app.getEm().searchConnectedEntities( rootEntity, query );
+        }
     }
-  }
 }

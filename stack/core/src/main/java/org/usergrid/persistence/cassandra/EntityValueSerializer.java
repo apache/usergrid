@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -23,25 +22,36 @@ import java.util.List;
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
-public class EntityValueSerializer extends AbstractSerializer<Object> {
+import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
-	@Override
-	public ByteBuffer toByteBuffer(Object obj) {
-		ByteBuffer bytes = null;
-		if (obj instanceof List) {
-			bytes = DynamicComposite.toByteBuffer((List<?>) obj);
-		} else if (obj instanceof Object[]) {
-			bytes = DynamicComposite.toByteBuffer((Object[]) obj);
-		} else {
-			bytes = bytebuffer(obj);
-		}
-		return bytes;
-	}
 
-	@Override
-	public Object fromByteBuffer(ByteBuffer byteBuffer) {
-		throw new IllegalStateException(
-				"The entity value serializer can only be used for data going to the database, and not data coming from the database");
-	}
+public class EntityValueSerializer extends AbstractSerializer<Object>
+{
 
+    @Override
+    public ByteBuffer toByteBuffer( Object obj )
+    {
+        ByteBuffer bytes = null;
+        if ( obj instanceof List )
+        {
+            bytes = DynamicComposite.toByteBuffer( ( List<?> ) obj );
+        }
+        else if ( obj instanceof Object[] )
+        {
+            bytes = DynamicComposite.toByteBuffer( ( Object[] ) obj );
+        }
+        else
+        {
+            bytes = bytebuffer( obj );
+        }
+        return bytes;
+    }
+
+
+    @Override
+    public Object fromByteBuffer( ByteBuffer byteBuffer )
+    {
+        throw new IllegalStateException(
+                "The entity value serializer can only be used for data going to the database, and not data coming from the database" );
+    }
 }

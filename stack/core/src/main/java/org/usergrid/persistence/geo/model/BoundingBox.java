@@ -13,22 +13,25 @@ and limitations under the License.
 
 package org.usergrid.persistence.geo.model;
 
-/**
- *
- * @author Alexandre Gellibert
- *
- */
-public class BoundingBox {
+
+/** @author Alexandre Gellibert */
+public class BoundingBox
+{
 
     private Point northEast;
     private Point southWest;
 
-    public BoundingBox(double north, double east, double south, double west) {
-        double north_,south_;
-        if(south > north) {
+
+    public BoundingBox( double north, double east, double south, double west )
+    {
+        double north_, south_;
+        if ( south > north )
+        {
             south_ = north;
             north_ = south;
-        } else {
+        }
+        else
+        {
             south_ = south;
             north_ = north;
         }
@@ -36,32 +39,43 @@ public class BoundingBox {
         // Don't swap east and west to allow disambiguation of
         // antimeridian crossing.
 
-        northEast = new Point(north_, east);
-        southWest = new Point(south_, west);
+        northEast = new Point( north_, east );
+        southWest = new Point( south_, west );
     }
 
-    public double getNorth() {
+
+    public double getNorth()
+    {
         return northEast.getLat();
     }
 
-    public double getSouth() {
+
+    public double getSouth()
+    {
         return southWest.getLat();
     }
 
-    public double getWest() {
+
+    public double getWest()
+    {
         return southWest.getLon();
     }
 
-    public double getEast() {
+
+    public double getEast()
+    {
         return northEast.getLon();
     }
 
-    public Point getNorthEast() {
+
+    public Point getNorthEast()
+    {
         return northEast;
     }
 
-    public Point getSouthWest() {
+
+    public Point getSouthWest()
+    {
         return southWest;
     }
-
 }

@@ -1,47 +1,69 @@
 package org.usergrid.persistence.query.ir.result;
 
+
 import java.nio.ByteBuffer;
 import java.util.UUID;
+
 
 /**
  *
  * @author: tnine
  *
  */
-public abstract class AbstractScanColumn implements ScanColumn {
+public abstract class AbstractScanColumn implements ScanColumn
+{
 
-  private final UUID uuid;
-  private final ByteBuffer buffer;
+    private final UUID uuid;
+    private final ByteBuffer buffer;
 
-  protected AbstractScanColumn(UUID uuid, ByteBuffer buffer) {
-    this.uuid = uuid;
-    this.buffer = buffer.duplicate();
-  }
 
-  @Override
-  public UUID getUUID() {
-    return uuid;
-  }
+    protected AbstractScanColumn( UUID uuid, ByteBuffer buffer )
+    {
+        this.uuid = uuid;
+        this.buffer = buffer.duplicate();
+    }
 
-  @Override
-  public ByteBuffer getCursorValue() {
-    return buffer.duplicate();
-  }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof AbstractScanColumn)) return false;
+    @Override
+    public UUID getUUID()
+    {
+        return uuid;
+    }
 
-    AbstractScanColumn that = (AbstractScanColumn) o;
 
-    if (!uuid.equals(that.uuid)) return false;
+    @Override
+    public ByteBuffer getCursorValue()
+    {
+        return buffer.duplicate();
+    }
 
-    return true;
-  }
 
-  @Override
-  public int hashCode() {
-    return uuid.hashCode();
-  }
+    @Override
+    public boolean equals( Object o )
+    {
+        if ( this == o )
+        {
+            return true;
+        }
+        if ( !( o instanceof AbstractScanColumn ) )
+        {
+            return false;
+        }
+
+        AbstractScanColumn that = ( AbstractScanColumn ) o;
+
+        if ( !uuid.equals( that.uuid ) )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode()
+    {
+        return uuid.hashCode();
+    }
 }

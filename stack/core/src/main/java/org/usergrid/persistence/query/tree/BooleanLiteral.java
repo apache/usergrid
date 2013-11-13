@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,35 +15,38 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
-/**
- * @author tnine
- * 
- */
-public class BooleanLiteral extends Literal<Boolean> {
 
-  private boolean value;
+/** @author tnine */
+public class BooleanLiteral extends Literal<Boolean>
+{
 
-  /**
-   * @param t
-   */
-  protected BooleanLiteral(Token t) {
-    super(t);
-    value = Boolean.valueOf(t.getText());
-  }
-  
-  /**
-   * The boolean literal
-   * @param value
-   */
-  public BooleanLiteral(boolean value){
-      super(new ClassicToken(0, String.valueOf(value)));
-      this.value = value;
-  }
+    private boolean value;
 
-  public Boolean getValue() {
-    return value;
-  }
+
+    /**
+     * @param t
+     */
+    protected BooleanLiteral( Token t )
+    {
+        super( t );
+        value = Boolean.valueOf( t.getText() );
+    }
+
+
+    /** The boolean literal */
+    public BooleanLiteral( boolean value )
+    {
+        super( new ClassicToken( 0, String.valueOf( value ) ) );
+        this.value = value;
+    }
+
+
+    public Boolean getValue()
+    {
+        return value;
+    }
 }
