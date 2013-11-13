@@ -39,39 +39,23 @@ import org.usergrid.persistence.query.SingleOrderBySameRangeScanLessThanEqualCon
 
 
 @RunWith( ConcurrentSuite.class )
-@Suite.SuiteClasses(
-    {
-        AllInCollectionIT.class,
-        AllInConnectionIT.class,
-        AllInConnectionNoTypeIT.class,
-        MultiOrderByCollectionIT.class,
-        MultiOrderByComplexUnionCollectionIT.class,
-        MultiOrderByComplexUnionConnectionIT.class,
-        SingleOrderByBoundRangeScanAscCollectionIT.class,
-        SingleOrderByBoundRangeScanAscConnectionIT.class,
-        SingleOrderByBoundRangeScanDescCollectionIT.class,
-        SingleOrderByBoundRangeScanDescConnectionIT.class,
-        SingleOrderByComplexIntersectionCollectionIT.class,
-        SingleOrderByComplexIntersectionConnectionIT.class,
-        SingleOrderByComplexUnionCollectionIT.class,
-        SingleOrderByComplexUnionConnectionIT.class,
-        SingleOrderByLessThanLimitCollectionIT.class,
-        SingleOrderByLessThanLimitConnectionIT.class,
-        SingleOrderByMaxLimitCollectionIT.class,
-        SingleOrderByMaxLimitConnectionIT.class,
-        SingleOrderByNoIntersectionCollectionIT.class,
-        SingleOrderByNoIntersectionConnectionIT.class,
-        SingleOrderByNotCollectionIT.class,
-        SingleOrderByNotConnectionIT.class,
-        SingleOrderBySameRangeScanGreaterCollectionIT.class,
-        SingleOrderBySameRangeScanGreaterConnectionIT.class,
-        SingleOrderBySameRangeScanGreaterThanEqualCollectionIT.class,
-        SingleOrderBySameRangeScanLessCollectionIT.class,
-        SingleOrderBySameRangeScanLessConnectionIT.class,
-        SingleOrderBySameRangeScanLessThanEqualCollectionIT.class,
+@Suite.SuiteClasses( {
+        AllInCollectionIT.class, AllInConnectionIT.class, AllInConnectionNoTypeIT.class, MultiOrderByCollectionIT.class,
+        MultiOrderByComplexUnionCollectionIT.class, MultiOrderByComplexUnionConnectionIT.class,
+        SingleOrderByBoundRangeScanAscCollectionIT.class, SingleOrderByBoundRangeScanAscConnectionIT.class,
+        SingleOrderByBoundRangeScanDescCollectionIT.class, SingleOrderByBoundRangeScanDescConnectionIT.class,
+        SingleOrderByComplexIntersectionCollectionIT.class, SingleOrderByComplexIntersectionConnectionIT.class,
+        SingleOrderByComplexUnionCollectionIT.class, SingleOrderByComplexUnionConnectionIT.class,
+        SingleOrderByLessThanLimitCollectionIT.class, SingleOrderByLessThanLimitConnectionIT.class,
+        SingleOrderByMaxLimitCollectionIT.class, SingleOrderByMaxLimitConnectionIT.class,
+        SingleOrderByNoIntersectionCollectionIT.class, SingleOrderByNoIntersectionConnectionIT.class,
+        SingleOrderByNotCollectionIT.class, SingleOrderByNotConnectionIT.class,
+        SingleOrderBySameRangeScanGreaterCollectionIT.class, SingleOrderBySameRangeScanGreaterConnectionIT.class,
+        SingleOrderBySameRangeScanGreaterThanEqualCollectionIT.class, SingleOrderBySameRangeScanLessCollectionIT.class,
+        SingleOrderBySameRangeScanLessConnectionIT.class, SingleOrderBySameRangeScanLessThanEqualCollectionIT.class,
         SingleOrderBySameRangeScanLessThanEqualConnectionIT.class
-    } )
-@Concurrent ( threads = 15 )
+} )
+@Concurrent( threads = 15 )
 public class ConcurrentCoreIteratorITSuite
 {
     @ClassRule

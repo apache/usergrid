@@ -15,10 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.management.organizations.users;
 
-import static org.apache.commons.collections.MapUtils.getObject;
-import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
-import static org.usergrid.utils.ConversionUtils.getBoolean;
-import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,102 +50,118 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+import static org.apache.commons.collections.MapUtils.getObject;
+import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.usergrid.utils.ConversionUtils.getBoolean;
+import static org.usergrid.utils.ConversionUtils.string;
+
+
 @Component("org.usergrid.rest.management.organizations.users.UsersResource")
 @Scope("prototype")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
-public class UsersResource extends AbstractContextResource {
+@Produces({
+        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript"
+})
+public class UsersResource extends AbstractContextResource
+{
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(UsersResource.class);
+    private static final Logger logger = LoggerFactory.getLogger( UsersResource.class );
 
-	OrganizationInfo organization;
+    OrganizationInfo organization;
 
-	public UsersResource() {
-	}
 
-	public UsersResource init(OrganizationInfo organization) {
-		this.organization = organization;
-		return this;
-	}
+    public UsersResource()
+    {
+    }
 
-	@RequireOrganizationAccess
-	@GET
-	public JSONWithPadding getOrganizationUsers(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("get organization users");
+    public UsersResource init( OrganizationInfo organization )
+    {
+        this.organization = organization;
+        return this;
+    }
 
-		List<UserInfo> users = management
-				.getAdminUsersForOrganization(organization.getUuid());
-		response.setData(users);
-		return new JSONWithPadding(response, callback);
-	}
 
-	@RequireOrganizationAccess
-	@POST
-	@Consumes(MediaType.APPLICATION_JSON)
-	public JSONWithPadding newUserForOrganization(@Context UriInfo ui,
-			Map<String, Object> json,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireOrganizationAccess
+    @GET
+    public JSONWithPadding getOrganizationUsers( @Context UriInfo ui,
+                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception
+    {
 
-		String email = string(json.get("email"));
-		String username = string(json.get("username"));
-		String name = string(json.get("name"));
-		String password = string(json.get("password"));
-		boolean invite = getBoolean(getObject(json, "invite", true));
+        ApiResponse response = createApiResponse();
+        response.setAction( "get organization users" );
 
-		return newUserForOrganizationFromForm(ui, username, name, email,
-				password, invite, callback);
-	}
+        List<UserInfo> users = management.getAdminUsersForOrganization( organization.getUuid() );
+        response.setData( users );
+        return new JSONWithPadding( response, callback );
+    }
 
-	@RequireOrganizationAccess
-	@POST
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public JSONWithPadding newUserForOrganizationFromForm(@Context UriInfo ui,
-			@FormParam("username") String username,
-			@FormParam("name") String name, @FormParam("email") String email,
-			@FormParam("password") String password,
-			@FormParam("invite") @DefaultValue("true") boolean invite,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
 
-		logger.info("New user for organization: " + username);
+    @RequireOrganizationAccess
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public JSONWithPadding newUserForOrganization( @Context UriInfo ui, Map<String, Object> json,
+                                                   @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception
+    {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("create user");
+        String email = string( json.get( "email" ) );
+        String username = string( json.get( "username" ) );
+        String name = string( json.get( "name" ) );
+        String password = string( json.get( "password" ) );
+        boolean invite = getBoolean( getObject( json, "invite", true ) );
 
-		UserInfo user = null;
-		if (invite) {
-			user = management.getAdminUserByEmail(email);
-		}
+        return newUserForOrganizationFromForm( ui, username, name, email, password, invite, callback );
+    }
 
-		if (user == null) {
-			user = management.createAdminUser(email, email, email, password,
-					false, false);
-			management.startAdminUserPasswordResetFlow(user);
-		}
 
-		if (user == null) {
-			return null;
-		}
+    @RequireOrganizationAccess
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public JSONWithPadding newUserForOrganizationFromForm( @Context UriInfo ui, @FormParam("username") String username,
+                                                           @FormParam("name") String name,
+                                                           @FormParam("email") String email,
+                                                           @FormParam("password") String password,
+                                                           @FormParam("invite") @DefaultValue("true") boolean invite,
+                                                           @QueryParam("callback") @DefaultValue("callback")
+                                                           String callback ) throws Exception
+    {
 
-		management.addAdminUserToOrganization(user, organization, true);
+        logger.info( "New user for organization: " + username );
 
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
+        ApiResponse response = createApiResponse();
+        response.setAction( "create user" );
 
-		return new JSONWithPadding(response, callback);
-	}
+        UserInfo user = null;
+        if ( invite )
+        {
+            user = management.getAdminUserByEmail( email );
+        }
+
+        if ( user == null )
+        {
+            user = management.createAdminUser( email, email, email, password, false, false );
+            management.startAdminUserPasswordResetFlow( user );
+        }
+
+        if ( user == null )
+        {
+            return null;
+        }
+
+        management.addAdminUserToOrganization( user, organization, true );
+
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
 
 	/*
-	 * @RequireOrganizationAccess
+     * @RequireOrganizationAccess
 	 *
 	 * @POST
 	 *
@@ -168,179 +180,187 @@ public class UsersResource extends AbstractContextResource {
 	 * password); }
 	 */
 
-	@RequireOrganizationAccess
-	@PUT
-	@Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public JSONWithPadding addUserToOrganization(@Context UriInfo ui,
-			@PathParam("userId") String userIdStr,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("add user to organization");
+    @RequireOrganizationAccess
+    @PUT
+    @Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    public JSONWithPadding addUserToOrganization( @Context UriInfo ui, @PathParam("userId") String userIdStr,
+                                                  @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception
+    {
 
-		UserInfo user = management.getAdminUserByUuid(UUID
-				.fromString(userIdStr));
-		if (user == null) {
-			throw new ManagementException("No user found for: " + userIdStr);
-		}
-		management.addAdminUserToOrganization(user, organization, true);
+        ApiResponse response = createApiResponse();
+        response.setAction( "add user to organization" );
 
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
+        UserInfo user = management.getAdminUserByUuid( UUID.fromString( userIdStr ) );
+        if ( user == null )
+        {
+            throw new ManagementException( "No user found for: " + userIdStr );
+        }
+        management.addAdminUserToOrganization( user, organization, true );
 
-		return new JSONWithPadding(response, callback);
-	}
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
 
-  @RequireOrganizationAccess
- 	@PUT
- 	@Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
- 	public JSONWithPadding addUserToOrganizationByEmail(@Context UriInfo ui,
- 			@PathParam("email") String email,
- 			@QueryParam("callback") @DefaultValue("callback") String callback)
- 			throws Exception {
-
- 		ApiResponse response = createApiResponse();
- 		response.setAction("add user to organization");
-
- 		UserInfo user = management.getAdminUserByEmail(email);
- 		if (user == null) {
-       throw new ManagementException("Username not found: " + email);
- 		}
- 		management.addAdminUserToOrganization(user, organization, true);
-
- 		Map<String, Object> result = new LinkedHashMap<String, Object>();
- 		result.put("user", user);
- 		response.setData(result);
- 		response.setSuccess();
-
- 		return new JSONWithPadding(response, callback);
- 	}
-
-	@RequireOrganizationAccess
-	@PUT
-	@Path("{username}")
-	public JSONWithPadding addUserToOrganizationByUsername(@Context UriInfo ui,
-			@PathParam("username") String username,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-
-	    if ("me".equals(username)) {
-	        UserInfo user = SubjectUtils.getAdminUser();
-	        if ((user != null) && (user.getUuid() != null)) {
-	            return addUserToOrganization(ui, user.getUuid().toString(),
-	                    callback);
-	        }
-	        throw mappableSecurityException("unauthorized",
-	                "No admin identity for access credentials provided");
-	    }
-
-	    ApiResponse response = createApiResponse();
-		response.setAction("add user to organization");
-
-		UserInfo user = management.getAdminUserByUsername(username);
-		if (user == null) {
-			throw new ManagementException("Username not found: " + username);
-		}
-		management.addAdminUserToOrganization(user, organization, true);
-
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
-
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding( response, callback );
+    }
 
 
-	@RequireOrganizationAccess
-	@DELETE
-	@Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public JSONWithPadding removeUserFromOrganizationByUserId(
-			@Context UriInfo ui, @PathParam("userId") String userIdStr,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireOrganizationAccess
+    @PUT
+    @Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
+    public JSONWithPadding addUserToOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
+                                                         @QueryParam("callback") @DefaultValue("callback")
+                                                         String callback ) throws Exception
+    {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("remove user from organization");
+        ApiResponse response = createApiResponse();
+        response.setAction( "add user to organization" );
 
-		UserInfo user = management.getAdminUserByUuid(UUID
-				.fromString(userIdStr));
-		if (user == null) {
-			return null;
-		}
-		management.removeAdminUserFromOrganization(user.getUuid(),
-				organization.getUuid());
+        UserInfo user = management.getAdminUserByEmail( email );
+        if ( user == null )
+        {
+            throw new ManagementException( "Username not found: " + email );
+        }
+        management.addAdminUserToOrganization( user, organization, true );
 
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding( response, callback );
+    }
 
-	@RequireOrganizationAccess
-	@DELETE
-	@Path("{username}")
-	public JSONWithPadding removeUserFromOrganizationByUsername(
-			@Context UriInfo ui, @PathParam("username") String username,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
 
-	    if ("me".equals(username)) {
-	        UserInfo user = SubjectUtils.getAdminUser();
-	        if ((user != null) && (user.getUuid() != null)) {
-	            return removeUserFromOrganizationByUserId(ui, user.getUuid()
-	                    .toString(), callback);
-	        }
-	        throw mappableSecurityException("unauthorized",
-	                "No admin identity for access credentials provided");
-	    }
+    @RequireOrganizationAccess
+    @PUT
+    @Path("{username}")
+    public JSONWithPadding addUserToOrganizationByUsername( @Context UriInfo ui, @PathParam("username") String username,
+                                                            @QueryParam("callback") @DefaultValue("callback")
+                                                            String callback ) throws Exception
+    {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("remove user from organization");
+        if ( "me".equals( username ) )
+        {
+            UserInfo user = SubjectUtils.getAdminUser();
+            if ( ( user != null ) && ( user.getUuid() != null ) )
+            {
+                return addUserToOrganization( ui, user.getUuid().toString(), callback );
+            }
+            throw mappableSecurityException( "unauthorized", "No admin identity for access credentials provided" );
+        }
 
-		UserInfo user = management.getAdminUserByUsername(username);
-		if (user == null) {
-			return null;
-		}
-		management.removeAdminUserFromOrganization(user.getUuid(),
-				organization.getUuid());
+        ApiResponse response = createApiResponse();
+        response.setAction( "add user to organization" );
 
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
+        UserInfo user = management.getAdminUserByUsername( username );
+        if ( user == null )
+        {
+            throw new ManagementException( "Username not found: " + username );
+        }
+        management.addAdminUserToOrganization( user, organization, true );
 
-		return new JSONWithPadding(response, callback);
-	}
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
 
-	@RequireOrganizationAccess
-	@DELETE
-	@Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
-	public JSONWithPadding removeUserFromOrganizationByEmail(
-			@Context UriInfo ui, @PathParam("email") String email,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+        return new JSONWithPadding( response, callback );
+    }
 
-		ApiResponse response = createApiResponse();
-		response.setAction("remove user from organization");
 
-		UserInfo user = management.getAdminUserByEmail(email);
-		if (user == null) {
-			return null;
-		}
-		management.removeAdminUserFromOrganization(user.getUuid(),
-				organization.getUuid());
+    @RequireOrganizationAccess
+    @DELETE
+    @Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    public JSONWithPadding removeUserFromOrganizationByUserId( @Context UriInfo ui,
+                                                               @PathParam("userId") String userIdStr,
+                                                               @QueryParam("callback") @DefaultValue("callback")
+                                                               String callback ) throws Exception
+    {
 
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
+        ApiResponse response = createApiResponse();
+        response.setAction( "remove user from organization" );
 
-		return new JSONWithPadding(response, callback);
-	}
+        UserInfo user = management.getAdminUserByUuid( UUID.fromString( userIdStr ) );
+        if ( user == null )
+        {
+            return null;
+        }
+        management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireOrganizationAccess
+    @DELETE
+    @Path("{username}")
+    public JSONWithPadding removeUserFromOrganizationByUsername( @Context UriInfo ui,
+                                                                 @PathParam("username") String username,
+                                                                 @QueryParam("callback") @DefaultValue("callback")
+                                                                 String callback ) throws Exception
+    {
+
+        if ( "me".equals( username ) )
+        {
+            UserInfo user = SubjectUtils.getAdminUser();
+            if ( ( user != null ) && ( user.getUuid() != null ) )
+            {
+                return removeUserFromOrganizationByUserId( ui, user.getUuid().toString(), callback );
+            }
+            throw mappableSecurityException( "unauthorized", "No admin identity for access credentials provided" );
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "remove user from organization" );
+
+        UserInfo user = management.getAdminUserByUsername( username );
+        if ( user == null )
+        {
+            return null;
+        }
+        management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireOrganizationAccess
+    @DELETE
+    @Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
+    public JSONWithPadding removeUserFromOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
+                                                              @QueryParam("callback") @DefaultValue("callback")
+                                                              String callback ) throws Exception
+    {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "remove user from organization" );
+
+        UserInfo user = management.getAdminUserByEmail( email );
+        if ( user == null )
+        {
+            return null;
+        }
+        management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put( "user", user );
+        response.setData( result );
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
 }

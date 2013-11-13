@@ -15,27 +15,40 @@
  ******************************************************************************/
 package org.usergrid.management;
 
+
 import java.util.Properties;
 
-public interface AccountCreationProps {
+
+public interface AccountCreationProps
+{
     public static final String PROPERTIES_MAILER_EMAIL = "usergrid.management.mailer";
 
-    public static final String PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED = "usergrid.management.email.sysadmin-organization-activated";
-    public static final String PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED = "usergrid.management.email.sysadmin-admin-activated";
+    public static final String PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED =
+            "usergrid.management.email.sysadmin-organization-activated";
+    public static final String PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED =
+            "usergrid.management.email.sysadmin-admin-activated";
     public static final String PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
-    public static final String PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
-    public static final String PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION = "usergrid.management.email.organization-confirmation";
-    public static final String PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.organization-activation-pending";
-    public static final String PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED = "usergrid.management.email.organization-activated";
-    public static final String PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
+    public static final String PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION =
+            "usergrid.management.email.sysadmin-organization-activation";
+    public static final String PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION =
+            "usergrid.management.email.organization-confirmation";
+    public static final String PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION =
+            "usergrid.management.email.organization-activation-pending";
+    public static final String PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED =
+            "usergrid.management.email.organization-activated";
+    public static final String PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION =
+            "usergrid.management.email.sysadmin-admin-activation";
     public static final String PROPERTIES_EMAIL_ADMIN_CONFIRMATION = "usergrid.management.email.admin-confirmation";
-    public static final String PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.admin-confirmed";
+    public static final String PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION =
+            "usergrid.management.email.admin-confirmed";
     public static final String PROPERTIES_EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
     public static final String PROPERTIES_EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
-    public static final String PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
+    public static final String PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION =
+            "usergrid.management.email.admin-user-activation";
     public static final String PROPERTIES_EMAIL_ADMIN_USER_ACTIVATED = "usergrid.management.email.admin-user-activated";
     public static final String PROPERTIES_EMAIL_USER_CONFIRMATION = "usergrid.management.email.user-confirmation";
-    public static final String PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.user-confirmed";
+    public static final String PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION =
+            "usergrid.management.email.user-confirmed";
     public static final String PROPERTIES_EMAIL_USER_ACTIVATED = "usergrid.management.email.user-activated";
     public static final String PROPERTIES_EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
     public static final String PROPERTIES_EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
@@ -49,14 +62,20 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_ORGANIZATION_ACTIVATION_URL = "usergrid.organization.activation.url";
     public static final String PROPERTIES_ADMIN_RESETPW_URL = "usergrid.admin.resetpw.url";
 
-    public static final String PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION = "usergrid.management.admin_users_require_confirmation";
-    public static final String PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION = "usergrid.management.organizations_require_confirmation";
+    public static final String PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION =
+            "usergrid.management.admin_users_require_confirmation";
+    public static final String PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION =
+            "usergrid.management.organizations_require_confirmation";
     public static final String PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION = "usergrid.management.notify_admin_of_activation";
 
-    public static final String PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS = "usergrid.management.admin_users_require_activation";
-    public static final String PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS = "usergrid.management.organizations_require_activation";
-    public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ORGANIZATIONS = "usergrid.management.notify_sysadmin_of_new_organizations";
-    public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ADMIN_USERS = "usergrid.management.notify_sysadmin_of_new_admin_users";
+    public static final String PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS =
+            "usergrid.management.admin_users_require_activation";
+    public static final String PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS =
+            "usergrid.management.organizations_require_activation";
+    public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ORGANIZATIONS =
+            "usergrid.management.notify_sysadmin_of_new_organizations";
+    public static final String PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ADMIN_USERS =
+            "usergrid.management.notify_sysadmin_of_new_admin_users";
 
     public static final String PROPERTIES_SYSADMIN_LOGIN_PASSWORD = "usergrid.sysadmin.login.password";
     public static final String PROPERTIES_SYSADMIN_LOGIN_EMAIL = "usergrid.sysadmin.login.email";
@@ -65,25 +84,37 @@ public interface AccountCreationProps {
 
     public static final String PROPERTIES_SYSADMIN_EMAIL = "usergrid.sysadmin.email";
 
-    public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD = "usergrid.test-account.admin-user.password";
+    public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD =
+            "usergrid.test-account.admin-user.password";
     public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL = "usergrid.test-account.admin-user.email";
     public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME = "usergrid.test-account.admin-user.name";
-    public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME = "usergrid.test-account.admin-user.username";
+    public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME =
+            "usergrid.test-account.admin-user.username";
     public static final String PROPERTIES_TEST_ACCOUNT_ORGANIZATION = "usergrid.test-account.organization";
     public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
     public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
 
     public boolean newOrganizationsNeedSysAdminApproval();
+
     public boolean newAdminUsersNeedSysAdminApproval();
+
     public boolean newAdminUsersRequireConfirmation();
+
     public boolean newOrganizationsRequireConfirmation();
+
     public boolean notifySysAdminOfNewAdminUsers();
+
     public boolean notifySysAdminOfNewOrganizations();
+
     public boolean notifyAdminOfActivation();
 
-    public String getProperty(String name);
-    public String getProperty(String name, String defaultValue);
-    public boolean isProperty(String name);
-    public void setProperty(String name, String value);
+    public String getProperty( String name );
+
+    public String getProperty( String name, String defaultValue );
+
+    public boolean isProperty( String name );
+
+    public void setProperty( String name, String value );
+
     public Properties getMailProperties();
 }

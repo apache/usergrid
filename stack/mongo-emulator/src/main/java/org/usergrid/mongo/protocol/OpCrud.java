@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,31 +15,36 @@
  ******************************************************************************/
 package org.usergrid.mongo.protocol;
 
+
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.usergrid.mongo.MongoChannelHandler;
 
-public abstract class OpCrud extends Message {
+
+public abstract class OpCrud extends Message
+{
 
     protected String fullCollectionName;
 
-    public String getFullCollectionName() {
+
+    public String getFullCollectionName()
+    {
         return fullCollectionName;
     }
 
-    public String getDatabaseName() {
-        return getDatabaseName(fullCollectionName);
+
+    public String getDatabaseName()
+    {
+        return getDatabaseName( fullCollectionName );
     }
 
-    public String getCollectionName() {
-        return getCollectionName(fullCollectionName);
+
+    public String getCollectionName()
+    {
+        return getCollectionName( fullCollectionName );
     }
 
-    /**
-     * Perform the operation
-     * 
-     * @param messageEvent
-     */
-    public abstract OpReply doOp(MongoChannelHandler handler,
-            ChannelHandlerContext ctx, MessageEvent messageEvent);
+
+    /** Perform the operation */
+    public abstract OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent );
 }

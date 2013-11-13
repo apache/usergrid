@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,6 @@
  ******************************************************************************/
 package org.usergrid.mongo.protocol;
 
-import static org.apache.commons.collections.MapUtils.getIntValue;
-import static org.usergrid.utils.JsonUtils.toJsonMap;
-import static org.usergrid.utils.MapUtils.entry;
-import static org.usergrid.utils.MapUtils.map;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -27,14 +23,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Stack;
 
-import org.antlr.runtime.ClassicToken;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.subject.Subject;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
-import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -54,22 +45,22 @@ import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.Query.SortDirection;
-import org.usergrid.persistence.query.tree.AndOperand;
-import org.usergrid.persistence.query.tree.Equal;
-import org.usergrid.persistence.query.tree.GreaterThan;
-import org.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.usergrid.persistence.query.tree.LessThan;
-import org.usergrid.persistence.query.tree.LessThanEqual;
-import org.usergrid.persistence.query.tree.Operand;
-import org.usergrid.persistence.query.tree.OrOperand;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.utils.MapUtils;
 
-public class OpQuery extends OpCrud {
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.subject.Subject;
 
-    private static final Logger logger = LoggerFactory.getLogger(OpQuery.class);
+import static org.usergrid.utils.JsonUtils.toJsonMap;
+import static org.usergrid.utils.MapUtils.entry;
+import static org.usergrid.utils.MapUtils.map;
+
+
+public class OpQuery extends OpCrud
+{
+
+    private static final Logger logger = LoggerFactory.getLogger( OpQuery.class );
 
     int flags;
     int numberToSkip;
@@ -78,128 +69,156 @@ public class OpQuery extends OpCrud {
     BSONObject returnFieldSelector;
 
     static Set<String> operators = new HashSet<String>();
+
+
     {
-        operators.add("all");
-        operators.add("and");
-        operators.add("elemMatch");
-        operators.add("exists");
-        operators.add("gt");
-        operators.add("gte");
-        operators.add("in");
-        operators.add("lt");
-        operators.add("lte");
-        operators.add("mod");
-        operators.add("ne");
-        operators.add("nin");
-        operators.add("nor");
-        operators.add("not");
-        operators.add("or");
-        operators.add("regex");
-        operators.add("size");
-        operators.add("type");
-        operators.add("where");
+        operators.add( "all" );
+        operators.add( "and" );
+        operators.add( "elemMatch" );
+        operators.add( "exists" );
+        operators.add( "gt" );
+        operators.add( "gte" );
+        operators.add( "in" );
+        operators.add( "lt" );
+        operators.add( "lte" );
+        operators.add( "mod" );
+        operators.add( "ne" );
+        operators.add( "nin" );
+        operators.add( "nor" );
+        operators.add( "not" );
+        operators.add( "or" );
+        operators.add( "regex" );
+        operators.add( "size" );
+        operators.add( "type" );
+        operators.add( "where" );
     }
 
-    public OpQuery() {
+
+    public OpQuery()
+    {
         opCode = OP_QUERY;
     }
 
-   
-   
 
-    public int getFlags() {
+    public int getFlags()
+    {
         return flags;
     }
 
-    public void setFlags(int flags) {
+
+    public void setFlags( int flags )
+    {
         this.flags = flags;
     }
 
-    public int getNumberToSkip() {
+
+    public int getNumberToSkip()
+    {
         return numberToSkip;
     }
 
-    public void setNumberToSkip(int numberToSkip) {
+
+    public void setNumberToSkip( int numberToSkip )
+    {
         this.numberToSkip = numberToSkip;
     }
 
-    public int getNumberToReturn() {
+
+    public int getNumberToReturn()
+    {
         return numberToReturn;
     }
 
-    public void setNumberToReturn(int numberToReturn) {
+
+    public void setNumberToReturn( int numberToReturn )
+    {
         this.numberToReturn = numberToReturn;
     }
 
-    public BSONObject getQuery() {
+
+    public BSONObject getQuery()
+    {
         return query;
     }
 
-    public void setQuery(BSONObject query) {
+
+    public void setQuery( BSONObject query )
+    {
         this.query = query;
     }
 
-    public void setQuery(Map<?, ?> map) {
+
+    public void setQuery( Map<?, ?> map )
+    {
         query = new BasicBSONObject();
-        query.putAll(map);
+        query.putAll( map );
     }
 
-    public BSONObject getReturnFieldSelector() {
+
+    public BSONObject getReturnFieldSelector()
+    {
         return returnFieldSelector;
     }
 
-    public void setReturnFieldSelector(BSONObject returnFieldSelector) {
+
+    public void setReturnFieldSelector( BSONObject returnFieldSelector )
+    {
         this.returnFieldSelector = returnFieldSelector;
     }
 
-    public void setReturnFieldSelector(Map<?, ?> map) {
+
+    public void setReturnFieldSelector( Map<?, ?> map )
+    {
         returnFieldSelector = new BasicBSONObject();
-        returnFieldSelector.putAll(map);
+        returnFieldSelector.putAll( map );
     }
 
+
     @Override
-    public void decode(ChannelBuffer buffer) throws IOException {
-        super.decode(buffer);
+    public void decode( ChannelBuffer buffer ) throws IOException
+    {
+        super.decode( buffer );
         flags = buffer.readInt();
-        fullCollectionName = readCString(buffer);
+        fullCollectionName = readCString( buffer );
         numberToSkip = buffer.readInt();
         numberToReturn = buffer.readInt();
-        query = BSONUtils.decoder().readObject(
-                new ChannelBufferInputStream(buffer));
-        if (buffer.readable()) {
-            returnFieldSelector = BSONUtils.decoder().readObject(
-                    new ChannelBufferInputStream(buffer));
-          logger.info("found fieldSeclector: {}", returnFieldSelector);
+        query = BSONUtils.decoder().readObject( new ChannelBufferInputStream( buffer ) );
+        if ( buffer.readable() )
+        {
+            returnFieldSelector = BSONUtils.decoder().readObject( new ChannelBufferInputStream( buffer ) );
+            logger.info( "found fieldSeclector: {}", returnFieldSelector );
         }
     }
 
+
     @Override
-    public ChannelBuffer encode(ChannelBuffer buffer) {
+    public ChannelBuffer encode( ChannelBuffer buffer )
+    {
         int l = 28; // 7 ints * 4 bytes
 
-        ByteBuffer fullCollectionNameBytes = getCString(fullCollectionName);
+        ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
         l += fullCollectionNameBytes.capacity();
 
-        ByteBuffer queryBytes = encodeDocument(query);
+        ByteBuffer queryBytes = encodeDocument( query );
         l += queryBytes.capacity();
 
-        ByteBuffer returnFieldSelectorBytes = encodeDocument(returnFieldSelector);
+        ByteBuffer returnFieldSelectorBytes = encodeDocument( returnFieldSelector );
         l += returnFieldSelectorBytes.capacity();
 
         messageLength = l;
 
-        buffer = super.encode(buffer);
+        buffer = super.encode( buffer );
 
-        buffer.writeInt(flags);
+        buffer.writeInt( flags );
 
-        buffer.writeBytes(fullCollectionNameBytes);
+        buffer.writeBytes( fullCollectionNameBytes );
 
-        buffer.writeInt(numberToSkip);
-        buffer.writeInt(numberToReturn);
+        buffer.writeInt( numberToSkip );
+        buffer.writeInt( numberToReturn );
 
-        buffer.writeBytes(queryBytes);
+        buffer.writeBytes( queryBytes );
 
-        buffer.writeBytes(returnFieldSelectorBytes);
+        buffer.writeBytes( returnFieldSelectorBytes );
 
         return buffer;
     }
@@ -211,248 +230,276 @@ public class OpQuery extends OpCrud {
      * @see org.usergrid.mongo.protocol.OpCrud#doOp()
      */
     @Override
-    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
-            MessageEvent messageEvent) {
-        logger.debug("In OpQuery.doOp with fullCollectionName: {}", fullCollectionName);
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
+    {
+        logger.debug( "In OpQuery.doOp with fullCollectionName: {}", fullCollectionName );
         Subject currentUser = SubjectUtils.getSubject();
 
         String collectionName = getCollectionName();
-        
-        if ("$cmd".equals(collectionName)) {
-           
-            @SuppressWarnings("unchecked")
-            String commandName = (String) MapUtils.getFirstKey(getQuery().toMap());
-            
-            if ("authenticate".equals(commandName)) {
-                return handleAuthenticate(handler, getDatabaseName());
+
+        if ( "$cmd".equals( collectionName ) )
+        {
+
+            @SuppressWarnings( "unchecked" ) String commandName = ( String ) MapUtils.getFirstKey( getQuery().toMap() );
+
+            if ( "authenticate".equals( commandName ) )
+            {
+                return handleAuthenticate( handler, getDatabaseName() );
             }
-            
-            if ("getnonce".equals(commandName)) {
+
+            if ( "getnonce".equals( commandName ) )
+            {
                 return handleGetnonce();
             }
-            
-            if (!currentUser.isAuthenticated()) {
-                return handleUnauthorizedCommand(messageEvent);
+
+            if ( !currentUser.isAuthenticated() )
+            {
+                return handleUnauthorizedCommand( messageEvent );
             }
 
-            MongoCommand command = MongoCommand.getCommand(commandName);
+            MongoCommand command = MongoCommand.getCommand( commandName );
 
-            if (command != null) {
-                logger.info("found command {} from name {}", command.getClass().getName(), commandName);
-                return command.execute(handler, ctx, messageEvent, this);
-            } else {
-                logger.info("No command for " + commandName);
+            if ( command != null )
+            {
+                logger.info( "found command {} from name {}", command.getClass().getName(), commandName );
+                return command.execute( handler, ctx, messageEvent, this );
+            }
+            else
+            {
+                logger.info( "No command for " + commandName );
             }
         }
 
-        if (!currentUser.isAuthenticated()) {
-            return handleUnauthorizedQuery(messageEvent);
+        if ( !currentUser.isAuthenticated() )
+        {
+            return handleUnauthorizedQuery( messageEvent );
         }
-        
-        if ("system.namespaces".equals(collectionName)) {
-            return handleListCollections(handler, getDatabaseName());
-        } 
-        
-        if ("system.users".equals(collectionName)) {
+
+        if ( "system.namespaces".equals( collectionName ) )
+        {
+            return handleListCollections( handler, getDatabaseName() );
+        }
+
+        if ( "system.users".equals( collectionName ) )
+        {
             return handleListUsers();
         }
-        
-        return handleQuery(handler);
 
+        return handleQuery( handler );
     }
 
-    private OpReply handleAuthenticate(MongoChannelHandler handler,
-            String databaseName) {
-        logger.info("Authenticating for database " + databaseName + "... ");
-        String name = (String) query.get("user");
-        String nonce = (String) query.get("nonce");
-        String key = (String) query.get("key");
+
+    private OpReply handleAuthenticate( MongoChannelHandler handler, String databaseName )
+    {
+        logger.info( "Authenticating for database " + databaseName + "... " );
+        String name = ( String ) query.get( "user" );
+        String nonce = ( String ) query.get( "nonce" );
+        String key = ( String ) query.get( "key" );
 
         UserInfo user = null;
-        try {
-            user = handler.getOrganizations().verifyMongoCredentials(name,
-                    nonce, key);
-        } catch (Exception e1) {
-            return handleAuthFails(this);
+        try
+        {
+            user = handler.getOrganizations().verifyMongoCredentials( name, nonce, key );
         }
-        if (user == null) {
-            return handleAuthFails(this);
+        catch ( Exception e1 )
+        {
+            return handleAuthFails( this );
+        }
+        if ( user == null )
+        {
+            return handleAuthFails( this );
         }
 
-        PrincipalCredentialsToken token = PrincipalCredentialsToken
-                .getFromAdminUserInfoAndPassword(user, key);
+        PrincipalCredentialsToken token = PrincipalCredentialsToken.getFromAdminUserInfoAndPassword( user, key );
         Subject subject = SubjectUtils.getSubject();
 
-        try {
-            subject.login(token);
-        } catch (AuthenticationException e2) {
-            return handleAuthFails(this);
+        try
+        {
+            subject.login( token );
+        }
+        catch ( AuthenticationException e2 )
+        {
+            return handleAuthFails( this );
         }
 
-        OpReply reply = new OpReply(this);
-        reply.addDocument(map("ok", 1.0));
+        OpReply reply = new OpReply( this );
+        reply.addDocument( map( "ok", 1.0 ) );
         return reply;
     }
 
-    private OpReply handleGetnonce() {
-        String nonce = String.format("%04x", (new Random()).nextLong());
-        OpReply reply = new OpReply(this);
-        reply.addDocument(map(entry("nonce", nonce), entry("ok", 1.0)));
+
+    private OpReply handleGetnonce()
+    {
+        String nonce = String.format( "%04x", ( new Random() ).nextLong() );
+        OpReply reply = new OpReply( this );
+        reply.addDocument( map( entry( "nonce", nonce ), entry( "ok", 1.0 ) ) );
         return reply;
     }
 
-    private OpReply handleUnauthorizedCommand(MessageEvent e) {
+
+    private OpReply handleUnauthorizedCommand( MessageEvent e )
+    {
         // { "assertion" : "unauthorized db:admin lock type:-1 client:127.0.0.1"
         // , "assertionCode" : 10057 , "errmsg" : "db assertion failure" , "ok"
         // : 0.0}
-        OpReply reply = new OpReply(this);
-        reply.addDocument(map(
-                entry("assertion",
-                        "unauthorized db:"
-                                + getDatabaseName()
-                                + " lock type:-1 client:"
-                                + ((InetSocketAddress) e.getRemoteAddress())
-                                        .getAddress().getHostAddress()),
-                entry("assertionCode", 10057),
-                entry("errmsg", "db assertion failure"), entry("ok", 0.0)));
+        OpReply reply = new OpReply( this );
+        reply.addDocument( map( entry( "assertion",
+                "unauthorized db:" + getDatabaseName() + " lock type:-1 client:" + ( ( InetSocketAddress ) e
+                        .getRemoteAddress() ).getAddress().getHostAddress() ), entry( "assertionCode", 10057 ),
+                entry( "errmsg", "db assertion failure" ), entry( "ok", 0.0 ) ) );
         return reply;
     }
 
-    private OpReply handleUnauthorizedQuery(MessageEvent e) {
+
+    private OpReply handleUnauthorizedQuery( MessageEvent e )
+    {
         // { "$err" : "unauthorized db:test lock type:-1 client:127.0.0.1" ,
         // "code" : 10057}
-        OpReply reply = new OpReply(this);
-        reply.addDocument(map(
-                entry("$err",
-                        "unauthorized db:"
-                                + getDatabaseName()
-                                + " lock type:-1 client:"
-                                + ((InetSocketAddress) e.getRemoteAddress())
-                                        .getAddress().getHostAddress()),
-                entry("code", 10057)));
+        OpReply reply = new OpReply( this );
+        reply.addDocument( map( entry( "$err",
+                "unauthorized db:" + getDatabaseName() + " lock type:-1 client:" + ( ( InetSocketAddress ) e
+                        .getRemoteAddress() ).getAddress().getHostAddress() ), entry( "code", 10057 ) ) );
         return reply;
     }
 
-    private OpReply handleAuthFails(OpQuery opQuery) {
+
+    private OpReply handleAuthFails( OpQuery opQuery )
+    {
         // { "errmsg" : "auth fails" , "ok" : 0.0}
-        OpReply reply = new OpReply(opQuery);
-        reply.addDocument(map(entry("errmsg", "auth fails"), entry("ok", 0.0)));
+        OpReply reply = new OpReply( opQuery );
+        reply.addDocument( map( entry( "errmsg", "auth fails" ), entry( "ok", 0.0 ) ) );
         return reply;
     }
 
-    private OpReply handleListCollections(MongoChannelHandler handler,
-            String databaseName) {
-        logger.info("Handling list collections for database {} ... ",
-                databaseName);
-        Identifier id = Identifier.from(databaseName);
 
-        OpReply reply = new OpReply(this);
-        
-        ApplicationInfo application = SubjectUtils.getApplication(id);
+    private OpReply handleListCollections( MongoChannelHandler handler, String databaseName )
+    {
+        logger.info( "Handling list collections for database {} ... ", databaseName );
+        Identifier id = Identifier.from( databaseName );
 
-        if (application == null) {
+        OpReply reply = new OpReply( this );
+
+        ApplicationInfo application = SubjectUtils.getApplication( id );
+
+        if ( application == null )
+        {
             return reply;
         }
-       
-        EntityManager em = handler.getEmf().getEntityManager(application.getId());
-        
-        
-        try {
+
+        EntityManager em = handler.getEmf().getEntityManager( application.getId() );
+
+
+        try
+        {
             Set<String> collections = em.getApplicationCollections();
-            for (String colName : collections) {
-                if (Schema.isAssociatedEntityType(colName)) {
+            for ( String colName : collections )
+            {
+                if ( Schema.isAssociatedEntityType( colName ) )
+                {
                     continue;
                 }
-                reply.addDocument(map("name", String.format("%s.%s", databaseName, colName)));
-                reply.addDocument(map("name", String.format("%s.%s.$_id_", databaseName , colName)));
+                reply.addDocument( map( "name", String.format( "%s.%s", databaseName, colName ) ) );
+                reply.addDocument( map( "name", String.format( "%s.%s.$_id_", databaseName, colName ) ) );
             }
             // reply.addDocument(map("name", databaseName + ".system.indexes"));
-        } catch (Exception ex) {
-            logger.error("Unable to retrieve collections", ex);
+        }
+        catch ( Exception ex )
+        {
+            logger.error( "Unable to retrieve collections", ex );
         }
         return reply;
     }
 
-    private OpReply handleListUsers() {
-        logger.info("Handling list users for database {} ...  " ,  getDatabaseName());
 
-        OpReply reply = new OpReply(this);
+    private OpReply handleListUsers()
+    {
+        logger.info( "Handling list users for database {} ...  ", getDatabaseName() );
+
+        OpReply reply = new OpReply( this );
         return reply;
     }
 
-    private OpReply handleQuery(MongoChannelHandler handler) {
-        logger.info("Handling a query... ");
-        OpReply reply = new OpReply(this);
-        
-        ApplicationInfo application = SubjectUtils.getApplication(Identifier
-                .from(getDatabaseName()));
-        if (application == null) {
+
+    private OpReply handleQuery( MongoChannelHandler handler )
+    {
+        logger.info( "Handling a query... " );
+        OpReply reply = new OpReply( this );
+
+        ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( getDatabaseName() ) );
+        if ( application == null )
+        {
             return reply;
         }
-        
+
         int count = getNumberToReturn();
-        if (count <= 0) {
+        if ( count <= 0 )
+        {
             count = 30;
         }
-        
-        EntityManager em = handler.getEmf().getEntityManager(
-                application.getId());
-        
-        try {
-            Results results = null;
-            Query q = MongoQueryParser.toNativeQuery(query, returnFieldSelector, numberToReturn);
-            if (q != null) {
-                results = em.searchCollection(em.getApplicationRef(),
-                        getCollectionName(), q);
 
-            } else {
-                results = em.getCollection(em.getApplicationRef(),
-                        getCollectionName(), null, count,
-                        Results.Level.ALL_PROPERTIES, false);
+        EntityManager em = handler.getEmf().getEntityManager( application.getId() );
+
+        try
+        {
+            Results results = null;
+            Query q = MongoQueryParser.toNativeQuery( query, returnFieldSelector, numberToReturn );
+            if ( q != null )
+            {
+                results = em.searchCollection( em.getApplicationRef(), getCollectionName(), q );
             }
-            if (!results.isEmpty()) {
-                for (Entity entity : results.getEntities()) {
-                    
-                    Object savedId = entity.getProperty("_id");
+            else
+            {
+                results = em.getCollection( em.getApplicationRef(), getCollectionName(), null, count,
+                        Results.Level.ALL_PROPERTIES, false );
+            }
+            if ( !results.isEmpty() )
+            {
+                for ( Entity entity : results.getEntities() )
+                {
+
+                    Object savedId = entity.getProperty( "_id" );
                     Object mongoId = null;
-                    
+
                     //try to parse it into an ObjectId
-                    if(savedId == null){
+                    if ( savedId == null )
+                    {
                         mongoId = entity.getUuid();
-                    }else{
-                        try{
-                            mongoId = new ObjectId(savedId.toString());
-                        //it's not a mongo Id, use it as is
-                        }catch(IllegalArgumentException iae){
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mongoId = new ObjectId( savedId.toString() );
+                            //it's not a mongo Id, use it as is
+                        }
+                        catch ( IllegalArgumentException iae )
+                        {
                             mongoId = savedId;
                         }
                     }
-                    
-                    reply.addDocument(map(
-                            entry("_id", mongoId),
-                            toJsonMap(entity),
-                            entry(Schema.PROPERTY_UUID, entity.getUuid()
-                                    .toString())));
+
+                    reply.addDocument( map( entry( "_id", mongoId ), toJsonMap( entity ),
+                            entry( Schema.PROPERTY_UUID, entity.getUuid().toString() ) ) );
                 }
             }
-        } catch (Exception ex) {
-            logger.error("Unable to retrieve collections", ex);
+        }
+        catch ( Exception ex )
+        {
+            logger.error( "Unable to retrieve collections", ex );
         }
         return reply;
     }
+
 
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString() {
-        return "OpQuery [flags=" + flags + ", numberToSkip=" + numberToSkip
-                + ", numberToReturn=" + numberToReturn + ", query=" + query
-                + ", returnFieldSelector=" + returnFieldSelector
-                + ", fullCollectionName=" + fullCollectionName
-                + ", messageLength=" + messageLength + ", requestID="
-                + requestID + ", responseTo=" + responseTo + ", opCode="
-                + opCode + "]";
+    public String toString()
+    {
+        return "OpQuery [flags=" + flags + ", numberToSkip=" + numberToSkip + ", numberToReturn=" + numberToReturn
+                + ", query=" + query + ", returnFieldSelector=" + returnFieldSelector + ", fullCollectionName="
+                + fullCollectionName + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo="
+                + responseTo + ", opCode=" + opCode + "]";
     }
-
 }

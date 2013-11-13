@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.mongo.testproxy;
+
 
 import java.net.InetSocketAddress;
 import java.nio.ByteOrder;
@@ -28,31 +29,29 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MongoProxyServer {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(MongoProxyServer.class);
+public class MongoProxyServer
+{
 
-	public static void main(String[] args) throws Exception {
-		logger.info("Starting Usergrid Mongo Proxy Server");
+    private static final Logger logger = LoggerFactory.getLogger( MongoProxyServer.class );
 
-		// Configure the server.
-		Executor executor = Executors.newCachedThreadPool();
-		ServerBootstrap bootstrap = new ServerBootstrap(
-				new NioServerSocketChannelFactory(executor, executor));
 
-		bootstrap.setOption("child.bufferFactory",
-				HeapChannelBufferFactory.getInstance(ByteOrder.LITTLE_ENDIAN));
+    public static void main( String[] args ) throws Exception
+    {
+        logger.info( "Starting Usergrid Mongo Proxy Server" );
 
-		ClientSocketChannelFactory cf = new NioClientSocketChannelFactory(
-				executor, executor);
+        // Configure the server.
+        Executor executor = Executors.newCachedThreadPool();
+        ServerBootstrap bootstrap = new ServerBootstrap( new NioServerSocketChannelFactory( executor, executor ) );
 
-		bootstrap.setPipelineFactory(new MongoProxyPipelineFactory(cf,
-				"localhost", 12345));
+        bootstrap.setOption( "child.bufferFactory", HeapChannelBufferFactory.getInstance( ByteOrder.LITTLE_ENDIAN ) );
 
-		bootstrap.bind(new InetSocketAddress(27017));
+        ClientSocketChannelFactory cf = new NioClientSocketChannelFactory( executor, executor );
 
-		logger.info("Usergrid Mongo Proxy Server accepting connections...");
+        bootstrap.setPipelineFactory( new MongoProxyPipelineFactory( cf, "localhost", 12345 ) );
 
-	}
+        bootstrap.bind( new InetSocketAddress( 27017 ) );
+
+        logger.info( "Usergrid Mongo Proxy Server accepting connections..." );
+    }
 }

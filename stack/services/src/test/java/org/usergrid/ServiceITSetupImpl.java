@@ -1,6 +1,8 @@
 package org.usergrid;
 
 
+import java.util.Properties;
+
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -14,13 +16,8 @@ import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
-import java.util.Properties;
-import org.usergrid.management.AccountCreationProps;
 
-
-/**
- * A {@link org.junit.rules.TestRule} that sets up services.
- */
+/** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetup
 {
     private static final Logger LOG = LoggerFactory.getLogger( ServiceITSetupImpl.class );

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.services.users.activities;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,122 +34,129 @@ import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceResults;
 import org.usergrid.services.generic.GenericCollectionService;
 
-public class ActivitiesService extends GenericCollectionService {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ActivitiesService.class);
+public class ActivitiesService extends GenericCollectionService
+{
 
-	public ActivitiesService() {
-		super();
-		logger.info("/users/*/activities");
-	}
+    private static final Logger logger = LoggerFactory.getLogger( ActivitiesService.class );
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public ServiceResults postCollection(ServiceContext context)
-			throws Exception {
 
-		ServicePayload payload = context.getPayload();
+    public ActivitiesService()
+    {
+        super();
+        logger.info( "/users/*/activities" );
+    }
 
-		Entity user = em.get(context.getOwner());
 
-		Object actor = payload.getProperty(Activity.PROPERTY_ACTOR);
+    @SuppressWarnings("unchecked")
+    @Override
+    public ServiceResults postCollection( ServiceContext context ) throws Exception
+    {
 
-		if (actor instanceof Map) {
-			handleDynamicPayload((Map<String, String>) actor, user, payload);
-		} else if (actor instanceof ActivityObject) {
-			handleDynamicPayload((ActivityObject) actor, user, payload);
-		} else if (actor == null) {
-			handleDynamicPayload((ActivityObject) actor, user, payload);
-		}
+        ServicePayload payload = context.getPayload();
 
-		ServiceResults results = super.postCollection(context);
+        Entity user = em.get( context.getOwner() );
 
-		distribute(context.getOwner(), results.getEntity());
-		return results;
-	}
+        Object actor = payload.getProperty( Activity.PROPERTY_ACTOR );
 
-	/**
-	 * Invoked when our actor is a map
-	 * 
-	 * @param actor
-	 * @param user
-	 * @param payload
-	 */
-	private void handleDynamicPayload(Map<String, String> actor, Entity user,
-			ServicePayload payload) {
+        if ( actor instanceof Map )
+        {
+            handleDynamicPayload( ( Map<String, String> ) actor, user, payload );
+        }
+        else if ( actor instanceof ActivityObject )
+        {
+            handleDynamicPayload( ( ActivityObject ) actor, user, payload );
+        }
+        else if ( actor == null )
+        {
+            handleDynamicPayload( ( ActivityObject ) actor, user, payload );
+        }
 
-		// create a new actor object
-		if (actor == null) {
-			actor = new HashMap<String, String>();
-			payload.setProperty(Activity.PROPERTY_ACTOR, actor);
-		}
+        ServiceResults results = super.postCollection( context );
 
-		if (user != null) {
-			if (actor.get(User.PROPERTY_UUID) == null && user.getUuid() != null) {
-				actor.put(User.PROPERTY_UUID, user.getUuid().toString());
-			}
+        distribute( context.getOwner(), results.getEntity() );
+        return results;
+    }
 
-			if (actor.get(User.PROPERTY_EMAIL) == null
-					&& user.getProperty(User.PROPERTY_EMAIL) != null) {
-				actor.put(User.PROPERTY_EMAIL,
-						user.getProperty(User.PROPERTY_EMAIL).toString());
-			}
-		}
-	}
 
-	/**
-	 * Invoked to set values when our actor is an activity object
-	 * 
-	 * @param actor
-	 * @param user
-	 * @param payload
-	 */
-	private void handleDynamicPayload(ActivityObject actor, Entity user,
-			ServicePayload payload) {
+    /** Invoked when our actor is a map */
+    private void handleDynamicPayload( Map<String, String> actor, Entity user, ServicePayload payload )
+    {
 
-		// create a new actor object
-		if (actor == null) {
-			actor = new ActivityObject();
-			payload.setProperty(Activity.PROPERTY_ACTOR, actor);
-		}
+        // create a new actor object
+        if ( actor == null )
+        {
+            actor = new HashMap<String, String>();
+            payload.setProperty( Activity.PROPERTY_ACTOR, actor );
+        }
 
-		if (user != null) {
-			if (actor.getId() == null && user.getUuid() != null) {
-				actor.setUuid(user.getUuid());
-				// TODO TN should this also populate id?
-			}
+        if ( user != null )
+        {
+            if ( actor.get( User.PROPERTY_UUID ) == null && user.getUuid() != null )
+            {
+                actor.put( User.PROPERTY_UUID, user.getUuid().toString() );
+            }
 
-			if (actor.getDynamicProperties().get(User.PROPERTY_EMAIL) == null
-					&& user.getProperty(User.PROPERTY_EMAIL) != null) {
-				actor.getDynamicProperties().put(User.PROPERTY_EMAIL,
-						user.getProperty(User.PROPERTY_EMAIL).toString());
-			}
-		}
+            if ( actor.get( User.PROPERTY_EMAIL ) == null && user.getProperty( User.PROPERTY_EMAIL ) != null )
+            {
+                actor.put( User.PROPERTY_EMAIL, user.getProperty( User.PROPERTY_EMAIL ).toString() );
+            }
+        }
+    }
 
-	}
 
-	@Override
-	public ServiceResults postItemById(ServiceContext context, UUID id)
-			throws Exception {
+    /** Invoked to set values when our actor is an activity object */
+    private void handleDynamicPayload( ActivityObject actor, Entity user, ServicePayload payload )
+    {
 
-		ServiceResults results = super.postItemById(context, id);
+        // create a new actor object
+        if ( actor == null )
+        {
+            actor = new ActivityObject();
+            payload.setProperty( Activity.PROPERTY_ACTOR, actor );
+        }
 
-		distribute(context.getOwner(), results.getEntity());
-		return results;
-	}
+        if ( user != null )
+        {
+            if ( actor.getId() == null && user.getUuid() != null )
+            {
+                actor.setUuid( user.getUuid() );
+                // TODO TN should this also populate id?
+            }
 
-	public void distribute(EntityRef user, Entity activity) throws Exception {
-		if (activity == null) {
-			return;
-		}
-		em.addToCollection(user, "feed", activity);
-		Results r = em.getConnectingEntities(user.getUuid(), "following",
-				User.ENTITY_TYPE, Results.Level.REFS);
-		List<EntityRef> refs = r.getRefs();
-		if (refs != null) {
-			em.addToCollections(refs, "feed", activity);
-		}
-	}
+            if ( actor.getDynamicProperties().get( User.PROPERTY_EMAIL ) == null
+                    && user.getProperty( User.PROPERTY_EMAIL ) != null )
+            {
+                actor.getDynamicProperties()
+                     .put( User.PROPERTY_EMAIL, user.getProperty( User.PROPERTY_EMAIL ).toString() );
+            }
+        }
+    }
 
+
+    @Override
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
+    {
+
+        ServiceResults results = super.postItemById( context, id );
+
+        distribute( context.getOwner(), results.getEntity() );
+        return results;
+    }
+
+
+    public void distribute( EntityRef user, Entity activity ) throws Exception
+    {
+        if ( activity == null )
+        {
+            return;
+        }
+        em.addToCollection( user, "feed", activity );
+        Results r = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS );
+        List<EntityRef> refs = r.getRefs();
+        if ( refs != null )
+        {
+            em.addToCollections( refs, "feed", activity );
+        }
+    }
 }

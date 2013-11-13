@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,28 +15,32 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
 import org.usergrid.persistence.exceptions.PersistenceException;
 
-/**
- * @author tnine
- * 
- */
-public class OrOperand extends BooleanOperand {
+
+/** @author tnine */
+public class OrOperand extends BooleanOperand
+{
 
     /**
      * @param left
      * @param token
      * @param right
      */
-    public OrOperand(Token t) {
-        super(t);
+    public OrOperand( Token t )
+    {
+        super( t );
     }
 
-    public OrOperand() {
-        super(new CommonToken(0, "or"));
+
+    public OrOperand()
+    {
+        super( new CommonToken( 0, "or" ) );
     }
+
 
     /*
      * (non-Javadoc)
@@ -46,8 +50,8 @@ public class OrOperand extends BooleanOperand {
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit(QueryVisitor visitor) throws PersistenceException {
-        visitor.visit(this);
+    public void visit( QueryVisitor visitor ) throws PersistenceException
+    {
+        visitor.visit( this );
     }
-
 }

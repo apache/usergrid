@@ -14,8 +14,6 @@
  */
 package org.usergrid.rest.applications;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.UUID;
 
@@ -35,59 +33,64 @@ import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.utils.UUIDUtils;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+
 /**
  * Invoke application request counters
  *
  * @author realbeast
  */
 @Concurrent()
-public class ApplicationRequestCounterIT extends AbstractRestIT {
-  private static final Logger log = LoggerFactory.getLogger(ApplicationRequestCounterIT.class);
-  long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
+public class ApplicationRequestCounterIT extends AbstractRestIT
+{
+    private static final Logger log = LoggerFactory.getLogger( ApplicationRequestCounterIT.class );
+    long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 
-  @Test
-  public void applicationrequestInternalCounters() throws Exception {
-    // Get application id
-    JsonNode node = resource().path("/test-organization/test-app")
-            .queryParam("access_token", access_token)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    assertNotNull(node.get("entities"));
+    @Test
+    public void applicationrequestInternalCounters() throws Exception
+    {
+        // Get application id
+        JsonNode node = resource().path( "/test-organization/test-app" ).queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
 
-    String uuid = node.get("application").asText();
-    assertEquals(true, UUIDUtils.isUUID(uuid));
+        assertNotNull( node.get( "entities" ) );
 
-    UUID applicationId = UUID.fromString(uuid);
-    EntityManagerFactory emf = setup.getEmf();
-    EntityManager em = emf.getEntityManager(applicationId);
+        String uuid = node.get( "application" ).asText();
+        assertEquals( true, UUIDUtils.isUUID( uuid ) );
 
-    int beforeTotalCall = getCounter(em, ServiceManager.APPLICATION_REQUESTS);
-    int beforeCall = getCounter(em, ServiceManager.APPLICATION_REQUESTS_PER.concat("get"));
+        UUID applicationId = UUID.fromString( uuid );
+        EntityManagerFactory emf = setup.getEmf();
+        EntityManager em = emf.getEntityManager( applicationId );
 
-    // call
-    node = resource().path("/test-organization/test-app/counters")
-            .queryParam("resolution", "all")
-            .queryParam("counter", "application.requests")
-            .queryParam("access_token", adminToken()).accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        int beforeTotalCall = getCounter( em, ServiceManager.APPLICATION_REQUESTS );
+        int beforeCall = getCounter( em, ServiceManager.APPLICATION_REQUESTS_PER.concat( "get" ) );
 
-    assertNotNull(node.get("counters"));
+        // call
+        node = resource().path( "/test-organization/test-app/counters" ).queryParam( "resolution", "all" )
+                .queryParam( "counter", "application.requests" ).queryParam( "access_token", adminToken() )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
 
-    int afterTotalCall = getCounter(em, ServiceManager.APPLICATION_REQUESTS);
-    int afterCall = getCounter(em, ServiceManager.APPLICATION_REQUESTS_PER.concat("get"));
+        assertNotNull( node.get( "counters" ) );
 
-    assertEquals(1, afterCall - beforeCall);
-    assertEquals(1, afterTotalCall - beforeTotalCall);
-  }
+        int afterTotalCall = getCounter( em, ServiceManager.APPLICATION_REQUESTS );
+        int afterCall = getCounter( em, ServiceManager.APPLICATION_REQUESTS_PER.concat( "get" ) );
 
-  private int getCounter(EntityManager em, String key) throws Exception {
-    Query query = new Query();
-    query.addCounterFilter(key + ":*:*:*");
-    query.setStartTime(ts);
-    query.setFinishTime(System.currentTimeMillis());
-    query.setResolution(CounterResolution.ALL);
-    Results r = em.getAggregateCounters(query);
-    return (int) r.getCounters().get(0).getValues().get(0).getValue();
-  }
+        assertEquals( 1, afterCall - beforeCall );
+        assertEquals( 1, afterTotalCall - beforeTotalCall );
+    }
+
+
+    private int getCounter( EntityManager em, String key ) throws Exception
+    {
+        Query query = new Query();
+        query.addCounterFilter( key + ":*:*:*" );
+        query.setStartTime( ts );
+        query.setFinishTime( System.currentTimeMillis() );
+        query.setResolution( CounterResolution.ALL );
+        Results r = em.getAggregateCounters( query );
+        return ( int ) r.getCounters().get( 0 ).getValues().get( 0 ).getValue();
+    }
 }

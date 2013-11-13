@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,6 @@
  ******************************************************************************/
 package org.usergrid.management;
 
-import static org.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,138 +23,199 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-public class OrganizationInfo {
+import static org.usergrid.persistence.Schema.PROPERTY_PATH;
+import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 
-  public static final String PASSWORD_HISTORY_SIZE_KEY = "passwordHistorySize";
 
-	private UUID id;
-	private String name;
-  private Map<String,Object> properties;
+public class OrganizationInfo
+{
 
-	public OrganizationInfo() {
-	}
-	
-	public OrganizationInfo(UUID id, String name) {
-		this.id = id;
-		this.name = name;
-	}
+    public static final String PASSWORD_HISTORY_SIZE_KEY = "passwordHistorySize";
 
-	public OrganizationInfo(Map<String, Object> properties) {
-		id = (UUID) properties.get(PROPERTY_UUID);
-		name = (String) properties.get(PROPERTY_PATH);
-	}
+    private UUID id;
+    private String name;
+    private Map<String, Object> properties;
 
-  public OrganizationInfo(UUID id, String name, Map<String,Object> properties) {
-    this(id, name);
-    this.properties = properties;
-  }
 
-  public UUID getUuid() {
-		return id;
-	}
-	
-	public void setUuid(UUID id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-
-  public int getPasswordHistorySize() {
-    int size = 0;
-    if (properties != null) {
-      Object sizeValue = properties.get(PASSWORD_HISTORY_SIZE_KEY);
-      if (sizeValue instanceof Number) {
-        size = ((Number)sizeValue).intValue();
-      } else if (sizeValue instanceof String) {
-        try {
-          size = Integer.parseInt((String)sizeValue);
-        } catch (NumberFormatException e) { /* ignore */ }
-      }
+    public OrganizationInfo()
+    {
     }
-    return size;
-  }
 
-	public static List<OrganizationInfo> fromNameIdMap(Map<String, UUID> map) {
-		List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
-		for (Entry<String, UUID> s : map.entrySet()) {
-			list.add(new OrganizationInfo(s.getValue(), s.getKey()));
-		}
-		return list;
-	}
 
-	public static List<OrganizationInfo> fromIdNameMap(Map<UUID, String> map) {
-		List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
-		for (Entry<UUID, String> s : map.entrySet()) {
-			list.add(new OrganizationInfo(s.getKey(), s.getValue()));
-		}
-		return list;
-	}
+    public OrganizationInfo( UUID id, String name )
+    {
+        this.id = id;
+        this.name = name;
+    }
 
-	public static Map<String, UUID> toNameIdMap(List<OrganizationInfo> list) {
-		Map<String, UUID> map = new LinkedHashMap<String, UUID>();
-		for (OrganizationInfo i : list) {
-			map.put(i.getName(), i.getUuid());
-		}
-		return map;
-	}
 
-	public static Map<UUID, String> toIdNameMap(List<OrganizationInfo> list) {
-		Map<UUID, String> map = new LinkedHashMap<UUID, String>();
-		for (OrganizationInfo i : list) {
-			map.put(i.getUuid(), i.getName());
-		}
-		return map;
-	}
+    public OrganizationInfo( Map<String, Object> properties )
+    {
+        id = ( UUID ) properties.get( PROPERTY_UUID );
+        name = ( String ) properties.get( PROPERTY_PATH );
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		OrganizationInfo other = (OrganizationInfo) obj;
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (!name.equals(other.name)) {
-			return false;
-		}
-		return true;
-	}
+    public OrganizationInfo( UUID id, String name, Map<String, Object> properties )
+    {
+        this( id, name );
+        this.properties = properties;
+    }
 
-  public Map<String, Object> getProperties() {
-    return properties;
-  }
 
-  public void setProperties(Map<String, Object> properties) {
-    this.properties = properties;
-  }
+    public UUID getUuid()
+    {
+        return id;
+    }
+
+
+    public void setUuid( UUID id )
+    {
+        this.id = id;
+    }
+
+
+    public String getName()
+    {
+        return name;
+    }
+
+
+    public void setName( String name )
+    {
+        this.name = name;
+    }
+
+
+    public int getPasswordHistorySize()
+    {
+        int size = 0;
+        if ( properties != null )
+        {
+            Object sizeValue = properties.get( PASSWORD_HISTORY_SIZE_KEY );
+            if ( sizeValue instanceof Number )
+            {
+                size = ( ( Number ) sizeValue ).intValue();
+            }
+            else if ( sizeValue instanceof String )
+            {
+                try
+                {
+                    size = Integer.parseInt( ( String ) sizeValue );
+                }
+                catch ( NumberFormatException e )
+                { /* ignore */ }
+            }
+        }
+        return size;
+    }
+
+
+    public static List<OrganizationInfo> fromNameIdMap( Map<String, UUID> map )
+    {
+        List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
+        for ( Entry<String, UUID> s : map.entrySet() )
+        {
+            list.add( new OrganizationInfo( s.getValue(), s.getKey() ) );
+        }
+        return list;
+    }
+
+
+    public static List<OrganizationInfo> fromIdNameMap( Map<UUID, String> map )
+    {
+        List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
+        for ( Entry<UUID, String> s : map.entrySet() )
+        {
+            list.add( new OrganizationInfo( s.getKey(), s.getValue() ) );
+        }
+        return list;
+    }
+
+
+    public static Map<String, UUID> toNameIdMap( List<OrganizationInfo> list )
+    {
+        Map<String, UUID> map = new LinkedHashMap<String, UUID>();
+        for ( OrganizationInfo i : list )
+        {
+            map.put( i.getName(), i.getUuid() );
+        }
+        return map;
+    }
+
+
+    public static Map<UUID, String> toIdNameMap( List<OrganizationInfo> list )
+    {
+        Map<UUID, String> map = new LinkedHashMap<UUID, String>();
+        for ( OrganizationInfo i : list )
+        {
+            map.put( i.getUuid(), i.getName() );
+        }
+        return map;
+    }
+
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        return result;
+    }
+
+
+    @Override
+    public boolean equals( Object obj )
+    {
+        if ( this == obj )
+        {
+            return true;
+        }
+        if ( obj == null )
+        {
+            return false;
+        }
+        if ( getClass() != obj.getClass() )
+        {
+            return false;
+        }
+        OrganizationInfo other = ( OrganizationInfo ) obj;
+        if ( id == null )
+        {
+            if ( other.id != null )
+            {
+                return false;
+            }
+        }
+        else if ( !id.equals( other.id ) )
+        {
+            return false;
+        }
+        if ( name == null )
+        {
+            if ( other.name != null )
+            {
+                return false;
+            }
+        }
+        else if ( !name.equals( other.name ) )
+        {
+            return false;
+        }
+        return true;
+    }
+
+
+    public Map<String, Object> getProperties()
+    {
+        return properties;
+    }
+
+
+    public void setProperties( Map<String, Object> properties )
+    {
+        this.properties = properties;
+    }
 }

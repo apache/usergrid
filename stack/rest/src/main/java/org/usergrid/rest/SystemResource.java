@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
-import java.util.Map;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -34,77 +33,88 @@ import org.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+
 @Path("/system")
 @Component
 @Scope("singleton")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-        "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript" })
-public class SystemResource extends AbstractContextResource {
+@Produces({
+        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript"
+})
+public class SystemResource extends AbstractContextResource
+{
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(SystemResource.class);
+    private static final Logger logger = LoggerFactory.getLogger( SystemResource.class );
 
-    public SystemResource() {
-        logger.info("SystemResource initialized");
+
+    public SystemResource()
+    {
+        logger.info( "SystemResource initialized" );
     }
+
 
     @RequireSystemAccess
     @GET
     @Path("database/setup")
-    public JSONWithPadding getSetup(@Context UriInfo ui,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+    public JSONWithPadding getSetup( @Context UriInfo ui,
+                                     @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception
+    {
 
         ApiResponse response = createApiResponse();
-        response.setAction("cassandra setup");
+        response.setAction( "cassandra setup" );
 
-        logger.info("Setting up Cassandra");
+        logger.info( "Setting up Cassandra" );
 
-       
 
-        try {
+        try
+        {
             emf.setup();
-        } catch (Exception e) {
-            logger.error(
-                    "Unable to complete core database setup, possibly due to it being setup already",
-                    e);
+        }
+        catch ( Exception e )
+        {
+            logger.error( "Unable to complete core database setup, possibly due to it being setup already", e );
         }
 
-        try {
+        try
+        {
             management.setup();
-        } catch (Exception e) {
-            logger.error(
-                    "Unable to complete management database setup, possibly due to it being setup already",
-                    e);
+        }
+        catch ( Exception e )
+        {
+            logger.error( "Unable to complete management database setup, possibly due to it being setup already", e );
         }
 
         response.setSuccess();
 
-        return new JSONWithPadding(response, callback);
+        return new JSONWithPadding( response, callback );
     }
+
 
     @RequireSystemAccess
     @GET
     @Path("superuser/setup")
-    public JSONWithPadding getSetupSuperuser(@Context UriInfo ui,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+    public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
+                                              @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception
+    {
 
         ApiResponse response = createApiResponse();
-        response.setAction("superuser setup");
+        response.setAction( "superuser setup" );
 
-        logger.info("Setting up Superuser");
+        logger.info( "Setting up Superuser" );
 
-        try {
+        try
+        {
             management.provisionSuperuser();
-        } catch (Exception e) {
-            logger.error("Unable to complete superuser setup", e);
+        }
+        catch ( Exception e )
+        {
+            logger.error( "Unable to complete superuser setup", e );
         }
 
         response.setSuccess();
 
-        return new JSONWithPadding(response, callback);
+        return new JSONWithPadding( response, callback );
     }
-
 }

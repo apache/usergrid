@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,19 +15,11 @@
  ******************************************************************************/
 package org.usergrid.tools;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.usergrid.services.ServiceParameter.parameters;
-import static org.usergrid.services.ServicePayload.payload;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
@@ -40,104 +32,115 @@ import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 
-public class PopulateSample extends ToolBase {
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
 
-	private static final Logger logger = LoggerFactory.getLogger(Export.class);
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.usergrid.services.ServiceParameter.parameters;
+import static org.usergrid.services.ServicePayload.payload;
 
-	@Override
-	public Options createOptions() {
 
-		Option useSpring = OptionBuilder.create("spring");
+public class PopulateSample extends ToolBase
+{
 
-		Options options = new Options();
-		options.addOption(useSpring);
+    private static final Logger logger = LoggerFactory.getLogger( Export.class );
 
-		return options;
-	}
 
-	@Override
-	public void runTool(CommandLine line) throws Exception {
-		logger.info("Starting test...");
-		startSpring();
+    @Override
+    public Options createOptions()
+    {
 
-		UserInfo user = managementService.createAdminUser("admin", "admin",
-				"admin@ug.com", "none", false, false);
+        Option useSpring = OptionBuilder.create( "spring" );
 
-		logger.info("Creating organization: sample-organization");
-		// management
-		// .createOrganization("sample-organization", "sample@organization.com",
-		// "1234");
-		OrganizationInfo organization = managementService.createOrganization(
-				"sample-organization", user, false);
+        Options options = new Options();
+        options.addOption( useSpring );
 
-		logger.info("creating application: testEntityManagerTest");
-		// TODO update to organizationName/applicationName
-		UUID applicationId = managementService.createApplication(
-				organization.getUuid(), "sample-application")
-            .getId();
+        return options;
+    }
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+    @Override
+    public void runTool( CommandLine line ) throws Exception
+    {
+        logger.info( "Starting test..." );
+        startSpring();
 
-		// Create user
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
-		properties.put("name", "Ed Anuff");
+        UserInfo user = managementService.createAdminUser( "admin", "admin", "admin@ug.com", "none", false, false );
 
-		Entity user1 = em.create("user", properties);
+        logger.info( "Creating organization: sample-organization" );
+        // management
+        // .createOrganization("sample-organization", "sample@organization.com",
+        // "1234");
+        OrganizationInfo organization = managementService.createOrganization( "sample-organization", user, false );
 
-		// Create activity
-		properties = Activity.newActivity(Activity.VERB_POST, null,
-				"I ate a sammich", null, user1, null, "tweet", null, null)
-				.getProperties();
+        logger.info( "creating application: testEntityManagerTest" );
+        // TODO update to organizationName/applicationName
+        UUID applicationId =
+                managementService.createApplication( organization.getUuid(), "sample-application" ).getId();
 
-		@SuppressWarnings("unused")
-		Entity activity = testRequest(sm, ServiceAction.POST, 1, properties,
-				"users", user1.getUuid(), "activities").getEntity();
+        ServiceManager sm = smf.getServiceManager( applicationId );
 
-		// Create another activity
-		properties = Activity.newActivity(Activity.VERB_POST, null,
-				"cool pic dude", null, user1, null, "tweet", null, null)
-				.getProperties();
+        EntityManager em = emf.getEntityManager( applicationId );
 
-		activity = testRequest(sm, ServiceAction.POST, 1, properties, "users",
-				user1.getUuid(), "activities").getEntity();
+        // Create user
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "username", "edanuff" );
+        properties.put( "email", "ed@anuff.com" );
+        properties.put( "name", "Ed Anuff" );
 
-		// Create another user
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "justin");
-		properties.put("email", "justin@gmail.com");
-		properties.put("name", "Justin Clark");
+        Entity user1 = em.create( "user", properties );
 
-		Entity user2 = em.create("user", properties);
+        // Create activity
+        properties =
+                Activity.newActivity( Activity.VERB_POST, null, "I ate a sammich", null, user1, null, "tweet", null,
+                        null ).getProperties();
 
-		// Create activity
-		properties = Activity.newActivity(Activity.VERB_POST, null,
-				"ATT U-verse May payment", null, user2, null, "payment", null,
-				null).getProperties();
+        @SuppressWarnings("unused") Entity activity =
+                testRequest( sm, ServiceAction.POST, 1, properties, "users", user1.getUuid(), "activities" )
+                        .getEntity();
 
-		activity = testRequest(sm, ServiceAction.POST, 1, properties, "users",
-				user2.getUuid(), "activities").getEntity();
+        // Create another activity
+        properties = Activity.newActivity( Activity.VERB_POST, null, "cool pic dude", null, user1, null, "tweet", null,
+                null ).getProperties();
 
-		// Connections
-		em.createConnection(user1, "workWith", user2);
-	}
+        activity = testRequest( sm, ServiceAction.POST, 1, properties, "users", user1.getUuid(), "activities" )
+                .getEntity();
 
-	public ServiceResults testRequest(ServiceManager sm, ServiceAction action,
-			int expectedCount, Map<String, Object> properties, Object... params)
-			throws Exception {
-		ServiceRequest request = sm.newRequest(action, parameters(params),
-				payload(properties));
+        // Create another user
+        properties = new LinkedHashMap<String, Object>();
+        properties.put( "username", "justin" );
+        properties.put( "email", "justin@gmail.com" );
+        properties.put( "name", "Justin Clark" );
 
-		logger.info("Request: " + action + " " + request.toString());
+        Entity user2 = em.create( "user", properties );
 
-		ServiceResults results = request.execute();
-		assertNotNull(results);
-		assertEquals(expectedCount, results.getEntities().size());
+        // Create activity
+        properties =
+                Activity.newActivity( Activity.VERB_POST, null, "ATT U-verse May payment", null, user2, null, "payment",
+                        null, null ).getProperties();
 
-		return results;
-	}
+        activity = testRequest( sm, ServiceAction.POST, 1, properties, "users", user2.getUuid(), "activities" )
+                .getEntity();
 
+        // Connections
+        em.createConnection( user1, "workWith", user2 );
+    }
+
+
+    public ServiceResults testRequest( ServiceManager sm, ServiceAction action, int expectedCount,
+                                       Map<String, Object> properties, Object... params ) throws Exception
+    {
+        ServiceRequest request = sm.newRequest( action, parameters( params ), payload( properties ) );
+
+        logger.info( "Request: " + action + " " + request.toString() );
+
+        ServiceResults results = request.execute();
+        assertNotNull( results );
+        assertEquals( expectedCount, results.getEntities().size() );
+
+        return results;
+    }
 }

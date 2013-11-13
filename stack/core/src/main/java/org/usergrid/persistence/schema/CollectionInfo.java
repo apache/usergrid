@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.persistence.schema;
+
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -23,161 +24,217 @@ import java.util.TreeSet;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.annotations.EntityCollection;
 
-public class CollectionInfo {
 
-	private String name;
-	private EntityInfo container;
+public class CollectionInfo
+{
 
-	private boolean indexingDynamicDictionaries;
-	private String linkedCollection;
-	private Set<String> propertiesIndexed = null;
-	private boolean publicVisible = true;
-	private final Set<String> dictionariesIndexed = new TreeSet<String>(
-			String.CASE_INSENSITIVE_ORDER);
-	private String type;
-	private boolean reversed;
-	private boolean includedInExport = true;
-	private String sort;
+    private String name;
+    private EntityInfo container;
 
-	public CollectionInfo() {
-	}
+    private boolean indexingDynamicDictionaries;
+    private String linkedCollection;
+    private Set<String> propertiesIndexed = null;
+    private boolean publicVisible = true;
+    private final Set<String> dictionariesIndexed = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+    private String type;
+    private boolean reversed;
+    private boolean includedInExport = true;
+    private String sort;
 
-	public CollectionInfo(EntityCollection collectionAnnotation) {
-		setIndexingDynamicDictionaries(collectionAnnotation
-				.indexingDynamicDictionaries());
-		setLinkedCollection(collectionAnnotation.linkedCollection());
-		setPublic(collectionAnnotation.publicVisible());
-		setDictionariesIndexed(new LinkedHashSet<String>(
-				Arrays.asList(collectionAnnotation.dictionariesIndexed())));
-		setType(collectionAnnotation.type());
-		setReversed(collectionAnnotation.reversed());
-		setIncludedInExport(collectionAnnotation.includedInExport());
-		setSort(collectionAnnotation.sort());
-	}
 
-	public String getType() {
-		return type;
-	}
+    public CollectionInfo()
+    {
+    }
 
-	public void setType(String type) {
-		if ("".equals(type)) {
-			type = null;
-		}
-		this.type = type;
-	}
 
-	public boolean isPropertyIndexed(String propertyName) {
-		return getPropertiesIndexed().contains(propertyName);
-	}
+    public CollectionInfo( EntityCollection collectionAnnotation )
+    {
+        setIndexingDynamicDictionaries( collectionAnnotation.indexingDynamicDictionaries() );
+        setLinkedCollection( collectionAnnotation.linkedCollection() );
+        setPublic( collectionAnnotation.publicVisible() );
+        setDictionariesIndexed(
+                new LinkedHashSet<String>( Arrays.asList( collectionAnnotation.dictionariesIndexed() ) ) );
+        setType( collectionAnnotation.type() );
+        setReversed( collectionAnnotation.reversed() );
+        setIncludedInExport( collectionAnnotation.includedInExport() );
+        setSort( collectionAnnotation.sort() );
+    }
 
-	public boolean hasIndexedProperties() {
-    return !getPropertiesIndexed().isEmpty();
-	}
 
-	public Set<String> getPropertiesIndexed() {
-    if (propertiesIndexed != null) return propertiesIndexed;
-    return Schema.getDefaultSchema().getEntityInfo(getType()).getIndexedProperties();
-	}
+    public String getType()
+    {
+        return type;
+    }
 
-	public void setPropertiesIndexed(Set<String> propertiesIndexed) {
-		this.propertiesIndexed = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		this.propertiesIndexed.addAll(propertiesIndexed);
-	}
 
-	public boolean isDictionaryIndexed(String propertyName) {
-		return dictionariesIndexed.contains(propertyName);
-	}
+    public void setType( String type )
+    {
+        if ( "".equals( type ) )
+        {
+            type = null;
+        }
+        this.type = type;
+    }
 
-	public Set<String> getDictionariesIndexed() {
-		return dictionariesIndexed;
-	}
 
-	public void setDictionariesIndexed(Set<String> dictionariesIndexed) {
-		dictionariesIndexed = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		dictionariesIndexed.addAll(dictionariesIndexed);
-	}
+    public boolean isPropertyIndexed( String propertyName )
+    {
+        return getPropertiesIndexed().contains( propertyName );
+    }
 
-	public boolean isIndexingDynamicDictionaries() {
-		return indexingDynamicDictionaries;
-	}
 
-	public void setIndexingDynamicDictionaries(
-			boolean indexingDynamicDictionaries) {
-		this.indexingDynamicDictionaries = indexingDynamicDictionaries;
-	}
+    public boolean hasIndexedProperties()
+    {
+        return !getPropertiesIndexed().isEmpty();
+    }
 
-	public String getLinkedCollection() {
-		return linkedCollection;
-	}
 
-	public void setLinkedCollection(String linkedCollection) {
-		if ("".equals(linkedCollection)) {
-			linkedCollection = null;
-		}
-		this.linkedCollection = linkedCollection;
-	}
+    public Set<String> getPropertiesIndexed()
+    {
+        if ( propertiesIndexed != null )
+        {
+            return propertiesIndexed;
+        }
+        return Schema.getDefaultSchema().getEntityInfo( getType() ).getIndexedProperties();
+    }
 
-	public String getName() {
-		return name;
-	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setPropertiesIndexed( Set<String> propertiesIndexed )
+    {
+        this.propertiesIndexed = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+        this.propertiesIndexed.addAll( propertiesIndexed );
+    }
 
-	public EntityInfo getContainer() {
-		return container;
-	}
 
-	public void setContainer(EntityInfo entityInfo) {
-		container = entityInfo;
-	}
+    public boolean isDictionaryIndexed( String propertyName )
+    {
+        return dictionariesIndexed.contains( propertyName );
+    }
 
-	public boolean isPublic() {
-		return publicVisible;
-	}
 
-	public void setPublic(boolean publicVisible) {
-		this.publicVisible = publicVisible;
-	}
+    public Set<String> getDictionariesIndexed()
+    {
+        return dictionariesIndexed;
+    }
 
-	public boolean isReversed() {
-		return reversed;
-	}
 
-	public void setReversed(boolean reversed) {
-		this.reversed = reversed;
-	}
+    public void setDictionariesIndexed( Set<String> dictionariesIndexed )
+    {
+        dictionariesIndexed = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+        dictionariesIndexed.addAll( dictionariesIndexed );
+    }
 
-	public void setIncludedInExport(boolean includedInExport) {
-		this.includedInExport = includedInExport;
-	}
 
-	public boolean isIncludedInExport() {
-		return includedInExport;
-	}
+    public boolean isIndexingDynamicDictionaries()
+    {
+        return indexingDynamicDictionaries;
+    }
 
-	public String getSort() {
-		return sort;
-	}
 
-	public void setSort(String sort) {
-		if ("".equals(sort)) {
-			sort = null;
-		}
-		this.sort = sort;
-	}
+    public void setIndexingDynamicDictionaries( boolean indexingDynamicDictionaries )
+    {
+        this.indexingDynamicDictionaries = indexingDynamicDictionaries;
+    }
 
-	@Override
-	public String toString() {
-		return "CollectionInfo [name=" + name
-				+ ", indexingDynamicDictionaries="
-				+ indexingDynamicDictionaries + ", linkedCollection="
-				+ linkedCollection + ", propertiesIndexed=" + propertiesIndexed
-				+ ", publicVisible=" + publicVisible + ", dictionariesIndexed="
-				+ dictionariesIndexed + ", type="
-				+ type + ", reversed=" + reversed + ", includedInExport="
-				+ includedInExport + ", sort=" + sort +  "]";
-	}
 
+    public String getLinkedCollection()
+    {
+        return linkedCollection;
+    }
+
+
+    public void setLinkedCollection( String linkedCollection )
+    {
+        if ( "".equals( linkedCollection ) )
+        {
+            linkedCollection = null;
+        }
+        this.linkedCollection = linkedCollection;
+    }
+
+
+    public String getName()
+    {
+        return name;
+    }
+
+
+    public void setName( String name )
+    {
+        this.name = name;
+    }
+
+
+    public EntityInfo getContainer()
+    {
+        return container;
+    }
+
+
+    public void setContainer( EntityInfo entityInfo )
+    {
+        container = entityInfo;
+    }
+
+
+    public boolean isPublic()
+    {
+        return publicVisible;
+    }
+
+
+    public void setPublic( boolean publicVisible )
+    {
+        this.publicVisible = publicVisible;
+    }
+
+
+    public boolean isReversed()
+    {
+        return reversed;
+    }
+
+
+    public void setReversed( boolean reversed )
+    {
+        this.reversed = reversed;
+    }
+
+
+    public void setIncludedInExport( boolean includedInExport )
+    {
+        this.includedInExport = includedInExport;
+    }
+
+
+    public boolean isIncludedInExport()
+    {
+        return includedInExport;
+    }
+
+
+    public String getSort()
+    {
+        return sort;
+    }
+
+
+    public void setSort( String sort )
+    {
+        if ( "".equals( sort ) )
+        {
+            sort = null;
+        }
+        this.sort = sort;
+    }
+
+
+    @Override
+    public String toString()
+    {
+        return "CollectionInfo [name=" + name + ", indexingDynamicDictionaries=" + indexingDynamicDictionaries
+                + ", linkedCollection=" + linkedCollection + ", propertiesIndexed=" + propertiesIndexed
+                + ", publicVisible=" + publicVisible + ", dictionariesIndexed=" + dictionariesIndexed + ", type=" + type
+                + ", reversed=" + reversed + ", includedInExport=" + includedInExport + ", sort=" + sort + "]";
+    }
 }

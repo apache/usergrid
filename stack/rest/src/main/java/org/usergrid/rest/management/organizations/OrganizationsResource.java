@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.rest.management.organizations;
+
 
 import java.util.Map;
 import java.util.UUID;
@@ -30,8 +31,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.google.common.base.Preconditions;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,144 +44,141 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 
-@Component("org.usergrid.rest.management.organizations.OrganizationsResource")
-@Scope("prototype")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-        "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript" })
-public class OrganizationsResource extends AbstractContextResource {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(OrganizationsResource.class);
+@Component( "org.usergrid.rest.management.organizations.OrganizationsResource" )
+@Scope( "prototype" )
+@Produces( {
+        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript"
+} )
+public class OrganizationsResource extends AbstractContextResource
+{
+
+    private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
     public static final String ORGANIZATION_PROPERTIES = "properties";
 
     @Autowired
     private ApplicationCreator applicationCreator;
 
-    public OrganizationsResource() {
+
+    public OrganizationsResource()
+    {
     }
 
-    @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+
+    @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     @RequireOrganizationAccess
-    public OrganizationResource getOrganizationById(@Context UriInfo ui,
-            @PathParam("organizationId") String organizationIdStr)
-            throws Exception {
-        OrganizationInfo organization = management.getOrganizationByUuid(UUID
-                .fromString(organizationIdStr));
-        if (organization == null) {
-            throw new ManagementException(
-                    "Could not find organization for ID: " + organizationIdStr);
+    public OrganizationResource getOrganizationById( @Context UriInfo ui,
+                                                     @PathParam( "organizationId" ) String organizationIdStr )
+            throws Exception
+    {
+        OrganizationInfo organization = management.getOrganizationByUuid( UUID.fromString( organizationIdStr ) );
+        if ( organization == null )
+        {
+            throw new ManagementException( "Could not find organization for ID: " + organizationIdStr );
         }
-        return getSubResource(OrganizationResource.class).init(organization);
+        return getSubResource( OrganizationResource.class ).init( organization );
     }
 
-    @Path("{organizationName}")
+
+    @Path( "{organizationName}" )
     @RequireOrganizationAccess
-    public OrganizationResource getOrganizationByName(@Context UriInfo ui,
-            @PathParam("organizationName") String organizationName)
-            throws Exception {
-        OrganizationInfo organization = management
-                .getOrganizationByName(organizationName);
-        if (organization == null) {
-            throw new ManagementException(
-                    "Could not find organization for name: " + organizationName);
+    public OrganizationResource getOrganizationByName( @Context UriInfo ui,
+                                                       @PathParam( "organizationName" ) String organizationName )
+            throws Exception
+    {
+        OrganizationInfo organization = management.getOrganizationByName( organizationName );
+        if ( organization == null )
+        {
+            throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
-        return getSubResource(OrganizationResource.class).init(organization);
+        return getSubResource( OrganizationResource.class ).init( organization );
     }
+
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding newOrganization(@Context UriInfo ui,
-            Map<String, Object> json,
-            @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+    @Consumes( MediaType.APPLICATION_JSON )
+    public JSONWithPadding newOrganization( @Context UriInfo ui, Map<String, Object> json,
+                                            @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+            throws Exception
+    {
         ApiResponse response = createApiResponse();
-        response.setAction("new organization");
+        response.setAction( "new organization" );
 
-        String organizationName = (String) json.remove("organization");
-        String username = (String) json.remove("username");
-        String name = (String) json.remove("name");
-        String email = (String) json.remove("email");
-        String password = (String) json.remove("password");
-        Map<String,Object> properties = (Map<String,Object>) json.remove(ORGANIZATION_PROPERTIES);
+        String organizationName = ( String ) json.remove( "organization" );
+        String username = ( String ) json.remove( "username" );
+        String name = ( String ) json.remove( "name" );
+        String email = ( String ) json.remove( "email" );
+        String password = ( String ) json.remove( "password" );
+        Map<String, Object> properties = ( Map<String, Object> ) json.remove( ORGANIZATION_PROPERTIES );
 
-        return newOrganization(ui, organizationName, username, name, email,
-                password, json, properties, callback);
+        return newOrganization( ui, organizationName, username, name, email, password, json, properties, callback );
     }
 
-    @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public JSONWithPadding newOrganizationFromForm(@Context UriInfo ui,
-            @FormParam("organization") String organizationNameForm,
-            @QueryParam("organization") String organizationNameQuery,
-            @FormParam("username") String usernameForm,
-            @QueryParam("username") String usernameQuery,
-            @FormParam("name") String nameForm,
-            @QueryParam("name") String nameQuery,
-            @FormParam("email") String emailForm,
-            @QueryParam("email") String emailQuery,
-            @FormParam("password") String passwordForm,
-            @QueryParam("password") String passwordQuery,
-            @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
 
-        String organizationName = organizationNameForm != null ? organizationNameForm
-                : organizationNameQuery;
+    @POST
+    @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
+    public JSONWithPadding newOrganizationFromForm( @Context UriInfo ui,
+                                                    @FormParam( "organization" ) String organizationNameForm,
+                                                    @QueryParam( "organization" ) String organizationNameQuery,
+                                                    @FormParam( "username" ) String usernameForm,
+                                                    @QueryParam( "username" ) String usernameQuery,
+                                                    @FormParam( "name" ) String nameForm,
+                                                    @QueryParam( "name" ) String nameQuery,
+                                                    @FormParam( "email" ) String emailForm,
+                                                    @QueryParam( "email" ) String emailQuery,
+                                                    @FormParam( "password" ) String passwordForm,
+                                                    @QueryParam( "password" ) String passwordQuery,
+                                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+            throws Exception
+    {
+
+        String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;
         String username = usernameForm != null ? usernameForm : usernameQuery;
         String name = nameForm != null ? nameForm : nameQuery;
         String email = emailForm != null ? emailForm : emailQuery;
         String password = passwordForm != null ? passwordForm : passwordQuery;
 
-        return newOrganization(ui, organizationName, username, name, email,
-                password, null, null, callback);
-
+        return newOrganization( ui, organizationName, username, name, email, password, null, null, callback );
     }
 
-    /**
-     * Create a new organization
-     * 
-     * @param ui
-     * @param organizationName
-     * @param username
-     * @param name
-     * @param email
-     * @param password
-     * @param callback
-     * @return
-     * @throws Exception
-     */
-    private JSONWithPadding newOrganization(@Context UriInfo ui,
-            String organizationName, String username, String name,
-            String email, String password, Map<String,Object> userProperties,
-            Map<String,Object> properties,
-            String callback) throws Exception {
-        Preconditions.checkArgument(StringUtils.isNotBlank(organizationName),
-                "The organization parameter was missing");
 
-        logger.info("New organization: {}", organizationName);
+    /** Create a new organization */
+    private JSONWithPadding newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
+                                             String email, String password, Map<String, Object> userProperties,
+                                             Map<String, Object> properties, String callback ) throws Exception
+    {
+        Preconditions
+                .checkArgument( StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
+
+        logger.info( "New organization: {}", organizationName );
 
         ApiResponse response = createApiResponse();
-        response.setAction("new organization");
+        response.setAction( "new organization" );
 
         OrganizationOwnerInfo organizationOwner = management
-                .createOwnerAndOrganization(organizationName, username, name,
-                        email, password, false, false, userProperties, properties);
+                .createOwnerAndOrganization( organizationName, username, name, email, password, false, false,
+                        userProperties, properties );
 
-        if (organizationOwner == null) {
-            logger.info("organizationOwner is null, returning. organization: {}", organizationName);
+        if ( organizationOwner == null )
+        {
+            logger.info( "organizationOwner is null, returning. organization: {}", organizationName );
             return null;
         }
 
-        applicationCreator.createSampleFor(organizationOwner.getOrganization());
+        applicationCreator.createSampleFor( organizationOwner.getOrganization() );
 
-        response.setData(organizationOwner);
+        response.setData( organizationOwner );
         response.setSuccess();
 
-        logger.info("New organization complete: {}", organizationName);
-        return new JSONWithPadding(response, callback);
+        logger.info( "New organization complete: {}", organizationName );
+        return new JSONWithPadding( response, callback );
     }
 
     /*

@@ -5,14 +5,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 @Concurrent()
 public class YetAnotherCassandraResourceIT
 {
-    public static final Logger logger = LoggerFactory.getLogger(CassandraResource.class);
+    public static final Logger logger = LoggerFactory.getLogger( CassandraResource.class );
     private static final long WAIT = 200L;
 
-    private CassandraResource cassandraResource =
-            CassandraResourceITSuite.cassandraResource;
+    private CassandraResource cassandraResource = CassandraResourceITSuite.cassandraResource;
+
 
     @Test
     public void testUsage() throws Exception

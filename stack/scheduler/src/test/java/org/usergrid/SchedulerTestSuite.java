@@ -9,15 +9,11 @@ import org.usergrid.batch.UsergridJobFactoryTest;
 import org.usergrid.cassandra.Concurrent;
 
 
-@RunWith( Suite.class )
+@RunWith(Suite.class)
 @Suite.SuiteClasses(
-    {
-            AppArgsTest.class,
-            UsergridJobFactoryTest.class,
-            BulkJobExecutionUnitTest.class,
-
-    } )
+        {
+                AppArgsTest.class, UsergridJobFactoryTest.class, BulkJobExecutionUnitTest.class,
+        })
 @Concurrent()
 public class SchedulerTestSuite
-{
-}
+{}

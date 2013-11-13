@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,276 +78,301 @@ import org.glassfish.grizzly.utils.ArraySet;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+
 /**
- * Modified version of the StaticHttpHandler to serve resources from the
- * classpath.
- * 
+ * Modified version of the StaticHttpHandler to serve resources from the classpath.
+ * <p/>
  * {@link HttpHandler}, which processes requests to a static resources.
- * 
+ *
  * @author Jeanfrancois Arcand
  * @author Alexey Stashok
  */
-public class ClasspathStaticHttpHandler extends HttpHandler {
-	private static final Logger LOGGER = Grizzly
-			.logger(ClasspathStaticHttpHandler.class);
+public class ClasspathStaticHttpHandler extends HttpHandler
+{
+    private static final Logger LOGGER = Grizzly.logger( ClasspathStaticHttpHandler.class );
 
-	protected final ArraySet<Resource> docRoots = new ArraySet<Resource>(
-			Resource.class);
+    protected final ArraySet<Resource> docRoots = new ArraySet<Resource>( Resource.class );
 
-	/**
-	 * Create <tt>HttpHandler</tt>, which, by default, will handle requests to
-	 * the static resources located in the current directory.
-	 */
-	public ClasspathStaticHttpHandler() {
-		addDocRoot(".");
-	}
 
-	/**
-	 * Create a new instance which will look for static pages located under the
-	 * <tt>docRoot</tt>. If the <tt>docRoot</tt> is <tt>null</tt> - static pages
-	 * won't be served by this <tt>HttpHandler</tt>
-	 * 
-	 * @param docRoots
-	 *            the folder(s) where the static resource are located. If the
-	 *            <tt>docRoot</tt> is <tt>null</tt> - static pages won't be
-	 *            served by this <tt>HttpHandler</tt>
-	 */
-	public ClasspathStaticHttpHandler(String... docRoots) {
-		if (docRoots != null) {
-			for (String docRoot : docRoots) {
-				addDocRoot(docRoot);
-			}
-		}
-	}
+    /**
+     * Create <tt>HttpHandler</tt>, which, by default, will handle requests to the static resources located in the
+     * current
+     * directory.
+     */
+    public ClasspathStaticHttpHandler()
+    {
+        addDocRoot( "." );
+    }
 
-	/**
-	 * Create a new instance which will look for static pages located under the
-	 * <tt>docRoot</tt>. If the <tt>docRoot</tt> is <tt>null</tt> - static pages
-	 * won't be served by this <tt>HttpHandler</tt>
-	 * 
-	 * @param docRoots
-	 *            the folders where the static resource are located. If the
-	 *            <tt>docRoot</tt> is empty - static pages won't be served by
-	 *            this <tt>HttpHandler</tt>
-	 */
-	public ClasspathStaticHttpHandler(Set<String> docRoots) {
-		if (docRoots != null) {
-			for (String docRoot : docRoots) {
-				addDocRoot(docRoot);
-			}
-		}
-	}
 
-	/**
-	 * Return the default directory from where files will be serviced.
-	 * 
-	 * @return the default directory from where file will be serviced.
-	 */
-	public Resource getDefaultDocRoot() {
-		final Resource[] array = docRoots.getArray();
-		return ((array != null) && (array.length > 0)) ? array[0] : null;
-	}
+    /**
+     * Create a new instance which will look for static pages located under the <tt>docRoot</tt>. If the
+     * <tt>docRoot</tt>
+     * is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
+     *
+     * @param docRoots the folder(s) where the static resource are located. If the <tt>docRoot</tt> is <tt>null</tt> -
+     * static pages won't be served by this <tt>HttpHandler</tt>
+     */
+    public ClasspathStaticHttpHandler( String... docRoots )
+    {
+        if ( docRoots != null )
+        {
+            for ( String docRoot : docRoots )
+            {
+                addDocRoot( docRoot );
+            }
+        }
+    }
 
-	/**
-	 * Return the list of directories where files will be serviced from.
-	 * 
-	 * @return the list of directories where files will be serviced from.
-	 */
-	public ArraySet<Resource> getDocRoots() {
-		return docRoots;
-	}
 
-	/**
-	 * Add the directory to the list of directories where files will be serviced
-	 * from.
-	 * 
-	 * @param docRoot
-	 *            the directory to be added to the list of directories where
-	 *            files will be serviced from.
-	 * 
-	 * @return return the {@link File} representation of the passed
-	 *         <code>docRoot</code>.
-	 */
-	public final Resource addDocRoot(String docRoot) {
-		if (docRoot == null) {
-			throw new NullPointerException("docRoot can't be null");
-		}
+    /**
+     * Create a new instance which will look for static pages located under the <tt>docRoot</tt>. If the
+     * <tt>docRoot</tt>
+     * is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
+     *
+     * @param docRoots the folders where the static resource are located. If the <tt>docRoot</tt> is empty - static
+     * pages
+     * won't be served by this <tt>HttpHandler</tt>
+     */
+    public ClasspathStaticHttpHandler( Set<String> docRoots )
+    {
+        if ( docRoots != null )
+        {
+            for ( String docRoot : docRoots )
+            {
+                addDocRoot( docRoot );
+            }
+        }
+    }
 
-		final Resource file = new ClassPathResource(docRoot);
-		addDocRoot(file);
 
-		return file;
-	}
+    /**
+     * Return the default directory from where files will be serviced.
+     *
+     * @return the default directory from where file will be serviced.
+     */
+    public Resource getDefaultDocRoot()
+    {
+        final Resource[] array = docRoots.getArray();
+        return ( ( array != null ) && ( array.length > 0 ) ) ? array[0] : null;
+    }
 
-	/**
-	 * Add the directory to the list of directories where files will be serviced
-	 * from.
-	 * 
-	 * @param docRoot
-	 *            the directory to be added to the list of directories where
-	 *            files will be serviced from.
-	 */
-	public final void addDocRoot(Resource docRoot) {
-		docRoots.add(docRoot);
-	}
 
-	/**
-	 * Removes the directory from the list of directories where static files
-	 * will be serviced from.
-	 * 
-	 * @param docRoot
-	 *            the directory to remove.
-	 */
-	public void removeDocRoot(File docRoot) {
-		docRoots.remove(docRoot);
-	}
+    /**
+     * Return the list of directories where files will be serviced from.
+     *
+     * @return the list of directories where files will be serviced from.
+     */
+    public ArraySet<Resource> getDocRoots()
+    {
+        return docRoots;
+    }
 
-	/**
-	 * Based on the {@link Request} URI, try to map the file from the
-	 * {@link #getDocRoots()}, and send it back to a client.
-	 * 
-	 * @param request
-	 *            the {@link Request}
-	 * @param response
-	 *            the {@link Response}
-	 * @throws Exception
-	 */
-	@Override
-	public void service(final Request request, final Response response)
-			throws Exception {
-		final String uri = getRelativeURI(request);
 
-		if ((uri == null) || !handle(uri, request, response)) {
-			onMissingResource(request, response);
-		}
-	}
+    /**
+     * Add the directory to the list of directories where files will be serviced from.
+     *
+     * @param docRoot the directory to be added to the list of directories where files will be serviced from.
+     *
+     * @return return the {@link File} representation of the passed <code>docRoot</code>.
+     */
+    public final Resource addDocRoot( String docRoot )
+    {
+        if ( docRoot == null )
+        {
+            throw new NullPointerException( "docRoot can't be null" );
+        }
 
-	protected String getRelativeURI(final Request request) {
-		String uri = request.getRequestURI();
-		if (uri.indexOf("..") >= 0) {
-			return null;
-		}
+        final Resource file = new ClassPathResource( docRoot );
+        addDocRoot( file );
 
-		final String resourcesContextPath = request.getContextPath();
-		if (resourcesContextPath.length() > 0) {
-			if (!uri.startsWith(resourcesContextPath)) {
-				return null;
-			}
+        return file;
+    }
 
-			uri = uri.substring(resourcesContextPath.length());
-		}
 
-		return uri;
-	}
+    /**
+     * Add the directory to the list of directories where files will be serviced from.
+     *
+     * @param docRoot the directory to be added to the list of directories where files will be serviced from.
+     */
+    public final void addDocRoot( Resource docRoot )
+    {
+        docRoots.add( docRoot );
+    }
 
-	/**
-	 * The method will be called, if the static resource requested by the
-	 * {@link Request} wasn't found, so {@link StaticHttpHandler} implementation
-	 * may try to workaround this situation. The default implementation - sends
-	 * a 404 response page by calling
-	 * {@link #customizedErrorPage(Request, Response)}.
-	 * 
-	 * @param request
-	 *            the {@link Request}
-	 * @param response
-	 *            the {@link Response}
-	 * @throws Exception
-	 */
-	protected void onMissingResource(final Request request,
-			final Response response) throws Exception {
-		response.setStatus(HttpStatus.NOT_FOUND_404);
-		customizedErrorPage(request, response);
-	}
 
-	/**
-	 * Lookup a resource based on the request URI, and send it using send file.
-	 * 
-	 * @param uri
-	 *            The request URI
-	 * @param req
-	 *            the {@link Request}
-	 * @param res
-	 *            the {@link Response}
-	 * @throws Exception
-	 */
-	protected boolean handle(final String uri, final Request req,
-			final Response res) throws Exception {
+    /**
+     * Removes the directory from the list of directories where static files will be serviced from.
+     *
+     * @param docRoot the directory to remove.
+     */
+    public void removeDocRoot( File docRoot )
+    {
+        docRoots.remove( docRoot );
+    }
 
-		boolean found = false;
 
-		final Resource[] fileFolders = docRoots.getArray();
-		if (fileFolders == null) {
-			return false;
-		}
+    /**
+     * Based on the {@link Request} URI, try to map the file from the {@link #getDocRoots()}, and send it back to a
+     * client.
+     *
+     * @param request the {@link Request}
+     * @param response the {@link Response}
+     */
+    @Override
+    public void service( final Request request, final Response response ) throws Exception
+    {
+        final String uri = getRelativeURI( request );
 
-		Resource resource = null;
+        if ( ( uri == null ) || !handle( uri, request, response ) )
+        {
+            onMissingResource( request, response );
+        }
+    }
 
-		for (int i = 0; i < fileFolders.length; i++) {
-			final Resource webDir = fileFolders[i];
-			// local file
-			resource = webDir.createRelative(uri);
-			final boolean exists = resource.exists();
 
-			if (exists) {
-				found = true;
-				break;
-			}
-		}
+    protected String getRelativeURI( final Request request )
+    {
+        String uri = request.getRequestURI();
+        if ( uri.indexOf( ".." ) >= 0 )
+        {
+            return null;
+        }
 
-		if (!found) {
-			if (LOGGER.isLoggable(Level.FINE)) {
-				LOGGER.log(Level.FINE, "File not found  {0}", resource);
-			}
-			return true;
-		}
+        final String resourcesContextPath = request.getContextPath();
+        if ( resourcesContextPath.length() > 0 )
+        {
+            if ( !uri.startsWith( resourcesContextPath ) )
+            {
+                return null;
+            }
 
-		sendFile(res, resource);
+            uri = uri.substring( resourcesContextPath.length() );
+        }
 
-		return true;
-	}
+        return uri;
+    }
 
-	public static void sendFile(final Response response, final Resource file)
-			throws IOException {
-		final String path = file.getFilename();
-		final InputStream fis = file.getInputStream();
 
-		try {
-			response.setStatus(HttpStatus.OK_200);
-			String substr;
-			int dot = path.lastIndexOf('.');
-			if (dot < 0) {
-				substr = file.toString();
-				dot = substr.lastIndexOf('.');
-			} else {
-				substr = path;
-			}
-			if (dot > 0) {
-				String ext = substr.substring(dot + 1);
-				String ct = MimeType.get(ext);
-				if (ct != null) {
-					response.setContentType(ct);
-				}
-			} else {
-				response.setContentType(MimeType.get("html"));
-			}
+    /**
+     * The method will be called, if the static resource requested by the {@link Request} wasn't found, so {@link
+     * StaticHttpHandler} implementation may try to workaround this situation. The default implementation - sends a 404
+     * response page by calling {@link #customizedErrorPage(Request, Response)}.
+     *
+     * @param request the {@link Request}
+     * @param response the {@link Response}
+     */
+    protected void onMissingResource( final Request request, final Response response ) throws Exception
+    {
+        response.setStatus( HttpStatus.NOT_FOUND_404 );
+        customizedErrorPage( request, response );
+    }
 
-			final long length = file.contentLength();
-			response.setContentLengthLong(length);
 
-			final OutputBuffer outputBuffer = response.getOutputBuffer();
+    /**
+     * Lookup a resource based on the request URI, and send it using send file.
+     *
+     * @param uri The request URI
+     * @param req the {@link Request}
+     * @param res the {@link Response}
+     */
+    protected boolean handle( final String uri, final Request req, final Response res ) throws Exception
+    {
 
-			byte b[] = new byte[8192];
-			int rd;
-			while ((rd = fis.read(b)) > 0) {
-				// chunk.setBytes(b, 0, rd);
-				outputBuffer.write(b, 0, rd);
-			}
-		} finally {
-			try {
-				fis.close();
-			} catch (IOException ignore) {
-			}
-		}
-	}
+        boolean found = false;
 
+        final Resource[] fileFolders = docRoots.getArray();
+        if ( fileFolders == null )
+        {
+            return false;
+        }
+
+        Resource resource = null;
+
+        for ( int i = 0; i < fileFolders.length; i++ )
+        {
+            final Resource webDir = fileFolders[i];
+            // local file
+            resource = webDir.createRelative( uri );
+            final boolean exists = resource.exists();
+
+            if ( exists )
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if ( !found )
+        {
+            if ( LOGGER.isLoggable( Level.FINE ) )
+            {
+                LOGGER.log( Level.FINE, "File not found  {0}", resource );
+            }
+            return true;
+        }
+
+        sendFile( res, resource );
+
+        return true;
+    }
+
+
+    public static void sendFile( final Response response, final Resource file ) throws IOException
+    {
+        final String path = file.getFilename();
+        final InputStream fis = file.getInputStream();
+
+        try
+        {
+            response.setStatus( HttpStatus.OK_200 );
+            String substr;
+            int dot = path.lastIndexOf( '.' );
+            if ( dot < 0 )
+            {
+                substr = file.toString();
+                dot = substr.lastIndexOf( '.' );
+            }
+            else
+            {
+                substr = path;
+            }
+            if ( dot > 0 )
+            {
+                String ext = substr.substring( dot + 1 );
+                String ct = MimeType.get( ext );
+                if ( ct != null )
+                {
+                    response.setContentType( ct );
+                }
+            }
+            else
+            {
+                response.setContentType( MimeType.get( "html" ) );
+            }
+
+            final long length = file.contentLength();
+            response.setContentLengthLong( length );
+
+            final OutputBuffer outputBuffer = response.getOutputBuffer();
+
+            byte b[] = new byte[8192];
+            int rd;
+            while ( ( rd = fis.read( b ) ) > 0 )
+            {
+                // chunk.setBytes(b, 0, rd);
+                outputBuffer.write( b, 0, rd );
+            }
+        }
+        finally
+        {
+            try
+            {
+                fis.close();
+            }
+            catch ( IOException ignore )
+            {
+            }
+        }
+    }
 }

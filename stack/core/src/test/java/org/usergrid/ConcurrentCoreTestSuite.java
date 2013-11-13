@@ -7,7 +7,11 @@ import org.usergrid.cassandra.Concurrent;
 import org.usergrid.cassandra.ConcurrentSuite;
 import org.usergrid.locking.zookeeper.ZookeeperLockManagerTest;
 import org.usergrid.mq.QueuePathsTest;
-import org.usergrid.persistence.*;
+import org.usergrid.persistence.EntityTest;
+import org.usergrid.persistence.QueryTest;
+import org.usergrid.persistence.QueryUtilsTest;
+import org.usergrid.persistence.SchemaTest;
+import org.usergrid.persistence.UtilsTest;
 import org.usergrid.persistence.cassandra.QueryProcessorTest;
 import org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImplTest;
 import org.usergrid.persistence.query.ir.result.IntersectionIteratorTest;
@@ -19,25 +23,12 @@ import org.usergrid.persistence.query.tree.StringLiteralTest;
 
 
 @RunWith( ConcurrentSuite.class )
-@Suite.SuiteClasses(
-    {
-            ZookeeperLockManagerTest.class,
-            QueuePathsTest.class,
-            QueryProcessorTest.class,
-            SimpleIndexBucketLocatorImplTest.class,
-            EntityTest.class,
-            QueryTest.class,
-            QueryUtilsTest.class,
-            SchemaTest.class,
-            UtilsTest.class,
-            IntersectionIteratorTest.class,
-            SubtractionIteratorTest.class,
-            UnionIteratorTest.class,
-            GrammarTreeTest.class,
-            LongLiteralTest.class,
-            StringLiteralTest.class
-    } )
+@Suite.SuiteClasses( {
+        ZookeeperLockManagerTest.class, QueuePathsTest.class, QueryProcessorTest.class,
+        SimpleIndexBucketLocatorImplTest.class, EntityTest.class, QueryTest.class, QueryUtilsTest.class,
+        SchemaTest.class, UtilsTest.class, IntersectionIteratorTest.class, SubtractionIteratorTest.class,
+        UnionIteratorTest.class, GrammarTreeTest.class, LongLiteralTest.class, StringLiteralTest.class
+} )
 @Concurrent()
 public class ConcurrentCoreTestSuite
-{
-}
+{}

@@ -102,7 +102,7 @@
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
     <module name="EmptyBlock">
       <property name="tokens" value="LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_TRY,LITERAL_WHILE,STATIC_INIT"/>
-      <property name="option" value="text"/>                                                                    <!-- changing block policy to stmt produces 110 new errors -->
+      <property name="option" value="text"/>
     </module>
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
 
@@ -127,11 +127,7 @@
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
 
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-    <!-- <module name="GenericWhitespace"/> -->
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-    <module name="HideUtilityClassConstructor"/>
+    <!--module name="HideUtilityClassConstructor"/ -->
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
 
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
@@ -140,7 +136,8 @@
 
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
     <module name="ImportOrder">
-      <property name="groups" value="java,javax,org,org.apache,org.apache.usergrid,com,net"/>
+      <property name="option" value="bottom"/>
+      <property name="groups" value="java,javax,org.apache,org.apache.usergrid,com,org.usergrid,org,net"/>
       <property name="separated" value="true"/>
     </module>
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
@@ -204,15 +201,11 @@
       <property name="tokens" value="BNOT,DEC,DOT,INC,LNOT,UNARY_MINUS,UNARY_PLUS"/>
     </module>
     
+    <!--
     <module name="NoWhitespaceAfter">
       <property name="allowLineBreaks" value="true"/>
       <property name="tokens" value="ARRAY_INIT"/>
     </module>
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-    <!--
-    <module name="NoWhitespaceBefore"/>
     -->
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
 
@@ -248,14 +241,6 @@
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
 
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-    <module name="SimplifyBooleanExpression"/>
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-    <module name="SimplifyBooleanReturn"/>
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
-
-    <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
     <module name="StaticVariableName"/>
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
 
@@ -265,6 +250,7 @@
 
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->
     <module name="TypecastParenPad">
+      <property name="option" value="space"/>
       <property name="tokens" value="RPAREN,TYPECAST"/>
     </module>
     <!-- ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... -->

@@ -1,7 +1,6 @@
 package org.usergrid.persistence;
 
 
-import me.prettyprint.hector.api.Cluster;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,10 +8,10 @@ import org.usergrid.cassandra.SchemaManager;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.Setup;
 
+import me.prettyprint.hector.api.Cluster;
 
-/**
- * @author zznate
- */
+
+/** @author zznate */
 @Ignore
 public class CoreSchemaManager implements SchemaManager
 {
@@ -37,11 +36,10 @@ public class CoreSchemaManager implements SchemaManager
             setup.init();
             setup.setupSystemKeyspace();
             setup.setupStaticKeyspace();
-
         }
         catch ( Exception ex )
         {
-            LOG.error("Could not setup usergrid core schema", ex);
+            LOG.error( "Could not setup usergrid core schema", ex );
         }
     }
 
@@ -62,7 +60,7 @@ public class CoreSchemaManager implements SchemaManager
         }
         catch ( Exception ex )
         {
-            LOG.error("Could not create default applications", ex);
+            LOG.error( "Could not create default applications", ex );
         }
     }
 
@@ -70,9 +68,9 @@ public class CoreSchemaManager implements SchemaManager
     @Override
     public void destroy()
     {
-        LOG.info("dropping keyspaces");
+        LOG.info( "dropping keyspaces" );
         cluster.dropKeyspace( CassandraService.SYSTEM_KEYSPACE );
         cluster.dropKeyspace( CassandraService.STATIC_APPLICATION_KEYSPACE );
-        LOG.info("keyspaces dropped");
+        LOG.info( "keyspaces dropped" );
     }
 }

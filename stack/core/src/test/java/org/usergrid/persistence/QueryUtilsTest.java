@@ -1,41 +1,43 @@
 package org.usergrid.persistence;
 
-import org.junit.Test;
-import org.usergrid.cassandra.Concurrent;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+import org.usergrid.cassandra.Concurrent;
+
 import static org.junit.Assert.assertEquals;
 
-/**
- * @author zznate
- */
+
+/** @author zznate */
 @Concurrent()
-public class QueryUtilsTest {
+public class QueryUtilsTest
+{
 
     private static final String FAKE_QL = "select color from cat";
 
-    private Map<String,List<String>> params = new HashMap<String, List<String>>();
+    private Map<String, List<String>> params = new HashMap<String, List<String>>();
+
 
     @Test
-    public void extractQueryAlias() {
-        params.put(QueryUtils.PARAM_QL, Arrays.asList(FAKE_QL));
-        String query = QueryUtils.queryStrFrom(params);
-        assertEquals(FAKE_QL, query);
+    public void extractQueryAlias()
+    {
+        params.put( QueryUtils.PARAM_QL, Arrays.asList( FAKE_QL ) );
+        String query = QueryUtils.queryStrFrom( params );
+        assertEquals( FAKE_QL, query );
         params.clear();
 
-        params.put(QueryUtils.PARAM_Q, Arrays.asList(FAKE_QL));
-        query = QueryUtils.queryStrFrom(params);
-        assertEquals(FAKE_QL, query);
+        params.put( QueryUtils.PARAM_Q, Arrays.asList( FAKE_QL ) );
+        query = QueryUtils.queryStrFrom( params );
+        assertEquals( FAKE_QL, query );
         params.clear();
 
-        params.put(QueryUtils.PARAM_QUERY, Arrays.asList(FAKE_QL));
-        query = QueryUtils.queryStrFrom(params);
-        assertEquals(FAKE_QL, query);
+        params.put( QueryUtils.PARAM_QUERY, Arrays.asList( FAKE_QL ) );
+        query = QueryUtils.queryStrFrom( params );
+        assertEquals( FAKE_QL, query );
         params.clear();
-
     }
 }

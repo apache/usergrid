@@ -1,24 +1,26 @@
 package org.usergrid.rest.applications.users;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.codehaus.jackson.JsonNode;
-import org.junit.Rule;
-import org.usergrid.rest.AbstractRestIT;
 
-import javax.ws.rs.core.MediaType;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.core.MediaType;
+
+import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
-import com.sun.jersey.api.client.ClientResponse;
+import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
+import org.usergrid.rest.test.resource.CustomCollection;
+
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
 
-import org.usergrid.rest.test.resource.CustomCollection;
 
 /**
  * // TODO: Document this
@@ -28,178 +30,170 @@ import org.usergrid.rest.test.resource.CustomCollection;
  */
 public class ConnectionResourceTest extends AbstractRestIT
 {
-  @Rule
-  public TestContextSetup context = new TestContextSetup( this );
-
-  @Test
-  public void connectionsQueryTest() {
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
 
-    CustomCollection activities = context.collection("peeps");
-
-    Map stuff = hashMap("type", "chicken");
-
-    activities.create(stuff);
+    @Test
+    public void connectionsQueryTest()
+    {
 
 
-    Map<String, Object> payload = new LinkedHashMap<String, Object>();
-    payload.put("username", "todd");
+        CustomCollection activities = context.collection( "peeps" );
 
-    Map<String, Object> objectOfDesire = new LinkedHashMap<String, Object>();
-    objectOfDesire.put("codingmunchies", "doritoes");
+        Map stuff = hashMap( "type", "chicken" );
 
-    resource().path("/test-organization/test-app/users")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .post(JsonNode.class, payload);
-
-    payload.put("username", "scott");
+        activities.create( stuff );
 
 
-    resource().path("/test-organization/test-app/users")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .post(JsonNode.class, payload);
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put( "username", "todd" );
+
+        Map<String, Object> objectOfDesire = new LinkedHashMap<String, Object>();
+        objectOfDesire.put( "codingmunchies", "doritoes" );
+
+        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, payload );
+
+        payload.put( "username", "scott" );
+
+
+        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, payload );
     /*finish setting up the two users */
 
 
-    ClientResponse toddWant = resource().path("/test-organization/test-app/users/todd/likes/peeps")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.TEXT_HTML)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .post(ClientResponse.class, objectOfDesire);
+        ClientResponse toddWant = resource().path( "/test-organization/test-app/users/todd/likes/peeps" )
+                .queryParam( "access_token", access_token ).accept( MediaType.TEXT_HTML )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( ClientResponse.class, objectOfDesire );
 
-    assertEquals(200, toddWant.getStatus());
+        assertEquals( 200, toddWant.getStatus() );
 
-    JsonNode node = resource().path("/test-organization/test-app/peeps")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE)
-        .get(JsonNode.class);
+        JsonNode node =
+                resource().path( "/test-organization/test-app/peeps" ).queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                        .get( JsonNode.class );
 
-    String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
 
 
-
-
-    try {
-      node = resource().path("/test-organization/test-app/users/scott/likes/" + uuid)
-          .queryParam("access_token", access_token)
-          .accept(MediaType.APPLICATION_JSON)
-          .type(MediaType.APPLICATION_JSON_TYPE)
-          .get(JsonNode.class);
-      assert (false);
-    } catch (UniformInterfaceException uie) {
-      assertEquals(404, uie.getResponse().getClientResponseStatus().getStatusCode());
-      return;
+        try
+        {
+            node = resource().path( "/test-organization/test-app/users/scott/likes/" + uuid )
+                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            assert ( false );
+        }
+        catch ( UniformInterfaceException uie )
+        {
+            assertEquals( 404, uie.getResponse().getClientResponseStatus().getStatusCode() );
+            return;
+        }
     }
 
-  }
 
-  @Test
-  public void connectionsLoopbackTest() {
+    @Test
+    public void connectionsLoopbackTest()
+    {
 
-    CustomCollection things = context.collection("things");
+        CustomCollection things = context.collection( "things" );
 
-    UUID thing1Id = getEntityId(things.create(hashMap("name", "thing1")), 0);
+        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
 
-    UUID thing2Id = getEntityId(things.create(hashMap("name", "thing2")), 0);
-
-
-    //create the connection
-    things.entity(thing1Id).connection("likes").entity(thing2Id).post();
+        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
 
 
-    //test we have the "likes" in our connection meta data response
-
-    JsonNode response = things.entity("thing1").get();
-
-    String url =  getEntity(response, 0).get("metadata").get("connections").get("likes").asText();
+        //create the connection
+        things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
 
-    assertNotNull("Connection url returned in entity", url);
+        //test we have the "likes" in our connection meta data response
 
-    //trim off the start /
-    url = url.substring(1);
+        JsonNode response = things.entity( "thing1" ).get();
 
-
-    //now that we know the URl is correct, follow it
-
-    response = context.collection(url).get();
-
-    UUID returnedUUID = getEntityId(response, 0);
-
-    assertEquals(thing2Id, returnedUUID);
+        String url = getEntity( response, 0 ).get( "metadata" ).get( "connections" ).get( "likes" ).asText();
 
 
-    //now follow the loopback, which should be pointers to the other entity
+        assertNotNull( "Connection url returned in entity", url );
 
-    url = getEntity(response, 0).get("metadata").get("connecting").get("likes").asText();
-
-    assertNotNull("Incoming edge URL provited", url);
-
-    //trim off the start /
-    url = url.substring(1);
-
-    //now we should get thing1 from the loopback url
-
-    response =  context.collection(url).get();
-
-    UUID returned = getEntityId(response, 0);
-
-    assertEquals("Should point to thing1 as an incoming entity connection", thing1Id, returned);
-
-  }
+        //trim off the start /
+        url = url.substring( 1 );
 
 
+        //now that we know the URl is correct, follow it
 
-  @Test
-  public void connectionsUUIDTest() {
+        response = context.collection( url ).get();
 
-    CustomCollection things = context.collection("things");
+        UUID returnedUUID = getEntityId( response, 0 );
 
-    UUID thing1Id = getEntityId(things.create(hashMap("name", "thing1")), 0);
-
-    UUID thing2Id = getEntityId(things.create(hashMap("name", "thing2")), 0);
+        assertEquals( thing2Id, returnedUUID );
 
 
-    //create the connection
-    things.entity(thing1Id).connection("likes").entity(thing2Id).post();
+        //now follow the loopback, which should be pointers to the other entity
+
+        url = getEntity( response, 0 ).get( "metadata" ).get( "connecting" ).get( "likes" ).asText();
+
+        assertNotNull( "Incoming edge URL provited", url );
+
+        //trim off the start /
+        url = url.substring( 1 );
+
+        //now we should get thing1 from the loopback url
+
+        response = context.collection( url ).get();
+
+        UUID returned = getEntityId( response, 0 );
+
+        assertEquals( "Should point to thing1 as an incoming entity connection", thing1Id, returned );
+    }
 
 
-    //test we have the "likes" in our connection meta data response
+    @Test
+    public void connectionsUUIDTest()
+    {
 
-    JsonNode response = things.entity("thing1").get();
+        CustomCollection things = context.collection( "things" );
 
-    String url =  getEntity(response, 0).get("metadata").get("connections").get("likes").asText();
+        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
 
-
-    assertNotNull("Connection url returned in entity", url);
-
-    //trim off the start /
-    url = url.substring(1);
+        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
 
 
-    //now that we know the URl is correct, follow it
+        //create the connection
+        things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
-    response = context.collection(url).get();
 
-    UUID returnedUUID = getEntityId(response, 0);
+        //test we have the "likes" in our connection meta data response
 
-    assertEquals(thing2Id, returnedUUID);
+        JsonNode response = things.entity( "thing1" ).get();
 
-    //get on the collection works, now get it directly by uuid
+        String url = getEntity( response, 0 ).get( "metadata" ).get( "connections" ).get( "likes" ).asText();
 
-    //now we should get thing1 from the loopback url
 
-    response = things.entity(thing1Id).connection("likes").entity(thing2Id).get();
+        assertNotNull( "Connection url returned in entity", url );
 
-    UUID returned = getEntityId(response, 0);
+        //trim off the start /
+        url = url.substring( 1 );
 
-    assertEquals("Should point to thing2 as an entity connection", thing2Id, returned);
 
-  }
+        //now that we know the URl is correct, follow it
 
+        response = context.collection( url ).get();
+
+        UUID returnedUUID = getEntityId( response, 0 );
+
+        assertEquals( thing2Id, returnedUUID );
+
+        //get on the collection works, now get it directly by uuid
+
+        //now we should get thing1 from the loopback url
+
+        response = things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).get();
+
+        UUID returned = getEntityId( response, 0 );
+
+        assertEquals( "Should point to thing2 as an entity connection", thing2Id, returned );
+    }
 }

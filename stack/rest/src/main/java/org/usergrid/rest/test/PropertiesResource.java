@@ -15,15 +15,18 @@
  */
 package org.usergrid.rest.test;
 
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -33,51 +36,58 @@ import org.springframework.stereotype.Component;
 import org.usergrid.rest.AbstractContextResource;
 
 
-/** 
- * For testing purposes only and only works with usergrid.test=true 
- */
+/** For testing purposes only and only works with usergrid.test=true */
 @Component
 @Scope("prototype")
 @Path("/testproperties")
-@Produces({ MediaType.APPLICATION_JSON})
-public class PropertiesResource extends AbstractContextResource {
-  static final Logger logger = LoggerFactory.getLogger(PropertiesResource.class);
+@Produces({ MediaType.APPLICATION_JSON })
+public class PropertiesResource extends AbstractContextResource
+{
+    static final Logger logger = LoggerFactory.getLogger( PropertiesResource.class );
 
-  public PropertiesResource() {}
 
-  @POST
-  public Response setProperties(String body) throws IOException {
+    public PropertiesResource() {}
 
-    Properties props = management.getProperties();
 
-    // only works in test mode
-    String testProp = (String)props.get("usergrid.test");
-    if (testProp == null || !Boolean.parseBoolean(testProp)) {
-      throw new UnsupportedOperationException();
+    @POST
+    public Response setProperties( String body ) throws IOException
+    {
+
+        Properties props = management.getProperties();
+
+        // only works in test mode
+        String testProp = ( String ) props.get( "usergrid.test" );
+        if ( testProp == null || !Boolean.parseBoolean( testProp ) )
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, String> map = mapper.readValue( body, new TypeReference<Map<String, String>>() {} );
+        for ( String key : map.keySet() )
+        {
+            management.getProperties().setProperty( key, map.get( key ) );
+        }
+
+        return Response.created( null ).build();
     }
 
-    ObjectMapper mapper = new ObjectMapper();
-    Map<String, String> map = mapper.readValue(body, new TypeReference<Map<String, String>>() {});
-    for (String key : map.keySet()) {
-      management.getProperties().setProperty(key, map.get(key));
+
+    @GET
+    public Response getProperties() throws Exception
+    {
+
+        Properties props = management.getProperties();
+
+        // only works in test mode
+        String testProp = ( String ) props.get( "usergrid.test" );
+        if ( testProp == null || !Boolean.parseBoolean( testProp ) )
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString( props );
+        return Response.ok( json ).build();
     }
-
-    return Response.created(null).build();
-  } 
-
-  @GET
-  public Response getProperties() throws Exception {
-
-    Properties props = management.getProperties();
-
-    // only works in test mode
-    String testProp = (String)props.get("usergrid.test");
-    if (testProp == null || !Boolean.parseBoolean(testProp)) {
-      throw new UnsupportedOperationException();
-    }
-
-    ObjectMapper mapper = new ObjectMapper();
-    String json = mapper.writeValueAsString(props);
-    return Response.ok(json).build();
-  }
 }
