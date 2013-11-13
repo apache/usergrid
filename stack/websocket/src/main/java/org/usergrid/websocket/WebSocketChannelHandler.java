@@ -39,7 +39,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.security.MessageDigest;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.subject.Subject;
@@ -75,13 +75,9 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
-
 public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(WebSocketChannelHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(WebSocketChannelHandler.class);
 
 	private final EntityManagerFactory emf;
 	private final ServiceManagerFactory smf;
@@ -93,18 +89,9 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
 	Subject subject = null;
 
-	// static ConcurrentHashMap<String, ChannelGroup> subscribers = new
-	// ConcurrentHashMap<String, ChannelGroup>();
+	private static ConcurrentHashMap<String, ChannelGroup> subscribers = new ConcurrentHashMap<String, ChannelGroup>();
 
-	static ConcurrentMap<String, ChannelGroup> subscribers = new MapMaker()
-			.makeComputingMap(new Function<String, ChannelGroup>() {
-				@Override
-				public ChannelGroup apply(String key) {
-					return new DefaultChannelGroup();
-				}
-			});
-
-	List<String> subscriptions;
+  List<String> subscriptions;
 
 	public WebSocketChannelHandler(EntityManagerFactory emf,
 			ServiceManagerFactory smf, ManagementService management,
@@ -149,7 +136,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 		String location = (ssl ? "wss://" : "ws://")
 				+ req.getHeader(HttpHeaders.Names.HOST)
 				+ (path != null ? path : "");
-		logger.info(location);
+		LOG.info(location);
 		return location;
 	}
 
@@ -176,7 +163,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.warn("Unexpected exception from downstream.", e.getCause());
+		LOG.warn("Unexpected exception from downstream.", e.getCause());
 		e.getChannel().close();
 	}
 
@@ -185,7 +172,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 			ChannelStateEvent e) throws Exception {
 		super.channelDisconnected(ctx, e);
 		if (websocket) {
-			logger.info("Websocket disconnected");
+			LOG.info("Websocket disconnected");
 		}
 	}
 
@@ -230,7 +217,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 		} else if (is_ws_request) {
 			// Serve the WebSocket handshake request.
 
-			logger.info("Starting new websocket connection...");
+			LOG.info("Starting new websocket connection...");
 			websocket = true;
 
 			// Create the WebSocket handshake response.
@@ -242,7 +229,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
 			QueryStringDecoder qs = new QueryStringDecoder(req.getUri());
 			String path = qs.getPath();
-			logger.info(path);
+			LOG.info(path);
 
 			// Fill in the headers and contents depending on handshake method.
 			if (req.containsHeader(SEC_WEBSOCKET_KEY1)
@@ -251,8 +238,8 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 				String[] segments = split(path, '/');
 
 				if (segments.length != 3) {
-					logger.info("Wrong number of path segments, expected 3, found "
-							+ segments.length);
+					LOG.info("Wrong number of path segments, expected 3, found "
+              + segments.length);
 					sendHttpResponse(ctx, req, FORBIDDEN);
 					return;
 				}
@@ -261,7 +248,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 				String collStr = segments[1];
 				String idStr = segments[2];
 
-				logger.info(nsStr + "/" + collStr + "/" + idStr);
+				LOG.info(nsStr + "/" + collStr + "/" + idStr);
 
 				if (isEmpty(nsStr) || isEmpty(collStr) || isEmpty(idStr)) {
 					sendHttpResponse(ctx, req, FORBIDDEN);
@@ -330,6 +317,16 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 	// during the lifecycle of a connection i.e. typical minimum lifespan
 	// would be 10 seconds when someone opens an app, it connects, then
 	// they close the app.
+
+  private ChannelGroup getChannelGroupWithDefault(String path) {
+    ChannelGroup group = subscribers.get(path);
+
+    if (group == null) {
+      group = subscribers.putIfAbsent(path, new DefaultChannelGroup());
+    }
+
+    return group;
+  }
 
 	public void addSubscription(String path, Channel channel) {
 		ChannelGroup group = subscribers.get(path);

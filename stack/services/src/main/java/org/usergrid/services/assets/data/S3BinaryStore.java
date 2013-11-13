@@ -1,20 +1,19 @@
 package org.usergrid.services.assets.data;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Properties;
+import java.io.*;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.BlobStoreContextFactory;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.options.GetOptions;
@@ -24,169 +23,161 @@ import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.entities.Asset;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.persistence.Entity;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Module;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
 
-/**
- * @author zznate
- */
 public class S3BinaryStore implements BinaryStore {
 
-  final static Iterable<? extends Module> MODULES =
-          ImmutableSet.of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule());
+  private static final Iterable<? extends Module> MODULES =
+      ImmutableSet.of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
+          new NettyPayloadModule());
 
-  private Logger logger = LoggerFactory.getLogger(S3BinaryStore.class);
-
-  private final String secretKey;
-  private final String accessId;
-  private static String S3_PROVIDER = "s3";
-
-  private Properties overrides;
-  private final BlobStoreContext context;
-
+  private static final Logger LOG = LoggerFactory.getLogger(S3BinaryStore.class);
   private static final long FIVE_MB = (FileUtils.ONE_MB * 5);
 
-  private String bucketName = "usergrid-test";
+  private BlobStoreContext context;
+  private String accessId;
+  private String secretKey;
+  private String bucketName;
+  private ExecutorService executor = Executors.newFixedThreadPool(10);
+
+  @Autowired
+  private EntityManagerFactory emf;
 
   public S3BinaryStore(String accessId, String secretKey, String bucketName) {
     this.accessId = accessId;
     this.secretKey = secretKey;
     this.bucketName = bucketName;
-    overrides = new Properties();
-    //overrides.setProperty("jclouds.mpu.parallel.degree", threadcount);
-    overrides.setProperty(S3_PROVIDER + ".identity", accessId);
-    overrides.setProperty(S3_PROVIDER + ".credential", secretKey);
+  }
 
-    context = new BlobStoreContextFactory().createContext("s3", MODULES, overrides);
+  private BlobStoreContext getContext() {
+    if (context == null) {
+      context = ContextBuilder.newBuilder("aws-s3")
+          .credentials(accessId, secretKey)
+          .modules(MODULES)
+          .buildView(BlobStoreContext.class);
 
-    // Create Container (the bucket in s3)
-    try {
-      AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
-      // BlobStore (returns false if it already exists)
-      ListenableFuture<Boolean> createContainer = blobStore.createContainerInLocation(null, bucketName);
-      createContainer.get();
-
-    } catch(Exception ex) {
-      logger.error("Could not start binary service: {}", ex.getMessage());
-      throw new RuntimeException(ex);
+      BlobStore blobStore = context.getBlobStore();
+      blobStore.createContainerInLocation(null, bucketName);
     }
 
+    return context;
   }
 
   public void destroy() {
-    context.close();
+    if (context != null) context.close();
   }
 
   @Override
-  public void write(UUID appId, Asset asset, InputStream inputStream) {
-    try {
-      AsyncBlobStore blobStore = context.getAsyncBlobStore();
-      // Add a Blob
-      // objectname will be in the form of org/app/UUID
-      // #payload can take an input stream
-      // TODO toggle to largeAsset ~ > 5mb: IOUtils#copyLarge to a tmp file
-      // TODO do this via ListenableFuture on dedicated thread pool
+  public void write(final UUID appId, final Entity entity, InputStream inputStream) throws IOException {
 
-      //byte[] data = IOUtils.toByteArray(inputStream);
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      long copied = IOUtils.copyLarge(inputStream, baos, 0, FIVE_MB);
-      BlobBuilder.PayloadBlobBuilder bb = null;
+    String uploadFileName = AssetUtils.buildAssetKey(appId, entity);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    long written = IOUtils.copyLarge(inputStream, baos, 0, FIVE_MB);
+    byte[] data = baos.toByteArray();
 
-      // If we are bigger than 5mb, dump to a tmp file and upload from there
-      if ( copied == FIVE_MB ) {
-        File f;
-        f = File.createTempFile(asset.getUuid().toString(), "tmp");
-        f.deleteOnExit();
-        OutputStream os = null;
-        try {
-          os = new BufferedOutputStream(new FileOutputStream(f.getAbsolutePath()));
+    final Map<String, Object> fileMetadata = AssetUtils.getFileMetadata(entity);
+    fileMetadata.put(AssetUtils.LAST_MODIFIED, System.currentTimeMillis());
 
-          copied = IOUtils.copyLarge(inputStream, os, 0, (FileUtils.ONE_GB * 5));
+    String mimeType = AssetMimeHandler.get().getMimeType(entity, data);
 
-          bb = blobStore.blobBuilder(AssetUtils.buildAssetKey(appId, asset))
-                  .payload(f)
-                  .calculateMD5()
-                  .contentType(AssetMimeHandler.get().getMimeType(asset, f));
-        } catch (Exception ex) {
-          ex.printStackTrace();
-        } finally {
-          IOUtils.closeQuietly(os);
-          if ( f != null && f.exists() ) {
-            f.delete();
-          }
-        }
-      } else {
-        byte[] data = baos.toByteArray();
-        copied = data.length;
-        bb = blobStore.blobBuilder(AssetUtils.buildAssetKey(appId, asset))
-                .payload(data)
-                .calculateMD5()
-                .contentType(AssetMimeHandler.get().getMimeType(asset, data));
+    if (written < FIVE_MB) { // total smaller than 5mb
+
+      BlobStore blobStore = getContext().getBlobStore();
+      BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder(uploadFileName)
+                                            .payload(data)
+                                            .calculateMD5()
+                                            .contentType(mimeType);
+
+      fileMetadata.put(AssetUtils.CONTENT_LENGTH, written);
+      if (fileMetadata.get(AssetUtils.CONTENT_DISPOSITION) != null) {
+        bb.contentDisposition(fileMetadata.get(AssetUtils.CONTENT_DISPOSITION).toString());
       }
-
-      asset.setProperty(AssetUtils.CONTENT_LENGTH,copied);
-
-      if ( asset.getProperty(AssetUtils.CONTENT_DISPOSITION) != null ) {
-        bb.contentDisposition(asset.getProperty(AssetUtils.CONTENT_DISPOSITION).toString());
-      }
-      Blob blob = bb.build();
+      final Blob blob = bb.build();
 
       String md5sum = Hex.encodeHexString(blob.getMetadata().getContentMetadata().getContentMD5());
-      asset.setProperty(AssetUtils.CHECKSUM,md5sum);
-      // containername?
-      ListenableFuture<String> futureETag = blobStore.putBlob(bucketName, blob, PutOptions.Builder.multipart());
-      // move update of properties into: futureETag.addListener();
+      fileMetadata.put(AssetUtils.CHECKSUM, md5sum);
 
-      // asynchronously wait for the upload if we are not doing a large file
-      if ( copied < FIVE_MB ) {
-        String eTag = futureETag.get();
-        asset.setProperty(AssetUtils.E_TAG,eTag);
+      String eTag = blobStore.putBlob(bucketName, blob);
+      fileMetadata.put(AssetUtils.E_TAG, eTag);
+
+    } else { // bigger than 5mb... dump 5 mb tmp files and upload from them
+
+      // todo: yes, AsyncBlobStore is deprecated, but there appears to be no replacement yet
+      final AsyncBlobStore blobStore = getContext().getAsyncBlobStore();
+
+      File tempFile = File.createTempFile(entity.getUuid().toString(), "tmp");
+      tempFile.deleteOnExit();
+      OutputStream os = null;
+      try {
+        os = new BufferedOutputStream(new FileOutputStream(tempFile.getAbsolutePath()));
+        os.write(data);
+        written += IOUtils.copyLarge(inputStream, os, 0, (FileUtils.ONE_GB * 5));
+      } finally {
+        IOUtils.closeQuietly(os);
       }
 
-    } catch (Exception e) {
-      e.printStackTrace();
+      BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder(uploadFileName)
+          .payload(tempFile)
+          .calculateMD5()
+          .contentType(mimeType);
+
+      fileMetadata.put(AssetUtils.CONTENT_LENGTH, written);
+      if (fileMetadata.get(AssetUtils.CONTENT_DISPOSITION) != null) {
+        bb.contentDisposition(fileMetadata.get(AssetUtils.CONTENT_DISPOSITION).toString());
+      }
+      final Blob blob = bb.build();
+
+      final File finalTempFile = tempFile;
+      final ListenableFuture<String> future = blobStore.putBlob(bucketName, blob, PutOptions.Builder.multipart());
+
+      Runnable listener = new Runnable() {
+        @Override
+        public void run() {
+          try {
+            String eTag = future.get();
+            fileMetadata.put(AssetUtils.E_TAG, eTag);
+            EntityManager em = emf.getEntityManager(appId);
+            em.update(entity);
+            finalTempFile.delete();
+          } catch (Exception e) {
+            LOG.error("error uploading", e);
+          }
+          if (finalTempFile != null && finalTempFile.exists()) { finalTempFile.delete(); }
+        }
+      };
+      future.addListener(listener, executor);
     }
   }
 
-
-
   @Override
-  public InputStream read(UUID appId, Asset asset, long offset, long length) {
-    AsyncBlobStore blobStore = context.getAsyncBlobStore();
-    ListenableFuture<Blob> blobFuture;
-    try {
-      if ( offset == 0 && length == FIVE_MB ) {
-        // missing file will throw: org.jclouds.aws.AWSResponseException:
-        blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset));
-      } else {
-        GetOptions options = GetOptions.Builder.range(offset, length);
-        blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset), options);
-      }
-      return blobFuture.get().getPayload().getInput();
-      //return blob.getPayload().
-      //return null;
-    } catch (Exception ex) {
-      // TODO throw typed exception
-      ex.printStackTrace();
+  public InputStream read(UUID appId, Entity entity, long offset, long length) throws IOException {
+    BlobStore blobStore = getContext().getBlobStore();
+    Blob blob;
+    if (offset == 0 && length == FIVE_MB) {
+      blob = blobStore.getBlob(bucketName, AssetUtils.buildAssetKey(appId, entity));
+    } else {
+      GetOptions options = GetOptions.Builder.range(offset, length);
+      blob = blobStore.getBlob(bucketName, AssetUtils.buildAssetKey(appId, entity), options);
     }
-    return null;
+    if (blob == null || blob.getPayload() == null) return null;
+    return blob.getPayload().getInput();
   }
 
   @Override
-  public InputStream read(UUID appId, Asset asset) {
-    return read(appId, asset,0,FIVE_MB);
+  public InputStream read(UUID appId, Entity entity) throws IOException {
+    return read(appId, entity, 0, FIVE_MB);
   }
 
   @Override
-  public void delete(UUID appId, Asset asset) {
-
-    AsyncBlobStore blobStore = context.getAsyncBlobStore();
-
-    blobStore.removeBlob(bucketName, AssetUtils.buildAssetKey(appId, asset));
-
+  public void delete(UUID appId, Entity entity) {
+    BlobStore blobStore = getContext().getBlobStore();
+    blobStore.removeBlob(bucketName, AssetUtils.buildAssetKey(appId, entity));
   }
 }
 

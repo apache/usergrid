@@ -92,7 +92,7 @@
 
               <argLine>-Xmx${services.it.heapmax} -Xms${services.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
-                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
 
               <includes>
@@ -148,7 +148,7 @@
               <forkMode>once</forkMode>
               <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
-                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
 
               <includes>
@@ -189,7 +189,7 @@
               <forkMode>once</forkMode>
               <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
-                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+                -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
 
               <includes>
@@ -249,12 +249,12 @@
           </systemPropertyVariables>
 
           <parallel>both</parallel>
-          <forkCount>4</forkCount>
+          <forkCount>${services.it.forkCount}</forkCount>
           <reuseForks>false</reuseForks>
 
           <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
           <argLine>
-            -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
+            -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
           </argLine>
 
           <includes>
@@ -360,11 +360,6 @@
       <artifactId>jersey-json</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>eu.medsea.mimeutil</groupId>
-      <artifactId>mime-util</artifactId>
-    </dependency>
-
     <!-- Codehaus, JClouds, Spring and Other Org Dependencies -->
 
     <dependency>
@@ -383,32 +378,32 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds</groupId>
+      <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-blobstore</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds</groupId>
+      <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-core</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds</groupId>
+      <groupId>org.apache.jclouds</groupId>
       <artifactId>jclouds-allblobstore</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-netty</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-apachehc</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-log4j</artifactId>
       <exclusions>
         <exclusion>
@@ -419,7 +414,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jclouds.driver</groupId>
+      <groupId>org.apache.jclouds.driver</groupId>
       <artifactId>jclouds-slf4j</artifactId>
     </dependency>
 
@@ -433,6 +428,10 @@
          <artifactId>slf4j-api</artifactId>
      </dependency>
 
+     <dependency>
+         <groupId>org.apache.tika</groupId>
+         <artifactId>tika-core</artifactId>
+     </dependency>
 
 
       <!-- Testing and Logging Dependencies -->

@@ -2,27 +2,28 @@ package org.usergrid.services.assets.data;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.entities.Asset;
+import org.usergrid.persistence.Entity;
 import org.usergrid.utils.StringUtils;
 
 import com.google.common.base.Preconditions;
 
-/**
- * @author zznate
- */
 public class AssetUtils {
-  private static Logger logger = LoggerFactory.getLogger(AssetUtils.class);
+  private static Logger LOG = LoggerFactory.getLogger(AssetUtils.class);
 
+  public static final String FILE_METADATA = "file-metadata";
   public static final String CONTENT_TYPE = "content-type";
   public static final String CONTENT_LENGTH = "content-length";
   public static final String CONTENT_DISPOSITION = "content-disposition";
   public static final String E_TAG = "etag";
   public static final String CHECKSUM = "checksum";
+  public static final String LAST_MODIFIED = "last-modified";
 
   /**
    * Returns the key for the bucket in the following form:
@@ -31,10 +32,10 @@ public class AssetUtils {
    * @param asset
    * @return
    */
-  public static String buildAssetKey(UUID appId, Asset asset) {
-    Preconditions.checkArgument(asset.getUuid() != null, "The asset provided to buildAssetKey had a null UUID");
+  public static String buildAssetKey(UUID appId, Entity entity) {
+    Preconditions.checkArgument(entity.getUuid() != null, "The asset provided to buildAssetKey had a null UUID");
     Preconditions.checkArgument(appId !=null, "The appId provided to buildAssetKey was null");
-    return appId.toString().concat("/").concat(asset.getUuid().toString());
+    return appId.toString().concat("/").concat(entity.getUuid().toString());
   }
 
   /**
@@ -48,10 +49,44 @@ public class AssetUtils {
       try {
         moded = DateUtils.parseDate(headerValue, DEFAULT_PATTERNS);
       } catch (ParseException pe) {
-        logger.error("Could not parse date format from If-Modified-Since header: " + headerValue);
+        LOG.error("Could not parse date format from If-Modified-Since header: " + headerValue);
       }
     }
     return moded;
+  }
+
+  /** side-effect: sets file-metadata on the entity if not present */
+  public static Map<String,Object> getFileMetadata(Entity entity) {
+    Map<String,Object> metadata = (Map<String,Object>)entity.getProperty(AssetUtils.FILE_METADATA);
+    if (metadata == null) {
+      metadata = new HashMap<String,Object>();
+      entity.setProperty(AssetUtils.FILE_METADATA, metadata);
+      addLegacyMetadata(entity, metadata);
+    }
+    // must always have a last modified. if not in the metadata, grab the entity's
+    if (metadata.get(LAST_MODIFIED) == null) {
+      metadata.put(LAST_MODIFIED, entity.getModified());
+    }
+    return metadata;
+  }
+
+  /** @deprecated for legacy use */
+  private static void addLegacyMetadata(Entity entity, Map<String,Object> metadata) {
+    if (entity.getProperty(CONTENT_TYPE) != null) {
+      metadata.put(CONTENT_TYPE, entity.getProperty(CONTENT_TYPE));
+    }
+    if (entity.getProperty(CONTENT_LENGTH) != null) {
+      metadata.put(CONTENT_LENGTH, entity.getProperty(CONTENT_LENGTH));
+    }
+    if (entity.getProperty(CONTENT_DISPOSITION) != null) {
+      metadata.put(CONTENT_DISPOSITION, entity.getProperty(CONTENT_DISPOSITION));
+    }
+    if (entity.getProperty(E_TAG) != null) {
+      metadata.put(E_TAG, entity.getProperty(E_TAG));
+    }
+    if (entity.getProperty(CHECKSUM) != null) {
+      metadata.put(CHECKSUM, entity.getProperty(CHECKSUM));
+    }
   }
 
   /***

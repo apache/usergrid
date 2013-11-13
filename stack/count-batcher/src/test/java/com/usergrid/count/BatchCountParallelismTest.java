@@ -66,9 +66,9 @@ public class BatchCountParallelismTest {
     System.out.println("size: " +calls.size());
 
     cdl.await();
-    exec.awaitTermination(2,TimeUnit.SECONDS);
+//    exec.awaitTermination(2,TimeUnit.SECONDS);
 
-    //exec.awaitTermination(3, TimeUnit.SECONDS);
+    exec.awaitTermination(3, TimeUnit.SECONDS);
     // we should have 100 total invocations of AbstractBatcher#add
     assertEquals(101, batcher.invocationCounter.count());
     // we should have submitted 10 batches

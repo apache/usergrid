@@ -4,15 +4,15 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.entities.Asset;
 
 /**
  * A binary store implementation using the local file system
- *
- * @author zznate
  */
 public class LocalFileBinaryStore implements BinaryStore {
 
@@ -34,60 +34,48 @@ public class LocalFileBinaryStore implements BinaryStore {
   /**
    * Common method of contructing the file object based on the configured repos
    * and {@link org.usergrid.persistence.entities.Asset#getPath()}
-   * @param asset
-   * @return
    */
-  private File path(UUID appId, Asset asset) {
-    return new File(reposLocation, AssetUtils.buildAssetKey(appId, asset));
+  private File path(UUID appId, Entity entity) {
+    return new File(reposLocation, AssetUtils.buildAssetKey(appId, entity));
   }
 
   @Override
-  public void write(UUID appId, Asset asset, InputStream inputStream) {
+  public void write(UUID appId, Entity entity, InputStream inputStream) throws IOException {
 
-    File file = path(appId, asset);
-    try {
+    File file = path(appId, entity);
 
-      FileUtils.copyInputStreamToFile(inputStream, file);
+    FileUtils.copyInputStreamToFile(inputStream, file);
 
-      long size = FileUtils.sizeOf(file);
+    long size = FileUtils.sizeOf(file);
 
-      asset.setProperty("content-length",size);
+    Map<String,Object> fileMetadata = AssetUtils.getFileMetadata(entity);
+    fileMetadata.put(AssetUtils.CONTENT_LENGTH, size);
+    fileMetadata.put(AssetUtils.LAST_MODIFIED, System.currentTimeMillis());
 
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
     // if we were successful, write the mime type
     if ( file.exists() ) {
-      AssetMimeHandler.get().getMimeType(asset, file);
+      AssetMimeHandler.get().getMimeType(entity, file);
     }
   }
 
   @Override
-  public InputStream read(UUID appId, Asset asset) {
-    return read(appId, asset, 0, FileUtils.ONE_MB * 5);
+  public InputStream read(UUID appId, Entity entity) throws IOException {
+    return read(appId, entity, 0, FileUtils.ONE_MB * 5);
   }
 
   @Override
-  public InputStream read(UUID appId, Asset asset, long offset, long length) {
-    try {
-      return new BufferedInputStream(FileUtils.openInputStream(path(appId, asset)));
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
-    // TODO throw typed exception
-    return null;
+  public InputStream read(UUID appId, Entity entity, long offset, long length) throws IOException {
+    return new BufferedInputStream(FileUtils.openInputStream(path(appId, entity)));
   }
 
   /**
    * Deletes the asset if it is a file. Does nothing if
    * {@link org.usergrid.persistence.entities.Asset#getPath()}
    * represents a directory.
-   *
-   * @param asset
    */
   @Override
-  public void delete(UUID appId, Asset asset) {
-    File file = path(appId, asset);
+  public void delete(UUID appId, Entity entity) {
+    File file = path(appId, entity);
     if ( file.exists() && !file.isDirectory() ) {
       FileUtils.deleteQuietly(file);
     }

@@ -17,7 +17,7 @@
     <!-- Usergrid Dependencies -->
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.hectorclient</groupId>
       <artifactId>hector-core</artifactId>
     </dependency>
 
