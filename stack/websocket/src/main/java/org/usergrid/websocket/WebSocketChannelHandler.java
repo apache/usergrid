@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,34 +15,11 @@
  ******************************************************************************/
 package org.usergrid.websocket;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.removeEnd;
-import static org.apache.commons.lang.StringUtils.split;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.ORIGIN;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_KEY1;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_KEY2;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_LOCATION;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_ORIGIN;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_PROTOCOL;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.WEBSOCKET_LOCATION;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.WEBSOCKET_ORIGIN;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.WEBSOCKET_PROTOCOL;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Values.WEBSOCKET;
-import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.security.MessageDigest;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.shiro.mgt.SessionsSecurityManager;
-import org.apache.shiro.subject.Subject;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -75,280 +52,346 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
 
+import org.apache.shiro.mgt.SessionsSecurityManager;
+import org.apache.shiro.subject.Subject;
+
 import com.google.common.base.Function;
 import com.google.common.collect.MapMaker;
 
-public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.removeEnd;
+import static org.apache.commons.lang.StringUtils.split;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.ORIGIN;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_KEY1;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_KEY2;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_LOCATION;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_ORIGIN;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_PROTOCOL;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.WEBSOCKET_LOCATION;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.WEBSOCKET_ORIGIN;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.WEBSOCKET_PROTOCOL;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Values.WEBSOCKET;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
+import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
+import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
+import static org.jboss.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(WebSocketChannelHandler.class);
 
-	private final EntityManagerFactory emf;
-	private final ServiceManagerFactory smf;
-	private final ManagementService management;
-	private final SessionsSecurityManager securityManager;
-	private final boolean ssl;
+public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler
+{
 
-	boolean websocket = false;
+    private static final Logger logger = LoggerFactory.getLogger( WebSocketChannelHandler.class );
 
-	Subject subject = null;
+    private final EntityManagerFactory emf;
+    private final ServiceManagerFactory smf;
+    private final ManagementService management;
+    private final SessionsSecurityManager securityManager;
+    private final boolean ssl;
 
-	// static ConcurrentHashMap<String, ChannelGroup> subscribers = new
-	// ConcurrentHashMap<String, ChannelGroup>();
+    boolean websocket = false;
 
-	static ConcurrentMap<String, ChannelGroup> subscribers = new MapMaker()
-			.makeComputingMap(new Function<String, ChannelGroup>() {
-				@Override
-				public ChannelGroup apply(String key) {
-					return new DefaultChannelGroup();
-				}
-			});
+    Subject subject = null;
 
-	List<String> subscriptions;
+    // static ConcurrentHashMap<String, ChannelGroup> subscribers = new
+    // ConcurrentHashMap<String, ChannelGroup>();
 
-	public WebSocketChannelHandler(EntityManagerFactory emf,
-			ServiceManagerFactory smf, ManagementService management,
-			SessionsSecurityManager securityManager, boolean ssl) {
-		super();
+    static ConcurrentMap<String, ChannelGroup> subscribers =
+            new MapMaker().makeComputingMap( new Function<String, ChannelGroup>()
+            {
+                @Override
+                public ChannelGroup apply( String key )
+                {
+                    return new DefaultChannelGroup();
+                }
+            } );
 
-		this.emf = emf;
-		this.smf = smf;
-		this.management = management;
-		this.securityManager = securityManager;
-		this.ssl = ssl;
+    List<String> subscriptions;
 
-		if (securityManager != null) {
-			subject = new Subject.Builder(securityManager).buildSubject();
-		}
-	}
 
-	public EntityManagerFactory getEmf() {
-		return emf;
-	}
+    public WebSocketChannelHandler( EntityManagerFactory emf, ServiceManagerFactory smf, ManagementService management,
+                                    SessionsSecurityManager securityManager, boolean ssl )
+    {
+        super();
 
-	public ServiceManagerFactory getSmf() {
-		return smf;
-	}
+        this.emf = emf;
+        this.smf = smf;
+        this.management = management;
+        this.securityManager = securityManager;
+        this.ssl = ssl;
 
-	public ManagementService getOrganizations() {
-		return management;
-	}
+        if ( securityManager != null )
+        {
+            subject = new Subject.Builder( securityManager ).buildSubject();
+        }
+    }
 
-	public SessionsSecurityManager getSecurityManager() {
-		return securityManager;
-	}
 
-	private String getWebSocketLocation(HttpRequest req) {
-		String path = req.getUri();
-		if (path.equals("/")) {
-			path = null;
-		}
-		if (path != null) {
-			path = removeEnd(path, "/");
-		}
-		String location = (ssl ? "wss://" : "ws://")
-				+ req.getHeader(HttpHeaders.Names.HOST)
-				+ (path != null ? path : "");
-		logger.info(location);
-		return location;
-	}
+    public EntityManagerFactory getEmf()
+    {
+        return emf;
+    }
 
-	private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req,
-			HttpResponse res) {
-		// Generate an error page if response status code is not OK (200).
-		if (res.getStatus().getCode() != 200) {
-			res.setContent(ChannelBuffers.copiedBuffer(res.getStatus()
-					.toString(), CharsetUtil.UTF_8));
-			setContentLength(res, res.getContent().readableBytes());
-		}
 
-		// Send the response and close the connection if necessary.
-		ChannelFuture f = ctx.getChannel().write(res);
-		if (!isKeepAlive(req) || (res.getStatus().getCode() != 200)) {
-			f.addListener(ChannelFutureListener.CLOSE);
-		}
-	}
+    public ServiceManagerFactory getSmf()
+    {
+        return smf;
+    }
 
-	private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req,
-			HttpResponseStatus status) {
-		sendHttpResponse(ctx, req, new DefaultHttpResponse(HTTP_1_1, status));
-	}
 
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.warn("Unexpected exception from downstream.", e.getCause());
-		e.getChannel().close();
-	}
+    public ManagementService getOrganizations()
+    {
+        return management;
+    }
 
-	@Override
-	public void channelDisconnected(ChannelHandlerContext ctx,
-			ChannelStateEvent e) throws Exception {
-		super.channelDisconnected(ctx, e);
-		if (websocket) {
-			logger.info("Websocket disconnected");
-		}
-	}
 
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-			throws Exception {
-		Object msg = e.getMessage();
-		if (msg instanceof HttpRequest) {
-			handleHttpRequest(ctx, (HttpRequest) msg);
-		} else if (msg instanceof WebSocketFrame) {
-			handleWebSocketFrame(ctx, (WebSocketFrame) msg);
-		}
-	}
+    public SessionsSecurityManager getSecurityManager()
+    {
+        return securityManager;
+    }
 
-	private void handleHttpRequest(ChannelHandlerContext ctx, HttpRequest req)
-			throws Exception {
-		// Allow only GET methods.
-		if (req.getMethod() != GET) {
-			sendHttpResponse(ctx, req, FORBIDDEN);
-			return;
-		}
 
-		boolean is_ws_request = Values.UPGRADE.equalsIgnoreCase(req
-				.getHeader(CONNECTION))
-				&& WEBSOCKET.equalsIgnoreCase(req.getHeader(Names.UPGRADE));
+    private String getWebSocketLocation( HttpRequest req )
+    {
+        String path = req.getUri();
+        if ( path.equals( "/" ) )
+        {
+            path = null;
+        }
+        if ( path != null )
+        {
+            path = removeEnd( path, "/" );
+        }
+        String location =
+                ( ssl ? "wss://" : "ws://" ) + req.getHeader( HttpHeaders.Names.HOST ) + ( path != null ? path : "" );
+        logger.info( location );
+        return location;
+    }
 
-		// Send the demo page.
-		if (!is_ws_request && req.getUri().equals("/")) {
-			HttpResponse res = new DefaultHttpResponse(HTTP_1_1, OK);
 
-			ChannelBuffer content = WebSocketServerIndexPage
-					.getContent(getWebSocketLocation(req));
+    private void sendHttpResponse( ChannelHandlerContext ctx, HttpRequest req, HttpResponse res )
+    {
+        // Generate an error page if response status code is not OK (200).
+        if ( res.getStatus().getCode() != 200 )
+        {
+            res.setContent( ChannelBuffers.copiedBuffer( res.getStatus().toString(), CharsetUtil.UTF_8 ) );
+            setContentLength( res, res.getContent().readableBytes() );
+        }
 
-			res.setHeader(CONTENT_TYPE, "text/html; charset=UTF-8");
-			setContentLength(res, content.readableBytes());
+        // Send the response and close the connection if necessary.
+        ChannelFuture f = ctx.getChannel().write( res );
+        if ( !isKeepAlive( req ) || ( res.getStatus().getCode() != 200 ) )
+        {
+            f.addListener( ChannelFutureListener.CLOSE );
+        }
+    }
 
-			res.setContent(content);
-			sendHttpResponse(ctx, req, res);
 
-			return;
+    private void sendHttpResponse( ChannelHandlerContext ctx, HttpRequest req, HttpResponseStatus status )
+    {
+        sendHttpResponse( ctx, req, new DefaultHttpResponse( HTTP_1_1, status ) );
+    }
 
-		} else if (is_ws_request) {
-			// Serve the WebSocket handshake request.
 
-			logger.info("Starting new websocket connection...");
-			websocket = true;
+    @Override
+    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e )
+    {
+        logger.warn( "Unexpected exception from downstream.", e.getCause() );
+        e.getChannel().close();
+    }
 
-			// Create the WebSocket handshake response.
-			HttpResponse res = new DefaultHttpResponse(
-					HTTP_1_1,
-					new HttpResponseStatus(101, "Web Socket Protocol Handshake"));
-			res.addHeader(Names.UPGRADE, WEBSOCKET);
-			res.addHeader(CONNECTION, Values.UPGRADE);
 
-			QueryStringDecoder qs = new QueryStringDecoder(req.getUri());
-			String path = qs.getPath();
-			logger.info(path);
+    @Override
+    public void channelDisconnected( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception
+    {
+        super.channelDisconnected( ctx, e );
+        if ( websocket )
+        {
+            logger.info( "Websocket disconnected" );
+        }
+    }
 
-			// Fill in the headers and contents depending on handshake method.
-			if (req.containsHeader(SEC_WEBSOCKET_KEY1)
-					&& req.containsHeader(SEC_WEBSOCKET_KEY2)) {
 
-				String[] segments = split(path, '/');
+    @Override
+    public void messageReceived( ChannelHandlerContext ctx, MessageEvent e ) throws Exception
+    {
+        Object msg = e.getMessage();
+        if ( msg instanceof HttpRequest )
+        {
+            handleHttpRequest( ctx, ( HttpRequest ) msg );
+        }
+        else if ( msg instanceof WebSocketFrame )
+        {
+            handleWebSocketFrame( ctx, ( WebSocketFrame ) msg );
+        }
+    }
 
-				if (segments.length != 3) {
-					logger.info("Wrong number of path segments, expected 3, found "
-							+ segments.length);
-					sendHttpResponse(ctx, req, FORBIDDEN);
-					return;
-				}
 
-				String nsStr = segments[0];
-				String collStr = segments[1];
-				String idStr = segments[2];
+    private void handleHttpRequest( ChannelHandlerContext ctx, HttpRequest req ) throws Exception
+    {
+        // Allow only GET methods.
+        if ( req.getMethod() != GET )
+        {
+            sendHttpResponse( ctx, req, FORBIDDEN );
+            return;
+        }
 
-				logger.info(nsStr + "/" + collStr + "/" + idStr);
+        boolean is_ws_request = Values.UPGRADE.equalsIgnoreCase( req.getHeader( CONNECTION ) ) && WEBSOCKET
+                .equalsIgnoreCase( req.getHeader( Names.UPGRADE ) );
 
-				if (isEmpty(nsStr) || isEmpty(collStr) || isEmpty(idStr)) {
-					sendHttpResponse(ctx, req, FORBIDDEN);
-					return;
-				}
+        // Send the demo page.
+        if ( !is_ws_request && req.getUri().equals( "/" ) )
+        {
+            HttpResponse res = new DefaultHttpResponse( HTTP_1_1, OK );
 
-				// New handshake method with a challenge:
-				res.addHeader(SEC_WEBSOCKET_ORIGIN, req.getHeader(ORIGIN));
-				res.addHeader(SEC_WEBSOCKET_LOCATION, getWebSocketLocation(req));
-				String protocol = req.getHeader(SEC_WEBSOCKET_PROTOCOL);
-				if (protocol != null) {
-					res.addHeader(SEC_WEBSOCKET_PROTOCOL, protocol);
-				}
+            ChannelBuffer content = WebSocketServerIndexPage.getContent( getWebSocketLocation( req ) );
 
-				// Calculate the answer of the challenge.
-				String key1 = req.getHeader(SEC_WEBSOCKET_KEY1);
-				String key2 = req.getHeader(SEC_WEBSOCKET_KEY2);
-				int a = (int) (Long.parseLong(key1.replaceAll("[^0-9]", "")) / key1
-						.replaceAll("[^ ]", "").length());
-				int b = (int) (Long.parseLong(key2.replaceAll("[^0-9]", "")) / key2
-						.replaceAll("[^ ]", "").length());
-				long c = req.getContent().readLong();
-				ChannelBuffer input = ChannelBuffers.buffer(16);
-				input.writeInt(a);
-				input.writeInt(b);
-				input.writeLong(c);
-				ChannelBuffer output = ChannelBuffers
-						.wrappedBuffer(MessageDigest.getInstance("MD5").digest(
-								input.array()));
-				res.setContent(output);
-			} else {
-				// Old handshake method with no challenge:
-				res.addHeader(WEBSOCKET_ORIGIN, req.getHeader(ORIGIN));
-				res.addHeader(WEBSOCKET_LOCATION, getWebSocketLocation(req));
-				String protocol = req.getHeader(WEBSOCKET_PROTOCOL);
-				if (protocol != null) {
-					res.addHeader(WEBSOCKET_PROTOCOL, protocol);
-				}
-			}
+            res.setHeader( CONTENT_TYPE, "text/html; charset=UTF-8" );
+            setContentLength( res, content.readableBytes() );
 
-			// Upgrade the connection and send the handshake response.
-			ChannelPipeline p = ctx.getChannel().getPipeline();
-			p.remove("aggregator");
-			p.replace("decoder", "wsdecoder", new WebSocketFrameDecoder());
+            res.setContent( content );
+            sendHttpResponse( ctx, req, res );
 
-			ctx.getChannel().write(res);
+            return;
+        }
+        else if ( is_ws_request )
+        {
+            // Serve the WebSocket handshake request.
 
-			p.replace("encoder", "wsencoder", new WebSocketFrameEncoder());
+            logger.info( "Starting new websocket connection..." );
+            websocket = true;
 
-			return;
-		}
+            // Create the WebSocket handshake response.
+            HttpResponse res =
+                    new DefaultHttpResponse( HTTP_1_1, new HttpResponseStatus( 101, "Web Socket Protocol Handshake" ) );
+            res.addHeader( Names.UPGRADE, WEBSOCKET );
+            res.addHeader( CONNECTION, Values.UPGRADE );
 
-		// Send an error page otherwise.
-		sendHttpResponse(ctx, req, FORBIDDEN);
-	}
+            QueryStringDecoder qs = new QueryStringDecoder( req.getUri() );
+            String path = qs.getPath();
+            logger.info( path );
 
-	private void handleWebSocketFrame(ChannelHandlerContext ctx,
-			WebSocketFrame frame) {
-		// Send the uppercased string back.
-		ctx.getChannel().write(
-				new DefaultWebSocketFrame(frame.getTextData().toUpperCase()));
-	}
+            // Fill in the headers and contents depending on handshake method.
+            if ( req.containsHeader( SEC_WEBSOCKET_KEY1 ) && req.containsHeader( SEC_WEBSOCKET_KEY2 ) )
+            {
 
-	// TODO Review this for concurrency safety
-	// Note: subscriptions are added and removed relatively infrequently
-	// during the lifecycle of a connection i.e. typical minimum lifespan
-	// would be 10 seconds when someone opens an app, it connects, then
-	// they close the app.
+                String[] segments = split( path, '/' );
 
-	public void addSubscription(String path, Channel channel) {
-		ChannelGroup group = subscribers.get(path);
-		synchronized (group) {
-			group.add(channel);
-		}
-	}
+                if ( segments.length != 3 )
+                {
+                    logger.info( "Wrong number of path segments, expected 3, found " + segments.length );
+                    sendHttpResponse( ctx, req, FORBIDDEN );
+                    return;
+                }
 
-	public void removeSubscription(String path, Channel channel) {
-		ChannelGroup group = subscribers.get(path);
-		synchronized (group) {
-			group.remove(channel);
-			if (group.isEmpty()) {
-				subscribers.remove(path, group);
-			}
-		}
-	}
+                String nsStr = segments[0];
+                String collStr = segments[1];
+                String idStr = segments[2];
 
-	public ChannelGroup getSubscriptionGroup(String path) {
-		return subscribers.get(path);
-	}
+                logger.info( nsStr + "/" + collStr + "/" + idStr );
+
+                if ( isEmpty( nsStr ) || isEmpty( collStr ) || isEmpty( idStr ) )
+                {
+                    sendHttpResponse( ctx, req, FORBIDDEN );
+                    return;
+                }
+
+                // New handshake method with a challenge:
+                res.addHeader( SEC_WEBSOCKET_ORIGIN, req.getHeader( ORIGIN ) );
+                res.addHeader( SEC_WEBSOCKET_LOCATION, getWebSocketLocation( req ) );
+                String protocol = req.getHeader( SEC_WEBSOCKET_PROTOCOL );
+                if ( protocol != null )
+                {
+                    res.addHeader( SEC_WEBSOCKET_PROTOCOL, protocol );
+                }
+
+                // Calculate the answer of the challenge.
+                String key1 = req.getHeader( SEC_WEBSOCKET_KEY1 );
+                String key2 = req.getHeader( SEC_WEBSOCKET_KEY2 );
+                int a = ( int ) ( Long.parseLong( key1.replaceAll( "[^0-9]", "" ) ) / key1.replaceAll( "[^ ]", "" )
+                                                                                          .length() );
+                int b = ( int ) ( Long.parseLong( key2.replaceAll( "[^0-9]", "" ) ) / key2.replaceAll( "[^ ]", "" )
+                                                                                          .length() );
+                long c = req.getContent().readLong();
+                ChannelBuffer input = ChannelBuffers.buffer( 16 );
+                input.writeInt( a );
+                input.writeInt( b );
+                input.writeLong( c );
+                ChannelBuffer output =
+                        ChannelBuffers.wrappedBuffer( MessageDigest.getInstance( "MD5" ).digest( input.array() ) );
+                res.setContent( output );
+            }
+            else
+            {
+                // Old handshake method with no challenge:
+                res.addHeader( WEBSOCKET_ORIGIN, req.getHeader( ORIGIN ) );
+                res.addHeader( WEBSOCKET_LOCATION, getWebSocketLocation( req ) );
+                String protocol = req.getHeader( WEBSOCKET_PROTOCOL );
+                if ( protocol != null )
+                {
+                    res.addHeader( WEBSOCKET_PROTOCOL, protocol );
+                }
+            }
+
+            // Upgrade the connection and send the handshake response.
+            ChannelPipeline p = ctx.getChannel().getPipeline();
+            p.remove( "aggregator" );
+            p.replace( "decoder", "wsdecoder", new WebSocketFrameDecoder() );
+
+            ctx.getChannel().write( res );
+
+            p.replace( "encoder", "wsencoder", new WebSocketFrameEncoder() );
+
+            return;
+        }
+
+        // Send an error page otherwise.
+        sendHttpResponse( ctx, req, FORBIDDEN );
+    }
+
+
+    private void handleWebSocketFrame( ChannelHandlerContext ctx, WebSocketFrame frame )
+    {
+        // Send the uppercased string back.
+        ctx.getChannel().write( new DefaultWebSocketFrame( frame.getTextData().toUpperCase() ) );
+    }
+
+    // TODO Review this for concurrency safety
+    // Note: subscriptions are added and removed relatively infrequently
+    // during the lifecycle of a connection i.e. typical minimum lifespan
+    // would be 10 seconds when someone opens an app, it connects, then
+    // they close the app.
+
+
+    public void addSubscription( String path, Channel channel )
+    {
+        ChannelGroup group = subscribers.get( path );
+        synchronized ( group )
+        {
+            group.add( channel );
+        }
+    }
+
+
+    public void removeSubscription( String path, Channel channel )
+    {
+        ChannelGroup group = subscribers.get( path );
+        synchronized ( group )
+        {
+            group.remove( channel );
+            if ( group.isEmpty() )
+            {
+                subscribers.remove( path, group );
+            }
+        }
+    }
+
+
+    public ChannelGroup getSubscriptionGroup( String path )
+    {
+        return subscribers.get( path );
+    }
 }
