@@ -90,7 +90,9 @@
               <forkCount>${services.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
 
-              <argLine>-Xmx${services.it.heapmax} -Xms${services.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${services.it.heapmax} -Xms${services.it.heapmin} -Dfile.encoding=UTF-8
+                -Dsun.jnu.encoding=UTF-8
+              </argLine>
               <argLine>
                 -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
               </argLine>
@@ -166,7 +168,6 @@
         </plugins>
       </build>
     </profile>
-
 
     <profile>
       <id>integ-concurrent</id>
@@ -428,14 +429,12 @@
       <artifactId>jython</artifactId>
     </dependency>
 
-     <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
 
-
-
-      <!-- Testing and Logging Dependencies -->
+    <!-- Testing and Logging Dependencies -->
     <dependency>
       <!--
       Do not remove this slf4j-api dependency remove even though pulled 

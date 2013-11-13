@@ -70,7 +70,9 @@
               <parallel>both</parallel>
               <forkCount>${scheduler.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
-              <argLine>-Xmx${scheduler.it.heapmax} -Xms${scheduler.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${scheduler.it.heapmax} -Xms${scheduler.it.heapmin} -Dfile.encoding=UTF-8
+                -Dsun.jnu.encoding=UTF-8
+              </argLine>
               <includes>
                 <include>**/SchedulerTestSuite.java</include>
                 <include>**/SchedulerRuntime*IT.java</include>

@@ -20,40 +20,40 @@
     <!-- =================================================================== -->
     <!-- Properties: Deployment Setting Defaults                             -->
     <!-- =================================================================== -->
-       <!-- NOTE: override from the CLI or settings.xml                 -->
-       <!-- NOTE: add server credentials config via settings            -->
-       <!-- NOTE: <settings>                                            -->
-       <!-- NOTE:   <servers>                                           -->
-       <!-- NOTE:     <server>                                          -->
-       <!-- NOTE:       <id>usergrid.releases</id>                      -->
-       <!-- NOTE:       <username>akarasulu</username>                  -->
-       <!-- NOTE:       <password>*********</password>                  -->
-       <!-- NOTE:     </server>                                         -->
-       <!-- NOTE:     <server>                                          -->
-       <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
-       <!-- NOTE:       <username>akarasulu</username>                  -->
-       <!-- NOTE:       <password>*********</password>                  -->
-       <!-- NOTE:     </server>                                         -->
-       <!-- NOTE:   </servers>                                          -->
-       <!-- NOTE:                                                       -->
-       <!-- NOTE:   <profiles>                                          -->
-       <!-- NOTE:     <profile>                                         -->
-       <!-- NOTE:       <id>deployment</id>                             -->
-       <!-- NOTE:       <properties>                                    -->
-       <!-- NOTE:         <release.repository.url>                      -->
-       <!-- NOTE:           https://to/your/custom/releases/repository  -->
-       <!-- NOTE:         </release.repository.url>                     -->
-       <!-- NOTE:         <snapshot.repository.url>                     -->
-       <!-- NOTE:           https://to/your/custom/snapshots/repository -->
-       <!-- NOTE:         </shapshot.repository.url>                    -->
-       <!-- NOTE:       </properties>                                   -->
-       <!-- NOTE:     </profile>                                        -->
-       <!-- NOTE:   </profiles>                                         -->
-       <!-- NOTE:                                                       -->
-       <!-- NOTE:   <activeProfiles>                                    -->
-       <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
-       <!-- NOTE:   </activeProfiles>                                   -->
-       <!-- NOTE: </settings>                                           -->
+    <!-- NOTE: override from the CLI or settings.xml                 -->
+    <!-- NOTE: add server credentials config via settings            -->
+    <!-- NOTE: <settings>                                            -->
+    <!-- NOTE:   <servers>                                           -->
+    <!-- NOTE:     <server>                                          -->
+    <!-- NOTE:       <id>usergrid.releases</id>                      -->
+    <!-- NOTE:       <username>akarasulu</username>                  -->
+    <!-- NOTE:       <password>*********</password>                  -->
+    <!-- NOTE:     </server>                                         -->
+    <!-- NOTE:     <server>                                          -->
+    <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
+    <!-- NOTE:       <username>akarasulu</username>                  -->
+    <!-- NOTE:       <password>*********</password>                  -->
+    <!-- NOTE:     </server>                                         -->
+    <!-- NOTE:   </servers>                                          -->
+    <!-- NOTE:                                                       -->
+    <!-- NOTE:   <profiles>                                          -->
+    <!-- NOTE:     <profile>                                         -->
+    <!-- NOTE:       <id>deployment</id>                             -->
+    <!-- NOTE:       <properties>                                    -->
+    <!-- NOTE:         <release.repository.url>                      -->
+    <!-- NOTE:           https://to/your/custom/releases/repository  -->
+    <!-- NOTE:         </release.repository.url>                     -->
+    <!-- NOTE:         <snapshot.repository.url>                     -->
+    <!-- NOTE:           https://to/your/custom/snapshots/repository -->
+    <!-- NOTE:         </shapshot.repository.url>                    -->
+    <!-- NOTE:       </properties>                                   -->
+    <!-- NOTE:     </profile>                                        -->
+    <!-- NOTE:   </profiles>                                         -->
+    <!-- NOTE:                                                       -->
+    <!-- NOTE:   <activeProfiles>                                    -->
+    <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
+    <!-- NOTE:   </activeProfiles>                                   -->
+    <!-- NOTE: </settings>                                           -->
 
     <snapshot.repository.url>
       https://repository.apache.org/content/repositories/snapshots
@@ -61,7 +61,7 @@
     <release.repository.url>
       https://repository.apache.org/service/local/staging/deploy/maven2
     </release.repository.url>
-    
+
     <!-- =================================================================== -->
     <!-- Properties: General Settings -->
     <!-- =================================================================== -->
@@ -168,7 +168,6 @@
     <module>build-tools</module>
     <!--Temporarily removed. This breaks master build <module>query-validator</module> -->
   </modules>
-
 
   <dependencyManagement>
     <dependencies>
@@ -738,7 +737,6 @@
           </exclusion>
         </exclusions>
       </dependency>
-
 
       <dependency>
         <!-- TODO T.N. try and remove this -->
@@ -1340,13 +1338,13 @@
           <version>2.1</version>
         </plugin>
 
-<!--
-        <plugin>
-          <groupId>com.structure101.java</groupId>
-          <artifactId>maven-structure101-plugin</artifactId>
-          <version>1.1</version>
-        </plugin>
--->
+        <!--
+                <plugin>
+                  <groupId>com.structure101.java</groupId>
+                  <artifactId>maven-structure101-plugin</artifactId>
+                  <version>1.1</version>
+                </plugin>
+        -->
         <plugin>
           <groupId>org.antlr</groupId>
           <artifactId>antlr3-maven-plugin</artifactId>
@@ -1743,7 +1741,7 @@
                 <requireMavenVersion>
                   <version>[3.0,3.1)</version>
                 </requireMavenVersion>
-              </rules>    
+              </rules>
             </configuration>
           </execution>
         </executions>
