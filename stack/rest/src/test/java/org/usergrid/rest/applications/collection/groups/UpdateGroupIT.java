@@ -14,86 +14,105 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.collection.groups;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.ws.rs.core.MediaType;
-import junit.framework.Assert;
-import org.apache.commons.io.IOUtils;
+
 import org.codehaus.jackson.JsonNode;
-import static org.junit.Assert.fail;
-import org.junit.Test;
 import org.junit.Rule;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 
-public class UpdateGroupIT extends AbstractRestIT {
-  private static final Logger logger = LoggerFactory.getLogger(UpdateGroupIT.class);
+import org.apache.commons.io.IOUtils;
 
-  @Rule
-  public TestContextSetup context = new TestContextSetup(this);
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 
-  @Test // USERGRID-1729
-  public void updateGroupWithSameNameAsApp() throws IOException {
+import junit.framework.Assert;
 
-    // create groupMap with same name as app
-    String groupId = null;
-    String groupPath = context.getAppName();
-    try {
-      Map<String, Object> groupMap = new HashMap<String, Object>();
-      groupMap.put("title", "Old Title");
-      groupMap.put("path", groupPath);
-      String path = context.getOrgName() + "/" + context.getAppName() + "/groups"; 
-      JsonNode groupJson = webResourceBuilder(path).post(JsonNode.class, groupMap);
-      groupId = groupJson.get("entities").get(0).get("uuid").getTextValue();
+import static org.junit.Assert.fail;
 
-    } catch (UniformInterfaceException e) {
-      fail("Error creating group: " + IOUtils.toString(e.getResponse().getEntityInputStream()));
+
+public class UpdateGroupIT extends AbstractRestIT
+{
+    private static final Logger logger = LoggerFactory.getLogger( UpdateGroupIT.class );
+
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
+
+
+    @Test // USERGRID-1729
+    public void updateGroupWithSameNameAsApp() throws IOException
+    {
+
+        // create groupMap with same name as app
+        String groupId = null;
+        String groupPath = context.getAppName();
+        try
+        {
+            Map<String, Object> groupMap = new HashMap<String, Object>();
+            groupMap.put( "title", "Old Title" );
+            groupMap.put( "path", groupPath );
+            String path = context.getOrgName() + "/" + context.getAppName() + "/groups";
+            JsonNode groupJson = webResourceBuilder( path ).post( JsonNode.class, groupMap );
+            groupId = groupJson.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+        }
+        catch ( UniformInterfaceException e )
+        {
+            fail( "Error creating group: " + IOUtils.toString( e.getResponse().getEntityInputStream() ) );
+        }
+
+        assertTitle( groupId, "Old Title" );
+
+        // update that group by giving it a new title and using group path in URL
+        try
+        {
+            Map<String, Object> group = new HashMap<String, Object>();
+            group.put( "title", "New Title" );
+            String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupPath;
+            webResourceBuilder( path ).put( JsonNode.class, group );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            fail( "Error updating group: " + IOUtils.toString( e.getResponse().getEntityInputStream() ) );
+        }
+
+        assertTitle( groupId, "New Title" );
+
+        // update that group by giving it a new title and using UUID in URL
+        try
+        {
+            Map<String, Object> group = new HashMap<String, Object>();
+            group.put( "title", "Even Newer Title" );
+            String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId;
+            webResourceBuilder( path ).put( JsonNode.class, group );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            fail( "Error updating group: " + IOUtils.toString( e.getResponse().getEntityInputStream() ) );
+        }
+
+        assertTitle( groupId, "Even Newer Title" );
     }
 
-    assertTitle(groupId, "Old Title");
 
-    // update that group by giving it a new title and using group path in URL
-    try {
-      Map<String, Object> group = new HashMap<String, Object>();
-      group.put("title", "New Title");
-      String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupPath;
-      webResourceBuilder(path).put(JsonNode.class, group);
-
-    } catch (UniformInterfaceException e) {
-      fail("Error updating group: " + IOUtils.toString(e.getResponse().getEntityInputStream()));
+    private WebResource.Builder webResourceBuilder( String path )
+    {
+        return resource().path( path ).queryParam( "access_token", context.getActiveUser().getToken() )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE );
     }
 
-    assertTitle(groupId, "New Title");
 
-    // update that group by giving it a new title and using UUID in URL
-    try {
-      Map<String, Object> group = new HashMap<String, Object>();
-      group.put("title", "Even Newer Title");
-      String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId; 
-      webResourceBuilder(path).put(JsonNode.class, group);
-
-    } catch (UniformInterfaceException e) {
-      fail("Error updating group: " + IOUtils.toString(e.getResponse().getEntityInputStream()));
+    private void assertTitle( String groupId, String title )
+    {
+        String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId;
+        JsonNode groupJson = webResourceBuilder( path ).get( JsonNode.class );
+        Assert.assertEquals( title, groupJson.get( "entities" ).get( 0 ).get( "title" ).getTextValue() );
     }
-
-    assertTitle(groupId, "Even Newer Title");
-  }
-
-  private WebResource.Builder webResourceBuilder(String path) {
-    return resource().path(path)
-      .queryParam("access_token", context.getActiveUser().getToken())
-      .accept(MediaType.APPLICATION_JSON)
-      .type(MediaType.APPLICATION_JSON_TYPE);
-  }
-
-  private void assertTitle(String groupId, String title) {
-    String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId; 
-    JsonNode groupJson = webResourceBuilder(path).get(JsonNode.class);
-    Assert.assertEquals(title, groupJson.get("entities").get(0).get("title").getTextValue());
-  }
 }

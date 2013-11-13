@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.rest.management.users.organizations;
+
 
 import java.util.Map;
 import java.util.UUID;
@@ -47,159 +48,170 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 
-@Component("org.usergrid.rest.management.users.organizations.OrganizationsResource")
-@Scope("prototype")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
-public class OrganizationsResource extends AbstractContextResource {
 
-	UserInfo user;
+@Component( "org.usergrid.rest.management.users.organizations.OrganizationsResource" )
+@Scope( "prototype" )
+@Produces( {
+        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript"
+} )
+public class OrganizationsResource extends AbstractContextResource
+{
 
-	public OrganizationsResource() {
-	}
+    UserInfo user;
 
-	public OrganizationsResource init(UserInfo user) {
-		this.user = user;
-		return this;
-	}
 
-	@RequireAdminUserAccess
-	@GET
-	public JSONWithPadding getUserOrganizations(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    public OrganizationsResource()
+    {
+    }
 
-		ApiResponse response = createApiResponse();
-		response.setAction("get user management");
 
-		BiMap<UUID, String> userOrganizations = SubjectUtils.getOrganizations();
-		response.setData(userOrganizations.inverse());
+    public OrganizationsResource init( UserInfo user )
+    {
+        this.user = user;
+        return this;
+    }
 
-		return new JSONWithPadding(response, callback);
-	}
 
-	@RequireAdminUserAccess
-	@POST
-	public JSONWithPadding newOrganizationForUser(@Context UriInfo ui,
-			Map<String, Object> json,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireAdminUserAccess
+    @GET
+    public JSONWithPadding getUserOrganizations( @Context UriInfo ui,
+                                                 @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("new organization for user");
+        ApiResponse response = createApiResponse();
+        response.setAction( "get user management" );
 
-		String organizationName = (String) json.get("organization");
-		OrganizationInfo organization = management.createOrganization(
-				organizationName, user, false);
-		response.setData(organization);
+        BiMap<UUID, String> userOrganizations = SubjectUtils.getOrganizations();
+        response.setData( userOrganizations.inverse() );
 
-		management.activateOrganization(organization);
+        return new JSONWithPadding( response, callback );
+    }
 
-		return new JSONWithPadding(response, callback);
-	}
 
-	@RequireAdminUserAccess
-	@POST
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public JSONWithPadding newOrganizationForUserFromForm(@Context UriInfo ui,
-			Map<String, Object> json,
-			@QueryParam("callback") @DefaultValue("callback") String callback,
-			@FormParam("organization") String organizationName)
-			throws Exception {
+    @RequireAdminUserAccess
+    @POST
+    public JSONWithPadding newOrganizationForUser( @Context UriInfo ui, Map<String, Object> json,
+                                                   @QueryParam( "callback" ) @DefaultValue( "callback" )
+                                                   String callback ) throws Exception
+    {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("new organization for user");
+        ApiResponse response = createApiResponse();
+        response.setAction( "new organization for user" );
 
-		if (organizationName == null) {
-			throw new ManagementException("Could not find organization for name: " + organizationName);
-		}
+        String organizationName = ( String ) json.get( "organization" );
+        OrganizationInfo organization = management.createOrganization( organizationName, user, false );
+        response.setData( organization );
 
-		OrganizationInfo organization = management.createOrganization(
-				organizationName, user, false);
-		response.setData(organization);
+        management.activateOrganization( organization );
 
-		management.activateOrganization(organization);
+        return new JSONWithPadding( response, callback );
+    }
 
-		return new JSONWithPadding(response, callback);
-	}
 
-	@RequireOrganizationAccess
-	@PUT
-	@Path("{organizationName}")
-	public JSONWithPadding addUserToOrganizationByOrganizationName(
-			@Context UriInfo ui,
-			@PathParam("organizationName") String organizationName,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireAdminUserAccess
+    @POST
+    @Consumes( MediaType.APPLICATION_FORM_URLENCODED )
+    public JSONWithPadding newOrganizationForUserFromForm( @Context UriInfo ui, Map<String, Object> json,
+                                                           @QueryParam( "callback" ) @DefaultValue( "callback" )
+                                                           String callback,
+                                                           @FormParam( "organization" ) String organizationName )
+            throws Exception
+    {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("add user to organization");
+        ApiResponse response = createApiResponse();
+        response.setAction( "new organization for user" );
 
-		OrganizationInfo organization = management
-				.getOrganizationByName(organizationName);
-		management.addAdminUserToOrganization(user, organization, true);
-		response.setData(organization);
-		return new JSONWithPadding(response, callback);
-	}
+        if ( organizationName == null )
+        {
+            throw new ManagementException( "Could not find organization for name: " + organizationName );
+        }
 
-	@RequireOrganizationAccess
-	@PUT
-	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public JSONWithPadding addUserToOrganizationByOrganizationId(
-			@Context UriInfo ui,
-			@PathParam("organizationId") String organizationIdStr,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+        OrganizationInfo organization = management.createOrganization( organizationName, user, false );
+        response.setData( organization );
 
-		ApiResponse response = createApiResponse();
-		response.setAction("add user to organization");
+        management.activateOrganization( organization );
 
-		OrganizationInfo organization = management.getOrganizationByUuid(UUID
-				.fromString(organizationIdStr));
-		management.addAdminUserToOrganization(user, organization, true);
-		response.setData(organization);
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding( response, callback );
+    }
 
-	@RequireOrganizationAccess
-	@DELETE
-	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public JSONWithPadding removeUserFromOrganizationByOrganizationId(
-			@Context UriInfo ui,
-			@PathParam("organizationId") String organizationIdStr,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
 
-		ApiResponse response = createApiResponse();
-		response.setAction("remove user from organization");
+    @RequireOrganizationAccess
+    @PUT
+    @Path( "{organizationName}" )
+    public JSONWithPadding addUserToOrganizationByOrganizationName( @Context UriInfo ui,
+                                                                    @PathParam( "organizationName" )
+                                                                    String organizationName, @QueryParam( "callback" )
+                                                                    @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
 
-		OrganizationInfo organization = management.getOrganizationByUuid(UUID
-				.fromString(organizationIdStr));
-		management.removeAdminUserFromOrganization(user.getUuid(),
-				organization.getUuid());
-		response.setData(organization);
-		return new JSONWithPadding(response, callback);
-	}
+        ApiResponse response = createApiResponse();
+        response.setAction( "add user to organization" );
 
-	@RequireOrganizationAccess
-	@DELETE
-	@Path("{organizationName}")
-	public JSONWithPadding removeUserFromOrganizationByOrganizationName(
-			@Context UriInfo ui,
-			@PathParam("organizationName") String organizationName,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+        OrganizationInfo organization = management.getOrganizationByName( organizationName );
+        management.addAdminUserToOrganization( user, organization, true );
+        response.setData( organization );
+        return new JSONWithPadding( response, callback );
+    }
 
-		ApiResponse response = createApiResponse();
-		response.setAction("remove user from organization");
-		OrganizationInfo organization = management
-				.getOrganizationByName(organizationName);
-		management.removeAdminUserFromOrganization(user.getUuid(),
-				organization.getUuid());
-		response.setData(organization);
 
-		return new JSONWithPadding(response, callback);
-	}
+    @RequireOrganizationAccess
+    @PUT
+    @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
+    public JSONWithPadding addUserToOrganizationByOrganizationId( @Context UriInfo ui, @PathParam( "organizationId" )
+    String organizationIdStr, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception
+    {
 
+        ApiResponse response = createApiResponse();
+        response.setAction( "add user to organization" );
+
+        OrganizationInfo organization = management.getOrganizationByUuid( UUID.fromString( organizationIdStr ) );
+        management.addAdminUserToOrganization( user, organization, true );
+        response.setData( organization );
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireOrganizationAccess
+    @DELETE
+    @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
+    public JSONWithPadding removeUserFromOrganizationByOrganizationId( @Context UriInfo ui,
+                                                                       @PathParam( "organizationId" )
+                                                                       String organizationIdStr,
+                                                                       @QueryParam( "callback" )
+                                                                       @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "remove user from organization" );
+
+        OrganizationInfo organization = management.getOrganizationByUuid( UUID.fromString( organizationIdStr ) );
+        management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+        response.setData( organization );
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireOrganizationAccess
+    @DELETE
+    @Path( "{organizationName}" )
+    public JSONWithPadding removeUserFromOrganizationByOrganizationName( @Context UriInfo ui,
+                                                                         @PathParam( "organizationName" )
+                                                                         String organizationName,
+                                                                         @QueryParam( "callback" )
+                                                                         @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "remove user from organization" );
+        OrganizationInfo organization = management.getOrganizationByName( organizationName );
+        management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+        response.setData( organization );
+
+        return new JSONWithPadding( response, callback );
+    }
 }

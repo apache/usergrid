@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,35 +15,35 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+
+
 /**
- * <p>
- * Map an authentication exception to an HTTP 401 response, optionally including
- * the realm for a credentials challenge at the client.
- * </p>
+ * <p> Map an authentication exception to an HTTP 401 response, optionally including the realm for a credentials
+ * challenge at the client. </p>
  */
 @Provider
-public class SecurityExceptionMapper extends
-		AbstractExceptionMapper<SecurityException> {
+public class SecurityExceptionMapper extends AbstractExceptionMapper<SecurityException>
+{
 
-	@Override
-	public Response toResponse(SecurityException e) {
+    @Override
+    public Response toResponse( SecurityException e )
+    {
 
-		if (e.getRealm() != null) {
-			return Response
-					.status(Status.UNAUTHORIZED)
-					.header("WWW-Authenticate",
-							"Basic realm=\"" + e.getRealm() + "\"")
-					.type("application/json").entity(e.getJsonResponse())
-					.build();
-		} else {
-			return toResponse(UNAUTHORIZED, e.getJsonResponse());
-		}
-	}
-
+        if ( e.getRealm() != null )
+        {
+            return Response.status( Status.UNAUTHORIZED )
+                           .header( "WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"" )
+                           .type( "application/json" ).entity( e.getJsonResponse() ).build();
+        }
+        else
+        {
+            return toResponse( UNAUTHORIZED, e.getJsonResponse() );
+        }
+    }
 }

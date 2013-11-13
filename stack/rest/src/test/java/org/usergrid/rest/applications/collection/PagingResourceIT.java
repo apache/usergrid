@@ -15,11 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.collection;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +24,6 @@ import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
@@ -40,181 +34,199 @@ import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.EntityResource;
 
-/**
- * Simple tests to test querying at the REST tier
- */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.usergrid.utils.MapUtils.hashMap;
+
+
+/** Simple tests to test querying at the REST tier */
 @Concurrent()
-public class PagingResourceIT extends AbstractRestIT {
+public class PagingResourceIT extends AbstractRestIT
+{
 
 
-  @Rule
-  public TestContextSetup context = new TestContextSetup( this );
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
 
-  @Test
-  public void collectionPaging() throws Exception {
+    @Test
+    public void collectionPaging() throws Exception
+    {
 
-    CustomCollection things = context.application().collection("things");
+        CustomCollection things = context.application().collection( "things" );
 
-    int size = 40;
+        int size = 40;
 
-    List<Map<String, String>> created = new ArrayList<Map<String, String>>(size);
+        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
 
-    for (int i = 0; i < size; i++) {
-      Map<String, String> entity = hashMap("name", String.valueOf(i));
-      things.create(entity);
+        for ( int i = 0; i < size; i++ )
+        {
+            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
+            things.create( entity );
 
-      created.add(entity);
-    }
+            created.add( entity );
+        }
 
-    // now page them all
-    ApiResponse response = null;
-    Iterator<Map<String, String>> entityItr = created.iterator();
+        // now page them all
+        ApiResponse response = null;
+        Iterator<Map<String, String>> entityItr = created.iterator();
 
-    do {
+        do
+        {
 
-      response = parse(things.get());
+            response = parse( things.get() );
 
-      for (Entity e : response.getEntities()) {
-        assertTrue(entityItr.hasNext());
-        assertEquals(entityItr.next().get("name"), e.getProperties().get("name").asText());
-      }
+            for ( Entity e : response.getEntities() )
+            {
+                assertTrue( entityItr.hasNext() );
+                assertEquals( entityItr.next().get( "name" ), e.getProperties().get( "name" ).asText() );
+            }
 
-      things = things.withCursor(response.getCursor());
-    } while (response != null && response.getCursor() != null);
+            things = things.withCursor( response.getCursor() );
+        }
+        while ( response != null && response.getCursor() != null );
 
-    // we paged them all
-    assertFalse(entityItr.hasNext());
-
-  }
-
-  @Test
-  public void startPaging() throws Exception {
-
-    CustomCollection things = context.application().collection("things");
-
-    int size = 40;
-
-    List<Map<String, String>> created = new ArrayList<Map<String, String>>(size);
-
-    for (int i = 0; i < size; i++) {
-      Map<String, String> entity = hashMap("name", String.valueOf(i));
-      things.create(entity);
-
-      created.add(entity);
-    }
-
-    // now page them all
-    ApiResponse response = null;
-
-    UUID start = null;
-    int index = 0;
-
-    do {
-
-      response = parse(things.get());
-
-      for (Entity e : response.getEntities()) {
-        assertEquals(created.get(index).get("name"), e.getProperties().get("name").asText());
-        index++;
-      }
-
-      // decrement since we'll get this one again
-      index--;
-
-      start = response.getEntities().get(response.getEntities().size() - 1).getUuid();
-
-      things = things.withStart(start);
-    } while (response != null && response.getEntities().size() > 1);
-
-    // we paged them all
-    assertEquals(created.size() - 1, index);
-
-  }
-
-
-  @Test
-  public void colletionBatchDeleting() throws Exception {
-
-    CustomCollection things = context.application().collection("things");
-
-    int size = 40;
-
-    List<Map<String, String>> created = new ArrayList<Map<String, String>>(size);
-
-    for (int i = 0; i < size; i++) {
-      Map<String, String> entity = hashMap("name", String.valueOf(i));
-      things.create(entity);
-
-      created.add(entity);
+        // we paged them all
+        assertFalse( entityItr.hasNext() );
     }
 
 
-    ApiResponse response ;
-    int deletePageSize = 10;
+    @Test
+    public void startPaging() throws Exception
+    {
 
-    things = things.withLimit(deletePageSize);
+        CustomCollection things = context.application().collection( "things" );
 
-    for(int i = 0; i < size/deletePageSize; i ++){
-      response = parse(things.delete());
+        int size = 40;
 
-      assertEquals("Only 10 entities should have been deleted", 10, response.getEntityCount());
+        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
+
+        for ( int i = 0; i < size; i++ )
+        {
+            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
+            things.create( entity );
+
+            created.add( entity );
+        }
+
+        // now page them all
+        ApiResponse response = null;
+
+        UUID start = null;
+        int index = 0;
+
+        do
+        {
+
+            response = parse( things.get() );
+
+            for ( Entity e : response.getEntities() )
+            {
+                assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
+                index++;
+            }
+
+            // decrement since we'll get this one again
+            index--;
+
+            start = response.getEntities().get( response.getEntities().size() - 1 ).getUuid();
+
+            things = things.withStart( start );
+        }
+        while ( response != null && response.getEntities().size() > 1 );
+
+        // we paged them all
+        assertEquals( created.size() - 1, index );
     }
 
-    response = parse(things.get());
 
-    assertEquals( "All entities should have been removed", 0, response.getEntityCount());
+    @Test
+    public void colletionBatchDeleting() throws Exception
+    {
 
-    //now do 1 more delete, we should get any results
+        CustomCollection things = context.application().collection( "things" );
 
-    response = parse(things.delete());
+        int size = 40;
 
-    assertEquals("No more entities deleted", 0, response.getEntityCount());
+        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
 
-  }
+        for ( int i = 0; i < size; i++ )
+        {
+            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
+            things.create( entity );
 
-  @Test
-  public void emptyQlandLimitIgnored() throws Exception {
-
-    CustomCollection things = context.application().collection("things");
-
-    Map<String, String> data = hashMap("name", "thing1");
-    JsonNode response = things.create(data);
-
-    JsonNode entity = getEntity(response, 0);
-
-    String uuid = entity.get("uuid").asText();
-
-    EntityResource entityRequest = things.entity("thing1").withParam("ql", "").withParam("limit", "");
-    
-    JsonNode returnedEntity = getEntity(entityRequest.get(), 0);
-
-    assertEquals(entity, returnedEntity);
-    
-    entityRequest = things.entity(uuid).withParam("ql", "").withParam("limit", "");
-
-    returnedEntity = getEntity(entityRequest.get(), 0);
-
-    assertEquals(entity, returnedEntity);
-
-    // now do a delete
-    returnedEntity = getEntity(entityRequest.delete(), 0);
-
-    assertEquals(entity, returnedEntity);
-
-    // verify it's gone
-    returnedEntity = getEntity(things.entity(uuid).get(), 0);
-
-    assertNull(returnedEntity);
-
-  }
-  
+            created.add( entity );
+        }
 
 
-  private static ObjectMapper mapper = new ObjectMapper();
+        ApiResponse response;
+        int deletePageSize = 10;
 
-  private static final ApiResponse parse(JsonNode response) throws Exception {
-    return mapper.readValue(response, ApiResponse.class);
-  }
+        things = things.withLimit( deletePageSize );
 
+        for ( int i = 0; i < size / deletePageSize; i++ )
+        {
+            response = parse( things.delete() );
+
+            assertEquals( "Only 10 entities should have been deleted", 10, response.getEntityCount() );
+        }
+
+        response = parse( things.get() );
+
+        assertEquals( "All entities should have been removed", 0, response.getEntityCount() );
+
+        //now do 1 more delete, we should get any results
+
+        response = parse( things.delete() );
+
+        assertEquals( "No more entities deleted", 0, response.getEntityCount() );
+    }
+
+
+    @Test
+    public void emptyQlandLimitIgnored() throws Exception
+    {
+
+        CustomCollection things = context.application().collection( "things" );
+
+        Map<String, String> data = hashMap( "name", "thing1" );
+        JsonNode response = things.create( data );
+
+        JsonNode entity = getEntity( response, 0 );
+
+        String uuid = entity.get( "uuid" ).asText();
+
+        EntityResource entityRequest = things.entity( "thing1" ).withParam( "ql", "" ).withParam( "limit", "" );
+
+        JsonNode returnedEntity = getEntity( entityRequest.get(), 0 );
+
+        assertEquals( entity, returnedEntity );
+
+        entityRequest = things.entity( uuid ).withParam( "ql", "" ).withParam( "limit", "" );
+
+        returnedEntity = getEntity( entityRequest.get(), 0 );
+
+        assertEquals( entity, returnedEntity );
+
+        // now do a delete
+        returnedEntity = getEntity( entityRequest.delete(), 0 );
+
+        assertEquals( entity, returnedEntity );
+
+        // verify it's gone
+        returnedEntity = getEntity( things.entity( uuid ).get(), 0 );
+
+        assertNull( returnedEntity );
+    }
+
+
+    private static ObjectMapper mapper = new ObjectMapper();
+
+
+    private static final ApiResponse parse( JsonNode response ) throws Exception
+    {
+        return mapper.readValue( response, ApiResponse.class );
+    }
 }

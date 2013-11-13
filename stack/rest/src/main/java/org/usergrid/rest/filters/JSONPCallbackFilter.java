@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.filters;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -27,38 +26,50 @@ import org.springframework.stereotype.Component;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
+
 @Component
-public class JSONPCallbackFilter implements ContainerRequestFilter {
+public class JSONPCallbackFilter implements ContainerRequestFilter
+{
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(JSONPCallbackFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger( JSONPCallbackFilter.class );
 
-	@Context
-	protected HttpServletRequest httpServletRequest;
+    @Context
+    protected HttpServletRequest httpServletRequest;
 
-	public JSONPCallbackFilter() {
-		logger.info("JSONPCallbackFilter is installed");
-	}
 
-	@Override
-	public ContainerRequest filter(ContainerRequest request) {
-		String callback = null;
-		try {
-			callback = httpServletRequest.getParameter("callback");
-		} catch (IllegalStateException e) {
-		}
-		if (callback == null) {
-			try {
-				callback = request.getQueryParameters().getFirst("callback");
-			} catch (IllegalStateException e) {
-			}
+    public JSONPCallbackFilter()
+    {
+        logger.info( "JSONPCallbackFilter is installed" );
+    }
 
-		}
-		if (isNotBlank(callback)) {
-			request.getRequestHeaders().putSingle("Accept",
-					"application/javascript");
-		}
-		return request;
-	}
 
+    @Override
+    public ContainerRequest filter( ContainerRequest request )
+    {
+        String callback = null;
+        try
+        {
+            callback = httpServletRequest.getParameter( "callback" );
+        }
+        catch ( IllegalStateException e )
+        {
+        }
+        if ( callback == null )
+        {
+            try
+            {
+                callback = request.getQueryParameters().getFirst( "callback" );
+            }
+            catch ( IllegalStateException e )
+            {
+            }
+        }
+        if ( isNotBlank( callback ) )
+        {
+            request.getRequestHeaders().putSingle( "Accept", "application/javascript" );
+        }
+        return request;
+    }
 }

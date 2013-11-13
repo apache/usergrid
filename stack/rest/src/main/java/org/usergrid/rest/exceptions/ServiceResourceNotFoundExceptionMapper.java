@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
@@ -24,13 +22,16 @@ import javax.ws.rs.ext.Provider;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+
+
 @Provider
-public class ServiceResourceNotFoundExceptionMapper extends
-		AbstractExceptionMapper<ServiceResourceNotFoundException>
+public class ServiceResourceNotFoundExceptionMapper extends AbstractExceptionMapper<ServiceResourceNotFoundException>
 {
 
-	@Override
-	public Response toResponse(ServiceResourceNotFoundException e)
+    @Override
+    public Response toResponse( ServiceResourceNotFoundException e )
     {
         if ( SubjectUtils.getSubjectUserId() == null )
         {
@@ -40,5 +41,5 @@ public class ServiceResourceNotFoundExceptionMapper extends
         {
             return toResponse( NOT_FOUND, e );
         }
-	}
+    }
 }

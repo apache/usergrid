@@ -15,14 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.applications;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.usergrid.services.ServiceParameter.addParameter;
-import static org.usergrid.services.ServicePayload.batchPayload;
-import static org.usergrid.services.ServicePayload.idListPayload;
-import static org.usergrid.services.ServicePayload.payload;
-import static org.usergrid.utils.JsonUtils.mapToJsonString;
-import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +37,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -63,365 +54,430 @@ import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.InflectionUtils;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.core.provider.EntityHolder;
 
-@Component
-@Scope("prototype")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-    "application/x-javascript", "text/ecmascript",
-    "application/ecmascript", "text/jscript" })
-public class ServiceResource extends AbstractContextResource {
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(ServiceResource.class);
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.services.ServiceParameter.addParameter;
+import static org.usergrid.services.ServicePayload.batchPayload;
+import static org.usergrid.services.ServicePayload.idListPayload;
+import static org.usergrid.services.ServicePayload.payload;
+import static org.usergrid.utils.JsonUtils.mapToJsonString;
+import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
+
+
+@Component
+@Scope( "prototype" )
+@Produces( {
+        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript"
+} )
+public class ServiceResource extends AbstractContextResource
+{
+
+    private static final Logger logger = LoggerFactory.getLogger( ServiceResource.class );
 
     protected ServiceManager services;
 
     List<ServiceParameter> serviceParameters = null;
 
-    public ServiceResource() {
+
+    public ServiceResource()
+    {
     }
 
+
     @Override
-    public void setParent(AbstractContextResource parent) {
-        super.setParent(parent);
-        if (parent instanceof ServiceResource) {
-            services = ((ServiceResource) parent).services;
+    public void setParent( AbstractContextResource parent )
+    {
+        super.setParent( parent );
+        if ( parent instanceof ServiceResource )
+        {
+            services = ( ( ServiceResource ) parent ).services;
         }
     }
 
-    public ServiceResource getServiceResourceParent() {
-        if (parent instanceof ServiceResource) {
-            return (ServiceResource) parent;
+
+    public ServiceResource getServiceResourceParent()
+    {
+        if ( parent instanceof ServiceResource )
+        {
+            return ( ServiceResource ) parent;
         }
         return null;
     }
 
-    public ServiceManager getServices() {
+
+    public ServiceManager getServices()
+    {
         return services;
     }
 
-    public UUID getApplicationId() {
+
+    public UUID getApplicationId()
+    {
         return services.getApplicationId();
     }
 
 
-    public List<ServiceParameter> getServiceParameters() {
-        if (serviceParameters != null) {
+    public List<ServiceParameter> getServiceParameters()
+    {
+        if ( serviceParameters != null )
+        {
             return serviceParameters;
         }
-        if (getServiceResourceParent() != null) {
+        if ( getServiceResourceParent() != null )
+        {
             return getServiceResourceParent().getServiceParameters();
         }
         serviceParameters = new ArrayList<ServiceParameter>();
         return serviceParameters;
     }
 
-    public static List<ServiceParameter> addMatrixParams(
-            List<ServiceParameter> parameters, UriInfo ui, PathSegment ps)
-                    throws Exception {
+
+    public static List<ServiceParameter> addMatrixParams( List<ServiceParameter> parameters, UriInfo ui,
+                                                          PathSegment ps ) throws Exception
+    {
 
         MultivaluedMap<String, String> params = ps.getMatrixParameters();
 
-        if (params != null) {
-            Query query = Query.fromQueryParams(params);
-            if (query != null) {
-                parameters = addParameter(parameters, query);
+        if ( params != null )
+        {
+            Query query = Query.fromQueryParams( params );
+            if ( query != null )
+            {
+                parameters = addParameter( parameters, query );
             }
         }
 
         return parameters;
-
     }
 
-    public static List<ServiceParameter> addQueryParams(
-            List<ServiceParameter> parameters, UriInfo ui) throws Exception {
+
+    public static List<ServiceParameter> addQueryParams( List<ServiceParameter> parameters, UriInfo ui )
+            throws Exception
+    {
 
         MultivaluedMap<String, String> params = ui.getQueryParameters();
-        if (params != null) {
+        if ( params != null )
+        {
             //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
             //aren't getting decoded properly
-            Query query = Query.fromQueryParams(params);
-            if (query != null) {
-                parameters = addParameter(parameters, query);
+            Query query = Query.fromQueryParams( params );
+            if ( query != null )
+            {
+                parameters = addParameter( parameters, query );
             }
         }
 
         return parameters;
-
     }
 
-    @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public AbstractContextResource addIdParameter(@Context UriInfo ui,
-            @PathParam("entityId") PathSegment entityId) throws Exception {
 
-        logger.debug("ServiceResource.addIdParameter");
+    @Path( "{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
+    public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+            throws Exception
+    {
 
-        UUID itemId = UUID.fromString(entityId.getPath());
+        logger.debug( "ServiceResource.addIdParameter" );
 
-        addParameter(getServiceParameters(), itemId);
+        UUID itemId = UUID.fromString( entityId.getPath() );
 
-        addMatrixParams(getServiceParameters(), ui, entityId);
+        addParameter( getServiceParameters(), itemId );
 
-        return getSubResource(ServiceResource.class);
+        addMatrixParams( getServiceParameters(), ui, entityId );
+
+        return getSubResource( ServiceResource.class );
     }
 
-    @Path("{itemName}")
-    public AbstractContextResource addNameParameter(@Context UriInfo ui,
-            @PathParam("itemName") PathSegment itemName) throws Exception {
 
-        logger.debug("ServiceResource.addNameParameter");
+    @Path( "{itemName}" )
+    public AbstractContextResource addNameParameter( @Context UriInfo ui,
+                                                     @PathParam( "itemName" ) PathSegment itemName ) throws Exception
+    {
 
-        logger.debug("Current segment is {}",  itemName.getPath());
+        logger.debug( "ServiceResource.addNameParameter" );
 
-        if (itemName.getPath().startsWith("{")) {
-            Query query = Query.fromJsonString(itemName.getPath());
-            if (query != null) {
-                addParameter(getServiceParameters(), query);
+        logger.debug( "Current segment is {}", itemName.getPath() );
+
+        if ( itemName.getPath().startsWith( "{" ) )
+        {
+            Query query = Query.fromJsonString( itemName.getPath() );
+            if ( query != null )
+            {
+                addParameter( getServiceParameters(), query );
             }
-        } else {
-            addParameter(getServiceParameters(), itemName.getPath());
+        }
+        else
+        {
+            addParameter( getServiceParameters(), itemName.getPath() );
         }
 
-        addMatrixParams(getServiceParameters(), ui, itemName);
+        addMatrixParams( getServiceParameters(), ui, itemName );
 
-        return getSubResource(ServiceResource.class);
+        return getSubResource( ServiceResource.class );
     }
 
-    public ServiceResults executeServiceRequest(UriInfo ui,
-            ApiResponse response, ServiceAction action, ServicePayload payload)
-                    throws Exception {
 
-        logger.debug("ServiceResource.executeServiceRequest");
+    public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
+                                                 ServicePayload payload ) throws Exception
+    {
 
-        boolean tree = "true".equalsIgnoreCase(ui.getQueryParameters()
-                .getFirst("tree"));
+        logger.debug( "ServiceResource.executeServiceRequest" );
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
         boolean collectionGet = false;
-        if(action==ServiceAction.GET) {
-        	collectionGet = (getServiceParameters().size()==1 
-            && InflectionUtils.isPlural(getServiceParameters().get(0)))? true : false;
+        if ( action == ServiceAction.GET )
+        {
+            collectionGet = ( getServiceParameters().size() == 1 && InflectionUtils
+                    .isPlural( getServiceParameters().get( 0 ) ) ) ? true : false;
         }
-        addQueryParams(getServiceParameters(), ui);
-        ServiceRequest r = services.newRequest(action, tree, getServiceParameters(), payload);
-        response.setServiceRequest(r);
+        addQueryParams( getServiceParameters(), ui );
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload );
+        response.setServiceRequest( r );
         ServiceResults results = r.execute();
-        if (results != null) {
-            if (results.hasData()) { 
-                response.setData(results.getData());
+        if ( results != null )
+        {
+            if ( results.hasData() )
+            {
+                response.setData( results.getData() );
             }
-            if (results.getServiceMetadata() != null) {
-                response.setMetadata(results.getServiceMetadata());
+            if ( results.getServiceMetadata() != null )
+            {
+                response.setMetadata( results.getServiceMetadata() );
             }
             Query query = r.getLastQuery();
-            if (query != null) {
-                if (query.hasSelectSubjects()) {
-                    response.setList(query.getSelectionResults(results));
-                    response.setCount(response.getList().size());
-                    response.setNext(results.getNextResult());
-                    response.setPath(results.getPath());
+            if ( query != null )
+            {
+                if ( query.hasSelectSubjects() )
+                {
+                    response.setList( query.getSelectionResults( results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
                     return results;
                 }
             }
-            if (collectionGet) {
-            	response.setCount(results.size());
+            if ( collectionGet )
+            {
+                response.setCount( results.size() );
             }
 
-            response.setResults(results);
-
+            response.setResults( results );
         }
 
-        httpServletRequest.setAttribute("applicationId",
-                services.getApplicationId());
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
 
         return results;
     }
 
+
     @GET
     @RequireApplicationAccess
-    public JSONWithPadding executeGet(@Context UriInfo ui,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-                    throws Exception {
+    public JSONWithPadding executeGet( @Context UriInfo ui,
+                                       @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
 
-        logger.debug("ServiceResource.executeGet");
-        
+        logger.debug( "ServiceResource.executeGet" );
+
         ApiResponse response = createApiResponse();
 
-        response.setAction("get");
-        response.setApplication(services.getApplication());
-        response.setParams(ui.getQueryParameters());
+        response.setAction( "get" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
 
-        executeServiceRequest(ui, response, ServiceAction.GET, null);
+        executeServiceRequest( ui, response, ServiceAction.GET, null );
 
-        return new JSONWithPadding(response, callback);
+        return new JSONWithPadding( response, callback );
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public ServicePayload getPayload(Object json) {
+
+    @SuppressWarnings( { "unchecked" } )
+    public ServicePayload getPayload( Object json )
+    {
         ServicePayload payload = null;
-        json = normalizeJsonTree(json);
-        if (json instanceof Map) {
-            Map<String, Object> jsonMap = (Map<String, Object>) json;
-            payload = payload(jsonMap);
-        } else if (json instanceof List) {
-            List<?> jsonList = (List<?>) json;
-            if (jsonList.size() > 0) {
-                if (jsonList.get(0) instanceof UUID) {
-                    payload = idListPayload((List<UUID>) json);
-                } else if (jsonList.get(0) instanceof Map) {
-                    payload = batchPayload((List<Map<String, Object>>) jsonList);
+        json = normalizeJsonTree( json );
+        if ( json instanceof Map )
+        {
+            Map<String, Object> jsonMap = ( Map<String, Object> ) json;
+            payload = payload( jsonMap );
+        }
+        else if ( json instanceof List )
+        {
+            List<?> jsonList = ( List<?> ) json;
+            if ( jsonList.size() > 0 )
+            {
+                if ( jsonList.get( 0 ) instanceof UUID )
+                {
+                    payload = idListPayload( ( List<UUID> ) json );
+                }
+                else if ( jsonList.get( 0 ) instanceof Map )
+                {
+                    payload = batchPayload( ( List<Map<String, Object>> ) jsonList );
                 }
             }
         }
-        if (payload == null) {
+        if ( payload == null )
+        {
             payload = new ServicePayload();
         }
         return payload;
     }
 
+
     @POST
     @RequireApplicationAccess
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost(@Context UriInfo ui,
-            EntityHolder<Object> body,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-                    throws Exception {
+    @Consumes( MediaType.APPLICATION_JSON )
+    public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
+                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
 
-        logger.debug("ServiceResource.executePost");
+        logger.debug( "ServiceResource.executePost" );
 
         Object json = body.getEntity();
 
         ApiResponse response = createApiResponse();
 
 
-        response.setAction("post");
-        response.setApplication(services.getApplication());
-        response.setParams(ui.getQueryParameters());
+        response.setAction( "post" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
 
-        ServicePayload payload = getPayload(json);
+        ServicePayload payload = getPayload( json );
 
-          executeServiceRequest(ui, response, ServiceAction.POST, payload);
+        executeServiceRequest( ui, response, ServiceAction.POST, payload );
 
-        return new JSONWithPadding(response, callback);
+        return new JSONWithPadding( response, callback );
     }
+
 
     @PUT
     @RequireApplicationAccess
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut(@Context UriInfo ui,
-            Map<String, Object> json,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-                    throws Exception {
+    @Consumes( MediaType.APPLICATION_JSON )
+    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+                                       @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
 
-        logger.debug("ServiceResource.executePut");
+        logger.debug( "ServiceResource.executePut" );
 
 
         ApiResponse response = createApiResponse();
-        response.setAction("put");
+        response.setAction( "put" );
 
         services.getApplicationRef();
-        response.setApplication(services.getApplication());
-        response.setParams(ui.getQueryParameters());
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
 
-        ServicePayload payload = getPayload(json);
+        ServicePayload payload = getPayload( json );
 
-        executeServiceRequest(ui, response, ServiceAction.PUT, payload);
+        executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
-        return new JSONWithPadding(response, callback);
+        return new JSONWithPadding( response, callback );
     }
+
 
     @DELETE
     @RequireApplicationAccess
-    public JSONWithPadding executeDelete(@Context UriInfo ui,
-            @QueryParam("callback") @DefaultValue("callback") String callback)
-                    throws Exception {
+    public JSONWithPadding executeDelete( @Context UriInfo ui,
+                                          @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception
+    {
 
-        logger.debug("ServiceResource.executeDelete");
+        logger.debug( "ServiceResource.executeDelete" );
 
         ApiResponse response = createApiResponse();
-        response.setAction("delete");
-        response.setApplication(services.getApplication());
-        response.setParams(ui.getQueryParameters());
+        response.setAction( "delete" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
 
-        executeServiceRequest(ui, response, ServiceAction.DELETE, null);
+        executeServiceRequest( ui, response, ServiceAction.DELETE, null );
 
-        return new JSONWithPadding(response, callback);
+        return new JSONWithPadding( response, callback );
     }
 
-//    TODO Temporarily removed until we test further
-//    @Produces("text/csv")
-//    @GET
-//    @RequireApplicationAccess
-//    @Consumes("text/csv")
-//    public String executeGetCsv(@Context UriInfo ui,
-//            @QueryParam("callback") @DefaultValue("callback") String callback)
-//                    throws Exception {
-//        ui.getQueryParameters().putSingle("pad", "true");
-//        JSONWithPadding jsonp = executeGet(ui, callback);
-//
-//        StringBuilder builder = new StringBuilder();
-//        if ((jsonp != null) && (jsonp.getJsonSource() instanceof ApiResponse)) {
-//            ApiResponse apiResponse = (ApiResponse) jsonp.getJsonSource();
-//            if ((apiResponse.getCounters() != null)
-//                    && (apiResponse.getCounters().size() > 0)) {
-//                List<AggregateCounterSet> counters = apiResponse.getCounters();
-//                int size = counters.get(0).getValues().size();
-//                List<AggregateCounter> firstCounterList = counters.get(0)
-//                        .getValues();
-//                if (size > 0) {
-//                    builder.append("timestamp");
-//                    for (AggregateCounterSet counterSet : counters) {
-//                        builder.append(",");
-//                        builder.append(counterSet.getName());
-//                    }
-//                    builder.append("\n");
-//                    SimpleDateFormat formatter = new SimpleDateFormat(
-//                            "yyyy-MM-dd HH:mm:ss.SSS");
-//                    for (int i = 0; i < size; i++) {
-//                        // yyyy-mm-dd hh:mm:ss.000
-//                        builder.append(formatter.format(new Date(
-//                                firstCounterList.get(i).getTimestamp())));
-//                        for (AggregateCounterSet counterSet : counters) {
-//                            List<AggregateCounter> counterList = counterSet
-//                                    .getValues();
-//                            builder.append(",");
-//                            builder.append(counterList.get(i).getValue());
-//                        }
-//                        builder.append("\n");
-//                    }
-//                }
-//            } else if ((apiResponse.getEntities() != null)
-//                    && (apiResponse.getEntities().size() > 0)) {
-//                for (Entity entity : apiResponse.getEntities()) {
-//                    builder.append(entity.getUuid());
-//                    builder.append(",");
-//                    builder.append(entity.getType());
-//                    builder.append(",");
-//                    builder.append(mapToJsonString(entity));
-//                }
-//
-//            }
-//        }
-//        return builder.toString();
-//    }
+    //    TODO Temporarily removed until we test further
+    //    @Produces("text/csv")
+    //    @GET
+    //    @RequireApplicationAccess
+    //    @Consumes("text/csv")
+    //    public String executeGetCsv(@Context UriInfo ui,
+    //            @QueryParam("callback") @DefaultValue("callback") String callback)
+    //                    throws Exception {
+    //        ui.getQueryParameters().putSingle("pad", "true");
+    //        JSONWithPadding jsonp = executeGet(ui, callback);
+    //
+    //        StringBuilder builder = new StringBuilder();
+    //        if ((jsonp != null) && (jsonp.getJsonSource() instanceof ApiResponse)) {
+    //            ApiResponse apiResponse = (ApiResponse) jsonp.getJsonSource();
+    //            if ((apiResponse.getCounters() != null)
+    //                    && (apiResponse.getCounters().size() > 0)) {
+    //                List<AggregateCounterSet> counters = apiResponse.getCounters();
+    //                int size = counters.get(0).getValues().size();
+    //                List<AggregateCounter> firstCounterList = counters.get(0)
+    //                        .getValues();
+    //                if (size > 0) {
+    //                    builder.append("timestamp");
+    //                    for (AggregateCounterSet counterSet : counters) {
+    //                        builder.append(",");
+    //                        builder.append(counterSet.getName());
+    //                    }
+    //                    builder.append("\n");
+    //                    SimpleDateFormat formatter = new SimpleDateFormat(
+    //                            "yyyy-MM-dd HH:mm:ss.SSS");
+    //                    for (int i = 0; i < size; i++) {
+    //                        // yyyy-mm-dd hh:mm:ss.000
+    //                        builder.append(formatter.format(new Date(
+    //                                firstCounterList.get(i).getTimestamp())));
+    //                        for (AggregateCounterSet counterSet : counters) {
+    //                            List<AggregateCounter> counterList = counterSet
+    //                                    .getValues();
+    //                            builder.append(",");
+    //                            builder.append(counterList.get(i).getValue());
+    //                        }
+    //                        builder.append("\n");
+    //                    }
+    //                }
+    //            } else if ((apiResponse.getEntities() != null)
+    //                    && (apiResponse.getEntities().size() > 0)) {
+    //                for (Entity entity : apiResponse.getEntities()) {
+    //                    builder.append(entity.getUuid());
+    //                    builder.append(",");
+    //                    builder.append(entity.getType());
+    //                    builder.append(",");
+    //                    builder.append(mapToJsonString(entity));
+    //                }
+    //
+    //            }
+    //        }
+    //        return builder.toString();
+    //    }
 
-    public static String wrapWithCallback(AccessInfo accessInfo,
-            String callback) {
-        return wrapWithCallback(mapToJsonString(accessInfo), callback);
+
+    public static String wrapWithCallback( AccessInfo accessInfo, String callback )
+    {
+        return wrapWithCallback( mapToJsonString( accessInfo ), callback );
     }
 
-    public static String wrapWithCallback(String json, String callback) {
-        if (StringUtils.isNotBlank(callback)) {
+
+    public static String wrapWithCallback( String json, String callback )
+    {
+        if ( StringUtils.isNotBlank( callback ) )
+        {
             json = callback + "(" + json + ")";
         }
         return json;
     }
 
-    public static MediaType jsonMediaType(String callback) {
-        return isNotBlank(callback) ? new MediaType("application", "javascript")
-        : APPLICATION_JSON_TYPE;
+
+    public static MediaType jsonMediaType( String callback )
+    {
+        return isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
     }
-
-
-
 }

@@ -16,17 +16,22 @@
 
 package org.usergrid.rest.exceptions;
 
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import org.usergrid.exception.JsonWriteException;
 
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+
+
 @Provider
-public class JsonWriteExceptionMapper extends AbstractExceptionMapper<JsonWriteException> {
- 
-	@Override
-	public Response toResponse(JsonWriteException e) {
-		return toResponse(INTERNAL_SERVER_ERROR, e);
-	} 
+public class JsonWriteExceptionMapper extends AbstractExceptionMapper<JsonWriteException>
+{
+
+    @Override
+    public Response toResponse( JsonWriteException e )
+    {
+        return toResponse( INTERNAL_SERVER_ERROR, e );
+    }
 }

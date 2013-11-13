@@ -16,17 +16,22 @@
 
 package org.usergrid.rest.exceptions;
 
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
 import org.usergrid.exception.JsonReadException;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
+
 @Provider
-public class JsonReadExceptionMapper extends AbstractExceptionMapper<JsonReadException> {
- 
-	@Override
-	public Response toResponse(JsonReadException e) {
-		return toResponse(BAD_REQUEST, e);
-	} 
+public class JsonReadExceptionMapper extends AbstractExceptionMapper<JsonReadException>
+{
+
+    @Override
+    public Response toResponse( JsonReadException e )
+    {
+        return toResponse( BAD_REQUEST, e );
+    }
 }

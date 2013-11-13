@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.events;
 
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -36,33 +37,37 @@ import org.usergrid.rest.applications.ServiceResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+
 @Component("org.usergrid.rest.applications.events.EventsResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
-public class EventsResource extends ServiceResource {
+public class EventsResource extends ServiceResource
+{
 
-	public static final Logger logger = LoggerFactory
-			.getLogger(EventsResource.class);
+    public static final Logger logger = LoggerFactory.getLogger( EventsResource.class );
 
-	String errorMsg;
-	User user;
+    String errorMsg;
+    User user;
 
-	public EventsResource() {
-	}
 
-	@Override
-	@GET
-	public JSONWithPadding executeGet(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-		QueueQuery query = QueueQuery.fromQueryParams(ui.getQueryParameters());
-		if (query == null) {
-			query = new QueueQuery();
-		}
-		query.setPosition(QueuePosition.START);
-		QueueResults results = ((ApplicationResource) parent).getQueues()
-				.getFromQueue("/events", query);
-		return new JSONWithPadding(results, callback);
-	}
+    public EventsResource()
+    {
+    }
 
+
+    @Override
+    @GET
+    public JSONWithPadding executeGet( @Context UriInfo ui,
+                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception
+    {
+        QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
+        if ( query == null )
+        {
+            query = new QueueQuery();
+        }
+        query.setPosition( QueuePosition.START );
+        QueueResults results = ( ( ApplicationResource ) parent ).getQueues().getFromQueue( "/events", query );
+        return new JSONWithPadding( results, callback );
+    }
 }

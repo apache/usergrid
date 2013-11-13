@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.rest.filters;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,18 +45,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-/**
- * Filter for setting default accept and Content-Type as application/json when
- * undefined by client
- * 
- * @author tnine
- * 
- */
-public class ContentTypeFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(ContentTypeFilter.class);
-    
+/**
+ * Filter for setting default accept and Content-Type as application/json when undefined by client
+ *
+ * @author tnine
+ */
+public class ContentTypeFilter implements Filter
+{
+
+    private static final Logger logger = LoggerFactory.getLogger( ContentTypeFilter.class );
+
 
     /*
      * (non-Javadoc)
@@ -63,9 +63,11 @@ public class ContentTypeFilter implements Filter {
      * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
      */
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        logger.info("Starting content type filter");
+    public void init( FilterConfig filterConfig ) throws ServletException
+    {
+        logger.info( "Starting content type filter" );
     }
+
 
     /*
      * (non-Javadoc)
@@ -74,21 +76,24 @@ public class ContentTypeFilter implements Filter {
      * javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-            FilterChain chain) throws IOException, ServletException {
+    public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain )
+            throws IOException, ServletException
+    {
 
-        if (!(request instanceof HttpServletRequest)) {
-            chain.doFilter(request, response);
+        if ( !( request instanceof HttpServletRequest ) )
+        {
+            chain.doFilter( request, response );
             return;
         }
 
-        HttpServletRequest origRequest = (HttpServletRequest) request;
+        HttpServletRequest origRequest = ( HttpServletRequest ) request;
 
-        HeaderWrapperRequest newRequest = new HeaderWrapperRequest(origRequest);
+        HeaderWrapperRequest newRequest = new HeaderWrapperRequest( origRequest );
         newRequest.adapt();
 
-        chain.doFilter(newRequest, response);
+        chain.doFilter( newRequest, response );
     }
+
 
     /*
      * (non-Javadoc)
@@ -96,10 +101,13 @@ public class ContentTypeFilter implements Filter {
      * @see javax.servlet.Filter#destroy()
      */
     @Override
-    public void destroy() {
+    public void destroy()
+    {
     }
 
-    private class HeaderWrapperRequest extends HttpServletRequestWrapper {
+
+    private class HeaderWrapperRequest extends HttpServletRequestWrapper
+    {
         private PushbackInputStream inputStream = null;
         private ServletInputStream servletInputStream = null;
         private HttpServletRequest origRequest = null;
@@ -107,84 +115,89 @@ public class ContentTypeFilter implements Filter {
 
         private final Map<String, String> newHeaders = new HashMap<String, String>();
 
+
         /**
          * @param request
          * @throws IOException
          */
-        public HeaderWrapperRequest(HttpServletRequest request)
-                throws IOException {
-            super(request);
+        public HeaderWrapperRequest( HttpServletRequest request ) throws IOException
+        {
+            super( request );
             origRequest = request;
-            inputStream = new PushbackInputStream(request.getInputStream());
-            servletInputStream = new DelegatingServletInputStream(inputStream);
+            inputStream = new PushbackInputStream( request.getInputStream() );
+            servletInputStream = new DelegatingServletInputStream( inputStream );
         }
+
 
         /**
          * @throws IOException
-         * 
+         *
          */
-        private void adapt() throws IOException {
-           
+        private void adapt() throws IOException
+        {
+
             //check if the accept header was set
-            @SuppressWarnings("rawtypes")
-            Enumeration contentType = origRequest.getHeaders(HttpHeaders.ACCEPT);
-            
-            if(!contentType.hasMoreElements()){
-              setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+            @SuppressWarnings( "rawtypes" ) Enumeration contentType = origRequest.getHeaders( HttpHeaders.ACCEPT );
+
+            if ( !contentType.hasMoreElements() )
+            {
+                setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
             }
-  
-            
+
+
             String path = origRequest.getRequestURI();
 
-            logger.debug("Content path is '{}'", path);
+            logger.debug( "Content path is '{}'", path );
 
             int initial = inputStream.read();
 
             String method = origRequest.getMethod();
-            
-           
+
+
             // nothing to read, check if it's a put or a post. If so set the
             // content type to json to create an empty json request
-            if (initial == -1) {
-                if ((HttpMethod.POST.equals(method) || HttpMethod.PUT
-                        .equals(method))
-                        && !MediaType.APPLICATION_FORM_URLENCODED
-                                .equals(getContentType())) {
+            if ( initial == -1 )
+            {
+                if ( ( HttpMethod.POST.equals( method ) || HttpMethod.PUT.equals( method ) ) && !MediaType
+                        .APPLICATION_FORM_URLENCODED.equals( getContentType() ) )
+                {
 
                     logger.debug(
                             "Setting content type to application/json for POST or PUT with no content at path '{}'",
-                            path);
+                            path );
 
-                    setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-                    setHeader(HttpHeaders.CONTENT_TYPE,
-                            MediaType.APPLICATION_JSON);
+                    setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
+                    setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );
                 }
 
                 return;
             }
 
-            char firstChar = (char) initial;
+            char firstChar = ( char ) initial;
 
             // its json, make it so
-            if (firstChar == '{' || firstChar == '[') {
-                logger.debug(
-                        "Setting content type to application/json for POST or PUT with json content at path '{}'",
-                        path);
+            if ( firstChar == '{' || firstChar == '[' )
+            {
+                logger.debug( "Setting content type to application/json for POST or PUT with json content at path '{}'",
+                        path );
 
-                setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-                setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+                setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
+                setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );
             }
 
-            inputStream.unread(initial);
+            inputStream.unread( initial );
         }
+
 
         /**
          * @throws IOException
-         * 
+         *
          */
-        public void setHeader(String name, String value) {
-            newHeaders.put(name, value);
+        public void setHeader( String name, String value )
+        {
+            newHeaders.put( name, value );
         }
+
 
         /*
          * (non-Javadoc)
@@ -194,15 +207,18 @@ public class ContentTypeFilter implements Filter {
          * String)
          */
         @Override
-        public String getHeader(String name) {
-            String header = newHeaders.get(name);
+        public String getHeader( String name )
+        {
+            String header = newHeaders.get( name );
 
-            if (header != null) {
+            if ( header != null )
+            {
                 return header;
             }
 
-            return super.getHeader(name);
+            return super.getHeader( name );
         }
+
 
         /*
          * (non-Javadoc)
@@ -212,22 +228,27 @@ public class ContentTypeFilter implements Filter {
          * .String)
          */
         @Override
-        public Enumeration getHeaders(String name) {
+        public Enumeration getHeaders( String name )
+        {
             Set<String> headers = new LinkedHashSet<String>();
 
-            String overridden = newHeaders.get(name);
+            String overridden = newHeaders.get( name );
 
-            if (overridden != null) {
-                headers.add(overridden);
-            } else {
-                for (Enumeration e = super.getHeaders(name); e
-                        .hasMoreElements();) {
-                    headers.add(e.nextElement().toString());
+            if ( overridden != null )
+            {
+                headers.add( overridden );
+            }
+            else
+            {
+                for ( Enumeration e = super.getHeaders( name ); e.hasMoreElements(); )
+                {
+                    headers.add( e.nextElement().toString() );
                 }
             }
 
-            return Collections.enumeration(headers);
+            return Collections.enumeration( headers );
         }
+
 
         /*
          * (non-Javadoc)
@@ -235,17 +256,20 @@ public class ContentTypeFilter implements Filter {
          * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
          */
         @Override
-        public Enumeration getHeaderNames() {
+        public Enumeration getHeaderNames()
+        {
             Set<String> headers = new LinkedHashSet<String>();
 
-            for (Enumeration e = super.getHeaderNames(); e.hasMoreElements();) {
-                headers.add(e.nextElement().toString());
+            for ( Enumeration e = super.getHeaderNames(); e.hasMoreElements(); )
+            {
+                headers.add( e.nextElement().toString() );
             }
 
-            headers.addAll(newHeaders.keySet());
+            headers.addAll( newHeaders.keySet() );
 
-            return Collections.enumeration(headers);
+            return Collections.enumeration( headers );
         }
+
 
         /*
          * (non-Javadoc)
@@ -253,9 +277,11 @@ public class ContentTypeFilter implements Filter {
          * @see javax.servlet.ServletRequestWrapper#getInputStream()
          */
         @Override
-        public ServletInputStream getInputStream() throws IOException {
+        public ServletInputStream getInputStream() throws IOException
+        {
             return servletInputStream;
         }
+
 
         /*
          * (non-Javadoc)
@@ -263,13 +289,14 @@ public class ContentTypeFilter implements Filter {
          * @see javax.servlet.ServletRequestWrapper#getReader()
          */
         @Override
-        public BufferedReader getReader() throws IOException {
-            if (reader != null) {
+        public BufferedReader getReader() throws IOException
+        {
+            if ( reader != null )
+            {
                 return reader;
             }
 
-            reader = new BufferedReader(new InputStreamReader(
-                    servletInputStream));
+            reader = new BufferedReader( new InputStreamReader( servletInputStream ) );
 
             return reader;
         }
@@ -278,45 +305,48 @@ public class ContentTypeFilter implements Filter {
         // methods. We won't use it, so I'm not implementing it here
     }
 
+
     /**
      * Delegating implementation of {@link javax.servlet.ServletInputStream}.
-     * 
-     * 
+     *
      * @author Juergen Hoeller, Todd Nine
      * @since 1.0.2
      */
-    private static class DelegatingServletInputStream extends
-            ServletInputStream {
+    private static class DelegatingServletInputStream extends ServletInputStream
+    {
 
         private final InputStream sourceStream;
 
+
         /**
          * Create a DelegatingServletInputStream for the given source stream.
-         * 
-         * @param sourceStream
-         *            the source stream (never <code>null</code>)
+         *
+         * @param sourceStream the source stream (never <code>null</code>)
          */
-        public DelegatingServletInputStream(InputStream sourceStream) {
-            Assert.notNull(sourceStream, "Source InputStream must not be null");
+        public DelegatingServletInputStream( InputStream sourceStream )
+        {
+            Assert.notNull( sourceStream, "Source InputStream must not be null" );
             this.sourceStream = sourceStream;
         }
 
-        /**
-         * Return the underlying source stream (never <code>null</code>).
-         */
-        public final InputStream getSourceStream() {
+
+        /** Return the underlying source stream (never <code>null</code>). */
+        public final InputStream getSourceStream()
+        {
             return this.sourceStream;
         }
 
-        public int read() throws IOException {
+
+        public int read() throws IOException
+        {
             return this.sourceStream.read();
         }
 
-        public void close() throws IOException {
+
+        public void close() throws IOException
+        {
             super.close();
             this.sourceStream.close();
         }
-
     }
-
 }

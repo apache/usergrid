@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +28,15 @@ import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.utils.UUIDUtils;
 
-/**
- * @author tnine
- */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+
+/** @author tnine */
 @Concurrent()
-public class ActivityResourceIT extends AbstractRestIT {
-    private static Logger log = LoggerFactory
-            .getLogger(ActivityResourceIT.class);
+public class ActivityResourceIT extends AbstractRestIT
+{
+    private static Logger log = LoggerFactory.getLogger( ActivityResourceIT.class );
 
     private static final String GROUP = "testGroup";
 
@@ -44,35 +44,47 @@ public class ActivityResourceIT extends AbstractRestIT {
 
     private static boolean groupCreated = false;
 
-    public ActivityResourceIT() throws Exception {
+
+    public ActivityResourceIT() throws Exception
+    {
 
     }
 
+
     @Before
-    public void setupGroup() {
-        if (groupCreated) {
+    public void setupGroup()
+    {
+        if ( groupCreated )
+        {
             return;
         }
 
-        client.createGroup(GROUP);
+        client.createGroup( GROUP );
 
         groupCreated = true;
     }
 
-    @Test
-    public void postNullActivityToGroup() {
 
-      boolean fail = false;
-      try {
-        client.postGroupActivity(GROUP, null);
-      } catch (Exception e) {
-        fail = true;
-      } 
-      assertTrue(fail);
+    @Test
+    public void postNullActivityToGroup()
+    {
+
+        boolean fail = false;
+        try
+        {
+            client.postGroupActivity( GROUP, null );
+        }
+        catch ( Exception e )
+        {
+            fail = true;
+        }
+        assertTrue( fail );
     }
 
+
     @Test
-    public void postGroupActivity() {
+    public void postGroupActivity()
+    {
 
         // don't populate the user, it will use the currently authenticated
         // user.
@@ -80,20 +92,18 @@ public class ActivityResourceIT extends AbstractRestIT {
         String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
-        client.postGroupActivity(GROUP, "POST", activityTitle, activityDesc,
-                "testCategory", null, null, null, null, null);
+        client.postGroupActivity( GROUP, "POST", activityTitle, activityDesc, "testCategory", null, null, null, null,
+                null );
 
-        Query results = client.queryActivityFeedForGroup(GROUP);
+        Query results = client.queryActivityFeedForGroup( GROUP );
 
         ApiResponse response = results.getResponse();
 
-        Entity result = response.getEntities().get(0);
+        Entity result = response.getEntities().get( 0 );
 
-        assertEquals("POST", result.getProperties().get("verb").asText());
-        assertEquals(activityTitle, result.getProperties().get("title")
-                .asText());
-        assertEquals(activityDesc, result.getProperties().get("content")
-                .asText());
+        assertEquals( "POST", result.getProperties().get( "verb" ).asText() );
+        assertEquals( activityTitle, result.getProperties().get( "title" ).asText() );
+        assertEquals( activityDesc, result.getProperties().get( "content" ).asText() );
 
         // now pull the activity directly, we should find it
 
@@ -101,42 +111,38 @@ public class ActivityResourceIT extends AbstractRestIT {
 
         response = results.getResponse();
 
-        result = response.getEntities().get(0);
+        result = response.getEntities().get( 0 );
 
-        assertEquals("POST", result.getProperties().get("verb").asText());
-        assertEquals(activityTitle, result.getProperties().get("title")
-                .asText());
-        assertEquals(activityDesc, result.getProperties().get("content")
-                .asText());
-
+        assertEquals( "POST", result.getProperties().get( "verb" ).asText() );
+        assertEquals( activityTitle, result.getProperties().get( "title" ).asText() );
+        assertEquals( activityDesc, result.getProperties().get( "content" ).asText() );
     }
 
+
     @Test
-    public void postUserActivity() {
+    public void postUserActivity()
+    {
 
         // don't populate the user, it will use the currently authenticated
         // user.
 
-        User current =  client.getLoggedInUser();
-        
+        User current = client.getLoggedInUser();
+
         String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
-        client.postUserActivity("POST", activityTitle, activityDesc,
-                "testCategory", current, null, null, null, null);
+        client.postUserActivity( "POST", activityTitle, activityDesc, "testCategory", current, null, null, null, null );
 
-        Query results = client.queryActivityFeedForUser(USER);
+        Query results = client.queryActivityFeedForUser( USER );
 
         ApiResponse response = results.getResponse();
 
-        Entity result = response.getEntities().get(0);
+        Entity result = response.getEntities().get( 0 );
 
-        assertEquals("POST", result.getProperties().get("verb").asText());
-        assertEquals(activityTitle, result.getProperties().get("title")
-                .asText());
-        assertEquals(activityDesc, result.getProperties().get("content")
-                .asText());
-        assertEquals(current.getUuid().toString(), result.getProperties().get("actor").get("uuid").asText());
+        assertEquals( "POST", result.getProperties().get( "verb" ).asText() );
+        assertEquals( activityTitle, result.getProperties().get( "title" ).asText() );
+        assertEquals( activityDesc, result.getProperties().get( "content" ).asText() );
+        assertEquals( current.getUuid().toString(), result.getProperties().get( "actor" ).get( "uuid" ).asText() );
 
         // now pull the activity directly, we should find it
 
@@ -144,45 +150,39 @@ public class ActivityResourceIT extends AbstractRestIT {
 
         response = results.getResponse();
 
-        result = response.getEntities().get(0);
+        result = response.getEntities().get( 0 );
 
-        assertEquals("POST", result.getProperties().get("verb").asText());
-        assertEquals(activityTitle, result.getProperties().get("title")
-                .asText());
-        assertEquals(activityDesc, result.getProperties().get("content")
-                .asText());
-
+        assertEquals( "POST", result.getProperties().get( "verb" ).asText() );
+        assertEquals( activityTitle, result.getProperties().get( "title" ).asText() );
+        assertEquals( activityDesc, result.getProperties().get( "content" ).asText() );
     }
-    
+
+
     @Test
-    public void postActivity() {
+    public void postActivity()
+    {
 
         // don't populate the user, it will use the currently authenticated
         // user.
 
-        User current =  client.getLoggedInUser();
-        
+        User current = client.getLoggedInUser();
+
         String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
-        client.postActivity("POST", activityTitle, activityDesc,
-                "testCategory", current, null, null, null, null);
+        client.postActivity( "POST", activityTitle, activityDesc, "testCategory", current, null, null, null, null );
 
         Query results = client.queryActivity();
 
         ApiResponse response = results.getResponse();
 
-        Entity result = response.getEntities().get(0);
+        Entity result = response.getEntities().get( 0 );
 
-        assertEquals("POST", result.getProperties().get("verb").asText());
-        assertEquals(activityTitle, result.getProperties().get("title")
-                .asText());
-        assertEquals(activityDesc, result.getProperties().get("content")
-                .asText());
-        
+        assertEquals( "POST", result.getProperties().get( "verb" ).asText() );
+        assertEquals( activityTitle, result.getProperties().get( "title" ).asText() );
+        assertEquals( activityDesc, result.getProperties().get( "content" ).asText() );
+
         //ACTOR isn't coming back, why?
-        assertEquals(current.getUuid().toString(), result.getProperties().get("actor").get("uuid").asText());
-
-      
+        assertEquals( current.getUuid().toString(), result.getProperties().get( "actor" ).get( "uuid" ).asText() );
     }
 }
