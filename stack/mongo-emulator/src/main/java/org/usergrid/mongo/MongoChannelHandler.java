@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,7 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
-import org.apache.shiro.mgt.SessionsSecurityManager;
-import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.support.SubjectThreadState;
-import org.apache.shiro.util.ThreadState;
+
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
@@ -32,109 +29,135 @@ import org.usergrid.mongo.protocol.OpReply;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
 
-public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
+import org.apache.shiro.mgt.SessionsSecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.support.SubjectThreadState;
+import org.apache.shiro.util.ThreadState;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(MongoChannelHandler.class);
 
-	private final EntityManagerFactory emf;
-	private final ServiceManagerFactory smf;
-	private final ManagementService management;
-	private final SessionsSecurityManager securityManager;
+public class MongoChannelHandler extends SimpleChannelUpstreamHandler
+{
 
-	Subject subject = null;
+    private static final Logger logger = LoggerFactory.getLogger( MongoChannelHandler.class );
 
-	public MongoChannelHandler(EntityManagerFactory emf,
-			ServiceManagerFactory smf, ManagementService management,
-			SessionsSecurityManager securityManager) {
-		super();
+    private final EntityManagerFactory emf;
+    private final ServiceManagerFactory smf;
+    private final ManagementService management;
+    private final SessionsSecurityManager securityManager;
 
-		logger.info("Starting new client connection...");
-		this.emf = emf;
-		this.smf = smf;
-		this.management = management;
-		this.securityManager = securityManager;
+    Subject subject = null;
 
-		if (securityManager != null) {
-			subject = new Subject.Builder(securityManager).buildSubject();
-		}
-	}
 
-	public EntityManagerFactory getEmf() {
-		return emf;
-	}
+    public MongoChannelHandler( EntityManagerFactory emf, ServiceManagerFactory smf, ManagementService management,
+                                SessionsSecurityManager securityManager )
+    {
+        super();
 
-	public ServiceManagerFactory getSmf() {
-		return smf;
-	}
+        logger.info( "Starting new client connection..." );
+        this.emf = emf;
+        this.smf = smf;
+        this.management = management;
+        this.securityManager = securityManager;
 
-	public ManagementService getOrganizations() {
-		return management;
-	}
+        if ( securityManager != null )
+        {
+            subject = new Subject.Builder( securityManager ).buildSubject();
+        }
+    }
 
-	public SessionsSecurityManager getSecurityManager() {
-		return securityManager;
-	}
 
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+    public EntityManagerFactory getEmf()
+    {
+        return emf;
+    }
 
-		ThreadState threadState = null;
-		if (subject != null) {
-			threadState = new SubjectThreadState(subject);
-			threadState.bind();
-			// logger.info("Security subject bound to thread");
-		}
 
-		try {
+    public ServiceManagerFactory getSmf()
+    {
+        return smf;
+    }
 
-			Message message = null;
-			if (e.getMessage() instanceof Message) {
-				message = (Message) e.getMessage();
-			}
 
-			if (message != null) {
-				logger.info(">>> {}\n" , message);
-				OpReply reply = handleMessage(ctx, e, message);
-				logger.info("<<< {}\n", reply);
-				
-				if(reply != null){
-				    e.getChannel().write(reply);
-				}
-			}
+    public ManagementService getOrganizations()
+    {
+        return management;
+    }
 
-		}
-		//an error occurred.  Set this as the attachment so subsequent calls to getlastError can return correct
-		//errors
-		catch(Exception ex){
-		    ctx.setAttachment(ex);
-		}
-		
-		finally {
-			if (threadState != null) {
-				threadState.clear();
-				// logger.info("Security subject unbound from thread");
-			}
-		}
 
-	}
+    public SessionsSecurityManager getSecurityManager()
+    {
+        return securityManager;
+    }
 
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.warn("Unexpected exception from downstream.", e.getCause());
-		e.getChannel().close();
-	}
 
-	public OpReply handleMessage(ChannelHandlerContext ctx, MessageEvent e, Message message) {
-    logger.debug("message type: {}", message.getClass().getCanonicalName());
-	    if(message instanceof OpCrud){
-	        return ((OpCrud)message).doOp(this, ctx, e);
-	    }
-	        
-		OpReply reply = new OpReply(message);
-		return reply;
-	}
+    @Override
+    public void messageReceived( ChannelHandlerContext ctx, MessageEvent e )
+    {
 
-	
+        ThreadState threadState = null;
+        if ( subject != null )
+        {
+            threadState = new SubjectThreadState( subject );
+            threadState.bind();
+            // logger.info("Security subject bound to thread");
+        }
 
+        try
+        {
+
+            Message message = null;
+            if ( e.getMessage() instanceof Message )
+            {
+                message = ( Message ) e.getMessage();
+            }
+
+            if ( message != null )
+            {
+                logger.info( ">>> {}\n", message );
+                OpReply reply = handleMessage( ctx, e, message );
+                logger.info( "<<< {}\n", reply );
+
+                if ( reply != null )
+                {
+                    e.getChannel().write( reply );
+                }
+            }
+        }
+        //an error occurred.  Set this as the attachment so subsequent calls to getlastError can return correct
+        //errors
+        catch ( Exception ex )
+        {
+            ctx.setAttachment( ex );
+        }
+
+        finally
+        {
+            if ( threadState != null )
+            {
+                threadState.clear();
+                // logger.info("Security subject unbound from thread");
+            }
+        }
+    }
+
+
+    @Override
+    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e )
+    {
+        logger.warn( "Unexpected exception from downstream.", e.getCause() );
+        e.getChannel().close();
+    }
+
+
+    public OpReply handleMessage( ChannelHandlerContext ctx, MessageEvent e, Message message )
+    {
+        logger.debug( "message type: {}", message.getClass().getCanonicalName() );
+        if ( message instanceof OpCrud )
+        {
+            return ( ( OpCrud ) message ).doOp( this, ctx, e );
+        }
+
+        OpReply reply = new OpReply( message );
+        return reply;
+    }
 }

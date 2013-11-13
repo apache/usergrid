@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.mongo.protocol;
+
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -40,75 +41,92 @@ import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
-public class OpDelete extends OpCrud {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(OpDelete.class);
+public class OpDelete extends OpCrud
+{
+
+    private static final Logger logger = LoggerFactory.getLogger( OpDelete.class );
     public static final int BATCH_SIZE = 1000;
 
     private int flags;
     // delete query
     private BSONObject selector;
 
-    public OpDelete() {
+
+    public OpDelete()
+    {
         opCode = OP_DELETE;
     }
 
-    public int getFlags() {
+
+    public int getFlags()
+    {
         return flags;
     }
 
-    public void setFlags(int flags) {
+
+    public void setFlags( int flags )
+    {
         this.flags = flags;
     }
 
-    public BSONObject getSelector() {
+
+    public BSONObject getSelector()
+    {
         return selector;
     }
 
-    public void setSelector(BSONObject selector) {
+
+    public void setSelector( BSONObject selector )
+    {
         this.selector = selector;
     }
 
-    public void setSelector(Map<?, ?> map) {
+
+    public void setSelector( Map<?, ?> map )
+    {
         selector = new BasicBSONObject();
-        selector.putAll(map);
+        selector.putAll( map );
     }
 
+
     @Override
-    public void decode(ChannelBuffer buffer) throws IOException {
-        super.decode(buffer);
+    public void decode( ChannelBuffer buffer ) throws IOException
+    {
+        super.decode( buffer );
         buffer.readInt();
-        fullCollectionName = readCString(buffer);
+        fullCollectionName = readCString( buffer );
         flags = buffer.readInt();
-        selector = BSONUtils.decoder().readObject(
-                new ChannelBufferInputStream(buffer));
+        selector = BSONUtils.decoder().readObject( new ChannelBufferInputStream( buffer ) );
     }
 
+
     @Override
-    public ChannelBuffer encode(ChannelBuffer buffer) {
+    public ChannelBuffer encode( ChannelBuffer buffer )
+    {
         int l = 24; // 6 ints * 4 bytes
 
-        ByteBuffer fullCollectionNameBytes = getCString(fullCollectionName);
+        ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
         l += fullCollectionNameBytes.capacity();
 
-        ByteBuffer selectorBytes = encodeDocument(selector);
+        ByteBuffer selectorBytes = encodeDocument( selector );
         l += selectorBytes.capacity();
 
         messageLength = l;
 
-        buffer = super.encode(buffer);
+        buffer = super.encode( buffer );
 
-        buffer.writeInt(0);
+        buffer.writeInt( 0 );
 
-        buffer.writeBytes(fullCollectionNameBytes);
+        buffer.writeBytes( fullCollectionNameBytes );
 
-        buffer.writeInt(flags);
+        buffer.writeInt( flags );
 
-        buffer.writeBytes(selectorBytes);
+        buffer.writeBytes( selectorBytes );
 
         return buffer;
     }
+
 
     /*
      * (non-Javadoc)
@@ -118,62 +136,68 @@ public class OpDelete extends OpCrud {
      * org.jboss.netty.channel.MessageEvent)
      */
     @Override
-    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
-            MessageEvent messageEvent) {
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
+    {
 
         // perform the query
-        Query query = MongoQueryParser.toNativeQuery(selector, 0);
+        Query query = MongoQueryParser.toNativeQuery( selector, 0 );
 
         // TODO TN set an error
-        if (query == null) {
+        if ( query == null )
+        {
             return null;
         }
 
-        query.setResultsLevel(Level.IDS);
-        query.setLimit(BATCH_SIZE);
+        query.setResultsLevel( Level.IDS );
+        query.setLimit( BATCH_SIZE );
 
-        ApplicationInfo application = SubjectUtils.getApplication(Identifier
-                .from(getDatabaseName()));
+        ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( getDatabaseName() ) );
 
-        if (application == null) {
-            ctx.setAttachment(new IllegalArgumentException(String.format("Could not find application with name '%s' ", getDatabaseName())));
+        if ( application == null )
+        {
+            ctx.setAttachment( new IllegalArgumentException(
+                    String.format( "Could not find application with name '%s' ", getDatabaseName() ) ) );
             return null;
         }
 
         // delete every result
 
-        EntityManager em = handler.getEmf().getEntityManager(
-                application.getId());
+        EntityManager em = handler.getEmf().getEntityManager( application.getId() );
 
         Results results = null;
 
-        do {
+        do
+        {
 
-            try {
-                
-                if(results != null){
-                    query.setCursor(results.getCursor());
+            try
+            {
+
+                if ( results != null )
+                {
+                    query.setCursor( results.getCursor() );
                 }
 
-                results = em.searchCollection(em.getApplicationRef(),
-                        getCollectionName(), query);
+                results = em.searchCollection( em.getApplicationRef(), getCollectionName(), query );
 
                 // now loop through all the ids and delete them
-                for (UUID id : results.getIds()) {
-                    em.delete(new SimpleEntityRef(query.getEntityType(), id));
+                for ( UUID id : results.getIds() )
+                {
+                    em.delete( new SimpleEntityRef( query.getEntityType(), id ) );
                 }
-
-            } catch (Exception ex) {
-                logger.error("Unable to delete object", ex);
-                ctx.setAttachment(ex);
             }
-
-        } while (results.getCursor() != null);
+            catch ( Exception ex )
+            {
+                logger.error( "Unable to delete object", ex );
+                ctx.setAttachment( ex );
+            }
+        }
+        while ( results.getCursor() != null );
 
         // return nothing on delete, like insert
-        
+
         return null;
     }
+
 
     /*
      * (non-Javadoc)
@@ -181,11 +205,10 @@ public class OpDelete extends OpCrud {
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString() {
-        return "OpDelete [flags=" + flags + ", selector=" + selector
-                + ", fullCollectionName=" + fullCollectionName
-                + ", messageLength=" + messageLength + ", requestID="
-                + requestID + ", responseTo=" + responseTo + ", opCode="
-                + opCode + "]";
+    public String toString()
+    {
+        return "OpDelete [flags=" + flags + ", selector=" + selector + ", fullCollectionName=" + fullCollectionName
+                + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo=" + responseTo
+                + ", opCode=" + opCode + "]";
     }
 }
