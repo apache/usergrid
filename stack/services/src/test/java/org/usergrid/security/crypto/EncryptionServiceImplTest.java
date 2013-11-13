@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.security.crypto;
 
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,144 +26,162 @@ import org.usergrid.security.crypto.command.EncryptionCommand;
 import org.usergrid.security.crypto.command.Md5HashCommand;
 import org.usergrid.security.crypto.command.Sha1HashCommand;
 
-/**
- * @author tnine
- * 
- */
-public class EncryptionServiceImplTest {
+import static org.junit.Assert.assertTrue;
 
-  @Test(expected = IllegalArgumentException.class)
-  public void duplicateCommand() {
-    final String duplicate = "foo";
 
-    EncryptionCommand command1 = new EncryptionCommand() {
+/** @author tnine */
+public class EncryptionServiceImplTest
+{
 
-      @Override
-      public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-        return null;
-      }
+    @Test(expected = IllegalArgumentException.class)
+    public void duplicateCommand()
+    {
+        final String duplicate = "foo";
 
-      @Override
-      public String getName() {
-        return duplicate;
-      }
+        EncryptionCommand command1 = new EncryptionCommand()
+        {
 
-      @Override
-      public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-        return null;
-      }
-    };
+            @Override
+            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+            {
+                return null;
+            }
 
-    EncryptionCommand command2 = new EncryptionCommand() {
 
-      @Override
-      public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-        return null;
-      }
+            @Override
+            public String getName()
+            {
+                return duplicate;
+            }
 
-      @Override
-      public String getName() {
-        return duplicate;
-      }
 
-      @Override
-      public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-        return null;
-      }
-    };
+            @Override
+            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+            {
+                return null;
+            }
+        };
 
-    List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>();
-    commands.add(command1);
-    commands.add(command2);
+        EncryptionCommand command2 = new EncryptionCommand()
+        {
 
-    EncryptionServiceImpl service = new EncryptionServiceImpl();
-    service.setCommands(commands);
-    service.init();
-  }
+            @Override
+            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+            {
+                return null;
+            }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void missingCryptoCommand() {
-    final String duplicate = "foo";
 
-    EncryptionCommand command1 = new EncryptionCommand() {
+            @Override
+            public String getName()
+            {
+                return duplicate;
+            }
 
-      @Override
-      public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-        return null;
-      }
 
-      @Override
-      public String getName() {
-        return duplicate;
-      }
+            @Override
+            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+            {
+                return null;
+            }
+        };
 
-      @Override
-      public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-        return null;
-      }
-    };
+        List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>();
+        commands.add( command1 );
+        commands.add( command2 );
 
-    List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>();
-    commands.add(command1);
-    
+        EncryptionServiceImpl service = new EncryptionServiceImpl();
+        service.setCommands( commands );
+        service.init();
+    }
 
-    EncryptionServiceImpl service = new EncryptionServiceImpl();
 
-    service.setCommands(commands);
-    service.init();
-    
-    
-    CredentialsInfo info = new CredentialsInfo();
-    info.setCryptoChain(new String[]{"doesnotexist"});
-    
-    service.verify("irrelevant", info, null, null);
-  }
+    @Test(expected = IllegalArgumentException.class)
+    public void missingCryptoCommand()
+    {
+        final String duplicate = "foo";
 
-  
-  @Test(expected = IllegalArgumentException.class)
-  public void noCommands() {
-    
-    EncryptionServiceImpl service = new EncryptionServiceImpl();
-    service.init();
+        EncryptionCommand command1 = new EncryptionCommand()
+        {
 
-  }
-  
-  /**
-   * Tests legacy md5 support for old imported md5 -> sha-1 passwords
-   */
-  @Test
-  public void legacyMd5Support(){
-    EncryptionServiceImpl impl = new EncryptionServiceImpl();
-    
-    Md5HashCommand md5 = new Md5HashCommand();
-    Sha1HashCommand sha1 = new Sha1HashCommand();
-    
-    List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>(2);
-    commands.add(md5);
-    commands.add(sha1);
-    
-    impl.setCommands(commands);
-    impl.setDefaultCommandName(sha1.getName());
-    impl.init();
-    
-    //now encrypt
-    String password = "secret";
-    
-    CredentialsInfo creds = new CredentialsInfo();
-    creds.setHashType("md5");
-    creds.setEncrypted(true);
-    creds.setCipher("sha-1");
-    
-    //set the secret into the creds statically for the legacy test
-    creds.setSecret("8rpwQiXFx-5nbzIB6iVr9XeeaHc");
-    
-    
-    
-    
-    boolean result = impl.verify(password, creds, null, null);
-    
-    assertTrue("Legacy password verified", result);
-    
-  }
+            @Override
+            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+            {
+                return null;
+            }
 
+
+            @Override
+            public String getName()
+            {
+                return duplicate;
+            }
+
+
+            @Override
+            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+            {
+                return null;
+            }
+        };
+
+        List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>();
+        commands.add( command1 );
+
+
+        EncryptionServiceImpl service = new EncryptionServiceImpl();
+
+        service.setCommands( commands );
+        service.init();
+
+
+        CredentialsInfo info = new CredentialsInfo();
+        info.setCryptoChain( new String[] { "doesnotexist" } );
+
+        service.verify( "irrelevant", info, null, null );
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void noCommands()
+    {
+
+        EncryptionServiceImpl service = new EncryptionServiceImpl();
+        service.init();
+    }
+
+
+    /** Tests legacy md5 support for old imported md5 -> sha-1 passwords */
+    @Test
+    public void legacyMd5Support()
+    {
+        EncryptionServiceImpl impl = new EncryptionServiceImpl();
+
+        Md5HashCommand md5 = new Md5HashCommand();
+        Sha1HashCommand sha1 = new Sha1HashCommand();
+
+        List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>( 2 );
+        commands.add( md5 );
+        commands.add( sha1 );
+
+        impl.setCommands( commands );
+        impl.setDefaultCommandName( sha1.getName() );
+        impl.init();
+
+        //now encrypt
+        String password = "secret";
+
+        CredentialsInfo creds = new CredentialsInfo();
+        creds.setHashType( "md5" );
+        creds.setEncrypted( true );
+        creds.setCipher( "sha-1" );
+
+        //set the secret into the creds statically for the legacy test
+        creds.setSecret( "8rpwQiXFx-5nbzIB6iVr9XeeaHc" );
+
+
+        boolean result = impl.verify( password, creds, null, null );
+
+        assertTrue( "Legacy password verified", result );
+    }
 }

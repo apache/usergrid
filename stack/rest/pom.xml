@@ -82,7 +82,8 @@
               <forkCount>${rest.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
               <perCoreThreadCount>false</perCoreThreadCount>
-              <argLine>-Xmx${rest.it.heapmax} -Xms${rest.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${rest.it.heapmax} -Xms${rest.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+              </argLine>
 
               <includes>
                 <include>**/RestTestSuite.java</include>
@@ -139,7 +140,8 @@
               <forkCount>${rest.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
               <perCoreThreadCount>false</perCoreThreadCount>
-              <argLine>-Xmx${rest.it.heapmax} -Xms${rest.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${rest.it.heapmax} -Xms${rest.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+              </argLine>
 
               <includes>
                 <include>**/RestTestSuite.java</include>
@@ -217,7 +219,8 @@
 
               <includes>
                 <include>**/ConcurrentRestITSuite.java</include>
-                <include>**/LongRunningNotInSuiteIT.java</include> <!-- an example -->
+                <include>**/LongRunningNotInSuiteIT.java</include>
+                <!-- an example -->
               </includes>
               <excludes>
                 <exclude>**/*IT.java</exclude>

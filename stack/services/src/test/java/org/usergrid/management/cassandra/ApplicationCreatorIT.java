@@ -1,10 +1,6 @@
 package org.usergrid.management.cassandra;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Set;
 
 import org.junit.Rule;
@@ -17,12 +13,15 @@ import org.usergrid.ServiceITSuite;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
-import org.usergrid.management.*;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
-/**
- * @author zznate
- */
+/** @author zznate */
 @Concurrent()
 public class ApplicationCreatorIT
 {
@@ -36,20 +35,20 @@ public class ApplicationCreatorIT
     @Rule
     public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
 
+
     @Test
     public void testCreateSampleApplication() throws Exception
     {
-        OrganizationOwnerInfo orgOwner =
-                setup.getMgmtSvc().createOwnerAndOrganization("appcreatortest",
-                        "nate-appcreatortest", "Nate",
-                        "nate+appcreatortest@apigee.com", "password", true,
-                        false);
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc()
+                                              .createOwnerAndOrganization( "appcreatortest", "nate-appcreatortest",
+                                                      "Nate", "nate+appcreatortest@apigee.com", "password", true,
+                                                      false );
 
-        ApplicationInfo appInfo = setup.getAppCreator().createSampleFor(orgOwner.getOrganization());
+        ApplicationInfo appInfo = setup.getAppCreator().createSampleFor( orgOwner.getOrganization() );
         assertNotNull( appInfo );
         assertEquals( "appcreatortest/sandbox", appInfo.getName() );
 
-        Set<String> rolePerms = setup.getEmf().getEntityManager(appInfo.getId()).getRolePermissions("guest");
+        Set<String> rolePerms = setup.getEmf().getEntityManager( appInfo.getId() ).getRolePermissions( "guest" );
         assertNotNull( rolePerms );
         assertTrue( rolePerms.contains( "get,post,put,delete:/**" ) );
     }
@@ -58,11 +57,8 @@ public class ApplicationCreatorIT
     @Test
     public void testCreateSampleApplicationAltName() throws Exception
     {
-        OrganizationOwnerInfo orgOwner =
-                setup.getMgmtSvc().createOwnerAndOrganization("appcreatortestcustom",
-                        "nate-appcreatortestcustom", "Nate",
-                        "nate+appcreatortestcustom@apigee.com", "password",
-                        true, false);
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( "appcreatortestcustom",
+                "nate-appcreatortestcustom", "Nate", "nate+appcreatortestcustom@apigee.com", "password", true, false );
 
         ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl( setup.getEmf(), setup.getMgmtSvc() );
         customCreator.setSampleAppName( "messagee" );

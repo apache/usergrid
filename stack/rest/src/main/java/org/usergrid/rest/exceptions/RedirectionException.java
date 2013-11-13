@@ -1,23 +1,32 @@
 package org.usergrid.rest.exceptions;
 
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class RedirectionException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+public class RedirectionException extends RuntimeException
+{
 
-	URI uri = null;
+    private static final long serialVersionUID = 1L;
 
-	public RedirectionException(String location) {
-		try {
-			uri = new URI(location);
-		} catch (URISyntaxException e) {
-		}
-	}
+    URI uri = null;
 
-	public URI getUri() {
-		return uri;
-	}
 
+    public RedirectionException( String location )
+    {
+        try
+        {
+            uri = new URI( location );
+        }
+        catch ( URISyntaxException e )
+        {
+        }
+    }
+
+
+    public URI getUri()
+    {
+        return uri;
+    }
 }

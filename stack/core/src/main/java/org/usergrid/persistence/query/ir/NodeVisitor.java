@@ -17,69 +17,63 @@ package org.usergrid.persistence.query.ir;
 
 
 /** @author tnine */
-public interface NodeVisitor {
+public interface NodeVisitor
+{
 
-  /**
-   *
-   * @param node
-   * @throws Exception
-   */
-  public void visit(AndNode node) throws Exception;
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit( AndNode node ) throws Exception;
 
-  /**
-   *
-   * @param node
-   * @throws Exception
-   */
-  public void visit(NotNode node) throws Exception;
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit( NotNode node ) throws Exception;
 
-  /**
-   *
-   * @param node
-   * @throws Exception
-   */
-  public void visit(OrNode node) throws Exception;
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit( OrNode node ) throws Exception;
 
-  /**
-   *
-   * @param node
-   * @throws Exception
-   */
-  public void visit(SliceNode node) throws Exception;
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit( SliceNode node ) throws Exception;
 
-  /**
-   *
-   * @param node
-   * @throws Exception
-   */
-  public void visit(WithinNode node) throws Exception;
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit( WithinNode node ) throws Exception;
 
-  /**
-   *
-   * @param node
-   * @throws Exception
-   */
-  public void visit(AllNode node) throws Exception;
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit( AllNode node ) throws Exception;
 
-  /**
-   *  Visit the name identifier node
-   *  @param nameIdentifierNode
-   */
-  public void visit(NameIdentifierNode nameIdentifierNode) throws Exception;
+    /** Visit the name identifier node */
+    public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception;
 
-  /** Visit the uuid identifier node
-   * @param uuidIdentifierNode
-   */
-  public void visit(UuidIdentifierNode uuidIdentifierNode);
+    /** Visit the uuid identifier node */
+    public void visit( UuidIdentifierNode uuidIdentifierNode );
 
-  /**
-   * @param orderByNode
-   * @throws Exception
-   */
-  public void visit(OrderByNode orderByNode) throws Exception;
-  /**
-   * Visit the email id node
-   * @param emailIdentifierNode
-   */
-  public void visit(EmailIdentifierNode emailIdentifierNode) throws Exception;
+    /**
+     * @param orderByNode
+     * @throws Exception
+     */
+    public void visit( OrderByNode orderByNode ) throws Exception;
+
+    /** Visit the email id node */
+    public void visit( EmailIdentifierNode emailIdentifierNode ) throws Exception;
 }

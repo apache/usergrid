@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.persistence.entities;
+
 
 import java.util.List;
 import java.util.Set;
@@ -28,114 +29,143 @@ import org.usergrid.persistence.annotations.EntityCollection;
 import org.usergrid.persistence.annotations.EntityDictionary;
 import org.usergrid.persistence.annotations.EntityProperty;
 
-/**
- * Groups are used to organize users.
- */
+
+/** Groups are used to organize users. */
 @XmlRootElement
-public class Role extends TypedEntity {
+public class Role extends TypedEntity
+{
 
     public static final String ENTITY_TYPE = "role";
 
-    @EntityProperty(indexed = true, fulltextIndexed = false, required = true, aliasProperty = true, mutable = false, unique = true)
+    @EntityProperty( indexed = true, fulltextIndexed = false, required = true, aliasProperty = true, mutable = false,
+            unique = true )
     protected String name;
 
-    @EntityProperty(mutable = true, indexed = true)
+    @EntityProperty( mutable = true, indexed = true )
     protected String roleName;
 
-    @EntityProperty(mutable = true, indexed = true)
+    @EntityProperty( mutable = true, indexed = true )
     protected String title;
 
-    @EntityProperty(mutable = true, indexed = true)
+    @EntityProperty( mutable = true, indexed = true )
     protected Long inactivity;
 
-    @EntityDictionary(keyType = java.lang.String.class)
+    @EntityDictionary( keyType = java.lang.String.class )
     protected Set<String> permissions;
 
-    @EntityCollection(type = "user", linkedCollection = "roles", indexingDynamicDictionaries = true)
+    @EntityCollection( type = "user", linkedCollection = "roles", indexingDynamicDictionaries = true )
     protected List<UUID> users;
 
-    @EntityCollection(type = "group", linkedCollection = "roles", indexingDynamicDictionaries = true)
+    @EntityCollection( type = "group", linkedCollection = "roles", indexingDynamicDictionaries = true )
     protected List<UUID> groups;
 
-    public Role() {
+
+    public Role()
+    {
         // id = UUIDUtils.newTimeUUID();
     }
 
-    public Role(String roleName) {
+
+    public Role( String roleName )
+    {
         this.roleName = roleName;
     }
 
-    public Role(UUID id) {
+
+    public Role( UUID id )
+    {
         this.uuid = id;
     }
 
+
     @Override
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getName() {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getName()
+    {
         return name;
     }
 
-    public void setName(String name) {
+
+    public void setName( String name )
+    {
         this.name = name;
     }
 
-    public String getRoleName() {
+
+    public String getRoleName()
+    {
         return roleName;
     }
 
-    public void setRoleName(String roleName) {
+
+    public void setRoleName( String roleName )
+    {
         this.roleName = roleName;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getTitle() {
+
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getTitle()
+    {
         return title;
     }
 
-    public void setTitle(String title) {
+
+    public void setTitle( String title )
+    {
         this.title = title;
     }
 
-    /**
-     * @return the inactivity
-     */
-    public Long getInactivity() {
+
+    /** @return the inactivity */
+    public Long getInactivity()
+    {
         return inactivity;
     }
 
-    /**
-     * @param inactivity
-     *            the inactivity to set
-     */
-    public void setInactivity(Long inactivity) {
+
+    /** @param inactivity the inactivity to set */
+    public void setInactivity( Long inactivity )
+    {
         this.inactivity = inactivity;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<UUID> getUsers() {
+
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public List<UUID> getUsers()
+    {
         return users;
     }
 
-    public void setUsers(List<UUID> users) {
+
+    public void setUsers( List<UUID> users )
+    {
         this.users = users;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Set<String> getPermissions() {
+
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Set<String> getPermissions()
+    {
         return permissions;
     }
 
-    public void setPermissions(Set<String> permissions) {
+
+    public void setPermissions( Set<String> permissions )
+    {
         this.permissions = permissions;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<UUID> getGroups() {
+
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public List<UUID> getGroups()
+    {
         return groups;
     }
 
-    public void setGroups(List<UUID> groups) {
+
+    public void setGroups( List<UUID> groups )
+    {
         this.groups = groups;
     }
-
 }

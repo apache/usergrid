@@ -1,6 +1,11 @@
 package org.usergrid;
 
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +19,13 @@ import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.JsonUtils;
 
-import java.util.*;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.batchPayload;
 import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.utils.InflectionUtils.pluralize;
+
 
 public class ServiceApplication extends CoreApplication
 {
@@ -63,7 +67,7 @@ public class ServiceApplication extends CoreApplication
             throws Exception
     {
         ServiceResults results = invokeService( action, params );
-        assertNotNull(results);
+        assertNotNull( results );
         assertEquals( expectedCount, results.getEntities().size() );
         dumpResults( results );
 
@@ -103,7 +107,7 @@ public class ServiceApplication extends CoreApplication
         if ( results != null )
         {
             List<Entity> entities = results.getEntities();
-            svcSetup.dump("Results", entities);
+            svcSetup.dump( "Results", entities );
         }
     }
 
@@ -126,12 +130,12 @@ public class ServiceApplication extends CoreApplication
                                             Object... params ) throws Exception
     {
         ServiceRequest request = sm.newRequest( action, parameters( params ), batchPayload( batch ) );
-        LOG.info("Request: " + action + " " + request.toString());
+        LOG.info( "Request: " + action + " " + request.toString() );
         // dump( "Batch", batch );
         ServiceResults results = request.execute();
-        assertNotNull(results);
-        assertEquals(expectedCount, results.getEntities().size());
-        dumpResults(results);
+        assertNotNull( results );
+        assertEquals( expectedCount, results.getEntities().size() );
+        dumpResults( results );
         return results;
     }
 
@@ -140,7 +144,7 @@ public class ServiceApplication extends CoreApplication
     {
         ServiceRequest request = sm.newRequest( action, parameters( params ), payload( properties ) );
         LOG.info( "Request: {} {}", action, request.toString() );
-        dumpProperties(properties);
+        dumpProperties( properties );
         ServiceResults results = request.execute();
         assertNotNull( results );
         assertNotNull( results.getData() );
@@ -151,7 +155,7 @@ public class ServiceApplication extends CoreApplication
 
     public Entity createRole( String name, String title, int inactivity ) throws Exception
     {
-        return  sm.getEntityManager().createRole( name, title, inactivity );
+        return sm.getEntityManager().createRole( name, title, inactivity );
     }
 
 
@@ -175,7 +179,7 @@ public class ServiceApplication extends CoreApplication
 
     public EntityRef getAlias( String aliasType, String alias ) throws Exception
     {
-        return em.getAlias(aliasType, alias);
+        return em.getAlias( aliasType, alias );
     }
 
 

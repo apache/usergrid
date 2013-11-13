@@ -1,5 +1,6 @@
 package org.usergrid.batch;
 
+
 import java.util.Collections;
 import java.util.List;
 
@@ -9,29 +10,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.usergrid.batch.repository.JobDescriptor;
 
-/**
- * @author tnine
- */
-public class UsergridJobFactory implements JobFactory {
 
-  @Autowired
-  private ApplicationContext context;
+/** @author tnine */
+public class UsergridJobFactory implements JobFactory
+{
 
-  private Logger logger = LoggerFactory.getLogger(UsergridJobFactory.class);
+    @Autowired
+    private ApplicationContext context;
 
-  @Override
-  public List<Job> jobsFrom(JobDescriptor descriptor) throws JobNotFoundException {
+    private Logger logger = LoggerFactory.getLogger( UsergridJobFactory.class );
 
-    Job job = context.getBean(descriptor.getJobName(), Job.class);
 
-    if (job == null) {
-      String error = String.format("Could not find job impelmentation for job name %s", descriptor.getJobName());
-      logger.error(error);
-      throw new JobNotFoundException(error);
+    @Override
+    public List<Job> jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException
+    {
+
+        Job job = context.getBean( descriptor.getJobName(), Job.class );
+
+        if ( job == null )
+        {
+            String error =
+                    String.format( "Could not find job impelmentation for job name %s", descriptor.getJobName() );
+            logger.error( error );
+            throw new JobNotFoundException( error );
+        }
+
+        return Collections.singletonList( job );
     }
-
-    return Collections.singletonList(job);
-
-  }
-
 }

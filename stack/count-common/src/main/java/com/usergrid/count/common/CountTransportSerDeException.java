@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,21 +15,28 @@
  ******************************************************************************/
 package com.usergrid.count.common;
 
-/**
- * @author zznate
- */
-public class CountTransportSerDeException extends RuntimeException {
-    private static final String DEF_MSG = "There was a serialization/deserialization problem in Count transport. Reason: ";
 
-    public CountTransportSerDeException() {
-        super(DEF_MSG);
+/** @author zznate */
+public class CountTransportSerDeException extends RuntimeException
+{
+    private static final String DEF_MSG =
+            "There was a serialization/deserialization problem in Count transport. Reason: ";
+
+
+    public CountTransportSerDeException()
+    {
+        super( DEF_MSG );
     }
 
-    public CountTransportSerDeException(String msg) {
-        super(DEF_MSG + msg);
+
+    public CountTransportSerDeException( String msg )
+    {
+        super( DEF_MSG + msg );
     }
 
-    public CountTransportSerDeException(String msg, Throwable t) {
-        super(DEF_MSG + msg, t);
+
+    public CountTransportSerDeException( String msg, Throwable t )
+    {
+        super( DEF_MSG + msg, t );
     }
 }

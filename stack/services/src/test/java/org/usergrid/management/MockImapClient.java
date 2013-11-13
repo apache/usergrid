@@ -1,5 +1,6 @@
 package org.usergrid.management;
 
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -12,67 +13,82 @@ import javax.mail.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MockImapClient {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(MockImapClient.class);
+public class MockImapClient
+{
 
-	String host;
-	String user;
-	String password;
+    private static final Logger logger = LoggerFactory.getLogger( MockImapClient.class );
 
-	public MockImapClient(String host, String user, String password) {
-		this.host = host;
-		this.user = user;
-		this.password = password;
-	}
+    String host;
+    String user;
+    String password;
 
-	public void processMail() {
-		try {
-			Session session = getMailSession();
-			Store store = connect(session);
-			Folder folder = openMailFolder(store);
-			findContent(folder);
-		} catch (MessagingException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 
-	}
+    public MockImapClient( String host, String user, String password )
+    {
+        this.host = host;
+        this.user = user;
+        this.password = password;
+    }
 
-	public Session getMailSession() {
-		Properties props = System.getProperties();
-		props.setProperty("mail.transport.protocol", "smtp");
-		props.setProperty("mail.store.protocol", "imap");
-		props.setProperty("mail.imap.partialfetch", "0");
 
-		logger.info("Getting session");
-		return Session.getDefaultInstance(props, null);
+    public void processMail()
+    {
+        try
+        {
+            Session session = getMailSession();
+            Store store = connect( session );
+            Folder folder = openMailFolder( store );
+            findContent( folder );
+        }
+        catch ( MessagingException e )
+        {
+            throw new RuntimeException( e );
+        }
+        catch ( IOException e )
+        {
+            throw new RuntimeException( e );
+        }
+    }
 
-	}
 
-	public Store connect(Session session) throws MessagingException {
-		logger.info("getting the session for accessing email.");
-		Store store = session.getStore("imap");
+    public Session getMailSession()
+    {
+        Properties props = System.getProperties();
+        props.setProperty( "mail.transport.protocol", "smtp" );
+        props.setProperty( "mail.store.protocol", "imap" );
+        props.setProperty( "mail.imap.partialfetch", "0" );
 
-		store.connect(host, user, password);
-		logger.info("Connection established with IMAP server.");
-		return store;
-	}
+        logger.info( "Getting session" );
+        return Session.getDefaultInstance( props, null );
+    }
 
-	public Folder openMailFolder(Store store) throws MessagingException {
-		Folder folder = store.getDefaultFolder();
-		folder = folder.getFolder("inbox");
-		folder.open(Folder.READ_ONLY);
-		return folder;
-	}
 
-	public void findContent(Folder folder) throws MessagingException,
-			IOException {
-		for (Message m : folder.getMessages()) {
-			logger.info("Subject: " + m.getSubject());
-		}
-	}
+    public Store connect( Session session ) throws MessagingException
+    {
+        logger.info( "getting the session for accessing email." );
+        Store store = session.getStore( "imap" );
 
+        store.connect( host, user, password );
+        logger.info( "Connection established with IMAP server." );
+        return store;
+    }
+
+
+    public Folder openMailFolder( Store store ) throws MessagingException
+    {
+        Folder folder = store.getDefaultFolder();
+        folder = folder.getFolder( "inbox" );
+        folder.open( Folder.READ_ONLY );
+        return folder;
+    }
+
+
+    public void findContent( Folder folder ) throws MessagingException, IOException
+    {
+        for ( Message m : folder.getMessages() )
+        {
+            logger.info( "Subject: " + m.getSubject() );
+        }
+    }
 }

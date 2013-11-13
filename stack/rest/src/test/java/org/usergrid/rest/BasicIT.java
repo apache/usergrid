@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.Map;
 import java.util.UUID;
@@ -35,27 +31,37 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class BasicIT extends AbstractRestIT {
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.usergrid.utils.MapUtils.hashMap;
 
-	private static final Logger LOG = LoggerFactory.getLogger(BasicIT.class);
 
-	public BasicIT() throws Exception {
-		super();
-	}
+public class BasicIT extends AbstractRestIT
+{
 
-	public void tryTest() {
-		WebResource webResource = resource();
-		String json = webResource.path("/test/hello")
-				.accept(MediaType.APPLICATION_JSON).get(String.class);
-		assertTrue(isNotBlank(json));
+    private static final Logger LOG = LoggerFactory.getLogger( BasicIT.class );
 
-		LOG.info( json );
-	}
+
+    public BasicIT() throws Exception
+    {
+        super();
+    }
+
+
+    public void tryTest()
+    {
+        WebResource webResource = resource();
+        String json = webResource.path( "/test/hello" ).accept( MediaType.APPLICATION_JSON ).get( String.class );
+        assertTrue( isNotBlank( json ) );
+
+        LOG.info( json );
+    }
 
 
     /**
-     * For USERGRID-2099 where putting an entity into a generic collection is
-     * resulting in a CCE when the name is a UUID string.
+     * For USERGRID-2099 where putting an entity into a generic collection is resulting in a CCE when the name is a UUID
+     * string.
      */
     @Test
     public void testGenericCollectionEntityNameUuid() throws Exception
@@ -63,8 +69,8 @@ public class BasicIT extends AbstractRestIT {
         JsonNode node = null;
 
         String token = userToken( "ed@anuff.com", "sesame" );
-        WebResource resource = resource().path( "/test-organization/test-app/suspects" )
-                .queryParam( "access_token", token );
+        WebResource resource =
+                resource().path( "/test-organization/test-app/suspects" ).queryParam( "access_token", token );
         node = resource.accept( MediaType.APPLICATION_JSON ).post( JsonNode.class );
 
 
@@ -72,29 +78,25 @@ public class BasicIT extends AbstractRestIT {
 
         // Notice for 'name' we replace the dash in uuid string
         // with 0's making it no longer conforms to a uuid
-        Map<String,String> payload = hashMap( "hair", "brown" ).map( "sex", "male" )
-      		.map( "eyes", "green" ).map( "name", uuid.replace( '-', '0' ) )
-      		.map( "build", "thin").map( "height", "6 4" );
+        Map<String, String> payload = hashMap( "hair", "brown" ).map( "sex", "male" ).map( "eyes", "green" )
+                .map( "name", uuid.replace( '-', '0' ) ).map( "build", "thin" ).map( "height", "6 4" );
 
-        node = resource.queryParam( "access_token", token )
-            .accept( MediaType.APPLICATION_JSON )
-      		.type( MediaType.APPLICATION_JSON_TYPE )
-      		.post( JsonNode.class, payload );
+        node = resource.queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
+                       .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
 
         logNode( node );
 
         // Now this should pass with the corrections made to USERGRID-2099 which
         // disables conversion of uuid strings into UUID objects in JsonUtils
-        payload = hashMap( "hair", "red" ).map( "sex", "female" )
-            .map( "eyes", "blue" ).map( "name", uuid )
-            .map( "build", "heavy" ).map( "height", "5 9" );
+        payload = hashMap( "hair", "red" ).map( "sex", "female" ).map( "eyes", "blue" ).map( "name", uuid )
+                .map( "build", "heavy" ).map( "height", "5 9" );
 
-        node = resource.accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .post( JsonNode.class, payload );
+        node = resource.accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                       .post( JsonNode.class, payload );
 
         logNode( node );
     }
+
 
     @Test
     public void testNonexistentUserAccessViaGuest()
@@ -116,222 +118,217 @@ public class BasicIT extends AbstractRestIT {
     }
 
 
-	@Test
-	public void testToken() {
-		JsonNode node = null;
+    @Test
+    public void testToken()
+    {
+        JsonNode node = null;
 
-		// test get token for admin user with bad password
+        // test get token for admin user with bad password
 
-		boolean err_thrown = false;
-		try {
-			node = resource().path("/management/token")
-					.queryParam("grant_type", "password")
-					.queryParam("username", "test@usergrid.com")
-					.queryParam("password", "blahblah")
-					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		} catch (UniformInterfaceException e) {
-			assertEquals("Should receive a 400 Bad Request", 400, e
-					.getResponse().getStatus());
-			err_thrown = true;
-		}
-		assertTrue("Error should have been thrown", err_thrown);
+        boolean err_thrown = false;
+        try
+        {
+            node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                    .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "blahblah" )
+                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
+            err_thrown = true;
+        }
+        assertTrue( "Error should have been thrown", err_thrown );
 
-		// test get token for admin user with correct default password
+        // test get token for admin user with correct default password
 
-		String mgmtToken = adminToken();
-		// test get admin user with token
+        String mgmtToken = adminToken();
+        // test get admin user with token
 
-		node = resource().path("/management/users/test@usergrid.com")
-				.queryParam("access_token", mgmtToken)
-				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        node = resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", mgmtToken )
+                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
-		logNode(node);
+        logNode( node );
 
-		assertEquals("Test User",
-				node.get("data").get("organizations").get("test-organization")
-						.get("users").get("test").get("name").getTextValue());
+        assertEquals( "Test User",
+                node.get( "data" ).get( "organizations" ).get( "test-organization" ).get( "users" ).get( "test" )
+                    .get( "name" ).getTextValue() );
 
 
-		// test login user with incorrect password
+        // test login user with incorrect password
 
-		err_thrown = false;
-		try {
-			node = resource().path("/test-app/token")
-					.queryParam("grant_type", "password")
-					.queryParam("username", "ed@anuff.com")
-					.queryParam("password", "blahblah")
-					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		} catch (UniformInterfaceException e) {
-			assertEquals("Should receive a 400 Bad Request", 400, e
-					.getResponse().getStatus());
-			err_thrown = true;
-		}
-		assertTrue("Error should have been thrown", err_thrown);
+        err_thrown = false;
+        try
+        {
+            node = resource().path( "/test-app/token" ).queryParam( "grant_type", "password" )
+                    .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "blahblah" )
+                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
+            err_thrown = true;
+        }
+        assertTrue( "Error should have been thrown", err_thrown );
 
-		// test login user with incorrect pin
+        // test login user with incorrect pin
 
-		err_thrown = false;
-		try {
-			node = resource().path("/test-app/token")
-					.queryParam("grant_type", "pin")
-					.queryParam("username", "ed@anuff.com")
-					.queryParam("pin", "4321")
-					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		} catch (UniformInterfaceException e) {
-			assertEquals("Should receive a 400 Bad Request", 400, e
-					.getResponse().getStatus());
-			err_thrown = true;
-		}
-		assertTrue("Error should have been thrown", err_thrown);
+        err_thrown = false;
+        try
+        {
+            node = resource().path( "/test-app/token" ).queryParam( "grant_type", "pin" )
+                    .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "4321" )
+                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
+            err_thrown = true;
+        }
+        assertTrue( "Error should have been thrown", err_thrown );
 
-		// test login user with correct password
+        // test login user with correct password
 
-		node = resource().path("/test-organization/test-app/token")
-				.queryParam("grant_type", "password")
-				.queryParam("username", "ed@anuff.com")
-				.queryParam("password", "sesame")
-				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
+                .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "sesame" )
+                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
-		logNode(node);
+        logNode( node );
 
-		String user_access_token = node.get("access_token").getTextValue();
-		assertTrue(isNotBlank(user_access_token));
+        String user_access_token = node.get( "access_token" ).getTextValue();
+        assertTrue( isNotBlank( user_access_token ) );
 
-		// test get app user collection with insufficient permissions
+        // test get app user collection with insufficient permissions
 
-		err_thrown = false;
-		try {
-			node = resource().path("/test-organization/test-app/users")
-					.queryParam("access_token", user_access_token)
-					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		} catch (UniformInterfaceException e) {
-			if (e.getResponse().getStatus() != 401) {
-				throw e;
-			}
-			err_thrown = true;
-		}
-		// assertTrue("Error should have been thrown", err_thrown);
+        err_thrown = false;
+        try
+        {
+            node = resource().path( "/test-organization/test-app/users" )
+                    .queryParam( "access_token", user_access_token ).accept( MediaType.APPLICATION_JSON )
+                    .get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            if ( e.getResponse().getStatus() != 401 )
+            {
+                throw e;
+            }
+            err_thrown = true;
+        }
+        // assertTrue("Error should have been thrown", err_thrown);
 
-		// test get app user with sufficient permissions
+        // test get app user with sufficient permissions
 
-		node = resource().path("/test-organization/test-app/users/edanuff")
-				.queryParam("access_token", user_access_token)
-				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		logNode(node);
+        node = resource().path( "/test-organization/test-app/users/edanuff" )
+                .queryParam( "access_token", user_access_token ).accept( MediaType.APPLICATION_JSON )
+                .get( JsonNode.class );
+        logNode( node );
 
-		assertEquals(1, node.get("entities").size());
+        assertEquals( 1, node.get( "entities" ).size() );
 
-		// test get app user collection with bad token
+        // test get app user collection with bad token
 
-		err_thrown = false;
-		try {
-			node = resource().path("/test-organization/test-app/users")
-					.queryParam("access_token", "blahblahblah")
-					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		} catch (UniformInterfaceException e) {
-			if (e.getResponse().getStatus() != 401) {
-				throw e;
-			}
-			err_thrown = true;
-		}
-		assertTrue("Error should have been thrown", err_thrown);
+        err_thrown = false;
+        try
+        {
+            node = resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", "blahblahblah" )
+                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            if ( e.getResponse().getStatus() != 401 )
+            {
+                throw e;
+            }
+            err_thrown = true;
+        }
+        assertTrue( "Error should have been thrown", err_thrown );
 
-		// test get app user collection with no token
+        // test get app user collection with no token
 
-		err_thrown = false;
-		try {
-			node = resource().path("/test-organization/test-app/users")
-					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-		} catch (UniformInterfaceException e) {
-			assertEquals("Should receive a 401 Unauthorized", 401, e
-					.getResponse().getStatus());
-			err_thrown = true;
-		}
-		assertTrue("Error should have been thrown", err_thrown);
+        err_thrown = false;
+        try
+        {
+            node = resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
+                    .get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            assertEquals( "Should receive a 401 Unauthorized", 401, e.getResponse().getStatus() );
+            err_thrown = true;
+        }
+        assertTrue( "Error should have been thrown", err_thrown );
 
-		// test login app user with pin
+        // test login app user with pin
 
-		node = resource().path("/test-organization/test-app/token")
-				.queryParam("grant_type", "pin")
-				.queryParam("username", "ed@anuff.com")
-				.queryParam("pin", "1234").accept(MediaType.APPLICATION_JSON)
-				.get(JsonNode.class);
+        node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
+                .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "1234" )
+                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
-		logNode(node);
+        logNode( node );
 
-		user_access_token = node.get("access_token").getTextValue();
-		assertTrue(isNotBlank(user_access_token));
+        user_access_token = node.get( "access_token" ).getTextValue();
+        assertTrue( isNotBlank( user_access_token ) );
 
-		// test set app user pin
+        // test set app user pin
 
-		MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-		formData.add("pin", "5678");
-		node = resource().path("/test-organization/test-app/users/ed@anuff.com/setpin")
-				.queryParam("access_token", user_access_token)
-				.type("application/x-www-form-urlencoded")
-				.post(JsonNode.class, formData);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add( "pin", "5678" );
+        node = resource().path( "/test-organization/test-app/users/ed@anuff.com/setpin" )
+                .queryParam( "access_token", user_access_token ).type( "application/x-www-form-urlencoded" )
+                .post( JsonNode.class, formData );
 
-		node = resource().path("/test-organization/test-app/token")
-				.queryParam("grant_type", "pin")
-				.queryParam("username", "ed@anuff.com")
-				.queryParam("pin", "5678").accept(MediaType.APPLICATION_JSON)
-				.get(JsonNode.class);
+        node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
+                .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "5678" )
+                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
-		logNode(node);
+        logNode( node );
 
-		user_access_token = node.get("access_token").getTextValue();
-		assertTrue(isNotBlank(user_access_token));
+        user_access_token = node.get( "access_token" ).getTextValue();
+        assertTrue( isNotBlank( user_access_token ) );
 
-		// test user test extension resource
+        // test user test extension resource
 
-		node = resource().path("/test-organization/test-app/users/ed@anuff.com/test").get(
-				JsonNode.class);
-		logNode(node);
+        node = resource().path( "/test-organization/test-app/users/ed@anuff.com/test" ).get( JsonNode.class );
+        logNode( node );
 
-		// test create user with guest permissions (no token)
+        // test create user with guest permissions (no token)
 
-		Map<String,String> payload = hashMap("email", "ed.anuff@gmail.com")
-				.map("username", "ed.anuff").map("name", "Ed Anuff")
-				.map("password", "sesame").map("pin", "1234");
+        Map<String, String> payload =
+                hashMap( "email", "ed.anuff@gmail.com" ).map( "username", "ed.anuff" ).map( "name", "Ed Anuff" )
+                        .map( "password", "sesame" ).map( "pin", "1234" );
 
-		node = resource().path("/test-organization/test-app/users")
-				.accept(MediaType.APPLICATION_JSON)
-				.type(MediaType.APPLICATION_JSON_TYPE)
-				.post(JsonNode.class, payload);
+        node = resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
 
-		logNode(node);
+        logNode( node );
 
-		assertEquals("ed.anuff", node.get("entities").get(0).get("username")
-				.getTextValue());
+        assertEquals( "ed.anuff", node.get( "entities" ).get( 0 ).get( "username" ).getTextValue() );
 
-		// test create device with guest permissions (no token)
+        // test create device with guest permissions (no token)
 
-		payload = hashMap("foo", "bar");
+        payload = hashMap( "foo", "bar" );
 
-		node = resource().path("/test-organization/test-app/devices/" + UUID.randomUUID())
-				.accept(MediaType.APPLICATION_JSON)
-				.type(MediaType.APPLICATION_JSON_TYPE)
-				.put(JsonNode.class, payload);
+        node = resource().path( "/test-organization/test-app/devices/" + UUID.randomUUID() )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                .put( JsonNode.class, payload );
 
-		logNode(node);
+        logNode( node );
 
-		// test create entity with guest permissions (no token), should fail
+        // test create entity with guest permissions (no token), should fail
 
-		payload = hashMap("foo", "bar");
+        payload = hashMap( "foo", "bar" );
 
-		err_thrown = false;
-		try {
-			node = resource().path("/test-organization/test-app/items")
-					.accept(MediaType.APPLICATION_JSON)
-					.type(MediaType.APPLICATION_JSON_TYPE)
-					.post(JsonNode.class, payload);
-		} catch (UniformInterfaceException e) {
-			assertEquals("Should receive a 401 Unauthorized", 401, e
-					.getResponse().getStatus());
-			err_thrown = true;
-		}
-		assertTrue("Error should have been thrown", err_thrown);
-
-	}
-
+        err_thrown = false;
+        try
+        {
+            node = resource().path( "/test-organization/test-app/items" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException e )
+        {
+            assertEquals( "Should receive a 401 Unauthorized", 401, e.getResponse().getStatus() );
+            err_thrown = true;
+        }
+        assertTrue( "Error should have been thrown", err_thrown );
+    }
 }

@@ -15,27 +15,30 @@
  */
 package org.usergrid;
 
+
+import java.util.UUID;
+
 import org.junit.rules.TestRule;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.cassandra.CassandraService;
 
-import java.util.UUID;
 
-public interface CoreITSetup extends TestRule {
+public interface CoreITSetup extends TestRule
+{
 
-  boolean USE_DEFAULT_APPLICATION = false;
+    boolean USE_DEFAULT_APPLICATION = false;
 
-  EntityManagerFactory getEmf();
+    EntityManagerFactory getEmf();
 
-  QueueManagerFactory getQmf();
+    QueueManagerFactory getQmf();
 
-  IndexBucketLocator getIbl();
+    IndexBucketLocator getIbl();
 
-  CassandraService getCassSvc();
+    CassandraService getCassSvc();
 
-  UUID createApplication(String organizationName, String applicationName) throws Exception;
+    UUID createApplication( String organizationName, String applicationName ) throws Exception;
 
-  void dump(String name, Object obj);
+    void dump( String name, Object obj );
 }

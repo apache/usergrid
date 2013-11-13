@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,36 +15,43 @@
  ******************************************************************************/
 package org.usergrid.persistence.exceptions;
 
-public class DuplicateUniquePropertyExistsException extends
-		PersistenceException {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	final String entityType;
-	final String propertyName;
-	final Object propertyValue;
+public class DuplicateUniquePropertyExistsException extends PersistenceException
+{
 
-	public DuplicateUniquePropertyExistsException(String entityType,
-			String propertyName, Object propertyValue) {
-		super("Entity " + entityType + " requires that property named "
-				+ propertyName + " be unique, value of " + propertyValue
-				+ " exists");
-		this.entityType = entityType;
-		this.propertyName = propertyName;
-		this.propertyValue = propertyValue;
-	}
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    final String entityType;
+    final String propertyName;
+    final Object propertyValue;
 
-	public String getEntityType() {
-		return entityType;
-	}
 
-	public String getPropertyName() {
-		return propertyName;
-	}
+    public DuplicateUniquePropertyExistsException( String entityType, String propertyName, Object propertyValue )
+    {
+        super( "Entity " + entityType + " requires that property named " + propertyName + " be unique, value of "
+                + propertyValue + " exists" );
+        this.entityType = entityType;
+        this.propertyName = propertyName;
+        this.propertyValue = propertyValue;
+    }
 
-	public Object getPropertyValue() {
-		return propertyValue;
-	}
+
+    public String getEntityType()
+    {
+        return entityType;
+    }
+
+
+    public String getPropertyName()
+    {
+        return propertyName;
+    }
+
+
+    public Object getPropertyValue()
+    {
+        return propertyValue;
+    }
 }

@@ -14,6 +14,7 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
+
 import java.util.UUID;
 
 import org.usergrid.rest.test.resource.app.Application;
@@ -24,164 +25,169 @@ import org.usergrid.rest.test.security.TestUser;
 
 import com.sun.jersey.test.framework.JerseyTest;
 
-public class TestContext {
 
-  private JerseyTest test;
-  private TestUser activeUser;
-  private String orgName;
-  private UUID orgUuid;
-  private String appName;
-  private UUID appUuid;
+public class TestContext
+{
 
-  /**
-   *
-   */
-  protected TestContext(JerseyTest test) {
-    this.test = test;
-  }
+    private JerseyTest test;
+    private TestUser activeUser;
+    private String orgName;
+    private UUID orgUuid;
+    private String appName;
+    private UUID appUuid;
 
-  /**
-   * Create a test context
-   *
-   * @param test
-   * @return
-   */
-  public static TestContext create(JerseyTest test) {
-    return new TestContext(test);
-  }
 
-  public TestUser getActiveUser() {
-    return activeUser;
-  }
-
-  public TestContext withUser(TestUser user) {
-    this.activeUser = user;
-    return this;
-  }
-
-  public TestContext clearUser() {
-    return withUser(null);
-  }
-
-  public TestContext withOrg(String orgName) {
-    this.orgName = orgName;
-    return this;
-  }
-
-  public TestContext withApp(String appName) {
-    this.appName = appName;
-    return this;
-  }
-
-  public String getOrgName() {
-    return orgName;
-  }
-
-  public String getAppName() {
-    return appName;
-  }
-
-  /**
-   * Creates the org specified
-   *
-   * @return
-   */
-  public TestContext createNewOrgAndUser() {
-    orgUuid = management().orgs().create(orgName, activeUser);
-
-    return this;
-  }
-
-  /**
-   * Creates the org specified
-   *
-   * @return
-   */
-  public TestContext createAppForOrg() {
-    appUuid = management().orgs().organization(orgName).apps().create(appName);
-
-    return this;
-  }
-
-  /**
-   * Create the app if it doesn't exist with the given TestUser. If the app exists, the user is
-   * logged in
-   *
-   * @return
-   */
-  public TestContext loginUser() {
-    // nothing to do
-    if (activeUser.isLoggedIn()) {
-      return this;
+    /**
+     *
+     */
+    protected TestContext( JerseyTest test )
+    {
+        this.test = test;
     }
 
-    // try to log in the user first
-    activeUser.login(this);
 
-    return this;
+    /** Create a test context */
+    public static TestContext create( JerseyTest test )
+    {
+        return new TestContext( test );
+    }
 
-  }
 
-  /**
-   * Get the users resource for the application
-   *
-   * @return
-   */
-  public UsersCollection users() {
-    return application().users();
-  }
+    public TestUser getActiveUser()
+    {
+        return activeUser;
+    }
 
-  /**
-   * Get the app user resource
-   *
-   * @param username
-   * @return
-   */
-  public User user(String username) {
-    return application().users().user(username);
-  }
 
-  /**
-   * @return the orgUuid
-   */
-  public UUID getOrgUuid() {
-    return orgUuid;
-  }
+    public TestContext withUser( TestUser user )
+    {
+        this.activeUser = user;
+        return this;
+    }
 
-  /**
-   * @return the appUuid
-   */
-  public UUID getAppUuid() {
-    return appUuid;
-  }
 
-  /**
-   * Get the application resource
-   *
-   * @return
-   */
-  public Application application() {
-    return new Application(orgName, appName, root());
-  }
+    public TestContext clearUser()
+    {
+        return withUser( null );
+    }
 
-  public CustomCollection collection(String str) {
-    return application().collection(str);
-  }
 
-  public Management management() {
-    return new Management(root());
-  }
+    public TestContext withOrg( String orgName )
+    {
+        this.orgName = orgName;
+        return this;
+    }
 
-  protected RootResource root() {
-    return new RootResource(test.resource(), activeUser == null ? null : activeUser.getToken());
-  }
 
-  /**
-   * Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call.
-   *
-   * @return
-   */
-  public TestContext initAll() {
-    return createNewOrgAndUser().loginUser().createAppForOrg();
-  }
+    public TestContext withApp( String appName )
+    {
+        this.appName = appName;
+        return this;
+    }
+
+
+    public String getOrgName()
+    {
+        return orgName;
+    }
+
+
+    public String getAppName()
+    {
+        return appName;
+    }
+
+
+    /** Creates the org specified */
+    public TestContext createNewOrgAndUser()
+    {
+        orgUuid = management().orgs().create( orgName, activeUser );
+
+        return this;
+    }
+
+
+    /** Creates the org specified */
+    public TestContext createAppForOrg()
+    {
+        appUuid = management().orgs().organization( orgName ).apps().create( appName );
+
+        return this;
+    }
+
+
+    /** Create the app if it doesn't exist with the given TestUser. If the app exists, the user is logged in */
+    public TestContext loginUser()
+    {
+        // nothing to do
+        if ( activeUser.isLoggedIn() )
+        {
+            return this;
+        }
+
+        // try to log in the user first
+        activeUser.login( this );
+
+        return this;
+    }
+
+
+    /** Get the users resource for the application */
+    public UsersCollection users()
+    {
+        return application().users();
+    }
+
+
+    /** Get the app user resource */
+    public User user( String username )
+    {
+        return application().users().user( username );
+    }
+
+
+    /** @return the orgUuid */
+    public UUID getOrgUuid()
+    {
+        return orgUuid;
+    }
+
+
+    /** @return the appUuid */
+    public UUID getAppUuid()
+    {
+        return appUuid;
+    }
+
+
+    /** Get the application resource */
+    public Application application()
+    {
+        return new Application( orgName, appName, root() );
+    }
+
+
+    public CustomCollection collection( String str )
+    {
+        return application().collection( str );
+    }
+
+
+    public Management management()
+    {
+        return new Management( root() );
+    }
+
+
+    protected RootResource root()
+    {
+        return new RootResource( test.resource(), activeUser == null ? null : activeUser.getToken() );
+    }
+
+
+    /** Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call. */
+    public TestContext initAll()
+    {
+        return createNewOrgAndUser().loginUser().createAppForOrg();
+    }
 }

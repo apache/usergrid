@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.tools;
 
-import static org.junit.Assert.assertNotNull;
 
 import java.util.UUID;
 
@@ -26,83 +25,85 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.Activity;
 import org.usergrid.persistence.entities.User;
-import org.usergrid.utils.UUIDUtils;
+
+import static org.junit.Assert.assertNotNull;
+
 
 /**
  * Simple class to create test for for exporting
- * 
+ *
  * @author tnine
- * 
  */
-public class ExportDataCreator {
+public class ExportDataCreator
+{
 
     private EntityManagerFactory emf;
 
     private ManagementService managementService;
 
+
     /**
      * @param emf
      * @param managementService
      */
-    public ExportDataCreator(EntityManagerFactory emf,
-            ManagementService managementService) {
+    public ExportDataCreator( EntityManagerFactory emf, ManagementService managementService )
+    {
         super();
         this.emf = emf;
         this.managementService = managementService;
     }
 
-    public void createTestData() throws Exception {
+
+    public void createTestData() throws Exception
+    {
 
         String orgName = "testexportorg";
-        
+
         //nothing to do 
-        if(managementService.getOrganizationByName(orgName) != null){
+        if ( managementService.getOrganizationByName( orgName ) != null )
+        {
             return;
         }
 
         OrganizationOwnerInfo orgInfo = managementService
-                .createOwnerAndOrganization(orgName,
-                        "textExportUser@apigee.com", "Test User",
-                        "textExportUser@apigee.com", "password", true, false);
+                .createOwnerAndOrganization( orgName, "textExportUser@apigee.com", "Test User",
+                        "textExportUser@apigee.com", "password", true, false );
 
-        UUID appId = managementService.createApplication(orgInfo
-                .getOrganization().getUuid(), "application")
-                .getId();
+        UUID appId = managementService.createApplication( orgInfo.getOrganization().getUuid(), "application" ).getId();
 
-        EntityManager em = emf.getEntityManager(appId);
+        EntityManager em = emf.getEntityManager( appId );
 
         User first = new User();
-        first.setUsername("first");
-        first.setEmail("first@usergrid.com");
+        first.setUsername( "first" );
+        first.setEmail( "first@usergrid.com" );
 
-        Entity firstUserEntity = em.create(first);
+        Entity firstUserEntity = em.create( first );
 
-        assertNotNull(firstUserEntity);
+        assertNotNull( firstUserEntity );
 
         User second = new User();
-        second.setUsername("second");
-        second.setEmail("second@usergrid.com");
+        second.setUsername( "second" );
+        second.setEmail( "second@usergrid.com" );
 
-        Entity secondUserEntity = em.create(second);
+        Entity secondUserEntity = em.create( second );
 
-        assertNotNull(secondUserEntity);
+        assertNotNull( secondUserEntity );
 
-        em.createConnection(firstUserEntity, "likes", secondUserEntity);
+        em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
-        em.createConnection(secondUserEntity, "dislikes", firstUserEntity);
+        em.createConnection( secondUserEntity, "dislikes", firstUserEntity );
 
         // now create some activities and put them into the user stream
 
         Activity activity = new Activity();
 
         Activity.ActivityObject actor = new Activity.ActivityObject();
-        actor.setEntityType("user");
-        actor.setId(firstUserEntity.getUuid().toString());
+        actor.setEntityType( "user" );
+        actor.setId( firstUserEntity.getUuid().toString() );
 
-        activity.setActor(actor);
-        activity.setVerb("POST");
+        activity.setActor( actor );
+        activity.setVerb( "POST" );
 
-        em.createItemInCollection(firstUserEntity, "activities", "activity",
-                activity.getProperties());
+        em.createItemInCollection( firstUserEntity, "activities", "activity", activity.getProperties() );
     }
 }

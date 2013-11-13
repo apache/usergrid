@@ -16,64 +16,62 @@
 
 package org.usergrid.rest.test;
 
+
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.ws.rs.core.MediaType;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import org.usergrid.rest.AbstractRestIT;
-import static org.usergrid.rest.AbstractRestIT.setup;
 import org.usergrid.services.ServiceManagerFactory;
 
-public class PropertiesResourceIT extends AbstractRestIT {
-  static final Logger logger = LoggerFactory.getLogger(PropertiesResourceIT.class);
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 
-	@Autowired
-	protected ServiceManagerFactory smf;
 
-  @Test
-  public void testBasicOperation() {
+public class PropertiesResourceIT extends AbstractRestIT
+{
+    static final Logger logger = LoggerFactory.getLogger( PropertiesResourceIT.class );
 
-    // set property locally
-    setup.getMgmtSvc().getProperties().put(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
+    @Autowired
+    protected ServiceManagerFactory smf;
 
-    // verify that it is set locally
-    Assert.assertTrue(setup.getMgmtSvc().newAdminUsersRequireConfirmation());
 
-    // verify that is is not set in Jetty 
+    @Test
+    public void testBasicOperation()
     {
-      Map<String, String> map = resource().path("/testproperties")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type( MediaType.APPLICATION_JSON_TYPE)
-        .get(Map.class);
-      Assert.assertFalse(Boolean.parseBoolean(map.get(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION)));
-    }
 
-    // set property in Jetty
-    {
-      Map<String, String> props = new HashMap<String, String>();
-      props.put(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true");
-      resource().path("/testproperties")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type( MediaType.APPLICATION_JSON_TYPE)
-        .post(props);
-    }
+        // set property locally
+        setup.getMgmtSvc().getProperties().put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
 
-    // verify that it is set in Jetty
-    {
-      Map<String, String> map = resource().path("/testproperties")
-        .queryParam("access_token", access_token)
-        .accept(MediaType.APPLICATION_JSON)
-        .type( MediaType.APPLICATION_JSON_TYPE)
-        .get(Map.class);
-      
-      Assert.assertTrue(Boolean.parseBoolean(map.get(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION)));
+        // verify that it is set locally
+        Assert.assertTrue( setup.getMgmtSvc().newAdminUsersRequireConfirmation() );
+
+        // verify that is is not set in Jetty
+        {
+            Map<String, String> map = resource().path( "/testproperties" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
+            Assert.assertFalse( Boolean.parseBoolean( map.get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) ) );
+        }
+
+        // set property in Jetty
+        {
+            Map<String, String> props = new HashMap<String, String>();
+            props.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+            resource().path( "/testproperties" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+        }
+
+        // verify that it is set in Jetty
+        {
+            Map<String, String> map = resource().path( "/testproperties" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
+
+            Assert.assertTrue( Boolean.parseBoolean( map.get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) ) );
+        }
     }
-  }
 }

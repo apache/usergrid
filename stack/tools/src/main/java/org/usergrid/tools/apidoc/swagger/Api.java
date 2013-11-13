@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.tools.apidoc.swagger;
 
-import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 import java.util.List;
 
@@ -24,58 +23,83 @@ import org.usergrid.utils.JsonUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class Api {
-	String path;
-	String description;
-	List<ApiOperation> operations;
+import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
-	public Api() {
-	}
 
-	@JsonSerialize(include = NON_NULL)
-	public String getPath() {
-		return path;
-	}
+public class Api
+{
+    String path;
+    String description;
+    List<ApiOperation> operations;
 
-	public void setPath(String path) {
-		this.path = path;
-	}
 
-	@JsonSerialize(include = NON_NULL)
-	public String getDescription() {
-		return description;
-	}
+    public Api()
+    {
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
 
-	@JsonSerialize(include = NON_NULL)
-	public List<ApiOperation> getOperations() {
-		return operations;
-	}
+    @JsonSerialize(include = NON_NULL)
+    public String getPath()
+    {
+        return path;
+    }
 
-	public void setOperations(List<ApiOperation> operations) {
-		this.operations = operations;
-	}
 
-	@Override
-	public String toString() {
-		return JsonUtils.mapToJsonString(this);
-	}
+    public void setPath( String path )
+    {
+        this.path = path;
+    }
 
-	public Element createWADLResource(Document doc, ApiListing listing) {
-		Element resource = doc.createElement("resource");
-		if (path != null) {
-			resource.setAttribute("path", path);
-		}
 
-		if ((operations != null) && !operations.isEmpty()) {
-			for (ApiOperation operation : operations) {
-				resource.appendChild(operation.createWADLMethod(doc, this));
-			}
-		}
+    @JsonSerialize(include = NON_NULL)
+    public String getDescription()
+    {
+        return description;
+    }
 
-		return resource;
-	}
+
+    public void setDescription( String description )
+    {
+        this.description = description;
+    }
+
+
+    @JsonSerialize(include = NON_NULL)
+    public List<ApiOperation> getOperations()
+    {
+        return operations;
+    }
+
+
+    public void setOperations( List<ApiOperation> operations )
+    {
+        this.operations = operations;
+    }
+
+
+    @Override
+    public String toString()
+    {
+        return JsonUtils.mapToJsonString( this );
+    }
+
+
+    public Element createWADLResource( Document doc, ApiListing listing )
+    {
+        Element resource = doc.createElement( "resource" );
+        if ( path != null )
+        {
+            resource.setAttribute( "path", path );
+        }
+
+        if ( ( operations != null ) && !operations.isEmpty() )
+        {
+            for ( ApiOperation operation : operations )
+            {
+                resource.appendChild( operation.createWADLMethod( doc, this ) );
+            }
+        }
+
+        return resource;
+    }
 }

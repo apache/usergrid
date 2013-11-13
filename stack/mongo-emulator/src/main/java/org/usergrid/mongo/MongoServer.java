@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,17 +15,12 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteOrder;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
-import org.apache.shiro.mgt.DefaultSecurityManager;
-import org.apache.shiro.mgt.SessionsSecurityManager;
-import org.apache.shiro.realm.Realm;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.HeapChannelBufferFactory;
 import org.jboss.netty.channel.Channel;
@@ -43,122 +38,150 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.services.ServiceManagerFactory;
 
-public class MongoServer {
+import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.mgt.SessionsSecurityManager;
+import org.apache.shiro.realm.Realm;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(MongoServer.class);
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-	EntityManagerFactory emf;
-	ServiceManagerFactory smf;
-	ManagementService management;
-	Realm realm;
-	SessionsSecurityManager securityManager;
-	Channel channel;
-	Properties properties;
 
-	public static void main(String[] args) throws Exception {
-		MongoServer server = new MongoServer();
-		server.startSpring();
-		server.startServer();
-	}
+public class MongoServer
+{
 
-	public MongoServer() {
-	}
+    private static final Logger logger = LoggerFactory.getLogger( MongoServer.class );
 
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-	}
+    EntityManagerFactory emf;
+    ServiceManagerFactory smf;
+    ManagementService management;
+    Realm realm;
+    SessionsSecurityManager securityManager;
+    Channel channel;
+    Properties properties;
 
-	@Autowired
-	public void setServiceManagerFactory(ServiceManagerFactory smf) {
-		this.smf = smf;
-	}
 
-	@Autowired
-	public void setManagementService(ManagementService management) {
-		this.management = management;
-	}
+    public static void main( String[] args ) throws Exception
+    {
+        MongoServer server = new MongoServer();
+        server.startSpring();
+        server.startServer();
+    }
 
-	@Autowired
-	public void setRealm(Realm realm) {
-		this.realm = realm;
-	}
 
-	public Properties getProperties() {
-		return properties;
-	}
+    public MongoServer()
+    {
+    }
 
-	@Autowired
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
 
-	public String[] getApplicationContextLocations() {
-		String[] locations = { "applicationContext.xml" };
-		return locations;
-	}
+    @Autowired
+    public void setEntityManagerFactory( EntityManagerFactory emf )
+    {
+        this.emf = emf;
+    }
 
-	public void startSpring() {
 
-		String[] locations = getApplicationContextLocations();
-		ApplicationContext ac = new ClassPathXmlApplicationContext(locations);
+    @Autowired
+    public void setServiceManagerFactory( ServiceManagerFactory smf )
+    {
+        this.smf = smf;
+    }
 
-		AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
-		acbf.autowireBeanProperties(this,
-				AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
-		acbf.initializeBean(this, "mongoServer");
 
-		assertNotNull(emf);
-		assertTrue(
-				"EntityManagerFactory is instance of EntityManagerFactoryImpl",
-				emf instanceof EntityManagerFactoryImpl);
+    @Autowired
+    public void setManagementService( ManagementService management )
+    {
+        this.management = management;
+    }
 
-	}
 
-	public void startServer() {
+    @Autowired
+    public void setRealm( Realm realm )
+    {
+        this.realm = realm;
+    }
 
-		if ((properties != null)
-				&& (Boolean.parseBoolean(properties.getProperty(
-						"usergrid.mongo.disable", "false")))) {
-			logger.info("Usergrid Mongo Emulation Server Disabled");
-			return;
-		}
 
-		logger.info("Starting Usergrid Mongo Emulation Server");
+    public Properties getProperties()
+    {
+        return properties;
+    }
 
-		if (realm != null) {
-			securityManager = new DefaultSecurityManager(realm);
-		}
 
-		// Configure the server.
-		ServerBootstrap bootstrap = new ServerBootstrap(
-				new NioServerSocketChannelFactory(
-						Executors.newCachedThreadPool(),
-						Executors.newCachedThreadPool()));
+    @Autowired
+    public void setProperties( Properties properties )
+    {
+        this.properties = properties;
+    }
 
-		bootstrap.setOption("child.bufferFactory",
-				HeapChannelBufferFactory.getInstance(ByteOrder.LITTLE_ENDIAN));
 
-		// Set up the pipeline factory.
-		ExecutionHandler executionHandler = new ExecutionHandler(
-				new OrderedMemoryAwareThreadPoolExecutor(16, 1048576, 1048576));
-    // TODO if config'ed for SSL, start the SslMSPF instead, change port as well?
-		bootstrap.setPipelineFactory(new MongoServerPipelineFactory(emf, smf,
-				management, securityManager, executionHandler));
+    public String[] getApplicationContextLocations()
+    {
+        String[] locations = { "applicationContext.xml" };
+        return locations;
+    }
 
-		// Bind and start to accept incoming connections.
-		channel = bootstrap.bind(new InetSocketAddress(27017));
 
-		logger.info("Usergrid Mongo API Emulation Server accepting connections...");
-	}
+    public void startSpring()
+    {
 
-	public void stopServer() {
-		logger.info("Stopping Usergrid Mongo Emulation Server");
-		if (channel != null) {
-			channel.close();
-			channel = null;
-		}
-		logger.info("Usergrid Mongo API Emulation Server stopped...");
-	}
+        String[] locations = getApplicationContextLocations();
+        ApplicationContext ac = new ClassPathXmlApplicationContext( locations );
+
+        AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
+        acbf.autowireBeanProperties( this, AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false );
+        acbf.initializeBean( this, "mongoServer" );
+
+        assertNotNull( emf );
+        assertTrue( "EntityManagerFactory is instance of EntityManagerFactoryImpl",
+                emf instanceof EntityManagerFactoryImpl );
+    }
+
+
+    public void startServer()
+    {
+
+        if ( ( properties != null ) && ( Boolean
+                .parseBoolean( properties.getProperty( "usergrid.mongo.disable", "false" ) ) ) )
+        {
+            logger.info( "Usergrid Mongo Emulation Server Disabled" );
+            return;
+        }
+
+        logger.info( "Starting Usergrid Mongo Emulation Server" );
+
+        if ( realm != null )
+        {
+            securityManager = new DefaultSecurityManager( realm );
+        }
+
+        // Configure the server.
+        ServerBootstrap bootstrap = new ServerBootstrap(
+                new NioServerSocketChannelFactory( Executors.newCachedThreadPool(), Executors.newCachedThreadPool() ) );
+
+        bootstrap.setOption( "child.bufferFactory", HeapChannelBufferFactory.getInstance( ByteOrder.LITTLE_ENDIAN ) );
+
+        // Set up the pipeline factory.
+        ExecutionHandler executionHandler =
+                new ExecutionHandler( new OrderedMemoryAwareThreadPoolExecutor( 16, 1048576, 1048576 ) );
+        // TODO if config'ed for SSL, start the SslMSPF instead, change port as well?
+        bootstrap.setPipelineFactory(
+                new MongoServerPipelineFactory( emf, smf, management, securityManager, executionHandler ) );
+
+        // Bind and start to accept incoming connections.
+        channel = bootstrap.bind( new InetSocketAddress( 27017 ) );
+
+        logger.info( "Usergrid Mongo API Emulation Server accepting connections..." );
+    }
+
+
+    public void stopServer()
+    {
+        logger.info( "Stopping Usergrid Mongo Emulation Server" );
+        if ( channel != null )
+        {
+            channel.close();
+            channel = null;
+        }
+        logger.info( "Usergrid Mongo API Emulation Server stopped..." );
+    }
 }

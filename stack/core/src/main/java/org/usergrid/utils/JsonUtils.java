@@ -1,26 +1,24 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.usergrid.utils;
 
-import static org.apache.commons.lang.StringUtils.substringAfter;
-import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,367 +26,374 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.io.JsonStringEncoder;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.schema.JsonSchema;
-import org.codehaus.jackson.smile.SmileFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.exception.JsonReadException;
 import org.usergrid.exception.JsonWriteException;
 import org.usergrid.persistence.Entity;
 
-/**
- * @author edanuff
- * 
- */
-public class JsonUtils {
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.io.JsonStringEncoder;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig.Feature;
+import org.codehaus.jackson.smile.SmileFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(JsonUtils.class);
+import static org.apache.commons.lang.StringUtils.substringAfter;
 
-	static ObjectMapper mapper = new ObjectMapper();
+import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
-	static SmileFactory smile = new SmileFactory();
 
-    static ObjectMapper smileMapper = new ObjectMapper(smile);
+public class JsonUtils
+{
+
+    private static final Logger LOG = LoggerFactory.getLogger( JsonUtils.class );
+
+    static ObjectMapper mapper = new ObjectMapper();
+
+    static SmileFactory smile = new SmileFactory();
+
+    static ObjectMapper smileMapper = new ObjectMapper( smile );
 
     private static ObjectMapper indentObjectMapper = new ObjectMapper();
 
-    static {
-        indentObjectMapper.getSerializationConfig().set(Feature.INDENT_OUTPUT, true);
+
+    static
+    {
+        indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
     }
 
-  /**
-   * Converts object to JSON string, throws runtime exception JsonWriteException on failure.
-   */
-	public static String mapToJsonString(Object obj) { 
-    Exception ex = null;
-		try {
-			return mapper.writeValueAsString(obj);
-		} catch (Throwable t) {
-      logger.debug("Error generating JSON", t);
-      throw new JsonWriteException("Error generating JSON", t);
- 	  }
-	}
 
-	/**
-   * Converts object to JSON string, throws runtime exception JsonWriteException on failure.
-	 */
-	public static String mapToFormattedJsonString(Object obj) {
-		try {
-			return indentObjectMapper.writeValueAsString(obj);
-		} catch (Throwable t) {
-      logger.debug("Error generating JSON", t);
-      throw new JsonWriteException("Error generating JSON", t);
- 	  }
-	}
+    /** Converts object to JSON string, throws runtime exception JsonWriteException on failure. */
+    public static String mapToJsonString( Object obj )
+    {
+        try
+        {
+            return mapper.writeValueAsString( obj );
+        }
+        catch ( Throwable t )
+        {
+            LOG.debug( "Error generating JSON", t );
+            throw new JsonWriteException( "Error generating JSON", t );
+        }
+    }
 
-	public static String schemaToFormattedJsonString(JsonSchema schema) {
-		return mapToFormattedJsonString(schema.getSchemaNode());
-	}
 
-	public static JsonSchema getJsonSchema(Class<?> cls) {
-		JsonSchema jsonSchema = null;
-		try {
-			jsonSchema = mapper.generateJsonSchema(cls);
-		} catch (JsonMappingException e) {
-		}
-		return jsonSchema;
-	}
+    /** Converts object to JSON string, throws runtime exception JsonWriteException on failure. */
+    public static String mapToFormattedJsonString( Object obj )
+    {
+        try
+        {
+            return indentObjectMapper.writeValueAsString( obj );
+        }
+        catch ( Throwable t )
+        {
+            LOG.debug( "Error generating JSON", t );
+            throw new JsonWriteException( "Error generating JSON", t );
+        }
+    }
 
-  /**
-   * Parses JSON string  and returns object, throws runtime exception JsonReadException on failure.
-	 */
-	public static Object parse(String json) {
-		try {
-			return mapper.readValue(json, Object.class);
-		} catch (Throwable t) {
-      logger.debug("Error parsing JSON", t);
-      throw new JsonReadException("Error parsing JSON", t);
- 	  }
-	}
 
-	public static JsonNode getJsonSchemaNode(Class<?> cls) {
-		JsonNode schemaRootNode = null;
-		JsonSchema jsonSchema = getJsonSchema(cls);
-		if (jsonSchema != null) {
-			schemaRootNode = jsonSchema.getSchemaNode();
-		}
-		return schemaRootNode;
-	}
+    /** Parses JSON string  and returns object, throws runtime exception JsonReadException on failure. */
+    public static Object parse( String json )
+    {
+        try
+        {
+            return mapper.readValue( json, Object.class );
+        }
+        catch ( Throwable t )
+        {
+            LOG.debug( "Error parsing JSON", t );
+            throw new JsonReadException( "Error parsing JSON", t );
+        }
+    }
 
-	public static String quoteString(String s) {
-		JsonStringEncoder encoder = new JsonStringEncoder();
-		return new String(encoder.quoteAsUTF8(s));
-	}
 
-	public static ByteBuffer toByteBuffer(Object obj) {
-		if (obj == null) {
-			return null;
-		}
+    public static String quoteString( String s )
+    {
+        JsonStringEncoder encoder = new JsonStringEncoder();
+        return new String( encoder.quoteAsUTF8( s ) );
+    }
 
-		byte[] bytes = null;
-		try {
-			bytes = smileMapper.writeValueAsBytes(obj);
-		} catch (Exception e) {
-			logger.error("Error getting SMILE bytes", e);
-		}
-		if (bytes != null) {
-			return ByteBuffer.wrap(bytes);
-		}
-		return null;
-	}
 
-	public static Object fromByteBuffer(ByteBuffer byteBuffer) {
-		return fromByteBuffer(byteBuffer, Object.class);
-	}
+    public static ByteBuffer toByteBuffer( Object obj )
+    {
+        if ( obj == null )
+        {
+            return null;
+        }
 
-	public static Object fromByteBuffer(ByteBuffer byteBuffer, Class<?> clazz) {
-		if ((byteBuffer == null) || !byteBuffer.hasRemaining()) {
-			return null;
-		}
-		if (clazz == null) {
-			clazz = Object.class;
-		}
+        byte[] bytes = null;
+        try
+        {
+            bytes = smileMapper.writeValueAsBytes( obj );
+        }
+        catch ( Exception e )
+        {
+            LOG.error( "Error getting SMILE bytes", e );
+        }
+        if ( bytes != null )
+        {
+            return ByteBuffer.wrap( bytes );
+        }
+        return null;
+    }
 
-		Object obj = null;
-		try {
-			obj = smileMapper.readValue(byteBuffer.array(), byteBuffer.arrayOffset()
-					+ byteBuffer.position(), byteBuffer.remaining(), clazz);
-		} catch (Exception e) {
-			logger.error("Error parsing SMILE bytes", e);
-		}
-		return obj;
-	}
 
-	public static JsonNode nodeFromByteBuffer(ByteBuffer byteBuffer) {
-		if ((byteBuffer == null) || !byteBuffer.hasRemaining()) {
-			return null;
-		}
+    public static Object fromByteBuffer( ByteBuffer byteBuffer )
+    {
+        return fromByteBuffer( byteBuffer, Object.class );
+    }
 
-		JsonNode obj = null;
-		try {
-			obj = smileMapper.readValue(byteBuffer.array(), byteBuffer.arrayOffset()
-					+ byteBuffer.position(), byteBuffer.remaining(),
-					JsonNode.class);
-		} catch (Exception e) {
-			logger.error("Error parsing SMILE bytes", e);
-		}
-		return obj;
-	}
 
-	public static JsonNode toJsonNode(Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		JsonNode node = mapper.convertValue(obj, JsonNode.class);
-		return node;
-	}
+    public static Object fromByteBuffer( ByteBuffer byteBuffer, Class<?> clazz )
+    {
+        if ( ( byteBuffer == null ) || !byteBuffer.hasRemaining() )
+        {
+            return null;
+        }
+        if ( clazz == null )
+        {
+            clazz = Object.class;
+        }
 
-	public static Map<String, Object> toJsonMap(Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		@SuppressWarnings("unchecked")
-		Map<String, Object> map = mapper.convertValue(obj, Map.class);
-		return map;
-	}
+        Object obj = null;
+        try
+        {
+            obj = smileMapper.readValue( byteBuffer.array(), byteBuffer.arrayOffset() + byteBuffer.position(),
+                    byteBuffer.remaining(), clazz );
+        }
+        catch ( Exception e )
+        {
+            LOG.error( "Error parsing SMILE bytes", e );
+        }
+        return obj;
+    }
 
-	private static UUID tryConvertToUUID(Object o) {
-		if (o instanceof String) {
-			String s = (String) o;
-			if (s.length() == 36) {
-				try {
-					UUID uuid = UUID.fromString(s);
-					return uuid;
-				} catch (IllegalArgumentException e) {
-				}
-			}
-		}
-		return null;
-	}
 
-	public static Object normalizeJsonTree(Object obj) {
-		if (obj instanceof Map) {
-			@SuppressWarnings("unchecked")
-			Map<Object, Object> m = (Map<Object, Object>) obj;
+    public static JsonNode toJsonNode( Object obj )
+    {
+        if ( obj == null )
+        {
+            return null;
+        }
+        return mapper.convertValue( obj, JsonNode.class );
+    }
+
+
+    @SuppressWarnings( "unchecked" )
+    public static Map<String, Object> toJsonMap( Object obj )
+    {
+        if ( obj == null )
+        {
+            return null;
+        }
+
+        return ( Map<String, Object> ) mapper.convertValue( obj, Map.class );
+    }
+
+
+    private static UUID tryConvertToUUID( Object o )
+    {
+        if ( o instanceof String )
+        {
+            String s = ( String ) o;
+            if ( s.length() == 36 )
+            {
+                try
+                {
+                    return UUID.fromString( s );
+                }
+                catch ( IllegalArgumentException e )
+                {
+                    LOG.warn( "Argument to UUID.fromString({}) was invalid.", s, e );
+                }
+            }
+        }
+        return null;
+    }
+
+
+    public static Object normalizeJsonTree( Object obj )
+    {
+        if ( obj instanceof Map )
+        {
+            @SuppressWarnings( "unchecked" ) Map<Object, Object> m = ( Map<Object, Object> ) obj;
             Object o;
             UUID uuid;
-			for ( Object k : m.keySet() )
+            for ( Object k : m.keySet() )
             {
                 if ( k instanceof String && ( ( String ) k ).equalsIgnoreCase( "name" ) )
                 {
                     continue;
                 }
 
-				o = m.get(k);
-				uuid = tryConvertToUUID(o);
-				if (uuid != null) {
-					m.put(k, uuid);
-				} else if (o instanceof Integer) {
-					m.put(k, ((Integer) o).longValue());
-				} else if (o instanceof BigInteger) {
-					m.put(k, ((BigInteger) o).longValue());
-				}
-			}
-		} else if (obj instanceof List) {
-			@SuppressWarnings("unchecked")
-			List<Object> l = (List<Object>) obj;
+                o = m.get( k );
+                uuid = tryConvertToUUID( o );
+                if ( uuid != null )
+                {
+                    m.put( k, uuid );
+                }
+                else if ( o instanceof Integer )
+                {
+                    m.put( k, ( ( Integer ) o ).longValue() );
+                }
+                else if ( o instanceof BigInteger )
+                {
+                    m.put( k, ( ( BigInteger ) o ).longValue() );
+                }
+            }
+        }
+        else if ( obj instanceof List )
+        {
+            @SuppressWarnings( "unchecked" ) List<Object> l = ( List<Object> ) obj;
             Object o;
             UUID uuid;
-			for (int i = 0; i < l.size(); i++) {
-				o = l.get(i);
-				uuid = tryConvertToUUID(o);
-				if (uuid != null) {
-					l.set(i, uuid);
-				} else if ((o instanceof Map) || (o instanceof List)) {
-					normalizeJsonTree(o);
-				} else if (o instanceof Integer) {
-					l.set(i, ((Integer) o).longValue());
-				} else if (o instanceof BigInteger) {
-					l.set(i, ((BigInteger) o).longValue());
-				}
-			}
-		} else if (obj instanceof String) {
-			UUID uuid = tryConvertToUUID(obj);
-			if (uuid != null) {
-				return uuid;
-			}
-		} else if (obj instanceof Integer) {
-			return ((Integer) obj).longValue();
-		} else if (obj instanceof BigInteger) {
-			return ((BigInteger) obj).longValue();
-		} else if (obj instanceof JsonNode) {
-			return mapper.convertValue(obj, Object.class);
-		}
-		return obj;
-	}
-
-	public static Object select(Object obj, String path) {
-		return select(obj, path, false);
-	}
-
-	public static Object select(Object obj, String path, boolean buildResultTree) {
-
-		if (obj == null) {
-			return null;
-		}
-
-		if (org.apache.commons.lang.StringUtils.isBlank(path)) {
-			return obj;
-		}
-
-		String segment = stringOrSubstringBeforeFirst(path, '.');
-		String remaining = substringAfter(path, ".");
-
-		if (obj instanceof Map) {
-			Map<?, ?> map = (Map<?, ?>) obj;
-			Object child = map.get(segment);
-			Object result = select(child, remaining, buildResultTree);
-			if (result != null) {
-				if (buildResultTree) {
-					Map<Object, Object> results = new LinkedHashMap<Object, Object>();
-					results.put(segment, result);
-					return results;
-				} else {
-					return result;
-				}
-			}
-			return null;
-		}
-		if (obj instanceof List) {
-			List<Object> results = new ArrayList<Object>();
-			List<?> list = (List<?>) obj;
-			for (Object i : list) {
-				Object result = select(i, path, buildResultTree);
-				if (result != null) {
-					results.add(result);
-				}
-			}
-			if (!results.isEmpty()) {
-				return results;
-			}
-			return null;
-		}
-
-    if (obj instanceof Entity) {
-      Object child = ((Entity)obj).getProperty(segment);
-      Object result = select(child, remaining, buildResultTree);
-      if (result != null) {
-        if (buildResultTree) {
-          Map<Object, Object> results = new LinkedHashMap<Object, Object>();
-          results.put(segment, result);
-          return results;
-        } else {
-          return result;
+            for ( int i = 0; i < l.size(); i++ )
+            {
+                o = l.get( i );
+                uuid = tryConvertToUUID( o );
+                if ( uuid != null )
+                {
+                    l.set( i, uuid );
+                }
+                else if ( ( o instanceof Map ) || ( o instanceof List ) )
+                {
+                    normalizeJsonTree( o );
+                }
+                else if ( o instanceof Integer )
+                {
+                    l.set( i, ( ( Integer ) o ).longValue() );
+                }
+                else if ( o instanceof BigInteger )
+                {
+                    l.set( i, ( ( BigInteger ) o ).longValue() );
+                }
+            }
         }
-      }
-      else {
-          return result;
-      }
+        else if ( obj instanceof String )
+        {
+            UUID uuid = tryConvertToUUID( obj );
+            if ( uuid != null )
+            {
+                return uuid;
+            }
+        }
+        else if ( obj instanceof Integer )
+        {
+            return ( ( Integer ) obj ).longValue();
+        }
+        else if ( obj instanceof BigInteger )
+        {
+            return ( ( BigInteger ) obj ).longValue();
+        }
+        else if ( obj instanceof JsonNode )
+        {
+            return mapper.convertValue( obj, Object.class );
+        }
+        return obj;
     }
 
-		return obj;
-	}
 
-	public static Object loadFromResourceFile(String file) {
-		Object json = null;
-		try {
-			URL resource = JsonUtils.class.getResource(file);
-			json = mapper.readValue(resource, Object.class);
-		} catch (Exception e) {
-			logger.error("Error loading JSON", e);
-		}
-		return json;
-	}
+    public static Object select( Object obj, String path )
+    {
+        return select( obj, path, false );
+    }
 
-	public static Object loadFromFilesystem(String filename) {
-		Object json = null;
-		try {
-			File file = new File(filename);
-			json = mapper.readValue(file, Object.class);
-		} catch (Exception e) {
-			logger.error("Error loading JSON", e);
-		}
-		return json;
-	}
 
-	public static Object loadFromUrl(String urlStr) {
-		Object json = null;
-		try {
-			URL url = new URL(urlStr);
-			json = mapper.readValue(url, Object.class);
-		} catch (Exception e) {
-			logger.error("Error loading JSON", e);
-		}
-		return json;
-	}
+    public static Object select( Object obj, String path, boolean buildResultTree )
+    {
 
-	public static Object loadFromUrl(URL url) {
-		Object json = null;
-		try {
-			json = mapper.readValue(url, Object.class);
-		} catch (Exception e) {
-			logger.error("Error loading JSON", e);
-		}
-		return json;
-	}
+        if ( obj == null )
+        {
+            return null;
+        }
 
-	public static boolean isSmile(ByteBuffer buffer) {
-		buffer = buffer.duplicate();
-		if (buffer.get() != 0x3A) {
-			return false;
-		}
-		if (buffer.get() != 0x29) {
-			return false;
-		}
-		if (buffer.get() != 0x0A) {
-			return false;
-		}
-		return true;
-	}
+        if ( org.apache.commons.lang.StringUtils.isBlank( path ) )
+        {
+            return obj;
+        }
+
+        String segment = stringOrSubstringBeforeFirst( path, '.' );
+        String remaining = substringAfter( path, "." );
+
+        if ( obj instanceof Map )
+        {
+            Map<?, ?> map = ( Map<?, ?> ) obj;
+            Object child = map.get( segment );
+            Object result = select( child, remaining, buildResultTree );
+            if ( result != null )
+            {
+                if ( buildResultTree )
+                {
+                    Map<Object, Object> results = new LinkedHashMap<Object, Object>();
+                    results.put( segment, result );
+                    return results;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+        if ( obj instanceof List )
+        {
+            List<Object> results = new ArrayList<Object>();
+            List<?> list = ( List<?> ) obj;
+            for ( Object i : list )
+            {
+                Object result = select( i, path, buildResultTree );
+                if ( result != null )
+                {
+                    results.add( result );
+                }
+            }
+            if ( !results.isEmpty() )
+            {
+                return results;
+            }
+            return null;
+        }
+
+        if ( obj instanceof Entity )
+        {
+            Object child = ( ( Entity ) obj ).getProperty( segment );
+            Object result = select( child, remaining, buildResultTree );
+            if ( result != null )
+            {
+                if ( buildResultTree )
+                {
+                    Map<Object, Object> results = new LinkedHashMap<Object, Object>();
+                    results.put( segment, result );
+                    return results;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            else
+            {
+                return result;
+            }
+        }
+
+        return obj;
+    }
+
+
+    public static Object loadFromFilesystem( String filename )
+    {
+        Object json = null;
+        try
+        {
+            File file = new File( filename );
+            json = mapper.readValue( file, Object.class );
+        }
+        catch ( Exception e )
+        {
+            LOG.error( "Error loading JSON", e );
+        }
+        return json;
+    }
 }

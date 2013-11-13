@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,11 +15,8 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.removeEnd;
 
 import java.util.List;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -27,9 +24,6 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-
-import net.tanesha.recaptcha.ReCaptcha;
-import net.tanesha.recaptcha.ReCaptchaFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.management.ManagementService;
@@ -44,115 +38,144 @@ import com.sun.jersey.api.core.ResourceContext;
 import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.spi.CloseableService;
 
-public abstract class AbstractContextResource {
+import net.tanesha.recaptcha.ReCaptcha;
+import net.tanesha.recaptcha.ReCaptchaFactory;
 
-	protected AbstractContextResource parent;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.removeEnd;
 
-	@Context
-	protected UriInfo uriInfo;
 
-	@Context
-	protected Request request;
+public abstract class AbstractContextResource
+{
 
-	@Context
-	protected SecurityContext sc;
+    protected AbstractContextResource parent;
 
-	@Context
-	protected HttpContext hc;
+    @Context
+    protected UriInfo uriInfo;
 
-	@Context
-	protected CloseableService cs;
+    @Context
+    protected Request request;
 
-	@Context
-	protected HttpServletRequest httpServletRequest;
+    @Context
+    protected SecurityContext sc;
 
-	@Context
-	protected ResourceContext resourceContext;
+    @Context
+    protected HttpContext hc;
 
-	@Autowired
-	protected EntityManagerFactory emf;
+    @Context
+    protected CloseableService cs;
 
-	@Autowired
-	protected ServiceManagerFactory smf;
+    @Context
+    protected HttpServletRequest httpServletRequest;
 
-	@Autowired
-	protected ManagementService management;
+    @Context
+    protected ResourceContext resourceContext;
 
-	@Autowired
-	protected ServerEnvironmentProperties properties;
+    @Autowired
+    protected EntityManagerFactory emf;
 
-	@Autowired
-	protected QueueManagerFactory qmf;
+    @Autowired
+    protected ServiceManagerFactory smf;
 
-	@Autowired
-	protected TokenService tokens;
+    @Autowired
+    protected ManagementService management;
 
-	public AbstractContextResource() {
-	}
+    @Autowired
+    protected ServerEnvironmentProperties properties;
 
-	public AbstractContextResource getParent() {
-		return parent;
-	}
+    @Autowired
+    protected QueueManagerFactory qmf;
 
-	public void setParent(AbstractContextResource parent) {
-		this.parent = parent;
-	}
+    @Autowired
+    protected TokenService tokens;
 
-	public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
-		T subResource = resourceContext.getResource(t);
-		subResource.setParent(this);
-		return subResource;
-	}
 
-	public PathSegment getFirstPathSegment(String name) {
-		if (name == null) {
-			return null;
-		}
-		List<PathSegment> segments = uriInfo.getPathSegments();
-		for (PathSegment segment : segments) {
-			if (name.equals(segment.getPath())) {
-				return segment;
-			}
-		}
-		return null;
-	}
+    public AbstractContextResource()
+    {
+    }
 
-	public boolean useReCaptcha() {
-		return isNotBlank(properties.getRecaptchaPublic())
-				&& isNotBlank(properties.getRecaptchaPrivate());
-	}
 
-	public String getReCaptchaHtml() {
-		if (!useReCaptcha()) {
-			return "";
-		}
-		ReCaptcha c = ReCaptchaFactory.newSecureReCaptcha(
-        properties.getRecaptchaPublic(),
-        properties.getRecaptchaPrivate(), false);
-		return c.createRecaptchaHtml(null, null);
-	}
+    public AbstractContextResource getParent()
+    {
+        return parent;
+    }
 
-	public void sendRedirect(String location) {
-		if (isNotBlank(location)) {
-			throw new RedirectionException(location);
-		}
-	}
 
-	public Viewable handleViewable(String template, Object model) {
-		String template_property = "usergrid.view"
-				+ removeEnd(this.getClass().getName().toLowerCase(), "resource")
-						.substring(
-								AbstractContextResource.class.getPackage()
-										.getName().length()) + "."
-				+ template.toLowerCase();
-		String redirect_url = properties.getProperty(template_property);
-		if (isNotBlank(redirect_url)) {
-			sendRedirect(redirect_url);
-		}
-		return new Viewable(template, model, this.getClass());
-	}
+    public void setParent( AbstractContextResource parent )
+    {
+        this.parent = parent;
+    }
 
-  protected ApiResponse createApiResponse() {
-    return new ApiResponse(properties);
-  }
+
+    public <T extends AbstractContextResource> T getSubResource( Class<T> t )
+    {
+        T subResource = resourceContext.getResource( t );
+        subResource.setParent( this );
+        return subResource;
+    }
+
+
+    public PathSegment getFirstPathSegment( String name )
+    {
+        if ( name == null )
+        {
+            return null;
+        }
+        List<PathSegment> segments = uriInfo.getPathSegments();
+        for ( PathSegment segment : segments )
+        {
+            if ( name.equals( segment.getPath() ) )
+            {
+                return segment;
+            }
+        }
+        return null;
+    }
+
+
+    public boolean useReCaptcha()
+    {
+        return isNotBlank( properties.getRecaptchaPublic() ) && isNotBlank( properties.getRecaptchaPrivate() );
+    }
+
+
+    public String getReCaptchaHtml()
+    {
+        if ( !useReCaptcha() )
+        {
+            return "";
+        }
+        ReCaptcha c = ReCaptchaFactory
+                .newSecureReCaptcha( properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false );
+        return c.createRecaptchaHtml( null, null );
+    }
+
+
+    public void sendRedirect( String location )
+    {
+        if ( isNotBlank( location ) )
+        {
+            throw new RedirectionException( location );
+        }
+    }
+
+
+    public Viewable handleViewable( String template, Object model )
+    {
+        String template_property = "usergrid.view" + removeEnd( this.getClass().getName().toLowerCase(), "resource" )
+                .substring( AbstractContextResource.class.getPackage().getName().length() ) + "." + template
+                .toLowerCase();
+        String redirect_url = properties.getProperty( template_property );
+        if ( isNotBlank( redirect_url ) )
+        {
+            sendRedirect( redirect_url );
+        }
+        return new Viewable( template, model, this.getClass() );
+    }
+
+
+    protected ApiResponse createApiResponse()
+    {
+        return new ApiResponse( properties );
+    }
 }

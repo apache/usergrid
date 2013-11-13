@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.mongo.protocol;
+
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,136 +39,162 @@ import org.usergrid.persistence.Identifier;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
 
-public class OpInsert extends OpCrud {
+public class OpInsert extends OpCrud
+{
 
-    private static final Logger logger = LoggerFactory.getLogger(OpInsert.class);
-    
-	protected int flags;
-	protected List<BSONObject> documents = new ArrayList<BSONObject>();
+    private static final Logger logger = LoggerFactory.getLogger( OpInsert.class );
 
-	public OpInsert() {
-		opCode = OP_INSERT;
-	}
+    protected int flags;
+    protected List<BSONObject> documents = new ArrayList<BSONObject>();
 
-	public int getFlags() {
-		return flags;
-	}
 
-	public void setFlags(int flags) {
-		this.flags = flags;
-	}
+    public OpInsert()
+    {
+        opCode = OP_INSERT;
+    }
 
-	public List<BSONObject> getDocuments() {
-		return documents;
-	}
 
-	public void setDocuments(List<BSONObject> documents) {
-		if (documents == null) {
-			documents = new ArrayList<BSONObject>();
-		}
-		this.documents = documents;
-	}
+    public int getFlags()
+    {
+        return flags;
+    }
 
-	public void addDocument(BSONObject document) {
-		documents.add(document);
-	}
 
-	public void addDocument(Map<?, ?> map) {
-		BSONObject b = new BasicBSONObject();
-		b.putAll(map);
-		documents.add(b);
-	}
+    public void setFlags( int flags )
+    {
+        this.flags = flags;
+    }
 
-	@Override
-	public void decode(ChannelBuffer buffer) throws IOException {
-	    super.decode(buffer);
 
-		flags = buffer.readInt();
-		fullCollectionName = readCString(buffer);
+    public List<BSONObject> getDocuments()
+    {
+        return documents;
+    }
 
-		while (buffer.readable()) {
-			documents.add(BSONUtils.decoder().readObject(
-					new ChannelBufferInputStream(buffer)));
-		}
-	}
 
-	@Override
-	public ChannelBuffer encode(ChannelBuffer buffer) {
-		int l = 20; // 5 ints * 4 bytes
+    public void setDocuments( List<BSONObject> documents )
+    {
+        if ( documents == null )
+        {
+            documents = new ArrayList<BSONObject>();
+        }
+        this.documents = documents;
+    }
 
-		ByteBuffer fullCollectionNameBytes = getCString(fullCollectionName);
-		l += fullCollectionNameBytes.capacity();
 
-		List<ByteBuffer> encodedDocuments = encodeDocuments(documents);
-		l += buffersSize(encodedDocuments);
+    public void addDocument( BSONObject document )
+    {
+        documents.add( document );
+    }
 
-		messageLength = l;
 
-		buffer = super.encode(buffer);
+    public void addDocument( Map<?, ?> map )
+    {
+        BSONObject b = new BasicBSONObject();
+        b.putAll( map );
+        documents.add( b );
+    }
 
-		buffer.writeInt(flags);
 
-		buffer.writeBytes(fullCollectionNameBytes);
+    @Override
+    public void decode( ChannelBuffer buffer ) throws IOException
+    {
+        super.decode( buffer );
 
-		for (ByteBuffer d : encodedDocuments) {
-			buffer.writeBytes(d);
-		}
+        flags = buffer.readInt();
+        fullCollectionName = readCString( buffer );
 
-		return buffer;
-	}
+        while ( buffer.readable() )
+        {
+            documents.add( BSONUtils.decoder().readObject( new ChannelBufferInputStream( buffer ) ) );
+        }
+    }
+
+
+    @Override
+    public ChannelBuffer encode( ChannelBuffer buffer )
+    {
+        int l = 20; // 5 ints * 4 bytes
+
+        ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
+        l += fullCollectionNameBytes.capacity();
+
+        List<ByteBuffer> encodedDocuments = encodeDocuments( documents );
+        l += buffersSize( encodedDocuments );
+
+        messageLength = l;
+
+        buffer = super.encode( buffer );
+
+        buffer.writeInt( flags );
+
+        buffer.writeBytes( fullCollectionNameBytes );
+
+        for ( ByteBuffer d : encodedDocuments )
+        {
+            buffer.writeBytes( d );
+        }
+
+        return buffer;
+    }
 
 
     /* (non-Javadoc)
-     * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
+     * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler,
+     * org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
      */
     @SuppressWarnings("unchecked")
     @Override
-    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
-            MessageEvent messageEvent) {
-        
-        ApplicationInfo application = SubjectUtils.getApplication(Identifier
-                .from(getDatabaseName()));
-      
-        if (application == null) {
-            ctx.setAttachment(new IllegalArgumentException(String.format("Could not find application with name '%s' ", getDatabaseName())));
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
+    {
+
+        ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( getDatabaseName() ) );
+
+        if ( application == null )
+        {
+            ctx.setAttachment( new IllegalArgumentException(
+                    String.format( "Could not find application with name '%s' ", getDatabaseName() ) ) );
             return null;
         }
-        
-       
-        EntityManager em = handler.getEmf().getEntityManager(application.getId());
-        
-        
-        for(BSONObject document: documents){
-            try {
+
+
+        EntityManager em = handler.getEmf().getEntityManager( application.getId() );
+
+
+        for ( BSONObject document : documents )
+        {
+            try
+            {
                 //special case to serialize mongo ObjectId if required
-                Object id = document.get("_id");
-                
-                if(id instanceof ObjectId){
-                    document.put("_id", ((ObjectId)id).toStringMongod());
+                Object id = document.get( "_id" );
+
+                if ( id instanceof ObjectId )
+                {
+                    document.put( "_id", ( ( ObjectId ) id ).toStringMongod() );
                 }
-                
-                em.create(getCollectionName(), document.toMap());
-               
-            } catch (Exception e) {
-                logger.error("Unable to insert mongo document {}", document, e);
-                ctx.setAttachment(e);
+
+                em.create( getCollectionName(), document.toMap() );
+            }
+            catch ( Exception e )
+            {
+                logger.error( "Unable to insert mongo document {}", document, e );
+                ctx.setAttachment( e );
             }
         }
-        
+
         //insert never returns a response in mongo
         return null;
     }
+
 
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString() {
-        return "OpInsert [flags=" + flags + ", documents=" + documents
-                + ", fullCollectionName=" + fullCollectionName
-                + ", messageLength=" + messageLength + ", requestID="
-                + requestID + ", responseTo=" + responseTo + ", opCode="
-                + opCode + "]";
+    public String toString()
+    {
+        return "OpInsert [flags=" + flags + ", documents=" + documents + ", fullCollectionName=" + fullCollectionName
+                + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo=" + responseTo
+                + ", opCode=" + opCode + "]";
     }
-
 }

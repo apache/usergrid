@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.security.crypto.command;
+
 
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -23,51 +24,56 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.usergrid.persistence.CredentialsInfo;
 
-/**
- * @author tnine
- *
- */
+
+/** @author tnine */
 @Component("org.usergrid.security.crypto.command.Sha1HashCommand")
-public class Sha1HashCommand extends SaltedHasherCommand {
+public class Sha1HashCommand extends SaltedHasherCommand
+{
 
-  private static final Logger logger = LoggerFactory.getLogger(Sha1HashCommand.class);
-  
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
-   */
-  @Override
-  public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-      java.security.MessageDigest d = null;
-      try {
-        d = java.security.MessageDigest.getInstance("SHA-1");
-      } catch (NoSuchAlgorithmException e) {
-        logger.error( "Unable to get SHA1 algorithm", e);
-        throw new RuntimeException(e);
-      }
-      d.reset();
-      
-      d.update(maybeSalt(input, applicationId, userId));
-      return d.digest();
-  
-  }
-  
-
-  /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
-   */
-  @Override
-  public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
-    return hash(input, info, userId, applicationId);
-  }
+    private static final Logger logger = LoggerFactory.getLogger( Sha1HashCommand.class );
 
 
-  /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
-   */
-  @Override
-  public String getName() {
-    return SHA1;
-  }
+    /* (non-Javadoc)
+     * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[],
+     * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+     */
+    @Override
+    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+    {
+        java.security.MessageDigest d = null;
+        try
+        {
+            d = java.security.MessageDigest.getInstance( "SHA-1" );
+        }
+        catch ( NoSuchAlgorithmException e )
+        {
+            logger.error( "Unable to get SHA1 algorithm", e );
+            throw new RuntimeException( e );
+        }
+        d.reset();
 
+        d.update( maybeSalt( input, applicationId, userId ) );
+        return d.digest();
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[],
+     * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+     */
+    @Override
+    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
+    {
+        return hash( input, info, userId, applicationId );
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
+     */
+    @Override
+    public String getName()
+    {
+        return SHA1;
+    }
 }
