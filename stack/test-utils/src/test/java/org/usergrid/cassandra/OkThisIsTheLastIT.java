@@ -17,8 +17,7 @@ public class OkThisIsTheLastIT
     @Rule
     public TestName name = new TestName();
 
-    private CassandraResource cassandraResource =
-            CassandraResourceITSuite.cassandraResource;
+    private CassandraResource cassandraResource = CassandraResourceITSuite.cassandraResource;
 
 
     @Test
