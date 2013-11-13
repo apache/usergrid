@@ -56,8 +56,7 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
  *
  * @author tnine
  */
-public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobRuntimeService
-{
+public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobRuntimeService {
 
     /**
      *
@@ -93,8 +92,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     /**
      *
      */
-    public SchedulerServiceImpl()
-    {
+    public SchedulerServiceImpl() {
     }
 
 
@@ -106,13 +104,11 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * long, org.usergrid.persistence.Entity)
      */
     @Override
-    public JobData createJob( String jobName, long fireTime, JobData jobData )
-    {
+    public JobData createJob( String jobName, long fireTime, JobData jobData ) {
         Assert.notNull( jobName, "jobName is required" );
         Assert.notNull( jobData, "jobData is required" );
 
-        try
-        {
+        try {
             jobData.setJobName( jobName );
             JobData job = em.create( jobData );
             JobStat stat = em.create( new JobStat( jobName, job.getUuid() ) );
@@ -121,16 +117,14 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
             return job;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new JobRuntimeException( e );
         }
     }
 
 
     /** Schedule the job internally */
-    private void scheduleJob( String jobName, long fireTime, UUID jobDataId, UUID jobStatId )
-    {
+    private void scheduleJob( String jobName, long fireTime, UUID jobDataId, UUID jobStatId ) {
         Assert.notNull( jobName, "jobName is required" );
         Assert.isTrue( fireTime > -1, "fireTime must be positive" );
         Assert.notNull( jobDataId, "jobDataId is required" );
@@ -152,20 +146,17 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * @see org.usergrid.batch.service.SchedulerService#deleteJob(java.util.UUID)
      */
     @Override
-    public void deleteJob( UUID jobId )
-    {
+    public void deleteJob( UUID jobId ) {
         /**
          * just delete our target job data. This is easier than attempting to delete
          * from the queue. The runner should catch this and treat the queued message
          * as discarded
          */
-        try
-        {
+        try {
             logger.debug( "deleteJob {}", jobId );
             em.delete( new SimpleEntityRef( "jobData", jobId ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new JobRuntimeException( e );
         }
     }
@@ -177,8 +168,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * @see org.usergrid.batch.repository.JobAccessor#getJobs(int)
      */
     @Override
-    public List<JobDescriptor> getJobs( int size )
-    {
+    public List<JobDescriptor> getJobs( int size ) {
         QueueQuery query = new QueueQuery();
         query.setTimeout( jobTimeout );
         query.setLimit( size );
@@ -187,15 +177,13 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
         List<JobDescriptor> results = new ArrayList<JobDescriptor>( jobs.size() );
 
-        for ( Message job : jobs.getMessages() )
-        {
+        for ( Message job : jobs.getMessages() ) {
 
             UUID jobUuid = UUID.fromString( job.getStringProperty( JOB_ID ) );
             UUID statsUuid = UUID.fromString( job.getStringProperty( STATS_ID ) );
             String jobName = job.getStringProperty( JOB_NAME );
 
-            try
-            {
+            try {
                 JobData data = em.get( jobUuid, JobData.class );
 
                 JobStat stats = em.get( statsUuid, JobStat.class );
@@ -204,19 +192,16 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                  * no job data, which is required even if empty to signal the job should
                  * still fire. Ignore this job
                  */
-                if ( data == null || stats == null )
-                {
+                if ( data == null || stats == null ) {
                     logger.info( "Received job with data id '{}' from the queue, but no data was found.  Dropping job",
                             jobUuid );
                     qm.deleteTransaction( jobQueueName, job.getTransaction(), null );
 
-                    if ( data != null )
-                    {
+                    if ( data != null ) {
                         em.delete( data );
                     }
 
-                    if ( stats != null )
-                    {
+                    if ( stats != null ) {
                         em.delete( stats );
                     }
 
@@ -225,15 +210,13 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
                 results.add( new JobDescriptor( jobName, job.getUuid(), job.getTransaction(), data, stats, this ) );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 // log and skip. This is a catastrophic runtime error if we see an
                 // exception here. We don't want to cause job loss, so leave the job in
                 // the Q.
                 logger.error(
-                        "Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job " +
-                                "loss",
-                        new Object[] { jobName, jobUuid, statsUuid, e } );
+                        "Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job "
+                                + "loss", new Object[] { jobName, jobUuid, statsUuid, e } );
             }
         }
 
@@ -242,13 +225,10 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
 
     @Override
-    public void heartbeat( JobRuntime execution, long delay )
-    {
+    public void heartbeat( JobRuntime execution, long delay ) {
         logger.debug( "renew transaction {}", execution.getTransactionId() );
-        try
-        {
-            synchronized ( execution )
-            {
+        try {
+            synchronized ( execution ) {
                 UUID newId = qm.renewTransaction( jobQueueName, execution.getTransactionId(),
                         new QueueQuery().withTimeout( delay ) );
 
@@ -256,8 +236,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 logger.debug( "renewed transaction {}", newId );
             }
         }
-        catch ( TransactionNotFoundException e )
-        {
+        catch ( TransactionNotFoundException e ) {
             logger.error( "Could not renew transaction", e );
             throw new JobRuntimeException( "Could not renew transaction during heartbeat", e );
         }
@@ -268,8 +247,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * @see org.usergrid.batch.service.JobRuntimeService#heartbeat(org.usergrid.batch.JobRuntime)
      */
     @Override
-    public void heartbeat( JobRuntime execution )
-    {
+    public void heartbeat( JobRuntime execution ) {
         heartbeat( execution, jobTimeout );
     }
 
@@ -281,8 +259,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * JobExecutionImpl)
      */
     @Override
-    public void delay( JobRuntime execution )
-    {
+    public void delay( JobRuntime execution ) {
         delayRetry( execution.getExecution(), execution.getDelay() );
     }
 
@@ -295,20 +272,17 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * )
      */
     @Override
-    public void save( JobExecution bulkJobExecution )
-    {
+    public void save( JobExecution bulkJobExecution ) {
 
         JobData data = bulkJobExecution.getJobData();
         JobStat stat = bulkJobExecution.getJobStats();
 
         Status jobStatus = bulkJobExecution.getStatus();
 
-        try
-        {
+        try {
 
             // we're done. Mark the transaction as complete and delete the job info
-            if ( jobStatus == Status.COMPLETED )
-            {
+            if ( jobStatus == Status.COMPLETED ) {
                 logger.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
                 qm.deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
                 logger.debug( "delete job data {}", data.getUuid() );
@@ -317,16 +291,14 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
             // the job failed too many times. Delete the transaction to prevent it
             // running again and save it for querying later
-            else if ( jobStatus == Status.DEAD )
-            {
+            else if ( jobStatus == Status.DEAD ) {
                 logger.warn( "Job {} is dead.  Removing", data.getJobName() );
                 qm.deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
                 em.update( data );
             }
 
             // update the job for the next run
-            else
-            {
+            else {
                 em.update( data );
             }
 
@@ -334,8 +306,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
             em.update( stat );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             // should never happen
             throw new JobRuntimeException( String.format( "Unable to delete job data with id %s", data.getUuid() ), e );
         }
@@ -349,11 +320,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * persistence.Query)
      */
     @Override
-    public Results queryJobData( Query query ) throws Exception
-    {
+    public Results queryJobData( Query query ) throws Exception {
 
-        if ( query == null )
-        {
+        if ( query == null ) {
             query = new Query();
         }
 
@@ -369,18 +338,15 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * .JobExecution, long)
      */
     @Override
-    public void delayRetry( JobExecution execution, long delay )
-    {
+    public void delayRetry( JobExecution execution, long delay ) {
 
         JobData data = execution.getJobData();
         JobStat stat = execution.getJobStats();
 
-        try
-        {
+        try {
 
             // if it's a dead status, it's failed too many times, just kill the job
-            if ( execution.getStatus() == Status.DEAD )
-            {
+            if ( execution.getStatus() == Status.DEAD ) {
                 qm.deleteTransaction( jobQueueName, execution.getTransactionId(), null );
                 em.update( data );
                 em.update( stat );
@@ -398,8 +364,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             em.update( data );
             em.update( stat );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             // should never happen
             throw new JobRuntimeException( String.format( "Unable to delete job data with id %s", data.getUuid() ), e );
         }
@@ -410,8 +375,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      * @see org.usergrid.batch.service.SchedulerService#getStatsForJob(java.lang.String, java.util.UUID)
      */
     @Override
-    public JobStat getStatsForJob( String jobName, UUID jobId ) throws Exception
-    {
+    public JobStat getStatsForJob( String jobName, UUID jobId ) throws Exception {
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
 
@@ -421,8 +385,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
         Results r = em.searchCollection( em.getApplicationRef(), "job_stats", query );
 
-        if ( r.size() == 1 )
-        {
+        if ( r.size() == 1 ) {
             return ( JobStat ) r.getEntity();
         }
 
@@ -431,8 +394,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
 
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         qm = qmf.getQueueManager( CassandraService.MANAGEMENT_APPLICATION_ID );
         em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
     }
@@ -440,30 +402,26 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     /** @param qmf the qmf to set */
     @Autowired
-    public void setQmf( QueueManagerFactory qmf )
-    {
+    public void setQmf( QueueManagerFactory qmf ) {
         this.qmf = qmf;
     }
 
 
     /** @param emf the emf to set */
     @Autowired
-    public void setEmf( EntityManagerFactory emf )
-    {
+    public void setEmf( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
     /** @param jobQueueName the jobQueueName to set */
-    public void setJobQueueName( String jobQueueName )
-    {
+    public void setJobQueueName( String jobQueueName ) {
         this.jobQueueName = jobQueueName;
     }
 
 
     /** @param timeout the timeout to set */
-    public void setJobTimeout( long timeout )
-    {
+    public void setJobTimeout( long timeout ) {
         this.jobTimeout = timeout;
     }
 }

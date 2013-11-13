@@ -23,30 +23,25 @@ import org.usergrid.rest.AbstractContextResource;
 
 @Component
 @Scope("prototype")
-public abstract class AbstractUserExtensionResource extends AbstractContextResource
-{
+public abstract class AbstractUserExtensionResource extends AbstractContextResource {
 
     UserResource userResource;
 
 
-    public AbstractUserExtensionResource()
-    {
+    public AbstractUserExtensionResource() {
     }
 
 
     @Override
-    public void setParent( AbstractContextResource parent )
-    {
+    public void setParent( AbstractContextResource parent ) {
         super.setParent( parent );
-        if ( parent instanceof UserResource )
-        {
+        if ( parent instanceof UserResource ) {
             this.userResource = ( UserResource ) parent;
         }
     }
 
 
-    public UserResource getUserResource()
-    {
+    public UserResource getUserResource() {
         return userResource;
     }
 }

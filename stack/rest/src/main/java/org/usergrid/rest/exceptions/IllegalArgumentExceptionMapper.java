@@ -23,12 +23,10 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 
 @Provider
-public class IllegalArgumentExceptionMapper extends AbstractExceptionMapper<IllegalArgumentException>
-{
+public class IllegalArgumentExceptionMapper extends AbstractExceptionMapper<IllegalArgumentException> {
 
     @Override
-    public Response toResponse( IllegalArgumentException e )
-    {
+    public Response toResponse( IllegalArgumentException e ) {
         return toResponse( BAD_REQUEST, e.getMessage() );
     }
 }

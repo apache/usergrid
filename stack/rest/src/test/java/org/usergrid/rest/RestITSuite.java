@@ -48,8 +48,7 @@ import org.usergrid.rest.management.users.organizations.UsersOrganizationsResour
                 PermissionsResourceIT.class, UserResourceIT.class, UsersOrganizationsResourceIT.class
         })
 @Concurrent()
-public class RestITSuite
-{
+public class RestITSuite {
 
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();

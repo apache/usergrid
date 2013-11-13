@@ -20,7 +20,6 @@ import com.usergrid.count.common.Count;
 
 
 /** @author zznate */
-public interface CountProducer
-{
+public interface CountProducer {
     void send( Count count );
 }

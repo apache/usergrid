@@ -58,8 +58,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * failure condition if multiple]
  */
 @Concurrent()
-public abstract class AbstractRestIT extends JerseyTest
-{
+public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
 
@@ -80,8 +79,7 @@ public abstract class AbstractRestIT extends JerseyTest
     private static final URI baseURI = setup.getBaseURI();
 
 
-    static
-    {
+    static {
         clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
         descriptor = new WebAppDescriptor.Builder( "org.usergrid.rest" ).clientConfig( clientConfig ).build();
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
@@ -89,8 +87,7 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     @AfterClass
-    public static void teardown()
-    {
+    public static void teardown() {
         access_token = null;
         usersSetup = false;
         adminAccessToken = null;
@@ -99,8 +96,7 @@ public abstract class AbstractRestIT extends JerseyTest
 
     /** Hook to get the token for our base user */
     @Before
-    public void acquireToken() throws Exception
-    {
+    public void acquireToken() throws Exception {
         setupUsers();
         LOG.info( "acquiring token" );
         access_token = userToken( "ed@anuff.com", "sesame" );
@@ -109,38 +105,31 @@ public abstract class AbstractRestIT extends JerseyTest
     }
 
 
-    public static void dumpClasspath( ClassLoader loader )
-    {
+    public static void dumpClasspath( ClassLoader loader ) {
         System.out.println( "Classloader " + loader + ":" );
 
-        if ( loader instanceof URLClassLoader )
-        {
+        if ( loader instanceof URLClassLoader ) {
             URLClassLoader ucl = ( URLClassLoader ) loader;
             System.out.println( "\t" + Arrays.toString( ucl.getURLs() ) );
         }
-        else
-        {
+        else {
             System.out.println( "\t(cannot display components as not a URLClassLoader)" );
         }
 
-        if ( loader.getParent() != null )
-        {
+        if ( loader.getParent() != null ) {
             dumpClasspath( loader.getParent() );
         }
     }
 
 
-    public AbstractRestIT() throws TestContainerException
-    {
+    public AbstractRestIT() throws TestContainerException {
         super( descriptor );
     }
 
 
-    protected void setupUsers()
-    {
+    protected void setupUsers() {
 
-        if ( usersSetup )
-        {
+        if ( usersSetup ) {
             return;
         }
 
@@ -151,8 +140,7 @@ public abstract class AbstractRestIT extends JerseyTest
     }
 
 
-    public void loginClient() throws InterruptedException
-    {
+    public void loginClient() throws InterruptedException {
         // now create a client that logs in ed
 
         // TODO T.N. This is a filthy hack and I should be ashamed of it (which
@@ -173,8 +161,7 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     @Override
-    protected TestContainerFactory getTestContainerFactory()
-    {
+    protected TestContainerFactory getTestContainerFactory() {
         // return new
         // com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
         return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
@@ -182,14 +169,12 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     @Override
-    protected URI getBaseURI()
-    {
+    protected URI getBaseURI() {
         return baseURI;
     }
 
 
-    public static void logNode( JsonNode node )
-    {
+    public static void logNode( JsonNode node ) {
         if ( LOG.isInfoEnabled() ) // - protect against unnecessary call to formatter
         {
             LOG.info( mapToFormattedJsonString( node ) );
@@ -197,8 +182,7 @@ public abstract class AbstractRestIT extends JerseyTest
     }
 
 
-    protected String userToken( String name, String password ) throws Exception
-    {
+    protected String userToken( String name, String password ) throws Exception {
 
         setUserPassword( "ed@anuff.com", "sesame" );
 
@@ -212,21 +196,17 @@ public abstract class AbstractRestIT extends JerseyTest
     }
 
 
-    public void createUser( String username, String email, String password, String name )
-    {
-        try
-        {
+    public void createUser( String username, String email, String password, String name ) {
+        try {
             JsonNode node =
                     resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
                             .queryParam( "username", username ).queryParam( "password", password )
                             .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
-            if ( getError( node ) == null )
-            {
+            if ( getError( node ) == null ) {
                 return;
             }
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             LOG.error( "Miss on user. Creating." );
         }
 
@@ -243,8 +223,7 @@ public abstract class AbstractRestIT extends JerseyTest
     }
 
 
-    public void setUserPassword( String username, String password )
-    {
+    public void setUserPassword( String username, String password ) {
         Map<String, String> data = new HashMap<String, String>();
         data.put( "newpassword", password );
 
@@ -262,23 +241,20 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     /** Acquire the management token for the test@usergrid.com user with the default password */
-    protected String adminToken()
-    {
+    protected String adminToken() {
         adminAccessToken = mgmtToken( "test@usergrid.com", "test" );
         return adminAccessToken;
     }
 
 
     /** Get the super user's access token */
-    protected String superAdminToken()
-    {
+    protected String superAdminToken() {
         return mgmtToken( "superuser", "superpassword" );
     }
 
 
     /** Acquire the management token for the test@usergrid.com user with the given password */
-    protected String mgmtToken( String user, String password )
-    {
+    protected String mgmtToken( String user, String password ) {
         JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", user ).queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
                 .get( JsonNode.class );
@@ -290,24 +266,20 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     /** Get the entity from the entity array in the response */
-    protected JsonNode getEntity( JsonNode response, int index )
-    {
-        if ( response == null )
-        {
+    protected JsonNode getEntity( JsonNode response, int index ) {
+        if ( response == null ) {
             return null;
         }
 
         JsonNode entities = response.get( "entities" );
 
-        if ( entities == null )
-        {
+        if ( entities == null ) {
             return null;
         }
 
         int size = entities.size();
 
-        if ( size <= index )
-        {
+        if ( size <= index ) {
             return null;
         }
 
@@ -316,45 +288,39 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     /** Get the entity from the entity array in the response */
-    protected JsonNode getEntity( JsonNode response, String name )
-    {
+    protected JsonNode getEntity( JsonNode response, String name ) {
         return response.get( "entities" ).get( name );
     }
 
 
     /** Get the uuid from the entity at the specified index */
-    protected UUID getEntityId( JsonNode response, int index )
-    {
+    protected UUID getEntityId( JsonNode response, int index ) {
         return UUID.fromString( getEntity( response, index ).get( "uuid" ).asText() );
     }
 
 
     /** Get the error response */
-    protected JsonNode getError( JsonNode response )
-    {
+    protected JsonNode getError( JsonNode response ) {
         return response.get( "error" );
     }
 
 
     /** convenience to return a ready WebResource.Builder in a single call */
-    protected WebResource.Builder appPath( String path )
-    {
+    protected WebResource.Builder appPath( String path ) {
         return resource().path( "/test-organization/test-app/" + path ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE );
     }
 
 
     /** convenience to return a ready WebResource.Builder in a single call */
-    protected WebResource.Builder path( String path )
-    {
+    protected WebResource.Builder path( String path ) {
         return resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE );
     }
 
 
     /** Sets a management service property locally and remotely. */
-    public void setTestProperty( String key, String value )
-    {
+    public void setTestProperty( String key, String value ) {
 
         // set the value locally (in the Usergrid instance here in the JUnit classloader
         setup.getMgmtSvc().getProperties().setProperty( key, value );
@@ -368,12 +334,10 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     /** Set a management service properties locally and remotely. */
-    public void setTestProperties( Map<String, String> props )
-    {
+    public void setTestProperties( Map<String, String> props ) {
 
         // set the values locally (in the Usergrid instance here in the JUnit classloader
-        for ( String key : props.keySet() )
-        {
+        for ( String key : props.keySet() ) {
             setup.getMgmtSvc().getProperties().setProperty( key, props.get( key ) );
         }
 
@@ -384,8 +348,7 @@ public abstract class AbstractRestIT extends JerseyTest
 
 
     /** Get all management service properties from th Jetty instance of the service. */
-    public Map<String, String> getRemoteTestProperties()
-    {
+    public Map<String, String> getRemoteTestProperties() {
         return resource().path( "/testproperties" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
     }

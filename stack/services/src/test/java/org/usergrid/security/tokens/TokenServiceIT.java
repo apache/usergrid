@@ -35,8 +35,7 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class TokenServiceIT
-{
+public class TokenServiceIT {
 
     static Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
 
@@ -51,8 +50,7 @@ public class TokenServiceIT
 
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
         log.info( "in setup" );
         adminUser =
                 setup.getMgmtSvc().createAdminUser( "edanuff34", "Ed Anuff", "ed@anuff34.com", "test", false, false );
@@ -65,11 +63,9 @@ public class TokenServiceIT
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testEmailConfirmToken() throws Exception
-    {
+    public void testEmailConfirmToken() throws Exception {
 
-        Map<String, Object> data = new HashMap<String, Object>()
-        {
+        Map<String, Object> data = new HashMap<String, Object>() {
             {
                 put( "email", "ed@anuff34.com" );
                 put( "username", "edanuff34" );
@@ -96,8 +92,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void testAdminPrincipalToken() throws Exception
-    {
+    public void testAdminPrincipalToken() throws Exception {
 
         AuthPrincipalInfo adminPrincipal =
                 new AuthPrincipalInfo( AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), UUIDUtils.newTimeUUID() );
@@ -120,8 +115,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void adminPrincipalTokenRevoke() throws Exception
-    {
+    public void adminPrincipalTokenRevoke() throws Exception {
 
 
         AuthPrincipalInfo adminPrincipal =
@@ -144,12 +138,10 @@ public class TokenServiceIT
         // tokens shouldn't be there anymore
         boolean invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( firstToken );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -157,12 +149,10 @@ public class TokenServiceIT
 
         invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( secondToken );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -171,8 +161,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void userPrincipalTokenRevoke() throws Exception
-    {
+    public void userPrincipalTokenRevoke() throws Exception {
         AuthPrincipalInfo adminPrincipal =
                 new AuthPrincipalInfo( AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
                         UUIDUtils.newTimeUUID() );
@@ -194,12 +183,10 @@ public class TokenServiceIT
         // tokens shouldn't be there anymore
         boolean invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( firstToken );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -207,12 +194,10 @@ public class TokenServiceIT
 
         invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( secondToken );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -221,8 +206,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void tokenDurationExpiration() throws Exception
-    {
+    public void tokenDurationExpiration() throws Exception {
         AuthPrincipalInfo adminPrincipal =
                 new AuthPrincipalInfo( AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
                         UUIDUtils.newTimeUUID() );
@@ -258,12 +242,10 @@ public class TokenServiceIT
 
         boolean invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( token );
         }
-        catch ( ExpiredTokenException ite )
-        {
+        catch ( ExpiredTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -272,8 +254,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void tokenDefaults() throws Exception
-    {
+    public void tokenDefaults() throws Exception {
         AuthPrincipalInfo adminPrincipal =
                 new AuthPrincipalInfo( AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
                         UUIDUtils.newTimeUUID() );
@@ -291,8 +272,7 @@ public class TokenServiceIT
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void invalidDurationValue() throws Exception
-    {
+    public void invalidDurationValue() throws Exception {
 
         long maxAge = ( ( TokenServiceImpl ) setup.getTokenSvc() ).getMaxPersistenceTokenAge();
 
@@ -305,8 +285,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void appDefaultExpiration() throws Exception
-    {
+    public void appDefaultExpiration() throws Exception {
 
         OrganizationOwnerInfo orgInfo =
                 setup.getMgmtSvc().createOwnerAndOrganization( "foo", "foobar", "foobar", "foo@bar.com", "foobar" );
@@ -324,8 +303,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void appExpiration() throws Exception
-    {
+    public void appExpiration() throws Exception {
 
         OrganizationOwnerInfo orgInfo =
                 setup.getMgmtSvc().createOwnerAndOrganization( "foo2", "foobar2", "foobar", "foo2@bar.com", "foobar" );
@@ -362,12 +340,10 @@ public class TokenServiceIT
 
         boolean invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( token );
         }
-        catch ( ExpiredTokenException ite )
-        {
+        catch ( ExpiredTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -376,8 +352,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void tokenDeletion() throws Exception
-    {
+    public void tokenDeletion() throws Exception {
         AuthPrincipalInfo adminPrincipal =
                 new AuthPrincipalInfo( AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
                         UUIDUtils.newTimeUUID() );
@@ -393,12 +368,10 @@ public class TokenServiceIT
 
         boolean invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( realToken );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -411,8 +384,7 @@ public class TokenServiceIT
 
 
     @Test
-    public void appExpirationInfinite() throws Exception
-    {
+    public void appExpirationInfinite() throws Exception {
 
         OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "appExpirationInfinite",
                 "appExpirationInfinite", "foobar", "appExpirationInfinite@bar.com", "foobar" );
@@ -443,12 +415,10 @@ public class TokenServiceIT
 
         boolean invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( token );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 
@@ -458,12 +428,10 @@ public class TokenServiceIT
 
         invalidTokenException = false;
 
-        try
-        {
+        try {
             setup.getTokenSvc().getTokenInfo( token );
         }
-        catch ( InvalidTokenException ite )
-        {
+        catch ( InvalidTokenException ite ) {
             invalidTokenException = true;
         }
 

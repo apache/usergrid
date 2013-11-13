@@ -20,36 +20,30 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 
-public class WebSocketKeyStore
-{
+public class WebSocketKeyStore {
     private static final short[] DATA = new short[] { };
 
 
-    private WebSocketKeyStore()
-    {
+    private WebSocketKeyStore() {
         throw new AssertionError();
     }
 
 
-    public static InputStream asInputStream()
-    {
+    public static InputStream asInputStream() {
         byte[] data = new byte[DATA.length];
-        for ( int i = 0; i < data.length; i++ )
-        {
+        for ( int i = 0; i < data.length; i++ ) {
             data[i] = ( byte ) DATA[i];
         }
         return new ByteArrayInputStream( data );
     }
 
 
-    public static char[] getCertificatePassword()
-    {
+    public static char[] getCertificatePassword() {
         return "jwebsocket".toCharArray();
     }
 
 
-    public static char[] getKeyStorePassword()
-    {
+    public static char[] getKeyStorePassword() {
         return "jwebsocket".toCharArray();
     }
 }

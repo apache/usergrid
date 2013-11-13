@@ -24,8 +24,7 @@ import java.lang.annotation.Target;
 
 @Target(value = { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EntityDictionary
-{
+public @interface EntityDictionary {
 
     Class<?> keyType();
 

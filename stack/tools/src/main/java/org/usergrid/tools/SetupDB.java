@@ -25,8 +25,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 
-public class SetupDB extends ToolBase
-{
+public class SetupDB extends ToolBase {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger( SetupDB.class );
@@ -34,8 +33,7 @@ public class SetupDB extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().withDescription( "Cassandra host" ).create( "host" );
@@ -51,8 +49,7 @@ public class SetupDB extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         setupCassandra();

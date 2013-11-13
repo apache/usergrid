@@ -44,20 +44,17 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 
 
 @Concurrent()
-public class EntityManagerIT extends AbstractCoreIT
-{
+public class EntityManagerIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityManagerIT.class );
 
 
-    public EntityManagerIT()
-    {
+    public EntityManagerIT() {
         super();
     }
 
 
     @Test
-    public void testEntityManager() throws Exception
-    {
+    public void testEntityManager() throws Exception {
         LOG.info( "EntityManagerIT.testEntityManagerTest" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testEntityManagerTest" );
@@ -113,8 +110,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testCreateAndGet() throws Exception
-    {
+    public void testCreateAndGet() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndGet" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndGet" );
@@ -123,8 +119,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
         int i = 0;
         List<Entity> things = new ArrayList<Entity>();
-        for ( i = 0; i < 10; i++ )
-        {
+        for ( i = 0; i < 10; i++ ) {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", "thing" + i );
 
@@ -138,8 +133,7 @@ public class EntityManagerIT extends AbstractCoreIT
         assertEquals( "should be ten entities", 10, things.size() );
 
         i = 0;
-        for ( Entity entity : things )
-        {
+        for ( Entity entity : things ) {
 
             Entity thing = em.get( entity.getUuid() );
             assertNotNull( "thing should not be null", thing );
@@ -150,8 +144,7 @@ public class EntityManagerIT extends AbstractCoreIT
         }
 
         List<UUID> ids = new ArrayList<UUID>();
-        for ( Entity entity : things )
-        {
+        for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
             Entity en = em.get( entity.getUuid() );
@@ -168,8 +161,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
         i = 0;
         Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
-        for ( Entity thing : results )
-        {
+        for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
@@ -188,8 +180,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testDictionaries() throws Exception
-    {
+    public void testDictionaries() throws Exception {
         LOG.info( "EntityDaoTest.testDictionaries" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testDictionaries" );
@@ -232,8 +223,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testProperties() throws Exception
-    {
+    public void testProperties() throws Exception {
         LOG.info( "EntityDaoTest.testProperties" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testProperties" );
@@ -258,8 +248,7 @@ public class EntityManagerIT extends AbstractCoreIT
         assertEquals( "wrong value for property beta", new Long( 2 ), props.get( "beta" ) );
         assertEquals( "wrong value for property gamma", new Long( 3 ), props.get( "gamma" ) );
 
-        for ( Entry<String, Object> entry : props.entrySet() )
-        {
+        for ( Entry<String, Object> entry : props.entrySet() ) {
             LOG.info( entry.getKey() + " : " + entry.getValue() );
         }
 
@@ -272,8 +261,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testCreateAndDelete() throws Exception
-    {
+    public void testCreateAndDelete() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndDelete" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndDelete" );
@@ -304,8 +292,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testCreateAndDeleteUser() throws Exception
-    {
+    public void testCreateAndDeleteUser() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndDeleteUser" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndDeleteUser" );
@@ -353,8 +340,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testJson() throws Exception
-    {
+    public void testJson() throws Exception {
         LOG.info( "EntityDaoTest.testProperties" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testJson" );
@@ -389,8 +375,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
     @Test
     @Ignore("There is a concurrency issue due to counters not being thread safe: see USERGRID-1753")
-    public void testEntityCounters() throws Exception
-    {
+    public void testEntityCounters() throws Exception {
         LOG.info( "EntityManagerIT#testEntityCounters" );
         EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
 
@@ -432,8 +417,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testCreateAndList() throws Exception
-    {
+    public void testCreateAndList() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndDelete" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndList" );
@@ -474,8 +458,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testCorrectType() throws Exception
-    {
+    public void testCorrectType() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCorrectType" );
 
@@ -501,8 +484,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void testImmutableForcedPropChange() throws Exception
-    {
+    public void testImmutableForcedPropChange() throws Exception {
         LOG.info( "EntityDaoTest.testProperties" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testNamePropChanges" );
@@ -526,8 +508,7 @@ public class EntityManagerIT extends AbstractCoreIT
 
 
     @Test
-    public void ownershipScopeCorrect() throws Exception
-    {
+    public void ownershipScopeCorrect() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "ownershipScopeCorrect" );
 

@@ -24,8 +24,7 @@ import org.usergrid.batch.JobRuntime;
  *
  * @author tnine
  */
-public interface JobRuntimeService
-{
+public interface JobRuntimeService {
 
     /**
      * Perform any heartbeat operations required.  Update jobExecution with the appropriate data

@@ -39,8 +39,7 @@ import static org.usergrid.utils.MapUtils.filter;
 
 
 /** Encapsulate the transport and error reporting of email */
-public class MailUtils
-{
+public class MailUtils {
 
     private static final Logger logger = LoggerFactory.getLogger( MailUtils.class );
 
@@ -52,8 +51,7 @@ public class MailUtils
     private static final String PROP_TRANSPORT = MAIL_PROP_PREFIX + "transport.protocol";
 
 
-    public static Properties getMailProperties( Properties properties )
-    {
+    public static Properties getMailProperties( Properties properties ) {
         return filter( properties, MAIL_PROP_PREFIX );
     }
 
@@ -70,15 +68,13 @@ public class MailUtils
      *
      * @param plainText can be null
      */
-    public void sendMail( Properties props, String to, String from, String subject, String plainText, String htmlText )
-    {
+    public void sendMail( Properties props, String to, String from, String subject, String plainText,
+                          String htmlText ) {
         Preconditions.checkArgument( StringUtils.isNotBlank( htmlText ) || StringUtils.isNotBlank( plainText ),
                 "htmlText and plainText were both blank" );
 
-        try
-        {
-            if ( props == null )
-            {
+        try {
+            if ( props == null ) {
                 props = System.getProperties();
             }
 
@@ -92,20 +88,16 @@ public class MailUtils
 
             MimeMultipart msgContent = new MimeMultipart( "alternative" );
 
-            if ( ( htmlText != null ) && ( plainText == null ) )
-            {
-                try
-                {
+            if ( ( htmlText != null ) && ( plainText == null ) ) {
+                try {
                     plainText = Jsoup.parse( htmlText ).body().wrap( "<pre></pre>" ).text();
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Html parse error", e );
                 }
             }
 
-            if ( plainText != null )
-            {
+            if ( plainText != null ) {
                 MimeBodyPart plainPart = new MimeBodyPart();
                 plainPart.setContent( plainText, "text/plain" );
                 plainPart.setHeader( MIME_VERSION, "1.0" );
@@ -113,8 +105,7 @@ public class MailUtils
                 msgContent.addBodyPart( plainPart );
             }
 
-            if ( htmlText != null )
-            {
+            if ( htmlText != null ) {
                 MimeBodyPart htmlPart = new MimeBodyPart();
                 htmlPart.setContent( htmlText, "text/html" );
                 htmlPart.setHeader( MIME_VERSION, "1.0" );
@@ -136,16 +127,13 @@ public class MailUtils
             transport.close();
             logger.info( String.format( LOG_PREFIX_OK, to ) );
         }
-        catch ( AddressException ae )
-        {
+        catch ( AddressException ae ) {
             logger.error( createErrorMessage( "could not send to bad address", to ), ae );
         }
-        catch ( MessagingException me )
-        {
+        catch ( MessagingException me ) {
             logger.error( createErrorMessage( "could not deliver message", to ), me );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "General exception delivering mail", to, e );
         }
     }
@@ -155,14 +143,12 @@ public class MailUtils
      * Delegates to {@link #sendMail(java.util.Properties, String, String, String, String, String)} with null as the
      * 'plainText' argument to such.
      */
-    public void sendHtmlMail( Properties props, String to, String from, String subject, String html )
-    {
+    public void sendHtmlMail( Properties props, String to, String from, String subject, String html ) {
         sendMail( props, to, from, subject, null, html );
     }
 
 
-    String createErrorMessage( String message, String toAddress )
-    {
+    String createErrorMessage( String message, String toAddress ) {
         return String.format( LOG_PREFIX, message, toAddress );
     }
 }

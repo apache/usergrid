@@ -21,15 +21,13 @@ import org.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class ContainsOperand extends EqualityOperand
-{
+public class ContainsOperand extends EqualityOperand {
 
     /**
      * @param property
      * @param literal
      */
-    public ContainsOperand( Token t )
-    {
+    public ContainsOperand( Token t ) {
         super( t );
     }
 
@@ -42,14 +40,12 @@ public class ContainsOperand extends EqualityOperand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException
-    {
+    public void visit( QueryVisitor visitor ) throws PersistenceException {
         visitor.visit( this );
     }
 
 
-    public StringLiteral getString()
-    {
+    public StringLiteral getString() {
         return ( StringLiteral ) getLiteral();
     }
 
@@ -58,8 +54,7 @@ public class ContainsOperand extends EqualityOperand
      * @see org.usergrid.persistence.query.tree.EqualityOperand#newProperty(java.lang.String)
      */
     @Override
-    protected Property newProperty( String name )
-    {
+    protected Property newProperty( String name ) {
         return new ContainsProperty( name );
     }
 
@@ -68,8 +63,7 @@ public class ContainsOperand extends EqualityOperand
      * @see org.usergrid.persistence.query.tree.EqualityOperand#getProperty()
      */
     @Override
-    public ContainsProperty getProperty()
-    {
+    public ContainsProperty getProperty() {
         return ( ContainsProperty ) this.children.get( 0 );
     }
 }

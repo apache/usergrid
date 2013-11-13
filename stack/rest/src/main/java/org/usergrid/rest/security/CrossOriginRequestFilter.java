@@ -25,15 +25,13 @@ import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 
-public class CrossOriginRequestFilter implements ContainerResponseFilter
-{
+public class CrossOriginRequestFilter implements ContainerResponseFilter {
 
     public static final Logger logger = LoggerFactory.getLogger( CrossOriginRequestFilter.class );
 
 
     @Override
-    public ContainerResponse filter( ContainerRequest request, ContainerResponse response )
-    {
+    public ContainerResponse filter( ContainerRequest request, ContainerResponse response ) {
 
         return CORSUtils.allowAllOrigins( request, response );
     }

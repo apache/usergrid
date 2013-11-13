@@ -35,13 +35,11 @@ import static org.junit.Assert.assertTrue;
 
 /** @author tnine */
 @Concurrent()
-public class RolesServiceIT extends AbstractServiceIT
-{
+public class RolesServiceIT extends AbstractServiceIT {
 
     /** Happy path test */
     @Test
-    public void createNewRolePost() throws Exception
-    {
+    public void createNewRolePost() throws Exception {
         createAndTestRoles( ServiceAction.POST, "manager", "Manager Title", 600000l );
         createAndTestPermission( ServiceAction.POST, "manager", "access:/**" );
     }
@@ -49,8 +47,7 @@ public class RolesServiceIT extends AbstractServiceIT
 
     /** Happy path test */
     @Test
-    public void createNewRolePut() throws Exception
-    {
+    public void createNewRolePut() throws Exception {
 
         createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
@@ -58,8 +55,7 @@ public class RolesServiceIT extends AbstractServiceIT
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void noRoleName() throws Exception
-    {
+    public void noRoleName() throws Exception {
         app.put( "title", "Manager Title" );
         app.put( "inactivity", 600000l );
 
@@ -69,8 +65,7 @@ public class RolesServiceIT extends AbstractServiceIT
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void noPermissionsOnPost() throws Exception
-    {
+    public void noPermissionsOnPost() throws Exception {
         app.put( "name", "manager" );
         app.put( "title", "Manager Title" );
         app.put( "inactivity", 600000l );
@@ -91,8 +86,7 @@ public class RolesServiceIT extends AbstractServiceIT
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void noPermissionsOnPut() throws Exception
-    {
+    public void noPermissionsOnPut() throws Exception {
         app.put( "name", "manager" );
         app.put( "title", "Manager Title" );
         app.put( "inactivity", 600000l );
@@ -117,8 +111,7 @@ public class RolesServiceIT extends AbstractServiceIT
     /** Test deleting all permissions */
     @SuppressWarnings("unchecked")
     @Test
-    public void deletePermissions() throws Exception
-    {
+    public void deletePermissions() throws Exception {
         createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/places/**" );
@@ -191,8 +184,7 @@ public class RolesServiceIT extends AbstractServiceIT
 
     /** Test deleting all permissions */
     @Test
-    public void deleteRoles() throws Exception
-    {
+    public void deleteRoles() throws Exception {
         createAndTestRoles( ServiceAction.PUT, "manager", "Manager Title", 600000l );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/**" );
         createAndTestPermission( ServiceAction.PUT, "manager", "access:/places/**" );
@@ -222,8 +214,7 @@ public class RolesServiceIT extends AbstractServiceIT
      * @param action the action to take
      */
     private void createAndTestRoles( ServiceAction action, String roleName, String roleTitle, long inactivity )
-            throws Exception
-    {
+            throws Exception {
         app.put( "name", roleName );
 
         app.put( "title", roleTitle );
@@ -260,8 +251,7 @@ public class RolesServiceIT extends AbstractServiceIT
      * @param grant the permission to grant
      */
     @SuppressWarnings("unchecked")
-    private void createAndTestPermission( ServiceAction action, String roleName, String grant ) throws Exception
-    {
+    private void createAndTestPermission( ServiceAction action, String roleName, String grant ) throws Exception {
         app.put( "permission", grant );
 
         // now grant permissions

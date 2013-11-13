@@ -26,8 +26,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 /** @author tnine */
 @Component("org.usergrid.security.crypto.command.Md5HashCommand")
-public class Md5HashCommand extends SaltedHasherCommand
-{
+public class Md5HashCommand extends SaltedHasherCommand {
 
 
     /* (non-Javadoc)
@@ -35,8 +34,7 @@ public class Md5HashCommand extends SaltedHasherCommand
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
     @Override
-    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         byte[] data = maybeSalt( input, applicationId, userId );
 
         return DigestUtils.md5Hex( data ).getBytes( UTF8 );
@@ -48,8 +46,7 @@ public class Md5HashCommand extends SaltedHasherCommand
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
     @Override
-    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         return hash( input, info, userId, applicationId );
     }
 
@@ -58,8 +55,7 @@ public class Md5HashCommand extends SaltedHasherCommand
      * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
      */
     @Override
-    public String getName()
-    {
+    public String getName() {
         return MD5;
     }
 }

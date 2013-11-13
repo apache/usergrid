@@ -21,26 +21,22 @@ import org.jboss.netty.channel.MessageEvent;
 import org.usergrid.mongo.MongoChannelHandler;
 
 
-public abstract class OpCrud extends Message
-{
+public abstract class OpCrud extends Message {
 
     protected String fullCollectionName;
 
 
-    public String getFullCollectionName()
-    {
+    public String getFullCollectionName() {
         return fullCollectionName;
     }
 
 
-    public String getDatabaseName()
-    {
+    public String getDatabaseName() {
         return getDatabaseName( fullCollectionName );
     }
 
 
-    public String getCollectionName()
-    {
+    public String getCollectionName() {
         return getCollectionName( fullCollectionName );
     }
 

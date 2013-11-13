@@ -20,26 +20,22 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceRequest;
 
 
-public class ForbiddenServiceOperationException extends ServiceInvocationException
-{
+public class ForbiddenServiceOperationException extends ServiceInvocationException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public ForbiddenServiceOperationException( ServiceContext context )
-    {
+    public ForbiddenServiceOperationException( ServiceContext context ) {
         super( context, "Service operation not allowed" );
     }
 
 
-    public ForbiddenServiceOperationException( ServiceRequest request )
-    {
+    public ForbiddenServiceOperationException( ServiceRequest request ) {
         super( request, "Service operation not allowed" );
     }
 
 
-    public ForbiddenServiceOperationException( ServiceRequest request, String message )
-    {
+    public ForbiddenServiceOperationException( ServiceRequest request, String message ) {
         super( request, message );
     }
 }

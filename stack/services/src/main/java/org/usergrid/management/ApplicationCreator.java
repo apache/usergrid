@@ -9,7 +9,6 @@ import org.usergrid.management.exceptions.ApplicationCreationException;
  *
  * @author zznate
  */
-public interface ApplicationCreator
-{
+public interface ApplicationCreator {
     ApplicationInfo createSampleFor( OrganizationInfo organizationInfo ) throws ApplicationCreationException;
 }

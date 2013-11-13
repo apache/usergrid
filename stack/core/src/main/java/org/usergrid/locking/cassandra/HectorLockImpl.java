@@ -28,8 +28,7 @@ import me.prettyprint.hector.api.locking.HLockTimeoutException;
 
 
 /** @author tnine */
-public class HectorLockImpl implements Lock
-{
+public class HectorLockImpl implements Lock {
 
     private HLock lock;
     private HLockManager lm;
@@ -39,8 +38,7 @@ public class HectorLockImpl implements Lock
     /**
      *
      */
-    public HectorLockImpl( HLock lock, HLockManager lm )
-    {
+    public HectorLockImpl( HLock lock, HLockManager lm ) {
         this.lock = lock;
         this.lm = lm;
     }
@@ -50,15 +48,12 @@ public class HectorLockImpl implements Lock
      * @see org.usergrid.locking.Lock#acquire(long, java.util.concurrent.TimeUnit)
      */
     @Override
-    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException
-    {
-        try
-        {
+    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException {
+        try {
             lm.acquire( this.lock, time.toMillis( timeout ) );
             count.incrementAndGet();
         }
-        catch ( HLockTimeoutException hlte )
-        {
+        catch ( HLockTimeoutException hlte ) {
             return false;
         }
 
@@ -70,8 +65,7 @@ public class HectorLockImpl implements Lock
      * @see org.usergrid.locking.Lock#lock()
      */
     @Override
-    public void lock() throws UGLockException
-    {
+    public void lock() throws UGLockException {
         lm.acquire( lock );
         count.incrementAndGet();
     }
@@ -81,12 +75,10 @@ public class HectorLockImpl implements Lock
      * @see org.usergrid.locking.Lock#release()
      */
     @Override
-    public void unlock() throws UGLockException
-    {
+    public void unlock() throws UGLockException {
         int current = count.decrementAndGet();
 
-        if ( current == 0 )
-        {
+        if ( current == 0 ) {
             lm.release( this.lock );
         }
     }

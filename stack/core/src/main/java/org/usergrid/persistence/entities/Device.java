@@ -30,87 +30,76 @@ import org.usergrid.persistence.annotations.EntityProperty;
 
 /** The Device entity class for representing devices in the service. */
 @XmlRootElement
-public class Device extends TypedEntity
-{
+public class Device extends TypedEntity {
 
     public static final String ENTITY_TYPE = "device";
     public static final String RECEIPTS_COLLECTION = "receipts";
 
-    @EntityProperty( indexed = true, fulltextIndexed = false, required = false, aliasProperty = true, unique = true,
-            basic = true )
+    @EntityProperty(indexed = true, fulltextIndexed = false, required = false, aliasProperty = true, unique = true,
+            basic = true)
     protected String name;
 
-    @EntityCollection( type = "user", linkedCollection = "devices" )
+    @EntityCollection(type = "user", linkedCollection = "devices")
     protected List<UUID> users;
 
-    @EntityCollection( type = "receipt" )
+    @EntityCollection(type = "receipt")
     protected List<UUID> receipts;
 
     @EntityProperty
     protected Integer badge;
 
 
-    public Device()
-    {
+    public Device() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public Device( UUID id )
-    {
+    public Device( UUID id ) {
         uuid = id;
     }
 
 
     @Override
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getName()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getUsers()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getUsers() {
         return users;
     }
 
 
-    public void setUsers( List<UUID> users )
-    {
+    public void setUsers( List<UUID> users ) {
         this.users = users;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getReceipts()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getReceipts() {
         return receipts;
     }
 
 
-    public void setReceipts( List<UUID> receipts )
-    {
+    public void setReceipts( List<UUID> receipts ) {
         this.receipts = receipts;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Integer getBadge()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Integer getBadge() {
         return badge;
     }
 
 
-    public void setBadge( Integer badge )
-    {
+    public void setBadge( Integer badge ) {
         this.badge = badge;
     }
 }

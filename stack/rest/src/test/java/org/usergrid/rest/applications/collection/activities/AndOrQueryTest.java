@@ -22,16 +22,14 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class AndOrQueryTest extends AbstractRestIT
-{
+public class AndOrQueryTest extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test //USERGRID-900
-    public void queriesWithAndPastLimit()
-    {
+    public void queriesWithAndPastLimit() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -44,21 +42,17 @@ public class AndOrQueryTest extends AbstractRestIT
         props.put( "content", "bragh" );
 
 
-        for ( int i = 0; i < 2000; i++ )
-        {
-            if ( i < 1000 )
-            {
+        for ( int i = 0; i < 2000; i++ ) {
+            if ( i < 1000 ) {
                 props.put( "madeup", false );
             }
-            else
-            {
+            else {
                 props.put( "madeup", true );
             }
 
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
-            if ( i == 0 )
-            {
+            if ( i == 0 ) {
                 created = activity.findValue( "created" ).getLongValue();
             }
         }
@@ -71,8 +65,7 @@ public class AndOrQueryTest extends AbstractRestIT
 
 
     @Test //USERGRID-1475
-    public void displayFullQueriesInLimit()
-    {
+    public void displayFullQueriesInLimit() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -81,15 +74,12 @@ public class AndOrQueryTest extends AbstractRestIT
         props.put( "actor", actor );
         props.put( "content", "bragh" );
 
-        for ( int i = 0; i < 20; i++ )
-        {
+        for ( int i = 0; i < 20; i++ ) {
 
-            if ( i < 10 )
-            {
+            if ( i < 10 ) {
                 props.put( "verb", "go" );
             }
-            else
-            {
+            else {
                 props.put( "verb", "stop" );
             }
 
@@ -102,8 +92,7 @@ public class AndOrQueryTest extends AbstractRestIT
 
         assertEquals( 10, incorrectNode.get( "entities" ).size() );
 
-        for ( int i = 0; i < 10; i++ )
-        {
+        for ( int i = 0; i < 10; i++ ) {
             assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).getIntValue() );
             assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).getTextValue() );
         }
@@ -111,8 +100,7 @@ public class AndOrQueryTest extends AbstractRestIT
 
 
     @Test //USERGRID-1615
-    public void queryReturnCount() throws Exception
-    {
+    public void queryReturnCount() throws Exception {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -136,8 +124,7 @@ public class AndOrQueryTest extends AbstractRestIT
 
 
     @Test //Check to make sure that asc works
-    public void queryCheckAsc() throws Exception
-    {
+    public void queryCheckAsc() throws Exception {
 
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
@@ -157,8 +144,7 @@ public class AndOrQueryTest extends AbstractRestIT
 
 
     @Ignore//Test to make sure all 1000 exist with a regular query
-    public void queryReturnCheck() throws Exception
-    {
+    public void queryReturnCheck() throws Exception {
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
@@ -175,8 +161,7 @@ public class AndOrQueryTest extends AbstractRestIT
 
 
     @Ignore
-    public void queryReturnCheckWithShortHand()
-    {
+    public void queryReturnCheckWithShortHand() {
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 

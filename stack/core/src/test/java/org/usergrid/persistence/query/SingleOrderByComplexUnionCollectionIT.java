@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByComplexUnionCollectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByComplexUnionCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByComplexUnionCollection() throws Exception
-    {
+    public void singleOrderByComplexUnionCollection() throws Exception {
         singleOrderByComplexUnion( new CollectionIoHelper() );
     }
 }

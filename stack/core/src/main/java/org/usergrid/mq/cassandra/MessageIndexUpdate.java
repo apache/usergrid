@@ -47,8 +47,7 @@ import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.IndexUtils.getKeyValueList;
 
 
-public class MessageIndexUpdate
-{
+public class MessageIndexUpdate {
 
     public static final boolean FULLTEXT = false;
 
@@ -63,20 +62,16 @@ public class MessageIndexUpdate
     public static final LongSerializer le = new LongSerializer();
 
 
-    public MessageIndexUpdate( Message message )
-    {
+    public MessageIndexUpdate( Message message ) {
         this.message = message;
 
-        if ( message.isIndexed() )
-        {
+        if ( message.isIndexed() ) {
             propertyEntryList = new HashMap<String, List<Map.Entry<String, Object>>>();
 
-            for ( Map.Entry<String, Object> property : message.getProperties().entrySet() )
-            {
+            for ( Map.Entry<String, Object> property : message.getProperties().entrySet() ) {
 
                 if ( !MESSAGE_PROPERTIES.containsKey( property.getKey() ) && validIndexableValueOrJson(
-                        property.getValue() ) )
-                {
+                        property.getValue() ) ) {
 
                     List<Map.Entry<String, Object>> list =
                             getKeyValueList( property.getKey(), property.getValue(), FULLTEXT );
@@ -85,26 +80,20 @@ public class MessageIndexUpdate
                 }
             }
         }
-        else
-        {
+        else {
             propertyEntryList = null;
         }
     }
 
 
-    public void addToMutation( Mutator<ByteBuffer> batch, UUID queueId, long shard_ts, long timestamp )
-    {
+    public void addToMutation( Mutator<ByteBuffer> batch, UUID queueId, long shard_ts, long timestamp ) {
 
-        if ( propertyEntryList != null )
-        {
-            for ( Entry<String, List<Entry<String, Object>>> property : propertyEntryList.entrySet() )
-            {
+        if ( propertyEntryList != null ) {
+            for ( Entry<String, List<Entry<String, Object>>> property : propertyEntryList.entrySet() ) {
 
-                for ( Map.Entry<String, Object> indexEntry : property.getValue() )
-                {
+                for ( Map.Entry<String, Object> indexEntry : property.getValue() ) {
 
-                    if ( validIndexableValue( indexEntry.getValue() ) )
-                    {
+                    if ( validIndexableValue( indexEntry.getValue() ) ) {
 
                         batch.addInsertion( bytebuffer( key( queueId, shard_ts, indexEntry.getKey() ) ),
                                 PROPERTY_INDEX.getColumnFamily(), createColumn(
@@ -125,8 +114,7 @@ public class MessageIndexUpdate
     }
 
 
-    public Message getMessage()
-    {
+    public Message getMessage() {
         return message;
     }
 }

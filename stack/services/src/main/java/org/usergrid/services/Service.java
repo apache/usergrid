@@ -22,8 +22,7 @@ import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 
 
-public interface Service
-{
+public interface Service {
 
     public static final String GENERIC_ENTITY_TYPE = "entity";
 

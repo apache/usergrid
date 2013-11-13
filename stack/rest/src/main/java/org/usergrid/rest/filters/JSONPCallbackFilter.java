@@ -30,8 +30,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 
 @Component
-public class JSONPCallbackFilter implements ContainerRequestFilter
-{
+public class JSONPCallbackFilter implements ContainerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger( JSONPCallbackFilter.class );
 
@@ -39,35 +38,27 @@ public class JSONPCallbackFilter implements ContainerRequestFilter
     protected HttpServletRequest httpServletRequest;
 
 
-    public JSONPCallbackFilter()
-    {
+    public JSONPCallbackFilter() {
         logger.info( "JSONPCallbackFilter is installed" );
     }
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request )
-    {
+    public ContainerRequest filter( ContainerRequest request ) {
         String callback = null;
-        try
-        {
+        try {
             callback = httpServletRequest.getParameter( "callback" );
         }
-        catch ( IllegalStateException e )
-        {
+        catch ( IllegalStateException e ) {
         }
-        if ( callback == null )
-        {
-            try
-            {
+        if ( callback == null ) {
+            try {
                 callback = request.getQueryParameters().getFirst( "callback" );
             }
-            catch ( IllegalStateException e )
-            {
+            catch ( IllegalStateException e ) {
             }
         }
-        if ( isNotBlank( callback ) )
-        {
+        if ( isNotBlank( callback ) ) {
             request.getRequestHeaders().putSingle( "Accept", "application/javascript" );
         }
         return request;

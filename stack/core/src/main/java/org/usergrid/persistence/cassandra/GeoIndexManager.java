@@ -47,18 +47,15 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.logBa
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
 
-public class GeoIndexManager
-{
+public class GeoIndexManager {
 
     private static final Logger logger = LoggerFactory.getLogger( GeoIndexManager.class );
 
     /**
      * We only ever go down to max resolution of 9 because we use bucket hashing. Every level divides the region by
-     * 1/16.
-     * Our original "box" is 90 degrees by 45 degrees. We therefore have 90 * (1/16)^(r-1) and 45 * (1/16)^(r-1) for our
-     * size where r is the largest bucket resolution. This gives us a size of 90 deg => 0.0000000209547 deg = .2cm
-     * and 45
-     * deg => 0.00000001047735 deg = .1 cm
+     * 1/16. Our original "box" is 90 degrees by 45 degrees. We therefore have 90 * (1/16)^(r-1) and 45 * (1/16)^(r-1)
+     * for our size where r is the largest bucket resolution. This gives us a size of 90 deg => 0.0000000209547 deg =
+     * .2cm and 45 deg => 0.00000001047735 deg = .1 cm
      */
     public static final int MAX_RESOLUTION = 9;
 
@@ -67,13 +64,11 @@ public class GeoIndexManager
     CassandraService cass;
 
 
-    public GeoIndexManager()
-    {
+    public GeoIndexManager() {
     }
 
 
-    public GeoIndexManager init( EntityManagerImpl em )
-    {
+    public GeoIndexManager init( EntityManagerImpl em ) {
         this.em = em;
         this.cass = em.getCass();
         return this;
@@ -81,8 +76,7 @@ public class GeoIndexManager
 
 
     public static Mutator<ByteBuffer> addLocationEntryInsertionToMutator( Mutator<ByteBuffer> m, Object key,
-                                                                          EntityLocationRef entry )
-    {
+                                                                          EntityLocationRef entry ) {
 
         DynamicComposite columnName = entry.getColumnName();
         DynamicComposite columnValue = entry.getColumnValue();
@@ -103,8 +97,7 @@ public class GeoIndexManager
                                                                        IndexBucketLocator locator, UUID appId,
                                                                        String propertyName, String geoCell,
                                                                        UUID[] index_keys, ByteBuffer columnName,
-                                                                       ByteBuffer columnValue, long timestamp )
-    {
+                                                                       ByteBuffer columnValue, long timestamp ) {
 
         // entity_id,prop_name
         Object property_index_key =
@@ -149,8 +142,7 @@ public class GeoIndexManager
 
     public static void batchStoreLocationInConnectionsIndex( Mutator<ByteBuffer> m, IndexBucketLocator locator,
                                                              UUID appId, UUID[] index_keys, String propertyName,
-                                                             EntityLocationRef location )
-    {
+                                                             EntityLocationRef location ) {
 
         Point p = location.getPoint();
         List<String> cells = GeocellManager.generateGeoCell( p );
@@ -158,8 +150,7 @@ public class GeoIndexManager
         ByteBuffer columnName = location.getColumnName().serialize();
         ByteBuffer columnValue = location.getColumnValue().serialize();
         long ts = location.getTimestampInMicros();
-        for ( String cell : cells )
-        {
+        for ( String cell : cells ) {
             batchAddConnectionIndexEntries( m, locator, appId, propertyName, cell, index_keys, columnName, columnValue,
                     ts );
         }
@@ -171,8 +162,7 @@ public class GeoIndexManager
 
 
     private static Mutator<ByteBuffer> addLocationEntryDeletionToMutator( Mutator<ByteBuffer> m, Object key,
-                                                                          EntityLocationRef entry )
-    {
+                                                                          EntityLocationRef entry ) {
 
         DynamicComposite columnName = entry.getColumnName();
         long ts = entry.getTimestampInMicros();
@@ -190,8 +180,7 @@ public class GeoIndexManager
                                                                           IndexBucketLocator locator, UUID appId,
                                                                           String propertyName, String geoCell,
                                                                           UUID[] index_keys, ByteBuffer columnName,
-                                                                          long timestamp )
-    {
+                                                                          long timestamp ) {
 
         // entity_id,prop_name
         Object property_index_key =
@@ -239,8 +228,7 @@ public class GeoIndexManager
 
     public static void batchDeleteLocationInConnectionsIndex( Mutator<ByteBuffer> m, IndexBucketLocator locator,
                                                               UUID appId, UUID[] index_keys, String propertyName,
-                                                              EntityLocationRef location )
-    {
+                                                              EntityLocationRef location ) {
 
         Point p = location.getPoint();
         List<String> cells = GeocellManager.generateGeoCell( p );
@@ -249,8 +237,7 @@ public class GeoIndexManager
 
         long ts = location.getTimestampInMicros();
 
-        for ( String cell : cells )
-        {
+        for ( String cell : cells ) {
 
             batchDeleteConnectionIndexEntries( m, locator, appId, propertyName, cell, index_keys, columnName, ts );
         }
@@ -263,14 +250,12 @@ public class GeoIndexManager
 
     public static void batchStoreLocationInCollectionIndex( Mutator<ByteBuffer> m, IndexBucketLocator locator,
                                                             UUID appId, Object key, UUID entityId,
-                                                            EntityLocationRef location )
-    {
+                                                            EntityLocationRef location ) {
 
         Point p = location.getPoint();
         List<String> cells = GeocellManager.generateGeoCell( p );
 
-        for ( int i = 0; i < MAX_RESOLUTION; i++ )
-        {
+        for ( int i = 0; i < MAX_RESOLUTION; i++ ) {
             String cell = cells.get( i );
 
             String indexBucket = locator.getBucket( appId, IndexType.GEO, entityId, cell );
@@ -278,8 +263,7 @@ public class GeoIndexManager
             addLocationEntryInsertionToMutator( m, key( key, DICTIONARY_GEOCELL, cell, indexBucket ), location );
         }
 
-        if ( logger.isInfoEnabled() )
-        {
+        if ( logger.isInfoEnabled() ) {
             logger.info( "Geocells to be saved for Point({},{}) are: {}", new Object[] {
                     location.getLatitude(), location.getLongitude(), cells
             } );
@@ -288,8 +272,7 @@ public class GeoIndexManager
 
 
     public void storeLocationInCollectionIndex( EntityRef owner, String collectionName, UUID entityId,
-                                                String propertyName, EntityLocationRef location )
-    {
+                                                String propertyName, EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
         Mutator<ByteBuffer> m = createMutator( ko, ByteBufferSerializer.get() );
@@ -302,27 +285,23 @@ public class GeoIndexManager
 
 
     public static void batchRemoveLocationFromCollectionIndex( Mutator<ByteBuffer> m, IndexBucketLocator locator,
-                                                               UUID appId, Object key, EntityLocationRef location )
-    {
+                                                               UUID appId, Object key, EntityLocationRef location ) {
 
         Point p = location.getPoint();
         List<String> cells = GeocellManager.generateGeoCell( p );
 
         // delete for every bucket in every resolution
-        for ( int i = 0; i < MAX_RESOLUTION; i++ )
-        {
+        for ( int i = 0; i < MAX_RESOLUTION; i++ ) {
 
             String cell = cells.get( i );
 
-            for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, cell ) )
-            {
+            for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, cell ) ) {
 
                 addLocationEntryDeletionToMutator( m, key( key, DICTIONARY_GEOCELL, cell, indexBucket ), location );
             }
         }
 
-        if ( logger.isInfoEnabled() )
-        {
+        if ( logger.isInfoEnabled() ) {
             logger.info( "Geocells to be deleted for Point({},{}) are: {}", new Object[] {
                     location.getLatitude(), location.getLongitude(), cells
             } );
@@ -331,8 +310,7 @@ public class GeoIndexManager
 
 
     public void removeLocationFromCollectionIndex( EntityRef owner, String collectionName, String propertyName,
-                                                   EntityLocationRef location )
-    {
+                                                   EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
         Mutator<ByteBuffer> m = createMutator( ko, ByteBufferSerializer.get() );

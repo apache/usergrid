@@ -41,8 +41,7 @@ import com.google.common.collect.Ordering;
  *
  * @author zznate
  */
-public class Metrics extends ExportingToolBase
-{
+public class Metrics extends ExportingToolBase {
 
     private List<OrganizationInfo> organizations;
     private ListMultimap<UUID, ApplicationInfo> orgApps = ArrayListMultimap.create();
@@ -54,8 +53,7 @@ public class Metrics extends ExportingToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         setVerbose( line );
@@ -72,18 +70,15 @@ public class Metrics extends ExportingToolBase
 
         logger.info( "Export directory: {}", outputDir.getAbsolutePath() );
 
-        if ( orgId == null )
-        {
+        if ( orgId == null ) {
             organizations = managementService.getOrganizations( null, 20000 );
-            for ( OrganizationInfo organization : organizations )
-            {
+            for ( OrganizationInfo organization : organizations ) {
                 logger.info( "Org Name: {} key: {}", organization.getName(), organization.getUuid() );
                 //List<UserInfo> adminUsers = managementService.getAdminUsersForOrganization(orgId);
                 applicationsFor( organization.getUuid() );
             }
         }
-        else
-        {
+        else {
             OrganizationInfo orgInfo = managementService.getOrganizationByUuid( orgId );
             applicationsFor( orgInfo.getUuid() );
             organizations = new ArrayList<OrganizationInfo>();
@@ -97,8 +92,7 @@ public class Metrics extends ExportingToolBase
 
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
         Options options = super.createOptions();
         Option duration = OptionBuilder.hasArg().withDescription( "A duration signifying the previous time until now. "
                 + "Supported forms: h,m,d eg. '30d' would be 30 days" ).create( "duration" );
@@ -113,40 +107,32 @@ public class Metrics extends ExportingToolBase
 
 
     /** 30 days in milliseconds by default */
-    private void parseDuration( CommandLine line )
-    {
+    private void parseDuration( CommandLine line ) {
         String duration = line.getOptionValue( "duration" );
-        if ( duration != null )
-        {
+        if ( duration != null ) {
             startDate = TimeUtils.millisFromDuration( duration );
             endDate = System.currentTimeMillis();
         }
     }
 
 
-    private void parseDateRange( CommandLine line ) throws Exception
-    {
-        if ( line.hasOption( "startDate" ) )
-        {
+    private void parseDateRange( CommandLine line ) throws Exception {
+        if ( line.hasOption( "startDate" ) ) {
             startDate = DateUtils.parseDate( line.getOptionValue( "startDate" ), new String[] { "yyyyMMdd-HHmm" } )
                                  .getTime();
         }
-        if ( line.hasOption( "endDate" ) )
-        {
+        if ( line.hasOption( "endDate" ) ) {
             endDate =
                     DateUtils.parseDate( line.getOptionValue( "endDate" ), new String[] { "yyyyMMdd-HHmm" } ).getTime();
         }
     }
 
 
-    private Iterable<OrganizationInfo> applyThreshold() throws Exception
-    {
+    private Iterable<OrganizationInfo> applyThreshold() throws Exception {
         Set<OrganizationInfo> orgs = new HashSet<OrganizationInfo>( reportThreshold );
-        for ( Long l : Ordering.natural().greatestOf( totalScore.keys(), reportThreshold ) )
-        {
+        for ( Long l : Ordering.natural().greatestOf( totalScore.keys(), reportThreshold ) ) {
             List<UUID> apps = totalScore.get( l );
-            for ( UUID appId : apps )
-            {
+            for ( UUID appId : apps ) {
                 orgs.add( managementService.getOrganizationForApplication( appId ) );
             }
         }
@@ -154,21 +140,18 @@ public class Metrics extends ExportingToolBase
     }
 
 
-    private void printReport( MetricSort metricSort, Iterable<OrganizationInfo> workingOrgs ) throws Exception
-    {
+    private void printReport( MetricSort metricSort, Iterable<OrganizationInfo> workingOrgs ) throws Exception {
         JsonGenerator jg = getJsonGenerator( createOutputFile( "metrics", metricSort.name().toLowerCase() ) );
         jg.writeStartObject();
         jg.writeStringField( "report", metricSort.name() );
         jg.writeStringField( "date", new Date().toString() );
         jg.writeArrayFieldStart( "orgs" );
-        for ( OrganizationInfo org : workingOrgs )
-        {
+        for ( OrganizationInfo org : workingOrgs ) {
             jg.writeStartObject();
             jg.writeStringField( "org_id", org.getUuid().toString() );
             jg.writeStringField( "org_name", org.getName() );
             jg.writeArrayFieldStart( "admins" );
-            for ( UserInfo userInfo : managementService.getAdminUsersForOrganization( org.getUuid() ) )
-            {
+            for ( UserInfo userInfo : managementService.getAdminUsersForOrganization( org.getUuid() ) ) {
                 jg.writeString( userInfo.getEmail() );
             }
             jg.writeEndArray();
@@ -181,22 +164,18 @@ public class Metrics extends ExportingToolBase
     }
 
 
-    private void writeAppLines( JsonGenerator jg, UUID orgId ) throws Exception
-    {
+    private void writeAppLines( JsonGenerator jg, UUID orgId ) throws Exception {
         jg.writeArrayFieldStart( "apps" );
-        for ( ApplicationInfo appInfo : orgApps.get( orgId ) )
-        {
+        for ( ApplicationInfo appInfo : orgApps.get( orgId ) ) {
 
             jg.writeStartObject();
             jg.writeStringField( "app_id", appInfo.getId().toString() );
             jg.writeStringField( "app_name", appInfo.getName() );
             jg.writeArrayFieldStart( "counts" );
             MetricLine line = collector.get( appInfo.getId() );
-            if ( line != null )
-            {
+            if ( line != null ) {
                 jg.writeStartObject();
-                for ( AggregateCounter ag : line.getAggregateCounters() )
-                {
+                for ( AggregateCounter ag : line.getAggregateCounters() ) {
                     jg.writeStringField( new Date( ag.getTimestamp() ).toString(), Long.toString( ag.getValue() ) );
                 }
                 jg.writeEndObject();
@@ -208,12 +187,10 @@ public class Metrics extends ExportingToolBase
     }
 
 
-    private void applicationsFor( UUID orgId ) throws Exception
-    {
+    private void applicationsFor( UUID orgId ) throws Exception {
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( orgId );
 
-        for ( UUID uuid : applications.keySet() )
-        {
+        for ( UUID uuid : applications.keySet() ) {
             logger.info( "Checking app: {}", applications.get( uuid ) );
 
             orgApps.put( orgId, new ApplicationInfo( uuid, applications.get( uuid ) ) );
@@ -224,10 +201,8 @@ public class Metrics extends ExportingToolBase
     }
 
 
-    private void collect( MetricLine metricLine )
-    {
-        for ( AggregateCounter a : metricLine.getAggregateCounters() )
-        {
+    private void collect( MetricLine metricLine ) {
+        for ( AggregateCounter a : metricLine.getAggregateCounters() ) {
             logger.info( "col: {} val: {}", new Date( a.getTimestamp() ), a.getValue() );
         }
         totalScore.put( metricLine.getCount(), metricLine.getAppId() );

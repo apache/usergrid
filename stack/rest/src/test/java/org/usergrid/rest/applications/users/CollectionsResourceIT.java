@@ -44,33 +44,28 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author tnine
  */
 @Concurrent()
-public class CollectionsResourceIT extends AbstractRestIT
-{
+public class CollectionsResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
 
     @Test
-    public void postToBadPath()
-    {
+    public void postToBadPath() {
         Map<String, String> payload = hashMap( "name", "Austin" ).map( "state", "TX" );
         JsonNode node = null;
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-organization/test-app/cities" )
                     .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Not Found", 400, e.getResponse().getStatus() );
         }
     }
 
 
     @Test
-    public void postToEmptyCollection()
-    {
+    public void postToEmptyCollection() {
         Map<String, String> payload = new HashMap<String, String>();
 
         JsonNode node =
@@ -89,8 +84,7 @@ public class CollectionsResourceIT extends AbstractRestIT
      * USERGRID-689
      */
     @Test
-    public void permissionWithMeInString() throws Exception
-    {
+    public void permissionWithMeInString() throws Exception {
         // user is created get a token
         createUser( "sumeet.agarwal@usergrid.com", "sumeet.agarwal@usergrid.com", "secret", "Sumeet Agarwal" );
 
@@ -132,8 +126,7 @@ public class CollectionsResourceIT extends AbstractRestIT
 
 
     @Test
-    public void stringWithSpaces()
-    {
+    public void stringWithSpaces() {
         Map<String, String> payload = hashMap( "summaryOverview", "My Summary" ).map( "caltype", "personal" );
 
         JsonNode node = resource().path( "/test-organization/test-app/calendarlists" )
@@ -176,8 +169,7 @@ public class CollectionsResourceIT extends AbstractRestIT
      * https://apigeesc.atlassian.net/browse/USERGRID-2318
      */
     @Test
-    public void testNoDuplicateFields() throws Exception
-    {
+    public void testNoDuplicateFields() throws Exception {
 
         UUID entityId = null;
         {

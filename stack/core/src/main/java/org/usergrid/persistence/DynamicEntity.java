@@ -31,8 +31,7 @@ import org.usergrid.utils.UUIDUtils;
  * @author edanuff
  */
 @XmlRootElement
-public class DynamicEntity extends AbstractEntity
-{
+public class DynamicEntity extends AbstractEntity {
 
     @EntityProperty(indexed = true, fulltextIndexed = false, required = false, mutable = true, aliasProperty = true,
             basic = true)
@@ -44,8 +43,7 @@ public class DynamicEntity extends AbstractEntity
     /**
      *
      */
-    public DynamicEntity()
-    {
+    public DynamicEntity() {
         // setId(UUIDUtils.newTimeUUID());
     }
 
@@ -53,8 +51,7 @@ public class DynamicEntity extends AbstractEntity
     /**
      * @param id
      */
-    public DynamicEntity( UUID id )
-    {
+    public DynamicEntity( UUID id ) {
         setUuid( id );
     }
 
@@ -62,8 +59,7 @@ public class DynamicEntity extends AbstractEntity
     /**
      * @param type
      */
-    public DynamicEntity( String type )
-    {
+    public DynamicEntity( String type ) {
         setUuid( UUIDUtils.newTimeUUID() );
         setType( type );
     }
@@ -73,8 +69,7 @@ public class DynamicEntity extends AbstractEntity
      * @param id
      * @param type
      */
-    public DynamicEntity( String type, UUID id )
-    {
+    public DynamicEntity( String type, UUID id ) {
         setUuid( id );
         setType( type );
     }
@@ -84,8 +79,7 @@ public class DynamicEntity extends AbstractEntity
      * @param id
      * @param type
      */
-    public DynamicEntity( String type, UUID id, Map<String, Object> propertyMap )
-    {
+    public DynamicEntity( String type, UUID id, Map<String, Object> propertyMap ) {
         setUuid( id );
         setType( type );
         setProperties( propertyMap );
@@ -94,28 +88,24 @@ public class DynamicEntity extends AbstractEntity
 
     @Override
     @EntityProperty(required = true, mutable = false, basic = true, indexed = false)
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
 
     @Override
-    public void setType( String type )
-    {
+    public void setType( String type ) {
         this.type = type;
     }
 
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 }

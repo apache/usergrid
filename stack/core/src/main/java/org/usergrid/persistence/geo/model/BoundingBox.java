@@ -15,23 +15,19 @@ package org.usergrid.persistence.geo.model;
 
 
 /** @author Alexandre Gellibert */
-public class BoundingBox
-{
+public class BoundingBox {
 
     private Point northEast;
     private Point southWest;
 
 
-    public BoundingBox( double north, double east, double south, double west )
-    {
+    public BoundingBox( double north, double east, double south, double west ) {
         double north_, south_;
-        if ( south > north )
-        {
+        if ( south > north ) {
             south_ = north;
             north_ = south;
         }
-        else
-        {
+        else {
             south_ = south;
             north_ = north;
         }
@@ -44,38 +40,32 @@ public class BoundingBox
     }
 
 
-    public double getNorth()
-    {
+    public double getNorth() {
         return northEast.getLat();
     }
 
 
-    public double getSouth()
-    {
+    public double getSouth() {
         return southWest.getLat();
     }
 
 
-    public double getWest()
-    {
+    public double getWest() {
         return southWest.getLon();
     }
 
 
-    public double getEast()
-    {
+    public double getEast() {
         return northEast.getLon();
     }
 
 
-    public Point getNorthEast()
-    {
+    public Point getNorthEast() {
         return northEast;
     }
 
 
-    public Point getSouthWest()
-    {
+    public Point getSouthWest() {
         return southWest;
     }
 }

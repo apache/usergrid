@@ -12,12 +12,10 @@ import static org.junit.Assert.assertNotNull;
 
 /** @author zznate */
 @Concurrent()
-public class AppArgsTest
-{
+public class AppArgsTest {
 
     @Test
-    public void verifyDefaults()
-    {
+    public void verifyDefaults() {
         AppArgs aa = AppArgs.parseArgs( new String[] { "" } );
         assertEquals( "127.0.0.1", aa.getHost() );
         assertEquals( 9160, aa.getPort() );
@@ -25,8 +23,7 @@ public class AppArgsTest
 
 
     @Test
-    public void verifyArgs()
-    {
+    public void verifyArgs() {
         AppArgs aa =
                 AppArgs.parseArgs( new String[] { "-host", "127.0.0.2", "-appContext", "classpath:/appContext.xml" } );
         assertEquals( "127.0.0.2", aa.getHost() );
@@ -35,8 +32,7 @@ public class AppArgsTest
 
 
     @Test
-    public void verifyContextSwitch()
-    {
+    public void verifyContextSwitch() {
         AppArgs appArgs = AppArgs.parseArgs( new String[] { "-appContext", "classpath:/appContext.xml" } );
         assertEquals( "/appContext.xml", getIndex( appArgs.getAppContext() ) );
         appArgs = AppArgs.parseArgs( new String[] { "-appContext", "/appContext.xml" } );
@@ -44,15 +40,12 @@ public class AppArgsTest
     }
 
 
-    private String getIndex( String path )
-    {
+    private String getIndex( String path ) {
         int index = CharMatcher.is( ':' ).indexIn( path );
-        if ( index > 0 )
-        {
+        if ( index > 0 ) {
             return path.substring( ++index );
         }
-        else
-        {
+        else {
             return path;
         }
     }

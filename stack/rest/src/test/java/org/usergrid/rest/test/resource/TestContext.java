@@ -26,8 +26,7 @@ import org.usergrid.rest.test.security.TestUser;
 import com.sun.jersey.test.framework.JerseyTest;
 
 
-public class TestContext
-{
+public class TestContext {
 
     private JerseyTest test;
     private TestUser activeUser;
@@ -40,67 +39,57 @@ public class TestContext
     /**
      *
      */
-    protected TestContext( JerseyTest test )
-    {
+    protected TestContext( JerseyTest test ) {
         this.test = test;
     }
 
 
     /** Create a test context */
-    public static TestContext create( JerseyTest test )
-    {
+    public static TestContext create( JerseyTest test ) {
         return new TestContext( test );
     }
 
 
-    public TestUser getActiveUser()
-    {
+    public TestUser getActiveUser() {
         return activeUser;
     }
 
 
-    public TestContext withUser( TestUser user )
-    {
+    public TestContext withUser( TestUser user ) {
         this.activeUser = user;
         return this;
     }
 
 
-    public TestContext clearUser()
-    {
+    public TestContext clearUser() {
         return withUser( null );
     }
 
 
-    public TestContext withOrg( String orgName )
-    {
+    public TestContext withOrg( String orgName ) {
         this.orgName = orgName;
         return this;
     }
 
 
-    public TestContext withApp( String appName )
-    {
+    public TestContext withApp( String appName ) {
         this.appName = appName;
         return this;
     }
 
 
-    public String getOrgName()
-    {
+    public String getOrgName() {
         return orgName;
     }
 
 
-    public String getAppName()
-    {
+    public String getAppName() {
         return appName;
     }
 
 
     /** Creates the org specified */
-    public TestContext createNewOrgAndUser()
-    {
+    public TestContext createNewOrgAndUser() {
         orgUuid = management().orgs().create( orgName, activeUser );
 
         return this;
@@ -108,8 +97,7 @@ public class TestContext
 
 
     /** Creates the org specified */
-    public TestContext createAppForOrg()
-    {
+    public TestContext createAppForOrg() {
         appUuid = management().orgs().organization( orgName ).apps().create( appName );
 
         return this;
@@ -117,11 +105,9 @@ public class TestContext
 
 
     /** Create the app if it doesn't exist with the given TestUser. If the app exists, the user is logged in */
-    public TestContext loginUser()
-    {
+    public TestContext loginUser() {
         // nothing to do
-        if ( activeUser.isLoggedIn() )
-        {
+        if ( activeUser.isLoggedIn() ) {
             return this;
         }
 
@@ -133,61 +119,52 @@ public class TestContext
 
 
     /** Get the users resource for the application */
-    public UsersCollection users()
-    {
+    public UsersCollection users() {
         return application().users();
     }
 
 
     /** Get the app user resource */
-    public User user( String username )
-    {
+    public User user( String username ) {
         return application().users().user( username );
     }
 
 
     /** @return the orgUuid */
-    public UUID getOrgUuid()
-    {
+    public UUID getOrgUuid() {
         return orgUuid;
     }
 
 
     /** @return the appUuid */
-    public UUID getAppUuid()
-    {
+    public UUID getAppUuid() {
         return appUuid;
     }
 
 
     /** Get the application resource */
-    public Application application()
-    {
+    public Application application() {
         return new Application( orgName, appName, root() );
     }
 
 
-    public CustomCollection collection( String str )
-    {
+    public CustomCollection collection( String str ) {
         return application().collection( str );
     }
 
 
-    public Management management()
-    {
+    public Management management() {
         return new Management( root() );
     }
 
 
-    protected RootResource root()
-    {
+    protected RootResource root() {
         return new RootResource( test.resource(), activeUser == null ? null : activeUser.getToken() );
     }
 
 
     /** Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call. */
-    public TestContext initAll()
-    {
+    public TestContext initAll() {
         return createNewOrgAndUser().loginUser().createAppForOrg();
     }
 }

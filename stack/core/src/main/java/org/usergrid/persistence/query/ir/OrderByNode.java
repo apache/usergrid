@@ -26,8 +26,7 @@ import org.usergrid.persistence.Query.SortPredicate;
  *
  * @author tnine
  */
-public class OrderByNode extends QueryNode
-{
+public class OrderByNode extends QueryNode {
 
 
     private final SliceNode firstPredicate;
@@ -40,8 +39,7 @@ public class OrderByNode extends QueryNode
      * @param secondarySorts Any subsequent terms
      * @param queryOperations The subtree for boolean evaluation
      */
-    public OrderByNode( SliceNode firstPredicate, List<SortPredicate> secondarySorts, QueryNode queryOperations )
-    {
+    public OrderByNode( SliceNode firstPredicate, List<SortPredicate> secondarySorts, QueryNode queryOperations ) {
         this.firstPredicate = firstPredicate;
         this.secondarySorts = secondarySorts;
         this.queryOperations = queryOperations;
@@ -49,21 +47,18 @@ public class OrderByNode extends QueryNode
 
 
     /** @return the sorts */
-    public List<SortPredicate> getSecondarySorts()
-    {
+    public List<SortPredicate> getSecondarySorts() {
         return secondarySorts;
     }
 
 
     /** @return the firstPredicate */
-    public SliceNode getFirstPredicate()
-    {
+    public SliceNode getFirstPredicate() {
         return firstPredicate;
     }
 
 
-    public QueryNode getQueryOperations()
-    {
+    public QueryNode getQueryOperations() {
         return queryOperations;
     }
 
@@ -76,15 +71,13 @@ public class OrderByNode extends QueryNode
        * .query.ir.NodeVisitor)
        */
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
     /** Return true if this order has secondary sorts */
-    public boolean hasSecondarySorts()
-    {
+    public boolean hasSecondarySorts() {
         return secondarySorts != null && secondarySorts.size() > 0;
     }
 
@@ -93,8 +86,7 @@ public class OrderByNode extends QueryNode
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OrderByNode [sorts=" + secondarySorts + "]";
     }
 }

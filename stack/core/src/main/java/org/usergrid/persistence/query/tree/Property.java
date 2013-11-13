@@ -25,21 +25,18 @@ import org.antlr.runtime.Token;
  *
  * @author tnine
  */
-public class Property extends Literal<String>
-{
+public class Property extends Literal<String> {
 
     private String property;
 
 
-    public Property( Token t )
-    {
+    public Property( Token t ) {
         super( t );
         this.property = t.getText();
     }
 
 
-    public Property( String property )
-    {
+    public Property( String property ) {
         this( new ClassicToken( 0, property ) );
     }
 
@@ -50,8 +47,7 @@ public class Property extends Literal<String>
      * @see org.usergrid.persistence.query.tree.Literal#getValue()
      */
     @Override
-    public String getValue()
-    {
+    public String getValue() {
         return this.property;
     }
 
@@ -60,8 +56,7 @@ public class Property extends Literal<String>
      * Subclasses an override.  Indexed value could be different when stored internally.  By default returns the same
      * property
      */
-    public String getIndexedValue()
-    {
+    public String getIndexedValue() {
         return this.property;
     }
 }

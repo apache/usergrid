@@ -40,16 +40,14 @@ import static org.junit.Assert.fail;
  *
  */
 @Concurrent()
-public class OwnershipResourceIT extends AbstractRestIT
-{
+public class OwnershipResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void meVerify() throws Exception
-    {
+    public void meVerify() throws Exception {
         context.clearUser();
         TestUser user1 =
                 new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context )
@@ -62,13 +60,11 @@ public class OwnershipResourceIT extends AbstractRestIT
         assertNotNull( uuid );
         setup.getMgmtSvc().revokeAccessTokenForAppUser( token );
 
-        try
-        {
+        try {
             context.application().users().user( "me" ).get();
             fail();
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
             assertTrue( ex.getMessage().contains( "401" ) );
         }
@@ -76,8 +72,7 @@ public class OwnershipResourceIT extends AbstractRestIT
 
 
     @Test
-    public void contextualPathOwnership()
-    {
+    public void contextualPathOwnership() {
 
         // anonymous user
         context.clearUser();
@@ -167,8 +162,7 @@ public class OwnershipResourceIT extends AbstractRestIT
 
 
     @Test
-    public void contextualConnectionOwnership()
-    {
+    public void contextualConnectionOwnership() {
 
         // anonymous user
         context.clearUser();
@@ -289,8 +283,7 @@ public class OwnershipResourceIT extends AbstractRestIT
 
 
     @Test
-    public void contextualConnectionOwnershipGuestAccess()
-    {
+    public void contextualConnectionOwnershipGuestAccess() {
 
         //set up full GET,PUT,POST,DELETE access for guests
         context.application().collection( "roles" ).entity( "guest" ).collection( "permissions" )

@@ -41,8 +41,7 @@ import static org.junit.Assert.assertFalse;
 
 
 @Concurrent()
-public class RoleIT
-{
+public class RoleIT {
     private static final Logger LOG = LoggerFactory.getLogger( RoleIT.class );
 
     @Rule
@@ -53,8 +52,7 @@ public class RoleIT
 
 
     @Test
-    public void testRoleInactivity() throws Exception
-    {
+    public void testRoleInactivity() throws Exception {
 
         OrganizationOwnerInfo ooi = setup.getMgmtSvc()
                                          .createOwnerAndOrganization( "RoleIT", "edanuff5", "Ed Anuff", "ed@anuff.com5",

@@ -24,11 +24,9 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent()
-public class GroupServiceIT extends AbstractServiceIT
-{
+public class GroupServiceIT extends AbstractServiceIT {
     @Test
-    public void testGroups() throws Exception
-    {
+    public void testGroups() throws Exception {
         app.put( "path", "test/test" );
         app.put( "title", "Test group" );
 
@@ -62,8 +60,7 @@ public class GroupServiceIT extends AbstractServiceIT
 
 
     @Test
-    public void testPermissions() throws Exception
-    {
+    public void testPermissions() throws Exception {
         app.put( "path", "mmmeow" );
 
         Entity group = app.create( "group" );

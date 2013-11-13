@@ -51,8 +51,7 @@ import org.springframework.util.Assert;
  *
  * @author tnine
  */
-public class ContentTypeFilter implements Filter
-{
+public class ContentTypeFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger( ContentTypeFilter.class );
 
@@ -63,8 +62,7 @@ public class ContentTypeFilter implements Filter
      * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
      */
     @Override
-    public void init( FilterConfig filterConfig ) throws ServletException
-    {
+    public void init( FilterConfig filterConfig ) throws ServletException {
         logger.info( "Starting content type filter" );
     }
 
@@ -77,11 +75,9 @@ public class ContentTypeFilter implements Filter
      */
     @Override
     public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain )
-            throws IOException, ServletException
-    {
+            throws IOException, ServletException {
 
-        if ( !( request instanceof HttpServletRequest ) )
-        {
+        if ( !( request instanceof HttpServletRequest ) ) {
             chain.doFilter( request, response );
             return;
         }
@@ -101,13 +97,11 @@ public class ContentTypeFilter implements Filter
      * @see javax.servlet.Filter#destroy()
      */
     @Override
-    public void destroy()
-    {
+    public void destroy() {
     }
 
 
-    private class HeaderWrapperRequest extends HttpServletRequestWrapper
-    {
+    private class HeaderWrapperRequest extends HttpServletRequestWrapper {
         private PushbackInputStream inputStream = null;
         private ServletInputStream servletInputStream = null;
         private HttpServletRequest origRequest = null;
@@ -120,8 +114,7 @@ public class ContentTypeFilter implements Filter
          * @param request
          * @throws IOException
          */
-        public HeaderWrapperRequest( HttpServletRequest request ) throws IOException
-        {
+        public HeaderWrapperRequest( HttpServletRequest request ) throws IOException {
             super( request );
             origRequest = request;
             inputStream = new PushbackInputStream( request.getInputStream() );
@@ -133,14 +126,12 @@ public class ContentTypeFilter implements Filter
          * @throws IOException
          *
          */
-        private void adapt() throws IOException
-        {
+        private void adapt() throws IOException {
 
             //check if the accept header was set
             @SuppressWarnings( "rawtypes" ) Enumeration contentType = origRequest.getHeaders( HttpHeaders.ACCEPT );
 
-            if ( !contentType.hasMoreElements() )
-            {
+            if ( !contentType.hasMoreElements() ) {
                 setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
             }
 
@@ -156,11 +147,9 @@ public class ContentTypeFilter implements Filter
 
             // nothing to read, check if it's a put or a post. If so set the
             // content type to json to create an empty json request
-            if ( initial == -1 )
-            {
+            if ( initial == -1 ) {
                 if ( ( HttpMethod.POST.equals( method ) || HttpMethod.PUT.equals( method ) ) && !MediaType
-                        .APPLICATION_FORM_URLENCODED.equals( getContentType() ) )
-                {
+                        .APPLICATION_FORM_URLENCODED.equals( getContentType() ) ) {
 
                     logger.debug(
                             "Setting content type to application/json for POST or PUT with no content at path '{}'",
@@ -176,8 +165,7 @@ public class ContentTypeFilter implements Filter
             char firstChar = ( char ) initial;
 
             // its json, make it so
-            if ( firstChar == '{' || firstChar == '[' )
-            {
+            if ( firstChar == '{' || firstChar == '[' ) {
                 logger.debug( "Setting content type to application/json for POST or PUT with json content at path '{}'",
                         path );
 
@@ -193,8 +181,7 @@ public class ContentTypeFilter implements Filter
          * @throws IOException
          *
          */
-        public void setHeader( String name, String value )
-        {
+        public void setHeader( String name, String value ) {
             newHeaders.put( name, value );
         }
 
@@ -207,12 +194,10 @@ public class ContentTypeFilter implements Filter
          * String)
          */
         @Override
-        public String getHeader( String name )
-        {
+        public String getHeader( String name ) {
             String header = newHeaders.get( name );
 
-            if ( header != null )
-            {
+            if ( header != null ) {
                 return header;
             }
 
@@ -228,20 +213,16 @@ public class ContentTypeFilter implements Filter
          * .String)
          */
         @Override
-        public Enumeration getHeaders( String name )
-        {
+        public Enumeration getHeaders( String name ) {
             Set<String> headers = new LinkedHashSet<String>();
 
             String overridden = newHeaders.get( name );
 
-            if ( overridden != null )
-            {
+            if ( overridden != null ) {
                 headers.add( overridden );
             }
-            else
-            {
-                for ( Enumeration e = super.getHeaders( name ); e.hasMoreElements(); )
-                {
+            else {
+                for ( Enumeration e = super.getHeaders( name ); e.hasMoreElements(); ) {
                     headers.add( e.nextElement().toString() );
                 }
             }
@@ -256,12 +237,10 @@ public class ContentTypeFilter implements Filter
          * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
          */
         @Override
-        public Enumeration getHeaderNames()
-        {
+        public Enumeration getHeaderNames() {
             Set<String> headers = new LinkedHashSet<String>();
 
-            for ( Enumeration e = super.getHeaderNames(); e.hasMoreElements(); )
-            {
+            for ( Enumeration e = super.getHeaderNames(); e.hasMoreElements(); ) {
                 headers.add( e.nextElement().toString() );
             }
 
@@ -277,8 +256,7 @@ public class ContentTypeFilter implements Filter
          * @see javax.servlet.ServletRequestWrapper#getInputStream()
          */
         @Override
-        public ServletInputStream getInputStream() throws IOException
-        {
+        public ServletInputStream getInputStream() throws IOException {
             return servletInputStream;
         }
 
@@ -289,10 +267,8 @@ public class ContentTypeFilter implements Filter
          * @see javax.servlet.ServletRequestWrapper#getReader()
          */
         @Override
-        public BufferedReader getReader() throws IOException
-        {
-            if ( reader != null )
-            {
+        public BufferedReader getReader() throws IOException {
+            if ( reader != null ) {
                 return reader;
             }
 
@@ -312,8 +288,7 @@ public class ContentTypeFilter implements Filter
      * @author Juergen Hoeller, Todd Nine
      * @since 1.0.2
      */
-    private static class DelegatingServletInputStream extends ServletInputStream
-    {
+    private static class DelegatingServletInputStream extends ServletInputStream {
 
         private final InputStream sourceStream;
 
@@ -323,28 +298,24 @@ public class ContentTypeFilter implements Filter
          *
          * @param sourceStream the source stream (never <code>null</code>)
          */
-        public DelegatingServletInputStream( InputStream sourceStream )
-        {
+        public DelegatingServletInputStream( InputStream sourceStream ) {
             Assert.notNull( sourceStream, "Source InputStream must not be null" );
             this.sourceStream = sourceStream;
         }
 
 
         /** Return the underlying source stream (never <code>null</code>). */
-        public final InputStream getSourceStream()
-        {
+        public final InputStream getSourceStream() {
             return this.sourceStream;
         }
 
 
-        public int read() throws IOException
-        {
+        public int read() throws IOException {
             return this.sourceStream.read();
         }
 
 
-        public void close() throws IOException
-        {
+        public void close() throws IOException {
             super.close();
             this.sourceStream.close();
         }

@@ -24,61 +24,51 @@ import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.utils.UUIDUtils;
 
 
-public class ClientCredentialsInfo
-{
+public class ClientCredentialsInfo {
 
     private final String id;
     private final String secret;
 
 
-    public ClientCredentialsInfo( String id, String secret )
-    {
+    public ClientCredentialsInfo( String id, String secret ) {
         this.id = id;
         this.secret = secret;
     }
 
 
     @JsonProperty("client_id")
-    public String getId()
-    {
+    public String getId() {
         return id;
     }
 
 
     @JsonProperty("client_secret")
-    public String getSecret()
-    {
+    public String getSecret() {
         return secret;
     }
 
 
-    public static ClientCredentialsInfo forUuidAndSecret( AuthPrincipalType type, UUID uuid, String secret )
-    {
+    public static ClientCredentialsInfo forUuidAndSecret( AuthPrincipalType type, UUID uuid, String secret ) {
         return new ClientCredentialsInfo( getClientIdForTypeAndUuid( type, uuid ), secret );
     }
 
 
-    public static String getClientIdForTypeAndUuid( AuthPrincipalType type, UUID uuid )
-    {
+    public static String getClientIdForTypeAndUuid( AuthPrincipalType type, UUID uuid ) {
         return type.getBase64Prefix() + UUIDUtils.toBase64( uuid );
     }
 
 
     @JsonIgnore
-    public UUID getUUIDFromConsumerKey()
-    {
+    public UUID getUUIDFromConsumerKey() {
         return getUUIDFromClientId( id );
     }
 
 
-    public static UUID getUUIDFromClientId( String key )
-    {
-        if ( key == null )
-        {
+    public static UUID getUUIDFromClientId( String key ) {
+        if ( key == null ) {
             return null;
         }
-        if ( key.length() != 26 )
-        {
+        if ( key.length() != 26 ) {
             return null;
         }
         return UUIDUtils.fromBase64( key.substring( 4 ) );
@@ -86,20 +76,16 @@ public class ClientCredentialsInfo
 
 
     @JsonIgnore
-    public AuthPrincipalType getTypeFromClientId()
-    {
+    public AuthPrincipalType getTypeFromClientId() {
         return getTypeFromClientId( id );
     }
 
 
-    public static AuthPrincipalType getTypeFromClientId( String key )
-    {
-        if ( key == null )
-        {
+    public static AuthPrincipalType getTypeFromClientId( String key ) {
+        if ( key == null ) {
             return null;
         }
-        if ( key.length() != 26 )
-        {
+        if ( key.length() != 26 ) {
             return null;
         }
         return AuthPrincipalType.getFromBase64String( key );

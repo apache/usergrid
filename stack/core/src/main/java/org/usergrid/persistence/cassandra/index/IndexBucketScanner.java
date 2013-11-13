@@ -43,8 +43,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
  *
  * @author tnine
  */
-public class IndexBucketScanner implements IndexScanner
-{
+public class IndexBucketScanner implements IndexScanner {
 
     private final CassandraService cass;
     private final IndexBucketLocator indexBucketLocator;
@@ -72,8 +71,7 @@ public class IndexBucketScanner implements IndexScanner
 
     public IndexBucketScanner( CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
                                UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish,
-                               boolean reversed, int pageSize, String... indexPath )
-    {
+                               boolean reversed, int pageSize, String... indexPath ) {
         this.cass = cass;
         this.indexBucketLocator = locator;
         this.applicationId = applicationId;
@@ -93,8 +91,7 @@ public class IndexBucketScanner implements IndexScanner
      * @see org.usergrid.persistence.cassandra.index.IndexScanner#reset()
      */
     @Override
-    public void reset()
-    {
+    public void reset() {
         hasMore = true;
         start = scanStart;
     }
@@ -107,12 +104,10 @@ public class IndexBucketScanner implements IndexScanner
      * @return True if the data could be loaded
      */
 
-    public boolean load() throws Exception
-    {
+    public boolean load() throws Exception {
 
         // nothing left to load
-        if ( !hasMore )
-        {
+        if ( !hasMore ) {
             return false;
         }
 
@@ -120,8 +115,7 @@ public class IndexBucketScanner implements IndexScanner
 
         List<Object> cassKeys = new ArrayList<Object>( keys.size() );
 
-        for ( String bucket : keys )
-        {
+        for ( String bucket : keys ) {
             cassKeys.add( key( keyPrefix, bucket ) );
         }
 
@@ -133,8 +127,7 @@ public class IndexBucketScanner implements IndexScanner
                 .load( cass, columnFamily, applicationId, cassKeys, start, finish, selectSize, reversed );
 
         // we loaded a full page, there might be more
-        if ( resultsTree.size() == selectSize )
-        {
+        if ( resultsTree.size() == selectSize ) {
             hasMore = true;
 
             // set the bytebuffer for the next pass
@@ -142,8 +135,7 @@ public class IndexBucketScanner implements IndexScanner
 
             resultsTree.remove( resultsTree.last() );
         }
-        else
-        {
+        else {
             hasMore = false;
         }
 
@@ -159,8 +151,7 @@ public class IndexBucketScanner implements IndexScanner
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator()
-    {
+    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -171,21 +162,17 @@ public class IndexBucketScanner implements IndexScanner
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
 
         // We've either 1) paged everything we should and have 1 left from our
         // "next page" pointer
         // Our currently buffered results don't exist or don't have a next. Try to
         // load them again if they're less than the page size
-        if ( lastResults == null && hasMore )
-        {
-            try
-            {
+        if ( lastResults == null && hasMore ) {
+            try {
                 return load();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 throw new RuntimeException( "Error loading next page of indexbucket scanner", e );
             }
         }
@@ -201,8 +188,7 @@ public class IndexBucketScanner implements IndexScanner
      */
     @Override
     @Metered(group = "core", name = "IndexBucketScanner_load")
-    public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next()
-    {
+    public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
         NavigableSet<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 
         lastResults = null;
@@ -217,8 +203,7 @@ public class IndexBucketScanner implements IndexScanner
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "You can't remove from a result set, only advance" );
     }
 
@@ -227,8 +212,7 @@ public class IndexBucketScanner implements IndexScanner
      * @see org.usergrid.persistence.cassandra.index.IndexScanner#getPageSize()
      */
     @Override
-    public int getPageSize()
-    {
+    public int getPageSize() {
         return pageSize;
     }
 }

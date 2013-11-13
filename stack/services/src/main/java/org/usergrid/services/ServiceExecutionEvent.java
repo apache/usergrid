@@ -16,8 +16,7 @@
 package org.usergrid.services;
 
 
-public class ServiceExecutionEvent
-{
+public class ServiceExecutionEvent {
 
     ServiceAction action;
     ServiceRequest request;
@@ -25,14 +24,12 @@ public class ServiceExecutionEvent
     ServicePayload payload;
 
 
-    public ServiceExecutionEvent()
-    {
+    public ServiceExecutionEvent() {
     }
 
 
     public ServiceExecutionEvent( ServiceAction action, ServiceRequest request, ServiceResults results,
-                                  ServicePayload payload )
-    {
+                                  ServicePayload payload ) {
 
         this.action = action;
         this.request = request;
@@ -41,50 +38,42 @@ public class ServiceExecutionEvent
     }
 
 
-    public ServiceAction getAction()
-    {
+    public ServiceAction getAction() {
         return action;
     }
 
 
-    public void setAction( ServiceAction action )
-    {
+    public void setAction( ServiceAction action ) {
         this.action = action;
     }
 
 
-    public ServiceRequest getRequest()
-    {
+    public ServiceRequest getRequest() {
         return request;
     }
 
 
-    public void setRequest( ServiceRequest request )
-    {
+    public void setRequest( ServiceRequest request ) {
         this.request = request;
     }
 
 
-    public ServiceResults getResults()
-    {
+    public ServiceResults getResults() {
         return results;
     }
 
 
-    public void setResults( ServiceResults results )
-    {
+    public void setResults( ServiceResults results ) {
         this.results = results;
     }
 
 
-    public ServicePayload getPayload()
-    {
+    public ServicePayload getPayload() {
         return payload;
     }
 
 
-    public void setPayload( ServicePayload payload )
-    {
+    public void setPayload( ServicePayload payload ) {
         this.payload = payload;
     }
 }

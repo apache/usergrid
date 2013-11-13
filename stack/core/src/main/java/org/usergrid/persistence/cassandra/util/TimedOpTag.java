@@ -13,8 +13,7 @@ import com.google.common.base.Objects;
  *
  * @author zznate
  */
-public class TimedOpTag
-{
+public class TimedOpTag {
 
     private final UUID opTag;
     private final String traceTagName;
@@ -23,8 +22,7 @@ public class TimedOpTag
     private boolean status;
 
 
-    private TimedOpTag( TraceTag trace )
-    {
+    private TimedOpTag( TraceTag trace ) {
         this.opTag = UUIDUtils.newTimeUUID();
         this.traceTagName = ( trace != null ? trace.getTraceName() : "-NONE-" );
     }
@@ -35,22 +33,18 @@ public class TimedOpTag
      *
      * @param traceTag can be null for single op timing
      */
-    public static TimedOpTag instance( TraceTag traceTag )
-    {
+    public static TimedOpTag instance( TraceTag traceTag ) {
         return new TimedOpTag( traceTag );
     }
 
 
     /** Apply tagName only if not already applied */
-    public void stopAndApply( String tName, boolean opStatus )
-    {
-        if ( elapsed == 0 )
-        {
+    public void stopAndApply( String tName, boolean opStatus ) {
+        if ( elapsed == 0 ) {
             // extract from uuid and calculate
             elapsed = System.currentTimeMillis() - UUIDUtils.getTimestampInMillis( opTag );
         }
-        if ( tName != null )
-        {
+        if ( tName != null ) {
             this.tagName = tName;
             this.status = opStatus;
         }
@@ -58,8 +52,7 @@ public class TimedOpTag
 
 
     /** Elapsed time of this op in milliseconds. */
-    public long getElapsed()
-    {
+    public long getElapsed() {
         return elapsed;
     }
 
@@ -68,29 +61,25 @@ public class TimedOpTag
      * The start time of this operation as represented by the timestamp embedded in the type-1 UUID of the opTag
      * property
      */
-    public long getStart()
-    {
+    public long getStart() {
         return UUIDUtils.getTimestampInMillis( opTag );
     }
 
 
     /** The tag for this specific operation */
-    public UUID getOpTag()
-    {
+    public UUID getOpTag() {
         return opTag;
     }
 
 
     /** A tag which may span 0 or more operations */
-    public String getTraceTagName()
-    {
+    public String getTraceTagName() {
         return traceTagName;
     }
 
 
     /** @return the tagName - null if never applied */
-    public String getTagName()
-    {
+    public String getTagName() {
         return tagName;
     }
 
@@ -99,15 +88,13 @@ public class TimedOpTag
      * @return whether or not the operation was 'successful' Could still be false if {@link #stopAndApply(String,
      *         boolean)} was never called
      */
-    public boolean getOpSuccessful()
-    {
+    public boolean getOpSuccessful() {
         return status;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return Objects.toStringHelper( this ).add( "traceTag", traceTagName ).add( "opTag", opTag.toString() )
                       .add( "tagName", tagName ).add( "start", getStart() ).add( "elapsed", elapsed ).toString();
     }

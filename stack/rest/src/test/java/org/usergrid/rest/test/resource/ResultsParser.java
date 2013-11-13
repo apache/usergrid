@@ -17,7 +17,6 @@ package org.usergrid.rest.test.resource;
 
 
 /** @author tnine */
-public interface ResultsParser
-{
+public interface ResultsParser {
 
 }

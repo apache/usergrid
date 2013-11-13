@@ -10,15 +10,13 @@ import static junit.framework.Assert.assertEquals;
 
 
 /** @author zznate */
-public class AssetUtilsTest
-{
+public class AssetUtilsTest {
 
     private static UUID appId = new UUID( 0, 1 );
 
 
     @Test
-    public void buildPathOk()
-    {
+    public void buildPathOk() {
         Asset asset = new Asset();
         asset.setPath( "path/to/file" );
         asset.setUuid( UUID.randomUUID() );
@@ -31,16 +29,14 @@ public class AssetUtilsTest
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void verifyErrorsOkAssetId()
-    {
+    public void verifyErrorsOkAssetId() {
         Asset asset = new Asset();
         AssetUtils.buildAssetKey( appId, asset );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void verifyErrorsOkNullAppId()
-    {
+    public void verifyErrorsOkNullAppId() {
         Asset asset = new Asset();
         asset.setUuid( UUID.randomUUID() );
         AssetUtils.buildAssetKey( null, asset );

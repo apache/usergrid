@@ -34,8 +34,7 @@ import org.usergrid.persistence.Results;
 import static junit.framework.Assert.assertNotNull;
 
 
-public class CoreApplication implements Application, TestRule
-{
+public class CoreApplication implements Application, TestRule {
 
     private final static Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
     protected UUID id;
@@ -46,57 +45,49 @@ public class CoreApplication implements Application, TestRule
     protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
 
-    public CoreApplication( CoreITSetup setup )
-    {
+    public CoreApplication( CoreITSetup setup ) {
         this.setup = setup;
     }
 
 
     @Override
-    public void putAll( Map<String, Object> properties )
-    {
+    public void putAll( Map<String, Object> properties ) {
         this.properties.putAll( properties );
     }
 
 
     @Override
-    public Object get( String key )
-    {
+    public Object get( String key ) {
         return properties.get( key );
     }
 
 
     @Override
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
     @Override
-    public UUID getId()
-    {
+    public UUID getId() {
         return id;
     }
 
 
     @Override
-    public String getOrgName()
-    {
+    public String getOrgName() {
         return orgName;
     }
 
 
     @Override
-    public String getAppName()
-    {
+    public String getAppName() {
         return appName;
     }
 
 
     @Override
-    public Entity create( String type ) throws Exception
-    {
+    public Entity create( String type ) throws Exception {
         Entity entity = em.create( type, properties );
         clear();
         return entity;
@@ -104,56 +95,46 @@ public class CoreApplication implements Application, TestRule
 
 
     @Override
-    public Object put( String property, Object value )
-    {
+    public Object put( String property, Object value ) {
         return properties.put( property, value );
     }
 
 
     @Override
-    public void clear()
-    {
+    public void clear() {
         properties.clear();
     }
 
 
     @Override
-    public void addToCollection( Entity user, String collection, Entity item ) throws Exception
-    {
+    public void addToCollection( Entity user, String collection, Entity item ) throws Exception {
         em.addToCollection( user, collection, item );
     }
 
 
     @Override
-    public Results searchCollection( Entity user, String collection, Query query ) throws Exception
-    {
+    public Results searchCollection( Entity user, String collection, Query query ) throws Exception {
         return em.searchCollection( user, collection, query );
     }
 
 
     @Override
-    public Entity get( UUID id ) throws Exception
-    {
+    public Entity get( UUID id ) throws Exception {
         return em.get( id );
     }
 
 
     @Override
-    public Statement apply( final Statement base, final Description description )
-    {
-        return new Statement()
-        {
+    public Statement apply( final Statement base, final Description description ) {
+        return new Statement() {
             @Override
-            public void evaluate() throws Throwable
-            {
+            public void evaluate() throws Throwable {
                 before( description );
 
-                try
-                {
+                try {
                     base.evaluate();
                 }
-                finally
-                {
+                finally {
                     after( description );
                 }
             }
@@ -161,14 +142,12 @@ public class CoreApplication implements Application, TestRule
     }
 
 
-    protected void after( Description description )
-    {
+    protected void after( Description description ) {
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
     }
 
 
-    protected void before( Description description ) throws Exception
-    {
+    protected void before( Description description ) throws Exception {
         orgName = description.getClassName();
         appName = description.getMethodName();
         id = setup.createApplication( orgName, appName );
@@ -181,14 +160,12 @@ public class CoreApplication implements Application, TestRule
     }
 
 
-    public EntityManager getEm()
-    {
+    public EntityManager getEm() {
         return em;
     }
 
 
-    public QueueManager getQm()
-    {
+    public QueueManager getQm() {
         return setup.getQmf().getQueueManager( getId() );
     }
 }

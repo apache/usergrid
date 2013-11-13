@@ -29,14 +29,12 @@ import org.usergrid.utils.MapUtils;
 
 
 /** @author tnine */
-public class Management extends NamedResource
-{
+public class Management extends NamedResource {
 
     /**
      * @param parent
      */
-    public Management( RootResource root )
-    {
+    public Management( RootResource root ) {
         super( root );
     }
 
@@ -48,29 +46,25 @@ public class Management extends NamedResource
      * org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
      */
     @Override
-    public void addToUrl( StringBuilder buffer )
-    {
+    public void addToUrl( StringBuilder buffer ) {
         parent.addToUrl( buffer );
         buffer.append( SLASH );
         buffer.append( "management" );
     }
 
 
-    public UsersCollection users()
-    {
+    public UsersCollection users() {
         return new UsersCollection( this );
     }
 
 
-    public OrganizationsCollection orgs()
-    {
+    public OrganizationsCollection orgs() {
         return new OrganizationsCollection( this );
     }
 
 
     /** Get the token from management for this username and password */
-    public String tokenGet( String username, String password )
-    {
+    public String tokenGet( String username, String password ) {
 
         JsonNode node = resource().path( String.format( "%s/token", url() ) ).queryParam( "grant_type", "password" )
                 .queryParam( "username", username ).queryParam( "password", password )
@@ -81,8 +75,7 @@ public class Management extends NamedResource
 
 
     /** Get the token from management for this username and password */
-    public String tokenPost( String username, String password )
-    {
+    public String tokenPost( String username, String password ) {
 
         Map<String, String> payload =
                 MapUtils.hashMap( "grant_type", "password" ).map( "username", username ).map( "password", password );
@@ -94,8 +87,7 @@ public class Management extends NamedResource
     }
 
 
-    public Me me()
-    {
+    public Me me() {
         return new Me( this );
     }
 }

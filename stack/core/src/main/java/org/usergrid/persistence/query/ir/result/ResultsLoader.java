@@ -22,8 +22,7 @@ import org.usergrid.persistence.Results;
 
 
 /** @author tnine */
-public interface ResultsLoader
-{
+public interface ResultsLoader {
 
     /** Load results from the list of uuids.  Should return a Results entity where the query cursor can be set */
     public Results getResults( List<ScanColumn> entityIds ) throws Exception;

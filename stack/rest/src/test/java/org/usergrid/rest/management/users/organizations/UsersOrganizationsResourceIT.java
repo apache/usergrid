@@ -17,13 +17,11 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 /** @author zznate */
 @Concurrent()
-public class UsersOrganizationsResourceIT extends AbstractRestIT
-{
+public class UsersOrganizationsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void createOrgFromUserConnectionFail() throws Exception
-    {
+    public void createOrgFromUserConnectionFail() throws Exception {
 
 
         Map<String, String> payload = hashMap( "email", "orgfromuserconn@apigee.com" ).map( "password", "password" )
@@ -46,15 +44,13 @@ public class UsersOrganizationsResourceIT extends AbstractRestIT
         payload = hashMap( "organization", "Orgfromuserconn" );
 
         // try to create the same org again off the connection
-        try
-        {
+        try {
             node = resource().path( String.format( "/management/users/%s/organizations", userId ) )
                     .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
             fail( "Should have thrown unique exception on org name" );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
         }
     }
 }

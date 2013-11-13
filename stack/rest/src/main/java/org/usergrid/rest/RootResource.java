@@ -80,17 +80,14 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class RootResource extends AbstractContextResource implements MetricProcessor<RootResource.MetricContext>
-{
+public class RootResource extends AbstractContextResource implements MetricProcessor<RootResource.MetricContext> {
 
-    static final class MetricContext
-    {
+    static final class MetricContext {
         final boolean showFullSamples;
         final ObjectNode objectNode;
 
 
-        MetricContext( ObjectNode objectNode, boolean showFullSamples )
-        {
+        MetricContext( ObjectNode objectNode, boolean showFullSamples ) {
             this.objectNode = objectNode;
             this.showFullSamples = showFullSamples;
         }
@@ -105,8 +102,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     private UsergridSystemMonitor usergridSystemMonitor;
 
 
-    public RootResource()
-    {
+    public RootResource() {
     }
 
 
@@ -115,8 +111,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @Path("applications")
     public JSONWithPadding getAllApplications( @Context UriInfo ui,
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws URISyntaxException
-    {
+            throws URISyntaxException {
 
         logger.info( "RootResource.getAllApplications" );
 
@@ -124,14 +119,12 @@ public class RootResource extends AbstractContextResource implements MetricProce
         response.setAction( "get applications" );
 
         Map<String, UUID> applications = null;
-        try
-        {
+        try {
             applications = emf.getApplications();
             response.setSuccess();
             response.setApplications( applications );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.info( "Unable to retrieve applications", e );
             response.setError( "Unable to retrieve applications" );
         }
@@ -145,24 +138,20 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @Path("apps")
     public JSONWithPadding getAllApplications2( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws URISyntaxException
-    {
+            throws URISyntaxException {
         return getAllApplications( ui, callback );
     }
 
 
     @GET
-    public Response getRoot( @Context UriInfo ui ) throws URISyntaxException
-    {
+    public Response getRoot( @Context UriInfo ui ) throws URISyntaxException {
 
         String redirect_root = properties.getRedirectRoot();
-        if ( StringUtils.isNotBlank( redirect_root ) )
-        {
+        if ( StringUtils.isNotBlank( redirect_root ) ) {
             ResponseBuilder response = Response.temporaryRedirect( new URI( redirect_root ) );
             return response.build();
         }
-        else
-        {
+        else {
             ResponseBuilder response = Response.temporaryRedirect( new URI( "/status" ) );
             return response.build();
         }
@@ -171,8 +160,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     @GET
     @Path("status")
-    public JSONWithPadding getStatus( @QueryParam("callback") @DefaultValue("callback") String callback )
-    {
+    public JSONWithPadding getStatus( @QueryParam("callback") @DefaultValue("callback") String callback ) {
         ApiResponse response = createApiResponse();
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
@@ -188,40 +176,32 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     @GET
     @Path("lb-status")
-    public Response getLbStatus()
-    {
+    public Response getLbStatus() {
         ResponseBuilder response;
-        if ( usergridSystemMonitor.getIsCassandraAlive() )
-        {
+        if ( usergridSystemMonitor.getIsCassandraAlive() ) {
             response = Response.noContent().status( Response.Status.OK );
         }
-        else
-        {
+        else {
             response = Response.noContent().status( Response.Status.SERVICE_UNAVAILABLE );
         }
         return response.build();
     }
 
 
-    private void dumpMetrics( ObjectNode node )
-    {
+    private void dumpMetrics( ObjectNode node ) {
         MetricsRegistry registry = Metrics.defaultRegistry();
 
-        for ( Map.Entry<String, SortedMap<MetricName, Metric>> entry : registry.groupedMetrics().entrySet() )
-        {
+        for ( Map.Entry<String, SortedMap<MetricName, Metric>> entry : registry.groupedMetrics().entrySet() ) {
 
             ObjectNode meterNode = JsonNodeFactory.instance.objectNode();
 
-            for ( Map.Entry<MetricName, Metric> subEntry : entry.getValue().entrySet() )
-            {
+            for ( Map.Entry<MetricName, Metric> subEntry : entry.getValue().entrySet() ) {
                 ObjectNode metricNode = JsonNodeFactory.instance.objectNode();
 
-                try
-                {
+                try {
                     subEntry.getValue().processWith( this, subEntry.getKey(), new MetricContext( metricNode, true ) );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.warn( "Error writing out {}", subEntry.getKey(), e );
                 }
                 meterNode.put( subEntry.getKey().getName(), metricNode );
@@ -233,17 +213,14 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     @Path("{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public ApplicationResource getApplicationById( @PathParam("applicationId") String applicationIdStr )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "options".equalsIgnoreCase( request.getMethod() ) )
-        {
+        if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
         }
 
         UUID applicationId = UUID.fromString( applicationIdStr );
-        if ( applicationId == null )
-        {
+        if ( applicationId == null ) {
             return null;
         }
 
@@ -251,10 +228,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    private ApplicationResource appResourceFor( UUID applicationId ) throws Exception
-    {
-        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) )
-        {
+    private ApplicationResource appResourceFor( UUID applicationId ) throws Exception {
+        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
             throw new UnauthorizedException();
         }
 
@@ -263,46 +238,42 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     @Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public ApplicationResource getApplicationById2( @PathParam("applicationId") String applicationId ) throws Exception
-    {
+    public ApplicationResource getApplicationById2( @PathParam("applicationId") String applicationId )
+            throws Exception {
         return getApplicationById( applicationId );
     }
 
 
     @Path("apps/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public ApplicationResource getApplicationById3( @PathParam("applicationId") String applicationId ) throws Exception
-    {
+    public ApplicationResource getApplicationById3( @PathParam("applicationId") String applicationId )
+            throws Exception {
         return getApplicationById( applicationId );
     }
 
 
     @Timed(name = "getApplicationByUuids_timer", group = "rest_timers")
     @ExceptionMetered(group = "rest_exceptions", name = "getApplicationByUuids_exceptions")
-    @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12" +
-            "}}/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12"
+            + "}}/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public ApplicationResource getApplicationByUuids( @PathParam("organizationId") String organizationIdStr,
                                                       @PathParam("applicationId") String applicationIdStr )
 
-            throws Exception
-    {
+            throws Exception {
 
         UUID applicationId = UUID.fromString( applicationIdStr );
         UUID organizationId = UUID.fromString( organizationIdStr );
-        if ( applicationId == null || organizationId == null )
-        {
+        if ( applicationId == null || organizationId == null ) {
             return null;
         }
         BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
-        if ( apps.get( applicationId ) == null )
-        {
+        if ( apps.get( applicationId ) == null ) {
             return null;
         }
         return appResourceFor( applicationId );
     }
 
 
-    private OrganizationResource orgResourceFor( String organizationName ) throws Exception
-    {
+    private OrganizationResource orgResourceFor( String organizationName ) throws Exception {
 
         return getSubResource( OrganizationResource.class ).init( organizationName );
     }
@@ -312,11 +283,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @ExceptionMetered(group = "rest_exceptions", name = "getOrganizationByName_exceptions")
     @Path("{organizationName}")
     public OrganizationResource getOrganizationByName( @PathParam("organizationName") String organizationName )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "options".equalsIgnoreCase( request.getMethod() ) )
-        {
+        if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
         }
 
@@ -326,31 +295,27 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     @Path("organizations/{organizationName}")
     public OrganizationResource getOrganizationByName2( @PathParam("organizationName") String organizationName )
-            throws Exception
-    {
+            throws Exception {
         return getOrganizationByName( organizationName );
     }
 
 
     @Path("orgs/{organizationName}")
     public OrganizationResource getOrganizationByName3( @PathParam("organizationName") String organizationName )
-            throws Exception
-    {
+            throws Exception {
         return getOrganizationByName( organizationName );
     }
 
 
     @Path("o/{organizationName}")
     public OrganizationResource getOrganizationByName4( @PathParam("organizationName") String organizationName )
-            throws Exception
-    {
+            throws Exception {
         return getOrganizationByName( organizationName );
     }
 
 
     @Override
-    public void processHistogram( MetricName name, Histogram histogram, MetricContext context ) throws Exception
-    {
+    public void processHistogram( MetricName name, Histogram histogram, MetricContext context ) throws Exception {
         final ObjectNode node = context.objectNode;
         node.put( "type", "histogram" );
         node.put( "count", histogram.count() );
@@ -360,8 +325,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     @Override
-    public void processCounter( MetricName name, Counter counter, MetricContext context ) throws Exception
-    {
+    public void processCounter( MetricName name, Counter counter, MetricContext context ) throws Exception {
         final ObjectNode node = context.objectNode;
         node.put( "type", "counter" );
         node.put( "count", counter.count() );
@@ -369,8 +333,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     @Override
-    public void processGauge( MetricName name, Gauge<?> gauge, MetricContext context ) throws Exception
-    {
+    public void processGauge( MetricName name, Gauge<?> gauge, MetricContext context ) throws Exception {
         final ObjectNode node = context.objectNode;
         node.put( "type", "gauge" );
         node.put( "vale", "[disabled]" );
@@ -378,8 +341,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     @Override
-    public void processMeter( MetricName name, Metered meter, MetricContext context ) throws Exception
-    {
+    public void processMeter( MetricName name, Metered meter, MetricContext context ) throws Exception {
         final ObjectNode node = context.objectNode;
         node.put( "type", "meter" );
         node.put( "event_type", meter.eventType() );
@@ -388,8 +350,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     @Override
-    public void processTimer( MetricName name, Timer timer, MetricContext context ) throws Exception
-    {
+    public void processTimer( MetricName name, Timer timer, MetricContext context ) throws Exception {
         final ObjectNode node = context.objectNode;
 
         node.put( "type", "timer" );
@@ -403,8 +364,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    private static void writeSummarizable( Summarizable metric, ObjectNode mNode ) throws IOException
-    {
+    private static void writeSummarizable( Summarizable metric, ObjectNode mNode ) throws IOException {
         mNode.put( "min", metric.min() );
         mNode.put( "max", metric.max() );
         mNode.put( "mean", metric.mean() );
@@ -412,8 +372,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    private static void writeSampling( Sampling metric, ObjectNode mNode ) throws IOException
-    {
+    private static void writeSampling( Sampling metric, ObjectNode mNode ) throws IOException {
 
         final Snapshot snapshot = metric.getSnapshot();
         mNode.put( "median", snapshot.getMedian() );
@@ -425,8 +384,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    private static void writeMeteredFields( Metered metered, ObjectNode node ) throws IOException
-    {
+    private static void writeMeteredFields( Metered metered, ObjectNode node ) throws IOException {
         ObjectNode mNode = JsonNodeFactory.instance.objectNode();
         mNode.put( "unit", metered.rateUnit().toString().toLowerCase() );
         mNode.put( "count", metered.count() );

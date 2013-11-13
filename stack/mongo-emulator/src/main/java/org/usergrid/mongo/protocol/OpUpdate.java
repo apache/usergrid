@@ -40,8 +40,7 @@ import org.usergrid.persistence.Results;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
 
-public class OpUpdate extends OpCrud
-{
+public class OpUpdate extends OpCrud {
 
     private static final Logger logger = LoggerFactory.getLogger( OpUpdate.class );
     private int flags;
@@ -49,65 +48,55 @@ public class OpUpdate extends OpCrud
     private BSONObject update;
 
 
-    public OpUpdate()
-    {
+    public OpUpdate() {
         opCode = OP_UPDATE;
     }
 
 
-    public int getFlags()
-    {
+    public int getFlags() {
         return flags;
     }
 
 
-    public void setFlags( int flags )
-    {
+    public void setFlags( int flags ) {
         this.flags = flags;
     }
 
 
-    public BSONObject getSelector()
-    {
+    public BSONObject getSelector() {
         return selector;
     }
 
 
-    public void setSelector( BSONObject selector )
-    {
+    public void setSelector( BSONObject selector ) {
         this.selector = selector;
     }
 
 
-    public void setSelector( Map<?, ?> map )
-    {
+    public void setSelector( Map<?, ?> map ) {
         selector = new BasicBSONObject();
         selector.putAll( map );
     }
 
 
-    public BSONObject getUpdate()
-    {
+    public BSONObject getUpdate() {
         return update;
     }
 
 
-    public void setUpdate( BSONObject update )
-    {
+    public void setUpdate( BSONObject update ) {
         this.update = update;
     }
 
 
-    public void setUpdate( Map<?, ?> map )
-    {
+    public void setUpdate( Map<?, ?> map ) {
         update = new BasicBSONObject();
         update.putAll( map );
     }
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
         buffer.readInt();
         fullCollectionName = readCString( buffer );
@@ -118,8 +107,7 @@ public class OpUpdate extends OpCrud
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 24; // 6 ints * 4 bytes
 
         ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
@@ -158,13 +146,11 @@ public class OpUpdate extends OpCrud
      */
     @SuppressWarnings("unchecked")
     @Override
-    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
-    {
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent ) {
 
         ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( getDatabaseName() ) );
 
-        if ( application == null )
-        {
+        if ( application == null ) {
             ctx.setAttachment( new IllegalArgumentException(
                     String.format( "Could not find application with name '%s' ", getDatabaseName() ) ) );
             return null;
@@ -175,18 +161,14 @@ public class OpUpdate extends OpCrud
         Results results = null;
         Query q = MongoQueryParser.toNativeQuery( selector, 1000 );
 
-        if ( q == null )
-        {
+        if ( q == null ) {
             ctx.setAttachment( new IllegalArgumentException( "Could not parse query" ) );
             return null;
         }
 
-        try
-        {
-            do
-            {
-                if ( results != null )
-                {
+        try {
+            do {
+                if ( results != null ) {
                     q.setCursor( results.getCursor() );
                 }
 
@@ -194,15 +176,13 @@ public class OpUpdate extends OpCrud
 
                 // apply the update
 
-                for ( Entity entity : results.getEntities() )
-                {
+                for ( Entity entity : results.getEntities() ) {
                     em.updateProperties( entity, update.toMap() );
                 }
             }
             while ( results != null && results.getCursor() != null );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to perform update with query {} and update {}",
                     new Object[] { selector, update, e } );
             ctx.setAttachment( e );
@@ -218,8 +198,7 @@ public class OpUpdate extends OpCrud
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OpUpdate [flags=" + flags + ", selector=" + selector + ", update=" + update + ", fullCollectionName="
                 + fullCollectionName + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo="
                 + responseTo + ", opCode=" + opCode + "]";

@@ -25,47 +25,38 @@ import org.usergrid.utils.StringUtils;
 import org.usergrid.utils.UUIDUtils;
 
 
-public class SimpleRoleRef implements RoleRef
-{
+public class SimpleRoleRef implements RoleRef {
 
     protected final UUID groupId;
     protected final String roleName;
     protected final UUID id;
 
 
-    public SimpleRoleRef( String roleName )
-    {
+    public SimpleRoleRef( String roleName ) {
         this( null, roleName );
     }
 
 
-    public SimpleRoleRef( UUID groupId, String roleName )
-    {
+    public SimpleRoleRef( UUID groupId, String roleName ) {
         Assert.notNull( roleName );
-        if ( groupId != null )
-        {
+        if ( groupId != null ) {
             this.groupId = groupId;
         }
-        else
-        {
+        else {
             this.groupId = UUIDUtils.tryExtractUUID( roleName );
         }
         this.roleName = StringUtils.stringOrSubstringAfterLast( roleName.toLowerCase(), ':' );
-        if ( groupId == null )
-        {
+        if ( groupId == null ) {
             id = CassandraPersistenceUtils.keyID( "role", this.groupId, this.roleName );
         }
-        else
-        {
+        else {
             id = CassandraPersistenceUtils.keyID( "role", this.roleName );
         }
     }
 
 
-    public static SimpleRoleRef forRoleEntity( Entity role )
-    {
-        if ( role == null )
-        {
+    public static SimpleRoleRef forRoleEntity( Entity role ) {
+        if ( role == null ) {
             return null;
         }
         UUID groupId = ( UUID ) role.getProperty( "group" );
@@ -74,70 +65,59 @@ public class SimpleRoleRef implements RoleRef
     }
 
 
-    public static SimpleRoleRef forRoleName( String roleName )
-    {
+    public static SimpleRoleRef forRoleName( String roleName ) {
         return new SimpleRoleRef( null, roleName );
     }
 
 
-    public static SimpleRoleRef forGroupIdAndRoleName( UUID groupId, String roleName )
-    {
+    public static SimpleRoleRef forGroupIdAndRoleName( UUID groupId, String roleName ) {
         return new SimpleRoleRef( groupId, roleName );
     }
 
 
-    public static UUID getIdForRoleName( String roleName )
-    {
+    public static UUID getIdForRoleName( String roleName ) {
         return forRoleName( roleName ).getUuid();
     }
 
 
-    public static UUID getIdForGroupIdAndRoleName( UUID groupId, String roleName )
-    {
+    public static UUID getIdForGroupIdAndRoleName( UUID groupId, String roleName ) {
         return forGroupIdAndRoleName( groupId, roleName ).getUuid();
     }
 
 
     @Override
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return id;
     }
 
 
     @Override
-    public String getType()
-    {
+    public String getType() {
         return "role";
     }
 
 
     @Override
-    public EntityRef getGroupRef()
-    {
+    public EntityRef getGroupRef() {
         return new SimpleEntityRef( Group.ENTITY_TYPE, groupId );
     }
 
 
     @Override
-    public String getRoleName()
-    {
+    public String getRoleName() {
         return roleName;
     }
 
 
     @Override
-    public UUID getGroupId()
-    {
+    public UUID getGroupId() {
         return groupId;
     }
 
 
     @Override
-    public String getApplicationRoleName()
-    {
-        if ( groupId == null )
-        {
+    public String getApplicationRoleName() {
+        if ( groupId == null ) {
             return roleName;
         }
         return groupId + ":" + roleName;

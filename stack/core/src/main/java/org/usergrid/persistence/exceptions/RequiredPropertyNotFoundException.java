@@ -16,30 +16,26 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class RequiredPropertyNotFoundException extends PersistenceException
-{
+public class RequiredPropertyNotFoundException extends PersistenceException {
 
     private static final long serialVersionUID = 1L;
     final String entityType;
     final String propertyName;
 
 
-    public RequiredPropertyNotFoundException( String entityType, String propertyName )
-    {
+    public RequiredPropertyNotFoundException( String entityType, String propertyName ) {
         super( "Entity " + entityType + " requires a property named " + propertyName );
         this.entityType = entityType;
         this.propertyName = propertyName;
     }
 
 
-    public String getEntityType()
-    {
+    public String getEntityType() {
         return entityType;
     }
 
 
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 }

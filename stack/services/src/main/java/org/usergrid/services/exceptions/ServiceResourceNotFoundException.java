@@ -20,8 +20,7 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceRequest;
 
 
-public class ServiceResourceNotFoundException extends ServiceInvocationException
-{
+public class ServiceResourceNotFoundException extends ServiceInvocationException {
 
     /**
      *
@@ -29,14 +28,12 @@ public class ServiceResourceNotFoundException extends ServiceInvocationException
     private static final long serialVersionUID = 1L;
 
 
-    public ServiceResourceNotFoundException( ServiceContext context )
-    {
+    public ServiceResourceNotFoundException( ServiceContext context ) {
         super( context, "Service resource not found" );
     }
 
 
-    public ServiceResourceNotFoundException( ServiceRequest request )
-    {
+    public ServiceResourceNotFoundException( ServiceRequest request ) {
         super( request, "Service resource not found" );
     }
 }

@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class AllInCollectionIT extends AbstractIteratingQueryIT
-{
+public class AllInCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void allInCollection() throws Exception
-    {
+    public void allInCollection() throws Exception {
         allIn( new CollectionIoHelper() );
     }
 }

@@ -17,24 +17,19 @@
 package org.usergrid.utils;
 
 
-public class NumberUtils
-{
-    public static int sign( int i )
-    {
-        if ( i < 0 )
-        {
+public class NumberUtils {
+    public static int sign( int i ) {
+        if ( i < 0 ) {
             return -1;
         }
-        if ( i > 0 )
-        {
+        if ( i > 0 ) {
             return 1;
         }
         return 0;
     }
 
 
-    public static long roundLong( long l, long r )
-    {
+    public static long roundLong( long l, long r ) {
         return ( l / r ) * r;
     }
 }

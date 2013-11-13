@@ -31,8 +31,7 @@ import static org.apache.commons.lang.StringUtils.rightPad;
 import static org.apache.commons.lang.StringUtils.substring;
 
 
-public class AESUtils
-{
+public class AESUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger( AESUtils.class );
 
@@ -41,52 +40,43 @@ public class AESUtils
     private static Base64 coder;
 
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             cipher = Cipher.getInstance( "AES/ECB/PKCS5Padding", "SunJCE" );
             coder = new Base64( 32, linebreak, true );
         }
-        catch ( Throwable t )
-        {
+        catch ( Throwable t ) {
             LOG.error( "Cipher error", t );
         }
     }
 
 
-    public static synchronized String encrypt( String secret, String plainText )
-    {
+    public static synchronized String encrypt( String secret, String plainText ) {
         secret = substring( rightPad( secret, 16 ), 0, 16 );
         SecretKey key = new SecretKeySpec( secret.getBytes(), "AES" );
-        try
-        {
+        try {
             cipher.init( Cipher.ENCRYPT_MODE, key );
             byte[] cipherText = cipher.doFinal( plainText.getBytes() );
             return new String( coder.encode( cipherText ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.error( "Encryption error", e );
         }
         return null;
     }
 
 
-    @SuppressWarnings( "unused" )
-    public static synchronized String decrypt( String secret, String codedText )
-    {
+    @SuppressWarnings("unused")
+    public static synchronized String decrypt( String secret, String codedText ) {
         secret = substring( rightPad( secret, 16 ), 0, 16 );
         SecretKey key = new SecretKeySpec( secret.getBytes(), "AES" );
         byte[] encypted = coder.decode( codedText.getBytes() );
-        try
-        {
+        try {
             cipher.init( Cipher.DECRYPT_MODE, key );
             byte[] decrypted = cipher.doFinal( encypted );
             return new String( decrypted );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.error( "Decryption error", e );
         }
         return null;

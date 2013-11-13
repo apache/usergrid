@@ -26,12 +26,10 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 
 @Provider
-public class JsonWriteExceptionMapper extends AbstractExceptionMapper<JsonWriteException>
-{
+public class JsonWriteExceptionMapper extends AbstractExceptionMapper<JsonWriteException> {
 
     @Override
-    public Response toResponse( JsonWriteException e )
-    {
+    public Response toResponse( JsonWriteException e ) {
         return toResponse( INTERNAL_SERVER_ERROR, e );
     }
 }

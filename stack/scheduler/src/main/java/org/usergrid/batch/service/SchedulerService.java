@@ -29,8 +29,7 @@ import org.usergrid.persistence.entities.JobStat;
  *
  * @author tnine
  */
-public interface SchedulerService
-{
+public interface SchedulerService {
 
     /**
      * Create a new job

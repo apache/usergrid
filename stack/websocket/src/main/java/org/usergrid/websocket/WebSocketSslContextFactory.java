@@ -23,24 +23,20 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
 
-public class WebSocketSslContextFactory
-{
+public class WebSocketSslContextFactory {
 
     private static final String PROTOCOL = "TLS";
     private static final SSLContext SERVER_CONTEXT;
 
 
-    static
-    {
+    static {
         String algorithm = Security.getProperty( "ssl.KeyManagerFactory.algorithm" );
-        if ( algorithm == null )
-        {
+        if ( algorithm == null ) {
             algorithm = "SunX509";
         }
 
         SSLContext serverContext = null;
-        try
-        {
+        try {
             KeyStore ks = KeyStore.getInstance( "JKS" );
             ks.load( WebSocketKeyStore.asInputStream(), WebSocketKeyStore.getKeyStorePassword() );
 
@@ -52,8 +48,7 @@ public class WebSocketSslContextFactory
             serverContext = SSLContext.getInstance( PROTOCOL );
             serverContext.init( kmf.getKeyManagers(), null, null );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new Error( "Failed to initialize the server-side SSLContext", e );
         }
 
@@ -61,8 +56,7 @@ public class WebSocketSslContextFactory
     }
 
 
-    public static SSLContext getServerContext()
-    {
+    public static SSLContext getServerContext() {
         return SERVER_CONTEXT;
     }
 }

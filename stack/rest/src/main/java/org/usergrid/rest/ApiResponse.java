@@ -47,13 +47,12 @@ import org.apache.commons.lang.StringUtils;
 import static org.usergrid.utils.InflectionUtils.pluralize;
 
 
-@JsonPropertyOrder({
+@JsonPropertyOrder( {
         "action", "application", "params", "path", "query", "uri", "status", "error", "applications", "entity",
         "entities", "list", "data", "next", "timestamp", "duration"
-})
+} )
 @XmlRootElement
-public class ApiResponse
-{
+public class ApiResponse {
 
     private ServiceRequest esp;
 
@@ -89,49 +88,41 @@ public class ApiResponse
     protected ServerEnvironmentProperties serverEnvironmentProperties;
 
 
-    public ApiResponse()
-    {
+    public ApiResponse() {
         timestamp = System.currentTimeMillis();
     }
 
 
-    public ApiResponse( ServerEnvironmentProperties properties )
-    {
+    public ApiResponse( ServerEnvironmentProperties properties ) {
         this.serverEnvironmentProperties = properties;
         timestamp = System.currentTimeMillis();
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getCallback()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getCallback() {
         return callback;
     }
 
 
-    public void setCallback( String callback )
-    {
+    public void setCallback( String callback ) {
         this.callback = callback;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getError()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getError() {
         return error;
     }
 
 
-    public void setError( String code )
-    {
+    public void setError( String code ) {
         error = code;
     }
 
 
-    public static String exceptionToErrorCode( Throwable e )
-    {
-        if ( e == null )
-        {
+    public static String exceptionToErrorCode( Throwable e ) {
+        if ( e == null ) {
             return "service_error";
         }
         String s = ClassUtils.getShortClassName( e.getClass() );
@@ -141,48 +132,39 @@ public class ApiResponse
     }
 
 
-    public ApiResponse withError( String code )
-    {
+    public ApiResponse withError( String code ) {
         return withError( code, null, null );
     }
 
 
-    public void setError( Throwable e )
-    {
+    public void setError( Throwable e ) {
         setError( null, null, e );
     }
 
 
-    public ApiResponse withError( Throwable e )
-    {
+    public ApiResponse withError( Throwable e ) {
         return withError( null, null, e );
     }
 
 
-    public void setError( String description, Throwable e )
-    {
+    public void setError( String description, Throwable e ) {
         setError( null, description, e );
     }
 
 
-    public ApiResponse withError( String description, Throwable e )
-    {
+    public ApiResponse withError( String description, Throwable e ) {
         return withError( null, description, e );
     }
 
 
-    public void setError( String code, String description, Throwable e )
-    {
-        if ( code == null )
-        {
+    public void setError( String code, String description, Throwable e ) {
+        if ( code == null ) {
             code = exceptionToErrorCode( e );
         }
         error = code;
         errorDescription = description;
-        if ( e != null )
-        {
-            if ( description == null )
-            {
+        if ( e != null ) {
+            if ( description == null ) {
                 errorDescription = e.getMessage();
             }
             exception = e.getClass().getName();
@@ -190,67 +172,57 @@ public class ApiResponse
     }
 
 
-    public ApiResponse withError( String code, String description, Throwable e )
-    {
+    public ApiResponse withError( String code, String description, Throwable e ) {
         setError( code, description, e );
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    @JsonProperty("error_description")
-    public String getErrorDescription()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    @JsonProperty( "error_description" )
+    public String getErrorDescription() {
         return errorDescription;
     }
 
 
-    @JsonProperty("error_description")
-    public void setErrorDescription( String errorDescription )
-    {
+    @JsonProperty( "error_description" )
+    public void setErrorDescription( String errorDescription ) {
         this.errorDescription = errorDescription;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    @JsonProperty("error_uri")
-    public String getErrorUri()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    @JsonProperty( "error_uri" )
+    public String getErrorUri() {
         return errorUri;
     }
 
 
-    @JsonProperty("error_uri")
-    public void setErrorUri( String errorUri )
-    {
+    @JsonProperty( "error_uri" )
+    public void setErrorUri( String errorUri ) {
         this.errorUri = errorUri;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getException()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getException() {
         return exception;
     }
 
 
-    public void setException( String exception )
-    {
+    public void setException( String exception ) {
         this.exception = exception;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getPath()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getPath() {
         return path;
     }
 
 
-    public void setPath( String path )
-    {
-        if ( path == null )
-        {
+    public void setPath( String path ) {
+        if ( path == null ) {
             this.path = null;
             uri = null;
         }
@@ -259,378 +231,317 @@ public class ApiResponse
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getUri()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getUri() {
         return uri;
     }
 
 
-    public void setServiceRequest( ServiceRequest p )
-    {
+    public void setServiceRequest( ServiceRequest p ) {
         esp = p;
-        if ( p != null )
-        {
+        if ( p != null ) {
             path = p.getPath();
             uri = createPath( path );
         }
     }
 
 
-    public ApiResponse withServiceRequest( ServiceRequest p )
-    {
+    public ApiResponse withServiceRequest( ServiceRequest p ) {
         setServiceRequest( p );
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getStatus()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getStatus() {
         return status;
     }
 
 
-    public void setSuccess()
-    {
+    public void setSuccess() {
         status = "ok";
     }
 
 
-    public ApiResponse withSuccess()
-    {
+    public ApiResponse withSuccess() {
         status = "ok";
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public long getDuration()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public long getDuration() {
         return System.currentTimeMillis() - timestamp;
     }
 
 
-    public void setTimestamp( long timestamp )
-    {
+    public void setTimestamp( long timestamp ) {
         this.timestamp = timestamp;
     }
 
 
-    public ApiResponse withTimestamp( long timestamp )
-    {
+    public ApiResponse withTimestamp( long timestamp ) {
         this.timestamp = timestamp;
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public long getTimestamp()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public long getTimestamp() {
         return timestamp;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getAction()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getAction() {
         return action;
     }
 
 
-    public void setAction( String action )
-    {
+    public void setAction( String action ) {
         this.action = action;
     }
 
 
-    public ApiResponse withAction( String action )
-    {
+    public ApiResponse withAction( String action ) {
         this.action = action;
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getApplication()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public UUID getApplication() {
         return application;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String applicationName()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String applicationName() {
         return applicationName;
     }
 
 
     /** @return the orgId */
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getOrganization()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getOrganization() {
         return organization;
     }
 
 
     /** Set the application and organization information */
-    public void setApplication( Application app )
-    {
+    public void setApplication( Application app ) {
         this.organization = app.getOrganizationName();
         this.applicationName = app.getApplicationName();
         this.application = app.getUuid();
 
-        if ( esp != null )
-        {
+        if ( esp != null ) {
             uri = createPath( esp.toString() );
         }
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize( include = Inclusion.NON_NULL )
     @XmlAnyElement
-    public List<Entity> getEntities()
-    {
+    public List<Entity> getEntities() {
         return entities;
     }
 
 
-    public void setEntities( List<Entity> entities )
-    {
-        if ( entities != null )
-        {
+    public void setEntities( List<Entity> entities ) {
+        if ( entities != null ) {
             this.entities = entities;
         }
-        else
-        {
+        else {
             this.entities = new ArrayList<Entity>();
         }
     }
 
 
-    public ApiResponse withEntities( List<Entity> entities )
-    {
+    public ApiResponse withEntities( List<Entity> entities ) {
         setEntities( entities );
         return this;
     }
 
 
-    public void setResults( ServiceResults results )
-    {
-        if ( results != null )
-        {
+    public void setResults( ServiceResults results ) {
+        if ( results != null ) {
             setPath( results.getPath() );
             entities = results.getEntities();
             next = results.getNextResult();
             cursor = results.getCursor();
             counters = results.getCounters();
         }
-        else
-        {
+        else {
             entities = new ArrayList<Entity>();
         }
     }
 
 
-    public ApiResponse withResults( ServiceResults results )
-    {
+    public ApiResponse withResults( ServiceResults results ) {
         setResults( results );
         return this;
     }
 
 
-    public ApiResponse withResultsCount( ServiceResults results )
-    {
+    public ApiResponse withResultsCount( ServiceResults results ) {
         setResults( results );
-        if ( results != null )
-        {
+        if ( results != null ) {
             count = results.size();
         }
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getNext()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public UUID getNext() {
         return next;
     }
 
 
-    public void setNext( UUID next )
-    {
+    public void setNext( UUID next ) {
         this.next = next;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getCursor()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public String getCursor() {
         return cursor;
     }
 
 
-    public void setCursor( String cursor )
-    {
+    public void setCursor( String cursor ) {
         this.cursor = cursor;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Integer getCount()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Integer getCount() {
         return count;
     }
 
 
-    public void setCount( Integer count )
-    {
+    public void setCount( Integer count ) {
         this.count = count;
     }
 
 
-    public ApiResponse withEntity( Entity entity )
-    {
+    public ApiResponse withEntity( Entity entity ) {
         entities = new ArrayList<Entity>();
         entities.add( entity );
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<Object> getList()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public List<Object> getList() {
         return list;
     }
 
 
-    public void setList( List<Object> list )
-    {
-        if ( list != null )
-        {
+    public void setList( List<Object> list ) {
+        if ( list != null ) {
             this.list = list;
         }
-        else
-        {
+        else {
             this.list = new ArrayList<Object>();
         }
     }
 
 
-    public ApiResponse withList( List<Object> list )
-    {
+    public ApiResponse withList( List<Object> list ) {
         setList( list );
         return this;
     }
 
 
-    public ApiResponse withListCount( List<Object> list )
-    {
+    public ApiResponse withListCount( List<Object> list ) {
         setList( list );
-        if ( !list.isEmpty() )
-        {
+        if ( !list.isEmpty() ) {
             this.count = list.size();
         }
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Object getData()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Object getData() {
         return data;
     }
 
 
-    public void setData( Object data )
-    {
-        if ( data != null )
-        {
+    public void setData( Object data ) {
+        if ( data != null ) {
             this.data = data;
         }
-        else
-        {
+        else {
             this.data = new LinkedHashMap<String, Object>();
         }
     }
 
 
-    public ApiResponse withData( Object data )
-    {
+    public ApiResponse withData( Object data ) {
         setData( data );
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<AggregateCounterSet> getCounters()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public List<AggregateCounterSet> getCounters() {
         return counters;
     }
 
 
-    public void setCounters( List<AggregateCounterSet> counters )
-    {
+    public void setCounters( List<AggregateCounterSet> counters ) {
         this.counters = counters;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Map<String, UUID> getApplications()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Map<String, UUID> getApplications() {
         return applications;
     }
 
 
-    public void setApplications( Map<String, UUID> applications )
-    {
+    public void setApplications( Map<String, UUID> applications ) {
         this.applications = applications;
     }
 
 
-    public ApiResponse withApplications( Map<String, UUID> applications )
-    {
+    public ApiResponse withApplications( Map<String, UUID> applications ) {
         this.applications = applications;
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public ClientCredentialsInfo getCredentials()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public ClientCredentialsInfo getCredentials() {
         return credentials;
     }
 
 
-    public void setCredentials( ClientCredentialsInfo credentials )
-    {
+    public void setCredentials( ClientCredentialsInfo credentials ) {
         this.credentials = credentials;
     }
 
 
-    public ApiResponse withCredentials( ClientCredentialsInfo credentials )
-    {
+    public ApiResponse withCredentials( ClientCredentialsInfo credentials ) {
         this.credentials = credentials;
         return this;
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Map<String, List<String>> getParams()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Map<String, List<String>> getParams() {
         return params;
     }
 
 
-    public void setParams( Map<String, List<String>> params )
-    {
+    public void setParams( Map<String, List<String>> params ) {
         Map<String, List<String>> q = new LinkedHashMap<String, List<String>>();
-        for ( String k : params.keySet() )
-        {
+        for ( String k : params.keySet() ) {
             List<String> v = params.get( k );
-            if ( v != null )
-            {
+            if ( v != null ) {
                 q.put( k, new ArrayList<String>( v ) );
             }
         }
@@ -638,43 +549,34 @@ public class ApiResponse
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Map<String, Object> getMetadata()
-    {
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 
 
-    public void setMetadata( Map<String, Object> metadata )
-    {
+    public void setMetadata( Map<String, Object> metadata ) {
         this.metadata = metadata;
     }
 
 
-    public String getEntityPath( String url_base, Entity entity )
-    {
+    public String getEntityPath( String url_base, Entity entity ) {
         String entity_uri = null;
-        if ( !Application.ENTITY_TYPE.equals( entity.getType() ) )
-        {
+        if ( !Application.ENTITY_TYPE.equals( entity.getType() ) ) {
             entity_uri = createPath( pluralize( entity.getType() ), entity.getUuid().toString() );
         }
-        else
-        {
+        else {
             entity_uri = createPath();
         }
         return entity_uri;
     }
 
 
-    public void prepareEntities()
-    {
-        if ( uri != null )
-        {
+    public void prepareEntities() {
+        if ( uri != null ) {
             String url_base = serverEnvironmentProperties.getApiBase();
-            if ( entities != null )
-            {
-                for ( Entity entity : entities )
-                {
+            if ( entities != null ) {
+                for ( Entity entity : entities ) {
                     String entity_uri = getEntityPath( url_base, entity );
                     entity.setMetadata( "uri", entity_uri );
                     entity.setMetadata( "path", path + "/" + entity.getUuid() );
@@ -685,15 +587,13 @@ public class ApiResponse
 
 
     @JsonAnyGetter
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
     @JsonAnySetter
-    public void setProperty( String key, Object value )
-    {
+    public void setProperty( String key, Object value ) {
         properties.put( key, value );
     }
 
@@ -703,35 +603,29 @@ public class ApiResponse
      *
      * @return `
      */
-    private String createPath( String... suffixes )
-    {
+    private String createPath( String... suffixes ) {
 
         StringBuilder builder = new StringBuilder();
 
         builder.append( serverEnvironmentProperties.getApiBase() );
-        if ( !serverEnvironmentProperties.getApiBase().endsWith( "/" ) )
-        {
+        if ( !serverEnvironmentProperties.getApiBase().endsWith( "/" ) ) {
             builder.append( "/" );
         }
         builder.append( organization );
         builder.append( "/" );
         builder.append( applicationName );
 
-        if ( suffixes.length == 0 )
-        {
+        if ( suffixes.length == 0 ) {
             return builder.toString();
         }
 
 
-        for ( String current : suffixes )
-        {
-            if ( current == null )
-            {
+        for ( String current : suffixes ) {
+            if ( current == null ) {
                 continue;
             }
 
-            if ( !current.startsWith( "/" ) )
-            {
+            if ( !current.startsWith( "/" ) ) {
                 builder.append( "/" );
             }
             builder.append( current );

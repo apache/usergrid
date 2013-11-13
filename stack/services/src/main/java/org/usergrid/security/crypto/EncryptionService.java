@@ -23,8 +23,7 @@ import org.usergrid.security.crypto.command.EncryptionCommand;
 
 
 /** @author tnine */
-public interface EncryptionService
-{
+public interface EncryptionService {
 
     /**
      * Using the credentials and the input secret provided, return a CredentialsInfo for comparison with the existing
@@ -62,8 +61,7 @@ public interface EncryptionService
 
     /**
      * Get the command supplied by name.  Could return null.  Should only be used by tools that are VERY sure what
-     * they're
-     * doing
+     * they're doing
      */
     public EncryptionCommand getCommand( String name );
 

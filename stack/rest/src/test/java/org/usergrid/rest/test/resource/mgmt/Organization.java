@@ -28,15 +28,13 @@ import org.usergrid.rest.test.resource.app.UsersCollection;
  *
  * @author tnine
  */
-public class Organization extends EntityResource
-{
+public class Organization extends EntityResource {
 
     /**
      * @param entityId
      * @param parent
      */
-    public Organization( UUID entityId, NamedResource parent )
-    {
+    public Organization( UUID entityId, NamedResource parent ) {
         super( entityId, parent );
     }
 
@@ -45,20 +43,17 @@ public class Organization extends EntityResource
      * @param entityName
      * @param parent
      */
-    public Organization( String entityName, NamedResource parent )
-    {
+    public Organization( String entityName, NamedResource parent ) {
         super( entityName, parent );
     }
 
 
-    public ApplicationsCollection apps()
-    {
+    public ApplicationsCollection apps() {
         return new ApplicationsCollection( this );
     }
 
 
-    public UsersCollection users()
-    {
+    public UsersCollection users() {
         return new UsersCollection( this );
     }
 }

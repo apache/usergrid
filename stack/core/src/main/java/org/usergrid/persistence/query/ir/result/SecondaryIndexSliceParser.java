@@ -27,38 +27,33 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
  *
  * @author tnine
  */
-public class SecondaryIndexSliceParser implements SliceParser
-{
+public class SecondaryIndexSliceParser implements SliceParser {
 
 
     /* (non-Javadoc)
      * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff )
-    {
+    public ScanColumn parse( ByteBuffer buff ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
         return new SecondaryIndexColumn( ( UUID ) composite.get( 2 ), composite.get( 1 ), buff );
     }
 
 
-    public static class SecondaryIndexColumn extends AbstractScanColumn
-    {
+    public static class SecondaryIndexColumn extends AbstractScanColumn {
 
         private final Object value;
 
 
-        public SecondaryIndexColumn( UUID uuid, Object value, ByteBuffer buff )
-        {
+        public SecondaryIndexColumn( UUID uuid, Object value, ByteBuffer buff ) {
             super( uuid, buff );
             this.value = value;
         }
 
 
         /** Get the value from the node */
-        public Object getValue()
-        {
+        public Object getValue() {
             return this.value;
         }
     }

@@ -22,11 +22,9 @@ import org.usergrid.persistence.Entity;
 import static org.junit.Assert.assertNotNull;
 
 
-public class UsersServiceIT extends AbstractServiceIT
-{
+public class UsersServiceIT extends AbstractServiceIT {
     @Test
-    public void testPermissions() throws Exception
-    {
+    public void testPermissions() throws Exception {
         app.createRole( "manager", null, 0 );
         app.createRole( "member", null, 0 );
 

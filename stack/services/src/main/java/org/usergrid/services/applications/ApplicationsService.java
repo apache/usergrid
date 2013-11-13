@@ -41,14 +41,12 @@ import static org.usergrid.services.ServiceResults.simpleServiceResults;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public class ApplicationsService extends AbstractService
-{
+public class ApplicationsService extends AbstractService {
 
     private static final Logger logger = LoggerFactory.getLogger( ApplicationsService.class );
 
 
-    public ApplicationsService()
-    {
+    public ApplicationsService() {
         super();
         logger.info( "/applications" );
         declareEntityDictionary( "counters" );
@@ -58,14 +56,12 @@ public class ApplicationsService extends AbstractService
 
 
     @Override
-    public ServiceResults invoke( ServiceContext context ) throws Exception
-    {
+    public ServiceResults invoke( ServiceContext context ) throws Exception {
 
         ServiceResults results = null;
 
         String metadataType = checkForServiceMetadata( context );
-        if ( metadataType != null )
-        {
+        if ( metadataType != null ) {
             return handleServiceMetadata( context, metadataType );
         }
 
@@ -83,36 +79,29 @@ public class ApplicationsService extends AbstractService
 
 
     @Override
-    public ServiceResults getItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults getItemById( ServiceContext context, UUID id ) throws Exception {
         return getApplicationEntity( context );
     }
 
 
     @Override
-    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
         return updateApplicationEntity( context, context.getPayload() );
     }
 
 
     @Override
     public ServiceResults getEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                               EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                               EntityDictionaryEntry dictionary ) throws Exception {
 
-        if ( "counters".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "counters".equalsIgnoreCase( dictionary.getName() ) ) {
             checkPermissionsForPath( context, "/counters" );
 
-            if ( context.parameterCount() == 0 )
-            {
+            if ( context.parameterCount() == 0 ) {
                 return getApplicationCounterNames();
             }
-            else if ( context.parameterCount() > 0 )
-            {
-                if ( context.getParameters().get( 0 ) instanceof QueryParameter )
-                {
+            else if ( context.parameterCount() > 0 ) {
+                if ( context.getParameters().get( 0 ) instanceof QueryParameter ) {
                     return getApplicationCounters( ( ( QueryParameter ) context.getParameters().get( 0 ) ).getQuery() );
                 }
             }
@@ -122,8 +111,7 @@ public class ApplicationsService extends AbstractService
     }
 
 
-    public ServiceResults getApplicationEntity( ServiceContext context ) throws Exception
-    {
+    public ServiceResults getApplicationEntity( ServiceContext context ) throws Exception {
 
         checkPermissionsForPath( context, "/" );
 
@@ -132,8 +120,7 @@ public class ApplicationsService extends AbstractService
 
         Map<String, Object> collections = em.getApplicationCollectionMetadata();
         // Set<String> collections = em.getApplicationCollections();
-        if ( collections.size() > 0 )
-        {
+        if ( collections.size() > 0 ) {
             r.setMetadata( em.getApplicationRef().getUuid(), "collections", collections );
         }
 
@@ -141,24 +128,19 @@ public class ApplicationsService extends AbstractService
     }
 
 
-    public ServiceResults updateApplicationEntity( ServiceContext context, ServicePayload payload ) throws Exception
-    {
+    public ServiceResults updateApplicationEntity( ServiceContext context, ServicePayload payload ) throws Exception {
 
         checkPermissionsForPath( context, "/" );
 
         Map<String, Object> properties = payload.getProperties();
         Object m = properties.get( "metadata" );
-        if ( m instanceof Map )
-        {
+        if ( m instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> metadata = ( Map<String, Object> ) m;
             Object c = metadata.get( "collections" );
-            if ( c instanceof Map )
-            {
+            if ( c instanceof Map ) {
                 @SuppressWarnings("unchecked") Map<String, Object> collections = ( Map<String, Object> ) c;
-                for ( String collection : collections.keySet() )
-                {
-                    if ( isReservedCollection( collection ) )
-                    {
+                for ( String collection : collections.keySet() ) {
+                    if ( isReservedCollection( collection ) ) {
                         continue;
                     }
 
@@ -174,8 +156,7 @@ public class ApplicationsService extends AbstractService
         Results r = Results.fromEntity( entity );
 
         Set<String> collections = em.getApplicationCollections();
-        if ( collections.size() > 0 )
-        {
+        if ( collections.size() > 0 ) {
             r.setMetadata( em.getApplicationRef().getUuid(), "collections", collections );
         }
 
@@ -183,11 +164,9 @@ public class ApplicationsService extends AbstractService
     }
 
 
-    private boolean isReservedCollection( String collection )
-    {
+    private boolean isReservedCollection( String collection ) {
         if ( StringUtils.equalsIgnoreCase( "applications", collection ) || StringUtils
-                .equalsIgnoreCase( "application", collection ) )
-        {
+                .equalsIgnoreCase( "application", collection ) ) {
             return true;
         }
 
@@ -195,21 +174,18 @@ public class ApplicationsService extends AbstractService
     }
 
 
-    public ServiceResults getApplicationCounterNames() throws Exception
-    {
+    public ServiceResults getApplicationCounterNames() throws Exception {
         Set<String> counters = em.getCounterNames();
         ServiceResults results = genericServiceResults().withData( counters );
         return results;
     }
 
 
-    public ServiceResults getApplicationCounters( Query query ) throws Exception
-    {
+    public ServiceResults getApplicationCounters( Query query ) throws Exception {
 
         Results counters = em.getAggregateCounters( query );
         ServiceResults results = simpleServiceResults( Type.COUNTERS );
-        if ( counters != null )
-        {
+        if ( counters != null ) {
             results.withCounters( counters.getCounters() );
         }
         return results;
@@ -218,10 +194,8 @@ public class ApplicationsService extends AbstractService
 
     @Override
     public ServiceResults getEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-            throws Exception
-    {
-        if ( "hello".equalsIgnoreCase( command ) )
-        {
+            throws Exception {
+        if ( "hello".equalsIgnoreCase( command ) ) {
             ServiceResults results = genericServiceResults().withData( hashMap( "say", "Hello!" ) );
             return results;
         }
@@ -231,10 +205,8 @@ public class ApplicationsService extends AbstractService
 
     @Override
     public ServiceResults postEntityCommand( ServiceContext context, List<EntityRef> refs, String command,
-                                             ServicePayload payload ) throws Exception
-    {
-        if ( "resetroles".equalsIgnoreCase( command ) )
-        {
+                                             ServicePayload payload ) throws Exception {
+        if ( "resetroles".equalsIgnoreCase( command ) ) {
             em.resetRoles();
             //          TODO TN finish this  return getApplicationRoles();
         }

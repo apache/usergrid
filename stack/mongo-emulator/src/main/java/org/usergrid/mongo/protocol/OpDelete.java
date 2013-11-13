@@ -42,8 +42,7 @@ import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
 
-public class OpDelete extends OpCrud
-{
+public class OpDelete extends OpCrud {
 
     private static final Logger logger = LoggerFactory.getLogger( OpDelete.class );
     public static final int BATCH_SIZE = 1000;
@@ -53,46 +52,39 @@ public class OpDelete extends OpCrud
     private BSONObject selector;
 
 
-    public OpDelete()
-    {
+    public OpDelete() {
         opCode = OP_DELETE;
     }
 
 
-    public int getFlags()
-    {
+    public int getFlags() {
         return flags;
     }
 
 
-    public void setFlags( int flags )
-    {
+    public void setFlags( int flags ) {
         this.flags = flags;
     }
 
 
-    public BSONObject getSelector()
-    {
+    public BSONObject getSelector() {
         return selector;
     }
 
 
-    public void setSelector( BSONObject selector )
-    {
+    public void setSelector( BSONObject selector ) {
         this.selector = selector;
     }
 
 
-    public void setSelector( Map<?, ?> map )
-    {
+    public void setSelector( Map<?, ?> map ) {
         selector = new BasicBSONObject();
         selector.putAll( map );
     }
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
         buffer.readInt();
         fullCollectionName = readCString( buffer );
@@ -102,8 +94,7 @@ public class OpDelete extends OpCrud
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 24; // 6 ints * 4 bytes
 
         ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
@@ -136,15 +127,13 @@ public class OpDelete extends OpCrud
      * org.jboss.netty.channel.MessageEvent)
      */
     @Override
-    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
-    {
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent ) {
 
         // perform the query
         Query query = MongoQueryParser.toNativeQuery( selector, 0 );
 
         // TODO TN set an error
-        if ( query == null )
-        {
+        if ( query == null ) {
             return null;
         }
 
@@ -153,8 +142,7 @@ public class OpDelete extends OpCrud
 
         ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( getDatabaseName() ) );
 
-        if ( application == null )
-        {
+        if ( application == null ) {
             ctx.setAttachment( new IllegalArgumentException(
                     String.format( "Could not find application with name '%s' ", getDatabaseName() ) ) );
             return null;
@@ -166,27 +154,22 @@ public class OpDelete extends OpCrud
 
         Results results = null;
 
-        do
-        {
+        do {
 
-            try
-            {
+            try {
 
-                if ( results != null )
-                {
+                if ( results != null ) {
                     query.setCursor( results.getCursor() );
                 }
 
                 results = em.searchCollection( em.getApplicationRef(), getCollectionName(), query );
 
                 // now loop through all the ids and delete them
-                for ( UUID id : results.getIds() )
-                {
+                for ( UUID id : results.getIds() ) {
                     em.delete( new SimpleEntityRef( query.getEntityType(), id ) );
                 }
             }
-            catch ( Exception ex )
-            {
+            catch ( Exception ex ) {
                 logger.error( "Unable to delete object", ex );
                 ctx.setAttachment( ex );
             }
@@ -205,8 +188,7 @@ public class OpDelete extends OpCrud
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OpDelete [flags=" + flags + ", selector=" + selector + ", fullCollectionName=" + fullCollectionName
                 + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo=" + responseTo
                 + ", opCode=" + opCode + "]";

@@ -25,8 +25,7 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
  * @author zznate
  */
 @Component
-public class TracingFilter implements ContainerRequestFilter, ContainerResponseFilter
-{
+public class TracingFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private Logger logger = LoggerFactory.getLogger( TracingFilter.class );
 
@@ -41,25 +40,20 @@ public class TracingFilter implements ContainerRequestFilter, ContainerResponseF
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request )
-    {
-        if ( !traceTagManager.getTraceEnabled() && !traceTagManager.getExplicitOnly() )
-        {
+    public ContainerRequest filter( ContainerRequest request ) {
+        if ( !traceTagManager.getTraceEnabled() && !traceTagManager.getExplicitOnly() ) {
             return request;
         }
         String traceId;
-        if ( traceTagManager.getExplicitOnly() )
-        {
+        if ( traceTagManager.getExplicitOnly() ) {
             // if we are set in explicit mode and the header is not present, leave.
             String id = httpServletRequest.getHeader( "XX-TRACE-ID" );
-            if ( StringUtils.isBlank( id ) )
-            {
+            if ( StringUtils.isBlank( id ) ) {
                 return request;
             }
             traceId = id.concat( "-REST-" ).concat( request.getPath( true ) );
         }
-        else
-        {
+        else {
             traceId = "TRACE-".concat( request.getPath( true ) );
         }
         TraceTag traceTag = traceTagManager.create( traceId );
@@ -70,10 +64,8 @@ public class TracingFilter implements ContainerRequestFilter, ContainerResponseF
 
 
     @Override
-    public ContainerResponse filter( ContainerRequest request, ContainerResponse response )
-    {
-        if ( traceTagManager.isActive() )
-        {
+    public ContainerResponse filter( ContainerRequest request, ContainerResponse response ) {
+        if ( traceTagManager.isActive() ) {
             TraceTag traceTag = traceTagManager.detach();
             traceTagReporter.report( traceTag );
         }

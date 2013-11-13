@@ -20,15 +20,13 @@ import org.antlr.runtime.Token;
 
 
 /** @author tnine */
-public class WithinOperand extends Operand
-{
+public class WithinOperand extends Operand {
 
     /**
      * @param property
      * @param literal
      */
-    public WithinOperand( Token t )
-    {
+    public WithinOperand( Token t ) {
         super( t );
     }
 
@@ -41,8 +39,7 @@ public class WithinOperand extends Operand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor )
-    {
+    public void visit( QueryVisitor visitor ) {
         visitor.visit( this );
     }
 
@@ -50,8 +47,7 @@ public class WithinOperand extends Operand
     /**
      * @param propName
      */
-    public void setProperty( String propName )
-    {
+    public void setProperty( String propName ) {
         setChild( 0, new WithinProperty( propName ) );
     }
 
@@ -59,8 +55,7 @@ public class WithinOperand extends Operand
     /**
      * @param distance
      */
-    public void setDistance( float distance )
-    {
+    public void setDistance( float distance ) {
         setChild( 1, new FloatLiteral( distance ) );
     }
 
@@ -68,8 +63,7 @@ public class WithinOperand extends Operand
     /**
      * @param lattitude
      */
-    public void setLattitude( float lattitude )
-    {
+    public void setLattitude( float lattitude ) {
         setChild( 2, new FloatLiteral( lattitude ) );
     }
 
@@ -77,8 +71,7 @@ public class WithinOperand extends Operand
     /**
      * @param longitude
      */
-    public void setLongitude( float longitude )
-    {
+    public void setLongitude( float longitude ) {
         setChild( 3, new FloatLiteral( longitude ) );
     }
 
@@ -87,8 +80,7 @@ public class WithinOperand extends Operand
      *
      * @return
      */
-    public WithinProperty getProperty()
-    {
+    public WithinProperty getProperty() {
         return ( WithinProperty ) this.children.get( 0 );
     }
 
@@ -97,8 +89,7 @@ public class WithinOperand extends Operand
      *
      * @return
      */
-    public NumericLiteral getDistance()
-    {
+    public NumericLiteral getDistance() {
         return ( NumericLiteral ) this.children.get( 1 );
     }
 
@@ -106,8 +97,7 @@ public class WithinOperand extends Operand
     /**
      * @return
      */
-    public NumericLiteral getLattitude()
-    {
+    public NumericLiteral getLattitude() {
         return ( NumericLiteral ) this.children.get( 2 );
     }
 
@@ -115,8 +105,7 @@ public class WithinOperand extends Operand
     /**
      * @return
      */
-    public NumericLiteral getLongitude()
-    {
+    public NumericLiteral getLongitude() {
         return ( NumericLiteral ) this.children.get( 3 );
     }
 }

@@ -33,14 +33,12 @@ import static org.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
 @Concurrent()
-public class CollectionServiceIT extends AbstractServiceIT
-{
+public class CollectionServiceIT extends AbstractServiceIT {
     public static final String CST_TEST_GROUP = "cst-test-group";
 
 
     @Test
-    public void testUsersCollectionWithGroupIdName() throws Exception
-    {
+    public void testUsersCollectionWithGroupIdName() throws Exception {
         app.put( "path", "cst-test-group/cst-test-group" );
         app.put( "title", "Collection Test group" );
 
@@ -57,101 +55,84 @@ public class CollectionServiceIT extends AbstractServiceIT
         Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( user );
 
-        try
-        {
+        try {
             // try GET on users with group id
             app.testRequest( ServiceAction.GET, 0, "users", group.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try GET on users with group name
             app.testRequest( ServiceAction.GET, 0, "users", CST_TEST_GROUP );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe )
-        {
+        catch ( ServiceResourceNotFoundException srnfe ) {
             // ok
         }
 
         app.put( "group-size", "10" );
 
-        try
-        {
+        try {
             // try POST on users with group id
             app.testRequest( ServiceAction.POST, 0, "users", group.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try POST on users with group name
             app.testRequest( ServiceAction.POST, 0, "users", CST_TEST_GROUP );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe )
-        {
+        catch ( ServiceResourceNotFoundException srnfe ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try PUT on users with group id
             app.testRequest( ServiceAction.PUT, 0, "users", group.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try PUT on users with group name
             app.testRequest( ServiceAction.PUT, 0, "users", CST_TEST_GROUP );
             Assert.fail();
         }
-        catch ( RequiredPropertyNotFoundException srnfe )
-        {
+        catch ( RequiredPropertyNotFoundException srnfe ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try DELETE on users with group id
             app.testRequest( ServiceAction.DELETE, 0, "users", group.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try DELETE on users with group name
             app.testRequest( ServiceAction.DELETE, 0, "users", CST_TEST_GROUP );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe )
-        {
+        catch ( ServiceResourceNotFoundException srnfe ) {
             // ok
         }
     }
 
 
     @Test
-    public void testGenericEntityCollectionWithIdName() throws Exception
-    {
+    public void testGenericEntityCollectionWithIdName() throws Exception {
         app.put( "name", "Tom" );
 
         Entity cat = app.testRequest( ServiceAction.POST, 1, "cats" ).getEntity();
@@ -164,82 +145,68 @@ public class CollectionServiceIT extends AbstractServiceIT
         Entity dog = app.testRequest( ServiceAction.POST, 1, "dogs" ).getEntity();
         assertNotNull( dog );
 
-        try
-        {
+        try {
             // try GET on cats with dog id
             app.testRequest( ServiceAction.GET, 0, "cats", dog.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try GET on cats with dog name
             app.testRequest( ServiceAction.GET, 0, "cats", "Danny" );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe )
-        {
+        catch ( ServiceResourceNotFoundException srnfe ) {
             // ok
         }
 
         app.put( "color", "black" );
 
-        try
-        {
+        try {
             // try POST on cats with dogs id
             app.testRequest( ServiceAction.POST, 0, "cats", dog.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try POST on cats with dogs name
             app.testRequest( ServiceAction.POST, 0, "cats", "Danny" );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe )
-        {
+        catch ( ServiceResourceNotFoundException srnfe ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try PUT on users with dogs id
             app.testRequest( ServiceAction.PUT, 0, "cats", dog.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try DELETE on cats with dogs id
             app.testRequest( ServiceAction.DELETE, 0, "cats", dog.getUuid() );
             Assert.fail();
         }
-        catch ( UnexpectedEntityTypeException uee )
-        {
+        catch ( UnexpectedEntityTypeException uee ) {
             // ok
         }
 
-        try
-        {
+        try {
             // try DELETE on cats with dogs name
             app.testRequest( ServiceAction.DELETE, 0, "cats", "Danny" );
             Assert.fail();
         }
-        catch ( ServiceResourceNotFoundException srnfe )
-        {
+        catch ( ServiceResourceNotFoundException srnfe ) {
             // ok
         }
 
@@ -269,8 +236,7 @@ public class CollectionServiceIT extends AbstractServiceIT
 
 
     @Test
-    public void testEmptyCollection() throws Exception
-    {
+    public void testEmptyCollection() throws Exception {
         // Generic collection first call
         Entity cat = app.testRequest( ServiceAction.POST, 0, "cats" ).getEntity();
         assertNull( cat );
@@ -286,46 +252,38 @@ public class CollectionServiceIT extends AbstractServiceIT
         assertNull( cat );
 
         // users core collections - username required
-        try
-        {
+        try {
             app.testRequest( ServiceAction.POST, 0, "users" );
             Assert.fail();
         }
-        catch ( RequiredPropertyNotFoundException rpnfe )
-        {
+        catch ( RequiredPropertyNotFoundException rpnfe ) {
             //ok
         }
 
         // groups core collections - path required
-        try
-        {
+        try {
 
             app.testRequest( ServiceAction.POST, 0, "groups" );
             Assert.fail();
         }
-        catch ( IllegalArgumentException iae )
-        {
+        catch ( IllegalArgumentException iae ) {
             //ok
         }
 
         // roles core collections - role name required
-        try
-        {
+        try {
             app.testRequest( ServiceAction.POST, 0, "roles" );
             Assert.fail();
         }
-        catch ( IllegalArgumentException iae )
-        {
+        catch ( IllegalArgumentException iae ) {
             //ok
         }
 
         // events core collections - timestamp required
-        try
-        {
+        try {
             app.testRequest( ServiceAction.POST, 0, "events" );
         }
-        catch ( RequiredPropertyNotFoundException rpnfe )
-        {
+        catch ( RequiredPropertyNotFoundException rpnfe ) {
             //ok
         }
     }

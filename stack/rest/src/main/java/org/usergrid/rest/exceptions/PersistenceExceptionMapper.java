@@ -22,7 +22,6 @@ import org.usergrid.persistence.exceptions.PersistenceException;
 
 
 @Provider
-public class PersistenceExceptionMapper extends AbstractExceptionMapper<PersistenceException>
-{
+public class PersistenceExceptionMapper extends AbstractExceptionMapper<PersistenceException> {
 
 }

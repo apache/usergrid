@@ -16,32 +16,27 @@
 package org.usergrid.management.exceptions;
 
 
-public class UnactivatedAppUserException extends ManagementException
-{
+public class UnactivatedAppUserException extends ManagementException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public UnactivatedAppUserException()
-    {
+    public UnactivatedAppUserException() {
         super();
     }
 
 
-    public UnactivatedAppUserException( String arg0, Throwable arg1 )
-    {
+    public UnactivatedAppUserException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public UnactivatedAppUserException( String arg0 )
-    {
+    public UnactivatedAppUserException( String arg0 ) {
         super( arg0 );
     }
 
 
-    public UnactivatedAppUserException( Throwable arg0 )
-    {
+    public UnactivatedAppUserException( Throwable arg0 ) {
         super( arg0 );
     }
 }

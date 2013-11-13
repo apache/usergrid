@@ -17,13 +17,10 @@ import org.junit.runners.model.RunnerScheduler;
 
 
 /** @author Mathieu Carbou (mathieu.carbou@gmail.com) */
-public class ConcurrentJunitRunner extends BlockJUnit4ClassRunner
-{
-    public ConcurrentJunitRunner( final Class<?> klass ) throws InitializationError
-    {
+public class ConcurrentJunitRunner extends BlockJUnit4ClassRunner {
+    public ConcurrentJunitRunner( final Class<?> klass ) throws InitializationError {
         super( klass );
-        setScheduler( new RunnerScheduler()
-        {
+        setScheduler( new RunnerScheduler() {
             ExecutorService executorService = Executors.newFixedThreadPool(
                     klass.isAnnotationPresent( Concurrent.class ) ? klass.getAnnotation( Concurrent.class ).threads() :
                     ( int ) ( Runtime.getRuntime().availableProcessors() * 1.5 ),
@@ -33,30 +30,23 @@ public class ConcurrentJunitRunner extends BlockJUnit4ClassRunner
 
 
             @Override
-            public void schedule( Runnable childStatement )
-            {
+            public void schedule( Runnable childStatement ) {
                 tasks.offer( completionService.submit( childStatement, null ) );
             }
 
 
             @Override
-            public void finished()
-            {
-                try
-                {
-                    while ( !tasks.isEmpty() )
-                    {
+            public void finished() {
+                try {
+                    while ( !tasks.isEmpty() ) {
                         tasks.remove( completionService.take() );
                     }
                 }
-                catch ( InterruptedException e )
-                {
+                catch ( InterruptedException e ) {
                     Thread.currentThread().interrupt();
                 }
-                finally
-                {
-                    while ( !tasks.isEmpty() )
-                    {
+                finally {
+                    while ( !tasks.isEmpty() ) {
                         tasks.poll().cancel( true );
                     }
                     executorService.shutdownNow();
@@ -66,22 +56,19 @@ public class ConcurrentJunitRunner extends BlockJUnit4ClassRunner
     }
 
 
-    static final class NamedThreadFactory implements ThreadFactory
-    {
+    static final class NamedThreadFactory implements ThreadFactory {
         static final AtomicInteger poolNumber = new AtomicInteger( 1 );
         final AtomicInteger threadNumber = new AtomicInteger( 1 );
         final ThreadGroup group;
 
 
-        NamedThreadFactory( String poolName )
-        {
+        NamedThreadFactory( String poolName ) {
             group = new ThreadGroup( poolName + "-" + poolNumber.getAndIncrement() );
         }
 
 
         @Override
-        public Thread newThread( Runnable r )
-        {
+        public Thread newThread( Runnable r ) {
             return new Thread( group, r, group.getName() + "-thread-" + threadNumber.getAndIncrement(), 0 );
         }
     }

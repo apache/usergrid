@@ -36,8 +36,7 @@ import static org.usergrid.utils.ConversionUtils.uuid;
 
 
 @XmlRootElement
-public class UserInfo
-{
+public class UserInfo {
 
     private final UUID applicationId;
     private final UUID id;
@@ -51,8 +50,7 @@ public class UserInfo
 
 
     public UserInfo( UUID applicationId, UUID id, String username, String name, String email, boolean confirmed,
-                     boolean activated, boolean disabled, Map<String, Object> properties )
-    {
+                     boolean activated, boolean disabled, Map<String, Object> properties ) {
         this.applicationId = applicationId;
         this.id = id;
         this.username = username;
@@ -65,8 +63,7 @@ public class UserInfo
     }
 
 
-    public UserInfo( UUID applicationId, Map<String, Object> properties )
-    {
+    public UserInfo( UUID applicationId, Map<String, Object> properties ) {
         this.applicationId = applicationId;
         id = uuid( properties.remove( PROPERTY_UUID ) );
         username = string( properties.remove( PROPERTY_USERNAME ) );
@@ -79,89 +76,74 @@ public class UserInfo
     }
 
 
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return applicationId;
     }
 
 
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return id;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public String getUsername()
-    {
+    public String getUsername() {
         return username;
     }
 
 
-    public String getEmail()
-    {
+    public String getEmail() {
         return email;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return id + "/" + name + "/" + email;
     }
 
 
-    public String getDisplayEmailAddress()
-    {
-        if ( isNotBlank( name ) )
-        {
+    public String getDisplayEmailAddress() {
+        if ( isNotBlank( name ) ) {
             return name + " <" + email + ">";
         }
         return email;
     }
 
 
-    public String getHTMLDisplayEmailAddress()
-    {
-        if ( isNotBlank( name ) )
-        {
+    public String getHTMLDisplayEmailAddress() {
+        if ( isNotBlank( name ) ) {
             return name + " &lt;<a href=\"mailto:" + email + "\">" + email + "</a>&gt;";
         }
         return email;
     }
 
 
-    public boolean isActivated()
-    {
+    public boolean isActivated() {
         return activated;
     }
 
 
-    public boolean isDisabled()
-    {
+    public boolean isDisabled() {
         return disabled;
     }
 
 
-    public boolean isAdminUser()
-    {
+    public boolean isAdminUser() {
         return MANAGEMENT_APPLICATION_ID.equals( applicationId );
     }
 
 
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
-    public boolean isConfirmed()
-    {
+    public boolean isConfirmed() {
         return confirmed;
     }
 }

@@ -29,8 +29,7 @@ import org.usergrid.security.salt.SaltProvider;
  *
  * @author tnine
  */
-public abstract class SaltedHasherCommand extends EncryptionCommand
-{
+public abstract class SaltedHasherCommand extends EncryptionCommand {
 
     protected static final Charset UTF8 = Charset.forName( "UTF-8" );
 
@@ -39,10 +38,8 @@ public abstract class SaltedHasherCommand extends EncryptionCommand
 
 
     /** Possibly salt the input bytes if the salt provider gives us back data. */
-    protected byte[] maybeSalt( byte[] input, UUID applicationId, UUID userId )
-    {
-        if ( provider == null )
-        {
+    protected byte[] maybeSalt( byte[] input, UUID applicationId, UUID userId ) {
+        if ( provider == null ) {
             return input;
         }
 
@@ -51,8 +48,7 @@ public abstract class SaltedHasherCommand extends EncryptionCommand
         /**
          * Nothing to do
          */
-        if ( salt == null || salt.length() == 0 )
-        {
+        if ( salt == null || salt.length() == 0 ) {
             return input;
         }
 

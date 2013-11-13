@@ -8,8 +8,7 @@ import org.usergrid.security.tokens.exceptions.BadTokenException;
 
 
 /** @author zznate */
-public interface SignInAsProvider
-{
+public interface SignInAsProvider {
 
     /** Authenticate a userId and external token against this provider */
     User createOrAuthenticate( String externalToken ) throws BadTokenException;

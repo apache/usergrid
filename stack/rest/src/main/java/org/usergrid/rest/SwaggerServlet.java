@@ -45,8 +45,7 @@ import static org.usergrid.rest.utils.CORSUtils.allowAllOrigins;
 import static org.usergrid.utils.StringUtils.readClasspathFileAsString;
 
 
-public class SwaggerServlet extends HttpServlet implements Filter
-{
+public class SwaggerServlet extends HttpServlet implements Filter {
 
     public static final String SWAGGER_BASE_PATH = "http://localhost:8080";
 
@@ -59,12 +58,10 @@ public class SwaggerServlet extends HttpServlet implements Filter
 
 
     @Override
-    public void init( ServletConfig config ) throws ServletException
-    {
+    public void init( ServletConfig config ) throws ServletException {
         super.init( config );
         logger.info( "init(ServletConfig config)" );
-        if ( sc == null )
-        {
+        if ( sc == null ) {
             sc = config.getServletContext();
         }
         properties = ( Properties ) getSpringBeanFromWeb( "properties" );
@@ -73,11 +70,9 @@ public class SwaggerServlet extends HttpServlet implements Filter
 
 
     @Override
-    public void init( FilterConfig config ) throws ServletException
-    {
+    public void init( FilterConfig config ) throws ServletException {
         logger.info( "init(FilterConfig paramFilterConfig)" );
-        if ( sc == null )
-        {
+        if ( sc == null ) {
             sc = config.getServletContext();
         }
         properties = ( Properties ) getSpringBeanFromWeb( "properties" );
@@ -85,10 +80,8 @@ public class SwaggerServlet extends HttpServlet implements Filter
     }
 
 
-    public Object getSpringBeanFromWeb( String beanName )
-    {
-        if ( sc == null )
-        {
+    public Object getSpringBeanFromWeb( String beanName ) {
+        if ( sc == null ) {
             return null;
         }
         ApplicationContext appContext = getRequiredWebApplicationContext( sc );
@@ -99,8 +92,7 @@ public class SwaggerServlet extends HttpServlet implements Filter
     Map<String, String> pathToJson = new HashMap<String, String>();
 
 
-    public String loadTempate( String template )
-    {
+    public String loadTempate( String template ) {
         String templateString = readClasspathFileAsString( template );
         Map<String, String> valuesMap = new HashMap<String, String>();
         String basePath = properties != null ? properties.getProperty( "swagger.basepath", SWAGGER_BASE_PATH ) :
@@ -111,8 +103,7 @@ public class SwaggerServlet extends HttpServlet implements Filter
     }
 
 
-    public void loadSwagger()
-    {
+    public void loadSwagger() {
         logger.info( "loadSwagger()" );
         pathToJson.put( "/resources.json", loadTempate( "/swagger/resources.json" ) );
         pathToJson.put( "/applications.json", loadTempate( "/swagger/applications.json" ) );
@@ -122,8 +113,7 @@ public class SwaggerServlet extends HttpServlet implements Filter
 
     @Override
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
-            throws ServletException, IOException
-    {
+            throws ServletException, IOException {
 
         String path = request.getServletPath();
 
@@ -135,25 +125,20 @@ public class SwaggerServlet extends HttpServlet implements Filter
 
     @Override
     public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain )
-            throws IOException, ServletException
-    {
-        try
-        {
+            throws IOException, ServletException {
+        try {
             doFilter( ( HttpServletRequest ) request, ( HttpServletResponse ) response, chain );
         }
-        catch ( ClassCastException e )
-        {
+        catch ( ClassCastException e ) {
             throw new ServletException( "non-HTTP request or response" );
         }
     }
 
 
     public void doFilter( HttpServletRequest request, HttpServletResponse response, FilterChain chain )
-            throws IOException, ServletException
-    {
+            throws IOException, ServletException {
 
-        if ( handleJsonOutput( request, response ) )
-        {
+        if ( handleJsonOutput( request, response ) ) {
             return;
         }
 
@@ -161,26 +146,20 @@ public class SwaggerServlet extends HttpServlet implements Filter
     }
 
 
-    public boolean handleJsonOutput( HttpServletRequest request, HttpServletResponse response ) throws IOException
-    {
+    public boolean handleJsonOutput( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         String path = request.getServletPath();
-        if ( isEmpty( path ) )
-        {
+        if ( isEmpty( path ) ) {
             path = request.getPathInfo();
         }
-        if ( isEmpty( path ) )
-        {
+        if ( isEmpty( path ) ) {
             return false;
         }
         path = path.toLowerCase();
-        if ( pathToJson.containsKey( path ) )
-        {
+        if ( pathToJson.containsKey( path ) ) {
             String json = pathToJson.get( path );
-            if ( json != null )
-            {
+            if ( json != null ) {
                 allowAllOrigins( request, response );
-                if ( "get".equalsIgnoreCase( request.getMethod() ) )
-                {
+                if ( "get".equalsIgnoreCase( request.getMethod() ) ) {
                     response.setContentType( "application/json" );
                     response.getWriter().print( json );
                     return true;

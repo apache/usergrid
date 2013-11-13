@@ -34,16 +34,14 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 
-public class ImportFB extends ToolBase
-{
+public class ImportFB extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( ImportFB.class );
 
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option input = OptionBuilder.withArgName( "file" ).hasArg().isRequired()
                                     .withDescription( "JSON file of array of Facebook users" ).create( "i" );
@@ -61,8 +59,7 @@ public class ImportFB extends ToolBase
 
     @SuppressWarnings("unchecked")
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         String input = line.getOptionValue( "i" );
         String output = line.getOptionValue( "o" );
 
@@ -72,8 +69,7 @@ public class ImportFB extends ToolBase
         Map<String, Object> map = ( Map<String, Object> ) json;
         List<Map<String, Object>> fbusers = ( List<Map<String, Object>> ) map.get( "data" );
         List<Map<String, Object>> users = new ArrayList<Map<String, Object>>();
-        for ( Map<String, Object> fbuser : fbusers )
-        {
+        for ( Map<String, Object> fbuser : fbusers ) {
             // logger.info(fbuser.get("name"));
 
             Map<String, Object> user = new LinkedHashMap<String, Object>();
@@ -81,8 +77,7 @@ public class ImportFB extends ToolBase
             String username = ( String ) fbuser.get( "username" );
             String picture = ( String ) fbuser.get( "picture" );
             user.put( "name", name );
-            if ( username == null )
-            {
+            if ( username == null ) {
                 username = name.replace( ' ', '.' );
             }
             username = username.toLowerCase();
@@ -94,14 +89,12 @@ public class ImportFB extends ToolBase
         logger.info( "Imported " + users.size() + " users" );
         // System.out.println(JsonUtils.mapToFormattedJsonString(users));
 
-        try
-        {
+        try {
             PrintWriter out = new PrintWriter( new File( output ), "UTF-8" );
             out.print( JsonUtils.mapToFormattedJsonString( users ) );
             out.close();
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             e.printStackTrace();
         }
     }

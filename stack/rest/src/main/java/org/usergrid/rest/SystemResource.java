@@ -41,14 +41,12 @@ import com.sun.jersey.api.json.JSONWithPadding;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class SystemResource extends AbstractContextResource
-{
+public class SystemResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( SystemResource.class );
 
 
-    public SystemResource()
-    {
+    public SystemResource() {
         logger.info( "SystemResource initialized" );
     }
 
@@ -58,8 +56,7 @@ public class SystemResource extends AbstractContextResource
     @Path("database/setup")
     public JSONWithPadding getSetup( @Context UriInfo ui,
                                      @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "cassandra setup" );
@@ -67,21 +64,17 @@ public class SystemResource extends AbstractContextResource
         logger.info( "Setting up Cassandra" );
 
 
-        try
-        {
+        try {
             emf.setup();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to complete core database setup, possibly due to it being setup already", e );
         }
 
-        try
-        {
+        try {
             management.setup();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to complete management database setup, possibly due to it being setup already", e );
         }
 
@@ -96,20 +89,17 @@ public class SystemResource extends AbstractContextResource
     @Path("superuser/setup")
     public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "superuser setup" );
 
         logger.info( "Setting up Superuser" );
 
-        try
-        {
+        try {
             management.provisionSuperuser();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to complete superuser setup", e );
         }
 

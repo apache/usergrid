@@ -21,19 +21,16 @@ import org.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class NotOperand extends Operand
-{
+public class NotOperand extends Operand {
 
 
-    public NotOperand( Token t )
-    {
+    public NotOperand( Token t ) {
         super( t );
     }
 
 
     /** get the only child operation */
-    public Operand getOperation()
-    {
+    public Operand getOperation() {
         return ( Operand ) this.children.get( 0 );
     }
 
@@ -42,8 +39,7 @@ public class NotOperand extends Operand
      * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException
-    {
+    public void visit( QueryVisitor visitor ) throws PersistenceException {
         visitor.visit( this );
     }
 }

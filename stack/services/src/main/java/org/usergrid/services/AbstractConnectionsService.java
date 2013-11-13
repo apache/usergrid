@@ -44,29 +44,25 @@ import static org.usergrid.utils.ListUtils.dequeue;
 import static org.usergrid.utils.ListUtils.initCopy;
 
 
-public class AbstractConnectionsService extends AbstractService
-{
+public class AbstractConnectionsService extends AbstractService {
 
     private static final Logger logger = LoggerFactory.getLogger( AbstractConnectionsService.class );
 
 
-    public AbstractConnectionsService()
-    {
+    public AbstractConnectionsService() {
         // addSets(Arrays.asList("indexes"));
         declareMetadataType( "indexes" );
     }
 
 
-    public boolean connecting()
-    {
+    public boolean connecting() {
         return "connecting".equals( getServiceInfo().getCollectionName() );
     }
 
 
     /**
-     * Create context from parameter queue. Returns context containing a query object that represents the parameters
-     * in the
-     * queue.
+     * Create context from parameter queue. Returns context containing a query object that represents the parameters in
+     * the queue.
      * <p/>
      * Valid parameter patterns:
      * <p/>
@@ -75,8 +71,7 @@ public class AbstractConnectionsService extends AbstractService
      */
     @Override
     public ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
-                                      ServicePayload payload ) throws Exception
-    {
+                                      ServicePayload payload ) throws Exception {
 
         EntityRef owner = request.getOwner();
         String collectionName = "application".equals( owner.getType() ) ? pluralize( getServiceInfo().getItemType() ) :
@@ -89,16 +84,13 @@ public class AbstractConnectionsService extends AbstractService
 
         String cType = collectionName;
         if ( "connecting".equals( collectionName ) || "connections".equals( collectionName ) || "connected"
-                .equals( collectionName ) )
-        {
+                .equals( collectionName ) ) {
             cType = null;
         }
-        if ( ( cType == null ) && firstParameterIsName( parameters ) )
-        {
+        if ( ( cType == null ) && firstParameterIsName( parameters ) ) {
             cType = dequeue( parameters ).getName();
         }
-        if ( cType != null )
-        {
+        if ( cType != null ) {
             collectionName = cType;
         }
 
@@ -109,76 +101,60 @@ public class AbstractConnectionsService extends AbstractService
 
         ServiceParameter first_parameter = dequeue( parameters );
 
-        if ( first_parameter instanceof QueryParameter )
-        {
+        if ( first_parameter instanceof QueryParameter ) {
             query = first_parameter.getQuery();
         }
-        else if ( first_parameter instanceof IdParameter )
-        {
+        else if ( first_parameter instanceof IdParameter ) {
             id = first_parameter.getId();
         }
-        else if ( first_parameter instanceof NameParameter )
-        {
+        else if ( first_parameter instanceof NameParameter ) {
             String s = first_parameter.getName();
-            if ( hasServiceMetadata( s ) )
-            {
+            if ( hasServiceMetadata( s ) ) {
                 return new ServiceContext( this, action, request, previousResults, owner, collectionName, parameters,
                         payload ).withServiceMetadata( s );
             }
-            else if ( hasServiceCommand( s ) )
-            {
+            else if ( hasServiceCommand( s ) ) {
                 return new ServiceContext( this, action, request, previousResults, owner, collectionName, parameters,
                         payload ).withServiceCommand( s );
             }
-            else if ( "any".equals( s ) )
-            {
+            else if ( "any".equals( s ) ) {
                 // do nothing, placeholder
             }
-            else
-            {
+            else {
                 eType = Schema.normalizeEntityType( s );
                 first_parameter = dequeue( parameters );
-                if ( first_parameter instanceof QueryParameter )
-                {
+                if ( first_parameter instanceof QueryParameter ) {
                     query = first_parameter.getQuery();
                 }
-                else if ( first_parameter instanceof IdParameter )
-                {
+                else if ( first_parameter instanceof IdParameter ) {
                     id = first_parameter.getId();
                 }
-                else if ( first_parameter instanceof NameParameter )
-                {
+                else if ( first_parameter instanceof NameParameter ) {
                     s = first_parameter.getName();
-                    if ( hasServiceMetadata( s ) )
-                    {
+                    if ( hasServiceMetadata( s ) ) {
                         return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                                 parameters, payload ).withServiceMetadata( s );
                     }
-                    else if ( hasServiceCommand( s ) )
-                    {
+                    else if ( hasServiceCommand( s ) ) {
                         return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                                 parameters, payload ).withServiceCommand( s );
                     }
-                    else
-                    {
+                    else {
                         name = s;
                     }
                 }
             }
         }
 
-        if ( query == null )
-        {
+        if ( query == null ) {
             query = new Query();
         }
         query.setConnectionType( cType );
         query.setEntityType( eType );
-        if ( id != null )
-        {
+        if ( id != null ) {
             query.addIdentifier( Identifier.fromUUID( id ) );
         }
-        if ( name != null )
-        {
+        if ( name != null ) {
             query.addIdentifier( Identifier.from( name ) );
         }
 
@@ -188,20 +164,17 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults getCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults getCollection( ServiceContext context ) throws Exception {
 
         checkPermissionsForCollection( context );
 
         Results r = null;
 
-        if ( connecting() )
-        {
+        if ( connecting() ) {
             r = em.getConnectingEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
                     Results.Level.ALL_PROPERTIES );
         }
-        else
-        {
+        else {
             r = em.getConnectedEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
                     Results.Level.ALL_PROPERTIES );
         }
@@ -213,26 +186,22 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults getItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults getItemById( ServiceContext context, UUID id ) throws Exception {
 
         checkPermissionsForEntity( context, id );
 
         EntityRef entity = null;
 
-        if ( !context.moreParameters() )
-        {
+        if ( !context.moreParameters() ) {
             entity = em.get( id );
 
             entity = importEntity( context, ( Entity ) entity );
         }
-        else
-        {
+        else {
             entity = em.getRef( id );
         }
 
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -240,8 +209,7 @@ public class AbstractConnectionsService extends AbstractService
 
         // the context of the entity they're trying to load isn't owned by the owner
         // in the path, don't return it
-        if ( !em.isConnectionMember( context.getOwner(), context.getCollectionName(), entity ) )
-        {
+        if ( !em.isConnectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
             logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
                     getEntityType(), id, context.getOwner()
             } );
@@ -260,19 +228,16 @@ public class AbstractConnectionsService extends AbstractService
    * @see org.usergrid.services.AbstractService#getItemByName(org.usergrid.services.ServiceContext, java.lang.String)
    */
     @Override
-    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
 
         ServiceResults results = getItemsByQuery( context, context.getQuery() );
 
-        if ( results.size() == 0 )
-        {
+        if ( results.size() == 0 ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
         if ( results.size() == 1 && !em
-                .isConnectionMember( context.getOwner(), context.getCollectionName(), results.getEntity() ) )
-        {
+                .isConnectionMember( context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -281,34 +246,29 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults getItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults getItemsByQuery( ServiceContext context, Query query ) throws Exception {
 
         checkPermissionsForCollection( context );
 
         if ( !query.hasQueryPredicates() && ( query.getEntityType() != null ) && query
-                .containsNameOrEmailIdentifiersOnly() )
-        {
+                .containsNameOrEmailIdentifiersOnly() ) {
 
             String name = query.getSingleNameOrEmailIdentifier();
 
             String nameProperty = Schema.getDefaultSchema().aliasProperty( query.getEntityType() );
-            if ( nameProperty == null )
-            {
+            if ( nameProperty == null ) {
                 nameProperty = "name";
             }
 
             EntityRef ref = em.getAlias( query.getEntityType(), name );
-            if ( ref == null )
-            {
+            if ( ref == null ) {
                 return null;
             }
 
             //TODO T.N. USERGRID-1919 actually validate this is connected
 
             Entity entity = em.get( ref );
-            if ( entity == null )
-            {
+            if ( entity == null ) {
                 return null;
             }
             entity = importEntity( context, entity );
@@ -318,14 +278,12 @@ public class AbstractConnectionsService extends AbstractService
 
         int count = query.getLimit();
         Results.Level level = Results.Level.REFS;
-        if ( !context.moreParameters() )
-        {
+        if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
         }
 
-        if ( context.getRequest().isReturnsTree() )
-        {
+        if ( context.getRequest().isReturnsTree() ) {
             level = Results.Level.ALL_PROPERTIES;
         }
 
@@ -334,21 +292,17 @@ public class AbstractConnectionsService extends AbstractService
 
         Results r = null;
 
-        if ( connecting() )
-        {
-            if ( query.hasQueryPredicates() )
-            {
+        if ( connecting() ) {
+            if ( query.hasQueryPredicates() ) {
                 logger.info( "Attempted query of backwards connections" );
                 return null;
             }
-            else
-            {
+            else {
                 r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
                         query.getEntityType(), level );
             }
         }
-        else
-        {
+        else {
             r = em.searchConnectedEntities( context.getOwner(), query );
         }
 
@@ -361,19 +315,16 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
 
         checkPermissionsForEntity( context, id );
 
-        if ( context.moreParameters() )
-        {
+        if ( context.moreParameters() ) {
             return getItemById( context, id );
         }
 
         Entity entity = em.get( id );
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
         entity = importEntity( context, entity );
@@ -385,38 +336,31 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults postItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults postItemByName( ServiceContext context, String name ) throws Exception {
         return postItemsByQuery( context, context.getQuery() );
     }
 
 
     @Override
-    public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception {
 
         checkPermissionsForCollection( context );
-        if ( !query.hasQueryPredicates() && ( query.getEntityType() != null ) )
-        {
+        if ( !query.hasQueryPredicates() && ( query.getEntityType() != null ) ) {
 
             Entity entity;
-            if ( query.containsSingleNameOrEmailIdentifier() )
-            {
+            if ( query.containsSingleNameOrEmailIdentifier() ) {
                 String name = query.getSingleNameOrEmailIdentifier();
 
                 EntityRef ref = em.getAlias( query.getEntityType(), name );
-                if ( ref == null )
-                {
+                if ( ref == null ) {
                     throw new ServiceResourceNotFoundException( context );
                 }
                 entity = em.get( ref );
-                if ( entity == null )
-                {
+                if ( entity == null ) {
                     throw new ServiceResourceNotFoundException( context );
                 }
             }
-            else
-            {
+            else {
                 entity = em.create( query.getEntityType(), context.getProperties() );
             }
             entity = importEntity( context, entity );
@@ -431,24 +375,20 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
 
-        if ( context.moreParameters() )
-        {
+        if ( context.moreParameters() ) {
             return getItemById( context, id );
         }
 
         checkPermissionsForEntity( context, id );
 
         Entity item = em.get( id );
-        if ( item != null )
-        {
+        if ( item != null ) {
             updateEntity( context, item, context.getPayload() );
             item = importEntity( context, item );
         }
-        else
-        {
+        else {
             String entityType = getEntityType();
             item = em.create( id, entityType, context.getPayload().getProperties() );
         }
@@ -457,28 +397,24 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception {
 
         return putItemsByQuery( context, context.getQuery() );
     }
 
 
     @Override
-    public ServiceResults putItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults putItemsByQuery( ServiceContext context, Query query ) throws Exception {
 
         checkPermissionsForCollection( context );
 
-        if ( context.moreParameters() )
-        {
+        if ( context.moreParameters() ) {
             return getItemsByQuery( context, query );
         }
 
 
         Results r = em.searchConnectedEntities( context.getOwner(), query );
-        if ( r.isEmpty() )
-        {
+        if ( r.isEmpty() ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -489,19 +425,16 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults deleteItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults deleteItemById( ServiceContext context, UUID id ) throws Exception {
 
         checkPermissionsForEntity( context, id );
 
-        if ( context.moreParameters() )
-        {
+        if ( context.moreParameters() ) {
             return getItemById( context, id );
         }
 
         Entity entity = em.get( id );
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
         entity = importEntity( context, entity );
@@ -513,38 +446,32 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults deleteItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults deleteItemByName( ServiceContext context, String name ) throws Exception {
         return deleteItemsByQuery( context, context.getQuery() );
     }
 
 
     @Override
-    public ServiceResults deleteItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults deleteItemsByQuery( ServiceContext context, Query query ) throws Exception {
 
         checkPermissionsForCollection( context );
 
         if ( !query.hasQueryPredicates() && ( query.getEntityType() != null ) && query
-                .containsNameOrEmailIdentifiersOnly() )
-        {
+                .containsNameOrEmailIdentifiersOnly() ) {
 
             String name = query.getSingleNameOrEmailIdentifier();
 
             String nameProperty = Schema.getDefaultSchema().aliasProperty( query.getEntityType() );
-            if ( nameProperty == null )
-            {
+            if ( nameProperty == null ) {
                 nameProperty = "name";
             }
 
             EntityRef ref = em.getAlias( query.getEntityType(), name );
-            if ( ref == null )
-            {
+            if ( ref == null ) {
                 throw new ServiceResourceNotFoundException( context );
             }
             Entity entity = em.get( ref );
-            if ( entity == null )
-            {
+            if ( entity == null ) {
                 throw new ServiceResourceNotFoundException( context );
             }
             entity = importEntity( context, entity );
@@ -559,13 +486,10 @@ public class AbstractConnectionsService extends AbstractService
 
 
     @Override
-    public ServiceResults getServiceMetadata( ServiceContext context, String metadataType ) throws Exception
-    {
-        if ( "indexes".equals( metadataType ) )
-        {
+    public ServiceResults getServiceMetadata( ServiceContext context, String metadataType ) throws Exception {
+        if ( "indexes".equals( metadataType ) ) {
             String cType = context.getQuery().getConnectionType();
-            if ( cType != null )
-            {
+            if ( cType != null ) {
                 Set<String> indexes = cast( em.getConnectionIndexes( context.getOwner(), cType ) );
 
                 return new ServiceResults( this,
@@ -579,14 +503,12 @@ public class AbstractConnectionsService extends AbstractService
 
 
     public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType,
-                                           EntityRef connectedEntityRef ) throws Exception
-    {
+                                           EntityRef connectedEntityRef ) throws Exception {
         return em.createConnection( connectingEntity, connectionType, connectedEntityRef );
     }
 
 
-    public void deleteConnection( ConnectionRef connectionRef ) throws Exception
-    {
+    public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
         em.deleteConnection( connectionRef );
     }
 }

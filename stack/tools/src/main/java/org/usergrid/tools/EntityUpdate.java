@@ -44,8 +44,7 @@ import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
  *
  * @author tnine
  */
-public class EntityUpdate extends ToolBase
-{
+public class EntityUpdate extends ToolBase {
 
     /**
      *
@@ -78,8 +77,7 @@ public class EntityUpdate extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         setVerbose( line );
@@ -99,8 +97,7 @@ public class EntityUpdate extends ToolBase
 
         File file = new File( updateFile );
 
-        if ( !file.exists() )
-        {
+        if ( !file.exists() ) {
             logger.error( "The file {} does not exist.  Please make sure you have read access so this file.  Exiting.",
                     updateFile );
             System.exit( 1 );
@@ -109,8 +106,7 @@ public class EntityUpdate extends ToolBase
         DynamicEntity update = MAPPER.readValue( file, DynamicEntity.class );
 
 
-        if ( update.getProperties().size() == 0 )
-        {
+        if ( update.getProperties().size() == 0 ) {
             logger.error( "The update in file {} has no properties.  Exiting", updateFile );
             System.exit( 2 );
         }
@@ -120,8 +116,7 @@ public class EntityUpdate extends ToolBase
 
         ApplicationInfo app = managementService.getApplicationInfo( Identifier.from( appName ) );
 
-        if ( app == null )
-        {
+        if ( app == null ) {
             logger.error( "Could not find application with id or name {}", appName );
             System.exit( 3 );
         }
@@ -135,14 +130,12 @@ public class EntityUpdate extends ToolBase
 
         long count = 0;
 
-        for ( Object next : itr )
-        {
+        for ( Object next : itr ) {
 
             Entity entity = ( Entity ) next;
 
             //set all props
-            for ( Map.Entry<String, Object> entry : update.getProperties().entrySet() )
-            {
+            for ( Map.Entry<String, Object> entry : update.getProperties().entrySet() ) {
                 entity.setProperty( entry.getKey(), entry.getValue() );
             }
 
@@ -160,8 +153,7 @@ public class EntityUpdate extends ToolBase
 
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
         Options options = super.createOptions();
 
         @SuppressWarnings("static-access") Option queryOption =

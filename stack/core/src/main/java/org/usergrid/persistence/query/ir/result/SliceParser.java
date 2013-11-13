@@ -24,8 +24,7 @@ import java.nio.ByteBuffer;
  *
  * @author tnine
  */
-public interface SliceParser
-{
+public interface SliceParser {
 
     /** Parse the slice and return it's parse type.  If null is returned, the column should be considered discarded */
     public ScanColumn parse( ByteBuffer buff );

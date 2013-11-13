@@ -25,12 +25,11 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 
 @Provider
-public class RequiredPropertyNotFoundExceptionMapper extends AbstractExceptionMapper<RequiredPropertyNotFoundException>
-{
+public class RequiredPropertyNotFoundExceptionMapper
+        extends AbstractExceptionMapper<RequiredPropertyNotFoundException> {
 
     @Override
-    public Response toResponse( RequiredPropertyNotFoundException e )
-    {
+    public Response toResponse( RequiredPropertyNotFoundException e ) {
         return toResponse( BAD_REQUEST, e.getMessage() );
     }
 }

@@ -57,8 +57,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not
 // using grizzly to test")
 @Concurrent()
-public class ContentTypeResourceIT extends AbstractRestIT
-{
+public class ContentTypeResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -69,8 +68,7 @@ public class ContentTypeResourceIT extends AbstractRestIT
      * body
      */
     @Test
-    public void correctHeaders() throws Exception
-    {
+    public void correctHeaders() throws Exception {
 
 
         Map<String, String> data = hashMap( "name", "Solitaire1" );
@@ -106,8 +104,7 @@ public class ContentTypeResourceIT extends AbstractRestIT
      * body
      */
     @Test
-    public void textPlainContentType() throws Exception
-    {
+    public void textPlainContentType() throws Exception {
         Map<String, String> data = hashMap( "name", "Solitaire2" );
 
         String json = JsonUtils.mapToFormattedJsonString( data );
@@ -138,8 +135,7 @@ public class ContentTypeResourceIT extends AbstractRestIT
 
     /** Tests that application/x-www-url-form-encoded works correctly */
     @Test
-    public void formEncodedContentType() throws Exception
-    {
+    public void formEncodedContentType() throws Exception {
 
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
 
@@ -179,8 +175,7 @@ public class ContentTypeResourceIT extends AbstractRestIT
     /** Tests that application/x-www-url-form-encoded works correctly */
     @Test
     @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
-    public void formEncodedUrlContentType() throws Exception
-    {
+    public void formEncodedUrlContentType() throws Exception {
         BasicHttpParams params = new BasicHttpParams();
 
         params.setParameter( "organization", "formUrlContentOrg" );
@@ -218,8 +213,7 @@ public class ContentTypeResourceIT extends AbstractRestIT
      * match the body
      */
     @Test
-    public void missingAcceptAndContent() throws Exception
-    {
+    public void missingAcceptAndContent() throws Exception {
 
         Map<String, String> data = hashMap( "name", "Solitaire3" );
 
@@ -252,8 +246,7 @@ public class ContentTypeResourceIT extends AbstractRestIT
      * body.  Then does a get without Accept type, it should return application/json, not text/csv
      */
     @Test
-    public void noAcceptGet() throws Exception
-    {
+    public void noAcceptGet() throws Exception {
         Map<String, String> data = hashMap( "name", "bar" );
 
         String json = JsonUtils.mapToFormattedJsonString( data );
@@ -298,22 +291,19 @@ public class ContentTypeResourceIT extends AbstractRestIT
     }
 
 
-    private void printResponse( HttpResponse rsp ) throws ParseException, IOException
-    {
+    private void printResponse( HttpResponse rsp ) throws ParseException, IOException {
         HttpEntity entity = rsp.getEntity();
 
         System.out.println( "----------------------------------------" );
         System.out.println( rsp.getStatusLine() );
 
         Header[] headers = rsp.getAllHeaders();
-        for ( int i = 0; i < headers.length; i++ )
-        {
+        for ( int i = 0; i < headers.length; i++ ) {
             System.out.println( headers[i] );
         }
         System.out.println( "----------------------------------------" );
 
-        if ( entity != null )
-        {
+        if ( entity != null ) {
             System.out.println( EntityUtils.toString( entity ) );
         }
     }

@@ -16,8 +16,7 @@ import org.usergrid.persistence.Results;
  * CoreApplication} with the Rule and ClassRule annotations to create unique Applications in Usergrid for use in
  * testing.
  */
-public interface Application extends TestRule
-{
+public interface Application extends TestRule {
     /**
      * Gets the Application's UUID.
      *
@@ -59,7 +58,7 @@ public interface Application extends TestRule
      *
      * @return the name of this Application's organization
      */
-    @SuppressWarnings( "UnusedDeclaration" )
+    @SuppressWarnings("UnusedDeclaration")
     String getOrgName();
 
     /**
@@ -67,7 +66,7 @@ public interface Application extends TestRule
      *
      * @return the name of this Application
      */
-    @SuppressWarnings( "UnusedDeclaration" )
+    @SuppressWarnings("UnusedDeclaration")
     String getAppName();
 
     /**

@@ -61,8 +61,7 @@ import static org.usergrid.rest.utils.JSONPUtils.wrapWithCallback;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class AuthResource extends AbstractContextResource
-{
+public class AuthResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( AuthResource.class );
 
@@ -72,17 +71,14 @@ public class AuthResource extends AbstractContextResource
     private SignInProviderFactory signInProviderFactory;
 
 
-    public AuthResource()
-    {
+    public AuthResource() {
     }
 
 
     @Override
-    public void setParent( AbstractContextResource parent )
-    {
+    public void setParent( AbstractContextResource parent ) {
         super.setParent( parent );
-        if ( parent instanceof ServiceResource )
-        {
+        if ( parent instanceof ServiceResource ) {
             services = ( ( ServiceResource ) parent ).services;
         }
     }
@@ -95,8 +91,7 @@ public class AuthResource extends AbstractContextResource
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response authFBPost( @Context UriInfo ui, @FormParam("fb_access_token") String fb_access_token,
                                 @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "AuthResource.authFBPost" );
 
@@ -107,20 +102,16 @@ public class AuthResource extends AbstractContextResource
     @GET
     @Path("pingident")
     public Response authPingIdent( @Context UriInfo ui, @QueryParam("ping_access_token") String pingToken,
-                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
         logger.info( "AuthResource.pingIdent" );
-        try
-        {
-            if ( StringUtils.isEmpty( pingToken ) )
-            {
+        try {
+            if ( StringUtils.isEmpty( pingToken ) ) {
                 missingTokenFail( callback );
             }
             SignInAsProvider pingProvider = signInProviderFactory.pingident( services.getApplication() );
             User user = pingProvider.createOrAuthenticate( pingToken );
 
-            if ( user == null )
-            {
+            if ( user == null ) {
                 return findAndCreateFail( callback );
             }
             long ttl = PingIdentityProvider.extractExpiration( user );
@@ -134,8 +125,7 @@ public class AuthResource extends AbstractContextResource
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return generalAuthError( callback, e );
         }
     }
@@ -144,14 +134,12 @@ public class AuthResource extends AbstractContextResource
     @POST
     @Path("pingident")
     public Response authPingIdentPost( @Context UriInfo ui, @QueryParam("ping_access_token") String pingToken,
-                                       @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                       @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
         return authPingIdent( ui, pingToken, callback );
     }
 
 
-    private Response missingTokenFail( String callback ) throws Exception
-    {
+    private Response missingTokenFail( String callback ) throws Exception {
         logger.error( "Missing Access token" );
         OAuthResponse response =
                 OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_REQUEST )
@@ -161,8 +149,7 @@ public class AuthResource extends AbstractContextResource
     }
 
 
-    private Response findAndCreateFail( String callback ) throws Exception
-    {
+    private Response findAndCreateFail( String callback ) throws Exception {
         logger.error( "Unable to find or create user" );
         OAuthResponse response =
                 OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_REQUEST )
@@ -172,8 +159,7 @@ public class AuthResource extends AbstractContextResource
     }
 
 
-    private Response generalAuthError( String callback, Exception e ) throws Exception
-    {
+    private Response generalAuthError( String callback, Exception e ) throws Exception {
         logger.error( "Generic Auth Error", e );
         OAuthResponse response =
                 OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_REQUEST )
@@ -187,22 +173,18 @@ public class AuthResource extends AbstractContextResource
     @Path("facebook")
     public Response authFB( @Context UriInfo ui, @QueryParam("fb_access_token") String fb_access_token,
                             @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "AuthResource.authFB" );
 
-        try
-        {
-            if ( StringUtils.isEmpty( fb_access_token ) )
-            {
+        try {
+            if ( StringUtils.isEmpty( fb_access_token ) ) {
                 return missingTokenFail( callback );
             }
             SignInAsProvider facebookProvider = signInProviderFactory.facebook( services.getApplication() );
             User user = facebookProvider.createOrAuthenticate( fb_access_token );
 
-            if ( user == null )
-            {
+            if ( user == null ) {
                 return findAndCreateFail( callback );
             }
 
@@ -215,8 +197,7 @@ public class AuthResource extends AbstractContextResource
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return generalAuthError( callback, e );
         }
     }
@@ -227,8 +208,7 @@ public class AuthResource extends AbstractContextResource
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response authFQPost( @Context UriInfo ui, @FormParam("fq_access_token") String fq_access_token,
                                 @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "AuthResource.authFQPost" );
 
@@ -240,22 +220,18 @@ public class AuthResource extends AbstractContextResource
     @Path("foursquare")
     public Response authFQ( @Context UriInfo ui, @QueryParam("fq_access_token") String fq_access_token,
                             @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "AuthResource.authFQ" );
 
-        try
-        {
-            if ( StringUtils.isEmpty( fq_access_token ) )
-            {
+        try {
+            if ( StringUtils.isEmpty( fq_access_token ) ) {
                 return missingTokenFail( callback );
             }
             SignInAsProvider foursquareProvider = signInProviderFactory.foursquare( services.getApplication() );
             User user = foursquareProvider.createOrAuthenticate( fq_access_token );
 
-            if ( user == null )
-            {
+            if ( user == null ) {
                 return findAndCreateFail( callback );
             }
 
@@ -268,8 +244,7 @@ public class AuthResource extends AbstractContextResource
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return generalAuthError( callback, e );
         }
     }

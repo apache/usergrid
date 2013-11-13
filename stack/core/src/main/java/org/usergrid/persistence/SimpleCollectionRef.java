@@ -21,8 +21,7 @@ import java.util.UUID;
 import org.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 
 
-public class SimpleCollectionRef implements CollectionRef
-{
+public class SimpleCollectionRef implements CollectionRef {
 
     public static final String MEMBER_ENTITY_TYPE = "member";
 
@@ -33,8 +32,7 @@ public class SimpleCollectionRef implements CollectionRef
     protected final UUID id;
 
 
-    public SimpleCollectionRef( EntityRef ownerRef, String collectionName, EntityRef itemRef )
-    {
+    public SimpleCollectionRef( EntityRef ownerRef, String collectionName, EntityRef itemRef ) {
         this.ownerRef = ownerRef;
         this.collectionName = collectionName;
         this.itemRef = itemRef;
@@ -44,49 +42,41 @@ public class SimpleCollectionRef implements CollectionRef
 
 
     @Override
-    public EntityRef getOwnerEntity()
-    {
+    public EntityRef getOwnerEntity() {
         return ownerRef;
     }
 
 
     @Override
-    public String getCollectionName()
-    {
+    public String getCollectionName() {
         return collectionName;
     }
 
 
     @Override
-    public EntityRef getItemRef()
-    {
+    public EntityRef getItemRef() {
         return itemRef;
     }
 
 
     @Override
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return id;
     }
 
 
     @Override
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
 
     @Override
-    public String toString()
-    {
-        if ( ( type == null ) && ( id == null ) )
-        {
+    public String toString() {
+        if ( ( type == null ) && ( id == null ) ) {
             return "CollectionRef(" + SimpleEntityRef.NULL_ID.toString() + ")";
         }
-        if ( type == null )
-        {
+        if ( type == null ) {
             return "CollectionRef(" + id.toString() + ")";
         }
         return type + "(" + id + "," + ownerRef + "," + collectionName + "," + itemRef + ")";

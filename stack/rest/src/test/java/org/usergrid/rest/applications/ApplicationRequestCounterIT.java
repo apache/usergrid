@@ -43,15 +43,13 @@ import static org.junit.Assert.assertNotNull;
  * @author realbeast
  */
 @Concurrent()
-public class ApplicationRequestCounterIT extends AbstractRestIT
-{
+public class ApplicationRequestCounterIT extends AbstractRestIT {
     private static final Logger log = LoggerFactory.getLogger( ApplicationRequestCounterIT.class );
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 
 
     @Test
-    public void applicationrequestInternalCounters() throws Exception
-    {
+    public void applicationrequestInternalCounters() throws Exception {
         // Get application id
         JsonNode node = resource().path( "/test-organization/test-app" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
@@ -83,8 +81,7 @@ public class ApplicationRequestCounterIT extends AbstractRestIT
     }
 
 
-    private int getCounter( EntityManager em, String key ) throws Exception
-    {
+    private int getCounter( EntityManager em, String key ) throws Exception {
         Query query = new Query();
         query.addCounterFilter( key + ":*:*:*" );
         query.setStartTime( ts );

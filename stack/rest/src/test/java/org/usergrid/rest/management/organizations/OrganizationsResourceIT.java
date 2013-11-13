@@ -35,18 +35,15 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 
 /** @author zznate */
-public class OrganizationsResourceIT extends AbstractRestIT
-{
+public class OrganizationsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void createOrgAndOwner() throws Exception
-    {
+    public void createOrgAndOwner() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
@@ -97,16 +94,14 @@ public class OrganizationsResourceIT extends AbstractRestIT
             Assert.assertEquals( 5, node.get( "organization" ).get( OrganizationsResource.ORGANIZATION_PROPERTIES )
                                         .get( "securityLevel" ).asInt() );
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
     @Test
-    public void testCreateDuplicateOrgName() throws Exception
-    {
+    public void testCreateDuplicateOrgName() throws Exception {
         Map<String, String> payload =
                 hashMap( "email", "create-duplicate-org@mockserver.com" ).map( "password", "password" )
                         .map( "organization", "create-duplicate-orgname-org" );
@@ -120,24 +115,20 @@ public class OrganizationsResourceIT extends AbstractRestIT
         payload = hashMap( "email", "create-duplicate-org2@mockserver.com" ).map( "username", "create-dupe-orgname2" )
                 .map( "password", "password" ).map( "organization", "create-duplicate-orgname-org" );
 
-        try
-        {
+        try {
             node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
         }
         payload = hashMap( "grant_type", "password" ).map( "username", "create-dupe-orgname2" )
                 .map( "password", "password" );
-        try
-        {
+        try {
             node = resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
             fail( "Should not have created user" );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
         }
         logNode( node );
 
@@ -150,8 +141,7 @@ public class OrganizationsResourceIT extends AbstractRestIT
 
 
     @Test
-    public void testOrgPOSTParams()
-    {
+    public void testOrgPOSTParams() {
         JsonNode node = resource().path( "/management/organizations" ).queryParam( "organization", "testOrgPOSTParams" )
                 .queryParam( "username", "testOrgPOSTParams" ).queryParam( "grant_type", "password" )
                 .queryParam( "email", "testOrgPOSTParams@apigee.com" ).queryParam( "name", "testOrgPOSTParams" )
@@ -165,8 +155,7 @@ public class OrganizationsResourceIT extends AbstractRestIT
 
 
     @Test
-    public void testOrgPOSTForm()
-    {
+    public void testOrgPOSTForm() {
 
         Form form = new Form();
         form.add( "organization", "testOrgPOSTForm" );
@@ -184,8 +173,7 @@ public class OrganizationsResourceIT extends AbstractRestIT
 
 
     @Test
-    public void noOrgDelete()
-    {
+    public void noOrgDelete() {
 
 
         String mgmtToken = adminToken();
@@ -193,14 +181,12 @@ public class OrganizationsResourceIT extends AbstractRestIT
         Status status = null;
         JsonNode node = null;
 
-        try
-        {
+        try {
             node = resource().path( "/test-organization" ).queryParam( "access_token", mgmtToken )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                     .delete( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 

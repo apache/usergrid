@@ -2,8 +2,7 @@ package org.usergrid.cassandra;
 
 
 /** @author zznate */
-public interface SchemaManager
-{
+public interface SchemaManager {
 
     /** Create any schema necessary for test execution. */
     void create();

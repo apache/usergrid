@@ -16,20 +16,17 @@
 package org.usergrid.security.tokens.exceptions;
 
 
-public class ExpiredTokenException extends TokenException
-{
+public class ExpiredTokenException extends TokenException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public ExpiredTokenException( String arg0, Throwable arg1 )
-    {
+    public ExpiredTokenException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public ExpiredTokenException( String arg0 )
-    {
+    public ExpiredTokenException( String arg0 ) {
         super( arg0 );
     }
 }

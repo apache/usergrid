@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByLessThanLimitConnectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByLessThanLimitConnectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByLessThanLimitConnection() throws Exception
-    {
+    public void singleOrderByLessThanLimitConnection() throws Exception {
         singleOrderByLessThanLimit( new ConnectionHelper() );
     }
 }

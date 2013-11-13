@@ -26,8 +26,7 @@ import org.usergrid.locking.exception.UGLockException;
  *
  * @author tnine
  */
-public interface Lock
-{
+public interface Lock {
 
     /**
      * Acquire the lock.  Wait the specified amount of time before giving up

@@ -27,19 +27,16 @@ import com.hazelcast.core.MembershipEvent;
 import com.hazelcast.core.MembershipListener;
 
 
-public class HazelcastLifecycleMonitor implements InstanceListener, MembershipListener
-{
+public class HazelcastLifecycleMonitor implements InstanceListener, MembershipListener {
 
     private static final Logger logger = LoggerFactory.getLogger( HazelcastLifecycleMonitor.class );
 
 
-    public HazelcastLifecycleMonitor()
-    {
+    public HazelcastLifecycleMonitor() {
     }
 
 
-    public void init()
-    {
+    public void init() {
         logger.info( "HazelcastLifecycleMonitor initializing..." );
         Hazelcast.addInstanceListener( this );
         Hazelcast.getCluster().addMembershipListener( this );
@@ -47,8 +44,7 @@ public class HazelcastLifecycleMonitor implements InstanceListener, MembershipLi
     }
 
 
-    public void destroy()
-    {
+    public void destroy() {
         logger.info( "Shutting down Hazelcast" );
         Hazelcast.shutdownAll();
         logger.info( "Hazelcast shutdown" );
@@ -56,31 +52,27 @@ public class HazelcastLifecycleMonitor implements InstanceListener, MembershipLi
 
 
     @Override
-    public void instanceCreated( InstanceEvent event )
-    {
+    public void instanceCreated( InstanceEvent event ) {
         Instance instance = event.getInstance();
         logger.info( "Created instance ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
     }
 
 
     @Override
-    public void instanceDestroyed( InstanceEvent event )
-    {
+    public void instanceDestroyed( InstanceEvent event ) {
         Instance instance = event.getInstance();
         logger.info( "Destroyed isntance ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
     }
 
 
     @Override
-    public void memberAdded( MembershipEvent membersipEvent )
-    {
+    public void memberAdded( MembershipEvent membersipEvent ) {
         logger.info( "MemberAdded " + membersipEvent );
     }
 
 
     @Override
-    public void memberRemoved( MembershipEvent membersipEvent )
-    {
+    public void memberRemoved( MembershipEvent membersipEvent ) {
         logger.info( "MemberRemoved " + membersipEvent );
     }
 }

@@ -10,8 +10,7 @@ import java.util.UUID;
  *
  * @author zznate
  */
-public class OrgScore
-{
+public class OrgScore {
     private final UUID id;
     private final String name;
     private long adminLogins;
@@ -20,87 +19,73 @@ public class OrgScore
     private long appCount;
 
 
-    public OrgScore( UUID id, String name )
-    {
+    public OrgScore( UUID id, String name ) {
         this.id = id;
         this.name = name;
     }
 
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return id;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public long getUserCount()
-    {
+    public long getUserCount() {
         return userCount;
     }
 
 
-    public void addToUserCount( long userCount )
-    {
+    public void addToUserCount( long userCount ) {
         this.userCount += userCount;
     }
 
 
-    public long getAdminCount()
-    {
+    public long getAdminCount() {
         return adminCount;
     }
 
 
-    public void setAdminCount( long adminCount )
-    {
+    public void setAdminCount( long adminCount ) {
         this.adminCount = adminCount;
     }
 
 
-    public long getAdminLogins()
-    {
+    public long getAdminLogins() {
         return adminLogins;
     }
 
 
-    public void setAdminLogins( long adminLogins )
-    {
+    public void setAdminLogins( long adminLogins ) {
         this.adminLogins = adminLogins;
     }
 
 
-    public long getAppCount()
-    {
+    public long getAppCount() {
         return appCount;
     }
 
 
-    public void setAppCount( long appCount )
-    {
+    public void setAppCount( long appCount ) {
         this.appCount = appCount;
     }
 
 
     /** Delegates to id UUID */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return id.hashCode();
     }
 
 
     /** Delegates to the id UUID */
     @Override
-    public boolean equals( Object o )
-    {
-        if ( o instanceof OrgScore )
-        {
+    public boolean equals( Object o ) {
+        if ( o instanceof OrgScore ) {
             return ( ( OrgScore ) o ).getId().equals( id );
         }
         return false;

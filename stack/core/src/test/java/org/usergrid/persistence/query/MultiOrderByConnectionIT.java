@@ -22,12 +22,10 @@ import org.usergrid.cassandra.Concurrent;
 
 /** @author tnine */
 @Concurrent()
-public class MultiOrderByConnectionIT extends AbstractIteratingQueryIT
-{
+public class MultiOrderByConnectionIT extends AbstractIteratingQueryIT {
 
     @Test
-    public void multOrderByConnection() throws Exception
-    {
+    public void multOrderByConnection() throws Exception {
         multiOrderBy( new ConnectionHelper() );
     }
 }

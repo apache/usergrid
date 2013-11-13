@@ -6,8 +6,7 @@ package org.usergrid.batch;
  *
  * @author zznate
  */
-public interface Job
-{
+public interface Job {
 
     /**
      * Invoked when a job should execute

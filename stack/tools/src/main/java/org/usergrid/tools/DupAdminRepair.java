@@ -56,8 +56,7 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
  *
  * @author tnine
  */
-public class DupAdminRepair extends ExportingToolBase
-{
+public class DupAdminRepair extends ExportingToolBase {
 
     /**
      *
@@ -69,8 +68,7 @@ public class DupAdminRepair extends ExportingToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -95,8 +93,7 @@ public class DupAdminRepair extends ExportingToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         String outputDir = line.getOptionValue( "output" );
 
         String emailsDir = String.format( "%s/emails", outputDir );
@@ -119,13 +116,11 @@ public class DupAdminRepair extends ExportingToolBase
 
         Multimap<String, UUID> emails = HashMultimap.create();
         Multimap<String, UUID> usernames = HashMultimap.create();
-        do
-        {
+        do {
 
             r = em.searchCollection( app, "users", query );
 
-            for ( Entity entity : r.getEntities() )
-            {
+            for ( Entity entity : r.getEntities() ) {
                 emails.put( entity.getProperty( "email" ).toString().toLowerCase(), entity.getUuid() );
                 usernames.put( entity.getProperty( "username" ).toString().toLowerCase(), entity.getUuid() );
             }
@@ -138,12 +133,10 @@ public class DupAdminRepair extends ExportingToolBase
 
         // now go through and print out duplicate emails
 
-        for ( String username : usernames.keySet() )
-        {
+        for ( String username : usernames.keySet() ) {
             Collection<UUID> ids = usernames.get( username );
 
-            if ( ids.size() > 1 )
-            {
+            if ( ids.size() > 1 ) {
                 logger.info( "Found multiple users with the username {}", username );
 
                 // force the username to be reset to the user's email
@@ -151,18 +144,15 @@ public class DupAdminRepair extends ExportingToolBase
             }
         }
 
-        for ( String email : emails.keySet() )
-        {
+        for ( String email : emails.keySet() ) {
             Collection<UUID> ids = emails.get( email );
 
-            if ( ids.size() > 1 )
-            {
+            if ( ids.size() > 1 ) {
                 // get the admin the same way as the rest tier, this way the OTHER
                 // admins will be removed
                 UserInfo targetUser = managementService.getAdminUserByEmail( email );
 
-                if ( targetUser == null )
-                {
+                if ( targetUser == null ) {
 
                     List<UUID> tempIds = new ArrayList<UUID>( ids );
                     Collections.sort( tempIds );
@@ -187,8 +177,7 @@ public class DupAdminRepair extends ExportingToolBase
 
                 file.write( JsonUtils.mapToFormattedJsonString( userOrganizationData ) );
 
-                for ( UUID id : ids )
-                {
+                for ( UUID id : ids ) {
 
                     userOrganizationData = managementService.getAdminUserOrganizationData( id );
 
@@ -225,13 +214,11 @@ public class DupAdminRepair extends ExportingToolBase
      * When our usernames are equal, we need to check if our emails are equal. If they're not, we need to change the one
      * that DOES NOT get returned on a lookup by username
      */
-    private void resolveUsernameConflicts( String targetDir, String userName, Collection<UUID> ids ) throws Exception
-    {
+    private void resolveUsernameConflicts( String targetDir, String userName, Collection<UUID> ids ) throws Exception {
         // lookup the admin id
         UserInfo existing = managementService.getAdminUserByUsername( userName );
 
-        if ( existing == null )
-        {
+        if ( existing == null ) {
             logger.warn( "Could not determine an admin for colliding username '{}'.  Skipping", userName );
             return;
         }
@@ -242,18 +229,15 @@ public class DupAdminRepair extends ExportingToolBase
 
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
-        for ( UUID id : ids )
-        {
+        for ( UUID id : ids ) {
             UserInfo other = managementService.getAdminUserByUuid( id );
 
             // same username and email, these will be merged later in the process,
             // skip it
-            if ( other != null && other.getEmail() != null && other.getEmail().equals( existing.getEmail() ) )
-            {
+            if ( other != null && other.getEmail() != null && other.getEmail().equals( existing.getEmail() ) ) {
                 logger.info(
-                        "Users with the same username '{}' have the same email '{}'. This will be resolved later in " +
-                                "the process, skipping",
-                        userName, existing.getEmail() );
+                        "Users with the same username '{}' have the same email '{}'. This will be resolved later in "
+                                + "the process, skipping", userName, existing.getEmail() );
                 continue;
             }
 
@@ -264,30 +248,24 @@ public class DupAdminRepair extends ExportingToolBase
             setUserName( em, other, other.getEmail() );
         }
 
-        if ( collision )
-        {
+        if ( collision ) {
             setUserName( em, existing, existing.getEmail() );
         }
     }
 
 
     /** Set the username to the one provided, if we can't due to duplicate property issues, we fall back to user+uuid */
-    private void setUserName( EntityManager em, UserInfo other, String newUserName ) throws Exception
-    {
+    private void setUserName( EntityManager em, UserInfo other, String newUserName ) throws Exception {
         logger.info( "Setting username to {} for user with username {} and id {}", new Object[] {
                 newUserName, other.getUsername(), other.getUuid()
         } );
 
-        try
-        {
+        try {
             em.setProperty( new SimpleEntityRef( "user", other.getUuid() ), "username", newUserName, true );
         }
-        catch ( DuplicateUniquePropertyExistsException e )
-        {
-            logger.warn(
-                    "More than 1 user has the username of {}.  Setting the username to their username+UUID as a " +
-                            "fallback",
-                    newUserName );
+        catch ( DuplicateUniquePropertyExistsException e ) {
+            logger.warn( "More than 1 user has the username of {}.  Setting the username to their username+UUID as a "
+                    + "fallback", newUserName );
 
             setUserName( em, other, String.format( "%s-%s", other.getUsername(), other.getUuid() ) );
         }
@@ -295,16 +273,14 @@ public class DupAdminRepair extends ExportingToolBase
 
 
     /** Merge the source admin to the target admin by copying oranizations. Then deletes the source admin */
-    private void mergeAdmins( String targetDir, UUID sourceId, UUID targetId ) throws Exception
-    {
+    private void mergeAdmins( String targetDir, UUID sourceId, UUID targetId ) throws Exception {
 
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
         User sourceUser = em.get( sourceId, User.class );
 
         // may have already been deleted, do nothing
-        if ( sourceUser == null )
-        {
+        if ( sourceUser == null ) {
             logger.warn( "Source admin with uuid {} does not exist in cassandra", sourceId );
             return;
         }
@@ -315,8 +291,7 @@ public class DupAdminRepair extends ExportingToolBase
                 ( Map<String, Map<String, UUID>> ) managementService.getAdminUserOrganizationData( sourceId )
                                                                     .get( "organizations" );
 
-        for ( String orgName : sourceOrgs.keySet() )
-        {
+        for ( String orgName : sourceOrgs.keySet() ) {
             UUID orgId = sourceOrgs.get( orgName ).get( "uuid" );
 
             OrganizationInfo org = managementService.getOrganizationByUuid( orgId );

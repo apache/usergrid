@@ -45,8 +45,7 @@ import static org.junit.Assert.fail;
 
 
 @Concurrent()
-public class IndexIT extends AbstractCoreIT
-{
+public class IndexIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
 
     public static final String[] alphabet = {
@@ -57,8 +56,7 @@ public class IndexIT extends AbstractCoreIT
 
 
     @Test
-    public void testCollectionOrdering() throws Exception
-    {
+    public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCollectionOrdering" );
@@ -67,8 +65,7 @@ public class IndexIT extends AbstractCoreIT
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
-        for ( int i = alphabet.length - 1; i >= 0; i-- )
-        {
+        for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
@@ -80,24 +77,21 @@ public class IndexIT extends AbstractCoreIT
 
         Query query = Query.fromQL( "order by name" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
 
         query = Query.fromQL( "order by name" ).withCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
 
         query = Query.fromQL( "order by name" ).withCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -108,8 +102,7 @@ public class IndexIT extends AbstractCoreIT
 
         query = Query.fromQL( "order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
@@ -117,16 +110,14 @@ public class IndexIT extends AbstractCoreIT
         query = Query.fromQL( "order by name desc" ).withCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         // LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
 
         query = Query.fromQL( "order by name desc" ).withCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
@@ -136,8 +127,7 @@ public class IndexIT extends AbstractCoreIT
 
 
     @Test
-    public void testCollectionFilters() throws Exception
-    {
+    public void testCollectionFilters() throws Exception {
         LOG.info( "testCollectionFilters" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testCollectionFilters" );
@@ -146,8 +136,7 @@ public class IndexIT extends AbstractCoreIT
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
-        for ( int i = alphabet.length - 1; i >= 0; i-- )
-        {
+        for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
@@ -159,8 +148,7 @@ public class IndexIT extends AbstractCoreIT
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 0;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -170,8 +158,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 0;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -181,8 +168,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -192,8 +178,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -203,8 +188,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -214,8 +198,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
             i++;
         }
@@ -225,8 +208,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 6;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
@@ -236,8 +218,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 5;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
@@ -247,8 +228,7 @@ public class IndexIT extends AbstractCoreIT
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 5;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
         }
@@ -271,8 +251,7 @@ public class IndexIT extends AbstractCoreIT
 
 
     @Test
-    public void testSecondarySorts() throws Exception
-    {
+    public void testSecondarySorts() throws Exception {
         LOG.info( "testSecondarySorts" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testSecondarySorts" );
@@ -281,8 +260,7 @@ public class IndexIT extends AbstractCoreIT
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
-        for ( int i = alphabet.length - 1; i >= 0; i-- )
-        {
+        for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
@@ -296,8 +274,7 @@ public class IndexIT extends AbstractCoreIT
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 6;
-        for ( Entity entity : r.getEntities() )
-        {
+        for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( 1L, entity.getProperty( "group" ) );
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -307,8 +284,7 @@ public class IndexIT extends AbstractCoreIT
 
 
     @Test
-    public void testPropertyUpdateWithConnection() throws Exception
-    {
+    public void testPropertyUpdateWithConnection() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testPropertyUpdateWithConnection" );
 
@@ -378,8 +354,7 @@ public class IndexIT extends AbstractCoreIT
     /** Same as above, but verifies the data in our entity_index_entry CF after the operations have completed */
 
     @Test
-    public void testPropertyUpdateWithConnectionEntityIndexEntryAudit() throws Exception
-    {
+    public void testPropertyUpdateWithConnectionEntityIndexEntryAudit() throws Exception {
 
         UUID applicationId =
                 setup.createApplication( "testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit" );
@@ -467,10 +442,8 @@ public class IndexIT extends AbstractCoreIT
 
         IndexEntry lastMatch = null;
 
-        for ( IndexEntry entry : update.getPrevEntries() )
-        {
-            if ( "status".equals( entry.getPath() ) )
-            {
+        for ( IndexEntry entry : update.getPrevEntries() ) {
+            if ( "status".equals( entry.getPath() ) ) {
                 count++;
                 lastMatch = entry;
             }
@@ -479,12 +452,10 @@ public class IndexIT extends AbstractCoreIT
 
         assertEquals( 1, count );
 
-        if ( lastMatch != null )
-        {
+        if ( lastMatch != null ) {
             assertEquals( "herring", lastMatch.getValue() );
         }
-        else
-        {
+        else {
             fail( "The last match was null but should have been herring!" );
         }
     }

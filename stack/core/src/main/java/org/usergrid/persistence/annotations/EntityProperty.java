@@ -24,8 +24,7 @@ import java.lang.annotation.Target;
 
 @Target(value = { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EntityProperty
-{
+public @interface EntityProperty {
 
     String name() default "";
 

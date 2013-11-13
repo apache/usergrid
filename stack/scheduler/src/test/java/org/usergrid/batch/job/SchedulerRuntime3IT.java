@@ -35,16 +35,14 @@ import static org.junit.Assert.assertFalse;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
     private static final String FAIL_PROP = "usergrid.scheduler.job.maxfail";
     private static final String RUNNLOOP_PROP = "usergrid.scheduler.job.interval";
 
 
     /** Test the scheduler ramps up correctly when there are more jobs to be read after a pause */
     @Test
-    public void failureCausesJobDeath() throws Exception
-    {
+    public void failureCausesJobDeath() throws Exception {
 
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNNLOOP_PROP ) );

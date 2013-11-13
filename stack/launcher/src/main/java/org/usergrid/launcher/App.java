@@ -38,8 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.standalone.Server;
 
 
-public class App
-{
+public class App {
 
     private static final Logger logger = LoggerFactory.getLogger( App.class );
 
@@ -57,32 +56,27 @@ public class App
     boolean autoLogin = true;
 
 
-    public App()
-    {
+    public App() {
         /*
-		 * super("Launcher"); addComponentsToPane(); pack(); setVisible(true);
+         * super("Launcher"); addComponentsToPane(); pack(); setVisible(true);
 		 */
     }
 
 
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) {
         System.setProperty( "apple.laf.useScreenMenuBar", "true" );
         System.setProperty( "com.apple.mrj.application.apple.menu.about.name", "Usergrid Launcher" );
         System.setProperty( "apple.awt.antialiasing", "true" );
         System.setProperty( "apple.awt.textantialiasing", "true" );
         System.setProperty( "apple.awt.graphics.UseQuartz", "true" );
-        try
-        {
+        try {
             UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             e.printStackTrace();
         }
 
-        if ( MAC_OS_X )
-        {
+        if ( MAC_OS_X ) {
             AppleUtils.initMacApp();
         }
 
@@ -91,16 +85,13 @@ public class App
     }
 
 
-    public void launch()
-    {
+    public void launch() {
         loadPrefs();
 
-        try
-        {
+        try {
             logViewer = new LogViewerFrame( this );
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             e.printStackTrace();
         }
 
@@ -111,64 +102,50 @@ public class App
     }
 
 
-    public static ArrayNode getJsonArray( Set<String> strings )
-    {
+    public static ArrayNode getJsonArray( Set<String> strings ) {
         ArrayNode node = JsonNodeFactory.instance.arrayNode();
-        for ( String string : strings )
-        {
+        for ( String string : strings ) {
             node.add( string );
         }
         return node;
     }
 
 
-    public void storeUrlsInPreferences( Set<String> urls )
-    {
+    public void storeUrlsInPreferences( Set<String> urls ) {
         ObjectMapper mapper = new ObjectMapper();
-        try
-        {
+        try {
             prefs.put( "urlList", mapper.writeValueAsString( getJsonArray( urls ) ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
         }
     }
 
 
-    public void storeUrlsInPreferences( String[] urls )
-    {
+    public void storeUrlsInPreferences( String[] urls ) {
         storeUrlsInPreferences( new LinkedHashSet<String>( Arrays.asList( urls ) ) );
     }
 
 
-    public Set<String> getUrlSetFromPreferences()
-    {
+    public Set<String> getUrlSetFromPreferences() {
         Set<String> urls = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
         urls.add( GH_PORTAL_URL );
         ObjectMapper mapper = new ObjectMapper();
         String json = null;
-        try
-        {
+        try {
             json = prefs.get( "urlList", null );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
         }
-        if ( json == null )
-        {
+        if ( json == null ) {
             return urls;
         }
         List<String> strings = null;
-        try
-        {
-            strings = mapper.readValue( json, new TypeReference<List<String>>()
-            {} );
+        try {
+            strings = mapper.readValue( json, new TypeReference<List<String>>() {} );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
         }
-        if ( strings == null )
-        {
+        if ( strings == null ) {
             return urls;
         }
         urls = new LinkedHashSet<String>( strings );
@@ -177,8 +154,7 @@ public class App
     }
 
 
-    public String[] getUrlsFromPreferences()
-    {
+    public String[] getUrlsFromPreferences() {
         Set<String> urls = getUrlSetFromPreferences();
         return urls.toArray( new String[urls.size()] );
     }
@@ -187,14 +163,10 @@ public class App
     Server server = null;
 
 
-    public Server getServer()
-    {
-        if ( server == null )
-        {
-            synchronized ( this )
-            {
-                if ( server == null )
-                {
+    public Server getServer() {
+        if ( server == null ) {
+            synchronized ( this ) {
+                if ( server == null ) {
                     server = new Server();
                     server.setDaemon( false );
                 }
@@ -204,15 +176,11 @@ public class App
     }
 
 
-    public void startServer()
-    {
-        executor.execute( new Runnable()
-        {
+    public void startServer() {
+        executor.execute( new Runnable() {
             @Override
-            public void run()
-            {
-                if ( !getServer().isRunning() )
-                {
+            public void run() {
+                if ( !getServer().isRunning() ) {
                     launcher.setStatusYellow();
                     getServer().setInitializeDatabaseOnStart( initializeDatabaseOnStart );
                     getServer().setStartDatabaseWithServer( startDatabaseWithServer );
@@ -224,15 +192,11 @@ public class App
     }
 
 
-    public synchronized void stopServer()
-    {
-        executor.execute( new Runnable()
-        {
+    public synchronized void stopServer() {
+        executor.execute( new Runnable() {
             @Override
-            public void run()
-            {
-                if ( getServer().isRunning() )
-                {
+            public void run() {
+                if ( getServer().isRunning() ) {
                     getServer().stopServer();
                     launcher.setStatusRed();
                 }
@@ -241,96 +205,81 @@ public class App
     }
 
 
-    public LogViewerFrame getLogViewer()
-    {
+    public LogViewerFrame getLogViewer() {
         return logViewer;
     }
 
 
-    public LauncherFrame getLauncher()
-    {
+    public LauncherFrame getLauncher() {
         return launcher;
     }
 
 
-    public void showLogView()
-    {
+    public void showLogView() {
         logViewer.setVisible( true );
     }
 
 
-    public boolean isInitializeDatabaseOnStart()
-    {
+    public boolean isInitializeDatabaseOnStart() {
         return initializeDatabaseOnStart;
     }
 
 
-    public void setInitializeDatabaseOnStart( boolean initializeDatabaseOnStart )
-    {
+    public void setInitializeDatabaseOnStart( boolean initializeDatabaseOnStart ) {
         this.initializeDatabaseOnStart = initializeDatabaseOnStart;
         prefs.putBoolean( "initializeDatabaseOnStart", initializeDatabaseOnStart );
     }
 
 
-    public boolean isStartDatabaseWithServer()
-    {
+    public boolean isStartDatabaseWithServer() {
         return startDatabaseWithServer;
     }
 
 
-    public void setStartDatabaseWithServer( boolean startDatabaseWithServer )
-    {
+    public void setStartDatabaseWithServer( boolean startDatabaseWithServer ) {
         this.startDatabaseWithServer = startDatabaseWithServer;
         prefs.putBoolean( "startDatabaseWithServer", startDatabaseWithServer );
     }
 
 
-    public String getAdminUserEmail()
-    {
+    public String getAdminUserEmail() {
         return adminUserEmail;
     }
 
 
-    public void setAdminUserEmail( String adminUserEmail )
-    {
+    public void setAdminUserEmail( String adminUserEmail ) {
         this.adminUserEmail = adminUserEmail;
         prefs.put( "adminUserEmail", adminUserEmail );
     }
 
 
-    public boolean isAutoLogin()
-    {
+    public boolean isAutoLogin() {
         return autoLogin;
     }
 
 
-    public void setAutoLogin( boolean autoLogin )
-    {
+    public void setAutoLogin( boolean autoLogin ) {
         this.autoLogin = autoLogin;
         prefs.putBoolean( "autoLogin", autoLogin );
     }
 
 
-    public String getAccessToken()
-    {
+    public String getAccessToken() {
         return server.getAccessTokenForAdminUser( adminUserEmail );
     }
 
 
-    public UUID getAdminUUID()
-    {
+    public UUID getAdminUUID() {
         return server.getAdminUUID( adminUserEmail );
     }
 
 
-    public boolean serverIsStarted()
-    {
+    public boolean serverIsStarted() {
         return ( server != null ) && server.isRunning();
     }
 
 
-    public void loadPrefs()
-    {
+    public void loadPrefs() {
         prefs = Preferences.userNodeForPackage( org.usergrid.launcher.App.class );
         initializeDatabaseOnStart = prefs.getBoolean( "initializeDatabaseOnStart", true );
         startDatabaseWithServer = prefs.getBoolean( "startDatabaseWithServer", true );

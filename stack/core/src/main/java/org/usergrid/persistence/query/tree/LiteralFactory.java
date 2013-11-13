@@ -24,38 +24,30 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public class LiteralFactory
-{
+public class LiteralFactory {
 
     /** Generate the correct literal subclass based on the runtime instance. */
-    public static final Literal<?> getLiteral( Object value )
-    {
-        if ( value instanceof Integer )
-        {
+    public static final Literal<?> getLiteral( Object value ) {
+        if ( value instanceof Integer ) {
             return new LongLiteral( ( Integer ) value );
         }
-        if ( value instanceof Long )
-        {
+        if ( value instanceof Long ) {
             return new LongLiteral( ( Long ) value );
         }
 
-        if ( value instanceof String )
-        {
+        if ( value instanceof String ) {
             return new StringLiteral( ( String ) value );
         }
 
-        if ( value instanceof Float )
-        {
+        if ( value instanceof Float ) {
             return new FloatLiteral( ( Float ) value );
         }
 
-        if ( value instanceof UUID )
-        {
+        if ( value instanceof UUID ) {
             return new UUIDLiteral( ( UUID ) value );
         }
 
-        if ( value instanceof Boolean )
-        {
+        if ( value instanceof Boolean ) {
             return new BooleanLiteral( ( Boolean ) value );
         }
 

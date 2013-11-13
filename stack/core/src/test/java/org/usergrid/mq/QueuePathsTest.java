@@ -27,8 +27,7 @@ import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 @Concurrent()
-public class QueuePathsTest
-{
+public class QueuePathsTest {
     private static final Logger LOG = LoggerFactory.getLogger( QueuePathsTest.class );
 
 
@@ -36,8 +35,7 @@ public class QueuePathsTest
     // TODO - why does this test case not have assertions to test results?
     // tests should not be written like this: what's the point? If it's
     // code coverage this is still bad.
-    public void testPaths() throws Exception
-    {
+    public void testPaths() throws Exception {
         LOG.info( normalizeQueuePath( "a/b/c" ) );
         LOG.info( normalizeQueuePath( "a/b/c/" ) );
         LOG.info( normalizeQueuePath( "/a/b/c" ) );

@@ -27,8 +27,7 @@ import org.usergrid.persistence.annotations.EntityProperty;
  *
  * @author tnine
  */
-public class JobStat extends TypedEntity
-{
+public class JobStat extends TypedEntity {
 
 
     @EntityProperty(required = true, basic = true, indexed = true)
@@ -54,8 +53,7 @@ public class JobStat extends TypedEntity
      * @param jobName
      * @param startTime
      */
-    public JobStat()
-    {
+    public JobStat() {
     }
 
 
@@ -63,8 +61,7 @@ public class JobStat extends TypedEntity
      * @param jobName
      * @param jobId
      */
-    public JobStat( String jobName, UUID jobId )
-    {
+    public JobStat( String jobName, UUID jobId ) {
         super();
         this.jobName = jobName;
         this.jobId = jobId;
@@ -72,22 +69,19 @@ public class JobStat extends TypedEntity
 
 
     /** @return the jobName */
-    public String getJobName()
-    {
+    public String getJobName() {
         return jobName;
     }
 
 
     /** @param jobName the jobName to set */
-    public void setJobName( String jobName )
-    {
+    public void setJobName( String jobName ) {
         this.jobName = jobName;
     }
 
 
     /** @return the fireTime */
-    public long getStartTime()
-    {
+    public long getStartTime() {
         return startTime;
     }
 
@@ -97,29 +91,25 @@ public class JobStat extends TypedEntity
      *
      * @param startTime the fireTime to set
      */
-    public void setStartTime( long startTime )
-    {
+    public void setStartTime( long startTime ) {
         this.startTime = startTime;
     }
 
 
     /** Increment the run count */
-    public void incrementRuns()
-    {
+    public void incrementRuns() {
         runCount++;
     }
 
 
     /** Increment the run count */
-    public void incrementDelays()
-    {
+    public void incrementDelays() {
         delayCount++;
     }
 
 
     /** Get the number of times this job has failed */
-    public int getRunCount()
-    {
+    public int getRunCount() {
         return runCount;
     }
 
@@ -129,8 +119,7 @@ public class JobStat extends TypedEntity
      *
      * @param failCount the failCount to set
      */
-    public void setRunCount( int runCount )
-    {
+    public void setRunCount( int runCount ) {
         this.runCount = runCount;
     }
 
@@ -140,15 +129,13 @@ public class JobStat extends TypedEntity
      * <p/>
      * runCount - delayCount
      */
-    public int getTotalAttempts()
-    {
+    public int getTotalAttempts() {
         return runCount - delayCount;
     }
 
 
     /** @return the delayCount */
-    public int getDelayCount()
-    {
+    public int getDelayCount() {
         return delayCount;
     }
 
@@ -158,36 +145,31 @@ public class JobStat extends TypedEntity
      *
      * @param delayCount the delayCount to set
      */
-    public void setDelayCount( int delayCount )
-    {
+    public void setDelayCount( int delayCount ) {
         this.delayCount = delayCount;
     }
 
 
     /** @return the duration */
-    public long getDuration()
-    {
+    public long getDuration() {
         return duration;
     }
 
 
     /** @param duration the duration to set */
-    public void setDuration( long duration )
-    {
+    public void setDuration( long duration ) {
         this.duration = duration;
     }
 
 
     /** @return the jobId */
-    public UUID getJobId()
-    {
+    public UUID getJobId() {
         return jobId;
     }
 
 
     /** @param jobId the jobId to set */
-    public void setJobId( UUID jobId )
-    {
+    public void setJobId( UUID jobId ) {
         this.jobId = jobId;
     }
 }

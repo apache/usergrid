@@ -25,30 +25,26 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceResults;
 
 
-public class DevicesService extends AbstractCollectionService
-{
+public class DevicesService extends AbstractCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( DevicesService.class );
 
 
-    public DevicesService()
-    {
+    public DevicesService() {
         super();
         logger.info( "/devices" );
     }
 
 
     @Override
-    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
         logger.info( "Registering device {}", id );
         return super.putItemById( context, id );
     }
 
 
     @Override
-    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
         logger.info( "Attempting to connect an entity to device {}", id );
         return super.postItemById( context, id );
     }

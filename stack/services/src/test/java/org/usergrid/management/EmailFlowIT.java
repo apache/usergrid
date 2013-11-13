@@ -83,8 +83,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESET
  * <p/>
  * Hence there can be race conditions between test methods in this class.
  */
-public class EmailFlowIT
-{
+public class EmailFlowIT {
     private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
     private static final String ORGANIZATION_NAME = "email-test-org-1";
     public static final String ORGANIZATION_NAME_2 = "email-test-org-2";
@@ -102,8 +101,7 @@ public class EmailFlowIT
 
 
     @Test
-    public void testCreateOrganizationAndAdminWithConfirmationOnly() throws Exception
-    {
+    public void testCreateOrganizationAndAdminWithConfirmationOnly() throws Exception {
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
@@ -140,8 +138,7 @@ public class EmailFlowIT
 
 
     @Test
-    public void testCreateOrganizationAndAdminWithConfirmationAndActivation() throws Exception
-    {
+    public void testCreateOrganizationAndAdminWithConfirmationAndActivation() throws Exception {
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "true" );
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
@@ -190,8 +187,7 @@ public class EmailFlowIT
 
 
     @Test
-    public void skipAllEmailConfiguration() throws Exception
-    {
+    public void skipAllEmailConfiguration() throws Exception {
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION, "false" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
@@ -211,8 +207,7 @@ public class EmailFlowIT
 
 
     @Test
-    public void testEmailStrings()
-    {
+    public void testEmailStrings() {
         testProperty( PROPERTIES_EMAIL_ADMIN_ACTIVATED, false );
         testProperty( PROPERTIES_EMAIL_ADMIN_CONFIRMATION, true );
         testProperty( PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET, true );
@@ -229,8 +224,7 @@ public class EmailFlowIT
 
 
     @Test
-    public void testAppUserActivationResetpwdMail() throws Exception
-    {
+    public void testAppUserActivationResetpwdMail() throws Exception {
         String orgName = this.getClass().getName() + "1";
         String appName = name.getMethodName();
         String userName = "Test User";
@@ -307,8 +301,7 @@ public class EmailFlowIT
 
     /** Tests to make sure a normal user must be activated by the admin after confirmation. */
     @Test
-    public void testAppUserConfirmationMail() throws Exception
-    {
+    public void testAppUserConfirmationMail() throws Exception {
         String orgName = this.getClass().getName();
         String appName = name.getMethodName();
         String userName = "Test User";
@@ -362,15 +355,13 @@ public class EmailFlowIT
 
     private OrganizationOwnerInfo createOwnerAndOrganization( String orgName, String userName, String display,
                                                               String email, String password, boolean disabled,
-                                                              boolean active ) throws Exception
-    {
+                                                              boolean active ) throws Exception {
         return setup.getMgmtSvc()
                     .createOwnerAndOrganization( orgName, userName, display, email, password, disabled, active );
     }
 
 
-    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException
-    {
+    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
         String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
         // TODO better token extraction
         // this is going to get the wrong string if the first part is not
@@ -379,14 +370,12 @@ public class EmailFlowIT
     }
 
 
-    private void testProperty( String propertyName, boolean containsSubstitution )
-    {
+    private void testProperty( String propertyName, boolean containsSubstitution ) {
         String propertyValue = setup.get( propertyName );
         assertTrue( propertyName + " was not found", isNotBlank( propertyValue ) );
         LOG.info( propertyName + "=" + propertyValue );
 
-        if ( containsSubstitution )
-        {
+        if ( containsSubstitution ) {
             Map<String, String> valuesMap = new HashMap<String, String>();
             valuesMap.put( "reset_url", "test-url" );
             valuesMap.put( "organization_name", "test-org" );
@@ -401,24 +390,21 @@ public class EmailFlowIT
     }
 
 
-    private void enableEmailConfirmation( UUID appId ) throws Exception
-    {
+    private void enableEmailConfirmation( UUID appId ) throws Exception {
         EntityManager em = setup.getEmf().getEntityManager( appId );
         SimpleEntityRef ref = new SimpleEntityRef( Application.ENTITY_TYPE, appId );
         em.setProperty( ref, ManagementServiceImpl.REGISTRATION_REQUIRES_EMAIL_CONFIRMATION, true );
     }
 
 
-    private void enableAdminApproval( UUID appId ) throws Exception
-    {
+    private void enableAdminApproval( UUID appId ) throws Exception {
         EntityManager em = setup.getEmf().getEntityManager( appId );
         SimpleEntityRef ref = new SimpleEntityRef( Application.ENTITY_TYPE, appId );
         em.setProperty( ref, ManagementServiceImpl.REGISTRATION_REQUIRES_ADMIN_APPROVAL, true );
     }
 
 
-    private User setupAppUser( UUID appId, String username, String email, boolean activated ) throws Exception
-    {
+    private User setupAppUser( UUID appId, String username, String email, boolean activated ) throws Exception {
         Mailbox.clearAll();
 
         EntityManager em = setup.getEmf().getEntityManager( appId );

@@ -18,12 +18,10 @@ import static org.junit.Assert.fail;
 
 
 @Concurrent()
-public class DevicesResourceIT extends AbstractRestIT
-{
+public class DevicesResourceIT extends AbstractRestIT {
 
     @Test
-    public void putWithUUIDShouldCreateAfterDelete()
-    {
+    public void putWithUUIDShouldCreateAfterDelete() {
 
         Map<String, String> payload = new HashMap<String, String>();
         UUID uuid = UUID.randomUUID();
@@ -44,13 +42,11 @@ public class DevicesResourceIT extends AbstractRestIT
         assertNotNull( getEntity( response, 0 ) );
 
         // check deleted
-        try
-        {
+        try {
             response = appPath( path ).get( JsonNode.class );
             fail( "should get 404 error" );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( 404, e.getResponse().getStatus() );
         }
 

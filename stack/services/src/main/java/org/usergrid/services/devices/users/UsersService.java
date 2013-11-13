@@ -20,14 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class UsersService extends org.usergrid.services.users.UsersService
-{
+public class UsersService extends org.usergrid.services.users.UsersService {
 
     private static final Logger logger = LoggerFactory.getLogger( UsersService.class );
 
 
-    public UsersService()
-    {
+    public UsersService() {
         super();
         logger.info( "/devices/*/users" );
     }

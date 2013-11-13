@@ -39,8 +39,7 @@ import static org.junit.Assert.assertTrue;
 
 /** @author tnine */
 @Concurrent()
-public class GroupResourceIT extends AbstractRestIT
-{
+public class GroupResourceIT extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger( GroupResourceIT.class );
 
     private static final String GROUP = "testGroup";
@@ -50,27 +49,22 @@ public class GroupResourceIT extends AbstractRestIT
     private static boolean groupCreated = false;
 
 
-    public GroupResourceIT() throws Exception
-    {
+    public GroupResourceIT() throws Exception {
 
     }
 
 
     @Before
-    public void setupGroup()
-    {
-        if ( groupCreated )
-        {
+    public void setupGroup() {
+        if ( groupCreated ) {
             return;
         }
 
-        try
-        {
+        try {
             client.createGroup( GROUP );
             groupCreated = true;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             log.error( "Error creating group " + GROUP, e );
         }
     }
@@ -78,20 +72,17 @@ public class GroupResourceIT extends AbstractRestIT
 
     //    @Ignore
     @Test
-    public void failGroupNameValidation()
-    {
+    public void failGroupNameValidation() {
 
         ApiResponse response = client.createGroup( "groupName/withslash" );
         assertNull( response.getError() );
 
         {
             boolean failed = false;
-            try
-            {
+            try {
                 client.createGroup( "groupName withspace" );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 failed = true;
             }
             assertTrue( failed );
@@ -100,8 +91,7 @@ public class GroupResourceIT extends AbstractRestIT
 
 
     @Test
-    public void postGroupActivity()
-    {
+    public void postGroupActivity() {
 
         // don't populate the user, it will use the currently authenticated
         // user.
@@ -153,8 +143,7 @@ public class GroupResourceIT extends AbstractRestIT
 
 
     @Test
-    public void addRemovePermission()
-    {
+    public void addRemovePermission() {
 
         UUID id = UUIDUtils.newTimeUUID();
 
@@ -202,8 +191,7 @@ public class GroupResourceIT extends AbstractRestIT
 
 
     @Test
-    public void addRemoveRole()
-    {
+    public void addRemoveRole() {
 
         UUID id = UUIDUtils.newTimeUUID();
 

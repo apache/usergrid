@@ -43,12 +43,10 @@ import static org.junit.Assert.assertTrue;
 
 /** @author tnine */
 @Concurrent()
-public class QueryProcessorTest
-{
+public class QueryProcessorTest {
 
     @Test
-    public void equality() throws Exception
-    {
+    public void equality() throws Exception {
         String queryString = "select * where a = 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -74,8 +72,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void lessThan() throws Exception
-    {
+    public void lessThan() throws Exception {
         String queryString = "select * where a < 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -101,8 +98,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void lessThanEquals() throws Exception
-    {
+    public void lessThanEquals() throws Exception {
         String queryString = "select * where a <= 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -128,8 +124,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void greaterThan() throws Exception
-    {
+    public void greaterThan() throws Exception {
         String queryString = "select * where a > 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -155,8 +150,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void greaterThanEquals() throws Exception
-    {
+    public void greaterThanEquals() throws Exception {
         String queryString = "select * where a >= 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -182,8 +176,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void contains() throws Exception
-    {
+    public void contains() throws Exception {
         String queryString = "select * where a contains 'foo'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -212,8 +205,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void containsLower() throws Exception
-    {
+    public void containsLower() throws Exception {
         String queryString = "select * where a contains 'FOO'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -242,8 +234,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void containsRange() throws Exception, PersistenceException
-    {
+    public void containsRange() throws Exception, PersistenceException {
         String queryString = "select * where a contains 'foo*'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -272,8 +263,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void within() throws Exception
-    {
+    public void within() throws Exception {
         String queryString = "select * where a within .5 of 157.00, 0.00";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -295,8 +285,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void andEquality() throws Exception
-    {
+    public void andEquality() throws Exception {
         assertAndQuery( "select * where a = 1 and b = 2 and c = 3" );
         assertAndQuery( "select * where a = 1 AND b = 2 and c = 3" );
         assertAndQuery( "select * where a = 1 AnD b = 2 and c = 3" );
@@ -307,8 +296,7 @@ public class QueryProcessorTest
     }
 
 
-    private void assertAndQuery( String queryString ) throws Exception
-    {
+    private void assertAndQuery( String queryString ) throws Exception {
         ANTLRStringStream in = new ANTLRStringStream( queryString );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
@@ -350,8 +338,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void orEquality() throws Exception
-    {
+    public void orEquality() throws Exception {
         assertOrQuery( "select * where a = 1 or b = 2" );
         assertOrQuery( "select * where a = 1 OR b = 2" );
         assertOrQuery( "select * where a = 1 oR b = 2" );
@@ -360,8 +347,7 @@ public class QueryProcessorTest
     }
 
 
-    private void assertOrQuery( String queryString ) throws Exception
-    {
+    private void assertOrQuery( String queryString ) throws Exception {
         ANTLRStringStream in = new ANTLRStringStream( queryString );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
@@ -401,11 +387,10 @@ public class QueryProcessorTest
 
     /** Tests that when properties are not siblings, they are properly assigned to a SliceNode */
     @Test
-    public void nestedCompression() throws Exception
-    {
+    public void nestedCompression() throws Exception {
         String queryString =
-                "select * where (a > 1 and b > 10 and a < 10 and b < 20 ) or ( c >= 20 and d >= 30 and c <= 30 and d " +
-                        "<= 40)";
+                "select * where (a > 1 and b > 10 and a < 10 and b < 20 ) or ( c >= 20 and d >= 30 and c <= 30 and d "
+                        + "<= 40)";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
@@ -469,11 +454,10 @@ public class QueryProcessorTest
 
     /** Tests that when there are multiple or with and clauses, the tree is constructed correctly */
     @Test
-    public void nestedOrCompression() throws Exception
-    {
+    public void nestedOrCompression() throws Exception {
         String queryString =
-                "select * where ((a > 1 and  a < 10) or (b > 10 and b < 20 )) or (( c >= 20 and c <= 30 ) or (d >= 30" +
-                        "  and d <= 40))";
+                "select * where ((a > 1 and  a < 10) or (b > 10 and b < 20 )) or (( c >= 20 and c <= 30 ) or (d >= 30"
+                        + "  and d <= 40))";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
@@ -547,8 +531,7 @@ public class QueryProcessorTest
 
     /** Tests that when NOT is not the root operand the tree has a different root */
     @Test
-    public void andNot() throws Exception
-    {
+    public void andNot() throws Exception {
         String queryString = "select * where a > 1 and not b = 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -593,8 +576,7 @@ public class QueryProcessorTest
 
     /** Tests that when NOT is the root operand, a full scan range is performed. */
     @Test
-    public void notRootOperand() throws Exception
-    {
+    public void notRootOperand() throws Exception {
         String queryString = "select * where not b = 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -623,8 +605,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void stringWithSpaces() throws Exception
-    {
+    public void stringWithSpaces() throws Exception {
         String queryString = "select * where a = 'foo with bar'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -653,8 +634,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void fieldWithDash() throws Exception
-    {
+    public void fieldWithDash() throws Exception {
         String queryString = "select * where a-foo = 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -682,8 +662,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void stringWithDash() throws Exception
-    {
+    public void stringWithDash() throws Exception {
         String queryString = "select * where a = 'foo-bar'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -712,8 +691,7 @@ public class QueryProcessorTest
 
 
     @Test
-    public void uuidParse() throws Exception
-    {
+    public void uuidParse() throws Exception {
 
         //    UUID value = UUID.fromString("4b91a9c2-86a1-11e2-b7fa-68a86d52fa56");
         //

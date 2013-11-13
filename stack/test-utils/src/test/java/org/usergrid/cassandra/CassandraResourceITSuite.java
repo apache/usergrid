@@ -19,8 +19,7 @@ import org.junit.runners.Suite;
         OkThisIsTheLastIT.class                // <== uses the existing suite instance
 })
 @Concurrent()
-public class CassandraResourceITSuite
-{
+public class CassandraResourceITSuite {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 }

@@ -25,15 +25,12 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 
 @Provider
-public class ManagementExceptionMapper extends AbstractExceptionMapper<ManagementException>
-{
+public class ManagementExceptionMapper extends AbstractExceptionMapper<ManagementException> {
 
     @Override
-    public Response toResponse( ManagementException e )
-    {
+    public Response toResponse( ManagementException e ) {
         String msg = e.getMessage();
-        if ( msg == null )
-        {
+        if ( msg == null ) {
             msg = e.getClass().getName();
         }
         return toResponse( BAD_REQUEST, msg );

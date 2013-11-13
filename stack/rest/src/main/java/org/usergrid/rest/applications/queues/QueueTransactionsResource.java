@@ -49,8 +49,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class QueueTransactionsResource extends AbstractContextResource
-{
+public class QueueTransactionsResource extends AbstractContextResource {
 
     static final Logger logger = LoggerFactory.getLogger( QueueTransactionsResource.class );
 
@@ -59,13 +58,11 @@ public class QueueTransactionsResource extends AbstractContextResource
     String subscriptionPath = "";
 
 
-    public QueueTransactionsResource()
-    {
+    public QueueTransactionsResource() {
     }
 
 
-    public QueueTransactionsResource init( QueueManager mq, String queuePath )
-    {
+    public QueueTransactionsResource init( QueueManager mq, String queuePath ) {
         this.mq = mq;
         this.queuePath = queuePath;
         return this;
@@ -76,8 +73,7 @@ public class QueueTransactionsResource extends AbstractContextResource
     @PUT
     public JSONWithPadding updateTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
 
@@ -91,8 +87,7 @@ public class QueueTransactionsResource extends AbstractContextResource
     @DELETE
     public JSONWithPadding removeTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
                                               @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
 

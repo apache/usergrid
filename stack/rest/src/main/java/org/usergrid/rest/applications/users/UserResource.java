@@ -75,8 +75,7 @@ import static org.usergrid.utils.ConversionUtils.string;
 @Component("org.usergrid.rest.applications.users.UserResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
-public class UserResource extends ServiceResource
-{
+public class UserResource extends ServiceResource {
 
     public static final String USER_EXTENSION_RESOURCE_PREFIX = "org.usergrid.rest.applications.users.extensions.";
 
@@ -91,13 +90,11 @@ public class UserResource extends ServiceResource
     String token;
 
 
-    public UserResource()
-    {
+    public UserResource() {
     }
 
 
-    public UserResource init( Identifier userIdentifier ) throws Exception
-    {
+    public UserResource init( Identifier userIdentifier ) throws Exception {
         this.userIdentifier = userIdentifier;
         return this;
     }
@@ -108,10 +105,8 @@ public class UserResource extends ServiceResource
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
-        if ( json != null )
-        {
+            throws Exception {
+        if ( json != null ) {
             json.remove( "password" );
             json.remove( "pin" );
         }
@@ -124,13 +119,11 @@ public class UserResource extends ServiceResource
     @Path("password")
     public JSONWithPadding setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "UserResource.setUserPassword" );
 
-        if ( json == null )
-        {
+        if ( json == null ) {
             return null;
         }
 
@@ -139,30 +132,26 @@ public class UserResource extends ServiceResource
         String oldPassword = string( json.get( "oldpassword" ) );
         String newPassword = string( json.get( "newpassword" ) );
 
-        if ( newPassword == null )
-        {
+        if ( newPassword == null ) {
             throw new IllegalArgumentException( "newpassword is required" );
         }
 
         UUID applicationId = getApplicationId();
         UUID targetUserId = getUserUuid();
 
-        if ( targetUserId == null )
-        {
+        if ( targetUserId == null ) {
             response.setError( "User not found" );
             return new JSONWithPadding( response, callback );
         }
 
 
-        if ( isApplicationAdmin() )
-        {
+        if ( isApplicationAdmin() ) {
 
             management.setAppUserPassword( applicationId, targetUserId, newPassword );
         }
 
         // we're not an admin user, we can only update the password ourselves
-        else
-        {
+        else {
             management.setAppUserPassword( getApplicationId(), targetUserId, oldPassword, newPassword );
         }
 
@@ -174,8 +163,7 @@ public class UserResource extends ServiceResource
     @Path("password")
     public JSONWithPadding setUserPasswordPost( @Context UriInfo ui, Map<String, Object> json,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         return setUserPasswordPut( ui, json, callback );
     }
 
@@ -183,8 +171,7 @@ public class UserResource extends ServiceResource
     @POST
     @Path("deactivate")
     public JSONWithPadding deactivate( @Context UriInfo ui, Map<String, Object> json,
-                                       @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                       @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "Deactivate user" );
@@ -200,20 +187,18 @@ public class UserResource extends ServiceResource
     @GET
     @Path("sendpin")
     public JSONWithPadding sendPin( @Context UriInfo ui,
-                                    @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
 
         logger.info( "UserResource.sendPin" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "retrieve user pin" );
 
-        if ( getUser() != null )
-        {
+        if ( getUser() != null ) {
             management.sendAppUserPin( getApplicationId(), getUserUuid() );
         }
-        else
-        {
+        else {
             response.setError( "User not found" );
         }
 
@@ -225,8 +210,7 @@ public class UserResource extends ServiceResource
     @Path("sendpin")
     public JSONWithPadding postSendPin( @Context UriInfo ui,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         return sendPin( ui, callback );
     }
 
@@ -235,20 +219,18 @@ public class UserResource extends ServiceResource
     @Path("setpin")
     @RequireApplicationAccess
     public JSONWithPadding setPin( @Context UriInfo ui, @QueryParam("pin") String pin,
-                                   @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception
-    {
+                                   @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
 
         logger.info( "UserResource.setPin" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "set user pin" );
 
-        if ( getUser() != null )
-        {
+        if ( getUser() != null ) {
             management.setAppUserPin( getApplicationId(), getUserUuid(), pin );
         }
-        else
-        {
+        else {
             response.setError( "User not found" );
         }
 
@@ -261,20 +243,18 @@ public class UserResource extends ServiceResource
     @Consumes("application/x-www-form-urlencoded")
     @RequireApplicationAccess
     public JSONWithPadding postPin( @Context UriInfo ui, @FormParam("pin") String pin,
-                                    @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
 
         logger.info( "UserResource.postPin" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "set user pin" );
 
-        if ( getUser() != null )
-        {
+        if ( getUser() != null ) {
             management.setAppUserPin( getApplicationId(), getUserUuid(), pin );
         }
-        else
-        {
+        else {
             response.setError( "User not found" );
         }
 
@@ -287,20 +267,18 @@ public class UserResource extends ServiceResource
     @Consumes(MediaType.APPLICATION_JSON)
     @RequireApplicationAccess
     public JSONWithPadding jsonPin( @Context UriInfo ui, JsonNode json,
-                                    @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
 
         logger.info( "UserResource.jsonPin" );
         ApiResponse response = createApiResponse();
         response.setAction( "set user pin" );
 
-        if ( getUser() != null )
-        {
+        if ( getUser() != null ) {
             String pin = json.path( "pin" ).getTextValue();
             management.setAppUserPin( getApplicationId(), getUserUuid(), pin );
         }
-        else
-        {
+        else {
             response.setError( "User not found" );
         }
 
@@ -311,29 +289,23 @@ public class UserResource extends ServiceResource
     @GET
     @Path("resetpw")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam("token") String token )
-    {
+    public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam("token") String token ) {
 
         logger.info( "UserResource.showPasswordResetForm" );
 
         this.token = token;
-        try
-        {
-            if ( management.checkPasswordResetTokenForAppUser( getApplicationId(), getUserUuid(), token ) )
-            {
+        try {
+            if ( management.checkPasswordResetTokenForAppUser( getApplicationId(), getUserUuid(), token ) ) {
                 return handleViewable( "resetpw_set_form", this );
             }
-            else
-            {
+            else {
                 return handleViewable( "resetpw_email_form", this );
             }
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -347,40 +319,32 @@ public class UserResource extends ServiceResource
                                              @FormParam("password1") String password1,
                                              @FormParam("password2") String password2,
                                              @FormParam("recaptcha_challenge_field") String challenge,
-                                             @FormParam("recaptcha_response_field") String uresponse )
-    {
+                                             @FormParam("recaptcha_response_field") String uresponse ) {
 
-        try
-        {
+        try {
             logger.info( "UserResource.handlePasswordResetForm" );
 
             this.token = token;
 
-            if ( ( password1 != null ) || ( password2 != null ) )
-            {
-                if ( management.checkPasswordResetTokenForAppUser( getApplicationId(), getUserUuid(), token ) )
-                {
-                    if ( ( password1 != null ) && password1.equals( password2 ) )
-                    {
+            if ( ( password1 != null ) || ( password2 != null ) ) {
+                if ( management.checkPasswordResetTokenForAppUser( getApplicationId(), getUserUuid(), token ) ) {
+                    if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAppUserPassword( getApplicationId(), getUser().getUuid(), password1 );
                         management.revokeAccessTokenForAppUser( token );
                         return handleViewable( "resetpw_set_success", this );
                     }
-                    else
-                    {
+                    else {
                         errorMsg = "Passwords didn't match, let's try again...";
                         return handleViewable( "resetpw_set_form", this );
                     }
                 }
-                else
-                {
+                else {
                     errorMsg = "Sorry, you have an invalid token. Let's try again...";
                     return handleViewable( "resetpw_email_form", this );
                 }
             }
 
-            if ( !useReCaptcha() )
-            {
+            if ( !useReCaptcha() ) {
                 management.startAppUserPasswordResetFlow( getApplicationId(), getUser() );
                 return handleViewable( "resetpw_email_success", this );
             }
@@ -391,51 +355,41 @@ public class UserResource extends ServiceResource
             ReCaptchaResponse reCaptchaResponse =
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
-            if ( reCaptchaResponse.isValid() )
-            {
+            if ( reCaptchaResponse.isValid() ) {
                 management.startAppUserPasswordResetFlow( getApplicationId(), getUser() );
                 return handleViewable( "resetpw_email_success", this );
             }
-            else
-            {
+            else {
                 errorMsg = "Incorrect Captcha";
                 return handleViewable( "resetpw_email_form", this );
             }
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
 
 
-    public String getErrorMsg()
-    {
+    public String getErrorMsg() {
         return errorMsg;
     }
 
 
-    public String getToken()
-    {
+    public String getToken() {
         return token;
     }
 
 
-    public User getUser()
-    {
-        if ( user == null )
-        {
+    public User getUser() {
+        if ( user == null ) {
             EntityManager em = getServices().getEntityManager();
-            try
-            {
+            try {
                 user = em.get( em.getUserByIdentifier( userIdentifier ), User.class );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable go get user", e );
             }
         }
@@ -443,11 +397,9 @@ public class UserResource extends ServiceResource
     }
 
 
-    public UUID getUserUuid()
-    {
+    public UUID getUserUuid() {
         user = getUser();
-        if ( user == null )
-        {
+        if ( user == null ) {
             return null;
         }
         return user.getUuid();
@@ -457,24 +409,19 @@ public class UserResource extends ServiceResource
     @GET
     @Path("activate")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable activate( @Context UriInfo ui, @QueryParam("token") String token )
-    {
+    public Viewable activate( @Context UriInfo ui, @QueryParam("token") String token ) {
 
-        try
-        {
+        try {
             management.handleActivationTokenForAppUser( getApplicationId(), getUserUuid(), token );
             return handleViewable( "activate", this );
         }
-        catch ( TokenException e )
-        {
+        catch ( TokenException e ) {
             return handleViewable( "bad_activation_token", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -483,29 +430,23 @@ public class UserResource extends ServiceResource
     @GET
     @Path("confirm")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable confirm( @Context UriInfo ui, @QueryParam("token") String token )
-    {
+    public Viewable confirm( @Context UriInfo ui, @QueryParam("token") String token ) {
 
-        try
-        {
+        try {
             ActivationState state =
                     management.handleConfirmationTokenForAppUser( getApplicationId(), getUserUuid(), token );
-            if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION )
-            {
+            if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
                 return handleViewable( "confirm", this );
             }
             return handleViewable( "activate", this );
         }
-        catch ( TokenException e )
-        {
+        catch ( TokenException e ) {
             return handleViewable( "bad_confirmation_token", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -515,8 +456,7 @@ public class UserResource extends ServiceResource
     @Path("reactivate")
     public JSONWithPadding reactivate( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "Send activation email for user: " + getUserUuid() );
 
@@ -533,8 +473,7 @@ public class UserResource extends ServiceResource
     @Path("revoketokens")
     public JSONWithPadding revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "Revoking user tokens for " + getUserUuid() );
 
@@ -551,8 +490,7 @@ public class UserResource extends ServiceResource
     @Path("revoketokens")
     public JSONWithPadding revokeTokensPut( @Context UriInfo ui,
                                             @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         return revokeTokensPost( ui, callback );
     }
 
@@ -561,8 +499,7 @@ public class UserResource extends ServiceResource
     @Path("revoketoken")
     public JSONWithPadding revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam("callback") @DefaultValue("callback") String callback,
-                                            @QueryParam("token") String token ) throws Exception
-    {
+                                            @QueryParam("token") String token ) throws Exception {
 
         logger.info( "Revoking user token for " + getUserUuid() );
 
@@ -579,8 +516,7 @@ public class UserResource extends ServiceResource
     @Path("revoketoken")
     public JSONWithPadding revokeTokenPut( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback,
-                                           @QueryParam("token") String token ) throws Exception
-    {
+                                           @QueryParam("token") String token ) throws Exception {
         return revokeTokenPost( ui, callback, token );
     }
 
@@ -589,16 +525,13 @@ public class UserResource extends ServiceResource
     @Path("token")
     @RequireApplicationAccess
     public Response getAccessToken( @Context UriInfo ui, @QueryParam("ttl") long ttl,
-                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         logger.debug( "UserResource.getAccessToken" );
 
-        try
-        {
+        try {
 
-            if ( isApplicationUser() && !getUserUuid().equals( getSubjectUserId() ) )
-            {
+            if ( isApplicationUser() && !getUserUuid().equals( getSubjectUserId() ) ) {
                 OAuthResponse res = OAuthResponse.errorResponse( SC_FORBIDDEN ).buildJSONMessage();
                 return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
                                .entity( wrapWithCallback( res.getBody(), callback ) ).build();
@@ -613,8 +546,7 @@ public class UserResource extends ServiceResource
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
         }
-        catch ( OAuthProblemException e )
-        {
+        catch ( OAuthProblemException e ) {
             logger.error( "OAuth Error", e );
             OAuthResponse res = OAuthResponse.errorResponse( SC_BAD_REQUEST ).error( e ).buildJSONMessage();
             return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
@@ -626,24 +558,20 @@ public class UserResource extends ServiceResource
     @Override
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
-            throws Exception
-    {
+            throws Exception {
 
         // check for user extension
         String resourceClass =
                 USER_EXTENSION_RESOURCE_PREFIX + StringUtils.capitalize( itemName.getPath() ) + "Resource";
         AbstractUserExtensionResource extensionResource = null;
-        try
-        {
+        try {
             @SuppressWarnings("unchecked") Class<AbstractUserExtensionResource> extensionCls =
                     ( Class<AbstractUserExtensionResource> ) Class.forName( resourceClass );
             extensionResource = getSubResource( extensionCls );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
         }
-        if ( extensionResource != null )
-        {
+        if ( extensionResource != null ) {
             return extensionResource;
         }
 

@@ -38,8 +38,8 @@ import org.usergrid.persistence.query.SingleOrderBySameRangeScanLessThanEqualCol
 import org.usergrid.persistence.query.SingleOrderBySameRangeScanLessThanEqualConnectionIT;
 
 
-@RunWith( ConcurrentSuite.class )
-@Suite.SuiteClasses( {
+@RunWith(ConcurrentSuite.class)
+@Suite.SuiteClasses({
         AllInCollectionIT.class, AllInConnectionIT.class, AllInConnectionNoTypeIT.class, MultiOrderByCollectionIT.class,
         MultiOrderByComplexUnionCollectionIT.class, MultiOrderByComplexUnionConnectionIT.class,
         SingleOrderByBoundRangeScanAscCollectionIT.class, SingleOrderByBoundRangeScanAscConnectionIT.class,
@@ -54,10 +54,9 @@ import org.usergrid.persistence.query.SingleOrderBySameRangeScanLessThanEqualCon
         SingleOrderBySameRangeScanGreaterThanEqualCollectionIT.class, SingleOrderBySameRangeScanLessCollectionIT.class,
         SingleOrderBySameRangeScanLessConnectionIT.class, SingleOrderBySameRangeScanLessThanEqualCollectionIT.class,
         SingleOrderBySameRangeScanLessThanEqualConnectionIT.class
-} )
-@Concurrent( threads = 15 )
-public class ConcurrentCoreIteratorITSuite
-{
+})
+@Concurrent(threads = 15)
+public class ConcurrentCoreIteratorITSuite {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
 }

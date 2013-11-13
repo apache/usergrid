@@ -27,22 +27,19 @@ import org.usergrid.rest.test.resource.app.queue.QueuesCollection;
 
 
 /** @author tnine */
-public class Application extends ValueResource
-{
+public class Application extends ValueResource {
 
 
     /**
      * @param parent
      */
-    public Application( String orgName, String appName, RootResource root )
-    {
+    public Application( String orgName, String appName, RootResource root ) {
         super( orgName + SLASH + appName, root );
     }
 
 
     /** Get the token from management for this username and password */
-    public String token( String username, String password )
-    {
+    public String token( String username, String password ) {
 
         String url = String.format( "%s/token", url() );
 
@@ -54,26 +51,22 @@ public class Application extends ValueResource
     }
 
 
-    public UsersCollection users()
-    {
+    public UsersCollection users() {
         return new UsersCollection( this );
     }
 
 
-    public QueuesCollection queues()
-    {
+    public QueuesCollection queues() {
         return new QueuesCollection( this );
     }
 
 
-    public DevicesCollection devices()
-    {
+    public DevicesCollection devices() {
         return new DevicesCollection( this );
     }
 
 
-    public CustomCollection collection( String name )
-    {
+    public CustomCollection collection( String name ) {
         return new CustomCollection( name, this );
     }
 }

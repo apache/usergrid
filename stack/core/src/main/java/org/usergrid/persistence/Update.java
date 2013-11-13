@@ -20,66 +20,56 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Update
-{
+public class Update {
 
     private List<UpdateOperation> operationList = new ArrayList<UpdateOperation>();
 
 
-    public class UpdateOperation
-    {
+    public class UpdateOperation {
         String propertyName;
         UpdateOperator operator;
         Object value;
 
 
-        UpdateOperation( String propertyName, UpdateOperator operator, Object value )
-        {
+        UpdateOperation( String propertyName, UpdateOperator operator, Object value ) {
             this.propertyName = propertyName;
             this.operator = operator;
             this.value = value;
         }
 
 
-        public String getPropertyName()
-        {
+        public String getPropertyName() {
             return propertyName;
         }
 
 
-        public UpdateOperator getOperator()
-        {
+        public UpdateOperator getOperator() {
             return operator;
         }
 
 
-        public Object getValue()
-        {
+        public Object getValue() {
             return value;
         }
     }
 
 
-    public static enum UpdateOperator
-    {
+    public static enum UpdateOperator {
         UPDATE, DELETE, ADD_TO_LIST, REMOVE_FROM_LIST;
     }
 
 
-    public Update()
-    {
+    public Update() {
     }
 
 
-    public void add( String propertyName, UpdateOperator operator, Object value )
-    {
+    public void add( String propertyName, UpdateOperator operator, Object value ) {
         UpdateOperation operation = new UpdateOperation( propertyName, operator, value );
         operationList.add( operation );
     }
 
 
-    public void clear()
-    {
+    public void clear() {
         operationList = new ArrayList<UpdateOperation>();
     }
 }

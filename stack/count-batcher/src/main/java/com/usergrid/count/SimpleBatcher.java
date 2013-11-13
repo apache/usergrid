@@ -28,15 +28,13 @@ import com.usergrid.count.common.Count;
  *
  * @author zznate
  */
-public class SimpleBatcher extends AbstractBatcher
-{
+public class SimpleBatcher extends AbstractBatcher {
     private Logger log = LoggerFactory.getLogger( SimpleBatcher.class );
 
     private boolean blockingSubmit = false;
 
 
-    public void setBlockingSubmit( boolean blockingSubmit )
-    {
+    public void setBlockingSubmit( boolean blockingSubmit ) {
         this.blockingSubmit = blockingSubmit;
     }
 }

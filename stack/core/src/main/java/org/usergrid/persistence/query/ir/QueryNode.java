@@ -21,8 +21,7 @@ package org.usergrid.persistence.query.ir;
  *
  * @author tnine
  */
-public abstract class QueryNode
-{
+public abstract class QueryNode {
 
     /** Visit this node */
     public abstract void visit( NodeVisitor visitor ) throws Exception;

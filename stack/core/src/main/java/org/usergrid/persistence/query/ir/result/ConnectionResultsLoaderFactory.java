@@ -8,25 +8,21 @@ import org.usergrid.persistence.Results;
 
 
 /** Implementation for loading connectionResults results */
-public class ConnectionResultsLoaderFactory implements ResultsLoaderFactory
-{
+public class ConnectionResultsLoaderFactory implements ResultsLoaderFactory {
 
     private final ConnectionRef connection;
 
 
-    public ConnectionResultsLoaderFactory( ConnectionRef connection )
-    {
+    public ConnectionResultsLoaderFactory( ConnectionRef connection ) {
         this.connection = connection;
     }
 
 
     @Override
-    public ResultsLoader getResultsLoader( EntityManager em, Query query, Results.Level level )
-    {
-        switch ( level )
-        {
+    public ResultsLoader getResultsLoader( EntityManager em, Query query, Results.Level level ) {
+        switch ( level ) {
             case IDS://Note that this is technically wrong.  However, to support backwards compatibility with the
-            // existing apis and usage, both ids and refs return a connection ref when dealing with connections
+                // existing apis and usage, both ids and refs return a connection ref when dealing with connections
             case REFS:
                 return new ConnectionRefLoader( connection );
             default:

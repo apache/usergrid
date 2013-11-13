@@ -55,8 +55,7 @@ import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
  *
  * @author tnine
  */
-public class AppAudit extends ToolBase
-{
+public class AppAudit extends ToolBase {
 
     /**
      *
@@ -70,8 +69,7 @@ public class AppAudit extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -91,8 +89,7 @@ public class AppAudit extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         logger.info( "Starting app audit" );
@@ -106,8 +103,7 @@ public class AppAudit extends ToolBase
         Set<String> allOrgs = new HashSet<String>();
         // Set<String> foundApps = new HashSet<String>();
 
-        for ( Entry<String, UUID> entry : apps.entrySet() )
-        {
+        for ( Entry<String, UUID> entry : apps.entrySet() ) {
             logger.info( "Name: {}, Id: {}", entry.getKey(), entry.getValue() );
             // repo.putData(entry.getKey(), entry.getValue());
             String[] parts = entry.getKey().split( "/" );
@@ -129,13 +125,11 @@ public class AppAudit extends ToolBase
 
         Results r = null;
 
-        do
-        {
+        do {
 
             r = em.searchCollection( rootAppRef, "groups", query );
 
-            for ( Entity entity : r.getEntities() )
-            {
+            for ( Entity entity : r.getEntities() ) {
                 collectionOrgs.remove( entity.getProperty( "path" ) );
             }
 
@@ -143,24 +137,20 @@ public class AppAudit extends ToolBase
         }
         while ( r != null && r.size() == PAGE_SIZE );
 
-        for ( String orgName : allOrgs )
-        {
+        for ( String orgName : allOrgs ) {
             EntityRef group = em.getAlias( "group", orgName );
 
-            if ( group != null )
-            {
+            if ( group != null ) {
                 aliasedOrgs.remove( orgName );
             }
         }
         // now dump what we couldn't find!
 
-        for ( String orgName : collectionOrgs )
-        {
+        for ( String orgName : collectionOrgs ) {
             logger.info( "Cound not find in collection groups.  Org : {}", orgName );
         }
 
-        for ( String orgName : aliasedOrgs )
-        {
+        for ( String orgName : aliasedOrgs ) {
             logger.info( "Cound not find in alias.  Org : {}", orgName );
         }
     }
@@ -171,19 +161,16 @@ public class AppAudit extends ToolBase
      *
      * @author tnine
      */
-    private static class OrgRepo
-    {
+    private static class OrgRepo {
         private Map<String, OrgMeta> orgData = new HashMap<String, OrgMeta>();
 
 
-        public void putData( String appName, UUID appId )
-        {
+        public void putData( String appName, UUID appId ) {
             String[] names = appName.split( "/" );
 
             OrgMeta orgMeta = orgData.get( names[0] );
 
-            if ( orgMeta == null )
-            {
+            if ( orgMeta == null ) {
                 orgMeta = new OrgMeta( names[0] );
                 orgData.put( names[0], orgMeta );
             }
@@ -192,8 +179,7 @@ public class AppAudit extends ToolBase
         }
 
 
-        public Collection<OrgMeta> getOrgData()
-        {
+        public Collection<OrgMeta> getOrgData() {
             return orgData.values();
         }
     }
@@ -204,8 +190,7 @@ public class AppAudit extends ToolBase
      *
      * @author tnine
      */
-    private static class OrgMeta
-    {
+    private static class OrgMeta {
 
         private String orgName;
 
@@ -215,33 +200,28 @@ public class AppAudit extends ToolBase
         /**
          * @param orgName
          */
-        public OrgMeta( String orgName )
-        {
+        public OrgMeta( String orgName ) {
             super();
             this.orgName = orgName;
         }
 
 
         /** Add an app with it's id to this org */
-        public void addApp( String appName, UUID appId )
-        {
+        public void addApp( String appName, UUID appId ) {
             apps.put( appName, appId );
         }
 
 
-        public String getOrgName()
-        {
+        public String getOrgName() {
             return orgName;
         }
 
 
         /** Get info for applications */
-        public List<ApplicationInfo> getInfo()
-        {
+        public List<ApplicationInfo> getInfo() {
             List<ApplicationInfo> infos = new ArrayList<ApplicationInfo>();
 
-            for ( Entry<String, UUID> entryId : apps.entrySet() )
-            {
+            for ( Entry<String, UUID> entryId : apps.entrySet() ) {
                 infos.add( new ApplicationInfo( entryId.getValue(), entryId.getKey() ) );
             }
 

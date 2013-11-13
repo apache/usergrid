@@ -23,8 +23,7 @@ import static org.apache.commons.lang.StringUtils.removeEnd;
 
 
 /** @author tnine */
-public class StringLiteral extends Literal<String>
-{
+public class StringLiteral extends Literal<String> {
 
     private String value;
     private String finishValue;
@@ -33,8 +32,7 @@ public class StringLiteral extends Literal<String>
     /**
      * @param t
      */
-    public StringLiteral( Token t )
-    {
+    public StringLiteral( Token t ) {
         super( t );
         String newValue = t.getText();
         newValue = newValue.substring( 1, newValue.length() - 1 );
@@ -43,49 +41,42 @@ public class StringLiteral extends Literal<String>
     }
 
 
-    public StringLiteral( String value )
-    {
+    public StringLiteral( String value ) {
         super( new ClassicToken( 0, value ) );
         parseValue( value );
     }
 
 
     /** Parse the value and set the optional end value */
-    private void parseValue( String value )
-    {
+    private void parseValue( String value ) {
 
         this.value = value.trim().toLowerCase();
 
-        if ( "*".equals( value ) )
-        {
+        if ( "*".equals( value ) ) {
             this.value = null;
             this.finishValue = null;
             return;
         }
 
-        if ( value != null && value.endsWith( "*" ) )
-        {
+        if ( value != null && value.endsWith( "*" ) ) {
             this.value = removeEnd( value.toString(), "*" );
 
             finishValue = this.value + "\uFFFF";
         }
         // set the end value to the same as the start value
-        else
-        {
+        else {
             finishValue = value;
         }
     }
 
 
     /** If this were a string literal */
-    public String getEndValue()
-    {
+    public String getEndValue() {
         return this.finishValue;
     }
 
 
-    public String getValue()
-    {
+    public String getValue() {
         return this.value;
     }
 }

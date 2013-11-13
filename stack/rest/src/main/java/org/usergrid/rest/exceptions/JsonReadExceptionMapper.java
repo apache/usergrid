@@ -26,12 +26,10 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 
 @Provider
-public class JsonReadExceptionMapper extends AbstractExceptionMapper<JsonReadException>
-{
+public class JsonReadExceptionMapper extends AbstractExceptionMapper<JsonReadException> {
 
     @Override
-    public Response toResponse( JsonReadException e )
-    {
+    public Response toResponse( JsonReadException e ) {
         return toResponse( BAD_REQUEST, e );
     }
 }

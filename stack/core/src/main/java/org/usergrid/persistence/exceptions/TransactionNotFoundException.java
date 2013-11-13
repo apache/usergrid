@@ -16,8 +16,7 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class TransactionNotFoundException extends PersistenceException
-{
+public class TransactionNotFoundException extends PersistenceException {
 
     /**
      *
@@ -25,26 +24,22 @@ public class TransactionNotFoundException extends PersistenceException
     private static final long serialVersionUID = -3579346096812510039L;
 
 
-    public TransactionNotFoundException()
-    {
+    public TransactionNotFoundException() {
         super();
     }
 
 
-    public TransactionNotFoundException( String message, Throwable cause )
-    {
+    public TransactionNotFoundException( String message, Throwable cause ) {
         super( message, cause );
     }
 
 
-    public TransactionNotFoundException( String message )
-    {
+    public TransactionNotFoundException( String message ) {
         super( message );
     }
 
 
-    public TransactionNotFoundException( Throwable cause )
-    {
+    public TransactionNotFoundException( Throwable cause ) {
         super( cause );
     }
 }

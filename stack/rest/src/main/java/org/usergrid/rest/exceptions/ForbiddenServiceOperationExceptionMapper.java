@@ -26,12 +26,10 @@ import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 
 @Provider
 public class ForbiddenServiceOperationExceptionMapper
-        extends AbstractExceptionMapper<ForbiddenServiceOperationException>
-{
+        extends AbstractExceptionMapper<ForbiddenServiceOperationException> {
 
     @Override
-    public Response toResponse( ForbiddenServiceOperationException e )
-    {
+    public Response toResponse( ForbiddenServiceOperationException e ) {
         return toResponse( FORBIDDEN, e );
     }
 }

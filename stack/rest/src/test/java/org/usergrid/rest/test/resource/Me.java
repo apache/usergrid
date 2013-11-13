@@ -24,14 +24,12 @@ import org.usergrid.rest.test.resource.app.User;
  *
  * @author tnine
  */
-public class Me extends User
-{
+public class Me extends User {
 
     /**
      * @param parent
      */
-    public Me( NamedResource parent )
-    {
+    public Me( NamedResource parent ) {
         super( "me", parent );
     }
 }

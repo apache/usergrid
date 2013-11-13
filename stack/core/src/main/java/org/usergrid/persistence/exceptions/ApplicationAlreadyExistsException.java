@@ -16,8 +16,7 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class ApplicationAlreadyExistsException extends PersistenceException
-{
+public class ApplicationAlreadyExistsException extends PersistenceException {
 
     /**
      *
@@ -26,15 +25,13 @@ public class ApplicationAlreadyExistsException extends PersistenceException
     final String applicationName;
 
 
-    public ApplicationAlreadyExistsException( String applicationName )
-    {
+    public ApplicationAlreadyExistsException( String applicationName ) {
         super( "Application " + applicationName + " already exists" );
         this.applicationName = applicationName;
     }
 
 
-    public String getApplicationName()
-    {
+    public String getApplicationName() {
         return applicationName;
     }
 }

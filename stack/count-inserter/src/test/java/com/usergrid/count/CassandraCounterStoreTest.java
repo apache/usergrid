@@ -31,16 +31,14 @@ import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 
 /** @author zznate */
-public class CassandraCounterStoreTest
-{
+public class CassandraCounterStoreTest {
 
     private static EmbeddedServerHelper esh;
     private static Cluster cluster;
 
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
         esh = new EmbeddedServerHelper();
         esh.setup();
         cluster =
@@ -49,8 +47,7 @@ public class CassandraCounterStoreTest
 
 
     @Test
-    public void testSerializer()
-    {
+    public void testSerializer() {
         CassandraCounterStore cassandraCounterStore =
                 new CassandraCounterStore( HFactory.createKeyspace( "Keyspace1", cluster ) );
         Count count = new Count( "Counter1", "k1", "c1", 1 );
@@ -59,8 +56,7 @@ public class CassandraCounterStoreTest
 
 
     @AfterClass
-    public static void teardown() throws IOException
-    {
+    public static void teardown() throws IOException {
         EmbeddedServerHelper.teardown();
     }
 }

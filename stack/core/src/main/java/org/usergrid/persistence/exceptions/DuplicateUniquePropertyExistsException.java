@@ -16,8 +16,7 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class DuplicateUniquePropertyExistsException extends PersistenceException
-{
+public class DuplicateUniquePropertyExistsException extends PersistenceException {
 
     /**
      *
@@ -28,8 +27,7 @@ public class DuplicateUniquePropertyExistsException extends PersistenceException
     final Object propertyValue;
 
 
-    public DuplicateUniquePropertyExistsException( String entityType, String propertyName, Object propertyValue )
-    {
+    public DuplicateUniquePropertyExistsException( String entityType, String propertyName, Object propertyValue ) {
         super( "Entity " + entityType + " requires that property named " + propertyName + " be unique, value of "
                 + propertyValue + " exists" );
         this.entityType = entityType;
@@ -38,20 +36,17 @@ public class DuplicateUniquePropertyExistsException extends PersistenceException
     }
 
 
-    public String getEntityType()
-    {
+    public String getEntityType() {
         return entityType;
     }
 
 
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 
 
-    public Object getPropertyValue()
-    {
+    public Object getPropertyValue() {
         return propertyValue;
     }
 }

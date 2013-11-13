@@ -28,8 +28,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 @XmlRootElement
-public class CredentialsInfo implements Comparable<CredentialsInfo>
-{
+public class CredentialsInfo implements Comparable<CredentialsInfo> {
 
     boolean recoverable;
     boolean encrypted;
@@ -48,79 +47,66 @@ public class CredentialsInfo implements Comparable<CredentialsInfo>
     protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
 
-    public CredentialsInfo()
-    {
+    public CredentialsInfo() {
         created = System.currentTimeMillis();
     }
 
 
-    public boolean getRecoverable()
-    {
+    public boolean getRecoverable() {
         return recoverable;
     }
 
 
-    public void setRecoverable( boolean recoverable )
-    {
+    public void setRecoverable( boolean recoverable ) {
         this.recoverable = recoverable;
     }
 
 
-    public boolean getEncrypted()
-    {
+    public boolean getEncrypted() {
         return encrypted;
     }
 
 
-    public void setEncrypted( boolean encrypted )
-    {
+    public void setEncrypted( boolean encrypted ) {
         this.encrypted = encrypted;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getCipher()
-    {
+    public String getCipher() {
         return cipher;
     }
 
 
-    public void setCipher( String cipher )
-    {
+    public void setCipher( String cipher ) {
         this.cipher = cipher;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getKey()
-    {
+    public String getKey() {
         return key;
     }
 
 
-    public void setKey( String key )
-    {
+    public void setKey( String key ) {
         this.key = key;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getSecret()
-    {
+    public String getSecret() {
         return secret;
     }
 
 
-    public void setSecret( String secret )
-    {
+    public void setSecret( String secret ) {
         this.secret = secret;
     }
 
 
-    public static String getCredentialsSecret( CredentialsInfo credentials )
-    {
-        if ( credentials == null )
-        {
+    public static String getCredentialsSecret( CredentialsInfo credentials ) {
+        if ( credentials == null ) {
             return null;
         }
         return credentials.getSecret();
@@ -128,28 +114,24 @@ public class CredentialsInfo implements Comparable<CredentialsInfo>
 
 
     @JsonAnyGetter
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
     @JsonAnySetter
-    public void setProperty( String key, Object value )
-    {
+    public void setProperty( String key, Object value ) {
         properties.put( key, value );
     }
 
 
-    public Object getProperty( String key )
-    {
+    public Object getProperty( String key ) {
         return properties.get( key );
     }
 
 
     /** @return the hashType */
-    public String getHashType()
-    {
+    public String getHashType() {
         return hashType;
     }
 
@@ -159,41 +141,34 @@ public class CredentialsInfo implements Comparable<CredentialsInfo>
      *
      * @param hashType the hashType to set
      */
-    public void setHashType( String hashType )
-    {
+    public void setHashType( String hashType ) {
         this.hashType = hashType;
     }
 
 
     /** @return the cryptoChain */
-    public String[] getCryptoChain()
-    {
+    public String[] getCryptoChain() {
         return cryptoChain;
     }
 
 
     /** @param cryptoChain the cryptoChain to set */
-    public void setCryptoChain( String[] cryptoChain )
-    {
+    public void setCryptoChain( String[] cryptoChain ) {
         this.cryptoChain = cryptoChain;
     }
 
 
-    public Long getCreated()
-    {
+    public Long getCreated() {
         return created;
     }
 
 
     @Override
-    public int compareTo( CredentialsInfo o )
-    {
-        if ( created == o.created )
-        {
+    public int compareTo( CredentialsInfo o ) {
+        if ( created == o.created ) {
             return 0;
         }
-        if ( o.created == null )
-        {
+        if ( o.created == null ) {
             return 1;
         }
         return o.created.compareTo( created );

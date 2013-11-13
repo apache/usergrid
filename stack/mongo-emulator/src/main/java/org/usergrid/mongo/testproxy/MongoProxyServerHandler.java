@@ -26,26 +26,22 @@ import org.usergrid.mongo.protocol.Message;
 import org.usergrid.mongo.protocol.OpReply;
 
 
-public class MongoProxyServerHandler extends SimpleChannelUpstreamHandler
-{
+public class MongoProxyServerHandler extends SimpleChannelUpstreamHandler {
 
     private static final Logger logger = LoggerFactory.getLogger( MongoProxyServerHandler.class );
 
 
     @Override
-    public void messageReceived( ChannelHandlerContext ctx, MessageEvent e )
-    {
+    public void messageReceived( ChannelHandlerContext ctx, MessageEvent e ) {
 
         Message message = null;
-        if ( e.getMessage() instanceof Message )
-        {
+        if ( e.getMessage() instanceof Message ) {
             message = ( Message ) e.getMessage();
         }
 
         OpReply reply = OpReply.errorReply( "not implemented" );
 
-        if ( message != null )
-        {
+        if ( message != null ) {
             logger.info( message.getClass().getName() );
             reply.setResponseTo( message.getRequestID() );
         }
@@ -55,8 +51,7 @@ public class MongoProxyServerHandler extends SimpleChannelUpstreamHandler
 
 
     @Override
-    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e )
-    {
+    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) {
         logger.warn( "Unexpected exception from downstream.", e.getCause() );
         e.getChannel().close();
     }

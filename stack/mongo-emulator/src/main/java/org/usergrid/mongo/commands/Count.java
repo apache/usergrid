@@ -33,36 +33,31 @@ import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class Count extends MongoCommand
-{
+public class Count extends MongoCommand {
 
     private static final Logger logger = LoggerFactory.getLogger( Count.class );
 
 
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
 
         OpReply reply = new OpReply( opQuery );
 
         ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( opQuery.getDatabaseName() ) );
 
-        if ( application == null )
-        {
+        if ( application == null ) {
             return reply;
         }
 
         EntityManager em = handler.getEmf().getEntityManager( application.getId() );
 
-        try
-        {
+        try {
             Results results =
                     em.getCollection( em.getApplicationRef(), ( String ) opQuery.getQuery().get( "count" ), null,
                             100000, Results.Level.IDS, false );
             reply.addDocument( map( entry( "n", results.size() * 1.0 ), entry( "ok", 1.0 ) ) );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             logger.error( "Unable to retrieve collections", ex );
         }
         return reply;

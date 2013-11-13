@@ -19,11 +19,9 @@ package org.usergrid.services.generic;
 import org.usergrid.services.AbstractConnectionsService;
 
 
-public class GenericConnectionsService extends AbstractConnectionsService
-{
+public class GenericConnectionsService extends AbstractConnectionsService {
 
-    public GenericConnectionsService()
-    {
+    public GenericConnectionsService() {
 
     }
 }

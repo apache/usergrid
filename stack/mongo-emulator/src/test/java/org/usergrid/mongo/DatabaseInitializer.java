@@ -28,8 +28,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
 
 
-public class DatabaseInitializer
-{
+public class DatabaseInitializer {
 
     private static final Logger logger = LoggerFactory.getLogger( DatabaseInitializer.class );
 
@@ -44,73 +43,62 @@ public class DatabaseInitializer
     protected QueueManagerFactory qmf;
 
 
-    public DatabaseInitializer()
-    {
+    public DatabaseInitializer() {
 
     }
 
 
-    public EntityManagerFactory getEntityManagerFactory()
-    {
+    public EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
-    public ServiceManagerFactory getServiceManagerFactory()
-    {
+    public ServiceManagerFactory getServiceManagerFactory() {
         return smf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
-    public ManagementService getManagementService()
-    {
+    public ManagementService getManagementService() {
         return management;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
-    public QueueManagerFactory getQueueManagerFactory()
-    {
+    public QueueManagerFactory getQueueManagerFactory() {
         return qmf;
     }
 
 
     @Autowired
-    public void setQueueManagerFactory( QueueManagerFactory qmf )
-    {
+    public void setQueueManagerFactory( QueueManagerFactory qmf ) {
         this.qmf = qmf;
     }
 
@@ -118,16 +106,14 @@ public class DatabaseInitializer
     boolean databaseInitializationPerformed = false;
 
 
-    public void init()
-    {
+    public void init() {
         logger.info( "Initializing server with Spring" );
 
         // If we're running an embedded Cassandra, we always need to initialize
         // it since Hector wipes the data on startup.
         //
 
-        if ( databaseInitializationPerformed )
-        {
+        if ( databaseInitializationPerformed ) {
             logger.info( "Can only attempt to initialized database once per JVM process" );
             return;
         }
@@ -135,27 +121,22 @@ public class DatabaseInitializer
 
         logger.info( "Initializing Cassandra database" );
         Map<String, String> properties = emf.getServiceProperties();
-        if ( properties != null )
-        {
+        if ( properties != null ) {
             logger.error( "System properties are initialized, database is set up already." );
             return;
         }
 
-        try
-        {
+        try {
             emf.setup();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to complete core database setup, possibly due to it being setup already", e );
         }
 
-        try
-        {
+        try {
             management.setup();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to complete management database setup, possibly due to it being setup already", e );
         }
 

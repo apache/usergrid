@@ -34,8 +34,7 @@ import org.usergrid.batch.JobExecution;
  */
 @Component("delayExecution")
 @Ignore("Not a test")
-public class DelayExecution implements Job
-{
+public class DelayExecution implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger( DelayExecution.class );
 
@@ -47,8 +46,7 @@ public class DelayExecution implements Job
     /**
      *
      */
-    public DelayExecution()
-    {
+    public DelayExecution() {
     }
 
 
@@ -58,13 +56,11 @@ public class DelayExecution implements Job
      * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
      */
     @Override
-    public void execute( JobExecution execution ) throws Exception
-    {
+    public void execute( JobExecution execution ) throws Exception {
 
         logger.info( "Running delay execution" );
 
-        if ( latch.getCount() > 1 )
-        {
+        if ( latch.getCount() > 1 ) {
             execution.delay( timeout );
         }
 
@@ -72,42 +68,36 @@ public class DelayExecution implements Job
     }
 
 
-    public void setLatch( int calls )
-    {
+    public void setLatch( int calls ) {
         latch = new CountDownLatch( calls );
     }
 
 
-    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException
-    {
+    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException {
         return latch.await( timeout, unit );
     }
 
 
     /** @return the timeout */
-    public long getTimeout()
-    {
+    public long getTimeout() {
         return timeout;
     }
 
 
     /** @param timeout the timeout to set */
-    public void setTimeout( long timeout )
-    {
+    public void setTimeout( long timeout ) {
         this.timeout = timeout;
     }
 
 
     /** @return the delayCount */
-    public int getDelayCount()
-    {
+    public int getDelayCount() {
         return delayCount;
     }
 
 
     /** @param delayCount the delayCount to set */
-    public void setDelayCount( int delayCount )
-    {
+    public void setDelayCount( int delayCount ) {
         this.delayCount = delayCount;
     }
 }

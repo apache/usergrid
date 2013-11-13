@@ -23,8 +23,7 @@ import org.usergrid.persistence.Results;
 
 
 /** @author tnine */
-public class EntityResultsLoader implements ResultsLoader
-{
+public class EntityResultsLoader implements ResultsLoader {
 
     private EntityManager em;
 
@@ -32,8 +31,7 @@ public class EntityResultsLoader implements ResultsLoader
     /**
      *
      */
-    public EntityResultsLoader( EntityManager em )
-    {
+    public EntityResultsLoader( EntityManager em ) {
         this.em = em;
     }
 
@@ -42,8 +40,7 @@ public class EntityResultsLoader implements ResultsLoader
      * @see org.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
      */
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception
-    {
+    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
         return em.get( ScanColumnTransformer.getIds( entityIds ) );
     }
 }

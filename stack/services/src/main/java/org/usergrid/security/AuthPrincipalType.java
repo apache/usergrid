@@ -25,8 +25,7 @@ import org.usergrid.persistence.entities.User;
 import static org.usergrid.utils.CodecUtils.base64;
 
 
-public enum AuthPrincipalType
-{
+public enum AuthPrincipalType {
     ORGANIZATION( "ou", Group.ENTITY_TYPE ), ADMIN_USER( "ad", User.ENTITY_TYPE ),
     APPLICATION( "ap", "application_info" ), APPLICATION_USER( "au", User.ENTITY_TYPE );
 
@@ -41,14 +40,11 @@ public enum AuthPrincipalType
     private static Map<String, AuthPrincipalType> base64Prefixes;
 
 
-    private synchronized static void register( AuthPrincipalType type )
-    {
-        if ( prefixes == null )
-        {
+    private synchronized static void register( AuthPrincipalType type ) {
+        if ( prefixes == null ) {
             prefixes = new ConcurrentHashMap<String, AuthPrincipalType>();
         }
-        if ( base64Prefixes == null )
-        {
+        if ( base64Prefixes == null ) {
             base64Prefixes = new ConcurrentHashMap<String, AuthPrincipalType>();
         }
         prefixes.put( type.getPrefix(), type );
@@ -56,8 +52,7 @@ public enum AuthPrincipalType
     }
 
 
-    AuthPrincipalType( String prefix, String entityType )
-    {
+    AuthPrincipalType( String prefix, String entityType ) {
         this.prefix = prefix;
         base64Prefix = base64( prefix + ":" );
         this.entityType = entityType;
@@ -65,66 +60,53 @@ public enum AuthPrincipalType
     }
 
 
-    public String getPrefix()
-    {
+    public String getPrefix() {
         return prefix;
     }
 
 
-    public String getBase64Prefix()
-    {
+    public String getBase64Prefix() {
         return base64Prefix;
     }
 
 
-    public String getEntityType()
-    {
+    public String getEntityType() {
         return entityType;
     }
 
 
-    public boolean prefixesBase64String( String key )
-    {
-        if ( key == null )
-        {
+    public boolean prefixesBase64String( String key ) {
+        if ( key == null ) {
             return false;
         }
         return key.startsWith( base64Prefix );
     }
 
 
-    public static AuthPrincipalType getFromBase64String( String key )
-    {
-        if ( key == null )
-        {
+    public static AuthPrincipalType getFromBase64String( String key ) {
+        if ( key == null ) {
             return null;
         }
-        if ( key.length() >= 4 )
-        {
+        if ( key.length() >= 4 ) {
             return base64Prefixes.get( key.substring( 0, 4 ) );
         }
         return null;
     }
 
 
-    public boolean prefixesString( String key )
-    {
-        if ( key == null )
-        {
+    public boolean prefixesString( String key ) {
+        if ( key == null ) {
             return false;
         }
         return key.startsWith( prefix + ":" );
     }
 
 
-    public static AuthPrincipalType getFromString( String key )
-    {
-        if ( key == null )
-        {
+    public static AuthPrincipalType getFromString( String key ) {
+        if ( key == null ) {
             return null;
         }
-        if ( ( key.length() >= 3 ) && ( key.charAt( 2 ) == ':' ) )
-        {
+        if ( ( key.length() >= 3 ) && ( key.charAt( 2 ) == ':' ) ) {
             return prefixes.get( key.substring( 0, 2 ) );
         }
         return null;

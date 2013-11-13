@@ -33,8 +33,7 @@ import org.usergrid.persistence.annotations.EntityProperty;
  * instead.
  */
 @XmlRootElement
-public class Message extends TypedEntity
-{
+public class Message extends TypedEntity {
 
     public static final String ENTITY_TYPE = "message";
 
@@ -45,40 +44,34 @@ public class Message extends TypedEntity
     protected Set<String> connections;
 
 
-    public Message()
-    {
+    public Message() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public Message( UUID id )
-    {
+    public Message( UUID id ) {
         this.uuid = id;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getCategory()
-    {
+    public String getCategory() {
         return category;
     }
 
 
-    public void setCategory( String category )
-    {
+    public void setCategory( String category ) {
         this.category = category;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Set<String> getConnections()
-    {
+    public Set<String> getConnections() {
         return connections;
     }
 
 
-    public void setConnections( Set<String> connections )
-    {
+    public void setConnections( Set<String> connections ) {
         this.connections = connections;
     }
 }

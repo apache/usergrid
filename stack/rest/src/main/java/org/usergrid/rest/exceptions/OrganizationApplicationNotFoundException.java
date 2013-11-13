@@ -10,8 +10,7 @@ import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 
 /** @author zznate */
-public class OrganizationApplicationNotFoundException extends RuntimeException
-{
+public class OrganizationApplicationNotFoundException extends RuntimeException {
     /**
      *
      */
@@ -21,8 +20,7 @@ public class OrganizationApplicationNotFoundException extends RuntimeException
 
 
     public OrganizationApplicationNotFoundException( String orgAppName, UriInfo uriInfo,
-                                                     ServerEnvironmentProperties properties )
-    {
+                                                     ServerEnvironmentProperties properties ) {
         super( "Could not find application for " + orgAppName + " from URI: " + uriInfo.getPath() );
         apiResponse = new ApiResponse( properties );
 
@@ -30,14 +28,12 @@ public class OrganizationApplicationNotFoundException extends RuntimeException
     }
 
 
-    public ApiResponse getApiResponse()
-    {
+    public ApiResponse getApiResponse() {
         return apiResponse;
     }
 
 
-    public String getJsonResponse()
-    {
+    public String getJsonResponse() {
         return mapToJsonString( apiResponse );
     }
 }

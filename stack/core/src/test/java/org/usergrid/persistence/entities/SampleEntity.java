@@ -28,8 +28,7 @@ import org.usergrid.persistence.annotations.EntityDictionary;
 
 
 @XmlRootElement
-public class SampleEntity extends TypedEntity
-{
+public class SampleEntity extends TypedEntity {
 
     public static final String ENTITY_TYPE = "sample_entity";
 
@@ -37,27 +36,23 @@ public class SampleEntity extends TypedEntity
     protected Set<String> connections;
 
 
-    public SampleEntity()
-    {
+    public SampleEntity() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public SampleEntity( UUID id )
-    {
+    public SampleEntity( UUID id ) {
         this.uuid = id;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Set<String> getConnections()
-    {
+    public Set<String> getConnections() {
         return connections;
     }
 
 
-    public void setConnections( Set<String> connections )
-    {
+    public void setConnections( Set<String> connections ) {
         this.connections = connections;
     }
 }

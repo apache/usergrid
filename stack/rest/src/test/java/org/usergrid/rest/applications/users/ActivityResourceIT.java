@@ -34,8 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 /** @author tnine */
 @Concurrent()
-public class ActivityResourceIT extends AbstractRestIT
-{
+public class ActivityResourceIT extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger( ActivityResourceIT.class );
 
     private static final String GROUP = "testGroup";
@@ -45,17 +44,14 @@ public class ActivityResourceIT extends AbstractRestIT
     private static boolean groupCreated = false;
 
 
-    public ActivityResourceIT() throws Exception
-    {
+    public ActivityResourceIT() throws Exception {
 
     }
 
 
     @Before
-    public void setupGroup()
-    {
-        if ( groupCreated )
-        {
+    public void setupGroup() {
+        if ( groupCreated ) {
             return;
         }
 
@@ -66,16 +62,13 @@ public class ActivityResourceIT extends AbstractRestIT
 
 
     @Test
-    public void postNullActivityToGroup()
-    {
+    public void postNullActivityToGroup() {
 
         boolean fail = false;
-        try
-        {
+        try {
             client.postGroupActivity( GROUP, null );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             fail = true;
         }
         assertTrue( fail );
@@ -83,8 +76,7 @@ public class ActivityResourceIT extends AbstractRestIT
 
 
     @Test
-    public void postGroupActivity()
-    {
+    public void postGroupActivity() {
 
         // don't populate the user, it will use the currently authenticated
         // user.
@@ -120,8 +112,7 @@ public class ActivityResourceIT extends AbstractRestIT
 
 
     @Test
-    public void postUserActivity()
-    {
+    public void postUserActivity() {
 
         // don't populate the user, it will use the currently authenticated
         // user.
@@ -159,8 +150,7 @@ public class ActivityResourceIT extends AbstractRestIT
 
 
     @Test
-    public void postActivity()
-    {
+    public void postActivity() {
 
         // don't populate the user, it will use the currently authenticated
         // user.

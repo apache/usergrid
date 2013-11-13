@@ -22,15 +22,13 @@ import org.usergrid.persistence.exceptions.NoIndexException;
 
 
 /** @author tnine */
-public class GreaterThanEqual extends EqualityOperand
-{
+public class GreaterThanEqual extends EqualityOperand {
 
     /**
      * @param property
      * @param literal
      */
-    public GreaterThanEqual( Token t )
-    {
+    public GreaterThanEqual( Token t ) {
         super( t );
     }
 
@@ -39,8 +37,7 @@ public class GreaterThanEqual extends EqualityOperand
      * @param property
      * @param literal
      */
-    public GreaterThanEqual()
-    {
+    public GreaterThanEqual() {
         super( new CommonToken( 0, ">=" ) );
     }
 
@@ -53,8 +50,7 @@ public class GreaterThanEqual extends EqualityOperand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException
-    {
+    public void visit( QueryVisitor visitor ) throws NoIndexException {
         visitor.visit( this );
     }
 }

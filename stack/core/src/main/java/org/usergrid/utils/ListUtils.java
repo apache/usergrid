@@ -28,182 +28,146 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ListUtils extends org.apache.commons.collections.ListUtils
-{
+public class ListUtils extends org.apache.commons.collections.ListUtils {
     private static final Logger LOG = LoggerFactory.getLogger( ListUtils.class );
 
-    public static <A> A first( List<A> list )
-    {
-        if ( list == null )
-        {
+
+    public static <A> A first( List<A> list ) {
+        if ( list == null ) {
             return null;
         }
-        if ( list.size() == 0 )
-        {
+        if ( list.size() == 0 ) {
             return null;
         }
         return list.get( 0 );
     }
 
 
-    public static <A> A last( List<A> list )
-    {
-        if ( list == null )
-        {
+    public static <A> A last( List<A> list ) {
+        if ( list == null ) {
             return null;
         }
-        if ( list.size() == 0 )
-        {
+        if ( list.size() == 0 ) {
             return null;
         }
         return list.get( list.size() - 1 );
     }
 
 
-    public static <A> Integer firstInteger( List<A> list )
-    {
+    public static <A> Integer firstInteger( List<A> list ) {
         A a = first( list );
-        if ( a == null )
-        {
+        if ( a == null ) {
             return null;
         }
 
-        if ( a instanceof Integer )
-        {
+        if ( a instanceof Integer ) {
             return ( Integer ) a;
         }
 
-        try
-        {
+        try {
             return NumberUtils.toInt( ( String ) a );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.warn( "Could not convert list item {} to int", a, e );
         }
         return null;
     }
 
 
-    public static <A> Long firstLong( List<A> list )
-    {
+    public static <A> Long firstLong( List<A> list ) {
         A a = first( list );
-        if ( a == null )
-        {
+        if ( a == null ) {
             return null;
         }
 
-        if ( a instanceof Long )
-        {
+        if ( a instanceof Long ) {
             return ( Long ) a;
         }
 
-        try
-        {
+        try {
             return NumberUtils.toLong( ( String ) a );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.warn( "Could not convert list item {} to long", a, e );
         }
         return null;
     }
 
 
-    public static <A> Boolean firstBoolean( List<A> list )
-    {
+    public static <A> Boolean firstBoolean( List<A> list ) {
         A a = first( list );
-        if ( a == null )
-        {
+        if ( a == null ) {
             return null;
         }
 
-        if ( a instanceof Boolean )
-        {
+        if ( a instanceof Boolean ) {
             return ( Boolean ) a;
         }
 
-        try
-        {
+        try {
             return Boolean.parseBoolean( ( String ) a );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.warn( "Could not convert list item {} to boolean", a, e );
         }
         return null;
     }
 
 
-    public static <A> UUID firstUuid( List<A> list )
-    {
+    public static <A> UUID firstUuid( List<A> list ) {
         A i = first( list );
-        if ( i == null )
-        {
+        if ( i == null ) {
             return null;
         }
 
-        if ( i instanceof UUID )
-        {
+        if ( i instanceof UUID ) {
             return ( UUID ) i;
         }
 
-        try
-        {
+        try {
             return UUIDUtils.tryGetUUID( ( String ) i );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.warn( "Could not convert list item {} to UUID", i, e );
         }
         return null;
     }
 
 
-    public static boolean isEmpty( List<?> list )
-    {
+    public static boolean isEmpty( List<?> list ) {
         return ( list == null ) || ( list.size() == 0 );
     }
 
 
-    public static <T> List<T> dequeueCopy( List<T> list )
-    {
-        if ( !isEmpty( list ) )
-        {
+    public static <T> List<T> dequeueCopy( List<T> list ) {
+        if ( !isEmpty( list ) ) {
             list = list.subList( 1, list.size() );
         }
         return list;
     }
 
 
-    public static <T> List<T> initCopy( List<T> list )
-    {
-        if ( !isEmpty( list ) )
-        {
+    public static <T> List<T> initCopy( List<T> list ) {
+        if ( !isEmpty( list ) ) {
             list = new ArrayList<T>( list );
         }
-        else
-        {
+        else {
             list = new ArrayList<T>();
         }
         return list;
     }
 
 
-    public static <T> T dequeue( List<T> list )
-    {
-        if ( !isEmpty( list ) )
-        {
+    public static <T> T dequeue( List<T> list ) {
+        if ( !isEmpty( list ) ) {
             return list.remove( 0 );
         }
         return null;
     }
 
 
-    public static <T> List<T> queue( List<T> list, T item )
-    {
-        if ( list == null )
-        {
+    public static <T> List<T> queue( List<T> list, T item ) {
+        if ( list == null ) {
             list = new ArrayList<T>();
         }
         list.add( item );
@@ -211,10 +175,8 @@ public class ListUtils extends org.apache.commons.collections.ListUtils
     }
 
 
-    public static <T> List<T> requeue( List<T> list, T item )
-    {
-        if ( list == null )
-        {
+    public static <T> List<T> requeue( List<T> list, T item ) {
+        if ( list == null ) {
             list = new ArrayList<T>();
         }
         list.add( 0, item );
@@ -222,31 +184,24 @@ public class ListUtils extends org.apache.commons.collections.ListUtils
     }
 
 
-    @SuppressWarnings( { "unchecked", "rawtypes" } )
-    public static List<?> flatten( Collection<?> l )
-    {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static List<?> flatten( Collection<?> l ) {
         boolean hasCollection = false;
-        for ( Object o : l )
-        {
-            if ( o instanceof Collection )
-            {
+        for ( Object o : l ) {
+            if ( o instanceof Collection ) {
                 hasCollection = true;
                 break;
             }
         }
-        if ( !hasCollection && ( l instanceof List ) )
-        {
+        if ( !hasCollection && ( l instanceof List ) ) {
             return ( List<?> ) l;
         }
         List newList = new ArrayList();
-        for ( Object o : l )
-        {
-            if ( o instanceof List )
-            {
+        for ( Object o : l ) {
+            if ( o instanceof List ) {
                 newList.addAll( flatten( ( List ) o ) );
             }
-            else
-            {
+            else {
                 newList.add( o );
             }
         }
@@ -254,12 +209,9 @@ public class ListUtils extends org.apache.commons.collections.ListUtils
     }
 
 
-    public static boolean anyNull( List<?> l )
-    {
-        for ( Object o : l )
-        {
-            if ( o == null )
-            {
+    public static boolean anyNull( List<?> l ) {
+        for ( Object o : l ) {
+            if ( o == null ) {
                 return true;
             }
         }
@@ -267,12 +219,9 @@ public class ListUtils extends org.apache.commons.collections.ListUtils
     }
 
 
-    public static boolean anyNull( Object... objects )
-    {
-        for ( Object o : objects )
-        {
-            if ( o == null )
-            {
+    public static boolean anyNull( Object... objects ) {
+        for ( Object o : objects ) {
+            if ( o == null ) {
                 return true;
             }
         }

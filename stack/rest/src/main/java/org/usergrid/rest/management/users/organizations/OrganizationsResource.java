@@ -55,19 +55,16 @@ import com.sun.jersey.api.json.JSONWithPadding;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 } )
-public class OrganizationsResource extends AbstractContextResource
-{
+public class OrganizationsResource extends AbstractContextResource {
 
     UserInfo user;
 
 
-    public OrganizationsResource()
-    {
+    public OrganizationsResource() {
     }
 
 
-    public OrganizationsResource init( UserInfo user )
-    {
+    public OrganizationsResource init( UserInfo user ) {
         this.user = user;
         return this;
     }
@@ -77,8 +74,7 @@ public class OrganizationsResource extends AbstractContextResource
     @GET
     public JSONWithPadding getUserOrganizations( @Context UriInfo ui,
                                                  @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get user management" );
@@ -94,8 +90,7 @@ public class OrganizationsResource extends AbstractContextResource
     @POST
     public JSONWithPadding newOrganizationForUser( @Context UriInfo ui, Map<String, Object> json,
                                                    @QueryParam( "callback" ) @DefaultValue( "callback" )
-                                                   String callback ) throws Exception
-    {
+                                                   String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization for user" );
@@ -117,14 +112,12 @@ public class OrganizationsResource extends AbstractContextResource
                                                            @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                            String callback,
                                                            @FormParam( "organization" ) String organizationName )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization for user" );
 
-        if ( organizationName == null )
-        {
+        if ( organizationName == null ) {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
 
@@ -144,8 +137,7 @@ public class OrganizationsResource extends AbstractContextResource
                                                                     @PathParam( "organizationName" )
                                                                     String organizationName, @QueryParam( "callback" )
                                                                     @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "add user to organization" );
@@ -161,8 +153,7 @@ public class OrganizationsResource extends AbstractContextResource
     @PUT
     @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     public JSONWithPadding addUserToOrganizationByOrganizationId( @Context UriInfo ui, @PathParam( "organizationId" )
-    String organizationIdStr, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception
-    {
+    String organizationIdStr, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "add user to organization" );
@@ -182,8 +173,7 @@ public class OrganizationsResource extends AbstractContextResource
                                                                        String organizationIdStr,
                                                                        @QueryParam( "callback" )
                                                                        @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "remove user from organization" );
@@ -203,8 +193,7 @@ public class OrganizationsResource extends AbstractContextResource
                                                                          String organizationName,
                                                                          @QueryParam( "callback" )
                                                                          @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "remove user from organization" );

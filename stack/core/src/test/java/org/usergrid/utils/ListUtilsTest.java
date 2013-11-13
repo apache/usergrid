@@ -27,15 +27,13 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 
 
-public class ListUtilsTest
-{
+public class ListUtilsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( ListUtilsTest.class );
 
 
     @Test
-    public void testListUtils()
-    {
+    public void testListUtils() {
 
         List<?> l = Arrays.asList( 1, 2, 3 );
 

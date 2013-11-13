@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByBoundRangeScanDescCollectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByBoundRangeScanDescCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByBoundRangeScanDescCollection() throws Exception
-    {
+    public void singleOrderByBoundRangeScanDescCollection() throws Exception {
         singleOrderByBoundRangeScanDesc( new CollectionIoHelper() );
     }
 }

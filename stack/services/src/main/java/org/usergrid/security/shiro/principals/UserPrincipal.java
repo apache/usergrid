@@ -21,38 +21,32 @@ import java.util.UUID;
 import org.usergrid.management.UserInfo;
 
 
-public abstract class UserPrincipal extends PrincipalIdentifier
-{
+public abstract class UserPrincipal extends PrincipalIdentifier {
 
     final UserInfo user;
     final UUID applicationId;
 
 
-    public UserPrincipal( UUID applicationId, UserInfo user )
-    {
+    public UserPrincipal( UUID applicationId, UserInfo user ) {
         this.applicationId = applicationId;
         this.user = user;
     }
 
 
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return applicationId;
     }
 
 
     @Override
-    public UserInfo getUser()
-    {
+    public UserInfo getUser() {
         return user;
     }
 
 
     @Override
-    public boolean isDisabled()
-    {
-        if ( user != null )
-        {
+    public boolean isDisabled() {
+        if ( user != null ) {
             return user.isDisabled();
         }
         return false;
@@ -60,10 +54,8 @@ public abstract class UserPrincipal extends PrincipalIdentifier
 
 
     @Override
-    public boolean isActivated()
-    {
-        if ( user != null )
-        {
+    public boolean isActivated() {
+        if ( user != null ) {
             return user.isActivated();
         }
         return true;
@@ -71,8 +63,7 @@ public abstract class UserPrincipal extends PrincipalIdentifier
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return user.toString();
     }
 }

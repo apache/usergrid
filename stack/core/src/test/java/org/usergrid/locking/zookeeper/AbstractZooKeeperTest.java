@@ -29,19 +29,16 @@ import org.apache.zookeeper.server.ZooKeeperServerMain;
 
 
 /** Base test class for ZooKeeper tests. */
-public abstract class AbstractZooKeeperTest
-{
+public abstract class AbstractZooKeeperTest {
 
     public static final String ZOO_KEEPER_HOST = "localhost:20181/";
 
     private static Logger LOG = LoggerFactory.getLogger( AbstractZooKeeperTest.class );
 
 
-    static class ZKServerMain extends ZooKeeperServerMain
-    {
+    static class ZKServerMain extends ZooKeeperServerMain {
         @Override
-        public void shutdown()
-        {
+        public void shutdown() {
             super.shutdown();
         }
     }
@@ -55,19 +52,15 @@ public abstract class AbstractZooKeeperTest
 
 
     @BeforeClass
-    public static void before() throws Exception
-    {
+    public static void before() throws Exception {
         // we don't call super.setUp
         System.setProperty( "zkHost", ZOO_KEEPER_HOST );
-        Thread zooThread = new Thread()
-        {
+        Thread zooThread = new Thread() {
             @Override
-            public void run()
-            {
+            public void run() {
                 ServerConfig config = null;
 
-                config = new ServerConfig()
-                {
+                config = new ServerConfig() {
                     {
                         clientPortAddress = new InetSocketAddress( "localhost", 20181 );
                         dataDir = tmpDir.getAbsolutePath() + File.separator + "zookeeper/server1/data";
@@ -77,13 +70,11 @@ public abstract class AbstractZooKeeperTest
                     }
                 };
 
-                try
-                {
+                try {
                     zkServer.runFromConfig( config );
                     LOG.info( "ZOOKEEPER EXIT" );
                 }
-                catch ( Throwable e )
-                {
+                catch ( Throwable e ) {
                     e.printStackTrace();
                     throw new RuntimeException( e );
                 }
@@ -100,8 +91,7 @@ public abstract class AbstractZooKeeperTest
     }
 
 
-    public static void buildZooKeeper() throws Exception
-    {
+    public static void buildZooKeeper() throws Exception {
         ZooPut zooPut = new ZooPut( ZOO_KEEPER_HOST.substring( 0, ZOO_KEEPER_HOST.indexOf( '/' ) ) );
         // TODO read a system property to get the app root path if
         // needed.
@@ -111,28 +101,22 @@ public abstract class AbstractZooKeeperTest
 
 
     @AfterClass
-    public static void after() throws Exception
-    {
+    public static void after() throws Exception {
         zkServer.shutdown();
 
         // Remove test data.
         boolean deletedData = recurseDelete( tmpDir );
-        if ( !deletedData )
-        {
+        if ( !deletedData ) {
             LOG.warn( "Zk testing data was not removed properly. You need to" + "manually remove:" + tmpDir
                     .getAbsolutePath() );
         }
     }
 
 
-    public static boolean recurseDelete( File f )
-    {
-        if ( f.isDirectory() )
-        {
-            for ( File sub : f.listFiles() )
-            {
-                if ( !recurseDelete( sub ) )
-                {
+    public static boolean recurseDelete( File f ) {
+        if ( f.isDirectory() ) {
+            for ( File sub : f.listFiles() ) {
+                if ( !recurseDelete( sub ) ) {
                     return false;
                 }
             }

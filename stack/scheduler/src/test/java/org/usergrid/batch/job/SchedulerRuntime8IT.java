@@ -38,16 +38,13 @@ import static org.junit.Assert.assertFalse;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
     /**
      * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
-     * the
-     * retry time
+     * the retry time
      */
     @Test
-    public void queryAndDeleteJobs() throws Exception
-    {
+    public void queryAndDeleteJobs() throws Exception {
 
         CountdownLatchJob job = cassandraResource.getBean( "countdownLatch", CountdownLatchJob.class );
 

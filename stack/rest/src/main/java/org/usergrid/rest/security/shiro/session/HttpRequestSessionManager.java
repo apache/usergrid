@@ -33,17 +33,14 @@ import org.apache.shiro.web.util.WebUtils;
  * on each request. This necessarily means that a mechanism like form-based authentication isn't viable, but the
  * intention is primarily for uses in stateless apis.
  */
-public class HttpRequestSessionManager implements SessionManager
-{
+public class HttpRequestSessionManager implements SessionManager {
 
     static final String REQUEST_ATTRIBUTE_KEY = "__SHIRO_REQUEST_SESSION";
 
 
     @Override
-    public Session start( SessionContext context ) throws AuthorizationException
-    {
-        if ( !WebUtils.isHttp( context ) )
-        {
+    public Session start( SessionContext context ) throws AuthorizationException {
+        if ( !WebUtils.isHttp( context ) ) {
             String msg = "SessionContext must be an HTTP compatible implementation.";
             throw new IllegalArgumentException( msg );
         }
@@ -60,10 +57,8 @@ public class HttpRequestSessionManager implements SessionManager
 
 
     @Override
-    public Session getSession( SessionKey key ) throws SessionException
-    {
-        if ( !WebUtils.isHttp( key ) )
-        {
+    public Session getSession( SessionKey key ) throws SessionException {
+        if ( !WebUtils.isHttp( key ) ) {
             String msg = "SessionKey must be an HTTP compatible implementation.";
             throw new IllegalArgumentException( msg );
         }
@@ -74,14 +69,11 @@ public class HttpRequestSessionManager implements SessionManager
     }
 
 
-    private String getHost( SessionContext context )
-    {
+    private String getHost( SessionContext context ) {
         String host = context.getHost();
-        if ( host == null )
-        {
+        if ( host == null ) {
             ServletRequest request = WebUtils.getRequest( context );
-            if ( request != null )
-            {
+            if ( request != null ) {
                 host = request.getRemoteHost();
             }
         }
@@ -89,8 +81,7 @@ public class HttpRequestSessionManager implements SessionManager
     }
 
 
-    protected Session createSession( HttpServletRequest request, String host )
-    {
+    protected Session createSession( HttpServletRequest request, String host ) {
         return new HttpServletRequestSession( request, host );
     }
 }

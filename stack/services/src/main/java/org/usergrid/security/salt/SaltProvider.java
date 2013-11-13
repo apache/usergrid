@@ -24,8 +24,7 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public interface SaltProvider
-{
+public interface SaltProvider {
 
     /** Get the salt that should be used for a user in the given application */
     public String getSalt( UUID applicationId, UUID userId );

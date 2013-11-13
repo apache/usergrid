@@ -65,8 +65,7 @@ import org.usergrid.persistence.geo.model.Point;
  * @author (java portage) Alexandre Gellibert
  */
 
-public class GeocellManager
-{
+public class GeocellManager {
 
     // The maximum *practical* geocell resolution.
     public static final int MAX_GEOCELL_RESOLUTION = GeoIndexManager.MAX_RESOLUTION;
@@ -85,12 +84,10 @@ public class GeocellManager
      *
      * @return Returns the list of geocells (all resolutions) that are containing the point
      */
-    public static List<String> generateGeoCell( Point point )
-    {
+    public static List<String> generateGeoCell( Point point ) {
         List<String> geocells = new ArrayList<String>();
         String geocellMax = GeocellUtils.compute( point, GeocellManager.MAX_GEOCELL_RESOLUTION );
-        for ( int i = 1; i < GeocellManager.MAX_GEOCELL_RESOLUTION; i++ )
-        {
+        for ( int i = 1; i < GeocellManager.MAX_GEOCELL_RESOLUTION; i++ ) {
             geocells.add( GeocellUtils.compute( point, i ) );
         }
         geocells.add( geocellMax );
@@ -111,10 +108,8 @@ public class GeocellManager
      *
      * @return A list of geocell strings that contain the given box.
      */
-    public static List<String> bestBboxSearchCells( BoundingBox bbox, CostFunction costFunction )
-    {
-        if ( bbox.getEast() < bbox.getWest() )
-        {
+    public static List<String> bestBboxSearchCells( BoundingBox bbox, CostFunction costFunction ) {
+        if ( bbox.getEast() < bbox.getWest() ) {
             BoundingBox bboxAntimeridian1 =
                     new BoundingBox( bbox.getNorth(), bbox.getEast(), bbox.getSouth(), GeocellUtils.MIN_LONGITUDE );
             BoundingBox bboxAntimeridian2 =
@@ -138,22 +133,19 @@ public class GeocellManager
         int minResolution = 0;
         int maxResoltuion = Math.min( cellNE.length(), cellSW.length() );
         while ( minResolution < maxResoltuion && cellNE.substring( 0, minResolution + 1 )
-                                                       .startsWith( cellSW.substring( 0, minResolution + 1 ) ) )
-        {
+                                                       .startsWith( cellSW.substring( 0, minResolution + 1 ) ) ) {
             minResolution++;
         }
 
         // Iteravely calculate all possible sets of cells that wholely contain
         // the requested bounding box.
         for ( int curResolution = minResolution; curResolution < GeocellManager.MAX_GEOCELL_RESOLUTION + 1;
-              curResolution++ )
-        {
+              curResolution++ ) {
             String curNE = cellNE.substring( 0, curResolution );
             String curSW = cellSW.substring( 0, curResolution );
 
             int numCells = GeocellUtils.interpolationCount( curNE, curSW );
-            if ( numCells > MAX_FEASIBLE_BBOX_SEARCH_CELLS )
-            {
+            if ( numCells > MAX_FEASIBLE_BBOX_SEARCH_CELLS ) {
                 continue;
             }
 
@@ -161,31 +153,27 @@ public class GeocellManager
             Collections.sort( cellSet );
 
             double cost;
-            if ( costFunction == null )
-            {
+            if ( costFunction == null ) {
                 cost = DEFAULT_COST_FUNCTION.defaultCostFunction( cellSet.size(), curResolution );
             }
-            else
-            {
+            else {
                 cost = costFunction.defaultCostFunction( cellSet.size(), curResolution );
             }
 
-            if ( cost <= minCost )
-            {
+            if ( cost <= minCost ) {
                 minCost = cost;
                 minCostCellSet = cellSet;
             }
-            else
-            {
-                if ( minCostCellSet.size() == 0 )
-                {
+            else {
+                if ( minCostCellSet.size() == 0 ) {
                     minCostCellSet = cellSet;
                 }
                 // Once the cost starts rising, we won't be able to do better, so abort.
                 break;
             }
         }
-        //        logger.log(Level.INFO, "Calculate cells "+StringUtils.join(minCostCellSet, ", ")+" in box ("+bbox.getSouth()+","+bbox.getWest()+") ("+bbox.getNorth()+","+bbox.getEast()+")");
+        //        logger.log(Level.INFO, "Calculate cells "+StringUtils.join(minCostCellSet, ",
+        // ")+" in box ("+bbox.getSouth()+","+bbox.getWest()+") ("+bbox.getNorth()+","+bbox.getEast()+")");
         return minCostCellSet;
     }
 }

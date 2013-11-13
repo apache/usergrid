@@ -23,20 +23,17 @@ import org.usergrid.management.OrganizationInfo;
 
 
 /** @author tnine */
-public class ExportOrg extends OrganizationInfo
-{
+public class ExportOrg extends OrganizationInfo {
 
     private List<String> adminUserNames;
 
 
-    public ExportOrg()
-    {
+    public ExportOrg() {
         adminUserNames = new ArrayList<String>();
     }
 
 
-    public ExportOrg( OrganizationInfo info )
-    {
+    public ExportOrg( OrganizationInfo info ) {
         setName( info.getName() );
         setUuid( info.getUuid() );
         adminUserNames = new ArrayList<String>();
@@ -44,21 +41,18 @@ public class ExportOrg extends OrganizationInfo
 
 
     /** @return the admins */
-    public List<String> getAdmins()
-    {
+    public List<String> getAdmins() {
         return adminUserNames;
     }
 
 
     /** @param admins the admins to set */
-    public void setAdmins( List<String> admins )
-    {
+    public void setAdmins( List<String> admins ) {
         this.adminUserNames = admins;
     }
 
 
-    public void addAdmin( String username )
-    {
+    public void addAdmin( String username ) {
         adminUserNames.add( username );
     }
 }

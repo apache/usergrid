@@ -7,8 +7,7 @@ import org.usergrid.batch.JobExecution;
 
 
 /** @author zznate */
-public interface JobAccessor
-{
+public interface JobAccessor {
 
     /** Get new jobs, with a max return value of size */
     public List<JobDescriptor> getJobs( int size );

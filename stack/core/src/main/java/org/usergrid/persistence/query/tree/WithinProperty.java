@@ -25,35 +25,30 @@ import org.antlr.runtime.Token;
  *
  * @author tnine
  */
-public class WithinProperty extends Property
-{
+public class WithinProperty extends Property {
 
     private String indexedName = null;
 
 
-    public WithinProperty( Token t )
-    {
+    public WithinProperty( Token t ) {
         super( t );
         this.indexedName = String.format( "%s.coordinates", super.getValue() );
     }
 
 
-    public WithinProperty( String property )
-    {
+    public WithinProperty( String property ) {
         this( new ClassicToken( 0, property ) );
     }
 
 
     /** Get the */
-    public String getIndexedName()
-    {
+    public String getIndexedName() {
         return this.indexedName;
     }
 
 
     /** @return the property */
-    public WithinProperty getProperty()
-    {
+    public WithinProperty getProperty() {
         return ( WithinProperty ) this.children.get( 0 );
     }
 }

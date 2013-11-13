@@ -81,8 +81,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
  *
  * @author tnine
  */
-public class UniqueIndexCleanup extends ToolBase
-{
+public class UniqueIndexCleanup extends ToolBase {
 
     /**
      *
@@ -107,8 +106,7 @@ public class UniqueIndexCleanup extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
 
         Options options = new Options();
@@ -143,8 +141,7 @@ public class UniqueIndexCleanup extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         logger.info( "Starting entity cleanup" );
@@ -152,8 +149,7 @@ public class UniqueIndexCleanup extends ToolBase
         Map<String, UUID> apps = getApplications( emf, line );
 
 
-        for ( Entry<String, UUID> app : apps.entrySet() )
-        {
+        for ( Entry<String, UUID> app : apps.entrySet() ) {
 
             logger.info( "Starting cleanup for app {}", app.getKey() );
 
@@ -163,8 +159,7 @@ public class UniqueIndexCleanup extends ToolBase
             //sanity check for corrupt apps
             Application appEntity = em.getApplication();
 
-            if ( appEntity == null )
-            {
+            if ( appEntity == null ) {
                 logger.warn( "Application does not exist in data. {}", app.getKey() );
                 continue;
             }
@@ -179,8 +174,7 @@ public class UniqueIndexCleanup extends ToolBase
 
 
             // go through each collection and audit the values
-            for ( String collectionName : getCollectionNames( em, line ) )
-            {
+            for ( String collectionName : getCollectionNames( em, line ) ) {
 
 
                 IndexScanner scanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
@@ -190,8 +184,7 @@ public class UniqueIndexCleanup extends ToolBase
                 SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser(), false );
 
 
-                while ( itr.hasNext() )
-                {
+                while ( itr.hasNext() ) {
 
                     Set<ScanColumn> ids = itr.next();
 
@@ -207,18 +200,15 @@ public class UniqueIndexCleanup extends ToolBase
                             ids.size(), collectionName, app.getValue()
                     } );
 
-                    for ( ScanColumn col : ids )
-                    {
+                    for ( ScanColumn col : ids ) {
                         final UUID id = col.getUUID();
                         boolean reIndex = false;
 
                         Mutator<ByteBuffer> m = createMutator( ko, be );
 
-                        try
-                        {
+                        try {
 
-                            for ( String prop : indexed )
-                            {
+                            for ( String prop : indexed ) {
 
                                 String bucket =
                                         indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, id, prop );
@@ -232,8 +222,7 @@ public class UniqueIndexCleanup extends ToolBase
                                 // our entity_index_entries. If they aren't, we need to delete the
                                 // from the secondary index, and mark
                                 // this object for re-index via n update
-                                for ( HColumn<ByteBuffer, ByteBuffer> index : indexCols )
-                                {
+                                for ( HColumn<ByteBuffer, ByteBuffer> index : indexCols ) {
 
                                     DynamicComposite secondaryIndexValue =
                                             DynamicComposite.fromByteBuffer( index.getName().duplicate() );
@@ -258,12 +247,10 @@ public class UniqueIndexCleanup extends ToolBase
 
                                     // we wouldn't find this column in our entity_index_entries
                                     // audit. Delete it, then mark this entity for update
-                                    if ( entries.size() == 0 )
-                                    {
+                                    if ( entries.size() == 0 ) {
                                         logger.info(
                                                 "Could not find reference to value '{}' for property '{}' on entity " +
-                                                        "{} in collection {}. "
-                                                        + " Forcing reindex",
+                                                        "{} in collection {}. " + " Forcing reindex",
                                                 new Object[] { propValue, prop, id, collectionName } );
 
                                         addDeleteToMutator( m, ENTITY_INDEX, rowKey, index.getName().duplicate(),
@@ -272,25 +259,21 @@ public class UniqueIndexCleanup extends ToolBase
                                         reIndex = true;
                                     }
 
-                                    if ( entries.size() > 1 )
-                                    {
+                                    if ( entries.size() > 1 ) {
                                         logger.info(
                                                 "Found more than 1 entity referencing unique index for property '{}' " +
-                                                        "with value "
-                                                        + "'{}'", prop, propValue );
+                                                        "with value " + "'{}'", prop, propValue );
                                         reIndex = true;
                                     }
                                 }
                             }
 
                             //force this entity to be updated
-                            if ( reIndex )
-                            {
+                            if ( reIndex ) {
                                 Entity entity = em.get( id );
 
                                 //entity may not exist, but we should have deleted rows from the index
-                                if ( entity == null )
-                                {
+                                if ( entity == null ) {
                                     logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
                                     //now execute the cleanup. In this case the entity is gone,
                                     // so we'll want to remove references from
@@ -309,8 +292,7 @@ public class UniqueIndexCleanup extends ToolBase
                                 m.execute();
                             }
                         }
-                        catch ( Exception e )
-                        {
+                        catch ( Exception e ) {
                             logger.error( "Unable to process entity with id '{}'", id, e );
                         }
                     }
@@ -322,19 +304,16 @@ public class UniqueIndexCleanup extends ToolBase
     }
 
 
-    private Map<String, UUID> getApplications( EntityManagerFactory emf, CommandLine line ) throws Exception
-    {
+    private Map<String, UUID> getApplications( EntityManagerFactory emf, CommandLine line ) throws Exception {
         String appName = line.getOptionValue( APPLICATION_ARG );
 
-        if ( appName == null )
-        {
+        if ( appName == null ) {
             return emf.getApplications();
         }
 
         ApplicationInfo app = managementService.getApplicationInfo( Identifier.from( appName ) );
 
-        if ( app == null )
-        {
+        if ( app == null ) {
             logger.error( "Could not find application with id or name {}", appName );
             System.exit( 3 );
         }
@@ -348,13 +327,11 @@ public class UniqueIndexCleanup extends ToolBase
     }
 
 
-    private Set<String> getCollectionNames( EntityManager em, CommandLine line ) throws Exception
-    {
+    private Set<String> getCollectionNames( EntityManager em, CommandLine line ) throws Exception {
 
         String collectionName = line.getOptionValue( COLLECTION_ARG );
 
-        if ( collectionName == null )
-        {
+        if ( collectionName == null ) {
             return em.getApplicationCollections();
         }
 
@@ -369,8 +346,7 @@ public class UniqueIndexCleanup extends ToolBase
     private List<HColumn<ByteBuffer, ByteBuffer>> scanIndexForAllTypes( Keyspace ko,
                                                                         IndexBucketLocator indexBucketLocator,
                                                                         UUID applicationId, Object rowKey,
-                                                                        UUID entityId, String prop ) throws Exception
-    {
+                                                                        UUID entityId, String prop ) throws Exception {
 
         //TODO Determine the index bucket.  Scan the entire index for properties with this entityId.
 
@@ -382,19 +358,16 @@ public class UniqueIndexCleanup extends ToolBase
         List<HColumn<ByteBuffer, ByteBuffer>> results = new ArrayList<HColumn<ByteBuffer, ByteBuffer>>();
 
 
-        do
-        {
+        do {
             cols = cass.getColumns( ko, ENTITY_INDEX, rowKey, start, null, 100, false );
 
-            for ( HColumn<ByteBuffer, ByteBuffer> col : cols )
-            {
+            for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
                 DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer( col.getName().duplicate() );
 
                 UUID storedId = ( UUID ) secondaryIndexValue.get( 2 );
 
                 //add it to the set.  We can't short circuit due to property ordering
-                if ( entityId.equals( storedId ) )
-                {
+                if ( entityId.equals( storedId ) ) {
                     results.add( col );
                 }
 

@@ -58,8 +58,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class ApplicationResource extends AbstractContextResource
-{
+public class ApplicationResource extends AbstractContextResource {
 
     OrganizationInfo organization;
     UUID applicationId;
@@ -69,21 +68,18 @@ public class ApplicationResource extends AbstractContextResource
     private SignInProviderFactory signInProviderFactory;
 
 
-    public ApplicationResource()
-    {
+    public ApplicationResource() {
     }
 
 
-    public ApplicationResource init( OrganizationInfo organization, UUID applicationId )
-    {
+    public ApplicationResource init( OrganizationInfo organization, UUID applicationId ) {
         this.organization = organization;
         this.applicationId = applicationId;
         return this;
     }
 
 
-    public ApplicationResource init( OrganizationInfo organization, ApplicationInfo application )
-    {
+    public ApplicationResource init( OrganizationInfo organization, ApplicationInfo application ) {
         this.organization = organization;
         applicationId = application.getId();
         this.application = application;
@@ -96,8 +92,7 @@ public class ApplicationResource extends AbstractContextResource
     public JSONWithPadding deleteApplicationFromOrganizationByApplicationId( @Context UriInfo ui,
                                                                              @QueryParam("callback")
                                                                              @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete application from organization" );
@@ -112,8 +107,7 @@ public class ApplicationResource extends AbstractContextResource
     @GET
     public JSONWithPadding getApplication( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         ServiceManager sm = smf.getServiceManager( applicationId );
@@ -130,8 +124,7 @@ public class ApplicationResource extends AbstractContextResource
     @Path("credentials")
     public JSONWithPadding getCredentials( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get application client credentials" );
@@ -150,8 +143,7 @@ public class ApplicationResource extends AbstractContextResource
     @Path("credentials")
     public JSONWithPadding generateCredentials( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "generate application client credentials" );
@@ -172,8 +164,7 @@ public class ApplicationResource extends AbstractContextResource
     public JSONWithPadding configureProvider( @Context UriInfo ui, @QueryParam("provider_key") String siaProvider,
                                               Map<String, Object> json,
                                               @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "post signin provider configuration" );
@@ -181,18 +172,15 @@ public class ApplicationResource extends AbstractContextResource
         Preconditions.checkArgument( siaProvider != null, "Sign in provider required" );
 
         SignInAsProvider signInAsProvider = null;
-        if ( StringUtils.equalsIgnoreCase( siaProvider, "facebook" ) )
-        {
+        if ( StringUtils.equalsIgnoreCase( siaProvider, "facebook" ) ) {
             signInAsProvider =
                     signInProviderFactory.facebook( smf.getServiceManager( applicationId ).getApplication() );
         }
-        else if ( StringUtils.equalsIgnoreCase( siaProvider, "pingident" ) )
-        {
+        else if ( StringUtils.equalsIgnoreCase( siaProvider, "pingident" ) ) {
             signInAsProvider =
                     signInProviderFactory.pingident( smf.getServiceManager( applicationId ).getApplication() );
         }
-        else if ( StringUtils.equalsIgnoreCase( siaProvider, "foursquare" ) )
-        {
+        else if ( StringUtils.equalsIgnoreCase( siaProvider, "foursquare" ) ) {
             signInAsProvider =
                     signInProviderFactory.foursquare( smf.getServiceManager( applicationId ).getApplication() );
         }

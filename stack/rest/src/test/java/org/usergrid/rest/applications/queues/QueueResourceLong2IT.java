@@ -19,16 +19,14 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent()
-public class QueueResourceLong2IT extends AbstractQueueResourceIT
-{
+public class QueueResourceLong2IT extends AbstractQueueResourceIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void transactionPageSize() throws InterruptedException
-    {
+    public void transactionPageSize() throws InterruptedException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -36,8 +34,7 @@ public class QueueResourceLong2IT extends AbstractQueueResourceIT
 
         @SuppressWarnings("unchecked") Map<String, ?>[] data = new Map[count];
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             data[i] = MapUtils.hashMap( "id", i );
         }
 
@@ -61,8 +58,7 @@ public class QueueResourceLong2IT extends AbstractQueueResourceIT
         List<String> originalMessageIds = transHandler.getMessageIds();
         BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
 
-        for ( int i = 0; i < originalMessageIds.size(); i++ )
-        {
+        for ( int i = 0; i < originalMessageIds.size(); i++ ) {
             // check the messages come back in the same order, they should
             assertEquals( originalMessageIds.get( i ), originalMessageIds.get( i ) );
 

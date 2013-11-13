@@ -16,11 +16,9 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public class OrganizationClientCredentials extends AbstractClientCredentials implements OrganizationCredentials
-{
+public class OrganizationClientCredentials extends AbstractClientCredentials implements OrganizationCredentials {
 
-    public OrganizationClientCredentials( String key, String secret )
-    {
+    public OrganizationClientCredentials( String key, String secret ) {
         super( key, secret );
     }
 }

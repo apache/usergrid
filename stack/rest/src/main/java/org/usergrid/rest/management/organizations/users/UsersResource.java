@@ -62,21 +62,18 @@ import static org.usergrid.utils.ConversionUtils.string;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class UsersResource extends AbstractContextResource
-{
+public class UsersResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( UsersResource.class );
 
     OrganizationInfo organization;
 
 
-    public UsersResource()
-    {
+    public UsersResource() {
     }
 
 
-    public UsersResource init( OrganizationInfo organization )
-    {
+    public UsersResource init( OrganizationInfo organization ) {
         this.organization = organization;
         return this;
     }
@@ -86,8 +83,7 @@ public class UsersResource extends AbstractContextResource
     @GET
     public JSONWithPadding getOrganizationUsers( @Context UriInfo ui,
                                                  @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization users" );
@@ -103,8 +99,7 @@ public class UsersResource extends AbstractContextResource
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding newUserForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         String email = string( json.get( "email" ) );
         String username = string( json.get( "username" ) );
@@ -125,8 +120,7 @@ public class UsersResource extends AbstractContextResource
                                                            @FormParam("password") String password,
                                                            @FormParam("invite") @DefaultValue("true") boolean invite,
                                                            @QueryParam("callback") @DefaultValue("callback")
-                                                           String callback ) throws Exception
-    {
+                                                           String callback ) throws Exception {
 
         logger.info( "New user for organization: " + username );
 
@@ -134,19 +128,16 @@ public class UsersResource extends AbstractContextResource
         response.setAction( "create user" );
 
         UserInfo user = null;
-        if ( invite )
-        {
+        if ( invite ) {
             user = management.getAdminUserByEmail( email );
         }
 
-        if ( user == null )
-        {
+        if ( user == null ) {
             user = management.createAdminUser( email, email, email, password, false, false );
             management.startAdminUserPasswordResetFlow( user );
         }
 
-        if ( user == null )
-        {
+        if ( user == null ) {
             return null;
         }
 
@@ -186,15 +177,13 @@ public class UsersResource extends AbstractContextResource
     @Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public JSONWithPadding addUserToOrganization( @Context UriInfo ui, @PathParam("userId") String userIdStr,
                                                   @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "add user to organization" );
 
         UserInfo user = management.getAdminUserByUuid( UUID.fromString( userIdStr ) );
-        if ( user == null )
-        {
+        if ( user == null ) {
             throw new ManagementException( "No user found for: " + userIdStr );
         }
         management.addAdminUserToOrganization( user, organization, true );
@@ -213,15 +202,13 @@ public class UsersResource extends AbstractContextResource
     @Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
     public JSONWithPadding addUserToOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                          @QueryParam("callback") @DefaultValue("callback")
-                                                         String callback ) throws Exception
-    {
+                                                         String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "add user to organization" );
 
         UserInfo user = management.getAdminUserByEmail( email );
-        if ( user == null )
-        {
+        if ( user == null ) {
             throw new ManagementException( "Username not found: " + email );
         }
         management.addAdminUserToOrganization( user, organization, true );
@@ -240,14 +227,11 @@ public class UsersResource extends AbstractContextResource
     @Path("{username}")
     public JSONWithPadding addUserToOrganizationByUsername( @Context UriInfo ui, @PathParam("username") String username,
                                                             @QueryParam("callback") @DefaultValue("callback")
-                                                            String callback ) throws Exception
-    {
+                                                            String callback ) throws Exception {
 
-        if ( "me".equals( username ) )
-        {
+        if ( "me".equals( username ) ) {
             UserInfo user = SubjectUtils.getAdminUser();
-            if ( ( user != null ) && ( user.getUuid() != null ) )
-            {
+            if ( ( user != null ) && ( user.getUuid() != null ) ) {
                 return addUserToOrganization( ui, user.getUuid().toString(), callback );
             }
             throw mappableSecurityException( "unauthorized", "No admin identity for access credentials provided" );
@@ -257,8 +241,7 @@ public class UsersResource extends AbstractContextResource
         response.setAction( "add user to organization" );
 
         UserInfo user = management.getAdminUserByUsername( username );
-        if ( user == null )
-        {
+        if ( user == null ) {
             throw new ManagementException( "Username not found: " + username );
         }
         management.addAdminUserToOrganization( user, organization, true );
@@ -278,15 +261,13 @@ public class UsersResource extends AbstractContextResource
     public JSONWithPadding removeUserFromOrganizationByUserId( @Context UriInfo ui,
                                                                @PathParam("userId") String userIdStr,
                                                                @QueryParam("callback") @DefaultValue("callback")
-                                                               String callback ) throws Exception
-    {
+                                                               String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "remove user from organization" );
 
         UserInfo user = management.getAdminUserByUuid( UUID.fromString( userIdStr ) );
-        if ( user == null )
-        {
+        if ( user == null ) {
             return null;
         }
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
@@ -306,14 +287,11 @@ public class UsersResource extends AbstractContextResource
     public JSONWithPadding removeUserFromOrganizationByUsername( @Context UriInfo ui,
                                                                  @PathParam("username") String username,
                                                                  @QueryParam("callback") @DefaultValue("callback")
-                                                                 String callback ) throws Exception
-    {
+                                                                 String callback ) throws Exception {
 
-        if ( "me".equals( username ) )
-        {
+        if ( "me".equals( username ) ) {
             UserInfo user = SubjectUtils.getAdminUser();
-            if ( ( user != null ) && ( user.getUuid() != null ) )
-            {
+            if ( ( user != null ) && ( user.getUuid() != null ) ) {
                 return removeUserFromOrganizationByUserId( ui, user.getUuid().toString(), callback );
             }
             throw mappableSecurityException( "unauthorized", "No admin identity for access credentials provided" );
@@ -323,8 +301,7 @@ public class UsersResource extends AbstractContextResource
         response.setAction( "remove user from organization" );
 
         UserInfo user = management.getAdminUserByUsername( username );
-        if ( user == null )
-        {
+        if ( user == null ) {
             return null;
         }
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
@@ -343,15 +320,13 @@ public class UsersResource extends AbstractContextResource
     @Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
     public JSONWithPadding removeUserFromOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                               @QueryParam("callback") @DefaultValue("callback")
-                                                              String callback ) throws Exception
-    {
+                                                              String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "remove user from organization" );
 
         UserInfo user = management.getAdminUserByEmail( email );
-        if ( user == null )
-        {
+        if ( user == null ) {
             return null;
         }
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );

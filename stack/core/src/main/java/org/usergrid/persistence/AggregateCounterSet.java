@@ -23,8 +23,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
-public class AggregateCounterSet
-{
+public class AggregateCounterSet {
     private String name;
     private UUID user;
     private UUID group;
@@ -33,8 +32,7 @@ public class AggregateCounterSet
     private List<AggregateCounter> values;
 
 
-    public AggregateCounterSet( String name, UUID user, UUID group, String category, List<AggregateCounter> values )
-    {
+    public AggregateCounterSet( String name, UUID user, UUID group, String category, List<AggregateCounter> values ) {
         this.name = name;
         this.user = user;
         this.group = group;
@@ -43,8 +41,7 @@ public class AggregateCounterSet
     }
 
 
-    public AggregateCounterSet( String name, UUID queue, String category, List<AggregateCounter> values )
-    {
+    public AggregateCounterSet( String name, UUID queue, String category, List<AggregateCounter> values ) {
         this.name = name;
         setQueue( queue );
         this.category = category;
@@ -53,79 +50,67 @@ public class AggregateCounterSet
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getUser()
-    {
+    public UUID getUser() {
         return user;
     }
 
 
-    public void setUser( UUID user )
-    {
+    public void setUser( UUID user ) {
         this.user = user;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getGroup()
-    {
+    public UUID getGroup() {
         return group;
     }
 
 
-    public void setGroup( UUID group )
-    {
+    public void setGroup( UUID group ) {
         this.group = group;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getCategory()
-    {
+    public String getCategory() {
         return category;
     }
 
 
-    public void setCategory( String category )
-    {
+    public void setCategory( String category ) {
         this.category = category;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<AggregateCounter> getValues()
-    {
+    public List<AggregateCounter> getValues() {
         return values;
     }
 
 
-    public void setValues( List<AggregateCounter> values )
-    {
+    public void setValues( List<AggregateCounter> values ) {
         this.values = values;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getQueue()
-    {
+    public UUID getQueue() {
         return queue;
     }
 
 
-    public void setQueue( UUID queue )
-    {
+    public void setQueue( UUID queue ) {
         this.queue = queue;
     }
 }

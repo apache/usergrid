@@ -17,30 +17,26 @@ package org.usergrid.persistence.query.ir;
 
 
 /** @author tnine */
-public class NotNode extends QueryNode
-{
+public class NotNode extends QueryNode {
 
     protected QueryNode subtractNode, keepNode;
 
 
     /** @param keepNode may be null if there are parents to this */
-    public NotNode( QueryNode subtractNode, QueryNode keepNode )
-    {
+    public NotNode( QueryNode subtractNode, QueryNode keepNode ) {
         this.subtractNode = subtractNode;
         this.keepNode = keepNode;
     }
 
 
     /** @return the child */
-    public QueryNode getSubtractNode()
-    {
+    public QueryNode getSubtractNode() {
         return subtractNode;
     }
 
 
     /** @return the all */
-    public QueryNode getKeepNode()
-    {
+    public QueryNode getKeepNode() {
         return keepNode;
     }
 
@@ -53,15 +49,13 @@ public class NotNode extends QueryNode
      * .query.ir.NodeVisitor)
      */
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "NotNode [child=" + subtractNode + "]";
     }
 }

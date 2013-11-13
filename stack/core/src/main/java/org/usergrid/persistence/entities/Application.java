@@ -34,8 +34,7 @@ import org.usergrid.persistence.annotations.EntityProperty;
 
 /** Applications represent the topmost container for all entities. */
 @XmlRootElement
-public class Application extends TypedEntity
-{
+public class Application extends TypedEntity {
 
     public static final String ENTITY_TYPE = "application";
 
@@ -47,417 +46,365 @@ public class Application extends TypedEntity
 
     public static final String COLLECTION_ACTIVITIES = "activities";
 
-    @EntityProperty( indexed = true, fulltextIndexed = false, required = true, mutable = false, aliasProperty = true,
-            basic = true )
+    @EntityProperty(indexed = true, fulltextIndexed = false, required = true, mutable = false, aliasProperty = true,
+            basic = true)
     protected String name;
 
-    @EntityProperty( basic = true, indexed = false )
+    @EntityProperty(basic = true, indexed = false)
     protected String title;
 
-    @EntityProperty( basic = true, indexed = false )
+    @EntityProperty(basic = true, indexed = false)
     protected Long accesstokenttl;
 
-    @EntityProperty( indexed = false )
+    @EntityProperty(indexed = false)
     protected String description;
 
-    @EntityDictionary( keyType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> collections;
 
-    @EntityDictionary( keyType = java.lang.String.class, valueType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class, valueType = java.lang.String.class)
     protected Map<String, String> rolenames;
 
-    @EntityDictionary( keyType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> counters;
 
-    @EntityProperty( indexed = false )
+    @EntityProperty(indexed = false)
     protected Boolean activated;
 
-    @EntityProperty( indexed = false )
+    @EntityProperty(indexed = false)
     protected Boolean disabled;
 
-    @EntityProperty( name = "allow_open_registration", indexed = false )
+    @EntityProperty(name = "allow_open_registration", indexed = false)
     protected Boolean allowOpenRegistration;
 
-    @EntityProperty( name = "registration_requires_email_confirmation", indexed = false )
+    @EntityProperty(name = "registration_requires_email_confirmation", indexed = false)
     protected Boolean registrationRequiresEmailConfirmation;
 
-    @EntityProperty( name = "registration_requires_admin_approval", indexed = false )
+    @EntityProperty(name = "registration_requires_admin_approval", indexed = false)
     protected Boolean registrationRequiresAdminApproval;
 
-    @EntityProperty( name = "notify_admin_of_new_users", indexed = false )
+    @EntityProperty(name = "notify_admin_of_new_users", indexed = false)
     protected Boolean notifyAdminOfNewUsers;
 
-    @EntityDictionary( keyType = java.lang.String.class, valueType = OAuthProvider.class )
+    @EntityDictionary(keyType = java.lang.String.class, valueType = OAuthProvider.class)
     protected Map<String, OAuthProvider> oauthproviders;
 
-    @EntityDictionary( keyType = java.lang.String.class, valueType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class, valueType = java.lang.String.class)
     protected Map<String, String> credentials;
 
-    @EntityDictionary( keyType = java.lang.String.class, valueType = WebHook.class )
+    @EntityDictionary(keyType = java.lang.String.class, valueType = WebHook.class)
     protected Map<String, WebHook> webhooks;
 
-    @EntityCollection( type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
     protected List<UUID> activities;
 
-    @EntityCollection( type = "asset", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "asset", indexingDynamicDictionaries = true)
     protected List<UUID> assets;
 
-    @EntityCollection( type = "event", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "event", indexingDynamicDictionaries = true)
     protected List<UUID> events;
 
-    @EntityCollection( type = "folder", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "folder", indexingDynamicDictionaries = true)
     protected List<UUID> folders;
 
-    @EntityCollection( type = "group" )
+    @EntityCollection(type = "group")
     protected List<UUID> groups;
 
-    @EntityCollection( type = "user", dictionariesIndexed = { "aliases" } )
+    @EntityCollection(type = "user", dictionariesIndexed = { "aliases" })
     protected List<UUID> users;
 
-    @EntityCollection( type = "device" )
+    @EntityCollection(type = "device")
     protected List<UUID> devices;
 
-    @EntityCollection( type = "notification" )
+    @EntityCollection(type = "notification")
     protected List<UUID> notifications;
 
 
-    public Application()
-    {
+    public Application() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public Application( UUID id )
-    {
+    public Application( UUID id ) {
         uuid = id;
     }
 
 
     @Override
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getName()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getTitle()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getTitle() {
         return title;
     }
 
 
-    public void setTitle( String title )
-    {
+    public void setTitle( String title ) {
         this.title = title;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getDescription()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getDescription() {
         return description;
     }
 
 
-    public void setDescription( String description )
-    {
+    public void setDescription( String description ) {
         this.description = description;
     }
 
 
-    public boolean activated()
-    {
+    public boolean activated() {
         return ( activated != null ) && activated;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Boolean getActivated()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Boolean getActivated() {
         return activated;
     }
 
 
-    public void setActivated( Boolean activated )
-    {
+    public void setActivated( Boolean activated ) {
         this.activated = activated;
     }
 
 
-    public boolean disabled()
-    {
+    public boolean disabled() {
         return ( disabled != null ) && disabled;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Boolean getDisabled()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Boolean getDisabled() {
         return disabled;
     }
 
 
-    public void setDisabled( Boolean disabled )
-    {
+    public void setDisabled( Boolean disabled ) {
         this.disabled = disabled;
     }
 
 
-    public boolean allowOpenRegistration()
-    {
+    public boolean allowOpenRegistration() {
         return ( allowOpenRegistration != null ) && allowOpenRegistration;
     }
 
 
-    @JsonProperty( "allow_open_registration" )
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Boolean getAllowOpenRegistration()
-    {
+    @JsonProperty("allow_open_registration")
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Boolean getAllowOpenRegistration() {
         return allowOpenRegistration;
     }
 
 
-    @JsonProperty( "allow_open_registration" )
-    public void setAllowOpenRegistration( Boolean allowOpenRegistration )
-    {
+    @JsonProperty("allow_open_registration")
+    public void setAllowOpenRegistration( Boolean allowOpenRegistration ) {
         this.allowOpenRegistration = allowOpenRegistration;
     }
 
 
-    public boolean registrationRequiresEmailConfirmation()
-    {
+    public boolean registrationRequiresEmailConfirmation() {
         return ( registrationRequiresEmailConfirmation != null ) && registrationRequiresEmailConfirmation;
     }
 
 
-    @JsonProperty( "registration_requires_email_confirmation" )
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Boolean getRegistrationRequiresEmailConfirmation()
-    {
+    @JsonProperty("registration_requires_email_confirmation")
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Boolean getRegistrationRequiresEmailConfirmation() {
         return registrationRequiresEmailConfirmation;
     }
 
 
-    @JsonProperty( "registration_requires_email_confirmation" )
-    public void setRegistrationRequiresEmailConfirmation( Boolean registrationRequiresEmailConfirmation )
-    {
+    @JsonProperty("registration_requires_email_confirmation")
+    public void setRegistrationRequiresEmailConfirmation( Boolean registrationRequiresEmailConfirmation ) {
         this.registrationRequiresEmailConfirmation = registrationRequiresEmailConfirmation;
     }
 
 
-    public boolean registrationRequiresAdminApproval()
-    {
+    public boolean registrationRequiresAdminApproval() {
         return ( registrationRequiresAdminApproval != null ) && registrationRequiresAdminApproval;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    @JsonProperty( "registration_requires_admin_approval" )
-    public Boolean getRegistrationRequiresAdminApproval()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonProperty("registration_requires_admin_approval")
+    public Boolean getRegistrationRequiresAdminApproval() {
         return registrationRequiresAdminApproval;
     }
 
 
-    @JsonProperty( "registration_requires_admin_approval" )
-    public void setRegistrationRequiresAdminApproval( Boolean registrationRequiresAdminApproval )
-    {
+    @JsonProperty("registration_requires_admin_approval")
+    public void setRegistrationRequiresAdminApproval( Boolean registrationRequiresAdminApproval ) {
         this.registrationRequiresAdminApproval = registrationRequiresAdminApproval;
     }
 
 
-    public boolean notifyAdminOfNewUsers()
-    {
+    public boolean notifyAdminOfNewUsers() {
         return ( notifyAdminOfNewUsers != null ) && notifyAdminOfNewUsers;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    @JsonProperty( "notify_admin_of_new_users" )
-    public Boolean getNotifyAdminOfNewUsers()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonProperty("notify_admin_of_new_users")
+    public Boolean getNotifyAdminOfNewUsers() {
         return notifyAdminOfNewUsers;
     }
 
 
-    @JsonProperty( "notify_admin_of_new_users" )
-    public void setNotifyAdminOfNewUsers( Boolean notifyAdminOfNewUsers )
-    {
+    @JsonProperty("notify_admin_of_new_users")
+    public void setNotifyAdminOfNewUsers( Boolean notifyAdminOfNewUsers ) {
         this.notifyAdminOfNewUsers = notifyAdminOfNewUsers;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getUsers()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getUsers() {
         return users;
     }
 
 
-    public void setUsers( List<UUID> users )
-    {
+    public void setUsers( List<UUID> users ) {
         this.users = users;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getGroups()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getGroups() {
         return groups;
     }
 
 
-    public void setGroups( List<UUID> groups )
-    {
+    public void setGroups( List<UUID> groups ) {
         this.groups = groups;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Set<String> getCollections()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Set<String> getCollections() {
         return collections;
     }
 
 
-    public void setCollections( Set<String> collections )
-    {
+    public void setCollections( Set<String> collections ) {
         this.collections = collections;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Map<String, String> getRolenames()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, String> getRolenames() {
         return rolenames;
     }
 
 
-    public void setRolenames( Map<String, String> rolenames )
-    {
+    public void setRolenames( Map<String, String> rolenames ) {
         this.rolenames = rolenames;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Set<String> getCounters()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Set<String> getCounters() {
         return counters;
     }
 
 
-    public void setCounters( Set<String> counters )
-    {
+    public void setCounters( Set<String> counters ) {
         this.counters = counters;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getAssets()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getAssets() {
         return assets;
     }
 
 
-    public void setAssets( List<UUID> assets )
-    {
+    public void setAssets( List<UUID> assets ) {
         this.assets = assets;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Map<String, String> getCredentials()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, String> getCredentials() {
         return credentials;
     }
 
 
-    public void setCredentials( Map<String, String> credentials )
-    {
+    public void setCredentials( Map<String, String> credentials ) {
         this.credentials = credentials;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getActivities()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getActivities() {
         return activities;
     }
 
 
-    public void setActivities( List<UUID> activities )
-    {
+    public void setActivities( List<UUID> activities ) {
         this.activities = activities;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getFolders()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getFolders() {
         return folders;
     }
 
 
-    public void setFolders( List<UUID> folders )
-    {
+    public void setFolders( List<UUID> folders ) {
         this.folders = folders;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getEvents()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getEvents() {
         return events;
     }
 
 
-    public void setEvents( List<UUID> events )
-    {
+    public void setEvents( List<UUID> events ) {
         this.events = events;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getDevices()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getDevices() {
         return devices;
     }
 
 
-    public void setDevices( List<UUID> devices )
-    {
+    public void setDevices( List<UUID> devices ) {
         this.devices = devices;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Map<String, OAuthProvider> getOauthproviders()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, OAuthProvider> getOauthproviders() {
         return oauthproviders;
     }
 
 
-    public void setOauthproviders( Map<String, OAuthProvider> oauthproviders )
-    {
+    public void setOauthproviders( Map<String, OAuthProvider> oauthproviders ) {
         this.oauthproviders = oauthproviders;
     }
 
 
     /** Get the organization name of this app */
-    public String getOrganizationName()
-    {
+    public String getOrganizationName() {
         String[] names = name.split( "/" );
 
-        if ( names.length == 2 )
-        {
+        if ( names.length == 2 ) {
             return names[0];
         }
 
@@ -466,12 +413,10 @@ public class Application extends TypedEntity
 
 
     /** Get the application name of this app */
-    public String getApplicationName()
-    {
+    public String getApplicationName() {
         String[] names = name.split( "/" );
 
-        if ( names.length == 2 )
-        {
+        if ( names.length == 2 ) {
             return names[1];
         }
 
@@ -480,22 +425,19 @@ public class Application extends TypedEntity
 
 
     /** @return the accesstokenttl */
-    public Long getAccesstokenttl()
-    {
+    public Long getAccesstokenttl() {
         return accesstokenttl;
     }
 
 
     /** @param accesstokenttl the accesstokenttl to set */
-    public void setAccesstokenttl( Long accesstokenttl )
-    {
+    public void setAccesstokenttl( Long accesstokenttl ) {
         this.accesstokenttl = accesstokenttl;
     }
 
 
     @XmlRootElement
-    public static class OAuthProvider
-    {
+    public static class OAuthProvider {
         String clientId;
         String clientSecret;
         String redirectUris;
@@ -506,20 +448,17 @@ public class Application extends TypedEntity
         String version = "1.0a";
 
 
-        public OAuthProvider()
-        {
+        public OAuthProvider() {
         }
 
 
-        public OAuthProvider( String clientId, String clientSecret )
-        {
+        public OAuthProvider( String clientId, String clientSecret ) {
             this.clientId = clientId;
             this.clientSecret = clientSecret;
         }
 
 
-        public OAuthProvider( String clientId, String clientSecret, String redirectUris, String javaScriptOrigins )
-        {
+        public OAuthProvider( String clientId, String clientSecret, String redirectUris, String javaScriptOrigins ) {
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.redirectUris = redirectUris;
@@ -529,8 +468,7 @@ public class Application extends TypedEntity
 
         public OAuthProvider( String clientId, String clientSecret, String redirectUris, String javaScriptOrigins,
                               String authorizationEndpointUrl, String accessTokenEndpointUrl,
-                              String requestTokenEndpointUrl )
-        {
+                              String requestTokenEndpointUrl ) {
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.redirectUris = redirectUris;
@@ -541,113 +479,96 @@ public class Application extends TypedEntity
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getVersion()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getVersion() {
             return version;
         }
 
 
-        public void setVersion( String version )
-        {
+        public void setVersion( String version ) {
             this.version = version;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getClientId()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getClientId() {
             return clientId;
         }
 
 
-        public void setClientId( String clientId )
-        {
+        public void setClientId( String clientId ) {
             this.clientId = clientId;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getClientSecret()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getClientSecret() {
             return clientSecret;
         }
 
 
-        public void setClientSecret( String clientSecret )
-        {
+        public void setClientSecret( String clientSecret ) {
             this.clientSecret = clientSecret;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getRedirectUris()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getRedirectUris() {
             return redirectUris;
         }
 
 
-        public void setRedirectUris( String redirectUris )
-        {
+        public void setRedirectUris( String redirectUris ) {
             this.redirectUris = redirectUris;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getJavaScriptOrigins()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getJavaScriptOrigins() {
             return javaScriptOrigins;
         }
 
 
-        public void setJavaScriptOrigins( String javaScriptOrigins )
-        {
+        public void setJavaScriptOrigins( String javaScriptOrigins ) {
             this.javaScriptOrigins = javaScriptOrigins;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getAuthorizationEndpointUrl()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getAuthorizationEndpointUrl() {
             return authorizationEndpointUrl;
         }
 
 
-        public void setAuthorizationEndpointUrl( String authorizationEndpointUrl )
-        {
+        public void setAuthorizationEndpointUrl( String authorizationEndpointUrl ) {
             this.authorizationEndpointUrl = authorizationEndpointUrl;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getAccessTokenEndpointUrl()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getAccessTokenEndpointUrl() {
             return accessTokenEndpointUrl;
         }
 
 
-        public void setAccessTokenEndpointUrl( String accessTokenEndpointUrl )
-        {
+        public void setAccessTokenEndpointUrl( String accessTokenEndpointUrl ) {
             this.accessTokenEndpointUrl = accessTokenEndpointUrl;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getRequestTokenEndpointUrl()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getRequestTokenEndpointUrl() {
             return requestTokenEndpointUrl;
         }
 
 
-        public void setRequestTokenEndpointUrl( String requestTokenEndpointUrl )
-        {
+        public void setRequestTokenEndpointUrl( String requestTokenEndpointUrl ) {
             this.requestTokenEndpointUrl = requestTokenEndpointUrl;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "OAuthProvider [clientId=" + clientId + ", clientSecret=" + clientSecret + ", redirectUris="
                     + redirectUris + ", javaScriptOrigins=" + javaScriptOrigins + ", authorizationEndpointUrl="
                     + authorizationEndpointUrl + ", accessTokenEndpointUrl=" + accessTokenEndpointUrl
@@ -657,37 +578,31 @@ public class Application extends TypedEntity
 
 
     @XmlRootElement
-    public static class WebHook
-    {
+    public static class WebHook {
         String type;
         String uri;
 
 
-        public WebHook()
-        {
+        public WebHook() {
         }
 
 
-        public String getType()
-        {
+        public String getType() {
             return type;
         }
 
 
-        public void setType( String type )
-        {
+        public void setType( String type ) {
             this.type = type;
         }
 
 
-        public String getUri()
-        {
+        public String getUri() {
             return uri;
         }
 
 
-        public void setUri( String uri )
-        {
+        public void setUri( String uri ) {
             this.uri = uri;
         }
     }

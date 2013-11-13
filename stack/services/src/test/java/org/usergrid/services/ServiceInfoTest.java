@@ -26,15 +26,13 @@ import org.usergrid.utils.JsonUtils;
 import static org.junit.Assert.assertEquals;
 
 
-public class ServiceInfoTest
-{
+public class ServiceInfoTest {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceInfoTest.class );
 
 
     @Test
-    public void testServiceInfo() throws Exception
-    {
+    public void testServiceInfo() throws Exception {
 
         testServiceInfo( "/users", "users.UsersService" );
         testServiceInfo( "/users/*/messages", "users.messages.MessagesService" );
@@ -50,8 +48,7 @@ public class ServiceInfoTest
 
 
     @Test
-    public void testFallback() throws Exception
-    {
+    public void testFallback() throws Exception {
 
         dumpFallback( "/users/*/friends/*/recommendations:food" );
         dumpFallback( "/users/*/friends/*/recommendations" );
@@ -61,8 +58,7 @@ public class ServiceInfoTest
 
 
     @Test
-    public void testTypes() throws Exception
-    {
+    public void testTypes() throws Exception {
 
         dumpType( "/users/*/friends/*/recommendations:food", "food" );
         dumpType( "/users/*/messages", "entity" );
@@ -73,46 +69,37 @@ public class ServiceInfoTest
     }
 
 
-    public void dumpFallback( String start )
-    {
+    public void dumpFallback( String start ) {
         List<String> patterns = ServiceInfo.getPatterns( start );
         logger.info( JsonUtils.mapToFormattedJsonString( patterns ) );
     }
 
 
-    public void dumpType( String start, String expectedType )
-    {
+    public void dumpType( String start, String expectedType ) {
         String type = ServiceInfo.determineType( start );
         logger.info( start + " = " + type );
         assertEquals( expectedType, type );
     }
 
 
-    public void testServiceInfo( String s, String... classes )
-    {
+    public void testServiceInfo( String s, String... classes ) {
         ServiceInfo info = ServiceInfo.getServiceInfo( s );
-        try
-        {
-            if ( info != null )
-            {
+        try {
+            if ( info != null ) {
                 logger.info( JsonUtils.mapToFormattedJsonString( info ) );
             }
-            else
-            {
+            else {
                 logger.info( "info = " + info );
             }
         }
-        catch ( Throwable t )
-        {
+        catch ( Throwable t ) {
             logger.error( "Error logging object " + info.toString() );
         }
         int i = 0;
-        for ( String pattern : info.getPatterns() )
-        {
+        for ( String pattern : info.getPatterns() ) {
             String className = ServiceInfo.getClassName( pattern );
             logger.info( pattern + " = " + className );
-            if ( ( classes != null ) && ( i < classes.length ) )
-            {
+            if ( ( classes != null ) && ( i < classes.length ) ) {
                 assertEquals( classes[i], className );
             }
             i++;

@@ -50,8 +50,7 @@ import static org.usergrid.persistence.SimpleEntityRef.ref;
 import static org.usergrid.utils.InflectionUtils.pluralize;
 
 
-public class ServiceManager
-{
+public class ServiceManager {
 
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceManager.class );
@@ -89,36 +88,29 @@ public class ServiceManager
     };
 
 
-    public ServiceManager()
-    {
+    public ServiceManager() {
     }
 
 
-    public ServiceManager init( ServiceManagerFactory smf, EntityManager em, Properties properties, QueueManager qm )
-    {
+    public ServiceManager init( ServiceManagerFactory smf, EntityManager em, Properties properties, QueueManager qm ) {
         this.smf = smf;
         this.em = em;
         this.qm = qm;
         this.properties = properties;
 
-        if ( em != null )
-        {
-            try
-            {
+        if ( em != null ) {
+            try {
                 application = em.getApplication();
                 applicationId = em.getApplicationRef().getUuid();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "This should never happen", e );
                 throw new RuntimeException( e );
             }
         }
-        if ( properties != null )
-        {
+        if ( properties != null ) {
             String packages = properties.getProperty( SERVICE_PACKAGE_PREFIXES );
-            if ( !StringUtils.isEmpty( packages ) )
-            {
+            if ( !StringUtils.isEmpty( packages ) ) {
                 setServicePackagePrefixes( packages );
             }
         }
@@ -126,25 +118,20 @@ public class ServiceManager
     }
 
 
-    public ApplicationContext getApplicationContext()
-    {
+    public ApplicationContext getApplicationContext() {
         return smf.getApplicationContext();
     }
 
 
-    private void setServicePackagePrefixes( String packages )
-    {
+    private void setServicePackagePrefixes( String packages ) {
         List<String> packagePrefixes = new ArrayList<String>();
-        for ( String prefix : package_prefixes )
-        {
+        for ( String prefix : package_prefixes ) {
             packagePrefixes.add( prefix );
         }
 
         String[] prefixes = packages.split( ";" );
-        for ( String prefix : prefixes )
-        {
-            if ( !packagePrefixes.contains( prefix ) )
-            {
+        for ( String prefix : prefixes ) {
+            if ( !packagePrefixes.contains( prefix ) ) {
                 packagePrefixes.add( prefix );
             }
         }
@@ -152,88 +139,73 @@ public class ServiceManager
     }
 
 
-    public EntityManager getEntityManager()
-    {
+    public EntityManager getEntityManager() {
         return em;
     }
 
 
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return application.getUuid();
     }
 
 
     /** Return true if our current applicationId is the managment Id */
-    public boolean isMangementApplication()
-    {
+    public boolean isMangementApplication() {
         return CassandraService.MANAGEMENT_APPLICATION_ID.equals( getApplicationId() );
     }
 
 
-    public EntityRef getApplicationRef()
-    {
+    public EntityRef getApplicationRef() {
         return ref( Application.ENTITY_TYPE, applicationId );
     }
 
 
-    public Application getApplication()
-    {
+    public Application getApplication() {
         return application;
     }
 
 
-    public Service getEntityService( String entityType )
-    {
+    public Service getEntityService( String entityType ) {
         String serviceType = "/" + pluralize( entityType );
         return getService( serviceType );
     }
 
 
-    public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception
-    {
+    public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception {
         Service service = getEntityService( entity.getType() );
-        if ( service != null )
-        {
+        if ( service != null ) {
             return service.importEntity( request, entity );
         }
         return entity;
     }
 
 
-    public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception
-    {
+    public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception {
         Service service = getEntityService( entity.getType() );
-        if ( service != null )
-        {
+        if ( service != null ) {
             return service.writeEntity( request, entity );
         }
         return entity;
     }
 
 
-    public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception
-    {
+    public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception {
         Service service = getEntityService( ref.getType() );
-        if ( service != null )
-        {
+        if ( service != null ) {
             return service.updateEntity( request, ref, payload );
         }
         return null;
     }
 
 
-    public Service getService( String serviceType )
-    {
+    public Service getService( String serviceType ) {
         return getService( serviceType, true );
     }
 
 
-    public Service getService( String serviceType, boolean fallback )
-    {
+    public Service getService( String serviceType, boolean fallback ) {
 
-        if ( serviceType == null )
-        {
+        if ( serviceType == null ) {
             return null;
         }
 
@@ -241,15 +213,13 @@ public class ServiceManager
 
         ServiceInfo info = ServiceInfo.getServiceInfo( serviceType );
 
-        if ( info == null )
-        {
+        if ( info == null ) {
             return null;
         }
 
         Service service = getServiceInstance( info );
 
-        if ( service != null )
-        {
+        if ( service != null ) {
             logger.debug( "Returning service instance: {}", service.getClass() );
         }
 
@@ -259,8 +229,7 @@ public class ServiceManager
 		 * (service != null) { break; } } }
 		 */
 
-        if ( service == null )
-        {
+        if ( service == null ) {
             logger.info( "Service {} not found", serviceType );
         }
 
@@ -270,33 +239,27 @@ public class ServiceManager
 
     private static LoadingCache<ServiceInfo, Class<Service>> serviceClassCache =
             CacheBuilder.newBuilder().maximumSize( 100 ).expireAfterAccess( 5, TimeUnit.MINUTES )
-                        .build( new CacheLoader<ServiceInfo, Class<Service>>()
-                        {
-                            public Class<Service> load( ServiceInfo key )
-                            { // no checked exception
+                        .build( new CacheLoader<ServiceInfo, Class<Service>>() {
+                            public Class<Service> load( ServiceInfo key ) { // no checked exception
                                 return findClass( key );
                             }
                         } );
 
 
     /** For the service info find the class that this maps */
-    private static Class<Service> findClass( ServiceInfo info )
-    {
+    private static Class<Service> findClass( ServiceInfo info ) {
         Class<Service> cls = null;
 
         String cname = null;
 
-        for ( String pattern : info.getPatterns() )
-        {
-            for ( String prefix : package_prefixes )
-            {
+        for ( String pattern : info.getPatterns() ) {
+            for ( String prefix : package_prefixes ) {
 
                 cname = prefix.concat( "." ).concat( ServiceInfo.getClassName( pattern ) );
 
                 cls = findClass( cname );
 
-                if ( cls != null )
-                {
+                if ( cls != null ) {
                     return cls;
                 }
             }
@@ -308,48 +271,39 @@ public class ServiceManager
 
 
     @SuppressWarnings("unchecked")
-    private static Class<Service> findClass( String classname )
-    {
+    private static Class<Service> findClass( String classname ) {
 
         Class<Service> cls;
-        try
-        {
+        try {
             logger.debug( "Attempting to instantiate service class {}", classname );
             cls = ( Class<Service> ) Class.forName( classname );
-            if ( cls.isInterface() )
-            {
+            if ( cls.isInterface() ) {
                 cls = ( Class<Service> ) Class.forName( classname.concat( IMPL ) );
             }
-            if ( ( cls != null ) && !Modifier.isAbstract( cls.getModifiers() ) )
-            {
+            if ( ( cls != null ) && !Modifier.isAbstract( cls.getModifiers() ) ) {
                 return cls;
             }
         }
-        catch ( ClassNotFoundException e1 )
-        {
+        catch ( ClassNotFoundException e1 ) {
             logger.debug( "Could not load class", e1 );
         }
         return null;
     }
 
 
-    private Class<Service> findServiceClass( ServiceInfo info )
-    {
+    private Class<Service> findServiceClass( ServiceInfo info ) {
         Class<Service> cls = null;
 
-        try
-        {
+        try {
             cls = serviceClassCache.get( info );
         }
-        catch ( ExecutionException e )
-        {
+        catch ( ExecutionException e ) {
             //shouldn't happen, just to be safe
             throw new RuntimeException( e );
         }
 
         //Makes me feel dirty on the inside, but neccessary for the guava cache non null
-        if ( cls == NOTFOUNDPOINTER )
-        {
+        if ( cls == NOTFOUNDPOINTER ) {
             return null;
         }
 
@@ -358,31 +312,24 @@ public class ServiceManager
     }
 
 
-    private Service getServiceInstance( ServiceInfo info )
-    {
+    private Service getServiceInstance( ServiceInfo info ) {
 
         Class<Service> cls = findServiceClass( info );
-        if ( cls != null )
-        {
+        if ( cls != null ) {
             Service s = null;
-            try
-            {
+            try {
                 s = cls.newInstance();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "cannot instantiate " + cls.getName(), e );
             }
-            if ( s instanceof AbstractService )
-            {
+            if ( s instanceof AbstractService ) {
                 AbstractService as = ( ( AbstractService ) s );
                 as.setServiceManager( this );
                 as.init( info );
             }
-            if ( s != null )
-            {
-                if ( s.getEntityType() == null )
-                {
+            if ( s != null ) {
+                if ( s.getEntityType() == null ) {
                     throw new UndefinedServiceEntityTypeException();
                 }
             }
@@ -393,23 +340,20 @@ public class ServiceManager
     }
 
 
-    public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters ) throws Exception
-    {
+    public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters ) throws Exception {
         return newRequest( action, false, parameters, null );
     }
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         return newRequest( action, false, parameters, payload );
     }
 
 
     private ServiceRequest getApplicationRequest( ServiceAction action, boolean returnsTree,
                                                   List<ServiceParameter> parameters, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
 
         String serviceName = pluralize( Application.ENTITY_TYPE );
         ListUtils.requeue( parameters, new IdParameter( applicationId ) );
@@ -421,39 +365,32 @@ public class ServiceManager
 
 
     public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
-                                      ServicePayload payload ) throws Exception
-    {
+                                      ServicePayload payload ) throws Exception {
 
-        if ( em != null )
-        {
-            if ( action != null )
-            {
+        if ( em != null ) {
+            if ( action != null ) {
                 em.incrementAggregateCounters( null, null, null,
                         APPLICATION_REQUESTS_PER.concat( action.toString().toLowerCase() ), 1 );
             }
         }
 
-        if ( !ServiceParameter.moreParameters( parameters ) )
-        {
+        if ( !ServiceParameter.moreParameters( parameters ) ) {
             return getApplicationRequest( action, returnsTree, parameters, payload );
         }
 
-        if ( !ServiceParameter.firstParameterIsName( parameters ) )
-        {
+        if ( !ServiceParameter.firstParameterIsName( parameters ) ) {
             return null;
         }
 
         String nameParam = ServiceParameter.firstParameter( parameters ).getName();
-        if ( appService.hasEntityCommand( nameParam ) || appService.hasEntityDictionary( nameParam ) )
-        {
+        if ( appService.hasEntityCommand( nameParam ) || appService.hasEntityDictionary( nameParam ) ) {
             return getApplicationRequest( action, returnsTree, parameters, payload );
         }
 
         // special-case for Notifications. todo: generalize
         if ( action == ServiceAction.POST &&
                 ServiceParameter.lastParameterIsName( parameters ) &&
-                "notifications".equals( parameters.get( parameters.size() - 1 ).getName() ) )
-        {
+                "notifications".equals( parameters.get( parameters.size() - 1 ).getName() ) ) {
             return new ServiceRequest( this, action, "notifications", parameters, payload, returnsTree );
         }
 
@@ -463,38 +400,32 @@ public class ServiceManager
 
 
     public void notifyExecutionEventListeners( ServiceAction action, ServiceRequest request, ServiceResults results,
-                                               ServicePayload payload )
-    {
+                                               ServicePayload payload ) {
         smf.notifyExecutionEventListeners( action, request, results, payload );
     }
 
 
-    public void notifyCollectionEventListeners( String path, ServiceResults results )
-    {
+    public void notifyCollectionEventListeners( String path, ServiceResults results ) {
         smf.notifyCollectionEventListeners( path, results );
     }
 
 
-    public SchedulerService getSchedulerService()
-    {
+    public SchedulerService getSchedulerService() {
         return smf.getSchedulerService();
     }
 
 
-    public LockManager getLockManager()
-    {
+    public LockManager getLockManager() {
         return smf.getLockManager();
     }
 
 
-    public QueueManager getQueueManager()
-    {
+    public QueueManager getQueueManager() {
         return qm;
     }
 
 
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 }

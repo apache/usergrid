@@ -27,13 +27,11 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-public class EntityLocationRefDistanceComparatorTest
-{
+public class EntityLocationRefDistanceComparatorTest {
 
 
     @Test
-    public void locationDistanceComparator()
-    {
+    public void locationDistanceComparator() {
         EntityLocationRefDistanceComparator comp = new EntityLocationRefDistanceComparator();
 
         UUID firstId = UUIDUtils.newTimeUUID();

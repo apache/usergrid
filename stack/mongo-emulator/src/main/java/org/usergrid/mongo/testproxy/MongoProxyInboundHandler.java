@@ -36,8 +36,7 @@ import org.usergrid.mongo.MongoMessageDecoder;
 import org.usergrid.mongo.protocol.Message;
 
 
-public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
-{
+public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler {
 
     private final ClientSocketChannelFactory cf;
     private final String remoteHost;
@@ -51,8 +50,7 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
     private volatile Channel outboundChannel;
 
 
-    public MongoProxyInboundHandler( ClientSocketChannelFactory cf, String remoteHost, int remotePort )
-    {
+    public MongoProxyInboundHandler( ClientSocketChannelFactory cf, String remoteHost, int remotePort ) {
         this.cf = cf;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
@@ -60,8 +58,7 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
     @Override
-    public void channelOpen( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception
-    {
+    public void channelOpen( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception {
         // Suspend incoming traffic until connected to the remote host.
         final Channel inboundChannel = e.getChannel();
         inboundChannel.setReadable( false );
@@ -74,19 +71,15 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
         ChannelFuture f = cb.connect( new InetSocketAddress( remoteHost, remotePort ) );
 
         outboundChannel = f.getChannel();
-        f.addListener( new ChannelFutureListener()
-        {
+        f.addListener( new ChannelFutureListener() {
             @Override
-            public void operationComplete( ChannelFuture future ) throws Exception
-            {
-                if ( future.isSuccess() )
-                {
+            public void operationComplete( ChannelFuture future ) throws Exception {
+                if ( future.isSuccess() ) {
                     // Connection attempt succeeded:
                     // Begin to accept incoming traffic.
                     inboundChannel.setReadable( true );
                 }
-                else
-                {
+                else {
                     // Close the connection if the connection attempt has
                     // failed.
                     inboundChannel.close();
@@ -97,21 +90,17 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
     @Override
-    public void messageReceived( ChannelHandlerContext ctx, final MessageEvent e ) throws Exception
-    {
+    public void messageReceived( ChannelHandlerContext ctx, final MessageEvent e ) throws Exception {
         ChannelBuffer msg = ( ChannelBuffer ) e.getMessage();
         Message mongo_message = MongoMessageDecoder.decode( msg );
-        if ( mongo_message != null )
-        {
+        if ( mongo_message != null ) {
             System.out.println( ">>> " + mongo_message.toString() );
         }
-        synchronized ( trafficLock )
-        {
+        synchronized ( trafficLock ) {
             outboundChannel.write( msg );
             // If outboundChannel is saturated, do not read until notified in
             // OutboundHandler.channelInterestChanged().
-            if ( !outboundChannel.isWritable() )
-            {
+            if ( !outboundChannel.isWritable() ) {
                 e.getChannel().setReadable( false );
             }
         }
@@ -119,14 +108,11 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
     @Override
-    public void channelInterestChanged( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception
-    {
+    public void channelInterestChanged( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception {
         // If inboundChannel is not saturated anymore, continue accepting
         // the incoming traffic from the outboundChannel.
-        synchronized ( trafficLock )
-        {
-            if ( e.getChannel().isWritable() )
-            {
+        synchronized ( trafficLock ) {
+            if ( e.getChannel().isWritable() ) {
                 outboundChannel.setReadable( true );
             }
         }
@@ -134,51 +120,42 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
     @Override
-    public void channelClosed( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception
-    {
-        if ( outboundChannel != null )
-        {
+    public void channelClosed( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception {
+        if ( outboundChannel != null ) {
             closeOnFlush( outboundChannel );
         }
     }
 
 
     @Override
-    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) throws Exception
-    {
+    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) throws Exception {
         e.getCause().printStackTrace();
         closeOnFlush( e.getChannel() );
     }
 
 
-    private class OutboundHandler extends SimpleChannelUpstreamHandler
-    {
+    private class OutboundHandler extends SimpleChannelUpstreamHandler {
 
         private final Channel inboundChannel;
 
 
-        OutboundHandler( Channel inboundChannel )
-        {
+        OutboundHandler( Channel inboundChannel ) {
             this.inboundChannel = inboundChannel;
         }
 
 
         @Override
-        public void messageReceived( ChannelHandlerContext ctx, final MessageEvent e ) throws Exception
-        {
+        public void messageReceived( ChannelHandlerContext ctx, final MessageEvent e ) throws Exception {
             ChannelBuffer msg = ( ChannelBuffer ) e.getMessage();
             Message mongo_message = MongoMessageDecoder.decode( msg );
-            if ( mongo_message != null )
-            {
+            if ( mongo_message != null ) {
                 System.out.println( "<<< " + mongo_message.toString() + "\n" );
             }
-            synchronized ( trafficLock )
-            {
+            synchronized ( trafficLock ) {
                 inboundChannel.write( msg );
                 // If inboundChannel is saturated, do not read until notified in
                 // HexDumpProxyInboundHandler.channelInterestChanged().
-                if ( !inboundChannel.isWritable() )
-                {
+                if ( !inboundChannel.isWritable() ) {
                     e.getChannel().setReadable( false );
                 }
             }
@@ -186,14 +163,11 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
         @Override
-        public void channelInterestChanged( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception
-        {
+        public void channelInterestChanged( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception {
             // If outboundChannel is not saturated anymore, continue accepting
             // the incoming traffic from the inboundChannel.
-            synchronized ( trafficLock )
-            {
-                if ( e.getChannel().isWritable() )
-                {
+            synchronized ( trafficLock ) {
+                if ( e.getChannel().isWritable() ) {
                     inboundChannel.setReadable( true );
                 }
             }
@@ -201,15 +175,13 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
         @Override
-        public void channelClosed( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception
-        {
+        public void channelClosed( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception {
             closeOnFlush( inboundChannel );
         }
 
 
         @Override
-        public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) throws Exception
-        {
+        public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) throws Exception {
             e.getCause().printStackTrace();
             closeOnFlush( e.getChannel() );
         }
@@ -217,10 +189,8 @@ public class MongoProxyInboundHandler extends SimpleChannelUpstreamHandler
 
 
     /** Closes the specified channel after all queued write requests are flushed. */
-    static void closeOnFlush( Channel ch )
-    {
-        if ( ch.isConnected() )
-        {
+    static void closeOnFlush( Channel ch ) {
+        if ( ch.isConnected() ) {
             ch.write( ChannelBuffers.EMPTY_BUFFER ).addListener( ChannelFutureListener.CLOSE );
         }
     }

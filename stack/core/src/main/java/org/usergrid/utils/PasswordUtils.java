@@ -20,11 +20,9 @@ package org.usergrid.utils;
 import org.apache.commons.codec.digest.DigestUtils;
 
 
-public class PasswordUtils
-{
+public class PasswordUtils {
 
-    public static String mongoPassword( String username, String password )
-    {
+    public static String mongoPassword( String username, String password ) {
         return DigestUtils.md5Hex( username + ":mongo:" + password );
     }
 }

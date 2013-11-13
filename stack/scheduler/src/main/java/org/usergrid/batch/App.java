@@ -21,8 +21,7 @@ import com.google.common.base.CharMatcher;
  *
  * @author zznate
  */
-public class App
-{
+public class App {
 
     private static Logger logger = LoggerFactory.getLogger( App.class );
 
@@ -30,11 +29,9 @@ public class App
     private final AppArgs appArgs;
 
 
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) {
         AppArgs appArgs = AppArgs.parseArgs( args );
-        if ( logger.isDebugEnabled() )
-        {
+        if ( logger.isDebugEnabled() ) {
             logger.debug( "Invoked App with appArgs: {}", appArgs.toString() );
         }
 
@@ -47,30 +44,25 @@ public class App
     }
 
 
-    App( AppArgs appArgs )
-    {
+    App( AppArgs appArgs ) {
         this.appArgs = appArgs;
     }
 
 
-    private void loadContext()
-    {
+    private void loadContext() {
         logger.info( "loading context" );
         // spring context
         int index = CharMatcher.is( ':' ).indexIn( appArgs.getAppContext() );
-        if ( index > 0 )
-        {
+        if ( index > 0 ) {
             appContext = new ClassPathXmlApplicationContext( appArgs.getAppContext().substring( ++index ) );
         }
-        else
-        {
+        else {
             appContext = new FileSystemXmlApplicationContext( appArgs.getAppContext() );
         }
     }
 
 
-    private void doExecute()
-    {
+    private void doExecute() {
         JobSchedulerService bjss = appContext.getBean( "bulkJobScheduledService", JobSchedulerService.class );
         logger.info( "starting scheduledService..." );
         bjss.startAndWait();

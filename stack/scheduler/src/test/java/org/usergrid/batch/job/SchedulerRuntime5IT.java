@@ -35,19 +35,16 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime5IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime5IT extends AbstractSchedulerRuntimeIT {
     private static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
 
 
     /**
      * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
-     * the
-     * retry time
+     * the retry time
      */
     @Test
-    public void delayHeartbeat() throws Exception
-    {
+    public void delayHeartbeat() throws Exception {
 
         long sleepTime = Long.parseLong( props.getProperty( TIMEOUT_PROP ) );
 

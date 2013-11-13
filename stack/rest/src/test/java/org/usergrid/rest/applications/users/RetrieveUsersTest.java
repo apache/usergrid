@@ -23,8 +23,7 @@ import static org.junit.Assert.assertEquals;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class RetrieveUsersTest extends AbstractRestIT
-{
+public class RetrieveUsersTest extends AbstractRestIT {
     private static final Logger log = LoggerFactory.getLogger( RetrieveUsersTest.class );
 
     @Rule
@@ -32,8 +31,7 @@ public class RetrieveUsersTest extends AbstractRestIT
 
 
     @Test // USERGRID-1222
-    public void queryForUsername()
-    {
+    public void queryForUsername() {
         CustomCollection users = context.collection( "users" );
 
         Map props = new HashMap();
@@ -52,8 +50,7 @@ public class RetrieveUsersTest extends AbstractRestIT
 
 
     @Test // USERGRID-1727
-    public void userEntityDictionaryHasRoles()
-    {
+    public void userEntityDictionaryHasRoles() {
         CustomCollection users = context.collection( "users" );
 
         Map props = new HashMap();

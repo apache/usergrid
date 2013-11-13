@@ -29,15 +29,13 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
  *
  * @author tnine
  */
-public class ConnectionIndexSliceParser implements SliceParser
-{
+public class ConnectionIndexSliceParser implements SliceParser {
 
     private final String connectedEntityType;
 
 
     /** @param connectedEntityType Could be null if we want to return all types */
-    public ConnectionIndexSliceParser( String connectedEntityType )
-    {
+    public ConnectionIndexSliceParser( String connectedEntityType ) {
         this.connectedEntityType = connectedEntityType;
     }
 
@@ -46,23 +44,20 @@ public class ConnectionIndexSliceParser implements SliceParser
      * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff )
-    {
+    public ScanColumn parse( ByteBuffer buff ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
         String connectedType = ( String ) composite.get( 1 );
 
 
         //connection type has been defined and it doesn't match, skip it
-        if ( connectedEntityType != null && !connectedEntityType.equals( connectedType ) )
-        {
+        if ( connectedEntityType != null && !connectedEntityType.equals( connectedType ) ) {
             return null;
         }
 
         //we're checking a loopback and it wasn't specified, skip it
         if ( ( connectedEntityType != null && !connectedEntityType.equalsIgnoreCase( connectedType ) ) || Schema
-                .TYPE_CONNECTION.equalsIgnoreCase( connectedType ) )
-        {
+                .TYPE_CONNECTION.equalsIgnoreCase( connectedType ) ) {
             return null;
         }
 
@@ -72,22 +67,19 @@ public class ConnectionIndexSliceParser implements SliceParser
     }
 
 
-    public static class ConnectionColumn extends AbstractScanColumn
-    {
+    public static class ConnectionColumn extends AbstractScanColumn {
 
         private final String connectedType;
 
 
-        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column )
-        {
+        public ConnectionColumn( UUID uuid, String connectedType, ByteBuffer column ) {
             super( uuid, column );
             this.connectedType = connectedType;
         }
 
 
         /** Get the target type from teh column */
-        public String getTargetType()
-        {
+        public String getTargetType() {
             return connectedType;
         }
     }

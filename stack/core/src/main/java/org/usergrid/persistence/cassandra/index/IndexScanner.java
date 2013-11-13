@@ -29,8 +29,7 @@ import me.prettyprint.hector.api.beans.HColumn;
  * @author tnine
  */
 public interface IndexScanner
-        extends Iterable<Set<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>>
-{
+        extends Iterable<Set<HColumn<ByteBuffer, ByteBuffer>>>, Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> {
 
     /** Reset the scanner back to the start */
     public void reset();

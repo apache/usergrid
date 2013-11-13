@@ -34,20 +34,17 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class MessagesIT extends AbstractCoreIT
-{
+public class MessagesIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( MessagesIT.class );
 
 
-    public MessagesIT()
-    {
+    public MessagesIT() {
         super();
     }
 
 
     @Test
-    public void testMessages() throws Exception
-    {
+    public void testMessages() throws Exception {
         LOG.info( "MessagesIT.testMessages" );
 
         Message message = new Message();
@@ -113,8 +110,7 @@ public class MessagesIT extends AbstractCoreIT
 
 
     @Test
-    public void testSubscriberSearch() throws Exception
-    {
+    public void testSubscriberSearch() throws Exception {
         QueueManager qm = app.getQm();
 
         Map<String, Object> properties = new HashMap<String, Object>();
@@ -166,15 +162,13 @@ public class MessagesIT extends AbstractCoreIT
 
 
     @Test
-    public void testConsumer() throws Exception
-    {
+    public void testConsumer() throws Exception {
         LOG.info( "Creating messages" );
 
         QueueManager qm = app.getQm();
         Message message;
 
-        for ( int i = 0; i < 10; i++ )
-        {
+        for ( int i = 0; i < 10; i++ ) {
             message = new Message();
             message.setStringProperty( "foo", "bar" + i );
 
@@ -183,32 +177,26 @@ public class MessagesIT extends AbstractCoreIT
             qm.postToQueue( "/foo/bar", message );
         }
 
-        for ( int i = 0; i < 11; i++ )
-        {
+        for ( int i = 0; i < 11; i++ ) {
             QueueResults messages = qm.getFromQueue( "/foo/bar", new QueueQuery().withConsumer( "consumer1" ) );
             LOG.info( JsonUtils.mapToFormattedJsonString( messages ) );
-            if ( i < 10 )
-            {
+            if ( i < 10 ) {
                 assertEquals( 1, messages.size() );
                 assertEquals( "bar" + i, messages.getMessages().get( 0 ).getStringProperty( "foo" ) );
             }
-            else
-            {
+            else {
                 assertEquals( 0, messages.size() );
             }
         }
 
-        for ( int i = 0; i < 11; i++ )
-        {
+        for ( int i = 0; i < 11; i++ ) {
             QueueResults messages = qm.getFromQueue( "/foo/bar", new QueueQuery().withConsumer( "consumer2" ) );
             LOG.info( JsonUtils.mapToFormattedJsonString( messages ) );
-            if ( i < 10 )
-            {
+            if ( i < 10 ) {
                 assertEquals( 1, messages.size() );
                 assertEquals( "bar" + i, messages.getMessages().get( 0 ).getStringProperty( "foo" ) );
             }
-            else
-            {
+            else {
                 assertEquals( 0, messages.size() );
             }
         }
@@ -216,8 +204,7 @@ public class MessagesIT extends AbstractCoreIT
 
 
     @Test
-    public void testTransactions() throws Exception
-    {
+    public void testTransactions() throws Exception {
         QueueManager qm = app.getQm();
 
         String queuePath = "/foo/bar";

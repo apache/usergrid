@@ -53,16 +53,14 @@ import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityExc
 
 
 @Component
-public class OAuth2AccessTokenSecurityFilter extends SecurityFilter
-{
+public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 
     public static final String REALM = "Usergrid Authentication";
 
     private static final Logger LOG = LoggerFactory.getLogger( OAuth2AccessTokenSecurityFilter.class );
 
 
-    public OAuth2AccessTokenSecurityFilter()
-    {
+    public OAuth2AccessTokenSecurityFilter() {
         LOG.info( "OAuth2AccessTokenSecurityFilter is installed" );
     }
 
@@ -72,17 +70,13 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request )
-    {
+    public ContainerRequest filter( ContainerRequest request ) {
 
-        try
-        {
-            try
-            {
+        try {
+            try {
 
                 String accessToken = request.getQueryParameters().getFirst( "access_token" );
-                if ( accessToken == null )
-                {
+                if ( accessToken == null ) {
                     // Make the OAuth Request out of this request
                     OAuthAccessResourceRequest oauthRequest =
                             new OAuthAccessResourceRequest( httpServletRequest, ParameterStyle.HEADER );
@@ -91,130 +85,103 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter
                     accessToken = oauthRequest.getAccessToken();
                 }
 
-                if ( accessToken == null )
-                {
+                if ( accessToken == null ) {
                     return request;
                 }
 
                 AuthPrincipalInfo principal = null;
-                try
-                {
+                try {
                     TokenInfo tokenInfo = tokens.getTokenInfo( accessToken );
                     principal = tokenInfo.getPrincipal();
                 }
-                catch ( BadTokenException e1 )
-                {
+                catch ( BadTokenException e1 ) {
                     throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                 }
-                catch ( ExpiredTokenException ete )
-                {
+                catch ( ExpiredTokenException ete ) {
                     throw mappableSecurityException( EXPIRED_ACCESS_TOKEN_ERROR );
                 }
-                catch ( InvalidTokenException ite )
-                {
+                catch ( InvalidTokenException ite ) {
                     throw mappableSecurityException( INVALID_AUTH_ERROR );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     LOG.error( "unable to verify oauth token", e );
                     throw mappableSecurityException( UNVERIFIED_OAUTH_ERROR );
                 }
 
-                if ( principal == null )
-                {
+                if ( principal == null ) {
                     return request;
                 }
 
                 PrincipalCredentialsToken token = null;
 
-                if ( AuthPrincipalType.ADMIN_USER.equals( principal.getType() ) )
-                {
+                if ( AuthPrincipalType.ADMIN_USER.equals( principal.getType() ) ) {
 
                     UserInfo user = null;
-                    try
-                    {
+                    try {
                         user = management.getAdminUserInfoFromAccessToken( accessToken );
                     }
-                    catch ( ManagementException e )
-                    {
+                    catch ( ManagementException e ) {
                         throw new MappableContainerException( e );
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                         LOG.error( "failed to get admin user info from access token", e );
                     }
-                    if ( user == null )
-                    {
+                    if ( user == null ) {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
                     token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken( user, accessToken );
                 }
-                else if ( AuthPrincipalType.APPLICATION_USER.equals( principal.getType() ) )
-                {
+                else if ( AuthPrincipalType.APPLICATION_USER.equals( principal.getType() ) ) {
 
                     UserInfo user = null;
-                    try
-                    {
+                    try {
                         user = management.getAppUserFromAccessToken( accessToken );
                     }
-                    catch ( ManagementException e )
-                    {
+                    catch ( ManagementException e ) {
                         throw new MappableContainerException( e );
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                         LOG.error( "failed to get app user from access token", e );
                     }
-                    if ( user == null )
-                    {
+                    if ( user == null ) {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
                     token = PrincipalCredentialsToken.getFromAppUserInfoAndAccessToken( user, accessToken );
                 }
-                else if ( AuthPrincipalType.ORGANIZATION.equals( principal.getType() ) )
-                {
+                else if ( AuthPrincipalType.ORGANIZATION.equals( principal.getType() ) ) {
 
                     OrganizationInfo organization = null;
-                    try
-                    {
+                    try {
                         organization = management.getOrganizationInfoFromAccessToken( accessToken );
                     }
-                    catch ( ManagementException e )
-                    {
+                    catch ( ManagementException e ) {
                         throw new MappableContainerException( e );
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                         LOG.error( "failed to get organization info from access token", e );
                     }
-                    if ( organization == null )
-                    {
+                    if ( organization == null ) {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
                     token = PrincipalCredentialsToken
                             .getFromOrganizationInfoAndAccessToken( organization, accessToken );
                 }
-                else if ( AuthPrincipalType.APPLICATION.equals( principal.getType() ) )
-                {
+                else if ( AuthPrincipalType.APPLICATION.equals( principal.getType() ) ) {
 
                     ApplicationInfo application = null;
-                    try
-                    {
+                    try {
                         application = management.getApplicationInfoFromAccessToken( accessToken );
                     }
-                    catch ( ManagementException e )
-                    {
+                    catch ( ManagementException e ) {
                         throw new MappableContainerException( e );
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                         LOG.error( "failed to get application info from access token", e );
                     }
-                    if ( application == null )
-                    {
+                    if ( application == null ) {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
@@ -224,12 +191,10 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter
                 Subject subject = SubjectUtils.getSubject();
                 subject.login( token );
             }
-            catch ( OAuthProblemException e )
-            {
+            catch ( OAuthProblemException e ) {
                 // Check if the error code has been set
                 String errorCode = e.getError();
-                if ( OAuthUtils.isEmpty( errorCode ) )
-                {
+                if ( OAuthUtils.isEmpty( errorCode ) ) {
 
                     return request;
                 }
@@ -237,8 +202,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter
                 throw new MappableContainerException( e );
             }
         }
-        catch ( OAuthSystemException ose )
-        {
+        catch ( OAuthSystemException ose ) {
             throw new MappableContainerException( ose );
         }
 

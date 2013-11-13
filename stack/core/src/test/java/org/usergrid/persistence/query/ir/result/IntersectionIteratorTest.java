@@ -31,12 +31,10 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-public class IntersectionIteratorTest
-{
+public class IntersectionIteratorTest {
 
     @Test
-    public void mutipleIterators()
-    {
+    public void mutipleIterators() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -104,8 +102,7 @@ public class IntersectionIteratorTest
 
 
     @Test
-    public void oneIterator()
-    {
+    public void oneIterator() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -145,8 +142,7 @@ public class IntersectionIteratorTest
 
 
     @Test
-    public void noIterator()
-    {
+    public void noIterator() {
         IntersectionIterator union = new IntersectionIterator( 100 );
 
         // now make sure it's right, only 1, 3 and 8 intersect
@@ -155,8 +151,7 @@ public class IntersectionIteratorTest
 
 
     @Test
-    public void largeIntersection()
-    {
+    public void largeIntersection() {
 
         int size = 10000;
         int firstIntersection = 100;
@@ -172,29 +167,24 @@ public class IntersectionIteratorTest
 
         List<UUID> results = new ArrayList<UUID>( size / secondIntersection );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             firstSet[i] = UUIDUtils.newTimeUUID();
             // every 100 elements, set the element equal to the first set. This way we
             // have intersection
 
-            if ( i % firstIntersection == 0 )
-            {
+            if ( i % firstIntersection == 0 ) {
                 secondSet[i] = firstSet[i];
             }
-            else
-            {
+            else {
                 secondSet[i] = UUIDUtils.newTimeUUID();
             }
 
-            if ( i % secondIntersection == 0 )
-            {
+            if ( i % secondIntersection == 0 ) {
                 thirdSet[i] = firstSet[i];
                 results.add( firstSet[i] );
             }
 
-            else
-            {
+            else {
                 thirdSet[i] = UUIDUtils.newTimeUUID();
             }
         }
@@ -224,8 +214,7 @@ public class IntersectionIteratorTest
         Iterator<ScanColumn> union = resultSet.iterator();
 
 
-        while ( union.hasNext() )
-        {
+        while ( union.hasNext() ) {
             assertTrue( expected.hasNext() );
             assertEquals( expected.next(), union.next().getUUID() );
         }
@@ -236,8 +225,7 @@ public class IntersectionIteratorTest
         union = resultSet.iterator();
 
 
-        while ( union.hasNext() )
-        {
+        while ( union.hasNext() ) {
             assertTrue( expected.hasNext() );
             assertEquals( expected.next(), union.next().getUUID() );
         }
@@ -249,13 +237,11 @@ public class IntersectionIteratorTest
 
 
     /**
-     * Tests that when there are multiple iterators, and one in the "middle" of the list returns no results,
-     * it will short
-     * circuit since no results will be possible
+     * Tests that when there are multiple iterators, and one in the "middle" of the list returns no results, it will
+     * short circuit since no results will be possible
      */
     @Test
-    public void mutipleIteratorsNoIntersection()
-    {
+    public void mutipleIteratorsNoIntersection() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -305,13 +291,11 @@ public class IntersectionIteratorTest
     }
 
 
-    private void reverse( UUID[] array )
-    {
+    private void reverse( UUID[] array ) {
 
         UUID temp = null;
 
-        for ( int i = 0; i < array.length / 2; i++ )
-        {
+        for ( int i = 0; i < array.length / 2; i++ ) {
             temp = array[i];
             array[i] = array[array.length - i - 1];
             array[array.length - i - 1] = temp;

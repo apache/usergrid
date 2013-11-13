@@ -21,8 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 
-public interface OAuthProxyFactory
-{
+public interface OAuthProxyFactory {
 
     public abstract OAuthProxy getOAuthProxy( UUID applicationId );
 

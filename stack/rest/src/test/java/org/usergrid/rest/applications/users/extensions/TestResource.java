@@ -32,21 +32,18 @@ import org.usergrid.rest.applications.users.AbstractUserExtensionResource;
 @Component("org.usergrid.rest.applications.users.extensions.TestResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
-public class TestResource extends AbstractUserExtensionResource
-{
+public class TestResource extends AbstractUserExtensionResource {
 
     private static Logger log = LoggerFactory.getLogger( TestResource.class );
 
 
-    public TestResource()
-    {
+    public TestResource() {
         log.info( "TestResource" );
     }
 
 
     @GET
-    public String sayHello()
-    {
+    public String sayHello() {
         return "{\"message\" : \"hello\"" + ( getUserResource().getUserUuid() != null ?
                                               ", \"user\" : \"" + getUserResource().getUserUuid() + "\"" : "" ) + " }";
     }

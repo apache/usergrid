@@ -35,8 +35,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 
 
 /** @author tnine */
-public class ConnectedIndexScanner implements IndexScanner
-{
+public class ConnectedIndexScanner implements IndexScanner {
 
     private final CassandraService cass;
     private final UUID applicationId;
@@ -62,8 +61,7 @@ public class ConnectedIndexScanner implements IndexScanner
 
 
     public ConnectedIndexScanner( CassandraService cass, String dictionaryType, UUID applicationId, UUID entityId,
-                                  Iterator<String> connectionTypes, ByteBuffer start, boolean reversed, int pageSize )
-    {
+                                  Iterator<String> connectionTypes, ByteBuffer start, boolean reversed, int pageSize ) {
 
         Assert.notNull( entityId, "Entity id for row key construction must be specified when searching graph indexes" );
         // create our start and end ranges
@@ -78,8 +76,7 @@ public class ConnectedIndexScanner implements IndexScanner
         this.connectionTypes = connectionTypes;
 
 
-        if ( connectionTypes.hasNext() )
-        {
+        if ( connectionTypes.hasNext() ) {
             currentConnectionType = connectionTypes.next();
         }
     }
@@ -91,8 +88,7 @@ public class ConnectedIndexScanner implements IndexScanner
      * @see org.usergrid.persistence.cassandra.index.IndexScanner#reset()
      */
     @Override
-    public void reset()
-    {
+    public void reset() {
         hasMore = true;
         start = scanStart;
     }
@@ -103,12 +99,10 @@ public class ConnectedIndexScanner implements IndexScanner
      * nothing was loaded, true otherwise
      */
 
-    public boolean load() throws Exception
-    {
+    public boolean load() throws Exception {
 
         // nothing left to load
-        if ( !hasMore )
-        {
+        if ( !hasMore ) {
             return false;
         }
 
@@ -116,8 +110,7 @@ public class ConnectedIndexScanner implements IndexScanner
         lastResults = new LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>>();
 
         //go through each connection type until we exhaust the result sets
-        while ( currentConnectionType != null )
-        {
+        while ( currentConnectionType != null ) {
 
             //only load a delta size to get this next page
             int selectSize = pageSize + 1 - lastResults.size();
@@ -132,8 +125,7 @@ public class ConnectedIndexScanner implements IndexScanner
             lastResults.addAll( results );
 
             // we loaded a full page, there might be more
-            if ( results.size() == selectSize )
-            {
+            if ( results.size() == selectSize ) {
                 hasMore = true;
 
                 // set the bytebuffer for the next pass
@@ -144,12 +136,10 @@ public class ConnectedIndexScanner implements IndexScanner
                 //we've loaded a full page
                 break;
             }
-            else
-            {
+            else {
 
                 //we're done, there's no more connection types and we've loaded all cols for this type.
-                if ( !connectionTypes.hasNext() )
-                {
+                if ( !connectionTypes.hasNext() ) {
                     hasMore = false;
                     currentConnectionType = null;
                     break;
@@ -173,8 +163,7 @@ public class ConnectedIndexScanner implements IndexScanner
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator()
-    {
+    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -185,21 +174,17 @@ public class ConnectedIndexScanner implements IndexScanner
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
 
         // We've either 1) paged everything we should and have 1 left from our
         // "next page" pointer
         // Our currently buffered results don't exist or don't have a next. Try to
         // load them again if they're less than the page size
-        if ( lastResults == null && hasMore )
-        {
-            try
-            {
+        if ( lastResults == null && hasMore ) {
+            try {
                 return load();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 throw new RuntimeException( "Error loading next page of indexbucket scanner", e );
             }
         }
@@ -215,8 +200,7 @@ public class ConnectedIndexScanner implements IndexScanner
      */
     @Override
     @Metered(group = "core", name = "IndexBucketScanner_load")
-    public Set<HColumn<ByteBuffer, ByteBuffer>> next()
-    {
+    public Set<HColumn<ByteBuffer, ByteBuffer>> next() {
         Set<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 
         lastResults = null;
@@ -231,8 +215,7 @@ public class ConnectedIndexScanner implements IndexScanner
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "You can't remove from a result set, only advance" );
     }
 
@@ -243,8 +226,7 @@ public class ConnectedIndexScanner implements IndexScanner
      * @see org.usergrid.persistence.cassandra.index.IndexScanner#getPageSize()
      */
     @Override
-    public int getPageSize()
-    {
+    public int getPageSize() {
         return pageSize;
     }
 }

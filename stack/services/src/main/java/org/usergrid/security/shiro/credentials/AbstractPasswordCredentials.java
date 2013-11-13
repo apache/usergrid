@@ -16,21 +16,18 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public class AbstractPasswordCredentials implements PasswordCredentials
-{
+public class AbstractPasswordCredentials implements PasswordCredentials {
 
     private final String password;
 
 
-    public AbstractPasswordCredentials( String password )
-    {
+    public AbstractPasswordCredentials( String password ) {
         this.password = password;
     }
 
 
     @Override
-    public String getPassword()
-    {
+    public String getPassword() {
         return password;
     }
 }

@@ -24,17 +24,14 @@ import org.springframework.util.StringUtils;
 import org.apache.commons.beanutils.MethodUtils;
 
 
-public class Command
-{
+public class Command {
 
     /**
      * @param args
      */
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) {
 
-        if ( ( args == null ) || ( args.length < 1 ) )
-        {
+        if ( ( args == null ) || ( args.length < 1 ) ) {
             System.out.println( "No command specified" );
             return;
         }
@@ -43,74 +40,58 @@ public class Command
 
         Class<?> clazz = null;
 
-        try
-        {
+        try {
             clazz = Class.forName( command );
         }
-        catch ( ClassNotFoundException e )
-        {
+        catch ( ClassNotFoundException e ) {
         }
 
-        if ( clazz == null )
-        {
-            try
-            {
+        if ( clazz == null ) {
+            try {
                 clazz = Class.forName( "org.usergrid.tools." + command );
             }
-            catch ( ClassNotFoundException e )
-            {
+            catch ( ClassNotFoundException e ) {
             }
         }
 
-        if ( clazz == null )
-        {
-            try
-            {
+        if ( clazz == null ) {
+            try {
                 clazz = Class.forName( "org.usergrid.tools." + StringUtils.capitalize( command ) );
             }
-            catch ( ClassNotFoundException e )
-            {
+            catch ( ClassNotFoundException e ) {
                 e.printStackTrace();
             }
         }
 
-        if ( clazz == null )
-        {
+        if ( clazz == null ) {
             System.out.println( "Unable to find command" );
             return;
         }
 
         args = Arrays.copyOfRange( args, 1, args.length );
 
-        try
-        {
-            if ( ToolBase.class.isAssignableFrom( clazz ) )
-            {
+        try {
+            if ( ToolBase.class.isAssignableFrom( clazz ) ) {
                 ToolBase tool = ( ToolBase ) clazz.newInstance();
                 tool.startTool( args );
             }
-            else
-            {
+            else {
                 MethodUtils.invokeStaticMethod( clazz, "main", ( Object ) args );
             }
         }
-        catch ( NoSuchMethodException e )
-        {
+        catch ( NoSuchMethodException e ) {
             System.out.println( "Unable to invoke command" );
             e.printStackTrace();
         }
-        catch ( IllegalAccessException e )
-        {
+        catch ( IllegalAccessException e ) {
             System.out.println( "Unable to invoke command" );
             e.printStackTrace();
         }
-        catch ( InvocationTargetException e )
-        {
+        catch ( InvocationTargetException e ) {
             System.out.println( "Error while invoking command" );
             e.printStackTrace();
         }
-        catch ( InstantiationException e )
-        {
+        catch ( InstantiationException e ) {
             System.out.println( "Error while instantiating tool object" );
             e.printStackTrace();
         }

@@ -27,22 +27,19 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 
 
 /** @author tnine */
-public class EntityResource extends ValueResource
-{
+public class EntityResource extends ValueResource {
 
     private String entityName;
     private UUID entityId;
 
 
-    public EntityResource( String entityName, NamedResource parent )
-    {
+    public EntityResource( String entityName, NamedResource parent ) {
         super( entityName, parent );
         this.entityName = entityName;
     }
 
 
-    public EntityResource( UUID entityId, NamedResource parent )
-    {
+    public EntityResource( UUID entityId, NamedResource parent ) {
         super( entityId.toString(), parent );
         this.entityId = entityId;
     }
@@ -52,33 +49,26 @@ public class EntityResource extends ValueResource
      * @see org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuffer)
      */
     @Override
-    public void addToUrl( StringBuilder buffer )
-    {
+    public void addToUrl( StringBuilder buffer ) {
         parent.addToUrl( buffer );
 
         buffer.append( SLASH );
 
-        if ( entityId != null )
-        {
+        if ( entityId != null ) {
             buffer.append( entityId.toString() );
         }
-        else if ( entityName != null )
-        {
+        else if ( entityName != null ) {
             buffer.append( entityName );
         }
     }
 
 
-    public JsonNode get()
-    {
-        try
-        {
+    public JsonNode get() {
+        try {
             return getInternal();
         }
-        catch ( UniformInterfaceException uie )
-        {
-            if ( uie.getResponse().getClientResponseStatus() == Status.NOT_FOUND )
-            {
+        catch ( UniformInterfaceException uie ) {
+            if ( uie.getResponse().getClientResponseStatus() == Status.NOT_FOUND ) {
                 return null;
             }
 
@@ -87,33 +77,28 @@ public class EntityResource extends ValueResource
     }
 
 
-    public JsonNode delete()
-    {
+    public JsonNode delete() {
         return deleteInternal();
     }
 
 
-    public JsonNode post( Map<String, ?> data )
-    {
+    public JsonNode post( Map<String, ?> data ) {
         return postInternal( data );
     }
 
 
     @SuppressWarnings("unchecked")
-    public JsonNode post()
-    {
+    public JsonNode post() {
         return postInternal( Collections.EMPTY_MAP );
     }
 
 
-    public Connection connection( String name )
-    {
+    public Connection connection( String name ) {
         return new Connection( name, this );
     }
 
 
-    public CustomCollection collection( String name )
-    {
+    public CustomCollection collection( String name ) {
         return new CustomCollection( name, this );
     }
 }

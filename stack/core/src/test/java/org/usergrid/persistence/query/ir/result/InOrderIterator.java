@@ -20,25 +20,21 @@ import com.google.common.collect.Iterables;
  * @author tnine
  */
 @Ignore("not a test")
-public class InOrderIterator implements ResultIterator
-{
+public class InOrderIterator implements ResultIterator {
 
     private LinkedHashSet<ScanColumn> uuids = new LinkedHashSet<ScanColumn>();
     private Iterator<List<ScanColumn>> iterator;
     private int pageSize = 1000;
 
 
-    public InOrderIterator( int pageSize )
-    {
+    public InOrderIterator( int pageSize ) {
         this.pageSize = pageSize;
     }
 
 
     /** Add a uuid to the list */
-    public void add( UUID... ids )
-    {
-        for ( UUID current : ids )
-        {
+    public void add( UUID... ids ) {
+        for ( UUID current : ids ) {
             uuids.add( new UUIDIndexSliceParser.UUIDColumn( current, ByteBuffer.allocate( 0 ) ) );
         }
     }
@@ -50,10 +46,8 @@ public class InOrderIterator implements ResultIterator
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<ScanColumn>> iterator()
-    {
-        if ( iterator == null )
-        {
+    public Iterator<Set<ScanColumn>> iterator() {
+        if ( iterator == null ) {
             reset();
         }
 
@@ -67,10 +61,8 @@ public class InOrderIterator implements ResultIterator
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext()
-    {
-        if ( iterator == null )
-        {
+    public boolean hasNext() {
+        if ( iterator == null ) {
             reset();
         }
 
@@ -84,10 +76,8 @@ public class InOrderIterator implements ResultIterator
      * @see java.util.Iterator#next()
      */
     @Override
-    public Set<ScanColumn> next()
-    {
-        if ( iterator == null )
-        {
+    public Set<ScanColumn> next() {
+        if ( iterator == null ) {
             reset();
         }
 
@@ -99,8 +89,7 @@ public class InOrderIterator implements ResultIterator
      * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
      */
     @Override
-    public void reset()
-    {
+    public void reset() {
         this.iterator = Iterables.partition( uuids, pageSize ).iterator();
     }
 
@@ -111,8 +100,7 @@ public class InOrderIterator implements ResultIterator
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
     }
 
 
@@ -121,8 +109,7 @@ public class InOrderIterator implements ResultIterator
      * .CursorCache)
      */
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded )
-    {
+    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
 
     }
 }

@@ -23,8 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 /** @author zznate */
 @Concurrent()
-public class ApplicationCreatorIT
-{
+public class ApplicationCreatorIT {
     private static final Logger LOG = LoggerFactory.getLogger( ApplicationCreatorIT.class );
 
     private CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
@@ -37,8 +36,7 @@ public class ApplicationCreatorIT
 
 
     @Test
-    public void testCreateSampleApplication() throws Exception
-    {
+    public void testCreateSampleApplication() throws Exception {
         OrganizationOwnerInfo orgOwner = setup.getMgmtSvc()
                                               .createOwnerAndOrganization( "appcreatortest", "nate-appcreatortest",
                                                       "Nate", "nate+appcreatortest@apigee.com", "password", true,
@@ -55,8 +53,7 @@ public class ApplicationCreatorIT
 
 
     @Test
-    public void testCreateSampleApplicationAltName() throws Exception
-    {
+    public void testCreateSampleApplicationAltName() throws Exception {
         OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( "appcreatortestcustom",
                 "nate-appcreatortestcustom", "Nate", "nate+appcreatortestcustom@apigee.com", "password", true, false );
 

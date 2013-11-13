@@ -35,16 +35,14 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
     private static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
     private static final String RUNNLOOP_PROP = "usergrid.scheduler.job.interval";
 
 
     /** Test that we're only running once, even when a job exceeds the heartbeat time */
     @Test
-    public void onlyOnceTestOnException() throws Exception
-    {
+    public void onlyOnceTestOnException() throws Exception {
 
         long sleepTime = Long.parseLong( props.getProperty( TIMEOUT_PROP ) );
 

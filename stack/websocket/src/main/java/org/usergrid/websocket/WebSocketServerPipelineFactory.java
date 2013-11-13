@@ -34,8 +34,7 @@ import org.apache.shiro.mgt.SessionsSecurityManager;
 import static org.jboss.netty.channel.Channels.pipeline;
 
 
-public class WebSocketServerPipelineFactory implements ChannelPipelineFactory
-{
+public class WebSocketServerPipelineFactory implements ChannelPipelineFactory {
 
     private final ExecutionHandler executionHandler;
     private final EntityManagerFactory emf;
@@ -47,8 +46,7 @@ public class WebSocketServerPipelineFactory implements ChannelPipelineFactory
 
     public WebSocketServerPipelineFactory( EntityManagerFactory emf, ServiceManagerFactory smf,
                                            ManagementService management, SessionsSecurityManager securityManager,
-                                           ExecutionHandler executionHandler, boolean ssl )
-    {
+                                           ExecutionHandler executionHandler, boolean ssl ) {
         this.emf = emf;
         this.smf = smf;
         this.management = management;
@@ -59,12 +57,10 @@ public class WebSocketServerPipelineFactory implements ChannelPipelineFactory
 
 
     @Override
-    public ChannelPipeline getPipeline() throws Exception
-    {
+    public ChannelPipeline getPipeline() throws Exception {
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = pipeline();
-        if ( ssl )
-        {
+        if ( ssl ) {
             SSLEngine sslEngine = WebSocketSslContextFactory.getServerContext().createSSLEngine();
             sslEngine.setUseClientMode( false );
             pipeline.addLast( "ssl", new SslHandler( sslEngine ) );

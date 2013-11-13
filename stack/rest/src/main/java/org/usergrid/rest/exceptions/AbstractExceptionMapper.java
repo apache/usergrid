@@ -37,8 +37,7 @@ import static org.usergrid.rest.utils.JSONPUtils.wrapJSONPResponse;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 
-public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> implements ExceptionMapper<E>
-{
+public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> implements ExceptionMapper<E> {
 
     public static final Logger logger =
             LoggerFactory.getLogger( AbstractExceptionMapper.class.getPackage().toString() );
@@ -50,41 +49,34 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     protected HttpServletRequest httpServletRequest;
 
 
-    public boolean isJSONP()
-    {
+    public boolean isJSONP() {
         return isJavascript( hh.getAcceptableMediaTypes() );
     }
 
 
     @Override
-    public Response toResponse( E e )
-    {
+    public Response toResponse( E e ) {
         // if we don't know what type of error it is then it's a 500
         return toResponse( INTERNAL_SERVER_ERROR, e );
     }
 
 
-    public Response toResponse( Status status, E e )
-    {
+    public Response toResponse( Status status, E e ) {
         return toResponse( status.getStatusCode(), e );
     }
 
 
-    public Response toResponse( int status, E e )
-    {
-        if ( status >= 500 )
-        {
+    public Response toResponse( int status, E e ) {
+        if ( status >= 500 ) {
             // only log real errors as errors
             logger.error( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
         }
         ApiResponse response = new ApiResponse();
         AuthErrorInfo authError = AuthErrorInfo.getForException( e );
-        if ( authError != null )
-        {
+        if ( authError != null ) {
             response.setError( authError.getType(), authError.getMessage(), e );
         }
-        else
-        {
+        else {
             response.setError( e );
         }
         String jsonResponse = mapToJsonString( response );
@@ -92,27 +84,22 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     }
 
 
-    public Response toResponse( Status status, String jsonResponse )
-    {
+    public Response toResponse( Status status, String jsonResponse ) {
         return toResponse( status.getStatusCode(), jsonResponse );
     }
 
 
-    private Response toResponse( int status, String jsonResponse )
-    {
-        if ( status >= 500 )
-        {
+    private Response toResponse( int status, String jsonResponse ) {
+        if ( status >= 500 ) {
             // only log real errors as errors
             logger.error( "Server Error (" + status + "):\n" + jsonResponse );
         }
         String callback = httpServletRequest.getParameter( "callback" );
-        if ( isJSONP() && isNotBlank( callback ) )
-        {
+        if ( isJSONP() && isNotBlank( callback ) ) {
             jsonResponse = wrapJSONPResponse( callback, jsonResponse );
             return Response.status( OK ).type( "application/javascript" ).entity( jsonResponse ).build();
         }
-        else
-        {
+        else {
             return Response.status( status ).type( APPLICATION_JSON_TYPE ).entity( jsonResponse ).build();
         }
     }

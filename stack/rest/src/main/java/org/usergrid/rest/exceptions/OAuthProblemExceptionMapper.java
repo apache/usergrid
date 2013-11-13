@@ -30,27 +30,21 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /** <p> Mapper for OAuthProblemException. </p> */
 @Provider
-public class OAuthProblemExceptionMapper implements ExceptionMapper<OAuthProblemException>
-{
+public class OAuthProblemExceptionMapper implements ExceptionMapper<OAuthProblemException> {
 
     @Override
-    public Response toResponse( OAuthProblemException e )
-    {
+    public Response toResponse( OAuthProblemException e ) {
         OAuthResponse res = null;
-        try
-        {
+        try {
             res = OAuthResponse.errorResponse( SC_BAD_REQUEST ).error( e ).buildJSONMessage();
         }
-        catch ( OAuthSystemException e1 )
-        {
+        catch ( OAuthSystemException e1 ) {
         }
-        if ( res != null )
-        {
+        if ( res != null ) {
             return Response.status( res.getResponseStatus() ).type( APPLICATION_JSON_TYPE ).entity( res.getBody() )
                            .build();
         }
-        else
-        {
+        else {
             return Response.status( SC_BAD_REQUEST ).build();
         }
     }

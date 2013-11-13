@@ -48,8 +48,7 @@ import org.usergrid.persistence.geo.model.Tuple;
  * @author api.roman.public@gmail.com (Roman Nurik)
  * @author (java portage) Alexandre Gellibert
  */
-public final class GeocellUtils
-{
+public final class GeocellUtils {
 
     public static final float MIN_LONGITUDE = -180.0f;
     public static final float MAX_LONGITUDE = 180.0f;
@@ -72,8 +71,7 @@ public final class GeocellUtils
     private static final int RADIUS = 6378135;
 
 
-    private GeocellUtils()
-    {
+    private GeocellUtils() {
         // no instantiation allowed
     }
 
@@ -90,11 +88,9 @@ public final class GeocellUtils
      *
      * @return A bool indicating whether or not the given cells are collinear in the given dimension.
      */
-    public static boolean collinear( String cell1, String cell2, boolean columnTest )
-    {
+    public static boolean collinear( String cell1, String cell2, boolean columnTest ) {
 
-        for ( int i = 0; i < Math.min( cell1.length(), cell2.length() ); i++ )
-        {
+        for ( int i = 0; i < Math.min( cell1.length(), cell2.length() ); i++ ) {
             int l1[] = subdivXY( cell1.charAt( i ) );
             int x1 = l1[0];
             int y1 = l1[1];
@@ -103,14 +99,12 @@ public final class GeocellUtils
             int y2 = l2[1];
 
             // Check row collinearity (assure y's are always the same).
-            if ( !columnTest && y1 != y2 )
-            {
+            if ( !columnTest && y1 != y2 ) {
                 return false;
             }
 
             // Check column collinearity (assure x's are always the same).
-            if ( columnTest && x1 != x2 )
-            {
+            if ( columnTest && x1 != x2 ) {
                 return false;
             }
         }
@@ -131,8 +125,7 @@ public final class GeocellUtils
      *
      * @return A list of geocell strings in the interpolation.
      */
-    public static List<String> interpolate( String cellNE, String cellSW )
-    {
+    public static List<String> interpolate( String cellNE, String cellSW ) {
         // 2D array, will later be flattened.
         LinkedList<LinkedList<String>> cellSet = new LinkedList<LinkedList<String>>();
         LinkedList<String> cellFirst = new LinkedList<String>();
@@ -141,27 +134,22 @@ public final class GeocellUtils
 
         // First get adjacent geocells across until Southeast--collinearity with
         // Northeast in vertical direction (0) means we're at Southeast.
-        while ( !collinear( cellFirst.getLast(), cellNE, true ) )
-        {
+        while ( !collinear( cellFirst.getLast(), cellNE, true ) ) {
             String cellTmp = adjacent( cellFirst.getLast(), EAST );
-            if ( cellTmp == null )
-            {
+            if ( cellTmp == null ) {
                 break;
             }
             cellFirst.add( cellTmp );
         }
 
         // Then get adjacent geocells upwards.
-        while ( !cellSet.getLast().getLast().equalsIgnoreCase( cellNE ) )
-        {
+        while ( !cellSet.getLast().getLast().equalsIgnoreCase( cellNE ) ) {
 
             LinkedList<String> cellTmpRow = new LinkedList<String>();
-            for ( String g : cellSet.getLast() )
-            {
+            for ( String g : cellSet.getLast() ) {
                 cellTmpRow.add( adjacent( g, NORTH ) );
             }
-            if ( cellTmpRow.getFirst() == null )
-            {
+            if ( cellTmpRow.getFirst() == null ) {
                 break;
             }
             cellSet.add( cellTmpRow );
@@ -169,8 +157,7 @@ public final class GeocellUtils
 
         // Flatten cellSet, since it's currently a 2D array.
         List<String> result = new ArrayList<String>();
-        for ( LinkedList<String> list : cellSet )
-        {
+        for ( LinkedList<String> list : cellSet ) {
             result.addAll( list );
         }
         return result;
@@ -188,8 +175,7 @@ public final class GeocellUtils
      *
      * @return An int, indicating the number of geocells in the interpolation.
      */
-    public static int interpolationCount( String cellNE, String cellSW )
-    {
+    public static int interpolationCount( String cellNE, String cellSW ) {
 
         BoundingBox bboxNE = computeBox( cellNE );
         BoundingBox bboxSW = computeBox( cellSW );
@@ -201,8 +187,7 @@ public final class GeocellUtils
         double numRows = ( ( bboxNE.getNorth() - bboxSW.getSouth() ) / cellLatSpan );
 
         double totalCols = numCols * numRows * 1.0;
-        if ( totalCols > Integer.MAX_VALUE )
-        {
+        if ( totalCols > Integer.MAX_VALUE ) {
             return Integer.MAX_VALUE;
         }
         return ( int ) totalCols;
@@ -217,11 +202,9 @@ public final class GeocellUtils
      * @return A list of 8 geocell strings and/or None values indicating adjacent cells.
      */
 
-    public static List<String> allAdjacents( String cell )
-    {
+    public static List<String> allAdjacents( String cell ) {
         List<String> result = new ArrayList<String>();
-        for ( int[] d : Arrays.asList( NORTHWEST, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST ) )
-        {
+        for ( int[] d : Arrays.asList( NORTHWEST, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST ) ) {
             result.add( adjacent( cell, d ) );
         }
         return result;
@@ -238,10 +221,8 @@ public final class GeocellUtils
      *
      * @return The geocell adjacent to the given cell in the given direction, or None if there is no such cell.
      */
-    public static String adjacent( String cell, int[] dir )
-    {
-        if ( cell == null )
-        {
+    public static String adjacent( String cell, int[] dir ) {
+        if ( cell == null ) {
             return null;
         }
         int dx = dir[0];
@@ -250,59 +231,46 @@ public final class GeocellUtils
         // characters into a list.
         int i = cellAdjArr.length - 1;
 
-        while ( i >= 0 && ( dx != 0 || dy != 0 ) )
-        {
+        while ( i >= 0 && ( dx != 0 || dy != 0 ) ) {
             int l[] = subdivXY( cellAdjArr[i] );
             int x = l[0];
             int y = l[1];
 
             // Horizontal adjacency.
-            if ( dx == -1 )
-            { // Asking for left.
-                if ( x == 0 )
-                { // At left of parent cell.
+            if ( dx == -1 ) { // Asking for left.
+                if ( x == 0 ) { // At left of parent cell.
                     x = GEOCELL_GRID_SIZE - 1; // Becomes right edge of adjacent parent.
                 }
-                else
-                {
+                else {
                     x--; // Adjacent, same parent.
                     dx = 0; // Done with x.
                 }
             }
-            else if ( dx == 1 )
-            { // Asking for right.
-                if ( x == GEOCELL_GRID_SIZE - 1 )
-                { // At right of parent cell.
+            else if ( dx == 1 ) { // Asking for right.
+                if ( x == GEOCELL_GRID_SIZE - 1 ) { // At right of parent cell.
                     x = 0; // Becomes left edge of adjacent parent.
                 }
-                else
-                {
+                else {
                     x++; // Adjacent, same parent.
                     dx = 0; // Done with x.
                 }
             }
 
             // Vertical adjacency.
-            if ( dy == 1 )
-            { // Asking for above.
-                if ( y == GEOCELL_GRID_SIZE - 1 )
-                { // At top of parent cell.
+            if ( dy == 1 ) { // Asking for above.
+                if ( y == GEOCELL_GRID_SIZE - 1 ) { // At top of parent cell.
                     y = 0; // Becomes bottom edge of adjacent parent.
                 }
-                else
-                {
+                else {
                     y++; // Adjacent, same parent.
                     dy = 0; // Done with y.
                 }
             }
-            else if ( dy == -1 )
-            { // Asking for below.
-                if ( y == 0 )
-                { // At bottom of parent cell.
+            else if ( dy == -1 ) { // Asking for below.
+                if ( y == 0 ) { // At bottom of parent cell.
                     y = GEOCELL_GRID_SIZE - 1; // Becomes top edge of adjacent parent.
                 }
-                else
-                {
+                else {
                     y--; // Adjacent, same parent.
                     dy = 0; // Done with y.
                 }
@@ -314,8 +282,7 @@ public final class GeocellUtils
         }
         // If we're not done with y then it's trying to wrap vertically,
         // which is a failure.
-        if ( dy != 0 )
-        {
+        if ( dy != 0 ) {
             return null;
         }
 
@@ -329,8 +296,7 @@ public final class GeocellUtils
      *
      * @return Returns whether or not the given cell contains the given point.
      */
-    public static boolean containsPoint( String cell, Point point )
-    {
+    public static boolean containsPoint( String cell, Point point ) {
         return compute( point, cell.length() ).equalsIgnoreCase( cell );
     }
 
@@ -338,44 +304,36 @@ public final class GeocellUtils
     /**
      * Returns the shortest distance between a point and a geocell bounding box.
      * <p/>
-     * If the point is inside the cell, the shortest distance is always to a 'edge' of the cell rectangle. If the
-     * point is
-     * outside the cell, the shortest distance will be to either a 'edge' or 'corner' of the cell rectangle.
+     * If the point is inside the cell, the shortest distance is always to a 'edge' of the cell rectangle. If the point
+     * is outside the cell, the shortest distance will be to either a 'edge' or 'corner' of the cell rectangle.
      *
      * @return The shortest distance from the point to the geocell's rectangle, in meters.
      */
-    public static double pointDistance( String cell, Point point )
-    {
+    public static double pointDistance( String cell, Point point ) {
         BoundingBox bbox = computeBox( cell );
 
         boolean betweenWE = bbox.getWest() <= point.getLon() && point.getLon() <= bbox.getEast();
         boolean betweenNS = bbox.getSouth() <= point.getLat() && point.getLat() <= bbox.getNorth();
 
-        if ( betweenWE )
-        {
-            if ( betweenNS )
-            {
+        if ( betweenWE ) {
+            if ( betweenNS ) {
                 // Inside the geocell.
                 return Math.min( Math.min( distance( point, new Point( bbox.getSouth(), point.getLon() ) ),
                         distance( point, new Point( bbox.getNorth(), point.getLon() ) ) ),
                         Math.min( distance( point, new Point( point.getLat(), bbox.getEast() ) ),
                                 distance( point, new Point( point.getLat(), bbox.getWest() ) ) ) );
             }
-            else
-            {
+            else {
                 return Math.min( distance( point, new Point( bbox.getSouth(), point.getLon() ) ),
                         distance( point, new Point( bbox.getNorth(), point.getLon() ) ) );
             }
         }
-        else
-        {
-            if ( betweenNS )
-            {
+        else {
+            if ( betweenNS ) {
                 return Math.min( distance( point, new Point( point.getLat(), bbox.getEast() ) ),
                         distance( point, new Point( point.getLat(), bbox.getWest() ) ) );
             }
-            else
-            {
+            else {
                 // TODO(romannurik): optimize
                 return Math.min( Math.min( distance( point, new Point( bbox.getSouth(), bbox.getEast() ) ),
                         distance( point, new Point( bbox.getNorth(), bbox.getEast() ) ) ),
@@ -396,16 +354,14 @@ public final class GeocellUtils
      *
      * @return The geocell string containing the given point, of length resolution.
      */
-    public static String compute( Point point, int resolution )
-    {
+    public static String compute( Point point, int resolution ) {
         float north = MAX_LATITUDE;
         float south = MIN_LATITUDE;
         float east = MAX_LONGITUDE;
         float west = MIN_LONGITUDE;
 
         StringBuilder cell = new StringBuilder();
-        while ( cell.length() < resolution )
-        {
+        while ( cell.length() < resolution ) {
             float subcellLonSpan = ( east - west ) / GEOCELL_GRID_SIZE;
             float subcellLatSpan = ( north - south ) / GEOCELL_GRID_SIZE;
 
@@ -434,17 +390,14 @@ public final class GeocellUtils
      *
      * @return A geotypes.Box corresponding to the rectangular boundaries of the geocell.
      */
-    public static BoundingBox computeBox( String cell_ )
-    {
-        if ( cell_ == null )
-        {
+    public static BoundingBox computeBox( String cell_ ) {
+        if ( cell_ == null ) {
             return null;
         }
 
         BoundingBox bbox = new BoundingBox( 90.0, 180.0, -90.0, -180.0 );
         StringBuilder cell = new StringBuilder( cell_ );
-        while ( cell.length() > 0 )
-        {
+        while ( cell.length() > 0 ) {
             double subcellLonSpan = ( bbox.getEast() - bbox.getWest() ) / GEOCELL_GRID_SIZE;
             double subcellLatSpan = ( bbox.getNorth() - bbox.getSouth() ) / GEOCELL_GRID_SIZE;
 
@@ -468,16 +421,12 @@ public final class GeocellUtils
      *
      * @return Returns whether or not the given geocell string defines a valid geocell.
      */
-    public static boolean isValid( String cell )
-    {
-        if ( cell == null || cell.trim().length() == 0 )
-        {
+    public static boolean isValid( String cell ) {
+        if ( cell == null || cell.trim().length() == 0 ) {
             return false;
         }
-        for ( char c : cell.toCharArray() )
-        {
-            if ( GEOCELL_ALPHABET.indexOf( c ) < 0 )
-            {
+        for ( char c : cell.toCharArray() ) {
+            if ( GEOCELL_ALPHABET.indexOf( c ) < 0 ) {
                 return false;
             }
         }
@@ -490,8 +439,7 @@ public final class GeocellUtils
      *
      * @return Returns the (x, y) of the geocell character in the 4x4 alphabet grid.
      */
-    public static int[] subdivXY( char char_ )
-    {
+    public static int[] subdivXY( char char_ ) {
         // NOTE: This only works for grid size 4.
         int charI = GEOCELL_ALPHABET.indexOf( char_ );
         return new int[] {
@@ -505,8 +453,7 @@ public final class GeocellUtils
      *
      * @return Returns the geocell character in the 4x4 alphabet grid at pos. (x, y).
      */
-    public static char subdivChar( int[] pos )
-    {
+    public static char subdivChar( int[] pos ) {
         // NOTE: This only works for grid size 4.
         return GEOCELL_ALPHABET.charAt( ( pos[1] & 2 ) << 2 |
                 ( pos[0] & 2 ) << 1 |
@@ -523,8 +470,7 @@ public final class GeocellUtils
      *
      * @return The 2D great-circle distance between the two given points, in meters.
      */
-    public static double distance( Point p1, Point p2 )
-    {
+    public static double distance( Point p1, Point p2 ) {
         double p1lat = Math.toRadians( p1.getLat() );
         double p1lon = Math.toRadians( p1.getLon() );
         double p2lat = Math.toRadians( p2.getLat() );
@@ -536,20 +482,17 @@ public final class GeocellUtils
 
 
     /**
-     * This function is used to fix issue 10: GeocellUtils.distance(...) uses Math.acos(arg) method. In some cases arg > 1
-     * (i.e 1.0000000002), so acos cannot be calculated and the method returns NaN.
+     * This function is used to fix issue 10: GeocellUtils.distance(...) uses Math.acos(arg) method. In some cases arg >
+     * 1 (i.e 1.0000000002), so acos cannot be calculated and the method returns NaN.
      *
      * @return a double between -1 and 1
      */
-    public static double makeDoubleInRange( double d )
-    {
+    public static double makeDoubleInRange( double d ) {
         double result = d;
-        if ( d > 1 )
-        {
+        if ( d > 1 ) {
             result = 1;
         }
-        else if ( d < -1 )
-        {
+        else if ( d < -1 ) {
             result = -1;
         }
         return result;
@@ -557,10 +500,11 @@ public final class GeocellUtils
 
 
     /**
-     * Returns the edges of the rectangular region containing all of the given geocells, sorted by distance from the given
-     * point, along with the actual distances from the point to these edges.
+     * Returns the edges of the rectangular region containing all of the given geocells, sorted by distance from the
+     * given point, along with the actual distances from the point to these edges.
      *
-     * @param cells : The cells (should be adjacent) defining the rectangular region whose edge distances are requested.
+     * @param cells : The cells (should be adjacent) defining the rectangular region whose edge distances are
+     * requested.
      * @param point : The point that should determine the edge sort order.
      *
      * @return A list of (direction, distance) tuples, where direction is the edge and distance is the distance from the
@@ -569,19 +513,16 @@ public final class GeocellUtils
      *         <p/>
      *         TODO(romannurik): Assert that lat,lon are actually inside the geocell.
      */
-    public static List<Tuple<int[], Double>> distanceSortedEdges( List<String> cells, Point point )
-    {
+    public static List<Tuple<int[], Double>> distanceSortedEdges( List<String> cells, Point point ) {
         List<BoundingBox> boxes = new ArrayList<BoundingBox>();
-        for ( String cell : cells )
-        {
+        for ( String cell : cells ) {
             boxes.add( computeBox( cell ) );
         }
         double maxNorth = Double.NEGATIVE_INFINITY;
         double maxEast = Double.NEGATIVE_INFINITY;
         double maxSouth = Double.POSITIVE_INFINITY;
         double maxWest = Double.POSITIVE_INFINITY;
-        for ( BoundingBox box : boxes )
-        {
+        for ( BoundingBox box : boxes ) {
             maxNorth = Math.max( maxNorth, box.getNorth() );
             maxEast = Math.max( maxEast, box.getEast() );
             maxSouth = Math.min( maxSouth, box.getSouth() );

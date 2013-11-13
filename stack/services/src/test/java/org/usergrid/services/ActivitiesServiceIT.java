@@ -28,15 +28,13 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent()
-public class ActivitiesServiceIT extends AbstractServiceIT
-{
+public class ActivitiesServiceIT extends AbstractServiceIT {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger( ActivitiesServiceIT.class );
 
 
     @Test
-    public void testActivites() throws Exception
-    {
+    public void testActivites() throws Exception {
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
 

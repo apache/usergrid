@@ -23,41 +23,34 @@ import java.util.List;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 
-public class OpKillCursors extends Message
-{
+public class OpKillCursors extends Message {
 
     int numberOfCursorIDs;
     List<Long> cursorIDs = new ArrayList<Long>();
 
 
-    public OpKillCursors()
-    {
+    public OpKillCursors() {
         opCode = OP_KILL_CURSORS;
     }
 
 
-    public int getNumberOfCursorIDs()
-    {
+    public int getNumberOfCursorIDs() {
         return numberOfCursorIDs;
     }
 
 
-    public void setNumberOfCursorIDs( int numberOfCursorIDs )
-    {
+    public void setNumberOfCursorIDs( int numberOfCursorIDs ) {
         this.numberOfCursorIDs = numberOfCursorIDs;
     }
 
 
-    public List<Long> getCursorIDs()
-    {
+    public List<Long> getCursorIDs() {
         return cursorIDs;
     }
 
 
-    public void setCursorIDs( List<Long> cursorIDs )
-    {
-        if ( cursorIDs == null )
-        {
+    public void setCursorIDs( List<Long> cursorIDs ) {
+        if ( cursorIDs == null ) {
             cursorIDs = new ArrayList<Long>();
         }
         this.cursorIDs = cursorIDs;
@@ -65,35 +58,30 @@ public class OpKillCursors extends Message
     }
 
 
-    public void addCursorIDs( long cursorID )
-    {
+    public void addCursorIDs( long cursorID ) {
         cursorIDs.add( cursorID );
         numberOfCursorIDs = cursorIDs.size();
     }
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
 
         buffer.readInt();
         numberOfCursorIDs = buffer.readInt();
-        while ( buffer.readable() )
-        {
+        while ( buffer.readable() ) {
             cursorIDs.add( buffer.readLong() );
         }
     }
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 24; // (6 ints * 4 bytes)
 
         numberOfCursorIDs = 0;
-        if ( cursorIDs != null )
-        {
+        if ( cursorIDs != null ) {
             numberOfCursorIDs = cursorIDs.size();
             l += numberOfCursorIDs * 8;
         }
@@ -105,10 +93,8 @@ public class OpKillCursors extends Message
 
         buffer.writeInt( numberOfCursorIDs );
 
-        if ( cursorIDs != null )
-        {
-            for ( Long cursorID : cursorIDs )
-            {
+        if ( cursorIDs != null ) {
+            for ( Long cursorID : cursorIDs ) {
                 buffer.writeLong( cursorID );
             }
         }
@@ -121,8 +107,7 @@ public class OpKillCursors extends Message
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OpKillCursors [numberOfCursorIDs=" + numberOfCursorIDs + ", cursorIDs=" + cursorIDs + ", messageLength="
                 + messageLength + ", requestID=" + requestID + ", responseTo=" + responseTo + ", opCode=" + opCode
                 + "]";

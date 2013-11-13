@@ -23,31 +23,26 @@ import org.codehaus.jackson.JsonNode;
 
 
 /** @author tnine */
-public abstract class SetResource extends ValueResource
-{
+public abstract class SetResource extends ValueResource {
 
-    public SetResource( String name, NamedResource parent )
-    {
+    public SetResource( String name, NamedResource parent ) {
         super( name, parent );
     }
 
 
     /** Get an entity resource by name */
-    public EntityResource entity( String name )
-    {
+    public EntityResource entity( String name ) {
         return new EntityResource( name, this );
     }
 
 
     /** Get an entity resource by Id */
-    public EntityResource entity( UUID id )
-    {
+    public EntityResource entity( UUID id ) {
         return new EntityResource( id, this );
     }
 
 
-    public int countEntities( String query )
-    {
+    public int countEntities( String query ) {
 
         int totalEntitiesContained = 0;
         JsonNode correctNode =
@@ -55,16 +50,14 @@ public abstract class SetResource extends ValueResource
    
     /*change code to reflect the above */
         //this.withQuery().withCursor()
-        while ( correctNode.get( "entities" ) != null )
-        {
+        while ( correctNode.get( "entities" ) != null ) {
             totalEntitiesContained += correctNode.get( "entities" ).size();
             if ( correctNode.get( "cursor" ) != null )
             //correctNode = this.query(query,"cursor",correctNode.get("cursor").toString());
             {
                 correctNode = this.withQuery( query ).withCursor( correctNode.get( "cursor" ).toString() ).get();
             }
-            else
-            {
+            else {
                 break;
             }
         }
@@ -75,13 +68,11 @@ public abstract class SetResource extends ValueResource
   then just have it automatically add in the variable. */
 
 
-    public JsonNode[] createEntitiesWithOrdinal( Map valueHolder, int numOfValues )
-    {
+    public JsonNode[] createEntitiesWithOrdinal( Map valueHolder, int numOfValues ) {
 
         JsonNode[] node = new JsonNode[numOfValues];
 
-        for ( int i = 0; i < numOfValues; i++ )
-        {
+        for ( int i = 0; i < numOfValues; i++ ) {
             valueHolder.put( "Ordinal", i );
             node[i] = this.create( valueHolder );
         }

@@ -30,15 +30,13 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 
 
-public class IndexUtilsTest
-{
+public class IndexUtilsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( IndexUtilsTest.class );
 
 
     @Test
-    public void testKeywords()
-    {
+    public void testKeywords() {
 
         String test = "Dragons, the policeman knew, were supposed to breathe fire and occasionally get themselves "
                 + "slaughtered.";
@@ -46,16 +44,14 @@ public class IndexUtilsTest
 
         assertEquals( 11, keywords.size() );
 
-        for ( String keyword : keywords )
-        {
+        for ( String keyword : keywords ) {
             LOG.info( keyword );
         }
     }
 
 
     @Test
-    public void testKeyValue() throws Exception
-    {
+    public void testKeyValue() throws Exception {
 
         User user = new User();
         user.setUsername( "edanuff" );
@@ -66,8 +62,7 @@ public class IndexUtilsTest
                         null, null );
 
         List<Entry<String, Object>> l = IndexUtils.getKeyValueList( activity, false );
-        for ( Entry<String, Object> e : l )
-        {
+        for ( Entry<String, Object> e : l ) {
             LOG.info( e.getKey() + " = " + e.getValue() );
         }
 

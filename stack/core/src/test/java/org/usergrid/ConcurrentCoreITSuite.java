@@ -36,16 +36,15 @@ import org.usergrid.persistence.cassandra.EntityManagerFactoryImplIT;
 import org.usergrid.system.UsergridSystemMonitorIT;
 
 
-@RunWith( ConcurrentSuite.class )
-@Suite.SuiteClasses( {
+@RunWith(ConcurrentSuite.class)
+@Suite.SuiteClasses({
         //        HectorLockManagerIT.class,
         UsergridSystemMonitorIT.class, CollectionIT.class, CounterIT.class, EntityConnectionsIT.class,
         EntityDictionaryIT.class, EntityManagerIT.class, GeoIT.class, IndexIT.class, MessagesIT.class,
         PermissionsIT.class, PathQueryIT.class, EntityManagerFactoryImplIT.class
-} )
+})
 @Concurrent()
-public class ConcurrentCoreITSuite
-{
+public class ConcurrentCoreITSuite {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
 }

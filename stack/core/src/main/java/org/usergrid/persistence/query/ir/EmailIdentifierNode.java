@@ -9,27 +9,23 @@ import org.usergrid.persistence.Identifier;
  *
  * @author tnine
  */
-public class EmailIdentifierNode extends QueryNode
-{
+public class EmailIdentifierNode extends QueryNode {
 
     private final Identifier identifier;
 
 
-    public EmailIdentifierNode( Identifier identifier )
-    {
+    public EmailIdentifierNode( Identifier identifier ) {
         this.identifier = identifier;
     }
 
 
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
-    public Identifier getIdentifier()
-    {
+    public Identifier getIdentifier() {
         return identifier;
     }
 }

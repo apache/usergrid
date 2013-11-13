@@ -25,8 +25,7 @@ import org.usergrid.cassandra.ConcurrentSuite;
                 SchedulerRuntime7IT.class, SchedulerRuntime8IT.class
         })
 @Concurrent()
-public class ConcurrentSchedulerITSuite
-{
+public class ConcurrentSchedulerITSuite {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 }

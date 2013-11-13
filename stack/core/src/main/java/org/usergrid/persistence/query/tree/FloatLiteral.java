@@ -21,8 +21,7 @@ import org.antlr.runtime.Token;
 
 
 /** @author tnine */
-public class FloatLiteral extends Literal<Float> implements NumericLiteral
-{
+public class FloatLiteral extends Literal<Float> implements NumericLiteral {
 
     private float value;
 
@@ -30,23 +29,20 @@ public class FloatLiteral extends Literal<Float> implements NumericLiteral
     /**
      * @param t
      */
-    public FloatLiteral( Token t )
-    {
+    public FloatLiteral( Token t ) {
         super( t );
         value = Float.valueOf( t.getText() );
     }
 
 
-    public FloatLiteral( float f )
-    {
+    public FloatLiteral( float f ) {
         super( new ClassicToken( 0, String.valueOf( f ) ) );
         value = f;
     }
 
 
     /** @return the value */
-    public Float getValue()
-    {
+    public Float getValue() {
         return value;
     }
 
@@ -55,8 +51,7 @@ public class FloatLiteral extends Literal<Float> implements NumericLiteral
      * @see org.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
      */
     @Override
-    public float getFloatValue()
-    {
+    public float getFloatValue() {
         return value;
     }
 }

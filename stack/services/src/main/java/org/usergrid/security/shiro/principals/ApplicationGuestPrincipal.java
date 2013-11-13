@@ -21,33 +21,28 @@ import java.util.UUID;
 import org.usergrid.management.ApplicationInfo;
 
 
-public class ApplicationGuestPrincipal extends PrincipalIdentifier
-{
+public class ApplicationGuestPrincipal extends PrincipalIdentifier {
 
     final ApplicationInfo application;
 
 
-    public ApplicationGuestPrincipal( ApplicationInfo application )
-    {
+    public ApplicationGuestPrincipal( ApplicationInfo application ) {
         this.application = application;
     }
 
 
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return application.getId();
     }
 
 
-    public ApplicationInfo getApplication()
-    {
+    public ApplicationInfo getApplication() {
         return application;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return application.toString();
     }
 }

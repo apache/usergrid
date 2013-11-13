@@ -57,21 +57,18 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 } )
-public class ApplicationsResource extends AbstractContextResource
-{
+public class ApplicationsResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( ApplicationsResource.class );
 
     OrganizationInfo organization;
 
 
-    public ApplicationsResource()
-    {
+    public ApplicationsResource() {
     }
 
 
-    public ApplicationsResource init( OrganizationInfo organization )
-    {
+    public ApplicationsResource init( OrganizationInfo organization ) {
         this.organization = organization;
         return this;
     }
@@ -81,8 +78,7 @@ public class ApplicationsResource extends AbstractContextResource
     @GET
     public JSONWithPadding getOrganizationApplications( @Context UriInfo ui,
                                                         @QueryParam( "callback" ) @DefaultValue( "callback" )
-                                                        String callback ) throws Exception
-    {
+                                                        String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization application" );
@@ -99,8 +95,7 @@ public class ApplicationsResource extends AbstractContextResource
     @Consumes( MediaType.APPLICATION_JSON )
     public JSONWithPadding newApplicationForOrganization( @Context UriInfo ui, Map<String, Object> json,
                                                           @QueryParam( "callback" ) @DefaultValue( "callback" )
-                                                          String callback ) throws Exception
-    {
+                                                          String callback ) throws Exception {
         String applicationName = ( String ) json.get( "name" );
         return newApplicationForOrganizationFromForm( ui, json, callback, applicationName );
     }
@@ -113,8 +108,7 @@ public class ApplicationsResource extends AbstractContextResource
                                                                   @QueryParam( "callback" ) @DefaultValue( "callback" )
                                                                   String callback,
                                                                   @FormParam( "name" ) String applicationName )
-            throws Exception
-    {
+            throws Exception {
 
         Preconditions.checkArgument( !isEmpty( applicationName ),
                 "The 'name' parameter is required and cannot be empty: " + applicationName );
@@ -136,8 +130,7 @@ public class ApplicationsResource extends AbstractContextResource
     @Path( "{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     public ApplicationResource applicationFromOrganizationByApplicationId( @Context UriInfo ui,
                                                                            @PathParam( "applicationId" )
-                                                                           String applicationIdStr ) throws Exception
-    {
+                                                                           String applicationIdStr ) throws Exception {
 
         return getSubResource( ApplicationResource.class ).init( organization, UUID.fromString( applicationIdStr ) );
     }
@@ -147,16 +140,14 @@ public class ApplicationsResource extends AbstractContextResource
     @Path( "{applicationName}" )
     public ApplicationResource applicationFromOrganizationByApplicationName( @Context UriInfo ui,
                                                                              @PathParam( "applicationName" )
-                                                                             String applicationName ) throws Exception
-    {
+                                                                             String applicationName ) throws Exception {
 
         String appName =
                 applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName;
 
         ApplicationInfo application = management.getApplicationInfo( appName );
 
-        if ( application == null )
-        {
+        if ( application == null ) {
             throw new EntityNotFoundException(
                     String.format( "Application %s does not exist for organization %s", applicationName,
                             organization.getName() ) );

@@ -27,8 +27,7 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
  *
  * @author tnine
  */
-public class UUIDIndexSliceParser implements SliceParser
-{
+public class UUIDIndexSliceParser implements SliceParser {
 
     private static final UUIDSerializer SERIALIZER = UUIDSerializer.get();
 
@@ -37,17 +36,14 @@ public class UUIDIndexSliceParser implements SliceParser
      * @see org.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
-    public ScanColumn parse( ByteBuffer buff )
-    {
+    public ScanColumn parse( ByteBuffer buff ) {
         return new UUIDColumn( SERIALIZER.fromByteBuffer( buff.duplicate() ), buff );
     }
 
 
-    public static class UUIDColumn extends AbstractScanColumn
-    {
+    public static class UUIDColumn extends AbstractScanColumn {
 
-        public UUIDColumn( UUID uuid, ByteBuffer buffer )
-        {
+        public UUIDColumn( UUID uuid, ByteBuffer buffer ) {
             super( uuid, buffer );
         }
     }

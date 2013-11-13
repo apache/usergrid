@@ -38,22 +38,19 @@ import static org.usergrid.utils.ListUtils.dequeueCopy;
 import static org.usergrid.utils.ListUtils.isEmpty;
 
 
-public class AbstractPathBasedColllectionService extends AbstractCollectionService
-{
+public class AbstractPathBasedColllectionService extends AbstractCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( AbstractPathBasedColllectionService.class );
 
 
-    public AbstractPathBasedColllectionService()
-    {
+    public AbstractPathBasedColllectionService() {
         super();
     }
 
 
     @Override
     public ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
-                                      ServicePayload payload ) throws Exception
-    {
+                                      ServicePayload payload ) throws Exception {
 
         EntityRef owner = request.getOwner();
         String collectionName = "application".equals( owner.getType() ) ? pluralize( getServiceInfo().getItemType() ) :
@@ -62,20 +59,16 @@ public class AbstractPathBasedColllectionService extends AbstractCollectionServi
         EntityRef pathEntity = null;
         List<ServiceParameter> parameters = filter( request.getParameters(), replaceParameters );
         ServiceParameter first_parameter = null;
-        if ( !isEmpty( parameters ) )
-        {
+        if ( !isEmpty( parameters ) ) {
             first_parameter = parameters.get( 0 );
 
-            if ( first_parameter instanceof NameParameter )
-            {
+            if ( first_parameter instanceof NameParameter ) {
 
-                if ( hasServiceMetadata( first_parameter.getName() ) )
-                {
+                if ( hasServiceMetadata( first_parameter.getName() ) ) {
                     return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                             parameters, payload ).withServiceMetadata( first_parameter.getName() );
                 }
-                else if ( hasServiceCommand( first_parameter.getName() ) )
-                {
+                else if ( hasServiceCommand( first_parameter.getName() ) ) {
                     return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                             parameters, payload ).withServiceCommand( first_parameter.getName() );
                 }
@@ -83,39 +76,31 @@ public class AbstractPathBasedColllectionService extends AbstractCollectionServi
                 List<String> aliases = new ArrayList<String>();
                 String alias = "";
                 String slash = "";
-                for ( ServiceParameter parameter : parameters )
-                {
-                    if ( parameter instanceof NameParameter )
-                    {
+                for ( ServiceParameter parameter : parameters ) {
+                    if ( parameter instanceof NameParameter ) {
                         String name = parameter.getName();
                         if ( ( entityDictionaries != null ) && ( entityDictionaries
-                                .contains( new EntityDictionaryEntry( name ) ) ) )
-                        {
+                                .contains( new EntityDictionaryEntry( name ) ) ) ) {
                             break;
                         }
-                        if ( Schema.getDefaultSchema().hasCollection( getServiceInfo().getItemType(), name ) )
-                        {
+                        if ( Schema.getDefaultSchema().hasCollection( getServiceInfo().getItemType(), name ) ) {
                             break;
                         }
                         alias += slash + name;
                         aliases.add( alias );
                         slash = "/";
                     }
-                    else
-                    {
+                    else {
                         break;
                     }
                 }
-                if ( !isEmpty( aliases ) )
-                {
+                if ( !isEmpty( aliases ) ) {
                     logger.info( "Found {} potential paths", aliases.size() );
                     Map<String, EntityRef> aliasedEntities = em.getAlias( getEntityType(), aliases );
-                    for ( int i = aliases.size() - 1; i >= 0; i-- )
-                    {
+                    for ( int i = aliases.size() - 1; i >= 0; i-- ) {
                         alias = aliases.get( i );
                         pathEntity = aliasedEntities.get( alias );
-                        if ( pathEntity != null )
-                        {
+                        if ( pathEntity != null ) {
                             logger.info( "Found entity {} of type {} for alias {}",
                                     new Object[] { pathEntity.getUuid(), pathEntity.getType(), alias } );
                             parameters = parameters.subList( i + 1, parameters.size() );
@@ -129,38 +114,32 @@ public class AbstractPathBasedColllectionService extends AbstractCollectionServi
                 }
             }
 
-            if ( pathEntity == null )
-            {
+            if ( pathEntity == null ) {
                 parameters = dequeueCopy( parameters );
             }
         }
 
         Query query = null;
-        if ( first_parameter instanceof QueryParameter )
-        {
+        if ( first_parameter instanceof QueryParameter ) {
             query = first_parameter.getQuery();
         }
         parameters = mergeQueries( query, parameters );
 
-        if ( first_parameter instanceof IdParameter )
-        {
+        if ( first_parameter instanceof IdParameter ) {
             UUID id = first_parameter.getId();
             return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                     Query.fromUUID( id ), parameters, payload );
         }
-        else if ( first_parameter instanceof NameParameter )
-        {
+        else if ( first_parameter instanceof NameParameter ) {
             String name = first_parameter.getName();
             return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                     Query.fromIdentifier( name ), parameters, payload );
         }
-        else if ( query != null )
-        {
+        else if ( query != null ) {
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, query, parameters,
                     payload );
         }
-        else if ( first_parameter == null )
-        {
+        else if ( first_parameter == null ) {
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, null, null,
                     payload );
         }

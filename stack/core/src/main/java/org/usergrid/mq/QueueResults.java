@@ -27,8 +27,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 @XmlRootElement
-public class QueueResults
-{
+public class QueueResults {
 
     private String path;
     private UUID queue;
@@ -37,32 +36,26 @@ public class QueueResults
     private UUID consumer;
 
 
-    public QueueResults()
-    {
+    public QueueResults() {
 
     }
 
 
-    public QueueResults( Message message )
-    {
-        if ( message != null )
-        {
+    public QueueResults( Message message ) {
+        if ( message != null ) {
             messages.add( message );
         }
     }
 
 
-    public QueueResults( List<Message> messages )
-    {
-        if ( messages != null )
-        {
+    public QueueResults( List<Message> messages ) {
+        if ( messages != null ) {
             this.messages = messages;
         }
     }
 
 
-    public QueueResults( String path, UUID queue, List<Message> messages, UUID last, UUID consumer )
-    {
+    public QueueResults( String path, UUID queue, List<Message> messages, UUID last, UUID consumer ) {
         this.path = path;
         this.queue = queue;
         this.messages = messages;
@@ -72,42 +65,35 @@ public class QueueResults
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getPath()
-    {
+    public String getPath() {
         return path;
     }
 
 
-    public void setPath( String path )
-    {
+    public void setPath( String path ) {
         this.path = path;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getQueue()
-    {
+    public UUID getQueue() {
         return queue;
     }
 
 
-    public void setQueue( UUID queue )
-    {
+    public void setQueue( UUID queue ) {
         this.queue = queue;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<Message> getMessages()
-    {
+    public List<Message> getMessages() {
         return messages;
     }
 
 
-    public void setMessages( List<Message> messages )
-    {
-        if ( messages == null )
-        {
+    public void setMessages( List<Message> messages ) {
+        if ( messages == null ) {
             messages = new ArrayList<Message>();
         }
         this.messages = messages;
@@ -115,33 +101,28 @@ public class QueueResults
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getLast()
-    {
+    public UUID getLast() {
         return last;
     }
 
 
-    public void setLast( UUID last )
-    {
+    public void setLast( UUID last ) {
         this.last = last;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getConsumer()
-    {
+    public UUID getConsumer() {
         return consumer;
     }
 
 
-    public void setConsumer( UUID consumer )
-    {
+    public void setConsumer( UUID consumer ) {
         this.consumer = consumer;
     }
 
 
-    public int size()
-    {
+    public int size() {
         return messages.size();
     }
 }

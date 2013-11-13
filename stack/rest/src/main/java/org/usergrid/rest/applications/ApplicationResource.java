@@ -94,8 +94,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class ApplicationResource extends ServiceResource
-{
+public class ApplicationResource extends ServiceResource {
 
     public static final Logger logger = LoggerFactory.getLogger( ApplicationResource.class );
 
@@ -103,13 +102,11 @@ public class ApplicationResource extends ServiceResource
     QueueManager queues;
 
 
-    public ApplicationResource()
-    {
+    public ApplicationResource() {
     }
 
 
-    public ApplicationResource init( UUID applicationId ) throws Exception
-    {
+    public ApplicationResource init( UUID applicationId ) throws Exception {
         this.applicationId = applicationId;
         services = smf.getServiceManager( applicationId );
         queues = qmf.getQueueManager( applicationId );
@@ -117,43 +114,37 @@ public class ApplicationResource extends ServiceResource
     }
 
 
-    public QueueManager getQueues()
-    {
+    public QueueManager getQueues() {
         return queues;
     }
 
 
     @Override
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return applicationId;
     }
 
 
     @Path("auth")
-    public AuthResource getAuthResource() throws Exception
-    {
+    public AuthResource getAuthResource() throws Exception {
         return getSubResource( AuthResource.class );
     }
 
 
     @RequireApplicationAccess
     @Path("queues")
-    public QueueResource getQueueResource() throws Exception
-    {
+    public QueueResource getQueueResource() throws Exception {
         return getSubResource( QueueResource.class ).init( queues, "" );
     }
 
 
     @RequireApplicationAccess
     @Path("events")
-    public EventsResource getEventsResource( @Context UriInfo ui ) throws Exception
-    {
+    public EventsResource getEventsResource( @Context UriInfo ui ) throws Exception {
         addParameter( getServiceParameters(), "events" );
 
         PathSegment ps = getFirstPathSegment( "events" );
-        if ( ps != null )
-        {
+        if ( ps != null ) {
             addMatrixParams( getServiceParameters(), ui, ps );
         }
 
@@ -163,22 +154,19 @@ public class ApplicationResource extends ServiceResource
 
     @RequireApplicationAccess
     @Path("event")
-    public EventsResource getEventResource( @Context UriInfo ui ) throws Exception
-    {
+    public EventsResource getEventResource( @Context UriInfo ui ) throws Exception {
         return getEventsResource( ui );
     }
 
 
     @RequireApplicationAccess
     @Path("assets")
-    public AssetsResource getAssetsResource( @Context UriInfo ui ) throws Exception
-    {
+    public AssetsResource getAssetsResource( @Context UriInfo ui ) throws Exception {
         logger.debug( "in assets n applicationResource" );
         addParameter( getServiceParameters(), "assets" );
 
         PathSegment ps = getFirstPathSegment( "assets" );
-        if ( ps != null )
-        {
+        if ( ps != null ) {
             addMatrixParams( getServiceParameters(), ui, ps );
         }
 
@@ -188,8 +176,7 @@ public class ApplicationResource extends ServiceResource
 
     @RequireApplicationAccess
     @Path("asset")
-    public AssetsResource getAssetResource( @Context UriInfo ui ) throws Exception
-    {
+    public AssetsResource getAssetResource( @Context UriInfo ui ) throws Exception {
         // TODO change to singular
         logger.debug( "in asset in applicationResource" );
         return getAssetsResource( ui );
@@ -197,14 +184,12 @@ public class ApplicationResource extends ServiceResource
 
 
     @Path("users")
-    public UsersResource getUsers( @Context UriInfo ui ) throws Exception
-    {
+    public UsersResource getUsers( @Context UriInfo ui ) throws Exception {
         logger.debug( "ApplicationResource.getUsers" );
         addParameter( getServiceParameters(), "users" );
 
         PathSegment ps = getFirstPathSegment( "users" );
-        if ( ps != null )
-        {
+        if ( ps != null ) {
             addMatrixParams( getServiceParameters(), ui, ps );
         }
 
@@ -213,8 +198,7 @@ public class ApplicationResource extends ServiceResource
 
 
     @Path("user")
-    public UsersResource getUsers2( @Context UriInfo ui ) throws Exception
-    {
+    public UsersResource getUsers2( @Context UriInfo ui ) throws Exception {
         return getUsers( ui );
     }
 
@@ -227,25 +211,20 @@ public class ApplicationResource extends ServiceResource
                                     @QueryParam("pin") String pin, @QueryParam("client_id") String client_id,
                                     @QueryParam("client_secret") String client_secret, @QueryParam("code") String code,
                                     @QueryParam("ttl") long ttl, @QueryParam("redirect_uri") String redirect_uri,
-                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         logger.debug( "ApplicationResource.getAccessToken" );
 
         User user = null;
 
-        try
-        {
+        try {
 
-            if ( authorization != null )
-            {
+            if ( authorization != null ) {
                 String type = stringOrSubstringBeforeFirst( authorization, ' ' ).toUpperCase();
-                if ( "BASIC".equals( type ) )
-                {
+                if ( "BASIC".equals( type ) ) {
                     String token = stringOrSubstringAfterFirst( authorization, ' ' );
                     String[] values = Base64.decodeToString( token ).split( ":" );
-                    if ( values.length >= 2 )
-                    {
+                    if ( values.length >= 2 ) {
                         client_id = values[0];
                         client_secret = values[1];
                     }
@@ -254,60 +233,46 @@ public class ApplicationResource extends ServiceResource
 
             // do checking for different grant types
             String errorDescription = "invalid username or password";
-            if ( GrantType.PASSWORD.toString().equals( grant_type ) )
-            {
-                try
-                {
+            if ( GrantType.PASSWORD.toString().equals( grant_type ) ) {
+                try {
                     user = management
                             .verifyAppUserPasswordCredentials( services.getApplicationId(), username, password );
                 }
-                catch ( UnactivatedAppUserException uaue )
-                {
+                catch ( UnactivatedAppUserException uaue ) {
                     errorDescription = "user not activated";
                 }
-                catch ( DisabledAppUserException daue )
-                {
+                catch ( DisabledAppUserException daue ) {
                     errorDescription = "user disabled";
                 }
-                catch ( Exception e1 )
-                {
+                catch ( Exception e1 ) {
                 }
             }
-            else if ( "pin".equals( grant_type ) )
-            {
-                try
-                {
+            else if ( "pin".equals( grant_type ) ) {
+                try {
                     user = management.verifyAppUserPinCredentials( services.getApplicationId(), username, pin );
                 }
-                catch ( Exception e1 )
-                {
+                catch ( Exception e1 ) {
                 }
             }
-            else if ( "client_credentials".equals( grant_type ) )
-            {
-                try
-                {
+            else if ( "client_credentials".equals( grant_type ) ) {
+                try {
                     AccessInfo access_info = management.authorizeClient( client_id, client_secret, ttl );
-                    if ( access_info != null )
-                    {
+                    if ( access_info != null ) {
                         return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                                        .entity( wrapWithCallback( access_info, callback ) ).build();
                     }
                 }
-                catch ( Exception e1 )
-                {
+                catch ( Exception e1 ) {
                 }
             }
-            else if ( "authorization_code".equals( grant_type ) )
-            {
+            else if ( "authorization_code".equals( grant_type ) ) {
                 AccessInfo access_info = new AccessInfo();
                 access_info.setAccessToken( code );
                 return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                                .entity( wrapWithCallback( access_info, callback ) ).build();
             }
 
-            if ( user == null )
-            {
+            if ( user == null ) {
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
@@ -324,8 +289,7 @@ public class ApplicationResource extends ServiceResource
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
         }
-        catch ( OAuthProblemException e )
-        {
+        catch ( OAuthProblemException e ) {
             logger.error( "OAuth Error", e );
             OAuthResponse res = OAuthResponse.errorResponse( SC_BAD_REQUEST ).error( e ).buildJSONMessage();
             return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
@@ -344,8 +308,7 @@ public class ApplicationResource extends ServiceResource
                                         @FormParam("client_secret") String client_secret,
                                         @FormParam("code") String code, @FormParam("ttl") long ttl,
                                         @FormParam("redirect_uri") String redirect_uri,
-                                        @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                        @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         logger.debug( "ApplicationResource.getAccessTokenPost" );
 
@@ -359,8 +322,8 @@ public class ApplicationResource extends ServiceResource
     @Consumes(APPLICATION_JSON)
     public Response getAccessTokenPostJson( @Context UriInfo ui, @HeaderParam("Authorization") String authorization,
                                             Map<String, Object> json,
-                                            @QueryParam("callback") @DefaultValue("") String callback ) throws Exception
-    {
+                                            @QueryParam("callback") @DefaultValue("") String callback )
+            throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -372,14 +335,11 @@ public class ApplicationResource extends ServiceResource
         String redirect_uri = ( String ) json.get( "redirect_uri" );
         long ttl = 0;
 
-        if ( json.get( "ttl" ) != null )
-        {
-            try
-            {
+        if ( json.get( "ttl" ) != null ) {
+            try {
                 ttl = Long.parseLong( json.get( "ttl" ).toString() );
             }
-            catch ( NumberFormatException nfe )
-            {
+            catch ( NumberFormatException nfe ) {
                 throw new IllegalArgumentException( "ttl must be a number >= 0" );
             }
         }
@@ -393,13 +353,12 @@ public class ApplicationResource extends ServiceResource
     @Path("credentials")
     @RequireApplicationAccess
     public JSONWithPadding getKeys( @Context UriInfo ui,
-                                    @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
 
         logger.debug( "AuthResource.keys" );
 
-        if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) )
-        {
+        if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
             throw new UnauthorizedException();
         }
 
@@ -419,13 +378,11 @@ public class ApplicationResource extends ServiceResource
     @Produces(MediaType.APPLICATION_JSON)
     public JSONWithPadding generateKeys( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.debug( "AuthResource.keys" );
 
-        if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) )
-        {
+        if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
             throw new UnauthorizedException();
         }
 
@@ -444,14 +401,11 @@ public class ApplicationResource extends ServiceResource
     public Viewable showAuthorizeForm( @Context UriInfo ui, @QueryParam("response_type") String response_type,
                                        @QueryParam("client_id") String client_id,
                                        @QueryParam("redirect_uri") String redirect_uri,
-                                       @QueryParam("scope") String scope, @QueryParam("state") String state )
-    {
+                                       @QueryParam("scope") String scope, @QueryParam("state") String state ) {
 
-        try
-        {
+        try {
             UUID uuid = getUUIDFromClientId( client_id );
-            if ( uuid == null )
-            {
+            if ( uuid == null ) {
                 throw mappableSecurityException( AuthErrorInfo.OAUTH2_INVALID_CLIENT,
                         "Unable to authenticate (OAuth). Invalid client_id" );
             }
@@ -467,12 +421,10 @@ public class ApplicationResource extends ServiceResource
 
             return handleViewable( "authorize_form", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -486,11 +438,9 @@ public class ApplicationResource extends ServiceResource
                                          @FormParam("redirect_uri") String redirect_uri,
                                          @FormParam("scope") String scope, @FormParam("state") String state,
                                          @FormParam("username") String username,
-                                         @FormParam("password") String password )
-    {
+                                         @FormParam("password") String password ) {
 
-        try
-        {
+        try {
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;
@@ -499,32 +449,26 @@ public class ApplicationResource extends ServiceResource
 
             User user = null;
             String errorDescription = "Username or password do not match";
-            try
-            {
+            try {
                 user = management.verifyAppUserPasswordCredentials( services.getApplicationId(), username, password );
             }
-            catch ( UnactivatedAdminUserException uaue )
-            {
+            catch ( UnactivatedAdminUserException uaue ) {
                 errorDescription = "user not activated";
             }
-            catch ( DisabledAdminUserException daue )
-            {
+            catch ( DisabledAdminUserException daue ) {
                 errorDescription = "user disabled";
             }
-            catch ( Exception e1 )
-            {
+            catch ( Exception e1 ) {
             }
 
-            if ( ( user != null ) && isNotBlank( redirect_uri ) )
-            {
+            if ( ( user != null ) && isNotBlank( redirect_uri ) ) {
                 String authorizationCode =
                         management.getAccessTokenForAppUser( services.getApplicationId(), user.getUuid(), 0 );
                 redirect_uri = buildRedirectUriWithAuthCode( redirect_uri, state, authorizationCode );
 
                 throw new RedirectionException( redirect_uri );
             }
-            else
-            {
+            else {
                 errorMsg = errorDescription;
             }
 
@@ -533,12 +477,10 @@ public class ApplicationResource extends ServiceResource
 
             return handleViewable( "authorize_form", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -549,8 +491,7 @@ public class ApplicationResource extends ServiceResource
     @Override
     public JSONWithPadding executeDelete( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.debug( "ApplicationResource.executeDelete" );
 
@@ -567,44 +508,37 @@ public class ApplicationResource extends ServiceResource
     String state;
 
 
-    public String getErrorMsg()
-    {
+    public String getErrorMsg() {
         return errorMsg;
     }
 
 
-    public String getApplicationName()
-    {
+    public String getApplicationName() {
         return applicationName;
     }
 
 
-    public String getResponseType()
-    {
+    public String getResponseType() {
         return responseType;
     }
 
 
-    public String getClientId()
-    {
+    public String getClientId() {
         return clientId;
     }
 
 
-    public String getRedirectUri()
-    {
+    public String getRedirectUri() {
         return redirectUri;
     }
 
 
-    public String getScope()
-    {
+    public String getScope() {
         return scope;
     }
 
 
-    public String getState()
-    {
+    public String getState() {
         return state;
     }
 
@@ -613,8 +547,7 @@ public class ApplicationResource extends ServiceResource
     // project
     @RequireApplicationAccess
     @Path("notifiers")
-    public AbstractContextResource getNotifiersResource( @Context UriInfo ui ) throws Exception
-    {
+    public AbstractContextResource getNotifiersResource( @Context UriInfo ui ) throws Exception {
 
         Class cls = Class.forName( "org.usergrid.rest.applications.notifiers.NotifiersResource" );
 
@@ -622,8 +555,7 @@ public class ApplicationResource extends ServiceResource
         addParameter( getServiceParameters(), "notifiers" );
 
         PathSegment ps = getFirstPathSegment( "notifiers" );
-        if ( ps != null )
-        {
+        if ( ps != null ) {
             addMatrixParams( getServiceParameters(), ui, ps );
         }
 
@@ -633,27 +565,22 @@ public class ApplicationResource extends ServiceResource
 
     @RequireApplicationAccess
     @Path("notifier")
-    public AbstractContextResource getNotifierResource( @Context UriInfo ui ) throws Exception
-    {
+    public AbstractContextResource getNotifierResource( @Context UriInfo ui ) throws Exception {
         return getNotifiersResource( ui );
     }
 
 
     private String buildRedirectUriWithAuthCode( String redirect_uri, String state, String authorizationCode )
-            throws UnsupportedEncodingException
-    {
-        if ( !redirect_uri.contains( "?" ) )
-        {
+            throws UnsupportedEncodingException {
+        if ( !redirect_uri.contains( "?" ) ) {
             redirect_uri += "?";
         }
-        else
-        {
+        else {
             redirect_uri += "&";
         }
         redirect_uri += "code=" + authorizationCode;
 
-        if ( isNotBlank( state ) )
-        {
+        if ( isNotBlank( state ) ) {
             redirect_uri += "&state=" + URLEncoder.encode( state, "UTF-8" );
         }
 
@@ -669,14 +596,12 @@ public class ApplicationResource extends ServiceResource
     @Path("apm/apigeeMobileConfig")
     public JSONWithPadding getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         EntityManager em = ( EntityManager ) emf.getEntityManager( applicationId );
         Object value = em.getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                 APIGEE_MOBILE_APM_CONFIG_JSON_KEY );
         //If there is no apm configuration then try to create apm config on the fly
-        if ( value == null )
-        {
+        if ( value == null ) {
             value = management.registerAppWithAPM( management.getOrganizationForApplication( applicationId ),
                     management.getApplicationInfo( applicationId ) );
         }

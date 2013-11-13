@@ -35,8 +35,7 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
  * @author tnine
  */
 @Component("OnlyOnceJob")
-public abstract class OnlyOnceJob implements Job
-{
+public abstract class OnlyOnceJob implements Job {
 
     @Autowired
     private LockManager lockManager;
@@ -45,8 +44,7 @@ public abstract class OnlyOnceJob implements Job
     /**
      *
      */
-    public OnlyOnceJob()
-    {
+    public OnlyOnceJob() {
     }
 
 
@@ -56,28 +54,24 @@ public abstract class OnlyOnceJob implements Job
      * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
      */
     @Override
-    public void execute( JobExecution execution ) throws Exception
-    {
+    public void execute( JobExecution execution ) throws Exception {
 
         String lockId = execution.getJobId().toString();
 
         Lock lock = lockManager.createLock( MANAGEMENT_APPLICATION_ID, String.format( "/jobs/%s", lockId ) );
 
         // the job is still running somewhere else. Try again in getDelay() milliseconds
-        if ( !lock.tryLock( 0, TimeUnit.MILLISECONDS ) )
-        {
+        if ( !lock.tryLock( 0, TimeUnit.MILLISECONDS ) ) {
             execution.delay( getDelay( execution ) );
             return;
         }
 
         //if we get here we can proceed.  Make sure we unlock no matter what.
-        try
-        {
+        try {
 
             doJob( execution );
         }
-        finally
-        {
+        finally {
             lock.unlock();
         }
     }

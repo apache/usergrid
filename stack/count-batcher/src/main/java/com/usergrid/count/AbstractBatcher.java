@@ -38,8 +38,7 @@ import com.yammer.metrics.core.TimerContext;
  *
  * @author zznate
  */
-public abstract class AbstractBatcher implements Batcher
-{
+public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
     private volatile Batch batch;
@@ -54,14 +53,12 @@ public abstract class AbstractBatcher implements Batcher
     private final AtomicBoolean lock = new AtomicBoolean( false );
 
 
-    public void setBatchSize( int batchSize )
-    {
+    public void setBatchSize( int batchSize ) {
         this.batchSize = batchSize;
     }
 
 
-    public void setBatchSubmitter( BatchSubmitter batchSubmitter )
-    {
+    public void setBatchSubmitter( BatchSubmitter batchSubmitter ) {
         this.batchSubmitter = batchSubmitter;
     }
 
@@ -71,49 +68,38 @@ public abstract class AbstractBatcher implements Batcher
      *
      * @return the number of operation against this SimpleBatcher
      */
-    public long getOpCount()
-    {
+    public long getOpCount() {
         return opCount.get();
     }
 
 
     /** Add a count object to this batcher */
-    public void add( Count count ) throws CounterProcessingUnavailableException
-    {
+    public void add( Count count ) throws CounterProcessingUnavailableException {
         invocationCounter.inc();
         final TimerContext context = addTimer.time();
-        if ( batchSize == 1 )
-        {
+        if ( batchSize == 1 ) {
             getBatch().addSerial( count );
         }
-        else
-        {
+        else {
             getBatch().add( count );
         }
         context.stop();
     }
 
 
-    Batch getBatch()
-    {
+    Batch getBatch() {
         Batch active = batch;
-        if ( active == null )
-        {
-            synchronized ( this )
-            {
+        if ( active == null ) {
+            synchronized ( this ) {
                 active = batch;
-                if ( active == null )
-                {
+                if ( active == null ) {
                     batch = active = new Batch();
                 }
             }
         }
-        if ( batchSize > 1 && active.getCapacity() == 0 )
-        {
-            synchronized ( this )
-            {
-                if ( active.getCapacity() == 0 )
-                {
+        if ( batchSize > 1 && active.getCapacity() == 0 ) {
+            synchronized ( this ) {
+                if ( active.getCapacity() == 0 ) {
                     active.flush();
                 }
             }
@@ -122,34 +108,29 @@ public abstract class AbstractBatcher implements Batcher
     }
 
 
-    public long getBatchSubmissionCount()
-    {
+    public long getBatchSubmissionCount() {
         return batchSubmissionCount.get();
     }
 
 
-    class Batch
-    {
+    class Batch {
         private BlockingQueue<Count> counts;
         private final AtomicInteger localCallCounter = new AtomicInteger();
 
         private final AtomicBoolean lock = new AtomicBoolean( false );
 
 
-        Batch()
-        {
+        Batch() {
             counts = new ArrayBlockingQueue<Count>( batchSize );
         }
 
 
-        int getCapacity()
-        {
+        int getCapacity() {
             return counts.remainingCapacity();
         }
 
 
-        void flush()
-        {
+        void flush() {
             ArrayList<Count> flushed = new ArrayList<Count>( batchSize );
             counts.drainTo( flushed );
             batchSubmitter.submit( flushed );
@@ -159,28 +140,22 @@ public abstract class AbstractBatcher implements Batcher
         }
 
 
-        void add( Count count )
-        {
-            try
-            {
+        void add( Count count ) {
+            try {
                 counts.offer( count, 500, TimeUnit.MILLISECONDS );
             }
-            catch ( Exception ex )
-            {
+            catch ( Exception ex ) {
                 ex.printStackTrace();
             }
         }
 
 
-        void addSerial( Count count )
-        {
+        void addSerial( Count count ) {
             Future f = batchSubmitter.submit( Arrays.asList( count ) );
-            try
-            {
+            try {
                 f.get();
             }
-            catch ( Exception ex )
-            {
+            catch ( Exception ex ) {
                 ex.printStackTrace();
             }
             batchSubmissionCount.incrementAndGet();
@@ -193,8 +168,7 @@ public abstract class AbstractBatcher implements Batcher
          * The number of times the {@link #add(com.usergrid.count.common.Count)} method has been invoked on this batch
          * instance
          */
-        public int getLocalCallCount()
-        {
+        public int getLocalCallCount() {
             return localCallCounter.get();
         }
     }

@@ -17,8 +17,7 @@ package org.usergrid.persistence.query.tree;
 
 
 /** @author tnine */
-public interface NumericLiteral
-{
+public interface NumericLiteral {
 
     /** Return the value of this numeric literal as a float */
     public float getFloatValue();

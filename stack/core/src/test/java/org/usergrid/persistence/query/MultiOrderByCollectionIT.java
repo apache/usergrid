@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class MultiOrderByCollectionIT extends AbstractIteratingQueryIT
-{
+public class MultiOrderByCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void multiOrderByCollection() throws Exception
-    {
+    public void multiOrderByCollection() throws Exception {
         multiOrderBy( new CollectionIoHelper() );
     }
 }

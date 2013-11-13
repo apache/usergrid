@@ -26,8 +26,7 @@ import static junit.framework.Assert.assertNotNull;
 /** @author zznate */
 @Ignore
 @Concurrent()
-public class PingIdentityProviderIT
-{
+public class PingIdentityProviderIT {
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
     private static UUID applicationId;
@@ -40,8 +39,7 @@ public class PingIdentityProviderIT
 
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
         adminUser = setup.getMgmtSvc()
                          .createAdminUser( "pinguser", "Ping User", "ping-user@usergrid.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "ping-organization", adminUser, true );
@@ -50,8 +48,7 @@ public class PingIdentityProviderIT
 
 
     @Test
-    public void verifyLiveConnect() throws Exception
-    {
+    public void verifyLiveConnect() throws Exception {
         Application application = setup.getEmf().getEntityManager( applicationId ).getApplication();
         Map pingProps = MapUtils.hashMap( "api_url", "" ).map( "client_secret", "" )
                                 .map( "client_id", "dev.app.appservicesvalidation" );

@@ -22,15 +22,13 @@ package org.usergrid.persistence.query.ir;
  *
  * @author tnine
  */
-public class AndNode extends BooleanNode
-{
+public class AndNode extends BooleanNode {
 
     /**
      * @param left
      * @param right
      */
-    public AndNode( QueryNode left, QueryNode right )
-    {
+    public AndNode( QueryNode left, QueryNode right ) {
         super( left, right );
     }
 
@@ -39,8 +37,7 @@ public class AndNode extends BooleanNode
      * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
      */
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 }

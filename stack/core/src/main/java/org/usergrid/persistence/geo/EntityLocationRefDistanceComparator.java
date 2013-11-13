@@ -28,14 +28,12 @@ import org.usergrid.utils.UUIDUtils;
  *
  * @author tnine
  */
-public class EntityLocationRefDistanceComparator implements Comparator<EntityLocationRef>
-{
+public class EntityLocationRefDistanceComparator implements Comparator<EntityLocationRef> {
 
     /**
      *
      */
-    public EntityLocationRefDistanceComparator()
-    {
+    public EntityLocationRefDistanceComparator() {
     }
 
 
@@ -45,23 +43,19 @@ public class EntityLocationRefDistanceComparator implements Comparator<EntityLoc
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     @Override
-    public int compare( EntityLocationRef o1, EntityLocationRef o2 )
-    {
+    public int compare( EntityLocationRef o1, EntityLocationRef o2 ) {
 
-        if ( o1 == null )
-        {
+        if ( o1 == null ) {
 
             //second is not null
-            if ( o2 != null )
-            {
+            if ( o2 != null ) {
                 return 1;
             }
             //both null
             return 0;
         }
         //second is null, first isn't
-        else if ( o2 == null )
-        {
+        else if ( o2 == null ) {
             return -1;
         }
 
@@ -74,8 +68,7 @@ public class EntityLocationRefDistanceComparator implements Comparator<EntityLoc
 
         //    int doubleCompare = Double.compare(o1.getDistance(), o2.getDistance());
 
-        if ( doubleCompare != 0 )
-        {
+        if ( doubleCompare != 0 ) {
             return doubleCompare;
         }
 

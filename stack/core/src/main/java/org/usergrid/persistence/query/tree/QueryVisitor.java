@@ -26,8 +26,7 @@ import org.usergrid.persistence.exceptions.PersistenceException;
  *
  * @author tnine
  */
-public interface QueryVisitor
-{
+public interface QueryVisitor {
 
     /**
      *

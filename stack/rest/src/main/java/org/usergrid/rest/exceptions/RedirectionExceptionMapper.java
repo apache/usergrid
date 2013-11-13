@@ -21,12 +21,10 @@ import javax.ws.rs.ext.Provider;
 
 
 @Provider
-public class RedirectionExceptionMapper extends AbstractExceptionMapper<RedirectionException>
-{
+public class RedirectionExceptionMapper extends AbstractExceptionMapper<RedirectionException> {
 
     @Override
-    public Response toResponse( RedirectionException e )
-    {
+    public Response toResponse( RedirectionException e ) {
         return Response.temporaryRedirect( e.getUri() ).build();
     }
 }

@@ -31,16 +31,14 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 
 
-public class JsonUtilsTest
-{
+public class JsonUtilsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( JsonUtilsTest.class );
 
 
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings("unchecked")
     @Test
-    public void testUnroll()
-    {
+    public void testUnroll() {
         Map<String, Object> json = new LinkedHashMap<String, Object>();
 
         json.put( "name", "edanuff" );
@@ -67,20 +65,17 @@ public class JsonUtilsTest
     }
 
 
-    public void dumpJson( String path, Object json )
-    {
+    public void dumpJson( String path, Object json ) {
         List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( path, json, true );
 
-        for ( Map.Entry<String, Object> e : list )
-        {
+        for ( Map.Entry<String, Object> e : list ) {
             LOG.info( e.getKey() + " = " + e.getValue() );
         }
     }
 
 
     @Test
-    public void testNormalize()
-    {
+    public void testNormalize() {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put( "foo", "bar" );
 

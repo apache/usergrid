@@ -36,8 +36,7 @@ import org.usergrid.services.ServiceResults;
 import com.google.common.collect.BiMap;
 
 
-public interface ManagementService
-{
+public interface ManagementService {
 
     public void activateAdminUser( UUID userId ) throws Exception;
 

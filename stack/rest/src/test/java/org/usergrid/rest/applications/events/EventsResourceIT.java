@@ -18,21 +18,18 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent
-public class EventsResourceIT extends AbstractRestIT
-{
+public class EventsResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( EventsResourceIT.class );
 
 
     @Test
-    public void testEventPostandGet()
-    {
+    public void testEventPostandGet() {
 
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
         payload.put( "category", "advertising" );
-        payload.put( "counters", new LinkedHashMap<String, Object>()
-        {
+        payload.put( "counters", new LinkedHashMap<String, Object>() {
             {
                 put( "ad_clicks", 5 );
             }
@@ -49,8 +46,7 @@ public class EventsResourceIT extends AbstractRestIT
         payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
         payload.put( "category", "sales" );
-        payload.put( "counters", new LinkedHashMap<String, Object>()
-        {
+        payload.put( "counters", new LinkedHashMap<String, Object>() {
             {
                 put( "ad_sales", 20 );
             }
@@ -66,8 +62,7 @@ public class EventsResourceIT extends AbstractRestIT
         payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
         payload.put( "category", "marketing" );
-        payload.put( "counters", new LinkedHashMap<String, Object>()
-        {
+        payload.put( "counters", new LinkedHashMap<String, Object>() {
             {
                 put( "ad_clicks", 10 );
             }
@@ -83,8 +78,7 @@ public class EventsResourceIT extends AbstractRestIT
         String lastId = null;
 
         // subsequent GETs advertising
-        for ( int i = 0; i < 3; i++ )
-        {
+        for ( int i = 0; i < 3; i++ ) {
 
             node = resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );

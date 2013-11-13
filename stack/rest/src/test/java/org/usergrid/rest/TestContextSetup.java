@@ -14,35 +14,27 @@ import com.sun.jersey.test.framework.JerseyTest;
  * A self configuring TestContext which sets itself up it implements TestRule. With a @Rule annotation, an instance of
  * this Class as a public member in any test class or abstract test class will auto svcSetup itself before each test.
  */
-public class TestContextSetup extends TestContext implements TestRule
-{
+public class TestContextSetup extends TestContext implements TestRule {
 
-    public TestContextSetup( JerseyTest test )
-    {
+    public TestContextSetup( JerseyTest test ) {
         super( test );
     }
 
 
-    public Statement apply( Statement base, Description description )
-    {
+    public Statement apply( Statement base, Description description ) {
         return statement( base, description );
     }
 
 
-    private Statement statement( final Statement base, final Description description )
-    {
-        return new Statement()
-        {
+    private Statement statement( final Statement base, final Description description ) {
+        return new Statement() {
             @Override
-            public void evaluate() throws Throwable
-            {
+            public void evaluate() throws Throwable {
                 before( description );
-                try
-                {
+                try {
                     base.evaluate();
                 }
-                finally
-                {
+                finally {
                     cleanup();
                 }
             }
@@ -50,14 +42,12 @@ public class TestContextSetup extends TestContext implements TestRule
     }
 
 
-    protected void cleanup()
-    {
+    protected void cleanup() {
         // might want to do something here later
     }
 
 
-    protected void before( Description description )
-    {
+    protected void before( Description description ) {
         String testClass = description.getTestClass().getName();
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;

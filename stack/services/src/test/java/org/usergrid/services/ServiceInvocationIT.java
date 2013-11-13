@@ -31,14 +31,12 @@ import org.usergrid.persistence.Query;
 import static org.junit.Assert.assertNotNull;
 
 
-public class ServiceInvocationIT extends AbstractServiceIT
-{
+public class ServiceInvocationIT extends AbstractServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ServiceInvocationIT.class );
 
 
     @Test
-    public void testServices() throws Exception
-    {
+    public void testServices() throws Exception {
         LOG.info( "testServices" );
 
         app.put( "username", "edanuff" );
@@ -125,8 +123,7 @@ public class ServiceInvocationIT extends AbstractServiceIT
 
 
     @Test
-    public void testBatchCreate() throws Exception
-    {
+    public void testBatchCreate() throws Exception {
         List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();

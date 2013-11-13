@@ -35,8 +35,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON })
-public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper>
-{
+public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper> {
 
     private static final Logger logger = LoggerFactory.getLogger( JacksonCustomMapperProvider.class );
 
@@ -44,8 +43,7 @@ public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper
     MapperConfigurator _mapperConfig;
 
 
-    public JacksonCustomMapperProvider()
-    {
+    public JacksonCustomMapperProvider() {
         logger.info( "JacksonCustomMapperProvider installed" );
         _mapperConfig = new MapperConfigurator( new ObjectMapper(), BASIC_ANNOTATIONS );
         _mapperConfig.setAnnotationsToUse( BASIC_ANNOTATIONS );
@@ -56,14 +54,12 @@ public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper
 
 
     @Override
-    public ObjectMapper getContext( Class<?> aClass )
-    {
+    public ObjectMapper getContext( Class<?> aClass ) {
         return _mapperConfig.getConfiguredMapper();
     }
 
 
-    public MapperConfigurator getConfigurator()
-    {
+    public MapperConfigurator getConfigurator() {
         return _mapperConfig;
     }
 }

@@ -25,58 +25,49 @@ import org.antlr.runtime.Token;
  *
  * @author tnine
  */
-public abstract class EqualityOperand extends Operand
-{
+public abstract class EqualityOperand extends Operand {
 
     /**
      * @param property
      * @param literal
      */
-    public EqualityOperand( Token t )
-    {
+    public EqualityOperand( Token t ) {
         super( t );
     }
 
 
-    public EqualityOperand( String propName, Literal<?> value )
-    {
+    public EqualityOperand( String propName, Literal<?> value ) {
         super( null );
     }
 
 
     /** Set the property on this operand */
-    public void setProperty( String name )
-    {
+    public void setProperty( String name ) {
         setAtIndex( 0, newProperty( name ) );
     }
 
 
     /** Get the property to set into the equality. Allows subclasses to override the type */
-    protected Property newProperty( String name )
-    {
+    protected Property newProperty( String name ) {
         return new Property( name );
     }
 
 
     /** Set the literal on this operand from the given value */
-    public void setLiteral( Object value )
-    {
+    public void setLiteral( Object value ) {
         setAtIndex( 1, LiteralFactory.getLiteral( value ) );
     }
 
 
     /** Set the child at the specified index. If it doesn't exist, it's added until it does */
     @SuppressWarnings("unchecked")
-    private void setAtIndex( int index, Literal<?> value )
-    {
+    private void setAtIndex( int index, Literal<?> value ) {
 
-        if ( children == null )
-        {
+        if ( children == null ) {
             children = createChildrenList();
         }
 
-        while ( children.size() - 1 < index )
-        {
+        while ( children.size() - 1 < index ) {
             children.add( null );
         }
 
@@ -85,15 +76,13 @@ public abstract class EqualityOperand extends Operand
 
 
     /** @return the property */
-    public Property getProperty()
-    {
+    public Property getProperty() {
         return ( Property ) this.children.get( 0 );
     }
 
 
     /** @return the literal */
-    public Literal<?> getLiteral()
-    {
+    public Literal<?> getLiteral() {
         return ( Literal<?> ) this.children.get( 1 );
     }
 }

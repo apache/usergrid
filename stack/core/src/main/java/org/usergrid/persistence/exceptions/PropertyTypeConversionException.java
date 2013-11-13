@@ -16,8 +16,7 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class PropertyTypeConversionException extends PersistenceException
-{
+public class PropertyTypeConversionException extends PersistenceException {
 
     /**
      *
@@ -30,8 +29,7 @@ public class PropertyTypeConversionException extends PersistenceException
 
 
     public PropertyTypeConversionException( String entityType, String propertyName, Object propertyValue,
-                                            Class<?> propertyType )
-    {
+                                            Class<?> propertyType ) {
         super( "Unable to convert property \"" + propertyName + "\" of entity \"" + entityType
                 + "\" from value of type " + propertyValue.getClass() + " to value of type " + propertyType );
         this.entityType = entityType;
@@ -42,8 +40,7 @@ public class PropertyTypeConversionException extends PersistenceException
 
 
     public PropertyTypeConversionException( String entityType, String propertyName, Object propertyValue,
-                                            Class<?> propertyType, Throwable cause )
-    {
+                                            Class<?> propertyType, Throwable cause ) {
         super( "Unable to convert property \"" + propertyName + "\" of entity \"" + entityType
                 + "\" from value of type " + propertyValue.getClass() + " to value of type " + propertyType, cause );
         this.entityType = entityType;
@@ -53,26 +50,22 @@ public class PropertyTypeConversionException extends PersistenceException
     }
 
 
-    public String getEntityType()
-    {
+    public String getEntityType() {
         return entityType;
     }
 
 
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 
 
-    public Object getPropertyValue()
-    {
+    public Object getPropertyValue() {
         return propertyValue;
     }
 
 
-    public Class<?> getPropertyType()
-    {
+    public Class<?> getPropertyType() {
         return propertyType;
     }
 }

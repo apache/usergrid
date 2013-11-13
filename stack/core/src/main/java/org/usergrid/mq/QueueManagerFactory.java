@@ -19,8 +19,7 @@ package org.usergrid.mq;
 import java.util.UUID;
 
 
-public interface QueueManagerFactory
-{
+public interface QueueManagerFactory {
 
     /**
      * A string description provided by the implementing class.

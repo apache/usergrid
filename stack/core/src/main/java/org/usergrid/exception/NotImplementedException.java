@@ -16,8 +16,7 @@
 package org.usergrid.exception;
 
 
-public class NotImplementedException extends RuntimeException
-{
+public class NotImplementedException extends RuntimeException {
 
     /**
      *
@@ -28,8 +27,7 @@ public class NotImplementedException extends RuntimeException
     /**
      *
      */
-    public NotImplementedException()
-    {
+    public NotImplementedException() {
         super();
     }
 
@@ -38,8 +36,7 @@ public class NotImplementedException extends RuntimeException
      * @param message
      * @param cause
      */
-    public NotImplementedException( String message, Throwable cause )
-    {
+    public NotImplementedException( String message, Throwable cause ) {
         super( message, cause );
     }
 
@@ -47,8 +44,7 @@ public class NotImplementedException extends RuntimeException
     /**
      * @param message
      */
-    public NotImplementedException( String message )
-    {
+    public NotImplementedException( String message ) {
         super( message );
     }
 
@@ -56,8 +52,7 @@ public class NotImplementedException extends RuntimeException
     /**
      * @param cause
      */
-    public NotImplementedException( Throwable cause )
-    {
+    public NotImplementedException( Throwable cause ) {
         super( cause );
     }
 }

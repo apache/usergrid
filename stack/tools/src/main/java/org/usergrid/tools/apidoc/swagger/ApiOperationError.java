@@ -22,46 +22,39 @@ import org.usergrid.utils.JsonUtils;
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 
-public class ApiOperationError
-{
+public class ApiOperationError {
     String reason;
     Integer code;
 
 
-    public ApiOperationError()
-    {
+    public ApiOperationError() {
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getReason()
-    {
+    public String getReason() {
         return reason;
     }
 
 
-    public void setReason( String reason )
-    {
+    public void setReason( String reason ) {
         this.reason = reason;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public Integer getCode()
-    {
+    public Integer getCode() {
         return code;
     }
 
 
-    public void setCode( Integer code )
-    {
+    public void setCode( Integer code ) {
         this.code = code;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return JsonUtils.mapToJsonString( this );
     }
 }

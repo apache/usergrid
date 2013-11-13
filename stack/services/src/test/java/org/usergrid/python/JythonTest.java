@@ -21,21 +21,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class JythonTest
-{
+public class JythonTest {
     private static final Logger logger = LoggerFactory.getLogger( JythonTest.class );
 
 
     @Test
-    public void testJythonObjectFactory() throws Exception
-    {
+    public void testJythonObjectFactory() throws Exception {
         logger.info( "Jython tests disabled" );
     }
 
 
     @Test
-    public void testJythonBasedService() throws Exception
-    {
+    public void testJythonBasedService() throws Exception {
         logger.info( "Jython tests disabled" );
     }
 }

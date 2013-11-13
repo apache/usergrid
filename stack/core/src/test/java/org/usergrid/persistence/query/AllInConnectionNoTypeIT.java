@@ -22,17 +22,14 @@ import org.usergrid.persistence.Results;
 
 
 /** @author tnine */
-public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT
-{
+public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT {
     @Test
-    public void allInConnectionNoType() throws Exception
-    {
+    public void allInConnectionNoType() throws Exception {
         allIn( new ConnectionNoTypeHelper() );
     }
 
 
-    class ConnectionNoTypeHelper extends ConnectionHelper
-    {
+    class ConnectionNoTypeHelper extends ConnectionHelper {
 
         /*
          * (non-Javadoc)
@@ -42,8 +39,7 @@ public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT
          * (org.usergrid.persistence.Query)
          */
         @Override
-        public Results getResults( Query query ) throws Exception
-        {
+        public Results getResults( Query query ) throws Exception {
             query.setConnectionType( CONNECTION );
             // don't set it on purpose
             query.setEntityType( null );

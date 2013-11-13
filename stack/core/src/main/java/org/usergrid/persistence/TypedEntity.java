@@ -28,12 +28,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author edanuff
  */
 @XmlRootElement
-public abstract class TypedEntity extends AbstractEntity
-{
+public abstract class TypedEntity extends AbstractEntity {
 
     @Override
-    public Entity toTypedEntity()
-    {
+    public Entity toTypedEntity() {
         return this;
     }
 }

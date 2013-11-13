@@ -19,8 +19,7 @@ package org.usergrid.persistence.schema;
 import org.usergrid.persistence.annotations.EntityDictionary;
 
 
-public class DictionaryInfo
-{
+public class DictionaryInfo {
     private String name;
     private Class<?> keyType;
 
@@ -31,13 +30,11 @@ public class DictionaryInfo
     ;
 
 
-    public DictionaryInfo()
-    {
+    public DictionaryInfo() {
     }
 
 
-    public DictionaryInfo( EntityDictionary setAnnotation )
-    {
+    public DictionaryInfo( EntityDictionary setAnnotation ) {
         setKeyType( setAnnotation.keyType() );
         setValueType( setAnnotation.valueType() );
         setKeysIndexedInConnections( setAnnotation.keysIndexedInConnections() );
@@ -46,89 +43,74 @@ public class DictionaryInfo
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
-    public Class<?> getKeyType()
-    {
+    public Class<?> getKeyType() {
         return keyType;
     }
 
 
-    public void setKeyType( Class<?> type )
-    {
-        if ( type == Object.class )
-        {
+    public void setKeyType( Class<?> type ) {
+        if ( type == Object.class ) {
             type = null;
         }
         keyType = type;
     }
 
 
-    public Class<?> getValueType()
-    {
+    public Class<?> getValueType() {
         return valueType;
     }
 
 
-    public void setValueType( Class<?> valueType )
-    {
-        if ( valueType == Object.class )
-        {
+    public void setValueType( Class<?> valueType ) {
+        if ( valueType == Object.class ) {
             valueType = null;
         }
         this.valueType = valueType;
     }
 
 
-    public boolean isKeysIndexedInConnections()
-    {
+    public boolean isKeysIndexedInConnections() {
         return keysIndexedInConnections;
     }
 
 
-    public void setKeysIndexedInConnections( boolean keysIndexedInConnections )
-    {
+    public void setKeysIndexedInConnections( boolean keysIndexedInConnections ) {
         this.keysIndexedInConnections = keysIndexedInConnections;
     }
 
 
-    public boolean isPublic()
-    {
+    public boolean isPublic() {
         return publicVisible;
     }
 
 
-    public void setPublic( boolean publicVisible )
-    {
+    public void setPublic( boolean publicVisible ) {
         this.publicVisible = publicVisible;
     }
 
 
-    public boolean isIncludedInExport()
-    {
+    public boolean isIncludedInExport() {
         return includedInExport;
     }
 
 
-    public void setIncludedInExport( boolean includedInExport )
-    {
+    public void setIncludedInExport( boolean includedInExport ) {
         this.includedInExport = includedInExport;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Set [name=" + name + ", keyType=" + keyType + ", valueType=" + valueType + ", keysIndexedInConnections="
                 + keysIndexedInConnections + ", publicVisible=" + publicVisible + "]";
     }

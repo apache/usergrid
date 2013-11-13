@@ -12,8 +12,7 @@ import org.usergrid.batch.repository.JobDescriptor;
 
 
 /** @author tnine */
-public class UsergridJobFactory implements JobFactory
-{
+public class UsergridJobFactory implements JobFactory {
 
     @Autowired
     private ApplicationContext context;
@@ -22,13 +21,11 @@ public class UsergridJobFactory implements JobFactory
 
 
     @Override
-    public List<Job> jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException
-    {
+    public List<Job> jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException {
 
         Job job = context.getBean( descriptor.getJobName(), Job.class );
 
-        if ( job == null )
-        {
+        if ( job == null ) {
             String error =
                     String.format( "Could not find job impelmentation for job name %s", descriptor.getJobName() );
             logger.error( error );

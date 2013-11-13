@@ -28,8 +28,7 @@ import org.usergrid.mongo.protocol.OpQuery;
 import org.usergrid.mongo.protocol.OpReply;
 
 
-public abstract class MongoCommand
-{
+public abstract class MongoCommand {
 
     private static final Logger logger = LoggerFactory.getLogger( MongoCommand.class );
 
@@ -37,11 +36,9 @@ public abstract class MongoCommand
 
 
     @SuppressWarnings("unchecked")
-    public static MongoCommand getCommand( String commandName )
-    {
+    public static MongoCommand getCommand( String commandName ) {
         MongoCommand command = commands.get( commandName );
-        if ( command != null )
-        {
+        if ( command != null ) {
             return command;
         }
 
@@ -49,37 +46,29 @@ public abstract class MongoCommand
 
         Class<MongoCommand> cls = null;
 
-        try
-        {
+        try {
             cls = ( Class<MongoCommand> ) Class.forName( clazz );
         }
-        catch ( ClassNotFoundException e )
-        {
+        catch ( ClassNotFoundException e ) {
             logger.error( "Couldn't find command class", e );
         }
         logger.debug( "using MongoCommand class {}", clazz );
-        try
-        {
-            if ( cls != null )
-            {
+        try {
+            if ( cls != null ) {
                 command = cls.newInstance();
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Couldn't find instantiate class", e );
         }
 
-        if ( command != null )
-        {
+        if ( command != null ) {
             MongoCommand oldCommand = commands.putIfAbsent( commandName, command );
-            if ( oldCommand != null )
-            {
+            if ( oldCommand != null ) {
                 command = oldCommand;
             }
         }
-        else
-        {
+        else {
             logger.warn( "Mongo command handler not found for " + commandName );
         }
 

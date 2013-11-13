@@ -34,8 +34,7 @@ import org.usergrid.batch.JobExecution;
  */
 @Component("onlyOnceUnlockOnFailExceution")
 @Ignore("Not a test")
-public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob
-{
+public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob {
 
     private static final Logger logger = LoggerFactory.getLogger( OnlyOnceUnlockOnFailExceution.class );
 
@@ -50,8 +49,7 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob
     /**
      *
      */
-    public OnlyOnceUnlockOnFailExceution()
-    {
+    public OnlyOnceUnlockOnFailExceution() {
     }
 
 
@@ -62,15 +60,13 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob
      * org.usergrid.batch.job.OnlyOnceJob#doJob(org.usergrid.batch.JobExecution)
      */
     @Override
-    protected void doJob( JobExecution execution ) throws Exception
-    {
+    protected void doJob( JobExecution execution ) throws Exception {
         logger.info( "Running only once execution" );
 
 
         latch.countDown();
 
-        if ( !slept )
-        {
+        if ( !slept ) {
             logger.info( "Sleeping in only once execution" );
             Thread.sleep( timeout );
             slept = true;
@@ -86,52 +82,44 @@ public class OnlyOnceUnlockOnFailExceution extends OnlyOnceJob
      * @see org.usergrid.batch.job.OnlyOnceJob#getDelay(org.usergrid.batch.JobExecution)
      */
     @Override
-    protected long getDelay( JobExecution execution ) throws Exception
-    {
+    protected long getDelay( JobExecution execution ) throws Exception {
         return delay;
     }
 
 
-    public void setDelay( long delay )
-    {
+    public void setDelay( long delay ) {
         this.delay = delay;
     }
 
 
-    public void setLatch( int calls )
-    {
+    public void setLatch( int calls ) {
         latch = new CountDownLatch( calls );
     }
 
 
-    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException
-    {
+    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException {
         return latch.await( timeout, unit );
     }
 
 
-    public boolean waitForException( long timeout, TimeUnit unit ) throws InterruptedException
-    {
+    public boolean waitForException( long timeout, TimeUnit unit ) throws InterruptedException {
         return exception.await( timeout, unit );
     }
 
 
-    public boolean waitForCompletion( long timeout, TimeUnit unit ) throws InterruptedException
-    {
+    public boolean waitForCompletion( long timeout, TimeUnit unit ) throws InterruptedException {
         return completed.await( timeout, unit );
     }
 
 
     /** @return the timeout */
-    public long getTimeout()
-    {
+    public long getTimeout() {
         return timeout;
     }
 
 
     /** @param timeout the timeout to set */
-    public void setTimeout( long timeout )
-    {
+    public void setTimeout( long timeout ) {
         this.timeout = timeout;
     }
 }

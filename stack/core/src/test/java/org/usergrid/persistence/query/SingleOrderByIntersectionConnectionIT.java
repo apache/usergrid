@@ -22,11 +22,9 @@ import org.usergrid.cassandra.Concurrent;
 
 /** @author tnine */
 @Concurrent()
-public class SingleOrderByIntersectionConnectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByIntersectionConnectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByIntersectionConnection() throws Exception
-    {
+    public void singleOrderByIntersectionConnection() throws Exception {
         singleOrderByIntersection( new ConnectionHelper() );
     }
 }

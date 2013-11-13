@@ -46,26 +46,22 @@ import static org.junit.Assert.fail;
 
 
 @Concurrent()
-public class QueryTest
-{
+public class QueryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( QueryTest.class );
 
 
     @Test
-    public void testQueryTree() throws Exception
-    {
+    public void testQueryTree() throws Exception {
         LOG.info( "testQuery" );
 
         Query q = new Query();
 
-        try
-        {
+        try {
             q.addFilter( "blah" );
             fail( "'blah' shouldn't be a valid operation." );
         }
-        catch ( RuntimeException e )
-        {
+        catch ( RuntimeException e ) {
             // this is correct
         }
 
@@ -132,8 +128,7 @@ public class QueryTest
 
 
     @Test
-    public void testCodeEquals()
-    {
+    public void testCodeEquals() {
         Query query = new Query();
         query.addEqualityFilter( "foo", "bar" );
 
@@ -145,8 +140,7 @@ public class QueryTest
 
 
     @Test
-    public void testCodeLessThan()
-    {
+    public void testCodeLessThan() {
         Query query = new Query();
         query.addLessThanFilter( "foo", 5 );
 
@@ -158,8 +152,7 @@ public class QueryTest
 
 
     @Test
-    public void testCodeLessThanEqual()
-    {
+    public void testCodeLessThanEqual() {
         Query query = new Query();
         query.addLessThanEqualFilter( "foo", 5 );
 
@@ -171,8 +164,7 @@ public class QueryTest
 
 
     @Test
-    public void testCodeGreaterThan()
-    {
+    public void testCodeGreaterThan() {
         Query query = new Query();
         query.addGreaterThanFilter( "foo", 5 );
 
@@ -184,8 +176,7 @@ public class QueryTest
 
 
     @Test
-    public void testCodeGreaterThanEqual()
-    {
+    public void testCodeGreaterThanEqual() {
         Query query = new Query();
         query.addGreaterThanEqualFilter( "foo", 5 );
 
@@ -197,8 +188,7 @@ public class QueryTest
 
 
     @Test
-    public void testFromJson() throws QueryParseException
-    {
+    public void testFromJson() throws QueryParseException {
         String s = "{\"filter\":\"a contains 'ed'\"}";
         Query q = Query.fromJsonString( s );
         assertNotNull( q );
@@ -211,8 +201,7 @@ public class QueryTest
 
 
     @Test
-    public void testCompoundQueryWithNot() throws QueryParseException
-    {
+    public void testCompoundQueryWithNot() throws QueryParseException {
         String s = "name contains 'm' and not name contains 'grover'";
         Query q = Query.fromQL( s );
         assertNotNull( q );
@@ -231,19 +220,16 @@ public class QueryTest
 
 
     @Test
-    public void badGrammar() throws QueryParseException
-    {
+    public void badGrammar() throws QueryParseException {
         // from isn't allowed
         String s = "select * from where name = 'bob'";
 
         String error = null;
 
-        try
-        {
+        try {
             Query.fromQL( s );
         }
-        catch ( QueryParseException qpe )
-        {
+        catch ( QueryParseException qpe ) {
             error = qpe.getMessage();
         }
 
@@ -252,8 +238,7 @@ public class QueryTest
 
 
     @Test
-    public void testTruncation()
-    {
+    public void testTruncation() {
 
         Query query = new Query();
         query.setLimit( Query.MAX_LIMIT * 2 );
@@ -263,8 +248,7 @@ public class QueryTest
 
 
     @Test
-    public void testTruncationFromParams() throws QueryParseException
-    {
+    public void testTruncationFromParams() throws QueryParseException {
 
         HashMap<String, List<String>> params = new HashMap<String, List<String>>();
 
@@ -277,19 +261,16 @@ public class QueryTest
 
 
     @Test
-    public void badOrderByBadGrammar() throws QueryParseException
-    {
+    public void badOrderByBadGrammar() throws QueryParseException {
         // from isn't allowed
         String s = "select * where name = 'bob' order by";
 
         String error = null;
 
-        try
-        {
+        try {
             Query.fromQL( s );
         }
-        catch ( QueryParseException qpe )
-        {
+        catch ( QueryParseException qpe ) {
             error = qpe.getMessage();
         }
 
@@ -298,8 +279,7 @@ public class QueryTest
 
 
     @Test
-    public void badOrderByGrammarAsc() throws QueryParseException
-    {
+    public void badOrderByGrammarAsc() throws QueryParseException {
         // from isn't allowed
         String s = "select * where name = 'bob' order by name asc";
 
@@ -315,8 +295,7 @@ public class QueryTest
 
 
     @Test
-    public void badOrderByGrammarDesc() throws QueryParseException
-    {
+    public void badOrderByGrammarDesc() throws QueryParseException {
         // from isn't allowed
         String s = "select * where name = 'bob' order by name desc";
 

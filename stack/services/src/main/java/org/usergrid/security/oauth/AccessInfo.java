@@ -29,8 +29,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 @XmlRootElement
-public class AccessInfo
-{
+public class AccessInfo {
 
     String accessToken;
     String tokenType;
@@ -43,29 +42,25 @@ public class AccessInfo
     protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
 
-    public AccessInfo()
-    {
+    public AccessInfo() {
 
     }
 
 
     @JsonProperty("access_token")
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getAccessToken()
-    {
+    public String getAccessToken() {
         return accessToken;
     }
 
 
     @JsonProperty("access_token")
-    public void setAccessToken( String accessToken )
-    {
+    public void setAccessToken( String accessToken ) {
         this.accessToken = accessToken;
     }
 
 
-    public AccessInfo withAccessToken( String accessToken )
-    {
+    public AccessInfo withAccessToken( String accessToken ) {
         this.accessToken = accessToken;
         return this;
     }
@@ -73,42 +68,36 @@ public class AccessInfo
 
     @JsonProperty("token_type")
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getTokenType()
-    {
+    public String getTokenType() {
         return tokenType;
     }
 
 
     @JsonProperty("token_type")
-    public void setTokenType( String tokenType )
-    {
+    public void setTokenType( String tokenType ) {
         this.tokenType = tokenType;
     }
 
 
-    public AccessInfo withTokenType( String tokenType )
-    {
+    public AccessInfo withTokenType( String tokenType ) {
         this.tokenType = tokenType;
         return this;
     }
 
 
     @JsonProperty("expires_in")
-    public long getExpiresIn()
-    {
+    public long getExpiresIn() {
         return expiresIn;
     }
 
 
     @JsonProperty("expires_in")
-    public void setExpiresIn( long expiresIn )
-    {
+    public void setExpiresIn( long expiresIn ) {
         this.expiresIn = expiresIn;
     }
 
 
-    public AccessInfo withExpiresIn( long expiresIn )
-    {
+    public AccessInfo withExpiresIn( long expiresIn ) {
         this.expiresIn = expiresIn;
         return this;
     }
@@ -116,96 +105,82 @@ public class AccessInfo
 
     @JsonProperty("refresh_token")
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getRefreshToken()
-    {
+    public String getRefreshToken() {
         return refreshToken;
     }
 
 
     @JsonProperty("refresh_token")
-    public void setRefreshToken( String refreshToken )
-    {
+    public void setRefreshToken( String refreshToken ) {
         this.refreshToken = refreshToken;
     }
 
 
-    public AccessInfo withRefreshToken( String refreshToken )
-    {
+    public AccessInfo withRefreshToken( String refreshToken ) {
         this.refreshToken = refreshToken;
         return this;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getScope()
-    {
+    public String getScope() {
         return scope;
     }
 
 
-    public void setScope( String scope )
-    {
+    public void setScope( String scope ) {
         this.scope = scope;
     }
 
 
-    public AccessInfo withScope( String scope )
-    {
+    public AccessInfo withScope( String scope ) {
         this.scope = scope;
         return this;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getState()
-    {
+    public String getState() {
         return state;
     }
 
 
-    public void setState( String state )
-    {
+    public void setState( String state ) {
         this.state = state;
     }
 
 
-    public AccessInfo withState( String state )
-    {
+    public AccessInfo withState( String state ) {
         this.state = state;
         return this;
     }
 
 
     @JsonAnyGetter
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
     @JsonAnySetter
-    public void setProperty( String key, Object value )
-    {
+    public void setProperty( String key, Object value ) {
         properties.put( key, value );
     }
 
 
-    public AccessInfo withProperty( String key, Object value )
-    {
+    public AccessInfo withProperty( String key, Object value ) {
         properties.put( key, value );
         return this;
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Long getPasswordChanged()
-    {
+    public Long getPasswordChanged() {
         return passwordChanged;
     }
 
 
-    public AccessInfo withPasswordChanged( Long lastPasswordChange )
-    {
+    public AccessInfo withPasswordChanged( Long lastPasswordChange ) {
         this.passwordChanged = lastPasswordChange;
         return this;
     }

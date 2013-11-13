@@ -31,8 +31,7 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 
 
-public class ServiceManagerFactory implements ApplicationContextAware
-{
+public class ServiceManagerFactory implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
@@ -47,8 +46,7 @@ public class ServiceManagerFactory implements ApplicationContextAware
 
 
     public ServiceManagerFactory( EntityManagerFactory emf, Properties properties, SchedulerService schedulerService,
-                                  LockManager lockManager, QueueManagerFactory qmf )
-    {
+                                  LockManager lockManager, QueueManagerFactory qmf ) {
         this.emf = emf;
         this.properties = properties;
         this.schedulerService = schedulerService;
@@ -57,16 +55,13 @@ public class ServiceManagerFactory implements ApplicationContextAware
     }
 
 
-    public ServiceManager getServiceManager( UUID applicationId )
-    {
+    public ServiceManager getServiceManager( UUID applicationId ) {
         EntityManager em = null;
-        if ( emf != null )
-        {
+        if ( emf != null ) {
             em = emf.getEntityManager( applicationId );
         }
         QueueManager qm = null;
-        if ( qmf != null )
-        {
+        if ( qmf != null ) {
             qm = qmf.getQueueManager( applicationId );
         }
         ServiceManager sm = new ServiceManager();
@@ -75,33 +70,26 @@ public class ServiceManagerFactory implements ApplicationContextAware
     }
 
 
-    public List<ServiceExecutionEventListener> getExecutionEventListeners()
-    {
+    public List<ServiceExecutionEventListener> getExecutionEventListeners() {
         return eventListeners;
     }
 
 
-    public void setExecutionEventListeners( List<ServiceExecutionEventListener> eventListeners )
-    {
+    public void setExecutionEventListeners( List<ServiceExecutionEventListener> eventListeners ) {
         this.eventListeners = eventListeners;
     }
 
 
     public void notifyExecutionEventListeners( ServiceAction action, ServiceRequest request, ServiceResults results,
-                                               ServicePayload payload )
-    {
+                                               ServicePayload payload ) {
         notifyExecutionEventListeners( new ServiceExecutionEvent( action, request, results, payload ) );
     }
 
 
-    public void notifyExecutionEventListeners( ServiceExecutionEvent event )
-    {
-        if ( eventListeners != null )
-        {
-            for ( ServiceExecutionEventListener listener : eventListeners )
-            {
-                if ( listener != null )
-                {
+    public void notifyExecutionEventListeners( ServiceExecutionEvent event ) {
+        if ( eventListeners != null ) {
+            for ( ServiceExecutionEventListener listener : eventListeners ) {
+                if ( listener != null ) {
                     listener.serviceExecuted( event );
                 }
             }
@@ -109,14 +97,10 @@ public class ServiceManagerFactory implements ApplicationContextAware
     }
 
 
-    public void notifyCollectionEventListeners( String path, ServiceResults results )
-    {
-        if ( collectionListeners != null )
-        {
-            for ( ServiceCollectionEventListener listener : collectionListeners )
-            {
-                if ( listener != null )
-                {
+    public void notifyCollectionEventListeners( String path, ServiceResults results ) {
+        if ( collectionListeners != null ) {
+            for ( ServiceCollectionEventListener listener : collectionListeners ) {
+                if ( listener != null ) {
                     listener.collectionModified( path, results );
                 }
             }
@@ -125,27 +109,23 @@ public class ServiceManagerFactory implements ApplicationContextAware
 
 
     @Override
-    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException
-    {
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
 
     /** @return the applicationContext */
-    public ApplicationContext getApplicationContext()
-    {
+    public ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 
 
-    public SchedulerService getSchedulerService()
-    {
+    public SchedulerService getSchedulerService() {
         return schedulerService;
     }
 
 
-    public LockManager getLockManager()
-    {
+    public LockManager getLockManager() {
         return lockManager;
     }
 }

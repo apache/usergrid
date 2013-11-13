@@ -37,8 +37,7 @@ import org.usergrid.persistence.entities.JobStat;
  *
  * @author tnine
  */
-public interface JobExecution
-{
+public interface JobExecution {
 
     /** Retry constant to signal the job should try forever */
     public static final int FOREVER = -1;
@@ -86,8 +85,7 @@ public interface JobExecution
     /** Get the current transaction Id from the heartbeat */
     public UUID getTransactionId();
 
-    public enum Status
-    {
+    public enum Status {
         NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, DEAD, DELAYED
     }
 }

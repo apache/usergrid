@@ -28,16 +28,14 @@ import static org.jboss.netty.channel.Channels.pipeline;
  * @author <a href="http://gleamynode.net/">Trustin Lee</a>
  * @version $Rev: 2080 $, $Date: 2010-01-26 18:04:19 +0900 (Tue, 26 Jan 2010) $
  */
-public class MongoProxyPipelineFactory implements ChannelPipelineFactory
-{
+public class MongoProxyPipelineFactory implements ChannelPipelineFactory {
 
     private final ClientSocketChannelFactory cf;
     private final String remoteHost;
     private final int remotePort;
 
 
-    public MongoProxyPipelineFactory( ClientSocketChannelFactory cf, String remoteHost, int remotePort )
-    {
+    public MongoProxyPipelineFactory( ClientSocketChannelFactory cf, String remoteHost, int remotePort ) {
         this.cf = cf;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
@@ -45,8 +43,7 @@ public class MongoProxyPipelineFactory implements ChannelPipelineFactory
 
 
     @Override
-    public ChannelPipeline getPipeline() throws Exception
-    {
+    public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline p = pipeline(); // Note the static import.
         // p.addLast("encoder", new MongoMessageEncoder());
         p.addLast( "framer", new MongoMessageFrame() );

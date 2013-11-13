@@ -41,8 +41,7 @@ import com.sun.jersey.spi.template.ViewProcessor;
 
 
 @Provider
-public class CustomJSPTemplateProcessor implements ViewProcessor<String>
-{
+public class CustomJSPTemplateProcessor implements ViewProcessor<String> {
 
     private static final Logger logger = LoggerFactory.getLogger( CustomJSPTemplateProcessor.class );
 
@@ -65,48 +64,38 @@ public class CustomJSPTemplateProcessor implements ViewProcessor<String>
     private final String basePath;
 
 
-    public CustomJSPTemplateProcessor( @Context ResourceConfig resourceConfig )
-    {
+    public CustomJSPTemplateProcessor( @Context ResourceConfig resourceConfig ) {
         logger.info( "CustomJSPTemplateProcessor installed" );
 
         String path = ( String ) resourceConfig.getProperties().get( ServletContainer.JSP_TEMPLATES_BASE_PATH );
-        if ( path == null )
-        {
+        if ( path == null ) {
             basePath = "";
         }
-        else if ( path.charAt( 0 ) == '/' )
-        {
+        else if ( path.charAt( 0 ) == '/' ) {
             basePath = path;
         }
-        else
-        {
+        else {
             basePath = "/" + path;
         }
     }
 
 
-    public String findJsp( String path ) throws MalformedURLException
-    {
-        if ( servletContext.getResource( path ) != null )
-        {
+    public String findJsp( String path ) throws MalformedURLException {
+        if ( servletContext.getResource( path ) != null ) {
             return path;
         }
-        else
-        {
+        else {
             // check if the entry exists in web.xml through the
             // RequestDispatcher
             ServletContext jspContext = servletContext.getContext( path );
-            if ( jspContext != null )
-            {
+            if ( jspContext != null ) {
                 RequestDispatcher jspReqDispatcher = servletContext.getRequestDispatcher( path );
-                if ( jspReqDispatcher != null )
-                {
+                if ( jspReqDispatcher != null ) {
                     return path;
                 }
             }
             RequestDispatcher reqDispatcher = servletContext.getRequestDispatcher( path );
-            if ( reqDispatcher != null )
-            {
+            if ( reqDispatcher != null ) {
                 return path;
             }
         }
@@ -115,36 +104,28 @@ public class CustomJSPTemplateProcessor implements ViewProcessor<String>
 
 
     @Override
-    public String resolve( String path )
-    {
-        if ( servletContext == null )
-        {
+    public String resolve( String path ) {
+        if ( servletContext == null ) {
             return null;
         }
 
-        if ( basePath != "" )
-        {
+        if ( basePath != "" ) {
             path = basePath + path;
         }
 
-        try
-        {
-            if ( findJsp( path ) != null )
-            {
+        try {
+            if ( findJsp( path ) != null ) {
                 return path;
             }
 
-            if ( !path.endsWith( ".jsp" ) )
-            {
+            if ( !path.endsWith( ".jsp" ) ) {
                 path = path + ".jsp";
-                if ( findJsp( path ) != null )
-                {
+                if ( findJsp( path ) != null ) {
                     return path;
                 }
             }
         }
-        catch ( MalformedURLException ex )
-        {
+        catch ( MalformedURLException ex ) {
             // TODO log
         }
 
@@ -153,10 +134,8 @@ public class CustomJSPTemplateProcessor implements ViewProcessor<String>
 
 
     @Override
-    public void writeTo( String resolvedPath, Viewable viewable, OutputStream out ) throws IOException
-    {
-        if ( hc.isTracingEnabled() )
-        {
+    public void writeTo( String resolvedPath, Viewable viewable, OutputStream out ) throws IOException {
+        if ( hc.isTracingEnabled() ) {
             hc.trace( String.format( "forwarding view to JSP page: \"%s\", it = %s", resolvedPath,
                     ReflectionHelper.objectToString( viewable.getModel() ) ) );
         }
@@ -165,19 +144,16 @@ public class CustomJSPTemplateProcessor implements ViewProcessor<String>
         out.flush();
 
         RequestDispatcher d = servletContext.getRequestDispatcher( resolvedPath );
-        if ( d == null )
-        {
+        if ( d == null ) {
             throw new ContainerException( "No request dispatcher for: " + resolvedPath );
         }
 
         d = new RequestDispatcherWrapper( d, basePath, hc, viewable );
 
-        try
-        {
+        try {
             d.forward( requestInvoker.get(), responseInvoker.get() );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new ContainerException( e );
         }
     }

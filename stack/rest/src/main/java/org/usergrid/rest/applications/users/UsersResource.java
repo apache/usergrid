@@ -64,8 +64,7 @@ import static org.usergrid.services.ServiceParameter.addParameter;
 @Component("org.usergrid.rest.applications.users.UsersResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
-public class UsersResource extends ServiceResource
-{
+public class UsersResource extends ServiceResource {
 
     private static final Logger logger = LoggerFactory.getLogger( UsersResource.class );
 
@@ -73,16 +72,14 @@ public class UsersResource extends ServiceResource
     User user;
 
 
-    public UsersResource()
-    {
+    public UsersResource() {
     }
 
 
     @Override
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "ServiceResource.addIdParameter" );
 
@@ -99,18 +96,15 @@ public class UsersResource extends ServiceResource
     @Override
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "ServiceResource.addNameParameter" );
 
         logger.info( "Current segment is " + itemName.getPath() );
 
-        if ( itemName.getPath().startsWith( "{" ) )
-        {
+        if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
-            if ( query != null )
-            {
+            if ( query != null ) {
                 addParameter( getServiceParameters(), query );
             }
             addMatrixParams( getServiceParameters(), ui, itemName );
@@ -122,8 +116,7 @@ public class UsersResource extends ServiceResource
 
         addMatrixParams( getServiceParameters(), ui, itemName );
         Identifier id = Identifier.from( itemName.getPath() );
-        if ( id == null )
-        {
+        if ( id == null ) {
             throw new IllegalArgumentException( "Not a valid user identifier: " + itemName.getPath() );
         }
         return getSubResource( UserResource.class ).init( id );
@@ -133,8 +126,7 @@ public class UsersResource extends ServiceResource
     @GET
     @Path("resetpw")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable showPasswordResetForm( @Context UriInfo ui )
-    {
+    public Viewable showPasswordResetForm( @Context UriInfo ui ) {
         return handleViewable( "resetpw_email_form", this );
     }
 
@@ -145,62 +137,51 @@ public class UsersResource extends ServiceResource
     @Produces(MediaType.TEXT_HTML)
     public Viewable handlePasswordResetForm( @Context UriInfo ui, @FormParam("email") String email,
                                              @FormParam("recaptcha_challenge_field") String challenge,
-                                             @FormParam("recaptcha_response_field") String uresponse )
-    {
+                                             @FormParam("recaptcha_response_field") String uresponse ) {
 
-        try
-        {
+        try {
             ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
             reCaptcha.setPrivateKey( properties.getRecaptchaPrivate() );
 
             ReCaptchaResponse reCaptchaResponse =
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
-            if ( isBlank( email ) )
-            {
+            if ( isBlank( email ) ) {
                 errorMsg = "No email provided, try again...";
                 return handleViewable( "resetpw_email_form", this );
             }
 
-            if ( !useReCaptcha() || reCaptchaResponse.isValid() )
-            {
+            if ( !useReCaptcha() || reCaptchaResponse.isValid() ) {
                 user = management.getAppUserByIdentifier( getApplicationId(), Identifier.fromEmail( email ) );
-                if ( user != null )
-                {
+                if ( user != null ) {
                     management.startAppUserPasswordResetFlow( getApplicationId(), user );
                     return handleViewable( "resetpw_email_success", this );
                 }
-                else
-                {
+                else {
                     errorMsg = "We don't recognize that email, try again...";
                     return handleViewable( "resetpw_email_form", this );
                 }
             }
-            else
-            {
+            else {
                 errorMsg = "Incorrect Captcha, try again...";
                 return handleViewable( "resetpw_email_form", this );
             }
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "resetpw_email_form", e );
         }
     }
 
 
-    public String getErrorMsg()
-    {
+    public String getErrorMsg() {
         return errorMsg;
     }
 
 
-    public User getUser()
-    {
+    public User getUser() {
         return user;
     }
 
@@ -210,15 +191,12 @@ public class UsersResource extends ServiceResource
     @RequireApplicationAccess
     public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         User user = getUser();
-        if ( user == null )
-        {
+        if ( user == null ) {
             return executePost( ui, new EntityHolder( json ), callback );
         }
-        if ( json != null )
-        {
+        if ( json != null ) {
             json.remove( "password" );
             json.remove( "pin" );
         }
@@ -231,8 +209,7 @@ public class UsersResource extends ServiceResource
     @RequireApplicationAccess
     public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         Object json = body.getEntity();
         String password = null;
         String pin = null;
@@ -244,8 +221,7 @@ public class UsersResource extends ServiceResource
         boolean activated =
                 !( ( registration_requires_email_confirmation != null ) && registration_requires_email_confirmation );
 
-        if ( json instanceof Map )
-        {
+        if ( json instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) json;
             password = ( String ) map.get( "password" );
             map.remove( "password" );
@@ -253,13 +229,10 @@ public class UsersResource extends ServiceResource
             map.remove( "pin" );
             map.put( "activated", activated );
         }
-        else if ( json instanceof List )
-        {
+        else if ( json instanceof List ) {
             @SuppressWarnings("unchecked") List<Object> list = ( List<Object> ) json;
-            for ( Object obj : list )
-            {
-                if ( obj instanceof Map )
-                {
+            for ( Object obj : list ) {
+                if ( obj instanceof Map ) {
                     @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) obj;
                     map.remove( "password" );
                     map.remove( "pin" );
@@ -269,24 +242,20 @@ public class UsersResource extends ServiceResource
 
         ApiResponse response = ( ApiResponse ) super.executePost( ui, body, callback ).getJsonSource();
 
-        if ( ( response.getEntities() != null ) && ( response.getEntities().size() == 1 ) )
-        {
+        if ( ( response.getEntities() != null ) && ( response.getEntities().size() == 1 ) ) {
 
             Entity entity = response.getEntities().get( 0 );
             User user = ( User ) entity.toTypedEntity();
 
-            if ( isNotBlank( password ) )
-            {
+            if ( isNotBlank( password ) ) {
                 management.setAppUserPassword( getApplicationId(), user.getUuid(), password );
             }
 
-            if ( isNotBlank( pin ) )
-            {
+            if ( isNotBlank( pin ) ) {
                 management.setAppUserPin( getApplicationId(), user.getUuid(), pin );
             }
 
-            if ( !activated )
-            {
+            if ( !activated ) {
                 management.startAppUserActivationFlow( getApplicationId(), user );
             }
         }

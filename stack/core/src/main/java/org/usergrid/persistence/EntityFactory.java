@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
 
 
 /** A factory for creating Entity objects. */
-public class EntityFactory
-{
+public class EntityFactory {
 
     /** The Constant logger. */
     private static final Logger logger = LoggerFactory.getLogger( EntityFactory.class );
@@ -40,59 +39,48 @@ public class EntityFactory
      *
      * @return new entity
      */
-    public static <A extends Entity> A newEntity( UUID id, String type, Class<A> entityClass )
-    {
-        if ( type == null )
-        {
+    public static <A extends Entity> A newEntity( UUID id, String type, Class<A> entityClass ) {
+        if ( type == null ) {
             String errorMsg = "Entity type cannot be null";
             logger.error( errorMsg );
             throw new IllegalArgumentException( errorMsg );
         }
-        if ( "entity".equalsIgnoreCase( type ) || "dynamicentity".equalsIgnoreCase( type ) )
-        {
+        if ( "entity".equalsIgnoreCase( type ) || "dynamicentity".equalsIgnoreCase( type ) ) {
             String errorMsg = "Unable to instantiate entity (" + type + ") because that is not a valid type.";
             logger.error( errorMsg );
             throw new IllegalArgumentException( errorMsg );
         }
         Class<? extends Entity> expectedCls = Schema.getDefaultSchema().getEntityClass( type );
 
-        if ( entityClass == null )
-        {
-            if ( expectedCls != null )
-            {
+        if ( entityClass == null ) {
+            if ( expectedCls != null ) {
                 entityClass = ( Class<A> ) expectedCls;
             }
-            else
-            {
+            else {
                 entityClass = ( Class<A> ) DynamicEntity.class;
             }
         }
 
         if ( ( expectedCls != null ) && !Entity.class.isAssignableFrom( entityClass ) && !expectedCls
-                .isAssignableFrom( entityClass ) )
-        {
+                .isAssignableFrom( entityClass ) ) {
             String errorMsg = "Unable to instantiate entity (" + type
                     + ") because type and entityClass do not match, either use DynamicClass as entityClass or fix " +
                     "mismatch.";
             logger.error( errorMsg );
             throw new IllegalArgumentException( errorMsg );
         }
-        else
-        {
-            try
-            {
+        else {
+            try {
                 A entity = entityClass.newInstance();
                 entity.setUuid( id );
                 entity.setType( type );
                 return entity;
             }
-            catch ( IllegalAccessException e )
-            {
+            catch ( IllegalAccessException e ) {
                 String errorMsg = "Unable to access entity (" + type + "): " + e.getMessage();
                 logger.error( errorMsg );
             }
-            catch ( InstantiationException e )
-            {
+            catch ( InstantiationException e ) {
                 String errorMsg = "Unable to instantiate entity (" + type + "): " + e.getMessage();
                 logger.error( errorMsg );
             }
@@ -111,11 +99,9 @@ public class EntityFactory
      *
      * @return new entity
      */
-    public static <A extends Entity> A newEntity( UUID id, Class<A> entityClass )
-    {
+    public static <A extends Entity> A newEntity( UUID id, Class<A> entityClass ) {
 
-        if ( entityClass == DynamicEntity.class )
-        {
+        if ( entityClass == DynamicEntity.class ) {
             return null;
         }
 
@@ -133,12 +119,10 @@ public class EntityFactory
      *
      * @return new entity
      */
-    public static Entity newEntity( UUID id, String type )
-    {
+    public static Entity newEntity( UUID id, String type ) {
 
         Class<? extends Entity> entityClass = Schema.getDefaultSchema().getEntityClass( type );
-        if ( entityClass == null )
-        {
+        if ( entityClass == null ) {
             entityClass = DynamicEntity.class;
         }
 

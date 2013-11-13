@@ -16,8 +16,7 @@
 package org.usergrid.services;
 
 
-public interface ServiceCollectionEventListener
-{
+public interface ServiceCollectionEventListener {
 
     public abstract void collectionModified( String path, ServiceResults results );
 }

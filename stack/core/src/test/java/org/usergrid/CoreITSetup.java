@@ -25,8 +25,7 @@ import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.cassandra.CassandraService;
 
 
-public interface CoreITSetup extends TestRule
-{
+public interface CoreITSetup extends TestRule {
 
     boolean USE_DEFAULT_APPLICATION = false;
 

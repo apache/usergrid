@@ -27,15 +27,13 @@ import org.usergrid.rest.test.resource.NamedResource;
  *
  * @author tnine
  */
-public class Application extends EntityResource
-{
+public class Application extends EntityResource {
 
     /**
      * @param entityId
      * @param parent
      */
-    public Application( UUID entityId, NamedResource parent )
-    {
+    public Application( UUID entityId, NamedResource parent ) {
         super( entityId, parent );
     }
 
@@ -44,8 +42,7 @@ public class Application extends EntityResource
      * @param entityName
      * @param parent
      */
-    public Application( String entityName, NamedResource parent )
-    {
+    public Application( String entityName, NamedResource parent ) {
         super( entityName, parent );
     }
 }

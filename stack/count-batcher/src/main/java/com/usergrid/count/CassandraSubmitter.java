@@ -37,8 +37,7 @@ import com.yammer.metrics.core.TimerContext;
  *
  * @author zznate
  */
-public class CassandraSubmitter implements BatchSubmitter
-{
+public class CassandraSubmitter implements BatchSubmitter {
     private final Logger log = LoggerFactory.getLogger( CassandraSubmitter.class );
 
     private final int threadCount = 3;
@@ -49,23 +48,19 @@ public class CassandraSubmitter implements BatchSubmitter
             Metrics.newTimer( CassandraSubmitter.class, "submit_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS );
 
 
-    public CassandraSubmitter( CassandraCounterStore cassandraCounterStore )
-    {
+    public CassandraSubmitter( CassandraCounterStore cassandraCounterStore ) {
         this.cassandraCounterStore = cassandraCounterStore;
     }
 
 
     @Override
-    public Future submit( final Collection<Count> counts )
-    {
-        return executor.submit( new Callable<Object>()
-        {
+    public Future submit( final Collection<Count> counts ) {
+        return executor.submit( new Callable<Object>() {
             final TimerContext timer = addTimer.time();
 
 
             @Override
-            public Object call() throws Exception
-            {
+            public Object call() throws Exception {
                 cassandraCounterStore.save( counts );
                 timer.stop();
                 return true;
@@ -75,8 +70,7 @@ public class CassandraSubmitter implements BatchSubmitter
 
 
     @Override
-    public void shutdown()
-    {
+    public void shutdown() {
         log.warn( "Shutting down CassandraSubmitter" );
         executor.shutdown();
     }

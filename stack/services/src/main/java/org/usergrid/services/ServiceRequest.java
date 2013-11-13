@@ -36,8 +36,7 @@ import static org.usergrid.utils.ListUtils.isEmpty;
 import static org.usergrid.utils.ListUtils.last;
 
 
-public class ServiceRequest
-{
+public class ServiceRequest {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequest.class );
 
@@ -64,8 +63,7 @@ public class ServiceRequest
 
 
     public ServiceRequest( ServiceManager services, ServiceAction action, String serviceName,
-                           List<ServiceParameter> parameters, ServicePayload payload, boolean returnsTree )
-    {
+                           List<ServiceParameter> parameters, ServicePayload payload, boolean returnsTree ) {
         this.services = services;
         this.action = action;
         parent = null;
@@ -76,8 +74,7 @@ public class ServiceRequest
         this.parameters = parameters;
         this.originalParameters = Collections.unmodifiableList( new ArrayList<ServiceParameter>( parameters ) );
         this.returnsTree = returnsTree;
-        if ( payload == null )
-        {
+        if ( payload == null ) {
             payload = new ServicePayload();
         }
 
@@ -86,15 +83,13 @@ public class ServiceRequest
 
 
     public ServiceRequest( ServiceManager services, ServiceAction action, String serviceName,
-                           List<ServiceParameter> parameters, ServicePayload payload )
-    {
+                           List<ServiceParameter> parameters, ServicePayload payload ) {
         this( services, action, serviceName, parameters, payload, false );
     }
 
 
     public ServiceRequest( ServiceRequest parent, EntityRef owner, String path, String childPath, String serviceName,
-                           List<ServiceParameter> parameters )
-    {
+                           List<ServiceParameter> parameters ) {
         services = parent.services;
         returnsTree = parent.returnsTree;
         action = parent.action;
@@ -102,8 +97,7 @@ public class ServiceRequest
         this.parent = parent;
         this.owner = owner;
         this.serviceName = serviceName;
-        if ( parameters == null )
-        {
+        if ( parameters == null ) {
             parameters = new ArrayList<ServiceParameter>();
         }
         this.parameters = parameters;
@@ -115,8 +109,7 @@ public class ServiceRequest
 
     public ServiceRequest( ServiceManager services, ServiceAction action, ServiceRequest parent, EntityRef owner,
                            String path, String childPath, String serviceName, List<ServiceParameter> parameters,
-                           ServicePayload payload, boolean returnsTree )
-    {
+                           ServicePayload payload, boolean returnsTree ) {
         this.services = services;
         this.action = action;
         this.parent = parent;
@@ -131,92 +124,76 @@ public class ServiceRequest
     }
 
 
-    public static ServiceRequest withPath( ServiceRequest r, String path )
-    {
+    public static ServiceRequest withPath( ServiceRequest r, String path ) {
         return new ServiceRequest( r.services, r.action, r.parent, r.owner, path, r.childPath, r.serviceName,
                 r.parameters, r.payload, r.returnsTree );
     }
 
 
-    public static ServiceRequest withChildPath( ServiceRequest r, String childPath )
-    {
+    public static ServiceRequest withChildPath( ServiceRequest r, String childPath ) {
         return new ServiceRequest( r.services, r.action, r.parent, r.owner, r.path, childPath, r.serviceName,
                 r.parameters, r.payload, r.returnsTree );
     }
 
 
-    public ServiceRequest withPath( String path )
-    {
+    public ServiceRequest withPath( String path ) {
         return withPath( this, path );
     }
 
 
-    public ServiceRequest withChildPath( String childPath )
-    {
+    public ServiceRequest withChildPath( String childPath ) {
         return withChildPath( this, childPath );
     }
 
 
-    public long getId()
-    {
+    public long getId() {
         return id;
     }
 
 
-    public String getPath()
-    {
+    public String getPath() {
         return path;
     }
 
 
-    public ServiceAction getAction()
-    {
+    public ServiceAction getAction() {
         return action;
     }
 
 
-    public ServicePayload getPayload()
-    {
+    public ServicePayload getPayload() {
         return payload;
     }
 
 
-    public ServiceManager getServices()
-    {
+    public ServiceManager getServices() {
         return services;
     }
 
 
-    public ServiceRequest getParent()
-    {
+    public ServiceRequest getParent() {
         return parent;
     }
 
 
-    public String getServiceName()
-    {
+    public String getServiceName() {
         return serviceName;
     }
 
 
-    public EntityRef getPreviousOwner()
-    {
-        if ( parent == null )
-        {
+    public EntityRef getPreviousOwner() {
+        if ( parent == null ) {
             return null;
         }
         return parent.getOwner();
     }
 
 
-    public ServiceResults execute() throws Exception
-    {
-        try
-        {
+    public ServiceResults execute() throws Exception {
+        try {
             return execute( null );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             // don't log as error because some exceptions are not actually errors, e.g. resource not found
             logger.debug( debugString(), e );
             throw e;
@@ -224,8 +201,7 @@ public class ServiceRequest
     }
 
 
-    private String debugString()
-    {
+    private String debugString() {
         StringBuffer sb = new StringBuffer();
         sb.append( "request details:\n  " );
         sb.append( action );
@@ -241,25 +217,21 @@ public class ServiceRequest
     }
 
 
-    public ServiceResults execute( ServiceResults previousResults ) throws Exception
-    {
+    public ServiceResults execute( ServiceResults previousResults ) throws Exception {
 
         // initServiceName();
 
         ServiceResults results = null;
         Service s = services.getService( serviceName );
-        if ( s != null )
-        {
+        if ( s != null ) {
             results = s.invoke( action, this, previousResults, payload );
-            if ( ( results != null ) && results.hasMoreRequests() )
-            {
+            if ( ( results != null ) && results.hasMoreRequests() ) {
 
                 results = invokeMultiple( results, payload );
             }
         }
 
-        if ( results == null )
-        {
+        if ( results == null ) {
             results = new ServiceResults( null, this, previousResults, null, Type.GENERIC, null, null, null );
         }
 
@@ -267,48 +239,38 @@ public class ServiceRequest
     }
 
 
-    private ServiceResults invokeMultiple( ServiceResults previousResults, ServicePayload payload ) throws Exception
-    {
+    private ServiceResults invokeMultiple( ServiceResults previousResults, ServicePayload payload ) throws Exception {
 
         List<ServiceRequest> requests = previousResults.getNextRequests();
-        if ( requests.size() > MAX_INVOCATIONS )
-        {
+        if ( requests.size() > MAX_INVOCATIONS ) {
             throw new IllegalArgumentException(
                     "Maximum sub-collection requests exceeded, limit is " + MAX_INVOCATIONS + ", " + requests.size()
                             + " attempted" );
         }
 
-        if ( returnsTree )
-        {
+        if ( returnsTree ) {
 
-            for ( ServiceRequest request : requests )
-            {
+            for ( ServiceRequest request : requests ) {
 
                 ServiceResults rs = request.execute( previousResults );
-                if ( rs != null )
-                {
+                if ( rs != null ) {
                     previousResults.setChildResults( rs );
                 }
             }
 
             return previousResults;
         }
-        else
-        {
+        else {
             ServiceResults aggregate_results = null;
 
-            for ( ServiceRequest request : requests )
-            {
+            for ( ServiceRequest request : requests ) {
 
                 ServiceResults rs = request.execute( previousResults );
-                if ( rs != null )
-                {
-                    if ( aggregate_results == null )
-                    {
+                if ( rs != null ) {
+                    if ( aggregate_results == null ) {
                         aggregate_results = rs;
                     }
-                    else
-                    {
+                    else {
                         aggregate_results.merge( rs );
                     }
                 }
@@ -319,28 +281,23 @@ public class ServiceRequest
     }
 
 
-    public List<ServiceParameter> getParameters()
-    {
+    public List<ServiceParameter> getParameters() {
         return parameters;
     }
 
 
-    public boolean hasParameters()
-    {
+    public boolean hasParameters() {
         return !isEmpty( parameters );
     }
 
 
-    public EntityRef getOwner()
-    {
+    public EntityRef getOwner() {
         return owner;
     }
 
 
-    public Query getLastQuery()
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public Query getLastQuery() {
+        if ( !isEmpty( parameters ) ) {
             return last( parameters ).getQuery();
         }
         return null;
@@ -348,63 +305,49 @@ public class ServiceRequest
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
-        if ( serviceName != null )
-        {
+        if ( serviceName != null ) {
             sb.append( "/" );
             sb.append( serviceName );
         }
-        for ( int i = 0; i < parameters.size(); i++ )
-        {
+        for ( int i = 0; i < parameters.size(); i++ ) {
             ServiceParameter p = parameters.get( i );
-            if ( p instanceof QueryParameter )
-            {
-                if ( i == ( parameters.size() - 1 ) )
-                {
+            if ( p instanceof QueryParameter ) {
+                if ( i == ( parameters.size() - 1 ) ) {
                     sb.append( '?' );
                 }
-                else
-                {
+                else {
                     sb.append( ';' );
                 }
                 boolean has_prev_param = false;
                 String q = p.toString();
-                if ( isNotBlank( q ) )
-                {
-                    try
-                    {
+                if ( isNotBlank( q ) ) {
+                    try {
                         sb.append( "ql=" + URLEncoder.encode( q, "UTF-8" ) );
                     }
-                    catch ( UnsupportedEncodingException e )
-                    {
+                    catch ( UnsupportedEncodingException e ) {
                         logger.error( "Unable to encode url", e );
                     }
                     has_prev_param = true;
                 }
                 int limit = p.getQuery().getLimit();
-                if ( limit != Query.DEFAULT_LIMIT )
-                {
-                    if ( has_prev_param )
-                    {
+                if ( limit != Query.DEFAULT_LIMIT ) {
+                    if ( has_prev_param ) {
                         sb.append( '&' );
                     }
                     sb.append( "limit=" + limit );
                     has_prev_param = true;
                 }
-                if ( p.getQuery().getStartResult() != null )
-                {
-                    if ( has_prev_param )
-                    {
+                if ( p.getQuery().getStartResult() != null ) {
+                    if ( has_prev_param ) {
                         sb.append( '&' );
                     }
                     sb.append( "start=" + p.getQuery().getStartResult() );
                     has_prev_param = true;
                 }
             }
-            else
-            {
+            else {
                 sb.append( '/' );
                 sb.append( p.toString() );
             }
@@ -413,20 +356,17 @@ public class ServiceRequest
     }
 
 
-    public String getChildPath()
-    {
+    public String getChildPath() {
         return childPath;
     }
 
 
-    public boolean isReturnsTree()
-    {
+    public boolean isReturnsTree() {
         return returnsTree;
     }
 
 
-    public List<ServiceParameter> getOriginalParameters()
-    {
+    public List<ServiceParameter> getOriginalParameters() {
         return originalParameters;
     }
 }

@@ -18,8 +18,7 @@ import org.usergrid.mq.Query.FilterPredicate;
 import org.usergrid.mq.Query.SortPredicate;
 
 
-public class QueryFilterParser extends Parser
-{
+public class QueryFilterParser extends Parser {
     public static final String[] tokenNames = new String[] {
             "<invalid>", "<EOR>", "<DOWN>", "<UP>", "ID", "INT", "EXPONENT", "FLOAT", "ESC_SEQ", "STRING", "BOOLEAN",
             "HEX_DIGIT", "UUID", "UNICODE_ESC", "OCTAL_ESC", "WS", "'<'", "'<='", "'='", "'>'", "'>='", "'in'", "'eq'",
@@ -69,14 +68,12 @@ public class QueryFilterParser extends Parser
     // delegators
 
 
-    public QueryFilterParser( TokenStream input )
-    {
+    public QueryFilterParser( TokenStream input ) {
         this( input, new RecognizerSharedState() );
     }
 
 
-    public QueryFilterParser( TokenStream input, RecognizerSharedState state )
-    {
+    public QueryFilterParser( TokenStream input, RecognizerSharedState state ) {
         super( input, state );
     }
 
@@ -93,14 +90,12 @@ public class QueryFilterParser extends Parser
 
 
     @Override
-    public void emitErrorMessage( String msg )
-    {
+    public void emitErrorMessage( String msg ) {
         logger.info( msg );
     }
 
 
-    public static class property_return extends ParserRuleReturnScope
-    {}
+    public static class property_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -108,13 +103,11 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "property"
     // org/usergrid/persistence/query/QueryFilter.g:101:1: property : ( ID ) ;
-    public final QueryFilterParser.property_return property() throws RecognitionException
-    {
+    public final QueryFilterParser.property_return property() throws RecognitionException {
         QueryFilterParser.property_return retval = new QueryFilterParser.property_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:102:2: ( ( ID ) )
             // org/usergrid/persistence/query/QueryFilter.g:102:5: ( ID )
             {
@@ -127,21 +120,18 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
     // $ANTLR end "property"
 
 
-    public static class operator_return extends ParserRuleReturnScope
-    {}
+    public static class operator_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -150,25 +140,21 @@ public class QueryFilterParser extends Parser
     // $ANTLR start "operator"
     // org/usergrid/persistence/query/QueryFilter.g:104:1: operator : ( '<' | '<=' | '=' | '>' | '>=' | 'in' | 'eq' |
     // 'lt' | 'gt' | 'lte' | 'gte' | 'contains' | 'within' ) ;
-    public final QueryFilterParser.operator_return operator() throws RecognitionException
-    {
+    public final QueryFilterParser.operator_return operator() throws RecognitionException {
         QueryFilterParser.operator_return retval = new QueryFilterParser.operator_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:105:2: ( ( '<' | '<=' | '=' | '>' | '>=' | 'in' | 'eq' |
             // 'lt' | 'gt' | 'lte' | 'gte' | 'contains' | 'within' ) )
             // org/usergrid/persistence/query/QueryFilter.g:105:4: ( '<' | '<=' | '=' | '>' | '>=' | 'in' | 'eq' |
             // 'lt' | 'gt' | 'lte' | 'gte' | 'contains' | 'within' )
             {
-                if ( ( input.LA( 1 ) >= 16 && input.LA( 1 ) <= 28 ) )
-                {
+                if ( ( input.LA( 1 ) >= 16 && input.LA( 1 ) <= 28 ) ) {
                     input.consume();
                     state.errorRecovery = false;
                 }
-                else
-                {
+                else {
                     MismatchedSetException mse = new MismatchedSetException( null, input );
                     throw mse;
                 }
@@ -176,21 +162,18 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
     // $ANTLR end "operator"
 
 
-    public static class value_return extends ParserRuleReturnScope
-    {}
+    public static class value_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -198,24 +181,20 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "value"
     // org/usergrid/persistence/query/QueryFilter.g:107:1: value : ( BOOLEAN | STRING | INT | FLOAT | UUID ) ;
-    public final QueryFilterParser.value_return value() throws RecognitionException
-    {
+    public final QueryFilterParser.value_return value() throws RecognitionException {
         QueryFilterParser.value_return retval = new QueryFilterParser.value_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:107:8: ( ( BOOLEAN | STRING | INT | FLOAT | UUID ) )
             // org/usergrid/persistence/query/QueryFilter.g:107:10: ( BOOLEAN | STRING | INT | FLOAT | UUID )
             {
                 if ( input.LA( 1 ) == INT || input.LA( 1 ) == FLOAT || ( input.LA( 1 ) >= STRING
-                        && input.LA( 1 ) <= BOOLEAN ) || input.LA( 1 ) == UUID )
-                {
+                        && input.LA( 1 ) <= BOOLEAN ) || input.LA( 1 ) == UUID ) {
                     input.consume();
                     state.errorRecovery = false;
                 }
-                else
-                {
+                else {
                     MismatchedSetException mse = new MismatchedSetException( null, input );
                     throw mse;
                 }
@@ -223,21 +202,18 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
     // $ANTLR end "value"
 
 
-    public static class second_value_return extends ParserRuleReturnScope
-    {}
+    public static class second_value_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -245,24 +221,20 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "second_value"
     // org/usergrid/persistence/query/QueryFilter.g:109:1: second_value : ( BOOLEAN | STRING | INT | FLOAT | UUID ) ;
-    public final QueryFilterParser.second_value_return second_value() throws RecognitionException
-    {
+    public final QueryFilterParser.second_value_return second_value() throws RecognitionException {
         QueryFilterParser.second_value_return retval = new QueryFilterParser.second_value_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:109:15: ( ( BOOLEAN | STRING | INT | FLOAT | UUID ) )
             // org/usergrid/persistence/query/QueryFilter.g:109:17: ( BOOLEAN | STRING | INT | FLOAT | UUID )
             {
                 if ( input.LA( 1 ) == INT || input.LA( 1 ) == FLOAT || ( input.LA( 1 ) >= STRING
-                        && input.LA( 1 ) <= BOOLEAN ) || input.LA( 1 ) == UUID )
-                {
+                        && input.LA( 1 ) <= BOOLEAN ) || input.LA( 1 ) == UUID ) {
                     input.consume();
                     state.errorRecovery = false;
                 }
-                else
-                {
+                else {
                     MismatchedSetException mse = new MismatchedSetException( null, input );
                     throw mse;
                 }
@@ -270,21 +242,18 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
     // $ANTLR end "second_value"
 
 
-    public static class third_value_return extends ParserRuleReturnScope
-    {}
+    public static class third_value_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -292,24 +261,20 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "third_value"
     // org/usergrid/persistence/query/QueryFilter.g:111:1: third_value : ( BOOLEAN | STRING | INT | FLOAT | UUID ) ;
-    public final QueryFilterParser.third_value_return third_value() throws RecognitionException
-    {
+    public final QueryFilterParser.third_value_return third_value() throws RecognitionException {
         QueryFilterParser.third_value_return retval = new QueryFilterParser.third_value_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:111:14: ( ( BOOLEAN | STRING | INT | FLOAT | UUID ) )
             // org/usergrid/persistence/query/QueryFilter.g:111:16: ( BOOLEAN | STRING | INT | FLOAT | UUID )
             {
                 if ( input.LA( 1 ) == INT || input.LA( 1 ) == FLOAT || ( input.LA( 1 ) >= STRING
-                        && input.LA( 1 ) <= BOOLEAN ) || input.LA( 1 ) == UUID )
-                {
+                        && input.LA( 1 ) <= BOOLEAN ) || input.LA( 1 ) == UUID ) {
                     input.consume();
                     state.errorRecovery = false;
                 }
-                else
-                {
+                else {
                     MismatchedSetException mse = new MismatchedSetException( null, input );
                     throw mse;
                 }
@@ -317,13 +282,11 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
@@ -333,8 +296,7 @@ public class QueryFilterParser extends Parser
     // $ANTLR start "filter"
     // org/usergrid/persistence/query/QueryFilter.g:113:1: filter returns [FilterPredicate filter] : property
     // operator value ( ( ',' | 'of' ) second_value ( ',' third_value )? )? EOF ;
-    public final FilterPredicate filter() throws RecognitionException
-    {
+    public final FilterPredicate filter() throws RecognitionException {
         FilterPredicate filter = null;
 
         QueryFilterParser.property_return property1 = null;
@@ -348,8 +310,7 @@ public class QueryFilterParser extends Parser
         QueryFilterParser.third_value_return third_value5 = null;
 
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:114:5: ( property operator value ( ( ',
             // ' | 'of' ) second_value ( ',' third_value )? )? EOF )
             // org/usergrid/persistence/query/QueryFilter.g:114:9: property operator value ( ( ',
@@ -375,23 +336,19 @@ public class QueryFilterParser extends Parser
                 int alt2 = 2;
                 int LA2_0 = input.LA( 1 );
 
-                if ( ( ( LA2_0 >= 29 && LA2_0 <= 30 ) ) )
-                {
+                if ( ( ( LA2_0 >= 29 && LA2_0 <= 30 ) ) ) {
                     alt2 = 1;
                 }
-                switch ( alt2 )
-                {
+                switch ( alt2 ) {
                     case 1:
                         // org/usergrid/persistence/query/QueryFilter.g:114:34: ( ',' | 'of' ) second_value ( ',
                         // ' third_value )?
                     {
-                        if ( ( input.LA( 1 ) >= 29 && input.LA( 1 ) <= 30 ) )
-                        {
+                        if ( ( input.LA( 1 ) >= 29 && input.LA( 1 ) <= 30 ) ) {
                             input.consume();
                             state.errorRecovery = false;
                         }
-                        else
-                        {
+                        else {
                             MismatchedSetException mse = new MismatchedSetException( null, input );
                             throw mse;
                         }
@@ -405,12 +362,10 @@ public class QueryFilterParser extends Parser
                         int alt1 = 2;
                         int LA1_0 = input.LA( 1 );
 
-                        if ( ( LA1_0 == 29 ) )
-                        {
+                        if ( ( LA1_0 == 29 ) ) {
                             alt1 = 1;
                         }
-                        switch ( alt1 )
-                        {
+                        switch ( alt1 ) {
                             case 1:
                                 // org/usergrid/persistence/query/QueryFilter.g:114:62: ',' third_value
                             {
@@ -442,21 +397,18 @@ public class QueryFilterParser extends Parser
                 match( input, EOF, FOLLOW_EOF_in_filter789 );
             }
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return filter;
     }
     // $ANTLR end "filter"
 
 
-    public static class select_subject_return extends ParserRuleReturnScope
-    {}
+    public static class select_subject_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -464,13 +416,11 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "select_subject"
     // org/usergrid/persistence/query/QueryFilter.g:127:1: select_subject : ID ;
-    public final QueryFilterParser.select_subject_return select_subject() throws RecognitionException
-    {
+    public final QueryFilterParser.select_subject_return select_subject() throws RecognitionException {
         QueryFilterParser.select_subject_return retval = new QueryFilterParser.select_subject_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:128:2: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:128:4: ID
             {
@@ -482,21 +432,18 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
     // $ANTLR end "select_subject"
 
 
-    public static class select_assign_target_return extends ParserRuleReturnScope
-    {}
+    public static class select_assign_target_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -504,13 +451,11 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "select_assign_target"
     // org/usergrid/persistence/query/QueryFilter.g:134:1: select_assign_target : ID ;
-    public final QueryFilterParser.select_assign_target_return select_assign_target() throws RecognitionException
-    {
+    public final QueryFilterParser.select_assign_target_return select_assign_target() throws RecognitionException {
         QueryFilterParser.select_assign_target_return retval = new QueryFilterParser.select_assign_target_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:135:2: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:135:4: ID
             {
@@ -519,21 +464,18 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
     // $ANTLR end "select_assign_target"
 
 
-    public static class select_assign_source_return extends ParserRuleReturnScope
-    {}
+    public static class select_assign_source_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -541,13 +483,11 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "select_assign_source"
     // org/usergrid/persistence/query/QueryFilter.g:137:1: select_assign_source : ID ;
-    public final QueryFilterParser.select_assign_source_return select_assign_source() throws RecognitionException
-    {
+    public final QueryFilterParser.select_assign_source_return select_assign_source() throws RecognitionException {
         QueryFilterParser.select_assign_source_return retval = new QueryFilterParser.select_assign_source_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:138:2: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:138:4: ID
             {
@@ -556,13 +496,11 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
@@ -572,15 +510,13 @@ public class QueryFilterParser extends Parser
     // $ANTLR start "select_assign"
     // org/usergrid/persistence/query/QueryFilter.g:140:1: select_assign : select_assign_target ':'
     // select_assign_source ;
-    public final void select_assign() throws RecognitionException
-    {
+    public final void select_assign() throws RecognitionException {
         QueryFilterParser.select_assign_source_return select_assign_source6 = null;
 
         QueryFilterParser.select_assign_target_return select_assign_target7 = null;
 
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:141:2: ( select_assign_target ':' select_assign_source )
             // org/usergrid/persistence/query/QueryFilter.g:141:4: select_assign_target ':' select_assign_source
             {
@@ -602,13 +538,11 @@ public class QueryFilterParser extends Parser
                           input.toString( select_assign_target7.start, select_assign_target7.stop ) : null ) );
             }
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return;
     }
@@ -618,8 +552,7 @@ public class QueryFilterParser extends Parser
     // $ANTLR start "where"
     // org/usergrid/persistence/query/QueryFilter.g:148:1: where : ( property operator value ( ( ',
     // ' | 'of' ) second_value ( ',' third_value )? )? ) ;
-    public final void where() throws RecognitionException
-    {
+    public final void where() throws RecognitionException {
         QueryFilterParser.property_return property8 = null;
 
         QueryFilterParser.operator_return operator9 = null;
@@ -631,8 +564,7 @@ public class QueryFilterParser extends Parser
         QueryFilterParser.third_value_return third_value12 = null;
 
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:149:2: ( ( property operator value ( ( ',
             // ' | 'of' ) second_value ( ',' third_value )? )? ) )
             // org/usergrid/persistence/query/QueryFilter.g:149:4: ( property operator value ( ( ',
@@ -663,23 +595,19 @@ public class QueryFilterParser extends Parser
                     int alt4 = 2;
                     int LA4_0 = input.LA( 1 );
 
-                    if ( ( ( LA4_0 >= 29 && LA4_0 <= 30 ) ) )
-                    {
+                    if ( ( ( LA4_0 >= 29 && LA4_0 <= 30 ) ) ) {
                         alt4 = 1;
                     }
-                    switch ( alt4 )
-                    {
+                    switch ( alt4 ) {
                         case 1:
                             // org/usergrid/persistence/query/QueryFilter.g:149:30: ( ',' | 'of' ) second_value ( ',
                             // ' third_value )?
                         {
-                            if ( ( input.LA( 1 ) >= 29 && input.LA( 1 ) <= 30 ) )
-                            {
+                            if ( ( input.LA( 1 ) >= 29 && input.LA( 1 ) <= 30 ) ) {
                                 input.consume();
                                 state.errorRecovery = false;
                             }
-                            else
-                            {
+                            else {
                                 MismatchedSetException mse = new MismatchedSetException( null, input );
                                 throw mse;
                             }
@@ -693,12 +621,10 @@ public class QueryFilterParser extends Parser
                             int alt3 = 2;
                             int LA3_0 = input.LA( 1 );
 
-                            if ( ( LA3_0 == 29 ) )
-                            {
+                            if ( ( LA3_0 == 29 ) ) {
                                 alt3 = 1;
                             }
-                            switch ( alt3 )
-                            {
+                            switch ( alt3 ) {
                                 case 1:
                                     // org/usergrid/persistence/query/QueryFilter.g:149:58: ',' third_value
                                 {
@@ -743,21 +669,18 @@ public class QueryFilterParser extends Parser
                 }
             }
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return;
     }
     // $ANTLR end "where"
 
 
-    public static class direction_return extends ParserRuleReturnScope
-    {}
+    public static class direction_return extends ParserRuleReturnScope {}
 
 
     ;
@@ -765,23 +688,19 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "direction"
     // org/usergrid/persistence/query/QueryFilter.g:165:1: direction : ( 'asc' | 'desc' ) ;
-    public final QueryFilterParser.direction_return direction() throws RecognitionException
-    {
+    public final QueryFilterParser.direction_return direction() throws RecognitionException {
         QueryFilterParser.direction_return retval = new QueryFilterParser.direction_return();
         retval.start = input.LT( 1 );
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:165:12: ( ( 'asc' | 'desc' ) )
             // org/usergrid/persistence/query/QueryFilter.g:165:14: ( 'asc' | 'desc' )
             {
-                if ( ( input.LA( 1 ) >= 32 && input.LA( 1 ) <= 33 ) )
-                {
+                if ( ( input.LA( 1 ) >= 32 && input.LA( 1 ) <= 33 ) ) {
                     input.consume();
                     state.errorRecovery = false;
                 }
-                else
-                {
+                else {
                     MismatchedSetException mse = new MismatchedSetException( null, input );
                     throw mse;
                 }
@@ -789,13 +708,11 @@ public class QueryFilterParser extends Parser
 
             retval.stop = input.LT( -1 );
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return retval;
     }
@@ -804,15 +721,13 @@ public class QueryFilterParser extends Parser
 
     // $ANTLR start "order"
     // org/usergrid/persistence/query/QueryFilter.g:167:1: order : ( property ( direction )? ) ;
-    public final void order() throws RecognitionException
-    {
+    public final void order() throws RecognitionException {
         QueryFilterParser.property_return property13 = null;
 
         QueryFilterParser.direction_return direction14 = null;
 
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:168:2: ( ( property ( direction )? ) )
             // org/usergrid/persistence/query/QueryFilter.g:168:4: ( property ( direction )? )
             {
@@ -828,12 +743,10 @@ public class QueryFilterParser extends Parser
                     int alt5 = 2;
                     int LA5_0 = input.LA( 1 );
 
-                    if ( ( ( LA5_0 >= 32 && LA5_0 <= 33 ) ) )
-                    {
+                    if ( ( ( LA5_0 >= 32 && LA5_0 <= 33 ) ) ) {
                         alt5 = 1;
                     }
-                    switch ( alt5 )
-                    {
+                    switch ( alt5 ) {
                         case 1:
                             // org/usergrid/persistence/query/QueryFilter.g:168:14: direction
                         {
@@ -855,13 +768,11 @@ public class QueryFilterParser extends Parser
                 System.out.println( "Parsed query order: " + property + " " + direction );
             }
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return;
     }
@@ -871,10 +782,8 @@ public class QueryFilterParser extends Parser
     // $ANTLR start "select_expr"
     // org/usergrid/persistence/query/QueryFilter.g:178:1: select_expr : ( '*' | select_subject ( ',
     // ' select_subject )* | '{' select_assign ( ',' select_assign )* '}' ) ;
-    public final void select_expr() throws RecognitionException
-    {
-        try
-        {
+    public final void select_expr() throws RecognitionException {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:179:2: ( ( '*' | select_subject ( ',
             // ' select_subject )* | '{' select_assign ( ',' select_assign )* '}' ) )
             // org/usergrid/persistence/query/QueryFilter.g:179:4: ( '*' | select_subject ( ',
@@ -883,20 +792,16 @@ public class QueryFilterParser extends Parser
                 // org/usergrid/persistence/query/QueryFilter.g:179:4: ( '*' | select_subject ( ',
                 // ' select_subject )* | '{' select_assign ( ',' select_assign )* '}' )
                 int alt8 = 3;
-                switch ( input.LA( 1 ) )
-                {
-                    case 34:
-                    {
+                switch ( input.LA( 1 ) ) {
+                    case 34: {
                         alt8 = 1;
                     }
                     break;
-                    case ID:
-                    {
+                    case ID: {
                         alt8 = 2;
                     }
                     break;
-                    case 35:
-                    {
+                    case 35: {
                         alt8 = 3;
                     }
                     break;
@@ -906,8 +811,7 @@ public class QueryFilterParser extends Parser
                         throw nvae;
                 }
 
-                switch ( alt8 )
-                {
+                switch ( alt8 ) {
                     case 1:
                         // org/usergrid/persistence/query/QueryFilter.g:179:5: '*'
                     {
@@ -924,19 +828,16 @@ public class QueryFilterParser extends Parser
 
                         // org/usergrid/persistence/query/QueryFilter.g:179:26: ( ',' select_subject )*
                         loop6:
-                        do
-                        {
+                        do {
                             int alt6 = 2;
                             int LA6_0 = input.LA( 1 );
 
-                            if ( ( LA6_0 == 29 ) )
-                            {
+                            if ( ( LA6_0 == 29 ) ) {
                                 alt6 = 1;
                             }
 
 
-                            switch ( alt6 )
-                            {
+                            switch ( alt6 ) {
                                 case 1:
                                     // org/usergrid/persistence/query/QueryFilter.g:179:27: ',' select_subject
                                 {
@@ -967,19 +868,16 @@ public class QueryFilterParser extends Parser
 
                         // org/usergrid/persistence/query/QueryFilter.g:179:69: ( ',' select_assign )*
                         loop7:
-                        do
-                        {
+                        do {
                             int alt7 = 2;
                             int LA7_0 = input.LA( 1 );
 
-                            if ( ( LA7_0 == 29 ) )
-                            {
+                            if ( ( LA7_0 == 29 ) ) {
                                 alt7 = 1;
                             }
 
 
-                            switch ( alt7 )
-                            {
+                            switch ( alt7 ) {
                                 case 1:
                                     // org/usergrid/persistence/query/QueryFilter.g:179:70: ',' select_assign
                                 {
@@ -1003,13 +901,11 @@ public class QueryFilterParser extends Parser
                 }
             }
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return;
     }
@@ -1019,12 +915,10 @@ public class QueryFilterParser extends Parser
     // $ANTLR start "ql"
     // org/usergrid/persistence/query/QueryFilter.g:181:1: ql returns [Query q] : 'select' select_expr ( 'where'
     // where ( 'and' where )* )? ( 'order by' order ( ',' order )* )? ;
-    public final Query ql() throws RecognitionException
-    {
+    public final Query ql() throws RecognitionException {
         Query q = null;
 
-        try
-        {
+        try {
             // org/usergrid/persistence/query/QueryFilter.g:182:2: ( 'select' select_expr ( 'where' where ( 'and'
             // where )* )? ( 'order by' order ( ',' order )* )? )
             // org/usergrid/persistence/query/QueryFilter.g:182:4: 'select' select_expr ( 'where' where ( 'and' where
@@ -1040,12 +934,10 @@ public class QueryFilterParser extends Parser
                 int alt10 = 2;
                 int LA10_0 = input.LA( 1 );
 
-                if ( ( LA10_0 == 38 ) )
-                {
+                if ( ( LA10_0 == 38 ) ) {
                     alt10 = 1;
                 }
-                switch ( alt10 )
-                {
+                switch ( alt10 ) {
                     case 1:
                         // org/usergrid/persistence/query/QueryFilter.g:182:26: 'where' where ( 'and' where )*
                     {
@@ -1057,19 +949,16 @@ public class QueryFilterParser extends Parser
 
                         // org/usergrid/persistence/query/QueryFilter.g:182:40: ( 'and' where )*
                         loop9:
-                        do
-                        {
+                        do {
                             int alt9 = 2;
                             int LA9_0 = input.LA( 1 );
 
-                            if ( ( LA9_0 == 39 ) )
-                            {
+                            if ( ( LA9_0 == 39 ) ) {
                                 alt9 = 1;
                             }
 
 
-                            switch ( alt9 )
-                            {
+                            switch ( alt9 ) {
                                 case 1:
                                     // org/usergrid/persistence/query/QueryFilter.g:182:41: 'and' where
                                 {
@@ -1094,12 +983,10 @@ public class QueryFilterParser extends Parser
                 int alt12 = 2;
                 int LA12_0 = input.LA( 1 );
 
-                if ( ( LA12_0 == 40 ) )
-                {
+                if ( ( LA12_0 == 40 ) ) {
                     alt12 = 1;
                 }
-                switch ( alt12 )
-                {
+                switch ( alt12 ) {
                     case 1:
                         // org/usergrid/persistence/query/QueryFilter.g:182:58: 'order by' order ( ',' order )*
                     {
@@ -1111,19 +998,16 @@ public class QueryFilterParser extends Parser
 
                         // org/usergrid/persistence/query/QueryFilter.g:182:75: ( ',' order )*
                         loop11:
-                        do
-                        {
+                        do {
                             int alt11 = 2;
                             int LA11_0 = input.LA( 1 );
 
-                            if ( ( LA11_0 == 29 ) )
-                            {
+                            if ( ( LA11_0 == 29 ) ) {
                                 alt11 = 1;
                             }
 
 
-                            switch ( alt11 )
-                            {
+                            switch ( alt11 ) {
                                 case 1:
                                     // org/usergrid/persistence/query/QueryFilter.g:182:76: ',' order
                                 {
@@ -1148,13 +1032,11 @@ public class QueryFilterParser extends Parser
                 q = query;
             }
         }
-        catch ( RecognitionException re )
-        {
+        catch ( RecognitionException re ) {
             reportError( re );
             recover( input, re );
         }
-        finally
-        {
+        finally {
         }
         return q;
     }

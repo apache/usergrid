@@ -60,8 +60,7 @@ import static org.usergrid.utils.ListUtils.isEmpty;
  *
  * @author edanuff
  */
-public abstract class AbstractService implements Service
-{
+public abstract class AbstractService implements Service {
 
     private static final Logger logger = LoggerFactory.getLogger( AbstractService.class );
 
@@ -87,42 +86,35 @@ public abstract class AbstractService implements Service
     protected Map<String, Object> defaultEntityMetadata;
 
 
-    public AbstractService()
-    {
+    public AbstractService() {
 
     }
 
 
-    public void setServiceManager( ServiceManager sm )
-    {
+    public void setServiceManager( ServiceManager sm ) {
         this.sm = sm;
         em = sm.getEntityManager();
     }
 
 
-    public ApplicationContext getApplicationContext()
-    {
+    public ApplicationContext getApplicationContext() {
         return sm.getApplicationContext();
     }
 
 
-    public void init( ServiceInfo info )
-    {
+    public void init( ServiceInfo info ) {
         this.info = info;
     }
 
 
-    public ServiceInfo getServiceInfo()
-    {
+    public ServiceInfo getServiceInfo() {
         return info;
     }
 
 
     @Override
-    public String getServiceType()
-    {
-        if ( info == null )
-        {
+    public String getServiceType() {
+        if ( info == null ) {
             return null;
         }
         return info.getName();
@@ -130,18 +122,15 @@ public abstract class AbstractService implements Service
 
 
     @Override
-    public Class<? extends Entity> getEntityClass()
-    {
+    public Class<? extends Entity> getEntityClass() {
         // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
-    public String getEntityType()
-    {
-        if ( info == null )
-        {
+    public String getEntityType() {
+        if ( info == null ) {
             return null;
         }
         return info.getItemType();
@@ -149,221 +138,176 @@ public abstract class AbstractService implements Service
 
 
     @Override
-    public boolean isRootService()
-    {
-        if ( info == null )
-        {
+    public boolean isRootService() {
+        if ( info == null ) {
             return false;
         }
         return info.isRootService();
     }
 
 
-    public boolean isCollectionReversed( ServiceContext context )
-    {
-        if ( info == null )
-        {
+    public boolean isCollectionReversed( ServiceContext context ) {
+        if ( info == null ) {
             return false;
         }
-        if ( "application".equals( context.getOwner().getType() ) )
-        {
+        if ( "application".equals( context.getOwner().getType() ) ) {
             return Schema.getDefaultSchema().isCollectionReversed( "application", pluralize( info.getItemType() ) );
         }
         return Schema.getDefaultSchema().isCollectionReversed( info.getContainerType(), info.getCollectionName() );
     }
 
 
-    public String getCollectionSort( ServiceContext context )
-    {
-        if ( info == null )
-        {
+    public String getCollectionSort( ServiceContext context ) {
+        if ( info == null ) {
             return null;
         }
-        if ( "application".equals( context.getOwner().getType() ) )
-        {
+        if ( "application".equals( context.getOwner().getType() ) ) {
             return Schema.getDefaultSchema().getCollectionSort( "application", pluralize( info.getItemType() ) );
         }
         return Schema.getDefaultSchema().getCollectionSort( info.getContainerType(), info.getCollectionName() );
     }
 
 
-    public void makeConnectionPrivate( String connection )
-    {
-        if ( privateConnections == null )
-        {
+    public void makeConnectionPrivate( String connection ) {
+        if ( privateConnections == null ) {
             privateConnections = new LinkedHashSet<String>();
         }
         privateConnections.add( connection );
     }
 
 
-    public void makeConnectionsPrivate( List<String> connections )
-    {
-        if ( privateConnections == null )
-        {
+    public void makeConnectionsPrivate( List<String> connections ) {
+        if ( privateConnections == null ) {
             privateConnections = new LinkedHashSet<String>();
         }
         privateConnections.addAll( connections );
     }
 
 
-    public void declareConnection( String connection )
-    {
-        if ( declaredConnections == null )
-        {
+    public void declareConnection( String connection ) {
+        if ( declaredConnections == null ) {
             declaredConnections = new LinkedHashSet<String>();
         }
         declaredConnections.add( connection );
     }
 
 
-    public void declareConnections( List<String> connections )
-    {
-        if ( declaredConnections == null )
-        {
+    public void declareConnections( List<String> connections ) {
+        if ( declaredConnections == null ) {
             declaredConnections = new LinkedHashSet<String>();
         }
         declaredConnections.addAll( connections );
     }
 
 
-    public void makeCollectionPrivate( String collection )
-    {
-        if ( privateCollections == null )
-        {
+    public void makeCollectionPrivate( String collection ) {
+        if ( privateCollections == null ) {
             privateCollections = new LinkedHashSet<String>();
         }
         privateCollections.add( collection );
     }
 
 
-    public void makeCollectionsPrivate( List<String> collections )
-    {
-        if ( privateCollections == null )
-        {
+    public void makeCollectionsPrivate( List<String> collections ) {
+        if ( privateCollections == null ) {
             privateCollections = new LinkedHashSet<String>();
         }
         privateCollections.addAll( collections );
     }
 
 
-    public void declareVirtualCollection( String collection )
-    {
-        if ( declaredCollections == null )
-        {
+    public void declareVirtualCollection( String collection ) {
+        if ( declaredCollections == null ) {
             declaredCollections = new LinkedHashSet<String>();
         }
         declaredCollections.add( collection );
     }
 
 
-    public void declareVirtualCollections( List<String> collections )
-    {
-        if ( declaredCollections == null )
-        {
+    public void declareVirtualCollections( List<String> collections ) {
+        if ( declaredCollections == null ) {
             declaredCollections = new LinkedHashSet<String>();
         }
         declaredCollections.addAll( collections );
     }
 
 
-    public void addReplaceParameters( List<String> find, List<String> replace )
-    {
-        if ( replaceParameters == null )
-        {
+    public void addReplaceParameters( List<String> find, List<String> replace ) {
+        if ( replaceParameters == null ) {
             replaceParameters = new LinkedHashMap<List<String>, List<String>>();
         }
         replaceParameters.put( find, replace );
     }
 
 
-    public void declareServiceCommands( String command )
-    {
-        if ( serviceCommands == null )
-        {
+    public void declareServiceCommands( String command ) {
+        if ( serviceCommands == null ) {
             serviceCommands = new LinkedHashSet<String>();
         }
         serviceCommands.add( command );
     }
 
 
-    public void declareServiceCommands( List<String> commands )
-    {
-        if ( serviceCommands == null )
-        {
+    public void declareServiceCommands( List<String> commands ) {
+        if ( serviceCommands == null ) {
             serviceCommands = new LinkedHashSet<String>();
         }
         serviceCommands.addAll( commands );
     }
 
 
-    public void declareEntityDictionary( EntityDictionaryEntry dictionary )
-    {
-        if ( entityDictionaries == null )
-        {
+    public void declareEntityDictionary( EntityDictionaryEntry dictionary ) {
+        if ( entityDictionaries == null ) {
             entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
         }
         entityDictionaries.add( dictionary );
     }
 
 
-    public void declareEntityDictionary( String dictionary )
-    {
-        if ( entityDictionaries == null )
-        {
+    public void declareEntityDictionary( String dictionary ) {
+        if ( entityDictionaries == null ) {
             entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
         }
         entityDictionaries.add( new EntityDictionaryEntry( dictionary ) );
     }
 
 
-    public void declareEntityDictionaries( List<String> dictionaries )
-    {
-        if ( entityDictionaries == null )
-        {
+    public void declareEntityDictionaries( List<String> dictionaries ) {
+        if ( entityDictionaries == null ) {
             entityDictionaries = new LinkedHashSet<EntityDictionaryEntry>();
         }
-        for ( String dict : dictionaries )
-        {
+        for ( String dict : dictionaries ) {
             entityDictionaries.add( new EntityDictionaryEntry( dict ) );
         }
     }
 
 
-    public void declareMetadataType( String type )
-    {
-        if ( metadataTypes == null )
-        {
+    public void declareMetadataType( String type ) {
+        if ( metadataTypes == null ) {
             metadataTypes = new LinkedHashSet<String>();
         }
         metadataTypes.add( type );
     }
 
 
-    public void declareMetadataTypes( List<String> typeList )
-    {
-        if ( metadataTypes == null )
-        {
+    public void declareMetadataTypes( List<String> typeList ) {
+        if ( metadataTypes == null ) {
             metadataTypes = new LinkedHashSet<String>();
         }
         metadataTypes.addAll( typeList );
     }
 
 
-    public void declareEntityCommand( String command )
-    {
-        if ( entityCommands == null )
-        {
+    public void declareEntityCommand( String command ) {
+        if ( entityCommands == null ) {
             entityCommands = new LinkedHashSet<String>();
         }
         entityCommands.add( command );
     }
 
 
-    public void declareEntityCommands( List<String> commands )
-    {
-        if ( entityCommands == null )
-        {
+    public void declareEntityCommands( List<String> commands ) {
+        if ( entityCommands == null ) {
             entityCommands = new LinkedHashSet<String>();
         }
         entityCommands.addAll( commands );
@@ -371,37 +315,31 @@ public abstract class AbstractService implements Service
 
 
     @Override
-    public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception
-    {
+    public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {
         // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
-    public Entity getEntity( ServiceRequest request, String name ) throws Exception
-    {
+    public Entity getEntity( ServiceRequest request, String name ) throws Exception {
         // TODO Auto-generated method stub
         return null;
     }
 
 
-    public Entity importEntity( ServiceContext context, Entity entity ) throws Exception
-    {
+    public Entity importEntity( ServiceContext context, Entity entity ) throws Exception {
         return importEntity( context.getRequest(), entity );
     }
 
 
     @Override
-    public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception
-    {
-        if ( entity == null )
-        {
+    public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception {
+        if ( entity == null ) {
             return null;
         }
 
-        if ( !isRootService() )
-        {
+        if ( !isRootService() ) {
             return sm.importEntity( request, entity );
         }
 
@@ -409,73 +347,59 @@ public abstract class AbstractService implements Service
         Map<String, Object> metadata = new LinkedHashMap<String, Object>();
         metadata.put( "path", path );
 
-        if ( defaultEntityMetadata != null )
-        {
+        if ( defaultEntityMetadata != null ) {
             metadata.putAll( defaultEntityMetadata );
         }
 
         Set<Object> connections = getConnectedTypesSet( entity );
-        if ( connections != null )
-        {
+        if ( connections != null ) {
             Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( Object n : connections )
-            {
+            for ( Object n : connections ) {
                 m.put( n.toString(), path + "/" + n );
             }
             metadata.put( "connections", m );
         }
 
         Set<Object> connecting = getConnectingTypesSet( entity );
-        if ( connecting != null )
-        {
+        if ( connecting != null ) {
             Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( Object n : connecting )
-            {
+            for ( Object n : connecting ) {
                 m.put( n.toString(), path + "/connecting/" + n );
             }
             metadata.put( "connecting", m );
         }
 
         Set<String> collections = getCollectionSet( entity );
-        if ( collections != null )
-        {
+        if ( collections != null ) {
             Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( Object n : collections )
-            {
+            for ( Object n : collections ) {
                 m.put( n.toString(), path + "/" + n );
             }
             metadata.put( "collections", m );
         }
 
-        if ( entityDictionaries != null )
-        {
+        if ( entityDictionaries != null ) {
             Map<String, Object> m = new LinkedHashMap<String, Object>();
-            for ( EntityDictionaryEntry dict : entityDictionaries )
-            {
+            for ( EntityDictionaryEntry dict : entityDictionaries ) {
                 m.put( dict.getName(), path + "/" + dict.getPath() );
             }
             metadata.put( "sets", m );
         }
 
-        if ( metadata.size() > 0 )
-        {
+        if ( metadata.size() > 0 ) {
             entity.mergeMetadata( metadata );
         }
         return entity;
     }
 
 
-    public void importEntities( ServiceRequest request, Results results ) throws Exception
-    {
+    public void importEntities( ServiceRequest request, Results results ) throws Exception {
 
         List<Entity> entities = results.getEntities();
-        if ( entities != null )
-        {
-            for ( Entity entity : entities )
-            {
+        if ( entities != null ) {
+            for ( Entity entity : entities ) {
                 Entity imported = importEntity( request, entity );
-                if ( imported != entity )
-                {
+                if ( imported != entity ) {
                     logger.debug( "Import returned new entity instace for {} replacing in results set",
                             entity.getUuid() );
                     results.replace( imported );
@@ -485,59 +409,48 @@ public abstract class AbstractService implements Service
     }
 
 
-    public void importEntities( ServiceContext context, Results results ) throws Exception
-    {
+    public void importEntities( ServiceContext context, Results results ) throws Exception {
         importEntities( context.getRequest(), results );
     }
 
 
     @Override
-    public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception
-    {
-        if ( !isRootService() )
-        {
+    public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception {
+        if ( !isRootService() ) {
             return sm.writeEntity( request, entity );
         }
         return entity;
     }
 
 
-    public void writeEntities( ServiceRequest request, Results results ) throws Exception
-    {
+    public void writeEntities( ServiceRequest request, Results results ) throws Exception {
 
         List<Entity> entities = results.getEntities();
-        if ( entities != null )
-        {
-            for ( Entity entity : entities )
-            {
+        if ( entities != null ) {
+            for ( Entity entity : entities ) {
                 writeEntity( request, entity );
             }
         }
     }
 
 
-    public Entity updateEntity( ServiceContext context, EntityRef ref, ServicePayload payload ) throws Exception
-    {
+    public Entity updateEntity( ServiceContext context, EntityRef ref, ServicePayload payload ) throws Exception {
         return updateEntity( context.getRequest(), ref, payload );
     }
 
 
-    public Entity updateEntity( ServiceContext context, EntityRef ref ) throws Exception
-    {
+    public Entity updateEntity( ServiceContext context, EntityRef ref ) throws Exception {
         return updateEntity( context.getRequest(), ref, context.getPayload() );
     }
 
 
     @Override
-    public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception
-    {
-        if ( !isRootService() )
-        {
+    public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception {
+        if ( !isRootService() ) {
             return sm.updateEntity( request, ref, payload );
         }
 
-        if ( ref instanceof Entity )
-        {
+        if ( ref instanceof Entity ) {
             Entity entity = ( Entity ) ref;
             em.updateProperties( entity, payload.getProperties() );
             entity.addProperties( payload.getProperties() );
@@ -548,48 +461,38 @@ public abstract class AbstractService implements Service
     }
 
 
-    public void updateEntities( ServiceContext context, Results results, ServicePayload payload ) throws Exception
-    {
+    public void updateEntities( ServiceContext context, Results results, ServicePayload payload ) throws Exception {
         updateEntities( context.getRequest(), results, payload );
     }
 
 
-    public void updateEntities( ServiceContext context, Results results ) throws Exception
-    {
+    public void updateEntities( ServiceContext context, Results results ) throws Exception {
         updateEntities( context.getRequest(), results, context.getPayload() );
     }
 
 
-    public void updateEntities( ServiceRequest request, Results results, ServicePayload payload ) throws Exception
-    {
+    public void updateEntities( ServiceRequest request, Results results, ServicePayload payload ) throws Exception {
 
         List<Entity> entities = results.getEntities();
-        if ( entities != null )
-        {
-            for ( Entity entity : entities )
-            {
+        if ( entities != null ) {
+            for ( Entity entity : entities ) {
                 updateEntity( request, entity, payload );
             }
         }
     }
 
 
-    public Set<Object> getConnectedTypesSet( EntityRef ref ) throws Exception
-    {
+    public Set<Object> getConnectedTypesSet( EntityRef ref ) throws Exception {
         Set<Object> connections = em.getDictionaryAsSet( ref, Schema.DICTIONARY_CONNECTED_TYPES );
-        if ( connections == null )
-        {
+        if ( connections == null ) {
             return null;
         }
-        if ( connections.size() > 0 )
-        {
+        if ( connections.size() > 0 ) {
             connections.remove( "connection" );
-            if ( privateConnections != null )
-            {
+            if ( privateConnections != null ) {
                 connections.removeAll( privateConnections );
             }
-            if ( connections.size() > 0 )
-            {
+            if ( connections.size() > 0 ) {
                 return new LinkedHashSet<Object>( connections );
             }
         }
@@ -597,22 +500,17 @@ public abstract class AbstractService implements Service
     }
 
 
-    public Set<Object> getConnectingTypesSet( EntityRef ref ) throws Exception
-    {
+    public Set<Object> getConnectingTypesSet( EntityRef ref ) throws Exception {
         Set<Object> connections = em.getDictionaryAsSet( ref, Schema.DICTIONARY_CONNECTING_TYPES );
-        if ( connections == null )
-        {
+        if ( connections == null ) {
             return null;
         }
-        if ( connections.size() > 0 )
-        {
+        if ( connections.size() > 0 ) {
             connections.remove( "connection" );
-            if ( privateConnections != null )
-            {
+            if ( privateConnections != null ) {
                 connections.removeAll( privateConnections );
             }
-            if ( connections.size() > 0 )
-            {
+            if ( connections.size() > 0 ) {
                 return new LinkedHashSet<Object>( connections );
             }
         }
@@ -620,20 +518,16 @@ public abstract class AbstractService implements Service
     }
 
 
-    public Set<String> getCollectionSet( EntityRef ref )
-    {
+    public Set<String> getCollectionSet( EntityRef ref ) {
         Set<String> set = Schema.getDefaultSchema().getCollectionNames( ref.getType() );
         set = new LinkedHashSet<String>( set );
-        if ( declaredCollections != null )
-        {
+        if ( declaredCollections != null ) {
             set.addAll( declaredCollections );
         }
-        if ( privateCollections != null )
-        {
+        if ( privateCollections != null ) {
             set.removeAll( privateCollections );
         }
-        if ( set.size() > 0 )
-        {
+        if ( set.size() > 0 ) {
             return set;
         }
         return null;
@@ -642,8 +536,7 @@ public abstract class AbstractService implements Service
 
     @Override
     public ServiceResults invoke( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
-                                  ServicePayload payload ) throws Exception
-    {
+                                  ServicePayload payload ) throws Exception {
 
         ServiceContext context = getContext( action, request, previousResults, payload );
 
@@ -657,8 +550,7 @@ public abstract class AbstractService implements Service
      */
 
     public ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
-                                      ServicePayload payload ) throws Exception
-    {
+                                      ServicePayload payload ) throws Exception {
 
         EntityRef owner = request.getOwner();
         String collectionName =
@@ -666,52 +558,43 @@ public abstract class AbstractService implements Service
         List<ServiceParameter> parameters = filter( request.getParameters(), replaceParameters );
 
         ServiceParameter first_parameter = null;
-        if ( !isEmpty( parameters ) )
-        {
+        if ( !isEmpty( parameters ) ) {
             first_parameter = parameters.get( 0 );
             parameters = dequeueCopy( parameters );
         }
 
-        if ( first_parameter instanceof NameParameter )
-        {
-            if ( hasServiceMetadata( first_parameter.getName() ) )
-            {
+        if ( first_parameter instanceof NameParameter ) {
+            if ( hasServiceMetadata( first_parameter.getName() ) ) {
                 return new ServiceContext( this, action, request, previousResults, owner, collectionName, parameters,
                         payload ).withServiceMetadata( first_parameter.getName() );
             }
-            else if ( hasServiceCommand( first_parameter.getName() ) )
-            {
+            else if ( hasServiceCommand( first_parameter.getName() ) ) {
                 return new ServiceContext( this, action, request, previousResults, owner, collectionName, parameters,
                         payload ).withServiceCommand( first_parameter.getName() );
             }
         }
 
         Query query = null;
-        if ( first_parameter instanceof QueryParameter )
-        {
+        if ( first_parameter instanceof QueryParameter ) {
             query = first_parameter.getQuery();
         }
         parameters = mergeQueries( query, parameters );
 
-        if ( first_parameter instanceof IdParameter )
-        {
+        if ( first_parameter instanceof IdParameter ) {
             UUID id = first_parameter.getId();
             return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                     Query.fromUUID( id ), parameters, payload );
         }
-        else if ( first_parameter instanceof NameParameter )
-        {
+        else if ( first_parameter instanceof NameParameter ) {
             String name = first_parameter.getName();
             return new ServiceContext( this, action, request, previousResults, owner, collectionName,
                     Query.fromIdentifier( name ), parameters, payload );
         }
-        else if ( query != null )
-        {
+        else if ( query != null ) {
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, query, parameters,
                     payload );
         }
-        else if ( first_parameter == null )
-        {
+        else if ( first_parameter == null ) {
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, null, null,
                     payload );
         }
@@ -720,40 +603,33 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults invoke( ServiceContext context ) throws Exception
-    {
+    public ServiceResults invoke( ServiceContext context ) throws Exception {
 
         ServiceResults results = null;
 
         String metadataType = checkForServiceMetadata( context );
-        if ( metadataType != null )
-        {
+        if ( metadataType != null ) {
             return handleServiceMetadata( context, metadataType );
         }
 
         String serviceCommand = checkForServiceCommand( context );
-        if ( serviceCommand != null )
-        {
+        if ( serviceCommand != null ) {
             return handleServiceCommand( context, serviceCommand );
         }
 
         EntityDictionaryEntry entityDictionary = checkForEntityDictionaries( context );
         String entityCommand = checkForEntityCommands( context );
 
-        if ( context.isByQuery() )
-        {
+        if ( context.isByQuery() ) {
             results = invokeItemsWithQuery( context, context.getQuery() );
         }
-        else if ( context.isByName() )
-        {
+        else if ( context.isByName() ) {
             results = invokeItemWithName( context, context.getName() );
         }
-        else if ( context.isByUuid() )
-        {
+        else if ( context.isByUuid() ) {
             results = invokeItemWithId( context, context.getUuid() );
         }
-        else
-        {
+        else {
             results = invokeCollection( context );
         }
 
@@ -764,11 +640,9 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults invokeItemWithId( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults invokeItemWithId( ServiceContext context, UUID id ) throws Exception {
 
-        switch ( context.getAction() )
-        {
+        switch ( context.getAction() ) {
             case GET:
                 return getItemById( context, id );
 
@@ -789,11 +663,9 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults invokeItemWithName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults invokeItemWithName( ServiceContext context, String name ) throws Exception {
 
-        switch ( context.getAction() )
-        {
+        switch ( context.getAction() ) {
             case GET:
                 return getItemByName( context, name );
 
@@ -814,11 +686,9 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults invokeItemsWithQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults invokeItemsWithQuery( ServiceContext context, Query query ) throws Exception {
 
-        switch ( context.getAction() )
-        {
+        switch ( context.getAction() ) {
             case GET:
                 return getItemsByQuery( context, query );
 
@@ -839,11 +709,9 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults invokeCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults invokeCollection( ServiceContext context ) throws Exception {
 
-        switch ( context.getAction() )
-        {
+        switch ( context.getAction() ) {
             case GET:
                 return getCollection( context );
 
@@ -864,150 +732,124 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults getItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults getItemById( ServiceContext context, UUID id ) throws Exception {
         throw new ServiceResourceNotFoundException( context );
     }
 
 
-    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
         throw new ServiceResourceNotFoundException( context );
     }
 
 
-    public ServiceResults getItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults getItemsByQuery( ServiceContext context, Query query ) throws Exception {
         throw new ServiceResourceNotFoundException( context );
     }
 
 
-    public ServiceResults getCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults getCollection( ServiceContext context ) throws Exception {
         throw new ServiceResourceNotFoundException( context );
     }
 
 
-    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
         return getItemById( context, id );
     }
 
 
-    public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception {
         return getItemByName( context, name );
     }
 
 
-    public ServiceResults putItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults putItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
 
 
-    public ServiceResults putCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults putCollection( ServiceContext context ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
         return getItemById( context, id );
     }
 
 
-    public ServiceResults postItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults postItemByName( ServiceContext context, String name ) throws Exception {
         return getItemByName( context, name );
     }
 
 
-    public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
 
 
-    public ServiceResults postCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults postCollection( ServiceContext context ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults deleteItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults deleteItemById( ServiceContext context, UUID id ) throws Exception {
         return getItemById( context, id );
     }
 
 
-    public ServiceResults deleteItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults deleteItemByName( ServiceContext context, String name ) throws Exception {
         return getItemByName( context, name );
     }
 
 
-    public ServiceResults deleteItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults deleteItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
 
 
-    public ServiceResults deleteCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults deleteCollection( ServiceContext context ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults headItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults headItemById( ServiceContext context, UUID id ) throws Exception {
         return getItemById( context, id );
     }
 
 
-    public ServiceResults headItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults headItemByName( ServiceContext context, String name ) throws Exception {
         return getItemByName( context, name );
     }
 
 
-    public ServiceResults headItemsByQuery( ServiceContext context, Query query ) throws Exception
-    {
+    public ServiceResults headItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
 
 
-    public ServiceResults headCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults headCollection( ServiceContext context ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public boolean hasServiceCommand( String command )
-    {
+    public boolean hasServiceCommand( String command ) {
         return ( serviceCommands != null ) && ( command != null ) && serviceCommands.contains( command );
     }
 
 
-    public String checkForServiceCommand( ServiceContext context )
-    {
-        if ( serviceCommands == null )
-        {
+    public String checkForServiceCommand( ServiceContext context ) {
+        if ( serviceCommands == null ) {
             return null;
         }
 
-        if ( !context.moreParameters() )
-        {
+        if ( !context.moreParameters() ) {
             return null;
         }
 
         String name = null;
-        if ( context.firstParameterIsName() )
-        {
+        if ( context.firstParameterIsName() ) {
             name = context.firstParameter().getName();
-            if ( serviceCommands.contains( name ) )
-            {
+            if ( serviceCommands.contains( name ) ) {
                 return name;
             }
         }
@@ -1016,10 +858,8 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults handleServiceCommand( ServiceContext context, String command ) throws Exception
-    {
-        switch ( context.getAction() )
-        {
+    public ServiceResults handleServiceCommand( ServiceContext context, String command ) throws Exception {
+        switch ( context.getAction() ) {
             case GET:
                 return getServiceCommand( context, command );
 
@@ -1040,49 +880,40 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults getServiceCommand( ServiceContext context, String command ) throws Exception
-    {
+    public ServiceResults getServiceCommand( ServiceContext context, String command ) throws Exception {
 
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults putServiceCommand( ServiceContext context, String command, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postServiceCommand( ServiceContext context, String command, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults deleteServiceCommand( ServiceContext context, String command ) throws Exception
-    {
+    public ServiceResults deleteServiceCommand( ServiceContext context, String command ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults headServiceCommand( ServiceContext context, String command ) throws Exception
-    {
+    public ServiceResults headServiceCommand( ServiceContext context, String command ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public boolean hasEntityDictionary( String dictionary )
-    {
-        if ( entityDictionaries == null )
-        {
+    public boolean hasEntityDictionary( String dictionary ) {
+        if ( entityDictionaries == null ) {
             return false;
         }
-        for ( EntityDictionaryEntry entry : entityDictionaries )
-        {
-            if ( entry.getName().equalsIgnoreCase( dictionary ) )
-            {
+        for ( EntityDictionaryEntry entry : entityDictionaries ) {
+            if ( entry.getName().equalsIgnoreCase( dictionary ) ) {
                 return true;
             }
         }
@@ -1090,26 +921,20 @@ public abstract class AbstractService implements Service
     }
 
 
-    public EntityDictionaryEntry checkForEntityDictionaries( ServiceContext context )
-    {
-        if ( entityDictionaries == null )
-        {
+    public EntityDictionaryEntry checkForEntityDictionaries( ServiceContext context ) {
+        if ( entityDictionaries == null ) {
             return null;
         }
 
-        if ( !context.moreParameters() )
-        {
+        if ( !context.moreParameters() ) {
             return null;
         }
 
         String name = null;
-        if ( context.firstParameterIsName() )
-        {
+        if ( context.firstParameterIsName() ) {
             name = context.firstParameter().getName();
-            for ( EntityDictionaryEntry entry : entityDictionaries )
-            {
-                if ( entry.getName().equalsIgnoreCase( name ) )
-                {
+            for ( EntityDictionaryEntry entry : entityDictionaries ) {
+                if ( entry.getName().equalsIgnoreCase( name ) ) {
                     return entry;
                 }
             }
@@ -1120,16 +945,12 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults handleEntityDictionary( ServiceContext context, ServiceResults results,
-                                                  EntityDictionaryEntry dictionary ) throws Exception
-    {
-        if ( dictionary != null )
-        {
-            if ( results.size() == 1 )
-            {
+                                                  EntityDictionaryEntry dictionary ) throws Exception {
+        if ( dictionary != null ) {
+            if ( results.size() == 1 ) {
                 results = handleEntityDictionary( context, results.getRef(), dictionary );
             }
-            else if ( results.size() > 1 )
-            {
+            else if ( results.size() > 1 ) {
                 results = handleEntityDictionary( context, results.getRefs(), dictionary );
             }
         }
@@ -1138,10 +959,8 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults handleEntityDictionary( ServiceContext context, EntityRef ref,
-                                                  EntityDictionaryEntry dictionary ) throws Exception
-    {
-        if ( ref == null )
-        {
+                                                  EntityDictionaryEntry dictionary ) throws Exception {
+        if ( ref == null ) {
             throw new UnsupportedServiceOperationException( context );
         }
         List<EntityRef> refs = new ArrayList<EntityRef>();
@@ -1151,14 +970,11 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults handleEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                                  EntityDictionaryEntry dictionary ) throws Exception
-    {
-        if ( ( refs == null ) || ( refs.size() == 0 ) )
-        {
+                                                  EntityDictionaryEntry dictionary ) throws Exception {
+        if ( ( refs == null ) || ( refs.size() == 0 ) ) {
             throw new UnsupportedServiceOperationException( context );
         }
-        switch ( context.getAction() )
-        {
+        switch ( context.getAction() ) {
             case GET:
                 return getEntityDictionary( context, refs, dictionary );
 
@@ -1180,13 +996,10 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults getEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                               EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                               EntityDictionaryEntry dictionary ) throws Exception {
 
-        for ( EntityDictionaryEntry entry : entityDictionaries )
-        {
-            if ( entry.getName().equalsIgnoreCase( dictionary.getName() ) )
-            {
+        for ( EntityDictionaryEntry entry : entityDictionaries ) {
+            if ( entry.getName().equalsIgnoreCase( dictionary.getName() ) ) {
                 EntityRef entityRef = refs.get( 0 );
                 checkPermissionsForEntitySubPath( context, entityRef, entry.getPath() );
                 Set<String> items = cast( em.getDictionaryAsSet( entityRef, entry.getName() ) );
@@ -1201,58 +1014,48 @@ public abstract class AbstractService implements Service
 
     public ServiceResults putEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                EntityDictionaryEntry dictionary, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                 EntityDictionaryEntry dictionary, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults deleteEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                                  EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                                  EntityDictionaryEntry dictionary ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults headEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                                EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                                EntityDictionaryEntry dictionary ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public boolean hasEntityCommand( String command )
-    {
+    public boolean hasEntityCommand( String command ) {
         return ( entityCommands != null ) && ( command != null ) && entityCommands.contains( command );
     }
 
 
-    public String checkForEntityCommands( ServiceContext context )
-    {
-        if ( entityCommands == null )
-        {
+    public String checkForEntityCommands( ServiceContext context ) {
+        if ( entityCommands == null ) {
             return null;
         }
 
-        if ( !context.moreParameters() )
-        {
+        if ( !context.moreParameters() ) {
             return null;
         }
 
         String name = null;
-        if ( context.firstParameterIsName() )
-        {
+        if ( context.firstParameterIsName() ) {
             name = context.firstParameter().getName();
-            if ( entityCommands.contains( name ) )
-            {
+            if ( entityCommands.contains( name ) ) {
                 return name;
             }
         }
@@ -1262,16 +1065,12 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults handleEntityCommand( ServiceContext context, ServiceResults results, String command )
-            throws Exception
-    {
-        if ( command != null )
-        {
-            if ( results.size() == 1 )
-            {
+            throws Exception {
+        if ( command != null ) {
+            if ( results.size() == 1 ) {
                 results = handleEntityCommand( context, results.getRef(), command );
             }
-            else if ( results.size() > 1 )
-            {
+            else if ( results.size() > 1 ) {
                 results = handleEntityCommand( context, results.getRefs(), command );
             }
         }
@@ -1279,10 +1078,9 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults handleEntityCommand( ServiceContext context, EntityRef ref, String command ) throws Exception
-    {
-        if ( ref == null )
-        {
+    public ServiceResults handleEntityCommand( ServiceContext context, EntityRef ref, String command )
+            throws Exception {
+        if ( ref == null ) {
             throw new UnsupportedServiceOperationException( context );
         }
         List<EntityRef> refs = new ArrayList<EntityRef>();
@@ -1292,14 +1090,11 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults handleEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-            throws Exception
-    {
-        if ( ( refs == null ) || ( refs.size() == 0 ) )
-        {
+            throws Exception {
+        if ( ( refs == null ) || ( refs.size() == 0 ) ) {
             throw new UnsupportedServiceOperationException( context );
         }
-        switch ( context.getAction() )
-        {
+        switch ( context.getAction() ) {
             case GET:
                 return getEntityCommand( context, refs, command );
 
@@ -1321,61 +1116,51 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults getEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-            throws Exception
-    {
+            throws Exception {
 
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults putEntityCommand( ServiceContext context, List<EntityRef> refs, String command,
-                                            ServicePayload payload ) throws Exception
-    {
+                                            ServicePayload payload ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postEntityCommand( ServiceContext context, List<EntityRef> refs, String command,
-                                             ServicePayload payload ) throws Exception
-    {
+                                             ServicePayload payload ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults deleteEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults headEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public boolean hasServiceMetadata( String metadata )
-    {
+    public boolean hasServiceMetadata( String metadata ) {
         return ( metadataTypes != null ) && ( metadata != null ) && metadataTypes.contains( metadata );
     }
 
 
-    public String checkForServiceMetadata( ServiceContext context )
-    {
-        if ( metadataTypes == null )
-        {
+    public String checkForServiceMetadata( ServiceContext context ) {
+        if ( metadataTypes == null ) {
             return null;
         }
 
-        if ( context.getServiceMetadata() == null )
-        {
+        if ( context.getServiceMetadata() == null ) {
             return null;
         }
 
-        if ( metadataTypes.contains( context.getServiceMetadata() ) )
-        {
+        if ( metadataTypes.contains( context.getServiceMetadata() ) ) {
             return context.getServiceMetadata();
         }
 
@@ -1383,10 +1168,8 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults handleServiceMetadata( ServiceContext context, String metadataType ) throws Exception
-    {
-        switch ( context.getAction() )
-        {
+    public ServiceResults handleServiceMetadata( ServiceContext context, String metadataType ) throws Exception {
+        switch ( context.getAction() ) {
             case GET:
                 return getServiceMetadata( context, metadataType );
 
@@ -1407,11 +1190,9 @@ public abstract class AbstractService implements Service
     }
 
 
-    public ServiceResults getServiceMetadata( ServiceContext context, String metadataType ) throws Exception
-    {
+    public ServiceResults getServiceMetadata( ServiceContext context, String metadataType ) throws Exception {
 
-        if ( metadataTypes.contains( metadataType ) )
-        {
+        if ( metadataTypes.contains( metadataType ) ) {
             // return new ServiceResults(this, context, Type.GENERIC,
             // Results.fromData(items), null, null);
         }
@@ -1421,79 +1202,67 @@ public abstract class AbstractService implements Service
 
 
     public ServiceResults putServiceMetadata( ServiceContext context, String metadataType, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
     public ServiceResults postServiceMetadata( ServiceContext context, String metadataType, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults deleteServiceMetadata( ServiceContext context, String metadataType ) throws Exception
-    {
+    public ServiceResults deleteServiceMetadata( ServiceContext context, String metadataType ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public ServiceResults headServiceMetadata( ServiceContext context, String metadataType ) throws Exception
-    {
+    public ServiceResults headServiceMetadata( ServiceContext context, String metadataType ) throws Exception {
         throw new UnsupportedServiceOperationException( context );
     }
 
 
-    public void checkPermissionsForCollection( ServiceContext context )
-    {
+    public void checkPermissionsForCollection( ServiceContext context ) {
         String path = context.getPath();
         checkPermissionsForPath( context, path );
     }
 
 
-    public void checkPermissionsForEntity( ServiceContext context, UUID entityId )
-    {
+    public void checkPermissionsForEntity( ServiceContext context, UUID entityId ) {
         String path = context.getPath( entityId );
         checkPermissionsForPath( context, path );
     }
 
 
-    public void checkPermissionsForEntity( ServiceContext context, EntityRef entity )
-    {
+    public void checkPermissionsForEntity( ServiceContext context, EntityRef entity ) {
         String path = context.getPath( entity );
         checkPermissionsForPath( context, path );
     }
 
 
-    public void checkPermissionsForEntitySubPath( ServiceContext context, UUID entityId, String subPath )
-    {
+    public void checkPermissionsForEntitySubPath( ServiceContext context, UUID entityId, String subPath ) {
         String path = context.getPath( entityId, subPath );
         checkPermissionsForPath( context, path );
     }
 
 
-    public void checkPermissionsForEntitySubPath( ServiceContext context, EntityRef entity, String subPath )
-    {
+    public void checkPermissionsForEntitySubPath( ServiceContext context, EntityRef entity, String subPath ) {
         String path = context.getPath( entity, subPath );
         checkPermissionsForPath( context, path );
     }
 
 
-    public void checkPermissionsForPath( ServiceContext context, String path )
-    {
+    public void checkPermissionsForPath( ServiceContext context, String path ) {
         Subject currentUser = SubjectUtils.getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return;
         }
         String perm =
                 getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
                         path );
         boolean permitted = currentUser.isPermitted( perm );
-        if ( logger.isDebugEnabled() )
-        {
+        if ( logger.isDebugEnabled() ) {
             logger.debug( PATH_MSG, new Object[] { path, context.getAction(), perm, permitted } );
         }
         SubjectUtils.checkPermission( perm );
@@ -1509,33 +1278,28 @@ public abstract class AbstractService implements Service
 
 
     /** Purpose is to enable entity dictionary entries to have name not equal to path segment. */
-    protected static class EntityDictionaryEntry
-    {
+    protected static class EntityDictionaryEntry {
         private String name;
         private String path; // path segment used in URL
 
 
-        public EntityDictionaryEntry( String name )
-        {
+        public EntityDictionaryEntry( String name ) {
             this.name = this.path = name;
         }
 
 
-        public EntityDictionaryEntry( String name, String path )
-        {
+        public EntityDictionaryEntry( String name, String path ) {
             this.name = name;
             this.path = path;
         }
 
 
-        public String getName()
-        {
+        public String getName() {
             return name;
         }
 
 
-        public String getPath()
-        {
+        public String getPath() {
             return path;
         }
     }

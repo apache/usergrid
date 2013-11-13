@@ -20,19 +20,16 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Component("org.usergrid.rest.management.metrics.MetricsResource")
 @Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON })
-public class MetricsResource extends AbstractContextResource
-{
+public class MetricsResource extends AbstractContextResource {
 
-    public MetricsResource()
-    {
+    public MetricsResource() {
 
     }
 
 
     @GET
     @Path("all")
-    public JSONWithPadding getDeveloperMetrics( @Context UriInfo ui )
-    {
+    public JSONWithPadding getDeveloperMetrics( @Context UriInfo ui ) {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get developer metrics" );

@@ -25,12 +25,10 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 
 @Provider
-public class EntityNotFoundExceptionMapper extends AbstractExceptionMapper<EntityNotFoundException>
-{
+public class EntityNotFoundExceptionMapper extends AbstractExceptionMapper<EntityNotFoundException> {
 
     @Override
-    public Response toResponse( EntityNotFoundException e )
-    {
+    public Response toResponse( EntityNotFoundException e ) {
         return toResponse( NOT_FOUND, e );
     }
 }

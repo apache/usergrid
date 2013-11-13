@@ -39,8 +39,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
-{
+public class ZookeeperLockManagerTest extends AbstractZooKeeperTest {
 
     private static final Logger logger = LoggerFactory.getLogger( ZookeeperLockManagerTest.class );
 
@@ -50,8 +49,7 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
 
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
 
         //    AbstractZooKeeperTest.before();
 
@@ -67,24 +65,21 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
 
 
     @Before
-    public void start()
-    {
+    public void start() {
         // Create a different thread to lock the same node, that is held by the main thread.
         pool = Executors.newFixedThreadPool( 1 );
     }
 
 
     @After
-    public void tearDown() throws Exception
-    {
+    public void tearDown() throws Exception {
         pool.shutdownNow();
     }
 
 
     /** Locks a path and launches a thread which also locks the same path. */
     @Test
-    public void testLock() throws InterruptedException, ExecutionException, UGLockException
-    {
+    public void testLock() throws InterruptedException, ExecutionException, UGLockException {
 
         final UUID application = UUID.randomUUID();
         final UUID entity = UUID.randomUUID();
@@ -120,8 +115,7 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
 
     /** Locks a couple of times and try to clean up. Later oin another thread successfully acquire the lock */
     @Test
-    public void testLock2() throws InterruptedException, ExecutionException, UGLockException
-    {
+    public void testLock2() throws InterruptedException, ExecutionException, UGLockException {
 
         final UUID application = UUID.randomUUID();
         final UUID entity = UUID.randomUUID();
@@ -153,14 +147,11 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
 
 
     /** Acquires a lock in a different thread. */
-    private boolean lockInDifferentThread( final UUID application, final UUID entity )
-    {
-        Future<Boolean> status = pool.submit( new Callable<Boolean>()
-        {
+    private boolean lockInDifferentThread( final UUID application, final UUID entity ) {
+        Future<Boolean> status = pool.submit( new Callable<Boolean>() {
 
             @Override
-            public Boolean call() throws Exception
-            {
+            public Boolean call() throws Exception {
 
                 Lock lock = manager.createLock( application, entity.toString() );
 
@@ -170,8 +161,7 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
                 boolean locked = lock.tryLock( 0, TimeUnit.MILLISECONDS );
 
                 // shouldn't lock, so unlock to avoid polluting future tests
-                if ( locked )
-                {
+                if ( locked ) {
                     lock.unlock();
                 }
 
@@ -180,12 +170,10 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest
         } );
 
         boolean wasLocked = true;
-        try
-        {
+        try {
             wasLocked = status.get( 2, TimeUnit.SECONDS );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             wasLocked = false;
         }
 

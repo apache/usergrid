@@ -24,12 +24,10 @@ import static org.junit.Assert.assertNull;
 
 
 /** @author tnine */
-public class StringLiteralTest
-{
+public class StringLiteralTest {
 
     @Test
-    public void exactToken()
-    {
+    public void exactToken() {
 
         StringLiteral literal = new StringLiteral( new CommonToken( 0, "'value'" ) );
 
@@ -39,8 +37,7 @@ public class StringLiteralTest
 
 
     @Test
-    public void exactString()
-    {
+    public void exactString() {
 
         StringLiteral literal = new StringLiteral( "value" );
 
@@ -50,8 +47,7 @@ public class StringLiteralTest
 
 
     @Test
-    public void wildcardToken()
-    {
+    public void wildcardToken() {
 
         StringLiteral literal = new StringLiteral( new CommonToken( 0, "'*'" ) );
 
@@ -61,8 +57,7 @@ public class StringLiteralTest
 
 
     @Test
-    public void wildcardString()
-    {
+    public void wildcardString() {
 
         StringLiteral literal = new StringLiteral( "*" );
 
@@ -72,8 +67,7 @@ public class StringLiteralTest
 
 
     @Test
-    public void wildcardEndToken()
-    {
+    public void wildcardEndToken() {
 
         StringLiteral literal = new StringLiteral( new CommonToken( 0, "'value*'" ) );
 
@@ -83,8 +77,7 @@ public class StringLiteralTest
 
 
     @Test
-    public void wildcardEndString()
-    {
+    public void wildcardEndString() {
 
         StringLiteral literal = new StringLiteral( "value*" );
 

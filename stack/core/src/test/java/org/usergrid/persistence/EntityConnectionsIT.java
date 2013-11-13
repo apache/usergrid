@@ -37,20 +37,17 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class EntityConnectionsIT extends AbstractCoreIT
-{
+public class EntityConnectionsIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityConnectionsIT.class );
 
 
-    public EntityConnectionsIT()
-    {
+    public EntityConnectionsIT() {
         super();
     }
 
 
     @Test
-    public void testEntityConnectionsSimple() throws Exception
-    {
+    public void testEntityConnectionsSimple() throws Exception {
         UUID applicationId = setup.createApplication( "EntityConnectionsIT", "testEntityConnectionsSimple" );
         assertNotNull( applicationId );
 
@@ -87,8 +84,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
 
     @Test
-    public void testEntityConnections() throws Exception
-    {
+    public void testEntityConnections() throws Exception {
         LOG.info( "\n\nEntityConnectionsIT.testEntityConnections\n" );
 
         UUID applicationId = setup.createApplication( "EntityConnectionsIT", "testEntityConnections" );
@@ -182,8 +178,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
 
     public Map<String, Map<String, List<UUID>>> testEntityConnections( UUID applicationId, UUID entityId,
-                                                                       int expectedCount ) throws Exception
-    {
+                                                                       int expectedCount ) throws Exception {
         LOG.info( "----------------------------------------------------" );
         LOG.info( "Checking connections for " + entityId.toString() );
 
@@ -201,15 +196,13 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
 
     public List<UUID> testApplicationCollections( UUID applicationId, String collectionName, int expectedCount )
-            throws Exception
-    {
+            throws Exception {
         return testEntityCollections( applicationId, applicationId, collectionName, expectedCount );
     }
 
 
     public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String collectionName,
-                                             int expectedCount ) throws Exception
-    {
+                                             int expectedCount ) throws Exception {
         LOG.info( "----------------------------------------------------" );
         LOG.info( "Checking collection " + collectionName + " for " + entityId.toString() );
 
@@ -218,8 +211,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
         int i = 0;
         Results entities = em.getCollection( en, collectionName, null, 100, Results.Level.IDS, false );
-        for ( UUID id : entities.getIds() )
-        {
+        for ( UUID id : entities.getIds() ) {
             LOG.info( ( i++ ) + " " + id.toString() );
         }
         LOG.info( "----------------------------------------------------" );
@@ -231,8 +223,7 @@ public class EntityConnectionsIT extends AbstractCoreIT
 
 
     @Test
-    public void testEntityConnectionsMembership() throws Exception
-    {
+    public void testEntityConnectionsMembership() throws Exception {
         UUID applicationId = setup.createApplication( "entityConnectionsTest", "testEntityConnectionsMembership" );
         assertNotNull( applicationId );
 

@@ -21,8 +21,7 @@ package org.usergrid.persistence.exceptions;
  *
  * @author tnine
  */
-public class NoFullTextIndexException extends PersistenceException
-{
+public class NoFullTextIndexException extends PersistenceException {
 
     /**
      *
@@ -32,8 +31,7 @@ public class NoFullTextIndexException extends PersistenceException
     final String propertyName;
 
 
-    public NoFullTextIndexException( String entityType, String propertyName )
-    {
+    public NoFullTextIndexException( String entityType, String propertyName ) {
         super( "Entity '" + entityType + "' with property named '" + propertyName
                 + "' is not full text indexed.  You cannot use the 'contains' operand on this field" );
         this.entityType = entityType;
@@ -41,14 +39,12 @@ public class NoFullTextIndexException extends PersistenceException
     }
 
 
-    public String getEntityType()
-    {
+    public String getEntityType() {
         return entityType;
     }
 
 
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 }

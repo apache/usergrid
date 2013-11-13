@@ -22,8 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 
-public interface OAuthProxy
-{
+public interface OAuthProxy {
 
     public abstract String startFBAuthGetRedirect( int appId, Set<String> scope, UUID entityId,
                                                    String authCodePropertyName, String accessTokenPropertyName,

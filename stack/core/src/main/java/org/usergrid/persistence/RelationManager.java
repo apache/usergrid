@@ -22,8 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 
-public interface RelationManager
-{
+public interface RelationManager {
 
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception;
 

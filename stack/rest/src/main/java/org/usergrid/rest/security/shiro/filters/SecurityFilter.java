@@ -40,8 +40,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
-public abstract class SecurityFilter implements ContainerRequestFilter
-{
+public abstract class SecurityFilter implements ContainerRequestFilter {
 
     public static final String AUTH_OAUTH_2_ACCESS_TOKEN_TYPE = "BEARER";
     public static final String AUTH_BASIC_TYPE = "BASIC";
@@ -60,87 +59,73 @@ public abstract class SecurityFilter implements ContainerRequestFilter
     HttpContext hc;
 
 
-    public EntityManagerFactory getEntityManagerFactory()
-    {
+    public EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
-    public ServiceManagerFactory getServiceManagerFactory()
-    {
+    public ServiceManagerFactory getServiceManagerFactory() {
         return smf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
-    public TokenService getTokenService()
-    {
+    public TokenService getTokenService() {
         return tokens;
     }
 
 
     @Autowired
-    public void setTokenService( TokenService tokens )
-    {
+    public void setTokenService( TokenService tokens ) {
         this.tokens = tokens;
     }
 
 
-    public ManagementService getManagementService()
-    {
+    public ManagementService getManagementService() {
         return management;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
-    public static Map<String, String> getAuthTypes( ContainerRequest request )
-    {
+    public static Map<String, String> getAuthTypes( ContainerRequest request ) {
         String auth_header = request.getHeaderValue( HttpHeaders.AUTHORIZATION );
-        if ( auth_header == null )
-        {
+        if ( auth_header == null ) {
             return null;
         }
 
         String[] auth_list = StringUtils.split( auth_header, ',' );
-        if ( auth_list == null )
-        {
+        if ( auth_list == null ) {
             return null;
         }
         Map<String, String> auth_types = new LinkedHashMap<String, String>();
-        for ( String auth : auth_list )
-        {
+        for ( String auth : auth_list ) {
             auth = auth.trim();
             String type = stringOrSubstringBeforeFirst( auth, ' ' ).toUpperCase();
             String token = stringOrSubstringAfterFirst( auth, ' ' );

@@ -36,8 +36,7 @@ import me.prettyprint.hector.api.locking.HLockManagerConfigurator;
  *
  * @author tnine
  */
-public class HectorLockManagerImpl implements LockManager
-{
+public class HectorLockManagerImpl implements LockManager {
     private int replicationFactor = 1;
     private int numberOfLockObserverThreads = 1;
     private long lockTtl = 2000;
@@ -49,14 +48,12 @@ public class HectorLockManagerImpl implements LockManager
     /**
      *
      */
-    public HectorLockManagerImpl()
-    {
+    public HectorLockManagerImpl() {
     }
 
 
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         HLockManagerConfigurator hlc = new HLockManagerConfigurator();
         hlc.setReplicationFactor( replicationFactor );
         hlc.setKeyspaceName( keyspaceName );
@@ -74,8 +71,7 @@ public class HectorLockManagerImpl implements LockManager
      * java.lang.String[])
      */
     @Override
-    public Lock createLock( UUID applicationId, String... path )
-    {
+    public Lock createLock( UUID applicationId, String... path ) {
 
         String lockPath = LockPathBuilder.buildPath( applicationId, path );
 
@@ -89,8 +85,7 @@ public class HectorLockManagerImpl implements LockManager
      *
      * @param replicationFactor the replicationFactor to set
      */
-    public void setReplicationFactor( int replicationFactor )
-    {
+    public void setReplicationFactor( int replicationFactor ) {
 
         Assert.isTrue( numberOfLockObserverThreads % 2 != 0, "You must specify an odd number for replication factor" );
 
@@ -104,8 +99,7 @@ public class HectorLockManagerImpl implements LockManager
      *
      * @param numberOfLockObserverThreads the numberOfLockObserverThreads to set
      */
-    public void setNumberOfLockObserverThreads( int numberOfLockObserverThreads )
-    {
+    public void setNumberOfLockObserverThreads( int numberOfLockObserverThreads ) {
         this.numberOfLockObserverThreads = numberOfLockObserverThreads;
     }
 
@@ -115,22 +109,19 @@ public class HectorLockManagerImpl implements LockManager
      *
      * @param lockTtl the lockTtl to set
      */
-    public void setLockTtl( long lockTtl )
-    {
+    public void setLockTtl( long lockTtl ) {
         this.lockTtl = lockTtl;
     }
 
 
     /** @param keyspaceName the keyspaceName to set */
-    public void setKeyspaceName( String keyspaceName )
-    {
+    public void setKeyspaceName( String keyspaceName ) {
         this.keyspaceName = keyspaceName;
     }
 
 
     /** @param cluster the cluster to set */
-    public void setCluster( Cluster cluster )
-    {
+    public void setCluster( Cluster cluster ) {
         this.cluster = cluster;
     }
 }

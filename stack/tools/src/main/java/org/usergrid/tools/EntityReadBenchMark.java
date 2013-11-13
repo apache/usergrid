@@ -69,8 +69,7 @@ import static org.usergrid.utils.ConversionUtils.bytebuffers;
  *
  * @author tnine
  */
-public class EntityReadBenchMark extends ToolBase
-{
+public class EntityReadBenchMark extends ToolBase {
 
 
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -88,9 +87,8 @@ public class EntityReadBenchMark extends ToolBase
 
 
     @Override
-    @SuppressWarnings( "static-access" )
-    public Options createOptions()
-    {
+    @SuppressWarnings("static-access")
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -128,8 +126,7 @@ public class EntityReadBenchMark extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         logger.info( "Starting entity cleanup" );
@@ -158,22 +155,18 @@ public class EntityReadBenchMark extends ToolBase
 
         String type = line.getOptionValue( "type" );
 
-        for ( int i = 0; i < workerSize; i++ )
-        {
+        for ( int i = 0; i < workerSize; i++ ) {
 
             ReadWorker worker = null;
 
 
-            if ( TYPE_ENTITY.equals( type ) )
-            {
+            if ( TYPE_ENTITY.equals( type ) ) {
                 worker = new IndexReadWorker( i, size, appId );
             }
-            else if ( TYPE_DICTIONARY.equals( type ) )
-            {
+            else if ( TYPE_DICTIONARY.equals( type ) ) {
                 worker = new DictReadWorker( i, size, appId );
             }
-            else
-            {
+            else {
                 throw new IllegalArgumentException( "You must specifiy the 'type' option" );
             }
 
@@ -186,8 +179,7 @@ public class EntityReadBenchMark extends ToolBase
         /**
          * Wait for all tasks to complete
          */
-        while ( !futures.isEmpty() )
-        {
+        while ( !futures.isEmpty() ) {
             futures.pop().get();
         }
 
@@ -200,8 +192,7 @@ public class EntityReadBenchMark extends ToolBase
     }
 
 
-    private abstract class ReadWorker implements Callable<Void>
-    {
+    private abstract class ReadWorker implements Callable<Void> {
 
         protected int count;
 
@@ -210,8 +201,7 @@ public class EntityReadBenchMark extends ToolBase
         protected UUID appId;
 
 
-        private ReadWorker( int workerNumber, int count, UUID appId ) throws Exception
-        {
+        private ReadWorker( int workerNumber, int count, UUID appId ) throws Exception {
             this.workerNumber = workerNumber;
             this.count = count;
             this.appId = appId;
@@ -224,12 +214,10 @@ public class EntityReadBenchMark extends ToolBase
          * @see java.util.concurrent.Callable#call()
          */
         @Override
-        public Void call() throws Exception
-        {
+        public Void call() throws Exception {
 
 
-            for ( int i = 0; i < count; i++ )
-            {
+            for ( int i = 0; i < count; i++ ) {
 
                 String value = new StringBuilder().append( workerNumber ).append( "-" ).append( i ).toString();
 
@@ -245,15 +233,13 @@ public class EntityReadBenchMark extends ToolBase
     }
 
 
-    private class IndexReadWorker extends ReadWorker
-    {
+    private class IndexReadWorker extends ReadWorker {
 
         private Keyspace keyspace;
         private IndexBucketLocator indexBucketLocator = null;
 
 
-        private IndexReadWorker( int workerNumber, int count, UUID appId ) throws Exception
-        {
+        private IndexReadWorker( int workerNumber, int count, UUID appId ) throws Exception {
             super( workerNumber, count, appId );
             keyspace = EntityReadBenchMark.this.cass.getApplicationKeyspace( appId );
             indexBucketLocator = ( ( EntityManagerImpl ) EntityReadBenchMark.this.emf.getEntityManager( appId ) )
@@ -265,8 +251,7 @@ public class EntityReadBenchMark extends ToolBase
          * @see org.usergrid.tools.EntityReadBenchMark.ReadWorker#doRead()
          */
         @Override
-        protected void doRead( String value ) throws Exception
-        {
+        protected void doRead( String value ) throws Exception {
             TimerContext timer = queryReads.time();
 
             Assert.isTrue( read( value ) );
@@ -275,8 +260,7 @@ public class EntityReadBenchMark extends ToolBase
         }
 
 
-        private boolean read( String value )
-        {
+        private boolean read( String value ) {
 
 
             List<String> buckets = indexBucketLocator.getBuckets( appId, IndexType.UNIQUE, "tests" );
@@ -285,8 +269,7 @@ public class EntityReadBenchMark extends ToolBase
 
             Object keyPrefix = key( appId, "tests", "test" );
 
-            for ( String bucket : buckets )
-            {
+            for ( String bucket : buckets ) {
                 cassKeys.add( key( keyPrefix, bucket ) );
             }
 
@@ -308,10 +291,8 @@ public class EntityReadBenchMark extends ToolBase
             QueryResult<Rows<ByteBuffer, DynamicComposite, ByteBuffer>> results = multiget.execute();
 
             // search for a column, if one exists, we've found the entity
-            for ( Row<ByteBuffer, DynamicComposite, ByteBuffer> row : results.get() )
-            {
-                if ( row.getColumnSlice().getColumns().size() > 0 )
-                {
+            for ( Row<ByteBuffer, DynamicComposite, ByteBuffer> row : results.get() ) {
+                if ( row.getColumnSlice().getColumns().size() > 0 ) {
                     return true;
                 }
             }
@@ -321,15 +302,13 @@ public class EntityReadBenchMark extends ToolBase
     }
 
 
-    private class DictReadWorker extends ReadWorker
-    {
+    private class DictReadWorker extends ReadWorker {
 
 
         UniqueIndexer indexer;
 
 
-        private DictReadWorker( int workerNumber, int count, UUID appId ) throws Exception
-        {
+        private DictReadWorker( int workerNumber, int count, UUID appId ) throws Exception {
             super( workerNumber, count, appId );
             Keyspace ko = EntityReadBenchMark.this.cass.getApplicationKeyspace( appId );
             indexer = new UniqueIndexer( ko );
@@ -340,8 +319,7 @@ public class EntityReadBenchMark extends ToolBase
          * @see org.usergrid.tools.EntityReadBenchMark.ReadWorker#doRead()
          */
         @Override
-        protected void doRead( String value ) throws Exception
-        {
+        protected void doRead( String value ) throws Exception {
 
             TimerContext timer = dictReads.time();
 
@@ -352,8 +330,7 @@ public class EntityReadBenchMark extends ToolBase
     }
 
 
-    private class UniqueIndexer
-    {
+    private class UniqueIndexer {
 
         private Keyspace keyspace;
 
@@ -362,16 +339,14 @@ public class EntityReadBenchMark extends ToolBase
          * @param indexBucketLocator
          * @param mutator
          */
-        public UniqueIndexer( Keyspace keyspace )
-        {
+        public UniqueIndexer( Keyspace keyspace ) {
             super();
             this.keyspace = keyspace;
         }
 
 
         private boolean existsInIndex( UUID applicationId, String collectionName, String propName, Object entityValue )
-                throws Exception
-        {
+                throws Exception {
             Object rowKey = key( applicationId, collectionName, propName, entityValue );
 
 

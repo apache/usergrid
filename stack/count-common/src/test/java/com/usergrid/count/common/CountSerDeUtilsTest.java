@@ -22,8 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 
 /** @author zznate */
-public class CountSerDeUtilsTest
-{
+public class CountSerDeUtilsTest {
 
     private static final String SIMPLE_JSON =
             "{\"tableName\":\"Counters\",\"keyName\":\"k1\",\"columnName\":\"c1\",\"value\":1}";
@@ -33,8 +32,7 @@ public class CountSerDeUtilsTest
 
 
     @Test
-    public void testSerialize()
-    {
+    public void testSerialize() {
         Count count = new Count( "Counters", "k1", "c1", 1 );
         String sered = CountSerDeUtils.serialize( count );
         assertEquals( SIMPLE_JSON, sered );
@@ -42,8 +40,7 @@ public class CountSerDeUtilsTest
 
 
     @Test
-    public void testDeserializer()
-    {
+    public void testDeserializer() {
         Count count = CountSerDeUtils.deserialize( SIMPLE_JSON );
         assertEquals( "k1", count.getKeyName() );
         assertEquals( "c1", count.getColumnName() );
@@ -53,8 +50,7 @@ public class CountSerDeUtilsTest
 
 
     @Test
-    public void testMixedSerializer()
-    {
+    public void testMixedSerializer() {
         Count count = new Count( "Counters", 1, "c1", 1 );
         String sered = CountSerDeUtils.serialize( count );
         assertEquals( MIXED_TYPE_JSON, sered );
@@ -62,8 +58,7 @@ public class CountSerDeUtilsTest
 
 
     @Test
-    public void testMixedDeserializer()
-    {
+    public void testMixedDeserializer() {
         Count count = CountSerDeUtils.deserialize( MIXED_TYPE_JSON );
         assertEquals( 1, count.getKeyName() );
         assertEquals( "c1", count.getColumnName() );

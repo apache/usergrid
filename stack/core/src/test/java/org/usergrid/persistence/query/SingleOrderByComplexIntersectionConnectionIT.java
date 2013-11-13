@@ -20,12 +20,10 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByComplexIntersectionConnectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByComplexIntersectionConnectionIT extends AbstractIteratingQueryIT {
 
     @Test
-    public void singleOrderByComplexIntersectionConnection() throws Exception
-    {
+    public void singleOrderByComplexIntersectionConnection() throws Exception {
         singleOrderByComplexIntersection( new ConnectionHelper() );
     }
 }

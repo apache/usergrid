@@ -23,15 +23,15 @@ import static org.junit.Assert.assertEquals;
 
 
 /** @author tnine */
-public class LongLiteralTest
-{
+public class LongLiteralTest {
 
 
-    /** Test method for {@link org.usergrid.persistence.query.tree.LongLiteral#IntegerLiteral(org.antlr.runtime
-     * .Token)}. */
+    /**
+     * Test method for {@link org.usergrid.persistence.query.tree.LongLiteral#IntegerLiteral(org.antlr.runtime
+     * .Token)}.
+     */
     @Test
-    public void longMin()
-    {
+    public void longMin() {
 
         long value = Long.MIN_VALUE;
 
@@ -43,11 +43,12 @@ public class LongLiteralTest
     }
 
 
-    /** Test method for {@link org.usergrid.persistence.query.tree.LongLiteral#IntegerLiteral(org.antlr.runtime
-     * .Token)}. */
+    /**
+     * Test method for {@link org.usergrid.persistence.query.tree.LongLiteral#IntegerLiteral(org.antlr.runtime
+     * .Token)}.
+     */
     @Test
-    public void longMax()
-    {
+    public void longMax() {
 
         long value = Long.MAX_VALUE;
 

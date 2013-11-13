@@ -26,8 +26,7 @@ import org.usergrid.cassandra.Concurrent;
 
 
 @Concurrent()
-public abstract class AbstractServiceIT
-{
+public abstract class AbstractServiceIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 

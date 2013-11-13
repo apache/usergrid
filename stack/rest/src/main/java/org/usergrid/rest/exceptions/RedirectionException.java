@@ -5,28 +5,23 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
-public class RedirectionException extends RuntimeException
-{
+public class RedirectionException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
     URI uri = null;
 
 
-    public RedirectionException( String location )
-    {
-        try
-        {
+    public RedirectionException( String location ) {
+        try {
             uri = new URI( location );
         }
-        catch ( URISyntaxException e )
-        {
+        catch ( URISyntaxException e ) {
         }
     }
 
 
-    public URI getUri()
-    {
+    public URI getUri() {
         return uri;
     }
 }

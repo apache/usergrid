@@ -28,8 +28,7 @@ import org.usergrid.persistence.query.ir.result.UnionIterator;
  *
  * @author tnine
  */
-public abstract class SearchVisitor implements NodeVisitor
-{
+public abstract class SearchVisitor implements NodeVisitor {
 
     private static final SecondaryIndexSliceParser COLLECTION_PARSER = new SecondaryIndexSliceParser();
 
@@ -45,8 +44,7 @@ public abstract class SearchVisitor implements NodeVisitor
     /**
      * @param queryProcessor
      */
-    public SearchVisitor( QueryProcessor queryProcessor )
-    {
+    public SearchVisitor( QueryProcessor queryProcessor ) {
         this.query = queryProcessor.getQuery();
         this.queryProcessor = queryProcessor;
         this.em = queryProcessor.getEntityManager();
@@ -54,8 +52,7 @@ public abstract class SearchVisitor implements NodeVisitor
 
 
     /** Return the results if they exist, null otherwise */
-    public ResultIterator getResults()
-    {
+    public ResultIterator getResults() {
         return results.isEmpty() ? null : results.pop();
     }
 
@@ -67,8 +64,7 @@ public abstract class SearchVisitor implements NodeVisitor
      * persistence.query.ir.AndNode)
      */
     @Override
-    public void visit( AndNode node ) throws Exception
-    {
+    public void visit( AndNode node ) throws Exception {
         node.getLeft().visit( this );
         node.getRight().visit( this );
 
@@ -94,8 +90,7 @@ public abstract class SearchVisitor implements NodeVisitor
      * persistence.query.ir.NotNode)
      */
     @Override
-    public void visit( NotNode node ) throws Exception
-    {
+    public void visit( NotNode node ) throws Exception {
         node.getSubtractNode().visit( this );
         ResultIterator not = results.pop();
 
@@ -117,8 +112,7 @@ public abstract class SearchVisitor implements NodeVisitor
      * persistence.query.ir.OrNode)
      */
     @Override
-    public void visit( OrNode node ) throws Exception
-    {
+    public void visit( OrNode node ) throws Exception {
         node.getLeft().visit( this );
         node.getRight().visit( this );
 
@@ -127,12 +121,10 @@ public abstract class SearchVisitor implements NodeVisitor
 
         UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ) );
 
-        if ( left != null )
-        {
+        if ( left != null ) {
             union.addIterator( left );
         }
-        if ( right != null )
-        {
+        if ( right != null ) {
             union.addIterator( right );
         }
 
@@ -148,8 +140,7 @@ public abstract class SearchVisitor implements NodeVisitor
      * .query.ir.OrderByNode)
      */
     @Override
-    public void visit( OrderByNode orderByNode ) throws Exception
-    {
+    public void visit( OrderByNode orderByNode ) throws Exception {
 
         QuerySlice slice = orderByNode.getFirstPredicate().getAllSlices().iterator().next();
 
@@ -159,8 +150,7 @@ public abstract class SearchVisitor implements NodeVisitor
 
         ResultIterator subResults = null;
 
-        if ( subOperations != null )
-        {
+        if ( subOperations != null ) {
             //visit our sub operation
             subOperations.visit( this );
 
@@ -172,12 +162,10 @@ public abstract class SearchVisitor implements NodeVisitor
         /**
          * We have secondary sorts, we need to evaluate the candidate results and sort them in memory
          */
-        if ( orderByNode.hasSecondarySorts() )
-        {
+        if ( orderByNode.hasSecondarySorts() ) {
 
             //only order by with no query, start scanning the first field
-            if ( subResults == null )
-            {
+            if ( subResults == null ) {
                 QuerySlice firstFieldSlice = new QuerySlice( slice.getPropertyName(), -1 );
                 subResults =
                         new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), COLLECTION_PARSER,
@@ -189,17 +177,14 @@ public abstract class SearchVisitor implements NodeVisitor
         }
 
         //we don't have multi field sorting, we can simply do intersection with a single scan range
-        else
-        {
+        else {
 
             IndexScanner scanner;
 
-            if ( slice.isComplete() )
-            {
+            if ( slice.isComplete() ) {
                 scanner = new NoOpIndexScanner();
             }
-            else
-            {
+            else {
                 scanner = secondaryIndexScan( orderByNode, slice );
             }
 
@@ -208,8 +193,7 @@ public abstract class SearchVisitor implements NodeVisitor
             IntersectionIterator union = new IntersectionIterator( queryProcessor.getPageSizeHint( orderByNode ) );
             union.addIterator( joinSlice );
 
-            if ( subResults != null )
-            {
+            if ( subResults != null ) {
                 union.addIterator( subResults );
             }
 
@@ -229,12 +213,10 @@ public abstract class SearchVisitor implements NodeVisitor
      * .query.ir.SliceNode)
      */
     @Override
-    public void visit( SliceNode node ) throws Exception
-    {
+    public void visit( SliceNode node ) throws Exception {
         IntersectionIterator intersections = new IntersectionIterator( queryProcessor.getPageSizeHint( node ) );
 
-        for ( QuerySlice slice : node.getAllSlices() )
-        {
+        for ( QuerySlice slice : node.getAllSlices() ) {
             IndexScanner scanner = secondaryIndexScan( node, slice );
 
             intersections.addIterator( new SliceIterator( slice, scanner, COLLECTION_PARSER, slice.hasCursor() ) );
@@ -245,26 +227,23 @@ public abstract class SearchVisitor implements NodeVisitor
 
 
     /**
-     * Create a secondary index scan for the given slice node. DOES NOT apply to the "all" case. This should only generate
-     * a slice for secondary property scanning
+     * Create a secondary index scan for the given slice node. DOES NOT apply to the "all" case. This should only
+     * generate a slice for secondary property scanning
      */
     protected abstract IndexScanner secondaryIndexScan( QueryNode node, QuerySlice slice ) throws Exception;
 
 
     @Override
-    public void visit( UuidIdentifierNode uuidIdentifierNode )
-    {
+    public void visit( UuidIdentifierNode uuidIdentifierNode ) {
         this.results.push( new StaticIdIterator( uuidIdentifierNode.getUuid() ) );
     }
 
 
     @Override
-    public void visit( EmailIdentifierNode emailIdentifierNode ) throws Exception
-    {
+    public void visit( EmailIdentifierNode emailIdentifierNode ) throws Exception {
         EntityRef user = queryProcessor.getEntityManager().getUserByIdentifier( emailIdentifierNode.getIdentifier() );
 
-        if ( user == null )
-        {
+        if ( user == null ) {
             this.results.push( new EmptyIterator() );
             return;
         }

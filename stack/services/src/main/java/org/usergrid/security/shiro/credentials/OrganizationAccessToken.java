@@ -16,11 +16,9 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public class OrganizationAccessToken extends AbstractAccessTokenCredentials implements OrganizationCredentials
-{
+public class OrganizationAccessToken extends AbstractAccessTokenCredentials implements OrganizationCredentials {
 
-    public OrganizationAccessToken( String token )
-    {
+    public OrganizationAccessToken( String token ) {
         super( token );
     }
 }

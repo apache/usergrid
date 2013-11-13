@@ -64,8 +64,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 
 /** @author zznate */
-public class MUUserResourceIT extends AbstractRestIT
-{
+public class MUUserResourceIT extends AbstractRestIT {
     private Logger LOG = LoggerFactory.getLogger( MUUserResourceIT.class );
 
 
@@ -81,8 +80,7 @@ public class MUUserResourceIT extends AbstractRestIT
      */
     @Test
     @Ignore( "aok - check this please" )
-    public void testCaseSensitivityAdminUser() throws Exception
-    {
+    public void testCaseSensitivityAdminUser() throws Exception {
         LOG.info( "Starting testCaseSensitivityAdminUser()" );
         UserInfo mixcaseUser = setup.getMgmtSvc()
                                     .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test",
@@ -102,15 +100,13 @@ public class MUUserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void testUnconfirmedAdminLogin() throws Exception
-    {
+    public void testUnconfirmedAdminLogin() throws Exception {
         // Setup properties to require confirmation of users
         // -------------------------------------------
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
@@ -143,16 +139,14 @@ public class MUUserResourceIT extends AbstractRestIT
             // Attempt to authenticate but this should fail
             // -------------------------------------------
             JsonNode node;
-            try
-            {
+            try {
                 node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", userName ).queryParam( "password", passwd )
                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
                 fail( "Unconfirmed users should not be authorized to authenticate." );
             }
-            catch ( UniformInterfaceException e )
-            {
+            catch ( UniformInterfaceException e ) {
                 node = e.getResponse().getEntity( JsonNode.class );
                 assertEquals( "invalid_grant", node.get( "error" ).getTextValue() );
                 assertEquals( "User must be confirmed to authenticate",
@@ -196,21 +190,18 @@ public class MUUserResourceIT extends AbstractRestIT
             assertNotNull( node );
             LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
     @Test
-    public void testSystemAdminNeedsNoConfirmation() throws Exception
-    {
+    public void testSystemAdminNeedsNoConfirmation() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             // require comfirmation of new admin users
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
@@ -227,32 +218,27 @@ public class MUUserResourceIT extends AbstractRestIT
 
             // sysadmin login should suceed despite confirmation setting
             JsonNode node;
-            try
-            {
+            try {
                 node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", sysadminUsername ).queryParam( "password", sysadminPassword )
                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
             }
-            catch ( UniformInterfaceException e )
-            {
+            catch ( UniformInterfaceException e ) {
                 fail( "Sysadmin should need no confirmation" );
             }
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
     @Test
-    public void testTestUserNeedsNoConfirmation() throws Exception
-    {
+    public void testTestUserNeedsNoConfirmation() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             // require comfirmation of new admin users
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
@@ -271,34 +257,29 @@ public class MUUserResourceIT extends AbstractRestIT
 
             // test user login should suceed despite confirmation setting
             JsonNode node;
-            try
-            {
+            try {
                 node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", testUserUsername ).queryParam( "password", testUserPassword )
                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
             }
-            catch ( UniformInterfaceException e )
-            {
+            catch ( UniformInterfaceException e ) {
                 fail( "Test User should need no confirmation" );
             }
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
-    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException
-    {
+    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
         String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
         return StringUtils.substringAfterLast( body, "token=" );
     }
 
 
     @Test
-    public void updateManagementUser() throws Exception
-    {
+    public void updateManagementUser() throws Exception {
         Map<String, String> payload =
                 hashMap( "email", "uort-user-1@apigee.com" ).map( "username", "uort-user-1" ).map( "name", "Test User" )
                         .map( "password", "password" ).map( "organization", "uort-org" ).map( "company", "Apigee" );
@@ -332,8 +313,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void getUser() throws Exception
-    {
+    public void getUser() throws Exception {
 
         // set an organization property
         HashMap<String, Object> payload = new HashMap<String, Object>();
@@ -361,8 +341,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void getUserShallow() throws Exception
-    {
+    public void getUserShallow() throws Exception {
 
         // set an organization property
         HashMap<String, Object> payload = new HashMap<String, Object>();
@@ -391,8 +370,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void reactivateMultipleSend() throws Exception
-    {
+    public void reactivateMultipleSend() throws Exception {
 
         JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, buildOrgUserPayload( "reactivate" ) );
@@ -416,8 +394,7 @@ public class MUUserResourceIT extends AbstractRestIT
     }
 
 
-    private Map<String, String> buildOrgUserPayload( String caller )
-    {
+    private Map<String, String> buildOrgUserPayload( String caller ) {
         String className = this.getClass().getSimpleName();
         Map<String, String> payload = hashMap( "email", String.format( "%s-%s@apigee.com", className, caller ) )
                 .map( "username", String.format( "%s-%s-user", className, caller ) )
@@ -429,8 +406,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
     @Test
     @Ignore( "because of that jstl classloader error thing" )
-    public void checkPasswordReset() throws Exception
-    {
+    public void checkPasswordReset() throws Exception {
 
         String email = "test@usergrid.com";
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
@@ -459,8 +435,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
     @Test
     @Ignore( "causes problems in build" )
-    public void passwordResetIncorrectUserName() throws Exception
-    {
+    public void passwordResetIncorrectUserName() throws Exception {
 
         String email = "test2@usergrid.com";
         setup.getMgmtSvc().createAdminUser( "test2", "test2", "test2@usergrid.com", "sesa2me", false, false );
@@ -487,8 +462,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void checkPasswordHistoryConflict() throws Exception
-    {
+    public void checkPasswordHistoryConflict() throws Exception {
 
         String[] passwords = new String[] { "password1", "password2", "password3", "password4" };
 
@@ -509,14 +483,12 @@ public class MUUserResourceIT extends AbstractRestIT
 
         Map<String, String> payload = hashMap( "oldpassword", passwords[0] ).map( "newpassword", passwords[0] ); // fail
 
-        try
-        {
+        try {
             JsonNode node = resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
             fail( "should fail with conflict" );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( 409, e.getResponse().getStatus() );
         }
 
@@ -526,14 +498,12 @@ public class MUUserResourceIT extends AbstractRestIT
         payload.put( "oldpassword", passwords[1] );
 
         payload.put( "newpassword", passwords[0] ); // fail
-        try
-        {
+        try {
             node = resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
             fail( "should fail with conflict" );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( 409, e.getResponse().getStatus() );
         }
     }
@@ -541,8 +511,7 @@ public class MUUserResourceIT extends AbstractRestIT
 
     @Test
     @Ignore( "because of that jstl classloader error thing" )
-    public void checkPasswordChangeTime() throws Exception
-    {
+    public void checkPasswordChangeTime() throws Exception {
 
         String email = "test@usergrid.com";
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
@@ -589,8 +558,7 @@ public class MUUserResourceIT extends AbstractRestIT
     /** USERGRID-1960 */
     @Test
     @Ignore( "Depends on other tests" )
-    public void listOrgUsersByName()
-    {
+    public void listOrgUsersByName() {
         JsonNode response = context.management().orgs().organization( context.getOrgName() ).users().get();
 
         //get the response and verify our user is there

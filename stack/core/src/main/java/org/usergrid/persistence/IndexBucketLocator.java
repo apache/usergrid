@@ -26,24 +26,20 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public interface IndexBucketLocator
-{
+public interface IndexBucketLocator {
 
-    public enum IndexType
-    {
+    public enum IndexType {
         COLLECTION( "collection" ), CONNECTION( "connection" ), GEO( "geo" ), UNIQUE( "unique" );
 
         private final String type;
 
 
-        private IndexType( String type )
-        {
+        private IndexType( String type ) {
             this.type = type;
         }
 
 
-        public String getType()
-        {
+        public String getType() {
             return type;
         }
 

@@ -31,51 +31,44 @@ import static org.usergrid.utils.ListUtils.anyNull;
  *
  * @author zznate
  */
-public class FoursquareProvider extends AbstractProvider
-{
+public class FoursquareProvider extends AbstractProvider {
 
     private Logger logger = LoggerFactory.getLogger( FoursquareProvider.class );
 
 
-    FoursquareProvider( EntityManager entityManager, ManagementService managementService )
-    {
+    FoursquareProvider( EntityManager entityManager, ManagementService managementService ) {
         super( entityManager, managementService );
     }
 
 
     @Override
-    void configure()
-    {
+    void configure() {
         // TODO
         // config params: url, version
     }
 
 
     @Override
-    Map<String, Object> userFromResource( String externalToken )
-    {
+    Map<String, Object> userFromResource( String externalToken ) {
         // TODO user extraction
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
-    public Map<Object, Object> loadConfigurationFor()
-    {
+    public Map<Object, Object> loadConfigurationFor() {
         return loadConfigurationFor( "foursquareProvider" );
     }
 
 
     @Override
-    public void saveToConfiguration( Map<String, Object> config )
-    {
+    public void saveToConfiguration( Map<String, Object> config ) {
         saveToConfiguration( "foursquareProvider", config );
     }
 
 
     @Override
-    public User createOrAuthenticate( String externalToken ) throws BadTokenException
-    {
+    public User createOrAuthenticate( String externalToken ) throws BadTokenException {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
         Client client = Client.create( clientConfig );
@@ -100,45 +93,37 @@ public class FoursquareProvider extends AbstractProvider
         location.put( "latitude", ( Double ) fq_location.get( "lat" ) );
         location.put( "longitude", ( Double ) fq_location.get( "lng" ) );
 
-        if ( logger.isDebugEnabled() )
-        {
+        if ( logger.isDebugEnabled() ) {
             logger.debug( JsonUtils.mapToFormattedJsonString( location ) );
         }
 
         // Only the first name is guaranteed to be here
-        try
-        {
+        try {
             fq_user_name = ( String ) fq_user.get( "firstName" ) + " " + ( String ) fq_user.get( "lastName" );
         }
-        catch ( NullPointerException e )
-        {
+        catch ( NullPointerException e ) {
             fq_user_name = ( String ) fq_user.get( "firstName" );
         }
 
         User user = null;
-        try
-        {
-            if ( ( fq_user != null ) && !anyNull( fq_user_id, fq_user_name ) )
-            {
+        try {
+            if ( ( fq_user != null ) && !anyNull( fq_user_id, fq_user_name ) ) {
 
                 Results r = entityManager.searchCollection( entityManager.getApplicationRef(), "users",
                         Query.findForProperty( "foursquare.id", fq_user_id ) );
 
-                if ( r.size() > 1 )
-                {
+                if ( r.size() > 1 ) {
                     logger.error( "Multiple users for FQ ID: " + fq_user_id );
                     throw new BadTokenException( "multiple users with same Foursquare ID" );
                 }
 
-                if ( r.size() < 1 )
-                {
+                if ( r.size() < 1 ) {
                     Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
                     properties.put( "foursquare", fq_user );
                     properties.put( "username", fq_user_username != null ? fq_user_username : "fq_" + fq_user_id );
                     properties.put( "name", fq_user_name );
-                    if ( fq_user_email != null )
-                    {
+                    if ( fq_user_email != null ) {
                         properties.put( "email", fq_user_email );
                     }
                     properties.put( "picture", "https://is0.4sqi.net/userpix_thumbs" + fq_user_picture );
@@ -147,8 +132,7 @@ public class FoursquareProvider extends AbstractProvider
 
                     user = entityManager.create( "user", User.class, properties );
                 }
-                else
-                {
+                else {
                     user = ( User ) r.getEntity().toTypedEntity();
                     Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
@@ -162,13 +146,11 @@ public class FoursquareProvider extends AbstractProvider
                     user.setProperty( "location", location );
                 }
             }
-            else
-            {
+            else {
                 throw new BadTokenException( "Unable to confirm Foursquare access token" );
             }
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             throw new BadTokenException( "Could not create or update Foursquare user", ex );
         }
 

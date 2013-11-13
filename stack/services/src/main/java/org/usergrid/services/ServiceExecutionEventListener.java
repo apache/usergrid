@@ -16,8 +16,7 @@
 package org.usergrid.services;
 
 
-public interface ServiceExecutionEventListener
-{
+public interface ServiceExecutionEventListener {
 
     public abstract void serviceExecuted( ServiceExecutionEvent event );
 }

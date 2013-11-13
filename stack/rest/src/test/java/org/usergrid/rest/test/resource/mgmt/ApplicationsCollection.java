@@ -25,28 +25,24 @@ import org.usergrid.utils.MapUtils;
 
 
 /** @author tnine */
-public class ApplicationsCollection extends CollectionResource
-{
+public class ApplicationsCollection extends CollectionResource {
 
     /**
      * @param collectionName
      * @param parent
      */
-    public ApplicationsCollection( NamedResource parent )
-    {
+    public ApplicationsCollection( NamedResource parent ) {
         super( "apps", parent );
     }
 
 
-    public Application application( String name )
-    {
+    public Application application( String name ) {
         return new Application( name, this );
     }
 
 
     /** Create the org and return it's UUID */
-    public UUID create( String name )
-    {
+    public UUID create( String name ) {
 
         JsonNode node = postInternal( MapUtils.hashMap( "name", name ) );
 

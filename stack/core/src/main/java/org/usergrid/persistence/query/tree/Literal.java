@@ -25,12 +25,10 @@ import org.antlr.runtime.tree.CommonTree;
  *
  * @author tnine
  */
-public abstract class Literal<V> extends CommonTree
-{
+public abstract class Literal<V> extends CommonTree {
 
 
-    protected Literal( Token t )
-    {
+    protected Literal( Token t ) {
         super( t );
     }
 

@@ -39,29 +39,24 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class OrganizationResource extends AbstractContextResource
-{
+public class OrganizationResource extends AbstractContextResource {
 
     String organizationName;
 
 
-    public OrganizationResource()
-    {
+    public OrganizationResource() {
 
     }
 
 
-    public OrganizationResource init( String organizationName )
-    {
+    public OrganizationResource init( String organizationName ) {
         this.organizationName = organizationName;
         return this;
     }
 
 
-    private ApplicationResource appResourceFor( UUID applicationId ) throws Exception
-    {
-        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) && !SubjectUtils.isServiceAdmin() )
-        {
+    private ApplicationResource appResourceFor( UUID applicationId ) throws Exception {
+        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) && !SubjectUtils.isServiceAdmin() ) {
             throw new UnauthorizedException();
         }
 
@@ -71,33 +66,27 @@ public class OrganizationResource extends AbstractContextResource
 
     @Path("{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public ApplicationResource getApplicationById( @PathParam("applicationId") String applicationIdStr )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "options".equalsIgnoreCase( request.getMethod() ) )
-        {
+        if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
         }
 
         UUID applicationId = UUID.fromString( applicationIdStr );
-        if ( applicationId == null )
-        {
+        if ( applicationId == null ) {
             return null;
         }
 
         OrganizationInfo org_info = management.getOrganizationByName( organizationName );
         UUID organizationId = null;
-        if ( org_info != null )
-        {
+        if ( org_info != null ) {
             organizationId = org_info.getUuid();
         }
-        if ( applicationId == null || organizationId == null )
-        {
+        if ( applicationId == null || organizationId == null ) {
             return null;
         }
         BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
-        if ( apps.get( applicationId ) == null )
-        {
+        if ( apps.get( applicationId ) == null ) {
             return null;
         }
 
@@ -106,33 +95,30 @@ public class OrganizationResource extends AbstractContextResource
 
 
     @Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public ApplicationResource getApplicationById2( @PathParam("applicationId") String applicationId ) throws Exception
-    {
+    public ApplicationResource getApplicationById2( @PathParam("applicationId") String applicationId )
+            throws Exception {
         return getApplicationById( applicationId );
     }
 
 
     @Path("apps/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public ApplicationResource getApplicationById3( @PathParam("applicationId") String applicationId ) throws Exception
-    {
+    public ApplicationResource getApplicationById3( @PathParam("applicationId") String applicationId )
+            throws Exception {
         return getApplicationById( applicationId );
     }
 
 
     @Path("{applicationName}")
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "options".equalsIgnoreCase( request.getMethod() ) )
-        {
+        if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
         }
 
         String orgAppName = PathingUtils.assembleAppName( organizationName, applicationName );
         UUID applicationId = emf.lookupApplication( orgAppName );
-        if ( applicationId == null )
-        {
+        if ( applicationId == null ) {
             throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
         }
 
@@ -142,24 +128,21 @@ public class OrganizationResource extends AbstractContextResource
 
     @Path("applications/{applicationName}")
     public ApplicationResource getApplicationByName2( @PathParam("applicationName") String applicationName )
-            throws Exception
-    {
+            throws Exception {
         return getApplicationByName( applicationName );
     }
 
 
     @Path("apps/{applicationName}")
     public ApplicationResource getApplicationByName3( @PathParam("applicationName") String applicationName )
-            throws Exception
-    {
+            throws Exception {
         return getApplicationByName( applicationName );
     }
 
 
     @Path("a/{applicationName}")
     public ApplicationResource getApplicationByName4( @PathParam("applicationName") String applicationName )
-            throws Exception
-    {
+            throws Exception {
         return getApplicationByName( applicationName );
     }
 
@@ -168,8 +151,7 @@ public class OrganizationResource extends AbstractContextResource
     @RequireOrganizationAccess
     public JSONWithPadding executeDelete( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
 
         throw new NotImplementedException( "Organization delete is not allowed yet" );

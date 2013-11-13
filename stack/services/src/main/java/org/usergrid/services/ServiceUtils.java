@@ -16,7 +16,6 @@
 package org.usergrid.services;
 
 
-public class ServiceUtils
-{
+public class ServiceUtils {
 
 }

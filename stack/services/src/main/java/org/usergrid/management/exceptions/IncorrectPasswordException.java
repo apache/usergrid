@@ -16,32 +16,27 @@
 package org.usergrid.management.exceptions;
 
 
-public class IncorrectPasswordException extends ManagementException
-{
+public class IncorrectPasswordException extends ManagementException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public IncorrectPasswordException()
-    {
+    public IncorrectPasswordException() {
         super();
     }
 
 
-    public IncorrectPasswordException( String arg0, Throwable arg1 )
-    {
+    public IncorrectPasswordException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public IncorrectPasswordException( String arg0 )
-    {
+    public IncorrectPasswordException( String arg0 ) {
         super( arg0 );
     }
 
 
-    public IncorrectPasswordException( Throwable arg0 )
-    {
+    public IncorrectPasswordException( Throwable arg0 ) {
         super( arg0 );
     }
 }

@@ -22,13 +22,12 @@ import org.usergrid.persistence.query.tree.LongLiteralTest;
 import org.usergrid.persistence.query.tree.StringLiteralTest;
 
 
-@RunWith( ConcurrentSuite.class )
-@Suite.SuiteClasses( {
+@RunWith(ConcurrentSuite.class)
+@Suite.SuiteClasses({
         ZookeeperLockManagerTest.class, QueuePathsTest.class, QueryProcessorTest.class,
         SimpleIndexBucketLocatorImplTest.class, EntityTest.class, QueryTest.class, QueryUtilsTest.class,
         SchemaTest.class, UtilsTest.class, IntersectionIteratorTest.class, SubtractionIteratorTest.class,
         UnionIteratorTest.class, GrammarTreeTest.class, LongLiteralTest.class, StringLiteralTest.class
-} )
+})
 @Concurrent()
-public class ConcurrentCoreTestSuite
-{}
+public class ConcurrentCoreTestSuite {}

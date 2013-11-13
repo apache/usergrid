@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class AllInConnectionIT extends AbstractIteratingQueryIT
-{
+public class AllInConnectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void allInConnection() throws Exception
-    {
+    public void allInConnection() throws Exception {
         allIn( new ConnectionHelper() );
     }
 }

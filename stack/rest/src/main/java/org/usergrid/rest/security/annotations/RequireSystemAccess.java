@@ -26,7 +26,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /** Requires that the current Shiro security subject have system superuser level status. */
 @Retention(value = RUNTIME)
 @Target(value = { METHOD })
-public @interface RequireSystemAccess
-{
+public @interface RequireSystemAccess {
 
 }

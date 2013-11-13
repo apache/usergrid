@@ -23,8 +23,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class OrderByTest extends AbstractRestIT
-{
+public class OrderByTest extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -32,8 +31,7 @@ public class OrderByTest extends AbstractRestIT
 
     @Test
     // USERGRID-1400
-    public void orderByShouldNotAffectResults()
-    {
+    public void orderByShouldNotAffectResults() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -43,12 +41,10 @@ public class OrderByTest extends AbstractRestIT
         props.put( "actor", actor );
         props.put( "verb", "go" );
         props.put( "content", "bragh" );
-        for ( int i = 0; i < 20; i++ )
-        {
+        for ( int i = 0; i < 20; i++ ) {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
-            if ( i == 5 )
-            {
+            if ( i == 5 ) {
                 created = activity.findValue( "created" ).getLongValue();
             }
         }
@@ -65,8 +61,7 @@ public class OrderByTest extends AbstractRestIT
 
     @Test
     // USERGRID-1520
-    public void orderByComesBeforeLimitResult()
-    {
+    public void orderByComesBeforeLimitResult() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -78,8 +73,7 @@ public class OrderByTest extends AbstractRestIT
         props.put( "verb", "go" );
         props.put( "content", "bragh" );
 
-        for ( int i = 0; i < 20; i++ )
-        {
+        for ( int i = 0; i < 20; i++ ) {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
         }
@@ -90,8 +84,7 @@ public class OrderByTest extends AbstractRestIT
 
         assertEquals( 5, incorrectNode.get( "entities" ).size() );
 
-        while ( checkResultsNum < 5 )
-        {
+        while ( checkResultsNum < 5 ) {
             assertEquals( activities.entityIndex( query, checkResultsNum ),
                     activities.entityIndexLimit( query, 5, checkResultsNum ) );
             checkResultsNum++;
@@ -106,8 +99,7 @@ public class OrderByTest extends AbstractRestIT
 
     @Test
     // USERGRID-1521
-    public void orderByReturnCorrectResults()
-    {
+    public void orderByReturnCorrectResults() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -122,8 +114,7 @@ public class OrderByTest extends AbstractRestIT
 
         List<JsonNode> activites = new ArrayList<JsonNode>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props ).get( "entities" ).get( 0 );
             activites.add( activity );
@@ -135,8 +126,7 @@ public class OrderByTest extends AbstractRestIT
         String cursor = null;
         int index = size - 1;
 
-        do
-        {
+        do {
             JsonNode response = activities.withQuery( errorQuery ).get();
             JsonNode cursorNode = response.get( "cursor" );
 
@@ -146,8 +136,7 @@ public class OrderByTest extends AbstractRestIT
 
             int returnSize = entities.size();
 
-            for ( int i = 0; i < returnSize; i++, index-- )
-            {
+            for ( int i = 0; i < returnSize; i++, index-- ) {
                 assertEquals( activites.get( index ), entities.get( i ) );
             }
 

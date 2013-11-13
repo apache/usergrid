@@ -32,31 +32,25 @@ import static org.usergrid.rest.exceptions.AuthErrorInfo.EXPIRED_ACCESS_TOKEN_ER
 
 
 @Provider
-public class ShiroAuthenticationExceptionMapper implements ExceptionMapper<AuthenticationException>
-{
+public class ShiroAuthenticationExceptionMapper implements ExceptionMapper<AuthenticationException> {
 
     @Override
-    public Response toResponse( AuthenticationException e )
-    {
-        if ( e.getCause() != null )
-        {
+    public Response toResponse( AuthenticationException e ) {
+        if ( e.getCause() != null ) {
             return constructResponse( e.getCause() );
         }
         return constructResponse( e );
     }
 
 
-    public Response constructResponse( Throwable e )
-    {
+    public Response constructResponse( Throwable e ) {
         String type = null;
         String message = e.getMessage();
         ApiResponse response = new ApiResponse();
-        if ( e instanceof ExpiredTokenException )
-        {
+        if ( e instanceof ExpiredTokenException ) {
             type = EXPIRED_ACCESS_TOKEN_ERROR.getType();
         }
-        else if ( e instanceof BadTokenException )
-        {
+        else if ( e instanceof BadTokenException ) {
             type = BAD_ACCESS_TOKEN_ERROR.getType();
         }
         response.withError( type, message, e );

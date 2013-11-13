@@ -26,12 +26,10 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 /** <p> Map an authentication exception to an HTTP 401 response. </p> */
 @Provider
-public class AuthorizationExceptionMapper extends AbstractExceptionMapper<AuthorizationException>
-{
+public class AuthorizationExceptionMapper extends AbstractExceptionMapper<AuthorizationException> {
 
     @Override
-    public Response toResponse( AuthorizationException e )
-    {
+    public Response toResponse( AuthorizationException e ) {
 
         return toResponse( UNAUTHORIZED, e );
     }

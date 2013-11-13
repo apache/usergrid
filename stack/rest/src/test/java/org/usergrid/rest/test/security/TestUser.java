@@ -23,8 +23,7 @@ import org.usergrid.rest.test.resource.TestContext;
 
 
 /** @author tnine */
-public abstract class TestUser
-{
+public abstract class TestUser {
 
     protected String user;
     protected String password;
@@ -38,8 +37,7 @@ public abstract class TestUser
      * @param password
      * @param email
      */
-    public TestUser( String user, String password, String email )
-    {
+    public TestUser( String user, String password, String email ) {
         super();
         this.user = user;
         this.password = password;
@@ -48,10 +46,8 @@ public abstract class TestUser
 
 
     /** Log in the type */
-    public TestUser login( TestContext context )
-    {
-        if ( token == null )
-        {
+    public TestUser login( TestContext context ) {
+        if ( token == null ) {
             token = getToken( context );
         }
 
@@ -60,55 +56,47 @@ public abstract class TestUser
 
 
     /** Log out */
-    public void logout()
-    {
+    public void logout() {
         token = null;
     }
 
 
     /** @return the user */
-    public String getUser()
-    {
+    public String getUser() {
         return user;
     }
 
 
     /** @return the password */
-    public String getPassword()
-    {
+    public String getPassword() {
         return password;
     }
 
 
     /** @return the email */
-    public String getEmail()
-    {
+    public String getEmail() {
         return email;
     }
 
 
-    public String getToken()
-    {
+    public String getToken() {
         return this.token;
     }
 
 
     /** @return the uuid */
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return uuid;
     }
 
 
-    public boolean isLoggedIn()
-    {
+    public boolean isLoggedIn() {
         return this.token != null;
     }
 
 
     /** Create this user */
-    public TestUser create( TestContext context )
-    {
+    public TestUser create( TestContext context ) {
         JsonNode node = createInternal( context );
 
         uuid = UUID.fromString( node.findValue( "uuid" ).asText() );
@@ -118,8 +106,7 @@ public abstract class TestUser
 
 
     /** Make this user active in the context */
-    public TestUser makeActive( TestContext context )
-    {
+    public TestUser makeActive( TestContext context ) {
         context.withUser( this );
         return this;
     }

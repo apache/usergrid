@@ -22,8 +22,7 @@ import static org.junit.Assert.fail;
 
 
 @Concurrent()
-public class QueueResourceLong3IT extends AbstractQueueResourceIT
-{
+public class QueueResourceLong3IT extends AbstractQueueResourceIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -31,8 +30,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
     /** Tests that if we page before transaction expiration, we're always getting all elements consecutively */
     @Test
-    public void transactionPageConsistent() throws InterruptedException
-    {
+    public void transactionPageConsistent() throws InterruptedException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -40,8 +38,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
         @SuppressWarnings("unchecked") Map<String, ?>[] data = new Map[count];
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             data[i] = MapUtils.hashMap( "id", i );
         }
 
@@ -63,20 +60,17 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
 
     @Test
-    public void transaction10KMax() throws InterruptedException
-    {
+    public void transaction10KMax() throws InterruptedException {
 
         Queue queue = context.application().queues().queue( "test" );
         queue.post( MapUtils.hashMap( "id", 0 ) );
 
         queue = queue.withTimeout( 10000 ).withLimit( 10001 );
 
-        try
-        {
+        try {
             queue.getNextPage();
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
 
             return;
         }
@@ -86,14 +80,12 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
 
 
     @Test
-    public void transactionRenewal() throws InterruptedException
-    {
+    public void transactionRenewal() throws InterruptedException {
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 2;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -131,8 +123,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
         // compare the replayed messages and the make sure they're in the same order
         BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
 
-        for ( int i = 0; i < originalMessageIds.size(); i++ )
-        {
+        for ( int i = 0; i < originalMessageIds.size(); i++ ) {
             // check the messages come back in the same order, they should
             assertEquals( originalMessageIds.get( i ), returned.get( i ) );
 
@@ -168,8 +159,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT
         // compare the replayed messages and the make sure they're in the same order
         newTransactions = transHandler.getTransactionToMessageId();
 
-        for ( int i = 0; i < originalMessageIds.size(); i++ )
-        {
+        for ( int i = 0; i < originalMessageIds.size(); i++ ) {
             // check the messages come back in the same order, they should
             assertEquals( originalMessageIds.get( i ), returned.get( i ) );
 

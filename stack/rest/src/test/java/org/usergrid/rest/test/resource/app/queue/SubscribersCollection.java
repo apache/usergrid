@@ -22,27 +22,23 @@ import org.usergrid.rest.test.resource.NamedResource;
 
 
 /** @author tnine */
-public class SubscribersCollection extends CollectionResource
-{
+public class SubscribersCollection extends CollectionResource {
 
     private String queueName;
 
 
-    public SubscribersCollection( NamedResource parent )
-    {
+    public SubscribersCollection( NamedResource parent ) {
         super( "subscribers", parent );
     }
 
 
-    public JsonNode subscribe( String queueName )
-    {
+    public JsonNode subscribe( String queueName ) {
         this.queueName = queueName;
         return jsonMedia( withToken( resource() ) ).put( JsonNode.class );
     }
 
 
-    public JsonNode unsubscribe( String queueName )
-    {
+    public JsonNode unsubscribe( String queueName ) {
         this.queueName = queueName;
         return jsonMedia( withToken( resource() ) ).delete( JsonNode.class );
     }
@@ -56,8 +52,7 @@ public class SubscribersCollection extends CollectionResource
      * )
      */
     @Override
-    public void addToUrl( StringBuilder buffer )
-    {
+    public void addToUrl( StringBuilder buffer ) {
         super.addToUrl( buffer );
         buffer.append( SLASH ).append( queueName );
     }

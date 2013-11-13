@@ -21,8 +21,7 @@ package org.usergrid.persistence.query.ir;
  *
  * @author tnine
  */
-public class WithinNode extends QueryNode
-{
+public class WithinNode extends QueryNode {
 
     private final String propertyName;
     private final float distance;
@@ -37,8 +36,7 @@ public class WithinNode extends QueryNode
      * @param lattitude
      * @param longitude
      */
-    public WithinNode( String propertyName, float distance, float lattitude, float longitude, int nodeId )
-    {
+    public WithinNode( String propertyName, float distance, float lattitude, float longitude, int nodeId ) {
         this.propertyName = propertyName;
         this.distance = distance;
         this.lattitude = lattitude;
@@ -48,36 +46,31 @@ public class WithinNode extends QueryNode
 
 
     /** @return the propertyName */
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 
 
     /** @return the distance */
-    public float getDistance()
-    {
+    public float getDistance() {
         return distance;
     }
 
 
     /** @return the lattitude */
-    public float getLattitude()
-    {
+    public float getLattitude() {
         return lattitude;
     }
 
 
     /** @return the longitude */
-    public float getLongitude()
-    {
+    public float getLongitude() {
         return longitude;
     }
 
 
     /** @return the slice */
-    public QuerySlice getSlice()
-    {
+    public QuerySlice getSlice() {
         return slice;
     }
 
@@ -90,15 +83,13 @@ public class WithinNode extends QueryNode
        * .query.ir.NodeVisitor)
        */
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "WithinNode [propertyName=" + propertyName + ", distance=" + distance + ", lattitude=" + lattitude
                 + ", longitude=" + longitude + "]";
     }

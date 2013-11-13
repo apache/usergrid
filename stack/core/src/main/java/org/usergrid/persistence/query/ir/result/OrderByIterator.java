@@ -50,8 +50,7 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
  * @author tnine
  */
 
-public class OrderByIterator extends MergeIterator
-{
+public class OrderByIterator extends MergeIterator {
 
     private static final UUIDSerializer UUID_SER = new UUIDSerializer();
 
@@ -71,8 +70,7 @@ public class OrderByIterator extends MergeIterator
      * @param pageSize
      */
     public OrderByIterator( QuerySlice slice, List<Query.SortPredicate> secondary, ResultIterator candidates,
-                            EntityManager em, int pageSize )
-    {
+                            EntityManager em, int pageSize ) {
         super( pageSize );
         this.slice = slice;
         this.em = em;
@@ -85,8 +83,7 @@ public class OrderByIterator extends MergeIterator
         this.subSortCompare
                 .addComparator( new EntityPropertyComparator( slice.getPropertyName(), slice.isReversed() ) );
 
-        for ( SortPredicate sort : secondary )
-        {
+        for ( SortPredicate sort : secondary ) {
             this.subSortCompare.addComparator( new EntityPropertyComparator( sort.getPropertyName(),
                     sort.getDirection() == Query.SortDirection.DESCENDING ) );
             this.secondaryFields.add( sort.getPropertyName() );
@@ -100,15 +97,13 @@ public class OrderByIterator extends MergeIterator
 
 
     @Override
-    protected Set<ScanColumn> advance()
-    {
+    protected Set<ScanColumn> advance() {
 
         ByteBuffer cursor = slice.getCursor();
 
         UUID minEntryId = null;
 
-        if ( cursor != null )
-        {
+        if ( cursor != null ) {
             minEntryId = UUID_SER.fromByteBuffer( cursor );
         }
 
@@ -121,12 +116,10 @@ public class OrderByIterator extends MergeIterator
          *  asc, timestamp desc" we must load every entity that has the value "true" before sub sorting,
          *  then drop all values that fall out of the sort.
          */
-        while ( candidates.hasNext() )
-        {
+        while ( candidates.hasNext() ) {
 
 
-            for ( ScanColumn id : candidates.next() )
-            {
+            for ( ScanColumn id : candidates.next() ) {
                 entries.add( id );
             }
 
@@ -139,21 +132,18 @@ public class OrderByIterator extends MergeIterator
 
 
     @Override
-    protected void doReset()
-    {
+    protected void doReset() {
         // no op
     }
 
 
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastValue )
-    {
+    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
         int sliceHash = slice.hashCode();
 
         ByteBuffer bytes = UUID_SER.toByteBuffer( lastValue );
 
-        if ( bytes == null )
-        {
+        if ( bytes == null ) {
             return;
         }
 
@@ -162,8 +152,7 @@ public class OrderByIterator extends MergeIterator
 
 
     /** A Sorted set with a max size. When a new entry is added, the max is removed */
-    public static final class SortedEntitySet extends TreeSet<Entity>
-    {
+    public static final class SortedEntitySet extends TreeSet<Entity> {
 
         private final int maxSize;
         private final Map<UUID, ScanColumn> cursorVal = new HashMap<UUID, ScanColumn>();
@@ -174,8 +163,7 @@ public class OrderByIterator extends MergeIterator
 
 
         public SortedEntitySet( Comparator<Entity> comparator, EntityManager em, List<String> fields, int maxSize,
-                                UUID minEntityId )
-        {
+                                UUID minEntityId ) {
             super( comparator );
             this.maxSize = maxSize;
             this.em = em;
@@ -186,20 +174,17 @@ public class OrderByIterator extends MergeIterator
 
 
         @Override
-        public boolean add( Entity entity )
-        {
+        public boolean add( Entity entity ) {
 
             // don't add this entity.  We get it in our scan range, but it's <= the minimum value that
             //should be allowed in the result set
-            if ( minEntity != null && comparator.compare( entity, minEntity ) <= 0 )
-            {
+            if ( minEntity != null && comparator.compare( entity, minEntity ) <= 0 ) {
                 return false;
             }
 
             boolean added = super.add( entity );
 
-            while ( size() > maxSize )
-            {
+            while ( size() > maxSize ) {
                 //remove our last element, we're over size
                 Entity e = this.pollLast();
                 //remove it from the cursors as well
@@ -211,28 +196,23 @@ public class OrderByIterator extends MergeIterator
 
 
         /** add the id to be loaded, and the dynamiccomposite column that belongs with it */
-        public void add( ScanColumn col )
-        {
+        public void add( ScanColumn col ) {
             cursorVal.put( col.getUUID(), col );
         }
 
 
-        private Entity getPartialEntity( UUID minEntityId )
-        {
+        private Entity getPartialEntity( UUID minEntityId ) {
             List<Entity> entities;
 
-            try
-            {
+            try {
                 entities = em.getPartialEntities( Collections.singletonList( minEntityId ), fields );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to load partial entities", e );
                 throw new RuntimeException( e );
             }
 
-            if ( entities == null || entities.size() == 0 )
-            {
+            if ( entities == null || entities.size() == 0 ) {
                 return null;
             }
 
@@ -240,17 +220,13 @@ public class OrderByIterator extends MergeIterator
         }
 
 
-        public void load()
-        {
-            try
-            {
-                for ( Entity e : em.getPartialEntities( cursorVal.keySet(), fields ) )
-                {
+        public void load() {
+            try {
+                for ( Entity e : em.getPartialEntities( cursorVal.keySet(), fields ) ) {
                     add( e );
                 }
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to load partial entities", e );
                 throw new RuntimeException( e );
             }
@@ -258,14 +234,12 @@ public class OrderByIterator extends MergeIterator
 
 
         /** Turn our sorted entities into a set of ids */
-        public Set<ScanColumn> toIds()
-        {
+        public Set<ScanColumn> toIds() {
             Iterator<Entity> itr = iterator();
 
             Set<ScanColumn> columns = new LinkedHashSet<ScanColumn>( this.size() );
 
-            while ( itr.hasNext() )
-            {
+            while ( itr.hasNext() ) {
 
                 UUID id = itr.next().getUuid();
 

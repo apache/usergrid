@@ -17,8 +17,7 @@ import org.usergrid.persistence.cassandra.ConnectionRefImpl;
  * @author: tnine
  *
  */
-public class ConnectionRefLoader implements ResultsLoader
-{
+public class ConnectionRefLoader implements ResultsLoader {
 
     private final UUID sourceEntityId;
     private final String sourceType;
@@ -26,8 +25,7 @@ public class ConnectionRefLoader implements ResultsLoader
     private final String targetEntityType;
 
 
-    public ConnectionRefLoader( ConnectionRef connectionRef )
-    {
+    public ConnectionRefLoader( ConnectionRef connectionRef ) {
         this.sourceType = connectionRef.getConnectingEntity().getType();
         this.sourceEntityId = connectionRef.getConnectingEntity().getUuid();
         this.connectionType = connectionRef.getConnectionType();
@@ -36,28 +34,24 @@ public class ConnectionRefLoader implements ResultsLoader
 
 
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception
-    {
+    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
 
 
         final EntityRef sourceRef = new SimpleEntityRef( sourceType, sourceEntityId );
 
         List<ConnectionRef> refs = new ArrayList<ConnectionRef>( entityIds.size() );
 
-        for ( ScanColumn column : entityIds )
-        {
+        for ( ScanColumn column : entityIds ) {
 
             SimpleEntityRef targetRef;
 
-            if ( column instanceof ConnectionIndexSliceParser.ConnectionColumn )
-            {
+            if ( column instanceof ConnectionIndexSliceParser.ConnectionColumn ) {
                 final ConnectionIndexSliceParser.ConnectionColumn connectionColumn =
                         ( ConnectionIndexSliceParser.ConnectionColumn ) column;
                 targetRef = new SimpleEntityRef( connectionColumn.getTargetType(), connectionColumn.getUUID() );
             }
 
-            else
-            {
+            else {
                 targetRef = new SimpleEntityRef( targetEntityType, column.getUUID() );
             }
 

@@ -42,20 +42,17 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent()
-public class GeoIT extends AbstractCoreIT
-{
+public class GeoIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
 
-    public GeoIT()
-    {
+    public GeoIT() {
         super();
     }
 
 
     @Test
-    public void testGeo() throws Exception
-    {
+    public void testGeo() throws Exception {
         LOG.info( "GeoIT.testGeo" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testGeo" );
@@ -197,8 +194,7 @@ public class GeoIT extends AbstractCoreIT
 
 
     @Test
-    public void testPointPaging() throws Exception
-    {
+    public void testPointPaging() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testPointPaging" );
         assertNotNull( applicationId );
@@ -219,8 +215,7 @@ public class GeoIT extends AbstractCoreIT
 
         float longitudeDelta = ( maxLongitude - minLongitude ) / numEntities;
 
-        for ( int i = 0; i < numEntities; i++ )
-        {
+        for ( int i = 0; i < numEntities; i++ ) {
             float lattitude = minLattitude + lattitudeDelta * i;
             float longitude = minLongitude + longitudeDelta * i;
 
@@ -242,12 +237,10 @@ public class GeoIT extends AbstractCoreIT
         int count = 0;
         Results results;
 
-        do
-        {
+        do {
             results = em.searchCollection( em.getApplicationRef(), "stores", query );
 
-            for ( Entity entity : results.getEntities() )
-            {
+            for ( Entity entity : results.getEntities() ) {
                 assertEquals( String.valueOf( count ), entity.getName() );
                 count++;
             }
@@ -263,8 +256,7 @@ public class GeoIT extends AbstractCoreIT
 
 
     @Test
-    public void testSamePointPaging() throws Exception
-    {
+    public void testSamePointPaging() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testSamePointPaging" );
         assertNotNull( applicationId );
@@ -276,8 +268,7 @@ public class GeoIT extends AbstractCoreIT
 
         int numEntities = 500;
 
-        for ( int i = 0; i < numEntities; i++ )
-        {
+        for ( int i = 0; i < numEntities; i++ ) {
             Map<String, Object> data = new HashMap<String, Object>( 2 );
             data.put( "name", String.valueOf( i ) );
             setPos( data, 0, 0 );
@@ -294,12 +285,10 @@ public class GeoIT extends AbstractCoreIT
         int count = 0;
         Results results;
 
-        do
-        {
+        do {
             results = em.searchCollection( em.getApplicationRef(), "stores", query );
 
-            for ( Entity entity : results.getEntities() )
-            {
+            for ( Entity entity : results.getEntities() ) {
                 assertEquals( String.valueOf( count ), entity.getName() );
                 count++;
             }
@@ -315,8 +304,7 @@ public class GeoIT extends AbstractCoreIT
 
 
     @Test
-    public void testDistanceByLimit() throws Exception
-    {
+    public void testDistanceByLimit() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testDistanceByLimit" );
         assertNotNull( applicationId );
@@ -337,8 +325,7 @@ public class GeoIT extends AbstractCoreIT
 
         float longitudeDelta = ( maxLongitude - minLongitude ) / numEntities;
 
-        for ( int i = 0; i < numEntities; i++ )
-        {
+        for ( int i = 0; i < numEntities; i++ ) {
             float lattitude = minLattitude + lattitudeDelta * i;
             float longitude = minLongitude + longitudeDelta * i;
 
@@ -359,12 +346,10 @@ public class GeoIT extends AbstractCoreIT
 
         int count = 0;
 
-        do
-        {
+        do {
             Results results = em.searchCollection( em.getApplicationRef(), "stores", query );
 
-            for ( Entity entity : results.getEntities() )
-            {
+            for ( Entity entity : results.getEntities() ) {
                 assertEquals( String.valueOf( count ), entity.getName() );
                 count++;
             }
@@ -377,8 +362,7 @@ public class GeoIT extends AbstractCoreIT
 
 
     @Test
-    public void testGeoWithIntersection() throws Exception
-    {
+    public void testGeoWithIntersection() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testGeoWithIntersection" );
         assertNotNull( applicationId );
@@ -392,8 +376,7 @@ public class GeoIT extends AbstractCoreIT
 
         List<Entity> created = new ArrayList<Entity>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
 
             // save all entities in the same location
             Map<String, Object> data = new HashMap<String, Object>( 2 );
@@ -418,13 +401,11 @@ public class GeoIT extends AbstractCoreIT
         Results r;
         int count = 0;
 
-        do
-        {
+        do {
 
             r = em.searchCollection( em.getApplicationRef(), "stores", query );
 
-            for ( Entity e : r.getEntities() )
-            {
+            for ( Entity e : r.getEntities() ) {
                 assertEquals( created.get( startDelta + count ), e );
                 count++;
             }
@@ -438,8 +419,7 @@ public class GeoIT extends AbstractCoreIT
 
 
     @Test
-    public void testDenseSearch() throws Exception
-    {
+    public void testDenseSearch() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testDenseSearch" );
         assertNotNull( applicationId );
@@ -460,8 +440,7 @@ public class GeoIT extends AbstractCoreIT
 
         float longitudeDelta = ( maxLongitude - minLongitude ) / numEntities;
 
-        for ( int i = 0; i < numEntities; i++ )
-        {
+        for ( int i = 0; i < numEntities; i++ ) {
             float lattitude = minLattitude + lattitudeDelta * i;
             float longitude = minLongitude + longitudeDelta * i;
 
@@ -518,8 +497,7 @@ public class GeoIT extends AbstractCoreIT
     }
 
 
-    public Map<String, Object> getLocation( double latitude, double longitude ) throws Exception
-    {
+    public Map<String, Object> getLocation( double latitude, double longitude ) throws Exception {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );
@@ -527,8 +505,7 @@ public class GeoIT extends AbstractCoreIT
     }
 
 
-    public void updatePos( EntityManager em, EntityRef entity, double latitude, double longitude ) throws Exception
-    {
+    public void updatePos( EntityManager em, EntityRef entity, double latitude, double longitude ) throws Exception {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );
@@ -537,8 +514,7 @@ public class GeoIT extends AbstractCoreIT
     }
 
 
-    public void setPos( Map<String, Object> data, double latitude, double longitude )
-    {
+    public void setPos( Map<String, Object> data, double latitude, double longitude ) {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );

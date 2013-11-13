@@ -22,42 +22,35 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class ClassUtils extends org.apache.commons.lang.ClassUtils
-{
+public class ClassUtils extends org.apache.commons.lang.ClassUtils {
 
-    @SuppressWarnings( "unchecked" )
-    public static <A, B> B cast( A a )
-    {
+    @SuppressWarnings("unchecked")
+    public static <A, B> B cast( A a ) {
         return ( B ) a;
     }
 
 
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings("unchecked")
     private static final Set<Class<?>> WRAPPER_TYPES = new HashSet<Class<?>>(
             Arrays.asList( Boolean.class, Byte.class, Character.class, Double.class, Float.class, Integer.class,
                     Long.class, Short.class, Void.class ) );
 
 
-    public static boolean isWrapperType( Class<?> clazz )
-    {
+    public static boolean isWrapperType( Class<?> clazz ) {
         return WRAPPER_TYPES.contains( clazz );
     }
 
 
-    public static boolean isPrimitiveType( Class<?> clazz )
-    {
-        if ( clazz == null )
-        {
+    public static boolean isPrimitiveType( Class<?> clazz ) {
+        if ( clazz == null ) {
             return false;
         }
         return clazz.isPrimitive() || isWrapperType( clazz );
     }
 
 
-    public static boolean isBasicType( Class<?> clazz )
-    {
-        if ( clazz == null )
-        {
+    public static boolean isBasicType( Class<?> clazz ) {
+        if ( clazz == null ) {
             return false;
         }
         return ( String.class.isAssignableFrom( clazz ) ) || isPrimitiveType( clazz );

@@ -60,14 +60,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 
-public class LauncherFrame extends JFrame
-{
+public class LauncherFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
 
-    enum Status
-    {
+    enum Status {
         GREEN, RED, YELLOW
     }
 
@@ -105,8 +103,7 @@ public class LauncherFrame extends JFrame
     JTextField auto_login_email;
 
 
-    public LauncherFrame( App app )
-    {
+    public LauncherFrame( App app ) {
         super( "Usergrid Launcher" );
 
         this.app = app;
@@ -125,8 +122,7 @@ public class LauncherFrame extends JFrame
     }
 
 
-    public void addComponentsToPane()
-    {
+    public void addComponentsToPane() {
         Container pane = getContentPane();
         pane.setLayout( new GridBagLayout() );
 
@@ -142,19 +138,14 @@ public class LauncherFrame extends JFrame
         status_label = new JLabel( status_red );
         status_label.setPreferredSize( new Dimension( 24, 64 ) );
         toolBar.add( status_label );
-        status_timer = new Timer( 750, new ActionListener()
-        {
+        status_timer = new Timer( 750, new ActionListener() {
             @Override
-            public void actionPerformed( ActionEvent e )
-            {
-                if ( status == Status.YELLOW )
-                {
-                    if ( status_label.getIcon() == status_yellow )
-                    {
+            public void actionPerformed( ActionEvent e ) {
+                if ( status == Status.YELLOW ) {
+                    if ( status_label.getIcon() == status_yellow ) {
                         status_label.setIcon( status_off );
                     }
-                    else
-                    {
+                    else {
                         status_label.setIcon( status_yellow );
                     }
                 }
@@ -167,11 +158,9 @@ public class LauncherFrame extends JFrame
         start_button = new JButton( start_active_icon );
         initButton( start_button );
         toolBar.add( start_button );
-        start_button.addActionListener( new ActionListener()
-        {
+        start_button.addActionListener( new ActionListener() {
             @Override
-            public void actionPerformed( ActionEvent event )
-            {
+            public void actionPerformed( ActionEvent event ) {
                 start_button.setIcon( start_icon );
                 stop_button.setIcon( stop_active_icon );
                 app.startServer();
@@ -183,11 +172,9 @@ public class LauncherFrame extends JFrame
         stop_button = new JButton( stop_icon );
         initButton( stop_button );
         toolBar.add( stop_button );
-        stop_button.addActionListener( new ActionListener()
-        {
+        stop_button.addActionListener( new ActionListener() {
             @Override
-            public void actionPerformed( ActionEvent event )
-            {
+            public void actionPerformed( ActionEvent event ) {
                 start_button.setIcon( start_active_icon );
                 stop_button.setIcon( stop_icon );
                 app.stopServer();
@@ -199,11 +186,9 @@ public class LauncherFrame extends JFrame
         log_viewer_button = new JButton( log_viewer_icon );
         initButton( log_viewer_button );
         toolBar.add( log_viewer_button );
-        log_viewer_button.addActionListener( new ActionListener()
-        {
+        log_viewer_button.addActionListener( new ActionListener() {
             @Override
-            public void actionPerformed( ActionEvent event )
-            {
+            public void actionPerformed( ActionEvent event ) {
                 app.showLogView();
             }
         } );
@@ -213,36 +198,29 @@ public class LauncherFrame extends JFrame
         usergrid_admin_button = new JButton( usergrid_admin_icon );
         initButton( usergrid_admin_button );
         toolBar.add( usergrid_admin_button );
-        usergrid_admin_button.addActionListener( new ActionListener()
-        {
+        usergrid_admin_button.addActionListener( new ActionListener() {
             @Override
-            public void actionPerformed( ActionEvent event )
-            {
-                if ( app.serverIsStarted() && ( status == Status.GREEN ) )
-                {
+            public void actionPerformed( ActionEvent event ) {
+                if ( app.serverIsStarted() && ( status == Status.GREEN ) ) {
                     storeAdminUrls();
                     storeAdminEmail();
                     String adminUri = null;
-                    try
-                    {
+                    try {
                         adminUri = getAdminURI().toString();
                         Desktop.getDesktop().browse( getAdminURI() );
                     }
-                    catch ( IOException e )
-                    {
+                    catch ( IOException e ) {
                         JOptionPane.showMessageDialog( null, new JTextArea( "Error opening URL in browser."
                                 + " Please open the following URL in a browser manually:\n" + adminUri ), "Warning",
                                 JOptionPane.WARNING_MESSAGE );
                     }
-                    catch ( Exception ex )
-                    {
+                    catch ( Exception ex ) {
                         JOptionPane.showMessageDialog( null, new JTextArea(
                                 "Error opening URL in browser." + "Please open the following URL in a browser manually:"
                                         + adminUri ), "Warning", JOptionPane.WARNING_MESSAGE );
                     }
                 }
-                else
-                {
+                else {
                     JOptionPane.showMessageDialog( null, "Server must be started before opening Admin Console.\n"
                             + "Please start server and wait for the status to turn green.", "Warning",
                             JOptionPane.WARNING_MESSAGE );
@@ -263,11 +241,9 @@ public class LauncherFrame extends JFrame
         start_database_checkbox.setSelected( app.isStartDatabaseWithServer() );
         start_database_checkbox.setFont( new Font( "Arial", Font.BOLD, 18 ) );
         pane.add( start_database_checkbox, c );
-        start_database_checkbox.addChangeListener( new ChangeListener()
-        {
+        start_database_checkbox.addChangeListener( new ChangeListener() {
             @Override
-            public void stateChanged( ChangeEvent change )
-            {
+            public void stateChanged( ChangeEvent change ) {
                 app.setStartDatabaseWithServer( start_database_checkbox.isSelected() );
             }
         } );
@@ -278,11 +254,9 @@ public class LauncherFrame extends JFrame
         init_database_checkbox.setSelected( app.isInitializeDatabaseOnStart() );
         init_database_checkbox.setFont( new Font( "Arial", Font.BOLD, 18 ) );
         pane.add( init_database_checkbox, c );
-        init_database_checkbox.addChangeListener( new ChangeListener()
-        {
+        init_database_checkbox.addChangeListener( new ChangeListener() {
             @Override
-            public void stateChanged( ChangeEvent change )
-            {
+            public void stateChanged( ChangeEvent change ) {
                 app.setInitializeDatabaseOnStart( init_database_checkbox.isSelected() );
             }
         } );
@@ -320,11 +294,9 @@ public class LauncherFrame extends JFrame
         auto_login_checkbox.setSelected( app.isAutoLogin() );
         auto_login_checkbox.setFont( new Font( "Arial", Font.BOLD, 18 ) );
         pane.add( auto_login_checkbox, c );
-        auto_login_checkbox.addChangeListener( new ChangeListener()
-        {
+        auto_login_checkbox.addChangeListener( new ChangeListener() {
             @Override
-            public void stateChanged( ChangeEvent change )
-            {
+            public void stateChanged( ChangeEvent change ) {
                 app.setAutoLogin( auto_login_checkbox.isSelected() );
             }
         } );
@@ -355,24 +327,21 @@ public class LauncherFrame extends JFrame
     }
 
 
-    public void setPreferredWidth( JComponent jc, int width )
-    {
+    public void setPreferredWidth( JComponent jc, int width ) {
         Dimension max = jc.getPreferredSize();
         max.width = width;
         jc.setPreferredSize( max );
     }
 
 
-    public void setMaxWidth( JComponent jc, int width )
-    {
+    public void setMaxWidth( JComponent jc, int width ) {
         Dimension max = jc.getMaximumSize();
         max.width = width;
         jc.setMaximumSize( max );
     }
 
 
-    public void initButton( JButton button )
-    {
+    public void initButton( JButton button ) {
         button.setPreferredSize( new Dimension( 64, 64 ) );
         button.setMargin( new Insets( 8, 8, 8, 8 ) );
         button.setOpaque( false );
@@ -383,52 +352,43 @@ public class LauncherFrame extends JFrame
     }
 
 
-    public void setStatusRed()
-    {
+    public void setStatusRed() {
         status = Status.RED;
         status_label.setIcon( status_red );
     }
 
 
-    public void setStatusGreen()
-    {
+    public void setStatusGreen() {
         status = Status.GREEN;
         status_label.setIcon( status_green );
     }
 
 
-    public void setStatusYellow()
-    {
+    public void setStatusYellow() {
         status = Status.YELLOW;
         status_label.setIcon( status_yellow );
     }
 
 
-    public URI getAdminURI() throws URISyntaxException, UnsupportedEncodingException
-    {
+    public URI getAdminURI() throws URISyntaxException, UnsupportedEncodingException {
         String url = urlList.getSelectedItem().toString();
-        if ( url.contains( "?" ) )
-        {
+        if ( url.contains( "?" ) ) {
             url += "&";
         }
-        else
-        {
+        else {
             url += "?";
         }
         url += "api_url=" + URLEncoder.encode( "http://localhost:8080", "UTF-8" );
-        if ( app.isAutoLogin() )
-        {
+        if ( app.isAutoLogin() ) {
             String access_token = app.getAccessToken();
             UUID adminId = app.getAdminUUID();
 
-            if ( access_token != null )
-            {
+            if ( access_token != null ) {
                 url += "&admin_email=" + URLEncoder.encode( app.getAdminUserEmail(), "UTF-8" );
                 url += "&access_token=" + access_token;
             }
 
-            if ( adminId != null )
-            {
+            if ( adminId != null ) {
                 url += "&uuid=" + adminId;
             }
         }
@@ -436,58 +396,48 @@ public class LauncherFrame extends JFrame
     }
 
 
-    public void storeAdminUrls()
-    {
+    public void storeAdminUrls() {
         Set<String> urls = app.getUrlSetFromPreferences();
         urls.add( urlList.getSelectedItem().toString() );
         app.storeUrlsInPreferences( urls );
     }
 
 
-    protected ImageIcon createImageIcon( String path, String description )
-    {
+    protected ImageIcon createImageIcon( String path, String description ) {
         java.net.URL imgURL = getClass().getResource( path );
-        if ( imgURL != null )
-        {
+        if ( imgURL != null ) {
             return new ImageIcon( imgURL, description );
         }
-        else
-        {
+        else {
             System.err.println( "Couldn't find file: " + path );
             return null;
         }
     }
 
 
-    public void storeAdminEmail()
-    {
+    public void storeAdminEmail() {
         app.setAdminUserEmail( auto_login_email.getText() );
     }
 
 
-    public static class LauncherToolBar extends JToolBar
-    {
+    public static class LauncherToolBar extends JToolBar {
 
-        public LauncherToolBar()
-        {
+        public LauncherToolBar() {
             super();
         }
 
 
-        public LauncherToolBar( int orientation )
-        {
+        public LauncherToolBar( int orientation ) {
             super( orientation );
         }
 
 
-        public LauncherToolBar( String name, int orientation )
-        {
+        public LauncherToolBar( String name, int orientation ) {
             super( name, orientation );
         }
 
 
-        public LauncherToolBar( String name )
-        {
+        public LauncherToolBar( String name ) {
             super( name );
         }
 
@@ -496,8 +446,7 @@ public class LauncherFrame extends JFrame
 
 
         @Override
-        protected void paintComponent( Graphics g )
-        {
+        protected void paintComponent( Graphics g ) {
             // Create the 2D copy
             Graphics2D g2 = ( Graphics2D ) g.create();
 

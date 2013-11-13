@@ -35,8 +35,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 
 /** @author tnine */
 @Service("encryptionService")
-public class EncryptionServiceImpl implements EncryptionService
-{
+public class EncryptionServiceImpl implements EncryptionService {
 
     private String defaultCommandName = EncryptionCommand.BCRYPT;
     private static final Charset UTF8 = Charset.forName( "UTF-8" );
@@ -54,27 +53,23 @@ public class EncryptionServiceImpl implements EncryptionService
      * java.util.UUID)
      */
     @Override
-    public boolean verify( String inputSecret, CredentialsInfo creds, UUID userId, UUID applicationId )
-    {
+    public boolean verify( String inputSecret, CredentialsInfo creds, UUID userId, UUID applicationId ) {
 
 
         String[] storedCommands = null;
 
         // We have the new format of crypto chain. read them and apply them
-        if ( creds.getCryptoChain() != null && creds.getCryptoChain().length > 0 )
-        {
+        if ( creds.getCryptoChain() != null && creds.getCryptoChain().length > 0 ) {
             storedCommands = creds.getCryptoChain();
         }
 
         // no chain was set, fall back to try to use the hashType and our default
         // (legacy support)
-        else if ( creds.getHashType() != null )
-        {
+        else if ( creds.getHashType() != null ) {
             storedCommands = new String[] { creds.getHashType(), creds.getCipher() };
         }
         // use the default cipher on the creds
-        else
-        {
+        else {
             storedCommands = new String[] { creds.getCipher() };
         }
 
@@ -82,16 +77,14 @@ public class EncryptionServiceImpl implements EncryptionService
 
         // run the bytes through each command sequentially to generate our
         // acceptable hashcode
-        for ( String commandName : storedCommands )
-        {
+        for ( String commandName : storedCommands ) {
             EncryptionCommand command = commands.get( commandName );
 
             // verify we have a command to load
-            if ( command == null )
-            {
+            if ( command == null ) {
                 throw new IllegalArgumentException( String.format(
-                        "No command implementat for name %s exists, yet it is persisted on a user's credentials info." +
-                                "  This means their credentials either need removed, or this command needs supported",
+                        "No command implementat for name %s exists, yet it is persisted on a user's credentials info."
+                                + "  This means their credentials either need removed, or this command needs supported",
                         commandName ) );
             }
 
@@ -105,17 +98,14 @@ public class EncryptionServiceImpl implements EncryptionService
 
     /** @param wiredCommands the wiredCommands to set */
     @Autowired
-    public void setCommands( List<EncryptionCommand> inputCommands )
-    {
+    public void setCommands( List<EncryptionCommand> inputCommands ) {
         this.inputCommands = inputCommands;
     }
 
 
     @PostConstruct
-    public void init()
-    {
-        if ( inputCommands == null || inputCommands.size() == 0 )
-        {
+    public void init() {
+        if ( inputCommands == null || inputCommands.size() == 0 ) {
             throw new IllegalArgumentException(
                     String.format( "You must provide %s implementations for this service to function properly",
                             EncryptionCommand.class ) );
@@ -126,19 +116,17 @@ public class EncryptionServiceImpl implements EncryptionService
         /**
          * Create the map by name so we can reference them later.
          */
-        for ( EncryptionCommand command : inputCommands )
-        {
+        for ( EncryptionCommand command : inputCommands ) {
             String name = command.getName();
 
             Assert.notNull( name, "Encryption command name cannot be null" );
 
             EncryptionCommand existing = commands.get( name );
 
-            if ( existing != null )
-            {
+            if ( existing != null ) {
                 throw new IllegalArgumentException( String.format(
-                        "Both class %s and %s implement command '%s'.  This is a wiring bug, " +
-                                "and not allowed.  Each instance must define it's own type",
+                        "Both class %s and %s implement command '%s'.  This is a wiring bug, "
+                                + "and not allowed.  Each instance must define it's own type",
                         command.getClass().getName(), existing.getClass().getName(), name ) );
             }
 
@@ -152,8 +140,7 @@ public class EncryptionServiceImpl implements EncryptionService
 
 
     /** @param defaultCommandName the defaultCommandName to set */
-    public void setDefaultCommandName( String defaultCommandName )
-    {
+    public void setDefaultCommandName( String defaultCommandName ) {
         this.defaultCommandName = defaultCommandName;
     }
 
@@ -166,8 +153,7 @@ public class EncryptionServiceImpl implements EncryptionService
      * .lang.String, org.usergrid.persistence.entities.User, java.util.UUID)
      */
     @Override
-    public CredentialsInfo plainTextCredentials( String secret, UUID userId, UUID applicationId )
-    {
+    public CredentialsInfo plainTextCredentials( String secret, UUID userId, UUID applicationId ) {
 
         CredentialsInfo credentials = new CredentialsInfo();
         credentials.setRecoverable( true );
@@ -185,8 +171,7 @@ public class EncryptionServiceImpl implements EncryptionService
      * (java.lang.String, org.usergrid.persistence.entities.User, java.util.UUID)
      */
     @Override
-    public CredentialsInfo defaultEncryptedCredentials( String input, UUID userId, UUID applicationId )
-    {
+    public CredentialsInfo defaultEncryptedCredentials( String input, UUID userId, UUID applicationId ) {
         CredentialsInfo credentials = new CredentialsInfo();
         credentials.setRecoverable( false );
         credentials.setEncrypted( true );
@@ -203,8 +188,7 @@ public class EncryptionServiceImpl implements EncryptionService
      * @see org.usergrid.security.crypto.EncryptionService#getCommand(java.lang.String)
      */
     @Override
-    public EncryptionCommand getCommand( String name )
-    {
+    public EncryptionCommand getCommand( String name ) {
         return commands.get( name );
     }
 
@@ -213,14 +197,12 @@ public class EncryptionServiceImpl implements EncryptionService
      * @see org.usergrid.security.crypto.EncryptionService#getDefaultCommand()
      */
     @Override
-    public EncryptionCommand getDefaultCommand()
-    {
+    public EncryptionCommand getDefaultCommand() {
         return defaultCommand;
     }
 
 
-    protected String encode( byte[] bytes )
-    {
+    protected String encode( byte[] bytes ) {
         return encodeBase64URLSafeString( bytes );
     }
 }

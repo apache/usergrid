@@ -36,8 +36,7 @@ import com.yammer.metrics.annotation.Timed;
  * @author zznate
  * @author tnine
  */
-public class JobSchedulerService extends AbstractScheduledService
-{
+public class JobSchedulerService extends AbstractScheduledService {
 
     protected static final long DEFAULT_DELAY = 1000;
     protected static final long ERROR_DELAY = 10000;
@@ -58,30 +57,25 @@ public class JobSchedulerService extends AbstractScheduledService
     private ListeningScheduledExecutorService service;
 
 
-    public JobSchedulerService()
-    {
+    public JobSchedulerService() {
     }
 
 
     @Timed(name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS,
             rateUnit = TimeUnit.MINUTES)
     @Override
-    protected void runOneIteration() throws Exception
-    {
+    protected void runOneIteration() throws Exception {
 
-        try
-        {
+        try {
             logger.info( "running iteration..." );
             List<JobDescriptor> activeJobs = null;
 
             // run until there are no more active jobs
-            while ( true )
-            {
+            while ( true ) {
 
                 // get the semaphore if we can. This means we have space for at least 1
                 // job
-                if ( logger.isDebugEnabled() )
-                {
+                if ( logger.isDebugEnabled() ) {
                     logger.debug( "About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits() );
                 }
 
@@ -97,22 +91,19 @@ public class JobSchedulerService extends AbstractScheduledService
                 activeJobs = jobAccessor.getJobs( capacity );
 
                 // nothing to do, we don't have any jobs to run
-                if ( activeJobs.size() == 0 )
-                {
+                if ( activeJobs.size() == 0 ) {
                     logger.debug( "No jobs returned. Exiting run loop" );
                     return;
                 }
 
-                for ( JobDescriptor jd : activeJobs )
-                {
+                for ( JobDescriptor jd : activeJobs ) {
                     logger.info( "Submitting work for {}", jd );
                     submitWork( jd );
                     logger.info( "Work submitted for {}", jd );
                 }
             }
         }
-        catch ( Throwable t )
-        {
+        catch ( Throwable t ) {
             logger.error( "Something really bad happened!  Scheduler run failed", t );
         }
     }
@@ -124,41 +115,34 @@ public class JobSchedulerService extends AbstractScheduledService
      * @see com.google.common.util.concurrent.AbstractScheduledService#scheduler()
      */
     @Override
-    protected Scheduler scheduler()
-    {
+    protected Scheduler scheduler() {
         return Scheduler.newFixedDelaySchedule( 0, interval, TimeUnit.MILLISECONDS );
     }
 
 
     /** Use the provided BulkJobFactory to build and submit BulkJob items as ListenableFuture objects */
     @ExceptionMetered(name = "BulkJobScheduledService_submitWork_exceptions", group = "scheduler")
-    private void submitWork( final JobDescriptor jobDescriptor )
-    {
+    private void submitWork( final JobDescriptor jobDescriptor ) {
         List<Job> jobs;
 
-        try
-        {
+        try {
             jobs = jobFactory.jobsFrom( jobDescriptor );
         }
-        catch ( JobNotFoundException e )
-        {
+        catch ( JobNotFoundException e ) {
             logger.error( "Could not create jobs", e );
             return;
         }
 
-        for ( final Job job : jobs )
-        {
+        for ( final Job job : jobs ) {
 
             // job execution needs to be external to both the callback and the task.
             // This way regardless of any error we can
             // mark a job as failed if required
             final JobExecution execution = new JobExecutionImpl( jobDescriptor );
 
-            ListenableFuture<Void> future = service.submit( new Callable<Void>()
-            {
+            ListenableFuture<Void> future = service.submit( new Callable<Void>() {
                 @Override
-                public Void call() throws Exception
-                {
+                public Void call() throws Exception {
                     capacitySemaphore.acquire();
 
                     execution.start( maxFailCount );
@@ -166,8 +150,7 @@ public class JobSchedulerService extends AbstractScheduledService
                     jobAccessor.save( execution );
 
                     //this job is dead, treat it as such
-                    if ( execution.getStatus() == Status.DEAD )
-                    {
+                    if ( execution.getStatus() == Status.DEAD ) {
                         return null;
                     }
 
@@ -179,14 +162,11 @@ public class JobSchedulerService extends AbstractScheduledService
                 }
             } );
 
-            Futures.addCallback( future, new FutureCallback<Void>()
-            {
+            Futures.addCallback( future, new FutureCallback<Void>() {
                 @Override
-                public void onSuccess( Void param )
-                {
+                public void onSuccess( Void param ) {
 
-                    if ( execution.getStatus() == Status.IN_PROGRESS )
-                    {
+                    if ( execution.getStatus() == Status.IN_PROGRESS ) {
                         logger.info( "Successful completion of bulkJob {}", execution );
                         execution.completed();
                     }
@@ -197,12 +177,10 @@ public class JobSchedulerService extends AbstractScheduledService
 
 
                 @Override
-                public void onFailure( Throwable throwable )
-                {
+                public void onFailure( Throwable throwable ) {
                     logger.error( "Failed execution for bulkJob", throwable );
                     // mark it as failed
-                    if ( execution.getStatus() == Status.IN_PROGRESS )
-                    {
+                    if ( execution.getStatus() == Status.IN_PROGRESS ) {
                         execution.failed();
                     }
 
@@ -215,36 +193,31 @@ public class JobSchedulerService extends AbstractScheduledService
 
 
     /** @param milliseconds the milliseconds to set to wait if we didn't receive a job to run */
-    public void setInterval( long milliseconds )
-    {
+    public void setInterval( long milliseconds ) {
         this.interval = milliseconds;
     }
 
 
     /** @param listeners the listeners to set */
-    public void setWorkerSize( int listeners )
-    {
+    public void setWorkerSize( int listeners ) {
         this.workerSize = listeners;
     }
 
 
     /** @param jobAccessor the jobAccessor to set */
-    public void setJobAccessor( JobAccessor jobAccessor )
-    {
+    public void setJobAccessor( JobAccessor jobAccessor ) {
         this.jobAccessor = jobAccessor;
     }
 
 
     /** @param jobFactory the jobFactory to set */
-    public void setJobFactory( JobFactory jobFactory )
-    {
+    public void setJobFactory( JobFactory jobFactory ) {
         this.jobFactory = jobFactory;
     }
 
 
     /** @param maxFailCount the maxFailCount to set */
-    public void setMaxFailCount( int maxFailCount )
-    {
+    public void setMaxFailCount( int maxFailCount ) {
         this.maxFailCount = maxFailCount;
     }
 
@@ -255,8 +228,7 @@ public class JobSchedulerService extends AbstractScheduledService
      * @see com.google.common.util.concurrent.AbstractScheduledService#startUp()
      */
     @Override
-    protected void startUp() throws Exception
-    {
+    protected void startUp() throws Exception {
         service = MoreExecutors.listeningDecorator( Executors.newScheduledThreadPool( workerSize ) );
         capacitySemaphore = new Semaphore( workerSize );
         super.startUp();
@@ -269,8 +241,7 @@ public class JobSchedulerService extends AbstractScheduledService
      * @see com.google.common.util.concurrent.AbstractScheduledService#shutDown()
      */
     @Override
-    protected void shutDown() throws Exception
-    {
+    protected void shutDown() throws Exception {
         service.shutdown();
         super.shutDown();
     }

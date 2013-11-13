@@ -19,12 +19,10 @@ import static org.junit.Assert.fail;
  * @author tnine
  */
 @Concurrent()
-public class BulkJobExecutionUnitTest
-{
+public class BulkJobExecutionUnitTest {
 
     @Test
-    public void transitionsOk()
-    {
+    public void transitionsOk() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
@@ -38,8 +36,7 @@ public class BulkJobExecutionUnitTest
 
 
     @Test
-    public void transitionsDead()
-    {
+    public void transitionsDead() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
@@ -53,8 +50,7 @@ public class BulkJobExecutionUnitTest
 
 
     @Test
-    public void transitionsRetry()
-    {
+    public void transitionsRetry() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
@@ -68,84 +64,69 @@ public class BulkJobExecutionUnitTest
 
 
     @Test
-    public void transitionFail()
-    {
+    public void transitionFail() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
         JobExecution bje = new JobExecutionImpl( jobDescriptor );
-        try
-        {
+        try {
             bje.completed();
             fail( "Should have throw ISE on NOT_STARTED to IN_PROGRESS" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
 
-        try
-        {
+        try {
             bje.failed();
             fail( "Should have thrown ISE on NOT_STARTED to FAILED" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
         bje.start( 1 );
 
         bje.completed();
-        try
-        {
+        try {
             bje.failed();
             fail( "Should have failed failed after complete call" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
     }
 
 
     @Test
-    public void transitionFailOnDeath()
-    {
+    public void transitionFailOnDeath() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
         JobExecution bje = new JobExecutionImpl( jobDescriptor );
-        try
-        {
+        try {
             bje.completed();
             fail( "Should have throw ISE on NOT_STARTED to IN_PROGRESS" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
 
-        try
-        {
+        try {
             bje.failed();
             fail( "Should have thrown ISE on NOT_STARTED to FAILED" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
         bje.start( 1 );
 
         bje.killed();
-        try
-        {
+        try {
             bje.killed();
             fail( "Should have failed failed after complete call" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
     }
 
 
     @Test
-    public void failureTriggerCount()
-    {
+    public void failureTriggerCount() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
@@ -173,8 +154,7 @@ public class BulkJobExecutionUnitTest
 
 
     @Test
-    public void failureTriggerNoTrip()
-    {
+    public void failureTriggerNoTrip() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
@@ -205,30 +185,25 @@ public class BulkJobExecutionUnitTest
 
 
     @Test
-    public void doubleInvokeFail()
-    {
+    public void doubleInvokeFail() {
         JobData data = new JobData();
         JobStat stat = new JobStat();
         JobDescriptor jobDescriptor = new JobDescriptor( "", UUID.randomUUID(), UUID.randomUUID(), data, stat, null );
         JobExecution bje = new JobExecutionImpl( jobDescriptor );
         bje.start( 1 );
-        try
-        {
+        try {
             bje.start( 1 );
             fail( "Should have failed on double start() call" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
 
         bje.completed();
-        try
-        {
+        try {
             bje.completed();
             fail( "Should have failed on double complete call" );
         }
-        catch ( IllegalStateException ise )
-        {
+        catch ( IllegalStateException ise ) {
         }
     }
 }

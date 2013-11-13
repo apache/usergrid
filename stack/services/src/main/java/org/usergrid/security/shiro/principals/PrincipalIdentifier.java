@@ -20,38 +20,32 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.security.shiro.credentials.AccessTokenCredentials;
 
 
-public abstract class PrincipalIdentifier
-{
+public abstract class PrincipalIdentifier {
 
     AccessTokenCredentials accessTokenCredentials;
 
 
-    public UserInfo getUser()
-    {
+    public UserInfo getUser() {
         return null;
     }
 
 
-    public boolean isDisabled()
-    {
+    public boolean isDisabled() {
         return false;
     }
 
 
-    public boolean isActivated()
-    {
+    public boolean isActivated() {
         return true;
     }
 
 
-    public AccessTokenCredentials getAccessTokenCredentials()
-    {
+    public AccessTokenCredentials getAccessTokenCredentials() {
         return accessTokenCredentials;
     }
 
 
-    public void setAccessTokenCredentials( AccessTokenCredentials accessTokenCredentials )
-    {
+    public void setAccessTokenCredentials( AccessTokenCredentials accessTokenCredentials ) {
         this.accessTokenCredentials = accessTokenCredentials;
     }
 }

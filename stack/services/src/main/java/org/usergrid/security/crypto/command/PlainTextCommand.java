@@ -28,16 +28,14 @@ import org.usergrid.persistence.CredentialsInfo;
  * @author tnine
  */
 @Component("org.usergrid.security.crypto.command.PlainTextCommand")
-public class PlainTextCommand extends SaltedHasherCommand
-{
+public class PlainTextCommand extends SaltedHasherCommand {
 
     /* (non-Javadoc)
      * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[],
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
     @Override
-    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         return input;
     }
 
@@ -51,8 +49,7 @@ public class PlainTextCommand extends SaltedHasherCommand
    * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
    */
     @Override
-    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         return input;
     }
 
@@ -61,8 +58,7 @@ public class PlainTextCommand extends SaltedHasherCommand
      * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
      */
     @Override
-    public String getName()
-    {
+    public String getName() {
         return PLAINTEXT;
     }
 }

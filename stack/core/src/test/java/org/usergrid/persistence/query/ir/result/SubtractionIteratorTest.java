@@ -29,12 +29,10 @@ import static org.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn
 
 
 /** @author tnine */
-public class SubtractionIteratorTest
-{
+public class SubtractionIteratorTest {
 
     @Test
-    public void smallerSubtract()
-    {
+    public void smallerSubtract() {
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
         UUID id3 = UUIDUtils.minTimeUUID( 3 );
@@ -69,8 +67,7 @@ public class SubtractionIteratorTest
 
 
     @Test
-    public void smallerKeep()
-    {
+    public void smallerKeep() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -108,8 +105,7 @@ public class SubtractionIteratorTest
 
 
     @Test
-    public void smallerKeepRemoveAll()
-    {
+    public void smallerKeepRemoveAll() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -143,8 +139,7 @@ public class SubtractionIteratorTest
 
 
     @Test
-    public void noKeep()
-    {
+    public void noKeep() {
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
 
         // we should get intersection on 1, 3, and 8
@@ -162,8 +157,7 @@ public class SubtractionIteratorTest
 
 
     @Test
-    public void noSubtract()
-    {
+    public void noSubtract() {
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
 
         //keep only id 1

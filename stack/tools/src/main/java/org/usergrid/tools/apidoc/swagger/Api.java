@@ -26,76 +26,63 @@ import org.w3c.dom.Element;
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 
-public class Api
-{
+public class Api {
     String path;
     String description;
     List<ApiOperation> operations;
 
 
-    public Api()
-    {
+    public Api() {
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getPath()
-    {
+    public String getPath() {
         return path;
     }
 
 
-    public void setPath( String path )
-    {
+    public void setPath( String path ) {
         this.path = path;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
 
-    public void setDescription( String description )
-    {
+    public void setDescription( String description ) {
         this.description = description;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public List<ApiOperation> getOperations()
-    {
+    public List<ApiOperation> getOperations() {
         return operations;
     }
 
 
-    public void setOperations( List<ApiOperation> operations )
-    {
+    public void setOperations( List<ApiOperation> operations ) {
         this.operations = operations;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return JsonUtils.mapToJsonString( this );
     }
 
 
-    public Element createWADLResource( Document doc, ApiListing listing )
-    {
+    public Element createWADLResource( Document doc, ApiListing listing ) {
         Element resource = doc.createElement( "resource" );
-        if ( path != null )
-        {
+        if ( path != null ) {
             resource.setAttribute( "path", path );
         }
 
-        if ( ( operations != null ) && !operations.isEmpty() )
-        {
-            for ( ApiOperation operation : operations )
-            {
+        if ( ( operations != null ) && !operations.isEmpty() ) {
+            for ( ApiOperation operation : operations ) {
                 resource.appendChild( operation.createWADLMethod( doc, this ) );
             }
         }

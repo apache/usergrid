@@ -10,8 +10,7 @@ import java.util.UUID;
  *
  * @author zznate
  */
-public class AppScore
-{
+public class AppScore {
     private final OrgScore orgScore;
     private final UUID appId;
     private final String appName;
@@ -19,60 +18,51 @@ public class AppScore
     private long requestCount;
 
 
-    public AppScore( OrgScore orgScore, UUID appId, String appName )
-    {
+    public AppScore( OrgScore orgScore, UUID appId, String appName ) {
         this.orgScore = orgScore;
         this.appId = appId;
         this.appName = appName;
     }
 
 
-    public OrgScore getOrgScore()
-    {
+    public OrgScore getOrgScore() {
         return orgScore;
     }
 
 
-    public UUID getAppId()
-    {
+    public UUID getAppId() {
         return appId;
     }
 
 
-    public String getAppName()
-    {
+    public String getAppName() {
         return appName;
     }
 
 
-    public long getUserCount()
-    {
+    public long getUserCount() {
         return userCount;
     }
 
 
-    public long getRequestCount()
-    {
+    public long getRequestCount() {
         return requestCount;
     }
 
 
-    public void setUserCount( long userCount )
-    {
+    public void setUserCount( long userCount ) {
         this.userCount = userCount;
     }
 
 
-    public void setRequestCount( long requestCount )
-    {
+    public void setRequestCount( long requestCount ) {
         this.requestCount = requestCount;
     }
 
 
     /** Returns the hashCode of he appid parameter */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return appId.hashCode();
     }
 
@@ -83,10 +73,8 @@ public class AppScore
      * @return true if the appId attributes are equal
      */
     @Override
-    public boolean equals( Object o )
-    {
-        if ( o instanceof AppScore )
-        {
+    public boolean equals( Object o ) {
+        if ( o instanceof AppScore ) {
             return ( ( AppScore ) o ).getAppId().equals( appId );
         }
         return false;

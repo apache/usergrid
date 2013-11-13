@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class MultiOrderByComplexUnionConnectionIT extends AbstractIteratingQueryIT
-{
+public class MultiOrderByComplexUnionConnectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void multiOrderByComplexUnionConnection() throws Exception
-    {
+    public void multiOrderByComplexUnionConnection() throws Exception {
         multiOrderByComplexUnion( new CollectionIoHelper() );
     }
 }

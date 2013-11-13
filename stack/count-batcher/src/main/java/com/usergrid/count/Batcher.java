@@ -24,8 +24,7 @@ import com.usergrid.count.common.Count;
  *
  * @author zznate
  */
-public interface Batcher
-{
+public interface Batcher {
     void setBatchSubmitter( BatchSubmitter batchSubmitter );
 
     void add( Count count );

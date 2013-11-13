@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByBoundRangeScanDescConnectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByBoundRangeScanDescConnectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByBoundRangeScanDescConnection() throws Exception
-    {
+    public void singleOrderByBoundRangeScanDescConnection() throws Exception {
         singleOrderByBoundRangeScanDesc( new ConnectionHelper() );
     }
 }

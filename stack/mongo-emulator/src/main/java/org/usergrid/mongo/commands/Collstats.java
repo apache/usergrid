@@ -30,27 +30,22 @@ import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class Collstats extends MongoCommand
-{
+public class Collstats extends MongoCommand {
 
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
         ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( opQuery.getDatabaseName() ) );
         OpReply reply = new OpReply( opQuery );
-        if ( application == null )
-        {
+        if ( application == null ) {
             return reply;
         }
         EntityManager em = handler.getEmf().getEntityManager( application.getId() );
         String collectionName = ( String ) opQuery.getQuery().get( "collstats" );
         long count = 0;
-        try
-        {
+        try {
             count = em.getApplicationCollectionSize( collectionName );
         }
-        catch ( Exception e1 )
-        {
+        catch ( Exception e1 ) {
         }
         reply.addDocument(
                 map( entry( "ns", opQuery.getDatabaseName() + "." + collectionName ), entry( "count", count ),

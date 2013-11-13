@@ -7,13 +7,11 @@ import static org.junit.Assert.assertEquals;
 
 
 /** Test for the entity comparator */
-public class EntityPropertyComparatorTest
-{
+public class EntityPropertyComparatorTest {
 
 
     @Test
-    public void testNulls() throws Exception
-    {
+    public void testNulls() throws Exception {
 
         DynamicEntity first = new DynamicEntity();
         first.setProperty( "test", true );
@@ -42,8 +40,7 @@ public class EntityPropertyComparatorTest
 
 
     @Test
-    public void testBooleans() throws Exception
-    {
+    public void testBooleans() throws Exception {
 
         DynamicEntity second = new DynamicEntity();
         second.setProperty( "test", true );
@@ -76,8 +73,7 @@ public class EntityPropertyComparatorTest
 
 
     @Test
-    public void testFloat() throws Exception
-    {
+    public void testFloat() throws Exception {
 
         DynamicEntity second = new DynamicEntity();
         second.setProperty( "test", 1.0f );
@@ -110,8 +106,7 @@ public class EntityPropertyComparatorTest
 
 
     @Test
-    public void testLong() throws Exception
-    {
+    public void testLong() throws Exception {
 
         DynamicEntity second = new DynamicEntity();
         second.setProperty( "test", 1l );
@@ -144,8 +139,7 @@ public class EntityPropertyComparatorTest
 
 
     @Test
-    public void testDouble() throws Exception
-    {
+    public void testDouble() throws Exception {
 
         DynamicEntity second = new DynamicEntity();
         second.setProperty( "test", 1d );
@@ -179,8 +173,7 @@ public class EntityPropertyComparatorTest
 
 
     @Test
-    public void testString() throws Exception
-    {
+    public void testString() throws Exception {
 
         DynamicEntity second = new DynamicEntity();
         second.setProperty( "test", "b" );

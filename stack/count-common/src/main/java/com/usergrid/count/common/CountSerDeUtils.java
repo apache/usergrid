@@ -24,34 +24,27 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 
 /** @author zznate */
-public class CountSerDeUtils
-{
+public class CountSerDeUtils {
 
-    public static String serialize( Count count )
-    {
+    public static String serialize( Count count ) {
         ObjectMapper mapper = new ObjectMapper();
-        try
-        {
+        try {
             return mapper.writeValueAsString( count );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             throw new CountTransportSerDeException( "Problem in serialize() call", ex );
         }
     }
 
 
-    public static Count deserialize( String json )
-    {
+    public static Count deserialize( String json ) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility( JsonMethod.CREATOR, JsonAutoDetect.Visibility.ANY );
 
-        try
-        {
+        try {
             return mapper.readValue( json, Count.class );
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             throw new CountTransportSerDeException( "Problem in deserialize() call", e );
         }
     }

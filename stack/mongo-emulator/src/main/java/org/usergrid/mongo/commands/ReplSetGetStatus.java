@@ -26,12 +26,10 @@ import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class ReplSetGetStatus extends MongoCommand
-{
+public class ReplSetGetStatus extends MongoCommand {
 
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
         OpReply reply = new OpReply( opQuery );
         reply.addDocument( map( entry( "errmsg", "not running with --replSet" ), entry( "ok", 0.0 ) ) );
         return reply;

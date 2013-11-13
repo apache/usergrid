@@ -32,8 +32,7 @@ import org.usergrid.batch.JobExecution;
  */
 @Component("failureJobExceuction")
 @Ignore("Not a test")
-public class FailureJobExceuction implements Job
-{
+public class FailureJobExceuction implements Job {
 
     private CountDownLatch latch = null;
 
@@ -41,8 +40,7 @@ public class FailureJobExceuction implements Job
     /**
      *
      */
-    public FailureJobExceuction()
-    {
+    public FailureJobExceuction() {
     }
 
 
@@ -52,28 +50,24 @@ public class FailureJobExceuction implements Job
      * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
      */
     @Override
-    public void execute( JobExecution execution ) throws Exception
-    {
+    public void execute( JobExecution execution ) throws Exception {
         latch.countDown();
 
         throw new RuntimeException( "Job Failed" );
     }
 
 
-    public void setLatch( int calls )
-    {
+    public void setLatch( int calls ) {
         latch = new CountDownLatch( calls );
     }
 
 
-    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException
-    {
+    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException {
         return latch.await( timeout, unit );
     }
 
 
-    public long getLatchCount()
-    {
+    public long getLatchCount() {
         return latch.getCount();
     }
 }

@@ -8,29 +8,25 @@ import org.usergrid.persistence.entities.Application;
 
 
 /** @author zznate */
-public class SignInProviderFactory
-{
+public class SignInProviderFactory {
 
     private EntityManagerFactory emf;
     private ManagementService managementService;
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService managementService )
-    {
+    public void setManagementService( ManagementService managementService ) {
         this.managementService = managementService;
     }
 
 
-    public SignInAsProvider facebook( Application application )
-    {
+    public SignInAsProvider facebook( Application application ) {
         FacebookProvider facebookProvider =
                 new FacebookProvider( emf.getEntityManager( application.getUuid() ), managementService );
         facebookProvider.configure();
@@ -38,8 +34,7 @@ public class SignInProviderFactory
     }
 
 
-    public SignInAsProvider foursquare( Application application )
-    {
+    public SignInAsProvider foursquare( Application application ) {
         FoursquareProvider foursquareProvider =
                 new FoursquareProvider( emf.getEntityManager( application.getUuid() ), managementService );
         foursquareProvider.configure();
@@ -47,8 +42,7 @@ public class SignInProviderFactory
     }
 
 
-    public SignInAsProvider pingident( Application application )
-    {
+    public SignInAsProvider pingident( Application application ) {
         PingIdentityProvider pingIdentityProvider =
                 new PingIdentityProvider( emf.getEntityManager( application.getUuid() ), managementService );
         pingIdentityProvider.configure();

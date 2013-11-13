@@ -27,8 +27,7 @@ import static org.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 
 
-public class OrganizationInfo
-{
+public class OrganizationInfo {
 
     public static final String PASSWORD_HISTORY_SIZE_KEY = "passwordHistorySize";
 
@@ -37,118 +36,96 @@ public class OrganizationInfo
     private Map<String, Object> properties;
 
 
-    public OrganizationInfo()
-    {
+    public OrganizationInfo() {
     }
 
 
-    public OrganizationInfo( UUID id, String name )
-    {
+    public OrganizationInfo( UUID id, String name ) {
         this.id = id;
         this.name = name;
     }
 
 
-    public OrganizationInfo( Map<String, Object> properties )
-    {
+    public OrganizationInfo( Map<String, Object> properties ) {
         id = ( UUID ) properties.get( PROPERTY_UUID );
         name = ( String ) properties.get( PROPERTY_PATH );
     }
 
 
-    public OrganizationInfo( UUID id, String name, Map<String, Object> properties )
-    {
+    public OrganizationInfo( UUID id, String name, Map<String, Object> properties ) {
         this( id, name );
         this.properties = properties;
     }
 
 
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return id;
     }
 
 
-    public void setUuid( UUID id )
-    {
+    public void setUuid( UUID id ) {
         this.id = id;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
-    public int getPasswordHistorySize()
-    {
+    public int getPasswordHistorySize() {
         int size = 0;
-        if ( properties != null )
-        {
+        if ( properties != null ) {
             Object sizeValue = properties.get( PASSWORD_HISTORY_SIZE_KEY );
-            if ( sizeValue instanceof Number )
-            {
+            if ( sizeValue instanceof Number ) {
                 size = ( ( Number ) sizeValue ).intValue();
             }
-            else if ( sizeValue instanceof String )
-            {
-                try
-                {
+            else if ( sizeValue instanceof String ) {
+                try {
                     size = Integer.parseInt( ( String ) sizeValue );
                 }
-                catch ( NumberFormatException e )
-                { /* ignore */ }
+                catch ( NumberFormatException e ) { /* ignore */ }
             }
         }
         return size;
     }
 
 
-    public static List<OrganizationInfo> fromNameIdMap( Map<String, UUID> map )
-    {
+    public static List<OrganizationInfo> fromNameIdMap( Map<String, UUID> map ) {
         List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
-        for ( Entry<String, UUID> s : map.entrySet() )
-        {
+        for ( Entry<String, UUID> s : map.entrySet() ) {
             list.add( new OrganizationInfo( s.getValue(), s.getKey() ) );
         }
         return list;
     }
 
 
-    public static List<OrganizationInfo> fromIdNameMap( Map<UUID, String> map )
-    {
+    public static List<OrganizationInfo> fromIdNameMap( Map<UUID, String> map ) {
         List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
-        for ( Entry<UUID, String> s : map.entrySet() )
-        {
+        for ( Entry<UUID, String> s : map.entrySet() ) {
             list.add( new OrganizationInfo( s.getKey(), s.getValue() ) );
         }
         return list;
     }
 
 
-    public static Map<String, UUID> toNameIdMap( List<OrganizationInfo> list )
-    {
+    public static Map<String, UUID> toNameIdMap( List<OrganizationInfo> list ) {
         Map<String, UUID> map = new LinkedHashMap<String, UUID>();
-        for ( OrganizationInfo i : list )
-        {
+        for ( OrganizationInfo i : list ) {
             map.put( i.getName(), i.getUuid() );
         }
         return map;
     }
 
 
-    public static Map<UUID, String> toIdNameMap( List<OrganizationInfo> list )
-    {
+    public static Map<UUID, String> toIdNameMap( List<OrganizationInfo> list ) {
         Map<UUID, String> map = new LinkedHashMap<UUID, String>();
-        for ( OrganizationInfo i : list )
-        {
+        for ( OrganizationInfo i : list ) {
             map.put( i.getUuid(), i.getName() );
         }
         return map;
@@ -156,8 +133,7 @@ public class OrganizationInfo
 
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
@@ -167,55 +143,43 @@ public class OrganizationInfo
 
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
             return true;
         }
-        if ( obj == null )
-        {
+        if ( obj == null ) {
             return false;
         }
-        if ( getClass() != obj.getClass() )
-        {
+        if ( getClass() != obj.getClass() ) {
             return false;
         }
         OrganizationInfo other = ( OrganizationInfo ) obj;
-        if ( id == null )
-        {
-            if ( other.id != null )
-            {
+        if ( id == null ) {
+            if ( other.id != null ) {
                 return false;
             }
         }
-        else if ( !id.equals( other.id ) )
-        {
+        else if ( !id.equals( other.id ) ) {
             return false;
         }
-        if ( name == null )
-        {
-            if ( other.name != null )
-            {
+        if ( name == null ) {
+            if ( other.name != null ) {
                 return false;
             }
         }
-        else if ( !name.equals( other.name ) )
-        {
+        else if ( !name.equals( other.name ) ) {
             return false;
         }
         return true;
     }
 
 
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
-    public void setProperties( Map<String, Object> properties )
-    {
+    public void setProperties( Map<String, Object> properties ) {
         this.properties = properties;
     }
 }

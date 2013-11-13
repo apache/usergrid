@@ -13,16 +13,14 @@ import com.sun.jersey.api.json.JSONConfiguration;
 
 
 /** @author zznate */
-public abstract class AbstractProvider implements SignInAsProvider
-{
+public abstract class AbstractProvider implements SignInAsProvider {
 
     protected EntityManager entityManager;
     protected ManagementService managementService;
     protected Client client;
 
 
-    AbstractProvider( EntityManager entityManager, ManagementService managementService )
-    {
+    AbstractProvider( EntityManager entityManager, ManagementService managementService ) {
         this.entityManager = entityManager;
         this.managementService = managementService;
         ClientConfig clientConfig = new DefaultClientConfig();
@@ -41,28 +39,22 @@ public abstract class AbstractProvider implements SignInAsProvider
 
 
     /** Encapsulates the dictionary lookup for any configuration required */
-    protected Map<Object, Object> loadConfigurationFor( String providerKey )
-    {
-        try
-        {
+    protected Map<Object, Object> loadConfigurationFor( String providerKey ) {
+        try {
             return entityManager.getDictionaryAsMap( entityManager.getApplication(), providerKey );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
         return null;
     }
 
 
-    protected void saveToConfiguration( String providerKey, Map<String, Object> config )
-    {
-        try
-        {
+    protected void saveToConfiguration( String providerKey, Map<String, Object> config ) {
+        try {
             entityManager.addMapToDictionary( entityManager.getApplication(), providerKey, config );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
     }

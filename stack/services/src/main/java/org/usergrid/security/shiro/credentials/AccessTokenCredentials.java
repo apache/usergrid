@@ -16,8 +16,7 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public interface AccessTokenCredentials extends PrincipalCredentials
-{
+public interface AccessTokenCredentials extends PrincipalCredentials {
 
     public String getToken();
 }

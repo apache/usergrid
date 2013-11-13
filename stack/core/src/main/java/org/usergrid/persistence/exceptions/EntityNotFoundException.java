@@ -16,8 +16,7 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class EntityNotFoundException extends PersistenceException
-{
+public class EntityNotFoundException extends PersistenceException {
 
     /**
      *
@@ -25,26 +24,22 @@ public class EntityNotFoundException extends PersistenceException
     private static final long serialVersionUID = -3579346096812510039L;
 
 
-    public EntityNotFoundException()
-    {
+    public EntityNotFoundException() {
         super();
     }
 
 
-    public EntityNotFoundException( String message, Throwable cause )
-    {
+    public EntityNotFoundException( String message, Throwable cause ) {
         super( message, cause );
     }
 
 
-    public EntityNotFoundException( String message )
-    {
+    public EntityNotFoundException( String message ) {
         super( message );
     }
 
 
-    public EntityNotFoundException( Throwable cause )
-    {
+    public EntityNotFoundException( Throwable cause ) {
         super( cause );
     }
 }

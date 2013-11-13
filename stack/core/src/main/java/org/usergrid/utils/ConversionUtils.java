@@ -35,8 +35,7 @@ import org.apache.commons.lang.math.NumberUtils;
 
 /** Convenience methods for converting to and from formats, primarily between byte arrays and UUIDs, Strings,
  * and Longs. */
-public class ConversionUtils
-{
+public class ConversionUtils {
 
     private static final Logger logger = LoggerFactory.getLogger( ConversionUtils.class );
 
@@ -57,8 +56,7 @@ public class ConversionUtils
      * @param uuid
      * @return
      */
-    public static UUID uuid( byte[] uuid )
-    {
+    public static UUID uuid( byte[] uuid ) {
         return uuid( uuid, 0 );
     }
 
@@ -68,21 +66,17 @@ public class ConversionUtils
      * @param offset
      * @return
      */
-    public static UUID uuid( byte[] uuid, int offset )
-    {
+    public static UUID uuid( byte[] uuid, int offset ) {
         ByteBuffer bb = ByteBuffer.wrap( uuid, offset, 16 );
         return new UUID( bb.getLong(), bb.getLong() );
     }
 
 
-    public static UUID uuid( ByteBuffer bb )
-    {
-        if ( bb == null )
-        {
+    public static UUID uuid( ByteBuffer bb ) {
+        if ( bb == null ) {
             return null;
         }
-        if ( bb.remaining() < 16 )
-        {
+        if ( bb.remaining() < 16 ) {
             return null;
         }
         bb = bb.slice();
@@ -94,14 +88,11 @@ public class ConversionUtils
      * @param uuid
      * @return
      */
-    public static UUID uuid( String uuid )
-    {
-        try
-        {
+    public static UUID uuid( String uuid ) {
+        try {
             return UUID.fromString( uuid );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Bad UUID", e );
         }
         return UUIDUtils.ZERO_UUID;
@@ -112,28 +103,22 @@ public class ConversionUtils
      * @param obj
      * @return
      */
-    public static UUID uuid( Object obj )
-    {
+    public static UUID uuid( Object obj ) {
         return uuid( obj, UUIDUtils.ZERO_UUID );
     }
 
 
-    public static UUID uuid( Object obj, UUID defaultValue )
-    {
-        if ( obj instanceof UUID )
-        {
+    public static UUID uuid( Object obj, UUID defaultValue ) {
+        if ( obj instanceof UUID ) {
             return ( UUID ) obj;
         }
-        else if ( obj instanceof byte[] )
-        {
+        else if ( obj instanceof byte[] ) {
             return uuid( ( byte[] ) obj );
         }
-        else if ( obj instanceof ByteBuffer )
-        {
+        else if ( obj instanceof ByteBuffer ) {
             return uuid( ( ByteBuffer ) obj );
         }
-        else if ( obj instanceof String )
-        {
+        else if ( obj instanceof String ) {
             return uuid( ( String ) obj );
         }
         return defaultValue;
@@ -144,22 +129,18 @@ public class ConversionUtils
      * @param uuid
      * @return
      */
-    public static byte[] bytes( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    public static byte[] bytes( UUID uuid ) {
+        if ( uuid == null ) {
             return null;
         }
         long msb = uuid.getMostSignificantBits();
         long lsb = uuid.getLeastSignificantBits();
         byte[] buffer = new byte[16];
 
-        for ( int i = 0; i < 8; i++ )
-        {
+        for ( int i = 0; i < 8; i++ ) {
             buffer[i] = ( byte ) ( msb >>> ( 8 * ( 7 - i ) ) );
         }
-        for ( int i = 8; i < 16; i++ )
-        {
+        for ( int i = 8; i < 16; i++ ) {
             buffer[i] = ( byte ) ( lsb >>> ( 8 * ( 7 - i ) ) );
         }
 
@@ -167,10 +148,8 @@ public class ConversionUtils
     }
 
 
-    public static ByteBuffer bytebuffer( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    public static ByteBuffer bytebuffer( UUID uuid ) {
+        if ( uuid == null ) {
             return null;
         }
         return ByteBuffer.wrap( bytes( uuid ) );
@@ -181,10 +160,8 @@ public class ConversionUtils
      * @param uuid
      * @return
      */
-    public static byte[] uuidToBytesNullOk( UUID uuid )
-    {
-        if ( uuid != null )
-        {
+    public static byte[] uuidToBytesNullOk( UUID uuid ) {
+        if ( uuid != null ) {
             return bytes( uuid );
         }
         return new byte[16];
@@ -195,14 +172,12 @@ public class ConversionUtils
      * @param s
      * @return
      */
-    public static byte[] bytes( String s )
-    {
+    public static byte[] bytes( String s ) {
         return bytes( s, UTF8_ENCODING );
     }
 
 
-    public static ByteBuffer bytebuffer( String s )
-    {
+    public static ByteBuffer bytebuffer( String s ) {
         return ByteBuffer.wrap( bytes( s ) );
     }
 
@@ -211,18 +186,15 @@ public class ConversionUtils
      * @param s
      * @return
      */
-    public static byte[] ascii( String s )
-    {
-        if ( s == null )
-        {
+    public static byte[] ascii( String s ) {
+        if ( s == null ) {
             return new byte[0];
         }
         return bytes( s, ASCII_ENCODING );
     }
 
 
-    public ByteBuffer asciibuffer( String s )
-    {
+    public ByteBuffer asciibuffer( String s ) {
         return ByteBuffer.wrap( ascii( s ) );
     }
 
@@ -232,30 +204,25 @@ public class ConversionUtils
      * @param encoding
      * @return
      */
-    public static byte[] bytes( String s, String encoding )
-    {
-        try
-        {
+    public static byte[] bytes( String s, String encoding ) {
+        try {
             return s.getBytes( encoding );
         }
-        catch ( UnsupportedEncodingException e )
-        {
+        catch ( UnsupportedEncodingException e ) {
             // logger.log(Level.SEVERE, "UnsupportedEncodingException ", e);
             throw new RuntimeException( e );
         }
     }
 
 
-    public static byte[] bytes( ByteBuffer bb )
-    {
+    public static byte[] bytes( ByteBuffer bb ) {
         byte[] b = new byte[bb.remaining()];
         bb.duplicate().get( b );
         return b;
     }
 
 
-    public static ByteBuffer bytebuffer( String s, String encoding )
-    {
+    public static ByteBuffer bytebuffer( String s, String encoding ) {
         return ByteBuffer.wrap( bytes( s, encoding ) );
     }
 
@@ -264,16 +231,14 @@ public class ConversionUtils
      * @param b
      * @return
      */
-    public static byte[] bytes( Boolean b )
-    {
+    public static byte[] bytes( Boolean b ) {
         byte[] bytes = new byte[1];
         bytes[0] = b ? ( byte ) 1 : 0;
         return bytes;
     }
 
 
-    public static ByteBuffer bytebuffer( Boolean b )
-    {
+    public static ByteBuffer bytebuffer( Boolean b ) {
         return ByteBuffer.wrap( bytes( b ) );
     }
 
@@ -282,8 +247,7 @@ public class ConversionUtils
      * @param val
      * @return
      */
-    public static byte[] bytes( Long val )
-    {
+    public static byte[] bytes( Long val ) {
         ByteBuffer buf = ByteBuffer.allocate( 8 );
         buf.order( ByteOrder.BIG_ENDIAN );
         buf.putLong( val );
@@ -291,8 +255,7 @@ public class ConversionUtils
     }
 
 
-    public static ByteBuffer bytebuffer( Long val )
-    {
+    public static ByteBuffer bytebuffer( Long val ) {
         ByteBuffer buf = ByteBuffer.allocate( 8 );
         buf.order( ByteOrder.BIG_ENDIAN );
         buf.putLong( val );
@@ -304,70 +267,55 @@ public class ConversionUtils
      * @param obj
      * @return
      */
-    public static byte[] bytes( Object obj )
-    {
-        if ( obj == null )
-        {
+    public static byte[] bytes( Object obj ) {
+        if ( obj == null ) {
             return new byte[0];
         }
-        else if ( obj instanceof byte[] )
-        {
+        else if ( obj instanceof byte[] ) {
             return ( byte[] ) obj;
         }
-        else if ( obj instanceof Long )
-        {
+        else if ( obj instanceof Long ) {
             return bytes( ( Long ) obj );
         }
-        else if ( obj instanceof String )
-        {
+        else if ( obj instanceof String ) {
             return bytes( ( String ) obj );
         }
-        else if ( obj instanceof UUID )
-        {
+        else if ( obj instanceof UUID ) {
             return bytes( ( UUID ) obj );
         }
-        else if ( obj instanceof Boolean )
-        {
+        else if ( obj instanceof Boolean ) {
             return bytes( ( Boolean ) obj );
         }
-        else if ( obj instanceof Date )
-        {
+        else if ( obj instanceof Date ) {
             return bytes( ( ( Date ) obj ).getTime() );
         }
-        else
-        {
+        else {
             return bytes( obj.toString() );
         }
     }
 
 
-    public static ByteBuffer bytebuffer( byte[] bytes )
-    {
+    public static ByteBuffer bytebuffer( byte[] bytes ) {
         return ByteBuffer.wrap( bytes );
     }
 
 
-    public static ByteBuffer bytebuffer( ByteBuffer bytes )
-    {
+    public static ByteBuffer bytebuffer( ByteBuffer bytes ) {
         return bytes.duplicate();
     }
 
 
-    public static ByteBuffer bytebuffer( Object obj )
-    {
-        if ( obj instanceof ByteBuffer )
-        {
+    public static ByteBuffer bytebuffer( Object obj ) {
+        if ( obj instanceof ByteBuffer ) {
             return ( ( ByteBuffer ) obj ).duplicate();
         }
         return ByteBuffer.wrap( bytes( obj ) );
     }
 
 
-    public static List<ByteBuffer> bytebuffers( List<?> l )
-    {
+    public static List<ByteBuffer> bytebuffers( List<?> l ) {
         List<ByteBuffer> results = new ArrayList<ByteBuffer>( l.size() );
-        for ( Object o : l )
-        {
+        for ( Object o : l ) {
             results.add( bytebuffer( o ) );
         }
         return results;
@@ -378,14 +326,12 @@ public class ConversionUtils
      * @param bytes
      * @return
      */
-    public static boolean getBoolean( byte[] bytes )
-    {
+    public static boolean getBoolean( byte[] bytes ) {
         return bytes[0] != 0;
     }
 
 
-    public static boolean getBoolean( ByteBuffer bytes )
-    {
+    public static boolean getBoolean( ByteBuffer bytes ) {
         return bytes.slice().get() != 0;
     }
 
@@ -395,24 +341,19 @@ public class ConversionUtils
      * @param offset
      * @return
      */
-    public static boolean getBoolean( byte[] bytes, int offset )
-    {
+    public static boolean getBoolean( byte[] bytes, int offset ) {
         return bytes[offset] != 0;
     }
 
 
-    public static boolean getBoolean( Object obj )
-    {
-        if ( obj instanceof Boolean )
-        {
+    public static boolean getBoolean( Object obj ) {
+        if ( obj instanceof Boolean ) {
             return ( Boolean ) obj;
         }
-        else if ( obj instanceof String )
-        {
+        else if ( obj instanceof String ) {
             return Boolean.parseBoolean( ( String ) obj );
         }
-        else if ( obj instanceof Number )
-        {
+        else if ( obj instanceof Number ) {
             return ( ( Number ) obj ).longValue() > 0;
         }
 
@@ -424,22 +365,17 @@ public class ConversionUtils
      * @param obj
      * @return
      */
-    public static String string( Object obj )
-    {
-        if ( obj instanceof String )
-        {
+    public static String string( Object obj ) {
+        if ( obj instanceof String ) {
             return ( String ) obj;
         }
-        else if ( obj instanceof byte[] )
-        {
+        else if ( obj instanceof byte[] ) {
             return string( ( byte[] ) obj );
         }
-        else if ( obj instanceof ByteBuffer )
-        {
+        else if ( obj instanceof ByteBuffer ) {
             return string( ( ByteBuffer ) obj );
         }
-        else if ( obj != null )
-        {
+        else if ( obj != null ) {
             return obj.toString();
         }
         return null;
@@ -450,20 +386,16 @@ public class ConversionUtils
      * @param bytes
      * @return
      */
-    public static String string( byte[] bytes )
-    {
-        if ( bytes == null )
-        {
+    public static String string( byte[] bytes ) {
+        if ( bytes == null ) {
             return null;
         }
         return string( bytes, 0, bytes.length, UTF8_ENCODING );
     }
 
 
-    public static String string( ByteBuffer bytes )
-    {
-        if ( bytes == null )
-        {
+    public static String string( ByteBuffer bytes ) {
+        if ( bytes == null ) {
             return null;
         }
         return string( bytes.array(), bytes.arrayOffset() + bytes.position(), bytes.remaining(), UTF8_ENCODING );
@@ -476,8 +408,7 @@ public class ConversionUtils
      * @param length
      * @return
      */
-    public static String string( byte[] bytes, int offset, int length )
-    {
+    public static String string( byte[] bytes, int offset, int length ) {
         return string( bytes, offset, length, UTF8_ENCODING );
     }
 
@@ -489,36 +420,29 @@ public class ConversionUtils
      * @param encoding
      * @return
      */
-    public static String string( byte[] bytes, int offset, int length, String encoding )
-    {
+    public static String string( byte[] bytes, int offset, int length, String encoding ) {
 
-        if ( length <= 0 )
-        {
+        if ( length <= 0 ) {
             return "";
         }
 
-        if ( bytes == null )
-        {
+        if ( bytes == null ) {
             return "";
         }
 
-        try
-        {
+        try {
             return new String( bytes, offset, length, encoding );
         }
-        catch ( UnsupportedEncodingException e )
-        {
+        catch ( UnsupportedEncodingException e ) {
             // logger.log(Level.SEVERE, "UnsupportedEncodingException ", e);
             throw new RuntimeException( e );
         }
     }
 
 
-    public static <T> List<String> strings( Collection<T> items )
-    {
+    public static <T> List<String> strings( Collection<T> items ) {
         List<String> strings = new ArrayList<String>();
-        for ( T item : items )
-        {
+        for ( T item : items ) {
             strings.add( string( item ) );
         }
         return strings;
@@ -530,14 +454,11 @@ public class ConversionUtils
      * @param offset
      * @return
      */
-    public static String stringFromLong( byte[] bytes, int offset )
-    {
-        if ( bytes.length == 0 )
-        {
+    public static String stringFromLong( byte[] bytes, int offset ) {
+        if ( bytes.length == 0 ) {
             return "";
         }
-        if ( ( bytes.length - offset ) < 8 )
-        {
+        if ( ( bytes.length - offset ) < 8 ) {
             throw new IllegalArgumentException( "A long is at least 8 bytes" );
         }
         return String.valueOf( ByteBuffer.wrap( bytes, offset, 8 ).getLong() );
@@ -548,42 +469,33 @@ public class ConversionUtils
      * @param bytes
      * @return
      */
-    public static long getLong( byte[] bytes )
-    {
+    public static long getLong( byte[] bytes ) {
         return ByteBuffer.wrap( bytes, 0, 8 ).getLong();
     }
 
 
-    public static long getLong( ByteBuffer bytes )
-    {
+    public static long getLong( ByteBuffer bytes ) {
         return bytes.slice().getLong();
     }
 
 
-    public static long getLong( Object obj )
-    {
-        if ( obj instanceof Long )
-        {
+    public static long getLong( Object obj ) {
+        if ( obj instanceof Long ) {
             return ( Long ) obj;
         }
-        if ( obj instanceof Number )
-        {
+        if ( obj instanceof Number ) {
             return ( ( Number ) obj ).longValue();
         }
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return NumberUtils.toLong( ( String ) obj );
         }
-        if ( obj instanceof Date )
-        {
+        if ( obj instanceof Date ) {
             return ( ( Date ) obj ).getTime();
         }
-        if ( obj instanceof byte[] )
-        {
+        if ( obj instanceof byte[] ) {
             return getLong( ( byte[] ) obj );
         }
-        if ( obj instanceof ByteBuffer )
-        {
+        if ( obj instanceof ByteBuffer ) {
             return getLong( ( ByteBuffer ) obj );
         }
         return 0;
@@ -594,42 +506,33 @@ public class ConversionUtils
      * @param bytes
      * @return
      */
-    public static int getInt( byte[] bytes )
-    {
+    public static int getInt( byte[] bytes ) {
         return ByteBuffer.wrap( bytes, 0, 4 ).getInt();
     }
 
 
-    public static int getInt( ByteBuffer bytes )
-    {
+    public static int getInt( ByteBuffer bytes ) {
         return bytes.slice().getInt();
     }
 
 
-    public static int getInt( Object obj )
-    {
-        if ( obj instanceof Integer )
-        {
+    public static int getInt( Object obj ) {
+        if ( obj instanceof Integer ) {
             return ( Integer ) obj;
         }
-        if ( obj instanceof Number )
-        {
+        if ( obj instanceof Number ) {
             return ( ( Number ) obj ).intValue();
         }
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return NumberUtils.toInt( ( String ) obj );
         }
-        if ( obj instanceof Date )
-        {
+        if ( obj instanceof Date ) {
             return ( int ) ( ( Date ) obj ).getTime();
         }
-        if ( obj instanceof byte[] )
-        {
+        if ( obj instanceof byte[] ) {
             return getInt( ( byte[] ) obj );
         }
-        if ( obj instanceof ByteBuffer )
-        {
+        if ( obj instanceof ByteBuffer ) {
             return getInt( ( ByteBuffer ) obj );
         }
         return 0;
@@ -640,84 +543,66 @@ public class ConversionUtils
      * @param bytes
      * @return
      */
-    public static float getFloat( byte[] bytes )
-    {
+    public static float getFloat( byte[] bytes ) {
         return ByteBuffer.wrap( bytes, 0, 4 ).getFloat();
     }
 
 
-    public static float getFloat( ByteBuffer bytes )
-    {
+    public static float getFloat( ByteBuffer bytes ) {
         return bytes.slice().getFloat();
     }
 
 
-    public static float getFloat( Object obj )
-    {
-        if ( obj instanceof Float )
-        {
+    public static float getFloat( Object obj ) {
+        if ( obj instanceof Float ) {
             return ( Float ) obj;
         }
-        if ( obj instanceof Number )
-        {
+        if ( obj instanceof Number ) {
             return ( ( Number ) obj ).floatValue();
         }
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return NumberUtils.toFloat( ( String ) obj );
         }
-        if ( obj instanceof Date )
-        {
+        if ( obj instanceof Date ) {
             return ( ( Date ) obj ).getTime();
         }
-        if ( obj instanceof byte[] )
-        {
+        if ( obj instanceof byte[] ) {
             return getFloat( ( byte[] ) obj );
         }
-        if ( obj instanceof ByteBuffer )
-        {
+        if ( obj instanceof ByteBuffer ) {
             return getFloat( ( ByteBuffer ) obj );
         }
         return 0;
     }
 
 
-    public static double getDouble( byte[] bytes )
-    {
+    public static double getDouble( byte[] bytes ) {
         return ByteBuffer.wrap( bytes, 0, 8 ).getDouble();
     }
 
 
-    public static double getDouble( ByteBuffer bytes )
-    {
+    public static double getDouble( ByteBuffer bytes ) {
         return bytes.slice().getDouble();
     }
 
 
-    public static double getDouble( Object obj )
-    {
-        if ( obj instanceof Double )
-        {
+    public static double getDouble( Object obj ) {
+        if ( obj instanceof Double ) {
             return ( Double ) obj;
         }
-        if ( obj instanceof Number )
-        {
+        if ( obj instanceof Number ) {
             return ( ( Number ) obj ).doubleValue();
         }
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return NumberUtils.toDouble( ( String ) obj );
         }
-        if ( obj instanceof Date )
-        {
+        if ( obj instanceof Date ) {
             return ( ( Date ) obj ).getTime();
         }
-        if ( obj instanceof byte[] )
-        {
+        if ( obj instanceof byte[] ) {
             return getDouble( ( byte[] ) obj );
         }
-        if ( obj instanceof ByteBuffer )
-        {
+        if ( obj instanceof ByteBuffer ) {
             return getDouble( ( ByteBuffer ) obj );
         }
         return 0;
@@ -729,98 +614,75 @@ public class ConversionUtils
      * @param bytes
      * @return
      */
-    public static Object object( Class<?> type, byte[] bytes )
-    {
+    public static Object object( Class<?> type, byte[] bytes ) {
 
-        try
-        {
-            if ( Long.class.isAssignableFrom( type ) )
-            {
+        try {
+            if ( Long.class.isAssignableFrom( type ) ) {
                 return getLong( bytes );
             }
-            else if ( UUID.class.isAssignableFrom( type ) )
-            {
+            else if ( UUID.class.isAssignableFrom( type ) ) {
                 return uuid( bytes );
             }
-            else if ( String.class.isAssignableFrom( type ) )
-            {
+            else if ( String.class.isAssignableFrom( type ) ) {
                 return string( bytes );
             }
-            else if ( Boolean.class.isAssignableFrom( type ) )
-            {
+            else if ( Boolean.class.isAssignableFrom( type ) ) {
                 return getBoolean( bytes );
             }
-            else if ( Integer.class.isAssignableFrom( type ) )
-            {
+            else if ( Integer.class.isAssignableFrom( type ) ) {
                 return getInt( bytes );
             }
-            else if ( Double.class.isAssignableFrom( type ) )
-            {
+            else if ( Double.class.isAssignableFrom( type ) ) {
                 return getDouble( bytes );
             }
-            else if ( Float.class.isAssignableFrom( type ) )
-            {
+            else if ( Float.class.isAssignableFrom( type ) ) {
                 return getFloat( bytes );
             }
-            else if ( byte[].class.isAssignableFrom( type ) )
-            {
+            else if ( byte[].class.isAssignableFrom( type ) ) {
                 return bytes;
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to get object from bytes for type " + type.getName(), e );
         }
         return null;
     }
 
 
-    public static Object object( Class<?> type, ByteBuffer bytes )
-    {
+    public static Object object( Class<?> type, ByteBuffer bytes ) {
 
-        try
-        {
-            if ( Long.class.isAssignableFrom( type ) )
-            {
+        try {
+            if ( Long.class.isAssignableFrom( type ) ) {
                 return bytes.slice().getLong();
             }
-            else if ( UUID.class.isAssignableFrom( type ) )
-            {
+            else if ( UUID.class.isAssignableFrom( type ) ) {
                 return uuid( bytes );
             }
-            else if ( String.class.isAssignableFrom( type ) )
-            {
+            else if ( String.class.isAssignableFrom( type ) ) {
                 return string( bytes );
             }
-            else if ( Boolean.class.isAssignableFrom( type ) )
-            {
+            else if ( Boolean.class.isAssignableFrom( type ) ) {
                 return bytes.slice().get() != 0;
             }
-            else if ( Integer.class.isAssignableFrom( type ) )
-            {
+            else if ( Integer.class.isAssignableFrom( type ) ) {
                 return bytes.slice().getInt();
             }
-            else if ( Double.class.isAssignableFrom( type ) )
-            {
+            else if ( Double.class.isAssignableFrom( type ) ) {
                 return bytes.slice().getDouble();
             }
-            else if ( Float.class.isAssignableFrom( type ) )
-            {
+            else if ( Float.class.isAssignableFrom( type ) ) {
                 return bytes.slice().getFloat();
             }
-            else if ( ByteBuffer.class.isAssignableFrom( type ) )
-            {
+            else if ( ByteBuffer.class.isAssignableFrom( type ) ) {
                 return bytes.duplicate();
             }
-            else if ( byte[].class.isAssignableFrom( type ) )
-            {
+            else if ( byte[].class.isAssignableFrom( type ) ) {
                 byte[] b = new byte[bytes.remaining()];
                 bytes.slice().get( b );
                 return b;
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to get object from bytes for type " + type.getName(), e );
         }
         return null;
@@ -833,88 +695,68 @@ public class ConversionUtils
      * @param len
      * @return
      */
-    public static ByteBuffer appendToByteBuffer( ByteBuffer bb, byte[] bytes, int len )
-    {
-        if ( len > bytes.length )
-        {
+    public static ByteBuffer appendToByteBuffer( ByteBuffer bb, byte[] bytes, int len ) {
+        if ( len > bytes.length ) {
             int pos = bb.position();
             bb.put( bytes );
             bb.position( pos + len );
         }
-        else
-        {
+        else {
             bb.put( bytes, 0, len );
         }
         return bb;
     }
 
 
-    public static Object coerce( Class<?> type, Object obj )
-    {
+    public static Object coerce( Class<?> type, Object obj ) {
 
-        if ( obj == null )
-        {
+        if ( obj == null ) {
             return null;
         }
 
-        if ( type == null )
-        {
+        if ( type == null ) {
             return obj;
         }
 
-        try
-        {
-            if ( Long.class.isAssignableFrom( type ) )
-            {
+        try {
+            if ( Long.class.isAssignableFrom( type ) ) {
                 return getLong( obj );
             }
-            else if ( UUID.class.isAssignableFrom( type ) )
-            {
+            else if ( UUID.class.isAssignableFrom( type ) ) {
                 return uuid( obj );
             }
-            else if ( String.class.isAssignableFrom( type ) )
-            {
+            else if ( String.class.isAssignableFrom( type ) ) {
                 return string( obj );
             }
-            else if ( Boolean.class.isAssignableFrom( type ) )
-            {
+            else if ( Boolean.class.isAssignableFrom( type ) ) {
                 return getBoolean( obj );
             }
-            else if ( Integer.class.isAssignableFrom( type ) )
-            {
+            else if ( Integer.class.isAssignableFrom( type ) ) {
                 return getInt( obj );
             }
-            else if ( Double.class.isAssignableFrom( type ) )
-            {
+            else if ( Double.class.isAssignableFrom( type ) ) {
                 return getDouble( obj );
             }
-            else if ( Float.class.isAssignableFrom( type ) )
-            {
+            else if ( Float.class.isAssignableFrom( type ) ) {
                 return getFloat( obj );
             }
-            else if ( byte[].class.isAssignableFrom( type ) )
-            {
+            else if ( byte[].class.isAssignableFrom( type ) ) {
                 return bytes( obj );
             }
-            else if ( ByteBuffer.class.isAssignableFrom( type ) )
-            {
+            else if ( ByteBuffer.class.isAssignableFrom( type ) ) {
                 return bytebuffer( obj );
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to get object from bytes for type " + type.getName(), e );
         }
         return null;
     }
 
 
-    public static Map<String, Object> coerceMap( Map<String, Class<?>> types, Map<String, Object> values )
-    {
-        for ( Map.Entry<String, Object> entry : values.entrySet() )
-        {
-            if ( types.containsKey( entry.getKey() ) )
-            {
+    public static Map<String, Object> coerceMap( Map<String, Class<?>> types, Map<String, Object> values ) {
+        for ( Map.Entry<String, Object> entry : values.entrySet() ) {
+            if ( types.containsKey( entry.getKey() ) ) {
                 values.put( entry.getKey(), coerce( types.get( entry.getKey() ), entry.getValue() ) );
             }
         }

@@ -39,8 +39,7 @@ import org.usergrid.persistence.Identifier;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
 
-public class OpInsert extends OpCrud
-{
+public class OpInsert extends OpCrud {
 
     private static final Logger logger = LoggerFactory.getLogger( OpInsert.class );
 
@@ -48,48 +47,40 @@ public class OpInsert extends OpCrud
     protected List<BSONObject> documents = new ArrayList<BSONObject>();
 
 
-    public OpInsert()
-    {
+    public OpInsert() {
         opCode = OP_INSERT;
     }
 
 
-    public int getFlags()
-    {
+    public int getFlags() {
         return flags;
     }
 
 
-    public void setFlags( int flags )
-    {
+    public void setFlags( int flags ) {
         this.flags = flags;
     }
 
 
-    public List<BSONObject> getDocuments()
-    {
+    public List<BSONObject> getDocuments() {
         return documents;
     }
 
 
-    public void setDocuments( List<BSONObject> documents )
-    {
-        if ( documents == null )
-        {
+    public void setDocuments( List<BSONObject> documents ) {
+        if ( documents == null ) {
             documents = new ArrayList<BSONObject>();
         }
         this.documents = documents;
     }
 
 
-    public void addDocument( BSONObject document )
-    {
+    public void addDocument( BSONObject document ) {
         documents.add( document );
     }
 
 
-    public void addDocument( Map<?, ?> map )
-    {
+    public void addDocument( Map<?, ?> map ) {
         BSONObject b = new BasicBSONObject();
         b.putAll( map );
         documents.add( b );
@@ -97,23 +88,20 @@ public class OpInsert extends OpCrud
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
 
         flags = buffer.readInt();
         fullCollectionName = readCString( buffer );
 
-        while ( buffer.readable() )
-        {
+        while ( buffer.readable() ) {
             documents.add( BSONUtils.decoder().readObject( new ChannelBufferInputStream( buffer ) ) );
         }
     }
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 20; // 5 ints * 4 bytes
 
         ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
@@ -130,8 +118,7 @@ public class OpInsert extends OpCrud
 
         buffer.writeBytes( fullCollectionNameBytes );
 
-        for ( ByteBuffer d : encodedDocuments )
-        {
+        for ( ByteBuffer d : encodedDocuments ) {
             buffer.writeBytes( d );
         }
 
@@ -145,13 +132,11 @@ public class OpInsert extends OpCrud
      */
     @SuppressWarnings("unchecked")
     @Override
-    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
-    {
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent ) {
 
         ApplicationInfo application = SubjectUtils.getApplication( Identifier.from( getDatabaseName() ) );
 
-        if ( application == null )
-        {
+        if ( application == null ) {
             ctx.setAttachment( new IllegalArgumentException(
                     String.format( "Could not find application with name '%s' ", getDatabaseName() ) ) );
             return null;
@@ -161,22 +146,18 @@ public class OpInsert extends OpCrud
         EntityManager em = handler.getEmf().getEntityManager( application.getId() );
 
 
-        for ( BSONObject document : documents )
-        {
-            try
-            {
+        for ( BSONObject document : documents ) {
+            try {
                 //special case to serialize mongo ObjectId if required
                 Object id = document.get( "_id" );
 
-                if ( id instanceof ObjectId )
-                {
+                if ( id instanceof ObjectId ) {
                     document.put( "_id", ( ( ObjectId ) id ).toStringMongod() );
                 }
 
                 em.create( getCollectionName(), document.toMap() );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to insert mongo document {}", document, e );
                 ctx.setAttachment( e );
             }
@@ -191,8 +172,7 @@ public class OpInsert extends OpCrud
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OpInsert [flags=" + flags + ", documents=" + documents + ", fullCollectionName=" + fullCollectionName
                 + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo=" + responseTo
                 + ", opCode=" + opCode + "]";

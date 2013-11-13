@@ -20,14 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RolesService extends org.usergrid.services.roles.RolesService
-{
+public class RolesService extends org.usergrid.services.roles.RolesService {
 
     private static final Logger logger = LoggerFactory.getLogger( RolesService.class );
 
 
-    public RolesService()
-    {
+    public RolesService() {
         super();
         logger.info( "/groups/*/roles" );
     }

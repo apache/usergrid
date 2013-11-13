@@ -22,15 +22,13 @@ import org.usergrid.persistence.geo.GeocellUtils;
  *
  * @author Alexandre Gellibert
  */
-public class DefaultCostFunction implements CostFunction
-{
+public class DefaultCostFunction implements CostFunction {
 
     /*
      * (non-Javadoc)
      * @see com.beoui.utils.CostFunction#defaultCostFunction(int, int)
      */
-    public double defaultCostFunction( int numCells, int resolution )
-    {
+    public double defaultCostFunction( int numCells, int resolution ) {
         return numCells > Math.pow( GeocellUtils.GEOCELL_GRID_SIZE, 2 ) ? Double.MAX_VALUE : 0;
     }
 }

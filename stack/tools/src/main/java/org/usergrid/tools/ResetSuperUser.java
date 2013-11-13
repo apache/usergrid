@@ -40,8 +40,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_L
  *
  * @author tnine
  */
-public class ResetSuperUser extends ToolBase
-{
+public class ResetSuperUser extends ToolBase {
 
     /**
      *
@@ -55,8 +54,7 @@ public class ResetSuperUser extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -89,8 +87,7 @@ public class ResetSuperUser extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         // force the props to be set

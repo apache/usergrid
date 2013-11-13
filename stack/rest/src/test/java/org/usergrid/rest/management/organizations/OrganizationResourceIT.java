@@ -22,16 +22,14 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 
 @Concurrent()
-public class OrganizationResourceIT extends AbstractRestIT
-{
+public class OrganizationResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void testOrganizationUpdate() throws Exception
-    {
+    public void testOrganizationUpdate() throws Exception {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
 

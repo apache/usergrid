@@ -46,8 +46,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class MongoServer
-{
+public class MongoServer {
 
     private static final Logger logger = LoggerFactory.getLogger( MongoServer.class );
 
@@ -60,69 +59,59 @@ public class MongoServer
     Properties properties;
 
 
-    public static void main( String[] args ) throws Exception
-    {
+    public static void main( String[] args ) throws Exception {
         MongoServer server = new MongoServer();
         server.startSpring();
         server.startServer();
     }
 
 
-    public MongoServer()
-    {
+    public MongoServer() {
     }
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
     @Autowired
-    public void setRealm( Realm realm )
-    {
+    public void setRealm( Realm realm ) {
         this.realm = realm;
     }
 
 
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
-    public String[] getApplicationContextLocations()
-    {
+    public String[] getApplicationContextLocations() {
         String[] locations = { "applicationContext.xml" };
         return locations;
     }
 
 
-    public void startSpring()
-    {
+    public void startSpring() {
 
         String[] locations = getApplicationContextLocations();
         ApplicationContext ac = new ClassPathXmlApplicationContext( locations );
@@ -137,20 +126,17 @@ public class MongoServer
     }
 
 
-    public void startServer()
-    {
+    public void startServer() {
 
         if ( ( properties != null ) && ( Boolean
-                .parseBoolean( properties.getProperty( "usergrid.mongo.disable", "false" ) ) ) )
-        {
+                .parseBoolean( properties.getProperty( "usergrid.mongo.disable", "false" ) ) ) ) {
             logger.info( "Usergrid Mongo Emulation Server Disabled" );
             return;
         }
 
         logger.info( "Starting Usergrid Mongo Emulation Server" );
 
-        if ( realm != null )
-        {
+        if ( realm != null ) {
             securityManager = new DefaultSecurityManager( realm );
         }
 
@@ -174,11 +160,9 @@ public class MongoServer
     }
 
 
-    public void stopServer()
-    {
+    public void stopServer() {
         logger.info( "Stopping Usergrid Mongo Emulation Server" );
-        if ( channel != null )
-        {
+        if ( channel != null ) {
             channel.close();
             channel = null;
         }

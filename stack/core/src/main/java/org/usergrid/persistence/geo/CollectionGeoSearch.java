@@ -22,16 +22,14 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
  *
  * @author tnine
  */
-public class CollectionGeoSearch extends GeoIndexSearcher
-{
+public class CollectionGeoSearch extends GeoIndexSearcher {
 
     private final String collectionName;
     private final EntityRef headEntity;
 
 
     public CollectionGeoSearch( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass,
-                                EntityRef headEntity, String collectionName )
-    {
+                                EntityRef headEntity, String collectionName ) {
         super( entityManager, locator, cass );
         this.collectionName = collectionName;
         this.headEntity = headEntity;
@@ -46,8 +44,7 @@ public class CollectionGeoSearch extends GeoIndexSearcher
      */
     @Override
     protected TreeSet<HColumn<ByteBuffer, ByteBuffer>> doSearch( List<String> geoCells, UUID startId, Point searchPoint,
-                                                                 String propertyName, int pageSize ) throws Exception
-    {
+                                                                 String propertyName, int pageSize ) throws Exception {
 
         return query( key( headEntity.getUuid(), collectionName, propertyName ), geoCells, searchPoint, startId,
                 pageSize );
