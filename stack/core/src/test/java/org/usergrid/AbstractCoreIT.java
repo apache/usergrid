@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.utils.JsonUtils;
 
 
-public abstract class AbstractCoreIT
-{
+public abstract class AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
     @ClassRule
@@ -33,16 +32,13 @@ public abstract class AbstractCoreIT
     public CoreApplication app = new CoreApplication( setup );
 
 
-    public void dump( Object obj )
-    {
+    public void dump( Object obj ) {
         dump( "Object", obj );
     }
 
 
-    public void dump( String name, Object obj )
-    {
-        if ( obj != null && LOG.isInfoEnabled() )
-        {
+    public void dump( String name, Object obj ) {
+        if ( obj != null && LOG.isInfoEnabled() ) {
             LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
         }
     }

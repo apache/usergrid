@@ -20,8 +20,7 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceRequest;
 
 
-public class UnsupportedServiceOperationException extends ServiceInvocationException
-{
+public class UnsupportedServiceOperationException extends ServiceInvocationException {
 
     /**
      *
@@ -29,14 +28,12 @@ public class UnsupportedServiceOperationException extends ServiceInvocationExcep
     private static final long serialVersionUID = 1L;
 
 
-    public UnsupportedServiceOperationException( ServiceContext context )
-    {
+    public UnsupportedServiceOperationException( ServiceContext context ) {
         super( context, "Service operation not supported" );
     }
 
 
-    public UnsupportedServiceOperationException( ServiceRequest request )
-    {
+    public UnsupportedServiceOperationException( ServiceRequest request ) {
         super( request, "Service operation not supported" );
     }
 }

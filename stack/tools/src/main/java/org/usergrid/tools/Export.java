@@ -47,8 +47,7 @@ import org.apache.commons.cli.CommandLine;
 import com.google.common.collect.BiMap;
 
 
-public class Export extends ExportingToolBase
-{
+public class Export extends ExportingToolBase {
 
     static final Logger logger = LoggerFactory.getLogger( Export.class );
 
@@ -56,8 +55,7 @@ public class Export extends ExportingToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         setVerbose( line );
@@ -76,11 +74,9 @@ public class Export extends ExportingToolBase
 
         // Loop through the organizations
         Map<UUID, String> organizations = getOrgs();
-        for ( Entry<UUID, String> organization : organizations.entrySet() )
-        {
+        for ( Entry<UUID, String> organization : organizations.entrySet() ) {
 
-            if ( organization.equals( properties.getProperty( "usergrid.test-account.organization" ) ) )
-            {
+            if ( organization.equals( properties.getProperty( "usergrid.test-account.organization" ) ) ) {
                 // Skip test data from being exported.
                 continue;
             }
@@ -90,22 +86,18 @@ public class Export extends ExportingToolBase
     }
 
 
-    private Map<UUID, String> getOrgs() throws Exception
-    {
+    private Map<UUID, String> getOrgs() throws Exception {
         // Loop through the organizations
         Map<UUID, String> organizationNames = null;
 
-        if ( orgId == null )
-        {
+        if ( orgId == null ) {
             organizationNames = managementService.getOrganizations();
         }
 
-        else
-        {
+        else {
             OrganizationInfo info = managementService.getOrganizationByUuid( orgId );
 
-            if ( info == null )
-            {
+            if ( info == null ) {
                 logger.error( "Organization info is null!" );
                 System.exit( 1 );
             }
@@ -119,14 +111,12 @@ public class Export extends ExportingToolBase
     }
 
 
-    private void exportApplicationsForOrg( Entry<UUID, String> organization ) throws Exception
-    {
+    private void exportApplicationsForOrg( Entry<UUID, String> organization ) throws Exception {
         logger.info( "" + organization );
 
         // Loop through the applications per organization
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organization.getKey() );
-        for ( Entry<UUID, String> application : applications.entrySet() )
-        {
+        for ( Entry<UUID, String> application : applications.entrySet() ) {
 
             logger.info( application.getValue() + " : " + application.getKey() );
 
@@ -140,13 +130,11 @@ public class Export extends ExportingToolBase
 
             Map<String, Object> dictionaries = new HashMap<String, Object>();
 
-            for ( String dictionary : rootEm.getDictionaries( appEntity ) )
-            {
+            for ( String dictionary : rootEm.getDictionaries( appEntity ) ) {
                 Map<Object, Object> dict = rootEm.getDictionaryAsMap( appEntity, dictionary );
 
                 // nothing to do
-                if ( dict.isEmpty() )
-                {
+                if ( dict.isEmpty() ) {
                     continue;
                 }
 
@@ -182,8 +170,7 @@ public class Export extends ExportingToolBase
 
             // Loop through the collections. This is the only way to loop
             // through the entities in the application (former namespace).
-            for ( String collectionName : metadata.keySet() )
-            {
+            for ( String collectionName : metadata.keySet() ) {
 
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
@@ -191,11 +178,9 @@ public class Export extends ExportingToolBase
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
-                while ( entities.size() > 0 )
-                {
+                while ( entities.size() > 0 ) {
 
-                    for ( Entity entity : entities )
-                    {
+                    for ( Entity entity : entities ) {
                         // Export the entity first and later the collections for
                         // this entity.
                         jg.writeObject( entity );
@@ -205,8 +190,7 @@ public class Export extends ExportingToolBase
                     }
 
                     //we're done
-                    if ( entities.getCursor() == null )
-                    {
+                    if ( entities.getCursor() == null ) {
                         break;
                     }
 
@@ -236,22 +220,19 @@ public class Export extends ExportingToolBase
      * @param entity entity
      */
     private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String application, Entity entity )
-            throws Exception
-    {
+            throws Exception {
 
         Set<String> collections = em.getCollections( entity );
 
         // Only create entry for Entities that have collections
-        if ( ( collections == null ) || collections.isEmpty() )
-        {
+        if ( ( collections == null ) || collections.isEmpty() ) {
             return;
         }
 
         jg.writeFieldName( entity.getUuid().toString() );
         jg.writeStartObject();
 
-        for ( String collectionName : collections )
-        {
+        for ( String collectionName : collections ) {
 
             jg.writeFieldName( collectionName );
             // Start collection array.
@@ -261,10 +242,8 @@ public class Export extends ExportingToolBase
 
             List<UUID> entityIds = collectionMembers.getIds();
 
-            if ( ( entityIds != null ) && !entityIds.isEmpty() )
-            {
-                for ( UUID childEntityUUID : entityIds )
-                {
+            if ( ( entityIds != null ) && !entityIds.isEmpty() ) {
+                for ( UUID childEntityUUID : entityIds ) {
                     jg.writeObject( childEntityUUID.toString() );
                 }
             }
@@ -285,21 +264,18 @@ public class Export extends ExportingToolBase
 
 
     /** Persists the connection for this entity. */
-    private void saveDictionaries( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception
-    {
+    private void saveDictionaries( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception {
 
         jg.writeFieldName( "dictionaries" );
         jg.writeStartObject();
 
         Set<String> dictionaries = em.getDictionaries( entity );
-        for ( String dictionary : dictionaries )
-        {
+        for ( String dictionary : dictionaries ) {
 
             Map<Object, Object> dict = em.getDictionaryAsMap( entity, dictionary );
 
             // nothing to do
-            if ( dict.isEmpty() )
-            {
+            if ( dict.isEmpty() ) {
                 continue;
             }
 
@@ -307,8 +283,7 @@ public class Export extends ExportingToolBase
 
             jg.writeStartObject();
 
-            for ( Entry<Object, Object> entry : dict.entrySet() )
-            {
+            for ( Entry<Object, Object> entry : dict.entrySet() ) {
                 jg.writeFieldName( entry.getKey().toString() );
                 jg.writeObject( entry.getValue() );
             }
@@ -320,15 +295,13 @@ public class Export extends ExportingToolBase
 
 
     /** Persists the connection for this entity. */
-    private void saveConnections( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception
-    {
+    private void saveConnections( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception {
 
         jg.writeFieldName( "connections" );
         jg.writeStartObject();
 
         Set<String> connectionTypes = em.getConnectionTypes( entity );
-        for ( String connectionType : connectionTypes )
-        {
+        for ( String connectionType : connectionTypes ) {
 
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
@@ -336,8 +309,7 @@ public class Export extends ExportingToolBase
             Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
             List<ConnectionRef> connections = results.getConnections();
 
-            for ( ConnectionRef connectionRef : connections )
-            {
+            for ( ConnectionRef connectionRef : connections ) {
                 jg.writeObject( connectionRef.getConnectedEntity().getUuid() );
             }
 
@@ -382,16 +354,13 @@ public class Export extends ExportingToolBase
    */
 
 
-    private void exportOrganizations() throws Exception, UnsupportedEncodingException
-    {
+    private void exportOrganizations() throws Exception, UnsupportedEncodingException {
 
 
-        for ( Entry<UUID, String> organizationName : getOrgs().entrySet() )
-        {
+        for ( Entry<UUID, String> organizationName : getOrgs().entrySet() ) {
 
             // Let's skip the test entities.
-            if ( organizationName.equals( properties.getProperty( "usergrid.test-account.organization" ) ) )
-            {
+            if ( organizationName.equals( properties.getProperty( "usergrid.test-account.organization" ) ) ) {
                 continue;
             }
 
@@ -402,8 +371,7 @@ public class Export extends ExportingToolBase
 
             List<UserInfo> users = managementService.getAdminUsersForOrganization( organizationName.getKey() );
 
-            for ( UserInfo user : users )
-            {
+            for ( UserInfo user : users ) {
                 exportOrg.addAdmin( user.getUsername() );
             }
 
@@ -418,25 +386,21 @@ public class Export extends ExportingToolBase
      *
      * @param acc OrganizationInfo
      */
-    private void saveOrganizationInFile( ExportOrg acc )
-    {
-        try
-        {
+    private void saveOrganizationInFile( ExportOrg acc ) {
+        try {
 
             File outFile = createOutputFile( "organization", acc.getName() );
             JsonGenerator jg = getJsonGenerator( outFile );
             jg.writeObject( acc );
             jg.close();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new RuntimeException( e );
         }
     }
 
 
-    public void streamOutput( File file, List<Entity> entities ) throws Exception
-    {
+    public void streamOutput( File file, List<Entity> entities ) throws Exception {
         JsonFactory jsonFactory = new JsonFactory();
         // or, for data binding,
         // org.codehaus.jackson.mapper.MappingJsonFactory
@@ -444,8 +408,7 @@ public class Export extends ExportingToolBase
         // or Stream, Reader
 
         jg.writeStartArray();
-        for ( Entity entity : entities )
-        {
+        for ( Entity entity : entities ) {
             jg.writeObject( entity );
         }
         jg.writeEndArray();

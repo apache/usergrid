@@ -45,8 +45,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.removeEnd;
 
 
-public abstract class AbstractContextResource
-{
+public abstract class AbstractContextResource {
 
     protected AbstractContextResource parent;
 
@@ -90,42 +89,34 @@ public abstract class AbstractContextResource
     protected TokenService tokens;
 
 
-    public AbstractContextResource()
-    {
+    public AbstractContextResource() {
     }
 
 
-    public AbstractContextResource getParent()
-    {
+    public AbstractContextResource getParent() {
         return parent;
     }
 
 
-    public void setParent( AbstractContextResource parent )
-    {
+    public void setParent( AbstractContextResource parent ) {
         this.parent = parent;
     }
 
 
-    public <T extends AbstractContextResource> T getSubResource( Class<T> t )
-    {
+    public <T extends AbstractContextResource> T getSubResource( Class<T> t ) {
         T subResource = resourceContext.getResource( t );
         subResource.setParent( this );
         return subResource;
     }
 
 
-    public PathSegment getFirstPathSegment( String name )
-    {
-        if ( name == null )
-        {
+    public PathSegment getFirstPathSegment( String name ) {
+        if ( name == null ) {
             return null;
         }
         List<PathSegment> segments = uriInfo.getPathSegments();
-        for ( PathSegment segment : segments )
-        {
-            if ( name.equals( segment.getPath() ) )
-            {
+        for ( PathSegment segment : segments ) {
+            if ( name.equals( segment.getPath() ) ) {
                 return segment;
             }
         }
@@ -133,16 +124,13 @@ public abstract class AbstractContextResource
     }
 
 
-    public boolean useReCaptcha()
-    {
+    public boolean useReCaptcha() {
         return isNotBlank( properties.getRecaptchaPublic() ) && isNotBlank( properties.getRecaptchaPrivate() );
     }
 
 
-    public String getReCaptchaHtml()
-    {
-        if ( !useReCaptcha() )
-        {
+    public String getReCaptchaHtml() {
+        if ( !useReCaptcha() ) {
             return "";
         }
         ReCaptcha c = ReCaptchaFactory
@@ -151,31 +139,26 @@ public abstract class AbstractContextResource
     }
 
 
-    public void sendRedirect( String location )
-    {
-        if ( isNotBlank( location ) )
-        {
+    public void sendRedirect( String location ) {
+        if ( isNotBlank( location ) ) {
             throw new RedirectionException( location );
         }
     }
 
 
-    public Viewable handleViewable( String template, Object model )
-    {
+    public Viewable handleViewable( String template, Object model ) {
         String template_property = "usergrid.view" + removeEnd( this.getClass().getName().toLowerCase(), "resource" )
                 .substring( AbstractContextResource.class.getPackage().getName().length() ) + "." + template
                 .toLowerCase();
         String redirect_url = properties.getProperty( template_property );
-        if ( isNotBlank( redirect_url ) )
-        {
+        if ( isNotBlank( redirect_url ) ) {
             sendRedirect( redirect_url );
         }
         return new Viewable( template, model, this.getClass() );
     }
 
 
-    protected ApiResponse createApiResponse()
-    {
+    protected ApiResponse createApiResponse() {
         return new ApiResponse( properties );
     }
 }

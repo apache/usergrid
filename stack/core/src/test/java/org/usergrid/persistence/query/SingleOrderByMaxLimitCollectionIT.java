@@ -20,12 +20,10 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByMaxLimitCollectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByMaxLimitCollectionIT extends AbstractIteratingQueryIT {
 
     @Test
-    public void singleOrderByMaxLimitCollection() throws Exception
-    {
+    public void singleOrderByMaxLimitCollection() throws Exception {
         singleOrderByMaxLimit( new CollectionIoHelper() );
     }
 }

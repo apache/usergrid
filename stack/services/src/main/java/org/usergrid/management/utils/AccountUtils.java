@@ -23,23 +23,18 @@ import static org.usergrid.persistence.Schema.PROPERTY_DISABLED;
 import static org.usergrid.utils.ConversionUtils.getBoolean;
 
 
-public class AccountUtils
-{
+public class AccountUtils {
 
-    public static boolean isUserActivated( Entity user )
-    {
-        if ( user == null )
-        {
+    public static boolean isUserActivated( Entity user ) {
+        if ( user == null ) {
             return false;
         }
         return getBoolean( user.getProperty( PROPERTY_ACTIVATED ) );
     }
 
 
-    public static boolean isUserDisabled( Entity user )
-    {
-        if ( user == null )
-        {
+    public static boolean isUserDisabled( Entity user ) {
+        if ( user == null ) {
             return false;
         }
         return getBoolean( user.getProperty( PROPERTY_DISABLED ) );

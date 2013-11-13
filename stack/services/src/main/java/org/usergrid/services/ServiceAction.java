@@ -16,7 +16,6 @@
 package org.usergrid.services;
 
 
-public enum ServiceAction
-{
+public enum ServiceAction {
     POST, GET, PUT, DELETE, HEAD, OPTIONS;
 }

@@ -23,44 +23,37 @@ import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.SimpleEntityRef;
 
 
-public class ConnectedEntityRefImpl extends SimpleEntityRef implements ConnectedEntityRef
-{
+public class ConnectedEntityRefImpl extends SimpleEntityRef implements ConnectedEntityRef {
 
     final String connectionType;
 
 
-    public ConnectedEntityRefImpl()
-    {
+    public ConnectedEntityRefImpl() {
         super( null, null );
         connectionType = null;
     }
 
 
-    public ConnectedEntityRefImpl( String connectionType, EntityRef connectedEntity )
-    {
+    public ConnectedEntityRefImpl( String connectionType, EntityRef connectedEntity ) {
         super( connectedEntity.getType(), connectedEntity.getUuid() );
         this.connectionType = connectionType;
     }
 
 
-    public ConnectedEntityRefImpl( String connectionType, String entityType, UUID entityId )
-    {
+    public ConnectedEntityRefImpl( String connectionType, String entityType, UUID entityId ) {
         super( entityType, entityId );
         this.connectionType = connectionType;
     }
 
 
     @Override
-    public String getConnectionType()
-    {
+    public String getConnectionType() {
         return connectionType;
     }
 
 
-    public static String getConnectionType( ConnectedEntityRef connection )
-    {
-        if ( connection == null )
-        {
+    public static String getConnectionType( ConnectedEntityRef connection ) {
+        if ( connection == null ) {
             return null;
         }
         return connection.getConnectionType();

@@ -17,12 +17,10 @@ package org.usergrid.rest.test.resource;
 
 
 /** @author tnine */
-public class CollectionResource extends SetResource
-{
+public class CollectionResource extends SetResource {
 
 
-    public CollectionResource( String collectionName, NamedResource parent )
-    {
+    public CollectionResource( String collectionName, NamedResource parent ) {
         super( collectionName, parent );
     }
 }

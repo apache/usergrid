@@ -20,17 +20,14 @@ import org.junit.Ignore;
 
 
 @Ignore
-public class WebSocketServerTest extends WebSocketServer
-{
+public class WebSocketServerTest extends WebSocketServer {
 
-    public WebSocketServerTest()
-    {
+    public WebSocketServerTest() {
         super();
     }
 
 
-    public static void main( String[] args ) throws Exception
-    {
+    public static void main( String[] args ) throws Exception {
         WebSocketServer server = new WebSocketServerTest();
         server.startSpring();
         server.startServer();
@@ -38,8 +35,7 @@ public class WebSocketServerTest extends WebSocketServer
 
 
     @Override
-    public String[] getApplicationContextLocations()
-    {
+    public String[] getApplicationContextLocations() {
         String[] locations = { "testApplicationContext.xml" };
         return locations;
     }

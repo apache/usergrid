@@ -21,8 +21,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 
 
 /** Iterator to iterate all types of connections the entity participates in */
-public class ConnectionTypesIterator implements Iterator<String>, Iterable<String>
-{
+public class ConnectionTypesIterator implements Iterator<String>, Iterable<String> {
 
 
     private static final StringSerializer STRING_SER = StringSerializer.get();
@@ -47,15 +46,14 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
      *
      * @param cass The cassandra service to use
      * @param applicationId The application id to use
-     * @param entityId The entityId to use.  Can be a source for outgoing connections,
-     * or target for incoming connections
+     * @param entityId The entityId to use.  Can be a source for outgoing connections, or target for incoming
+     * connections
      * @param outgoing True if this is a search from source->target on the edge, false if it is a search from
      * target<-source
      * @param pageSize The page size to use for batch fetching
      */
     public ConnectionTypesIterator( CassandraService cass, UUID applicationId, UUID entityId, boolean outgoing,
-                                    int pageSize )
-    {
+                                    int pageSize ) {
         this.cass = cass;
         this.applicationId = applicationId;
         this.pageSize = pageSize;
@@ -66,8 +64,7 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
 
 
     @Override
-    public Iterator<String> iterator()
-    {
+    public Iterator<String> iterator() {
         return this;
     }
 
@@ -78,21 +75,17 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
        * @see java.util.Iterator#hasNext()
        */
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
 
         // We've either 1) paged everything we should and have 1 left from our
         // "next page" pointer
         // Our currently buffered results don't exist or don't have a next. Try to
         // load them again if they're less than the page size
-        if ( ( lastResults == null || !lastResults.hasNext() ) && hasMore )
-        {
-            try
-            {
+        if ( ( lastResults == null || !lastResults.hasNext() ) && hasMore ) {
+            try {
                 return load();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 throw new RuntimeException( "Error loading next page of indexbucket scanner", e );
             }
         }
@@ -107,11 +100,9 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
      * @see java.util.Iterator#next()
      */
     @Override
-    public String next()
-    {
+    public String next() {
 
-        if ( !hasNext() )
-        {
+        if ( !hasNext() ) {
             throw new NoSuchElementException( "There are no elements left in this iterator" );
         }
 
@@ -125,8 +116,7 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "You can't remove from a result set, only advance" );
     }
 
@@ -136,12 +126,10 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
      * nothing was loaded, true otherwise
      */
 
-    public boolean load() throws Exception
-    {
+    public boolean load() throws Exception {
 
         // nothing left to load
-        if ( !hasMore )
-        {
+        if ( !hasMore ) {
             return false;
         }
 
@@ -157,8 +145,7 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
                         selectSize, false );
 
         // we loaded a full page, there might be more
-        if ( results.size() == selectSize )
-        {
+        if ( results.size() == selectSize ) {
             hasMore = true;
 
             // set the bytebuffer for the next pass
@@ -166,8 +153,7 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
 
             results.remove( results.size() - 1 );
         }
-        else
-        {
+        else {
             hasMore = false;
         }
 
@@ -175,13 +161,11 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
         List<String> stringResults = new ArrayList<String>( results.size() );
 
         //do the parse here
-        for ( HColumn<ByteBuffer, ByteBuffer> col : results )
-        {
+        for ( HColumn<ByteBuffer, ByteBuffer> col : results ) {
             final String value = STRING_SER.fromByteBuffer( col.getName() );
 
             //always ignore loopback, this is legacy data that needs cleaned up, and it doesn't belong here
-            if ( !Schema.TYPE_CONNECTION.equalsIgnoreCase( value ) )
-            {
+            if ( !Schema.TYPE_CONNECTION.equalsIgnoreCase( value ) ) {
                 stringResults.add( value );
             }
         }

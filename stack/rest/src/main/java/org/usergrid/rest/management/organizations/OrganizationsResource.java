@@ -56,8 +56,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 } )
-public class OrganizationsResource extends AbstractContextResource
-{
+public class OrganizationsResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
@@ -67,8 +66,7 @@ public class OrganizationsResource extends AbstractContextResource
     private ApplicationCreator applicationCreator;
 
 
-    public OrganizationsResource()
-    {
+    public OrganizationsResource() {
     }
 
 
@@ -76,11 +74,9 @@ public class OrganizationsResource extends AbstractContextResource
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationById( @Context UriInfo ui,
                                                      @PathParam( "organizationId" ) String organizationIdStr )
-            throws Exception
-    {
+            throws Exception {
         OrganizationInfo organization = management.getOrganizationByUuid( UUID.fromString( organizationIdStr ) );
-        if ( organization == null )
-        {
+        if ( organization == null ) {
             throw new ManagementException( "Could not find organization for ID: " + organizationIdStr );
         }
         return getSubResource( OrganizationResource.class ).init( organization );
@@ -91,11 +87,9 @@ public class OrganizationsResource extends AbstractContextResource
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationByName( @Context UriInfo ui,
                                                        @PathParam( "organizationName" ) String organizationName )
-            throws Exception
-    {
+            throws Exception {
         OrganizationInfo organization = management.getOrganizationByName( organizationName );
-        if ( organization == null )
-        {
+        if ( organization == null ) {
             throw new ManagementException( "Could not find organization for name: " + organizationName );
         }
         return getSubResource( OrganizationResource.class ).init( organization );
@@ -106,8 +100,7 @@ public class OrganizationsResource extends AbstractContextResource
     @Consumes( MediaType.APPLICATION_JSON )
     public JSONWithPadding newOrganization( @Context UriInfo ui, Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception
-    {
+            throws Exception {
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
 
@@ -136,8 +129,7 @@ public class OrganizationsResource extends AbstractContextResource
                                                     @FormParam( "password" ) String passwordForm,
                                                     @QueryParam( "password" ) String passwordQuery,
                                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;
         String username = usernameForm != null ? usernameForm : usernameQuery;
@@ -152,8 +144,7 @@ public class OrganizationsResource extends AbstractContextResource
     /** Create a new organization */
     private JSONWithPadding newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
                                              String email, String password, Map<String, Object> userProperties,
-                                             Map<String, Object> properties, String callback ) throws Exception
-    {
+                                             Map<String, Object> properties, String callback ) throws Exception {
         Preconditions
                 .checkArgument( StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
@@ -166,8 +157,7 @@ public class OrganizationsResource extends AbstractContextResource
                 .createOwnerAndOrganization( organizationName, username, name, email, password, false, false,
                         userProperties, properties );
 
-        if ( organizationOwner == null )
-        {
+        if ( organizationOwner == null ) {
             logger.info( "organizationOwner is null, returning. organization: {}", organizationName );
             return null;
         }

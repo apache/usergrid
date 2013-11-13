@@ -22,22 +22,19 @@ import org.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class OrOperand extends BooleanOperand
-{
+public class OrOperand extends BooleanOperand {
 
     /**
      * @param left
      * @param token
      * @param right
      */
-    public OrOperand( Token t )
-    {
+    public OrOperand( Token t ) {
         super( t );
     }
 
 
-    public OrOperand()
-    {
+    public OrOperand() {
         super( new CommonToken( 0, "or" ) );
     }
 
@@ -50,8 +47,7 @@ public class OrOperand extends BooleanOperand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException
-    {
+    public void visit( QueryVisitor visitor ) throws PersistenceException {
         visitor.visit( this );
     }
 }

@@ -21,8 +21,7 @@ import java.util.List;
 
 
 /** @author tnine */
-public abstract class MultiIterator extends MergeIterator
-{
+public abstract class MultiIterator extends MergeIterator {
 
     protected List<ResultIterator> iterators = new ArrayList<ResultIterator>();
 
@@ -30,15 +29,13 @@ public abstract class MultiIterator extends MergeIterator
     /**
      * @param pageSize
      */
-    public MultiIterator( int pageSize )
-    {
+    public MultiIterator( int pageSize ) {
         super( pageSize );
     }
 
 
     /** Add an iterator for our sub results */
-    public void addIterator( ResultIterator iterator )
-    {
+    public void addIterator( ResultIterator iterator ) {
         iterators.add( iterator );
     }
 
@@ -49,10 +46,8 @@ public abstract class MultiIterator extends MergeIterator
      * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
      */
     @Override
-    public void doReset()
-    {
-        for ( ResultIterator itr : iterators )
-        {
+    public void doReset() {
+        for ( ResultIterator itr : iterators ) {
             itr.reset();
         }
     }

@@ -25,46 +25,39 @@ import org.jboss.netty.channel.MessageEvent;
 import org.usergrid.mongo.MongoChannelHandler;
 
 
-public class OpGetMore extends OpCrud
-{
+public class OpGetMore extends OpCrud {
 
     int numberToReturn;
     long cursorID;
 
 
-    public OpGetMore()
-    {
+    public OpGetMore() {
         opCode = OP_GET_MORE;
     }
 
 
-    public int getNumberToReturn()
-    {
+    public int getNumberToReturn() {
         return numberToReturn;
     }
 
 
-    public void setNumberToReturn( int numberToReturn )
-    {
+    public void setNumberToReturn( int numberToReturn ) {
         this.numberToReturn = numberToReturn;
     }
 
 
-    public long getCursorID()
-    {
+    public long getCursorID() {
         return cursorID;
     }
 
 
-    public void setCursorID( long cursorID )
-    {
+    public void setCursorID( long cursorID ) {
         this.cursorID = cursorID;
     }
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
 
         buffer.readInt();
@@ -75,8 +68,7 @@ public class OpGetMore extends OpCrud
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 32; // 8 ints * 4 bytes
 
         ByteBuffer fullCollectionNameBytes = getCString( fullCollectionName );
@@ -103,8 +95,7 @@ public class OpGetMore extends OpCrud
      * org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
      */
     @Override
-    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent )
-    {
+    public OpReply doOp( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent ) {
         return new OpReply( this );
     }
 
@@ -113,8 +104,7 @@ public class OpGetMore extends OpCrud
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OpGetMore [numberToReturn=" + numberToReturn + ", cursorID=" + cursorID + ", fullCollectionName="
                 + fullCollectionName + ", messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo="
                 + responseTo + ", opCode=" + opCode + "]";

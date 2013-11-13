@@ -28,11 +28,9 @@ import static org.junit.Assert.assertEquals;
 
 
 /** @author tnine */
-public class Sha1HashCommandTest
-{
+public class Sha1HashCommandTest {
     @Test
-    public void hashAndAuthCorrect() throws UnsupportedEncodingException, NoSuchAlgorithmException
-    {
+    public void hashAndAuthCorrect() throws UnsupportedEncodingException, NoSuchAlgorithmException {
 
         String test = "I'm a  test password";
 
@@ -55,16 +53,14 @@ public class Sha1HashCommandTest
 
     /** the sha command MUST implement the name as "sha-1" for backwards compatibility */
     @Test
-    public void testLegacyName()
-    {
+    public void testLegacyName() {
         Sha1HashCommand command = new Sha1HashCommand();
 
         assertEquals( "sha-1", command.getName() );
     }
 
 
-    private byte[] digest( byte[] input ) throws NoSuchAlgorithmException
-    {
+    private byte[] digest( byte[] input ) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance( "SHA-1" );
         return md.digest( input );
     }

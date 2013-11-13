@@ -26,8 +26,7 @@ import org.apache.commons.io.IOUtils;
 
 
 /** Upserts data from files found in an S3 bucket. */
-public class WarehouseUpsert extends ExportingToolBase
-{
+public class WarehouseUpsert extends ExportingToolBase {
 
     private static final Logger LOG = LoggerFactory.getLogger( WarehouseUpsert.class );
 
@@ -54,8 +53,7 @@ public class WarehouseUpsert extends ExportingToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
 
         startSpring();
         setVerbose( line );
@@ -81,19 +79,15 @@ public class WarehouseUpsert extends ExportingToolBase
 
         // create main table
         String mainTableName = ( String ) properties.get( MAIN_TABLE_PROPNAME );
-        try
-        {
+        try {
             con.createStatement().execute( createWarehouseTable( mainTableName ) );
             LOG.info( "Created main table " + mainTableName );
         }
-        catch ( SQLException ex )
-        {
-            if ( !ex.getMessage().contains( "already exists" ) )
-            {
+        catch ( SQLException ex ) {
+            if ( !ex.getMessage().contains( "already exists" ) ) {
                 LOG.error( "Error creating main table: " + ex.getMessage(), ex );
             }
-            else
-            {
+            else {
                 LOG.info( "Using existing main table " + mainTableName );
             }
         }
@@ -101,19 +95,15 @@ public class WarehouseUpsert extends ExportingToolBase
         // drop any existing staging table
         String stagingTableName = ( String ) properties.get( STAGING_TABLE_PROPNAME );
         String dropStagingTable = String.format( "drop table %s", stagingTableName );
-        try
-        {
+        try {
             con.createStatement().execute( dropStagingTable );
             LOG.info( "Dropped existing staging table " + stagingTableName );
         }
-        catch ( SQLException ex )
-        {
-            if ( !ex.getMessage().contains( "does not exist" ) )
-            {
+        catch ( SQLException ex ) {
+            if ( !ex.getMessage().contains( "does not exist" ) ) {
                 LOG.error( "Error dropping staging table: " + ex.getMessage(), ex );
             }
-            else
-            {
+            else {
                 LOG.info( "Using existing staging table " + stagingTableName );
             }
         }
@@ -154,8 +144,7 @@ public class WarehouseUpsert extends ExportingToolBase
     }
 
 
-    String createWarehouseTable( String name )
-    {
+    String createWarehouseTable( String name ) {
         String ddl = tableSchema.replaceAll( "\\{tableName\\}", name );
         ddl = ddl.replaceAll( "\\{accessId\\}", accessId );
         ddl = ddl.replaceAll( "\\{secretKey\\}", secretKey );

@@ -35,8 +35,7 @@ import static org.usergrid.utils.ConversionUtils.bytes;
  *
  * @author tnine
  */
-public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator
-{
+public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
 
     public static final BigInteger MINIMUM = BigInteger.ZERO;
     public static final BigInteger MAXIMUM = new BigInteger( "" + 2 ).pow( 127 );
@@ -47,10 +46,8 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator
 
 
     /** Create a bucket locator with the specified size */
-    public SimpleIndexBucketLocatorImpl( int size )
-    {
-        for ( int i = 0; i < size; i++ )
-        {
+    public SimpleIndexBucketLocatorImpl( int size ) {
+        for ( int i = 0; i < size; i++ ) {
             BigInteger integer = initialToken( size, i );
             buckets.add( integer );
             bucketsString.add( String.format( "%039d", integer ) );
@@ -61,18 +58,15 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator
 
 
     /** Base constructor that creates a ring of 100 tokens */
-    public SimpleIndexBucketLocatorImpl()
-    {
+    public SimpleIndexBucketLocatorImpl() {
         this( 100 );
     }
 
 
     /** Get a token */
-    private static BigInteger initialToken( int size, int position )
-    {
+    private static BigInteger initialToken( int size, int position ) {
         BigInteger decValue = MINIMUM;
-        if ( position != 0 )
-        {
+        if ( position != 0 ) {
             decValue = MAXIMUM.divide( new BigInteger( "" + size ) ).multiply( new BigInteger( "" + position ) )
                               .subtract( BigInteger.ONE );
         }
@@ -81,15 +75,13 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator
 
 
     /** Get the next token in the ring for this big int. */
-    private String getClosestToken( UUID entityId )
-    {
+    private String getClosestToken( UUID entityId ) {
         BigInteger location = new BigInteger( md5( bytes( entityId ) ) );
         location = location.abs();
 
         int index = Collections.binarySearch( buckets, location );
 
-        if ( index < 0 )
-        {
+        if ( index < 0 ) {
             index = ( index + 1 ) * -1;
         }
 
@@ -109,8 +101,7 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator
      * java.lang.String[])
      */
     @Override
-    public String getBucket( UUID applicationId, IndexType type, UUID entityId, String... components )
-    {
+    public String getBucket( UUID applicationId, IndexType type, UUID entityId, String... components ) {
         return getClosestToken( entityId );
     }
 
@@ -124,8 +115,7 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator
      * java.lang.String[])
      */
     @Override
-    public List<String> getBuckets( UUID applicationId, IndexType type, String... components )
-    {
+    public List<String> getBuckets( UUID applicationId, IndexType type, String... components ) {
         return bucketsString;
     }
 }

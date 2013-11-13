@@ -21,8 +21,7 @@ import org.antlr.runtime.Token;
 
 
 /** @author tnine */
-public class BooleanLiteral extends Literal<Boolean>
-{
+public class BooleanLiteral extends Literal<Boolean> {
 
     private boolean value;
 
@@ -30,23 +29,20 @@ public class BooleanLiteral extends Literal<Boolean>
     /**
      * @param t
      */
-    protected BooleanLiteral( Token t )
-    {
+    protected BooleanLiteral( Token t ) {
         super( t );
         value = Boolean.valueOf( t.getText() );
     }
 
 
     /** The boolean literal */
-    public BooleanLiteral( boolean value )
-    {
+    public BooleanLiteral( boolean value ) {
         super( new ClassicToken( 0, String.valueOf( value ) ) );
         this.value = value;
     }
 
 
-    public Boolean getValue()
-    {
+    public Boolean getValue() {
         return value;
     }
 }

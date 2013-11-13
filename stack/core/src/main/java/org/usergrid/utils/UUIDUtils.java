@@ -43,16 +43,13 @@ import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 
 
-public class UUIDUtils
-{
+public class UUIDUtils {
     private static final Logger LOG = LoggerFactory.getLogger( UUIDUtils.class );
     private static final int[] MICROS = new int[1000];
 
 
-    static
-    {
-        for ( int x = 0; x < 1000; x++ )
-        {
+    static {
+        for ( int x = 0; x < 1000; x++ ) {
             MICROS[x] = x * 10;
         }
     }
@@ -83,31 +80,25 @@ public class UUIDUtils
      * If we did not do this, you would get <b>timestamp collision</b> even though the UUIDs will technically be
      * 'unique.'
      */
-    public static java.util.UUID newTimeUUID()
-    {
+    public static java.util.UUID newTimeUUID() {
         // get & inc counter, but roll on 1k (because we divide by 10 on retrieval)
         // if count + currentMicro > 1k, block and roll
         tsLock.lock();
         long ts = System.currentTimeMillis();
-        if ( ts > timestampMillisNow )
-        {
+        if ( ts > timestampMillisNow ) {
             timestampMillisNow = ts;
             currentMicrosPoint.set( 0 );
         }
         int pointer = currentMicrosPoint.getAndIncrement();
-        try
-        {
-            if ( pointer > 990 )
-            {
+        try {
+            if ( pointer > 990 ) {
                 TimeUnit.MILLISECONDS.sleep( 1L );
             }
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
-        finally
-        {
+        finally {
             tsLock.unlock();
         }
         return newTimeUUID( ts, MICROS[pointer] );
@@ -121,14 +112,12 @@ public class UUIDUtils
 
 
     // 14 bits of randomness
-    private static int getRandomClockSequence()
-    {
+    private static int getRandomClockSequence() {
         return CLOCK_SEQ_RANDOM.nextInt() & 0x3FFF;
     }
 
 
-    private static void setTimestamp( long timestamp, byte[] uuidBytes, int clockSeq, int timeOffset )
-    {
+    private static void setTimestamp( long timestamp, byte[] uuidBytes, int clockSeq, int timeOffset ) {
 
         timestamp *= KCLOCK_MULTIPLIER_L;
         timestamp += KCLOCK_OFFSET;
@@ -145,9 +134,8 @@ public class UUIDUtils
     }
 
 
-    @SuppressWarnings( "all" )
-    private static void setTime( byte[] uuidBytes, long timestamp )
-    {
+    @SuppressWarnings("all")
+    private static void setTime( byte[] uuidBytes, long timestamp ) {
 
         // Time fields aren't nicely split across the UUID, so can't just
         // linearly dump the stamp:
@@ -186,10 +174,8 @@ public class UUIDUtils
      * be incremented since this is beyond the possible values when coverrting from millis to 1/10 microseconds stored
      * in the time uuid.
      */
-    public static UUID newTimeUUID( long ts, int timeoffset )
-    {
-        if ( ts == 0 )
-        {
+    public static UUID newTimeUUID( long ts, int timeoffset ) {
+        if ( ts == 0 ) {
             return newTimeUUID();
         }
 
@@ -208,27 +194,22 @@ public class UUIDUtils
      * be of increasing value chronologically. If a large number of subsequent calls are made to this method (>1000)
      * with the same timestamp, you will have non-unique temporal values stored in your UUID.
      */
-    public static UUID newTimeUUID( long ts )
-    {
+    public static UUID newTimeUUID( long ts ) {
         tsLock.lock();
         int pointer = customMicrosPointer.getAndIncrement();
-        try
-        {
-            if ( pointer > 990 )
-            {
+        try {
+            if ( pointer > 990 ) {
                 customMicrosPointer.set( 0 );
             }
         }
-        finally
-        {
+        finally {
             tsLock.unlock();
         }
         return newTimeUUID( ts, MICROS[pointer] );
     }
 
 
-    public static UUID minTimeUUID( long ts )
-    {
+    public static UUID minTimeUUID( long ts ) {
         byte[] uuidBytes = new byte[16];
         setTimestamp( ts, uuidBytes, 0, 0 );
 
@@ -236,8 +217,7 @@ public class UUIDUtils
     }
 
 
-    public static UUID maxTimeUUID( long ts )
-    {
+    public static UUID maxTimeUUID( long ts ) {
         byte[] uuidBytes = new byte[16];
         uuidBytes[10] = ( byte ) 0xFF;
         uuidBytes[11] = ( byte ) 0xFF;
@@ -252,24 +232,19 @@ public class UUIDUtils
 
 
     /** Returns the minimum UUID */
-    public static UUID min( UUID first, UUID second )
-    {
-        if ( first == null )
-        {
-            if ( second == null )
-            {
+    public static UUID min( UUID first, UUID second ) {
+        if ( first == null ) {
+            if ( second == null ) {
                 return null;
             }
             return second;
         }
 
-        if ( second == null )
-        {
+        if ( second == null ) {
             return first;
         }
 
-        if ( compare( first, second ) < 0 )
-        {
+        if ( compare( first, second ) < 0 ) {
             return first;
         }
         return second;
@@ -277,24 +252,19 @@ public class UUIDUtils
 
 
     /** Returns the minimum UUID */
-    public static UUID max( UUID first, UUID second )
-    {
-        if ( first == null )
-        {
-            if ( second == null )
-            {
+    public static UUID max( UUID first, UUID second ) {
+        if ( first == null ) {
+            if ( second == null ) {
                 return null;
             }
             return second;
         }
 
-        if ( second == null )
-        {
+        if ( second == null ) {
             return first;
         }
 
-        if ( compare( first, second ) < 0 )
-        {
+        if ( compare( first, second ) < 0 ) {
             return second;
         }
         return first;
@@ -302,10 +272,8 @@ public class UUIDUtils
 
 
     /** Returns a UUID that is -1 of the passed uuid, sorted by time uuid only */
-    public static UUID decrement( UUID uuid )
-    {
-        if ( !isTimeBased( uuid ) )
-        {
+    public static UUID decrement( UUID uuid ) {
+        if ( !isTimeBased( uuid ) ) {
             throw new IllegalArgumentException( "The uuid must be a time type" );
         }
 
@@ -314,8 +282,7 @@ public class UUIDUtils
         long timestamp = uuid.timestamp();
         timestamp--;
 
-        if ( timestamp < 0 )
-        {
+        if ( timestamp < 0 ) {
             throw new IllegalArgumentException( "You must specify a time uuid with a timestamp > 0" );
         }
 
@@ -328,20 +295,16 @@ public class UUIDUtils
     }
 
 
-    public static boolean isTimeBased( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    public static boolean isTimeBased( UUID uuid ) {
+        if ( uuid == null ) {
             return false;
         }
         return uuid.version() == 1;
     }
 
 
-    public static long getTimestampInMillis( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    public static long getTimestampInMillis( UUID uuid ) {
+        if ( uuid == null ) {
             return 0;
         }
         long t = uuid.timestamp();
@@ -349,10 +312,8 @@ public class UUIDUtils
     }
 
 
-    public static long getTimestampInMicros( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    public static long getTimestampInMicros( UUID uuid ) {
+        if ( uuid == null ) {
             return 0;
         }
         long t = uuid.timestamp();
@@ -360,114 +321,91 @@ public class UUIDUtils
     }
 
 
-    public static UUID tryGetUUID( String s )
-    {
-        if ( s == null )
-        {
+    public static UUID tryGetUUID( String s ) {
+        if ( s == null ) {
             return null;
         }
-        if ( s.length() != 36 )
-        {
+        if ( s.length() != 36 ) {
             return null;
         }
         // 8-4-4-4-12
         // 0-7,8,9-12,13,14-17,18,19-22,23,24-35
-        if ( s.charAt( 8 ) != '-' )
-        {
+        if ( s.charAt( 8 ) != '-' ) {
             return null;
         }
-        if ( s.charAt( 13 ) != '-' )
-        {
+        if ( s.charAt( 13 ) != '-' ) {
             return null;
         }
-        if ( s.charAt( 18 ) != '-' )
-        {
+        if ( s.charAt( 18 ) != '-' ) {
             return null;
         }
-        if ( s.charAt( 23 ) != '-' )
-        {
+        if ( s.charAt( 23 ) != '-' ) {
             return null;
         }
         UUID uuid = null;
-        try
-        {
+        try {
             uuid = UUID.fromString( s );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.info( "Could not convert String {} into a UUID", s, e );
         }
         return uuid;
     }
 
 
-    public static boolean isUUID( String s )
-    {
+    public static boolean isUUID( String s ) {
         return tryGetUUID( s ) != null;
     }
 
 
-    public static UUID tryExtractUUID( String s )
-    {
-        if ( s == null )
-        {
+    public static UUID tryExtractUUID( String s ) {
+        if ( s == null ) {
             return null;
         }
-        if ( s.length() < 36 )
-        {
+        if ( s.length() < 36 ) {
             return null;
         }
         return tryGetUUID( s.substring( 0, 36 ) );
     }
 
 
-    public static UUID tryExtractUUID( String s, int offset )
-    {
-        if ( s == null )
-        {
+    public static UUID tryExtractUUID( String s, int offset ) {
+        if ( s == null ) {
             return null;
         }
-        if ( ( s.length() - offset ) < 36 )
-        {
+        if ( ( s.length() - offset ) < 36 ) {
             return null;
         }
         return tryGetUUID( s.substring( offset, offset + 36 ) );
     }
 
 
-    public static String toBase64( UUID id )
-    {
-        if ( id == null )
-        {
+    public static String toBase64( UUID id ) {
+        if ( id == null ) {
             return null;
         }
         return encodeBase64URLSafeString( bytes( id ) );
     }
 
 
-    public static UUID fromBase64( String str )
-    {
-        if ( str == null )
-        {
+    public static UUID fromBase64( String str ) {
+        if ( str == null ) {
             return null;
         }
         byte[] bytes = decodeBase64( str );
-        if ( bytes.length != 16 )
-        {
+        if ( bytes.length != 16 ) {
             return null;
         }
         return uuid( bytes );
     }
 
 
-    public static int compare( UUID u1, UUID u2 )
-    {
+    public static int compare( UUID u1, UUID u2 ) {
         return UUIDComparator.staticCompare( u1, u2 );
     }
 
 
-    public static List<UUID> sort( List<UUID> uuids )
-    {
+    public static List<UUID> sort( List<UUID> uuids ) {
         Collections.sort( uuids, new UUIDComparator() );
         return uuids;
     }

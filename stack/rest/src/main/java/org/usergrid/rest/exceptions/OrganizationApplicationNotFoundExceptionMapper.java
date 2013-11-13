@@ -8,11 +8,9 @@ import javax.ws.rs.ext.Provider;
 /** @author zznate */
 @Provider
 public class OrganizationApplicationNotFoundExceptionMapper
-        extends AbstractExceptionMapper<OrganizationApplicationNotFoundException>
-{
+        extends AbstractExceptionMapper<OrganizationApplicationNotFoundException> {
     @Override
-    public Response toResponse( OrganizationApplicationNotFoundException e )
-    {
+    public Response toResponse( OrganizationApplicationNotFoundException e ) {
         return super.toResponse( Response.Status.BAD_REQUEST, e.getJsonResponse() );
     }
 }

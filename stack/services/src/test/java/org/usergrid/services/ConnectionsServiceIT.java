@@ -28,12 +28,10 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class ConnectionsServiceIT extends AbstractServiceIT
-{
+public class ConnectionsServiceIT extends AbstractServiceIT {
     @SuppressWarnings("rawtypes")
     @Test
-    public void testUserConnections() throws Exception
-    {
+    public void testUserConnections() throws Exception {
         app.put( "username", "conn-user1" );
         app.put( "email", "conn-user1@apigee.com" );
 

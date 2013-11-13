@@ -16,8 +16,7 @@
 package org.usergrid.persistence;
 
 
-public interface ConnectedEntityRef extends EntityRef
-{
+public interface ConnectedEntityRef extends EntityRef {
 
     public String getConnectionType();
 }

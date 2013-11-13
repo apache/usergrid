@@ -11,8 +11,7 @@ import org.usergrid.persistence.Results;
  * @author: tnine
  *
  */
-public interface ResultsLoaderFactory
-{
+public interface ResultsLoaderFactory {
 
     /**
      * Get the results loaded that will load all Ids given the results level.  The original query and the entity manager

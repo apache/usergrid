@@ -23,11 +23,9 @@ import static org.junit.Assert.assertEquals;
 
 
 @Concurrent()
-public class UtilsTest
-{
+public class UtilsTest {
     @Test
-    public void testCounterResolution() throws Exception
-    {
+    public void testCounterResolution() throws Exception {
         assertEquals( CounterResolution.ALL, CounterResolution.fromString( "foo" ) );
         assertEquals( CounterResolution.MINUTE, CounterResolution.fromString( "MINUTE" ) );
         assertEquals( CounterResolution.MINUTE, CounterResolution.fromString( "minute" ) );

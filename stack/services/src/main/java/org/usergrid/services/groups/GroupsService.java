@@ -39,16 +39,14 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.usergrid.services.ServiceResults.genericServiceResults;
 
 
-public class GroupsService extends AbstractPathBasedColllectionService
-{
+public class GroupsService extends AbstractPathBasedColllectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( GroupsService.class );
 
     static CharMatcher matcher = CharMatcher.JAVA_LETTER_OR_DIGIT.or( CharMatcher.anyOf( "-./" ) );
 
 
-    public GroupsService()
-    {
+    public GroupsService() {
         super();
         logger.info( "/groups" );
 
@@ -60,13 +58,11 @@ public class GroupsService extends AbstractPathBasedColllectionService
 
 
     @Override
-    public ServiceResults postCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults postCollection( ServiceContext context ) throws Exception {
 
         String path = ( String ) context.getProperty( "path" );
 
-        if ( path == null )
-        {
+        if ( path == null ) {
             throw new IllegalArgumentException( "You must provide a 'path' property when creating a group" );
         }
 
@@ -78,31 +74,27 @@ public class GroupsService extends AbstractPathBasedColllectionService
     }
 
 
-    public ServiceResults getGroupRoles( UUID groupId ) throws Exception
-    {
+    public ServiceResults getGroupRoles( UUID groupId ) throws Exception {
         Map<String, Role> roles = em.getGroupRolesWithTitles( groupId );
         ServiceResults results = genericServiceResults().withData( roles );
         return results;
     }
 
 
-    public ServiceResults getApplicationRolePermissions( String roleName ) throws Exception
-    {
+    public ServiceResults getApplicationRolePermissions( String roleName ) throws Exception {
         Set<String> permissions = em.getRolePermissions( roleName );
         ServiceResults results = genericServiceResults().withData( permissions );
         return results;
     }
 
 
-    public ServiceResults addGroupRole( UUID groupId, String roleName ) throws Exception
-    {
+    public ServiceResults addGroupRole( UUID groupId, String roleName ) throws Exception {
         em.addGroupToRole( groupId, roleName );
         return getGroupRoles( groupId );
     }
 
 
-    public ServiceResults deleteGroupRole( UUID groupId, String roleName ) throws Exception
-    {
+    public ServiceResults deleteGroupRole( UUID groupId, String roleName ) throws Exception {
         em.removeGroupFromRole( groupId, roleName );
         return getGroupRoles( groupId );
     }
@@ -110,33 +102,27 @@ public class GroupsService extends AbstractPathBasedColllectionService
 
     @Override
     public ServiceResults getEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                               EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                               EntityDictionaryEntry dictionary ) throws Exception {
 
-        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "rolenames" );
 
-            if ( context.parameterCount() == 0 )
-            {
+            if ( context.parameterCount() == 0 ) {
 
                 return getGroupRoles( entityRef.getUuid() );
             }
-            else if ( context.parameterCount() == 1 )
-            {
+            else if ( context.parameterCount() == 1 ) {
 
                 String roleName = context.getParameters().get( 1 ).getName();
-                if ( isBlank( roleName ) )
-                {
+                if ( isBlank( roleName ) ) {
                     return null;
                 }
 
                 return getApplicationRolePermissions( roleName );
             }
         }
-        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "permissions" );
 
@@ -150,17 +136,14 @@ public class GroupsService extends AbstractPathBasedColllectionService
     @Override
     public ServiceResults postEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                 EntityDictionaryEntry dictionary, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "permissions".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "permissions".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "permissions" );
 
             String permission = payload.getStringProperty( "permission" );
-            if ( isBlank( permission ) )
-            {
+            if ( isBlank( permission ) ) {
                 return null;
             }
 
@@ -176,20 +159,16 @@ public class GroupsService extends AbstractPathBasedColllectionService
     @Override
     public ServiceResults putEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                EntityDictionaryEntry dictionary, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "rolenames" );
 
-            if ( context.parameterCount() == 0 )
-            {
+            if ( context.parameterCount() == 0 ) {
 
                 String name = payload.getStringProperty( "name" );
-                if ( isBlank( name ) )
-                {
+                if ( isBlank( name ) ) {
                     return null;
                 }
 
@@ -203,45 +182,37 @@ public class GroupsService extends AbstractPathBasedColllectionService
 
     @Override
     public ServiceResults deleteEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                                  EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                                  EntityDictionaryEntry dictionary ) throws Exception {
 
-        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "rolenames" );
 
-            if ( context.parameterCount() == 1 )
-            {
+            if ( context.parameterCount() == 1 ) {
 
                 String roleName = context.getParameters().get( 1 ).getName();
-                if ( isBlank( roleName ) )
-                {
+                if ( isBlank( roleName ) ) {
                     return null;
                 }
 
                 return deleteGroupRole( entityRef.getUuid(), roleName );
             }
         }
-        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "permissions" );
 
             Query q = context.getParameters().get( 0 ).getQuery();
-            if ( q == null )
-            {
+            if ( q == null ) {
                 return null;
             }
 
             List<String> permissions = q.getPermissions();
-            if ( permissions == null )
-            {
+            if ( permissions == null ) {
                 return null;
             }
 
-            for ( String permission : permissions )
-            {
+            for ( String permission : permissions ) {
                 em.revokeGroupPermission( entityRef.getUuid(), permission );
             }
 

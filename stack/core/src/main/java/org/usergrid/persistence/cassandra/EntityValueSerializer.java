@@ -25,23 +25,18 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
 
-public class EntityValueSerializer extends AbstractSerializer<Object>
-{
+public class EntityValueSerializer extends AbstractSerializer<Object> {
 
     @Override
-    public ByteBuffer toByteBuffer( Object obj )
-    {
+    public ByteBuffer toByteBuffer( Object obj ) {
         ByteBuffer bytes = null;
-        if ( obj instanceof List )
-        {
+        if ( obj instanceof List ) {
             bytes = DynamicComposite.toByteBuffer( ( List<?> ) obj );
         }
-        else if ( obj instanceof Object[] )
-        {
+        else if ( obj instanceof Object[] ) {
             bytes = DynamicComposite.toByteBuffer( ( Object[] ) obj );
         }
-        else
-        {
+        else {
             bytes = bytebuffer( obj );
         }
         return bytes;
@@ -49,9 +44,9 @@ public class EntityValueSerializer extends AbstractSerializer<Object>
 
 
     @Override
-    public Object fromByteBuffer( ByteBuffer byteBuffer )
-    {
+    public Object fromByteBuffer( ByteBuffer byteBuffer ) {
         throw new IllegalStateException(
-                "The entity value serializer can only be used for data going to the database, and not data coming from the database" );
+                "The entity value serializer can only be used for data going to the database, " +
+                        "and not data coming from the database" );
     }
 }

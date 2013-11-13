@@ -11,12 +11,10 @@ import static javax.ws.rs.core.Response.Status.CONFLICT;
 
 /** <p> Map an RecentlyUsedPasswordException to an HTTP 409 response. </p> */
 @Provider
-public class RecentlyUsedPasswordExceptionMapper extends AbstractExceptionMapper<RecentlyUsedPasswordException>
-{
+public class RecentlyUsedPasswordExceptionMapper extends AbstractExceptionMapper<RecentlyUsedPasswordException> {
 
     @Override
-    public Response toResponse( RecentlyUsedPasswordException e )
-    {
+    public Response toResponse( RecentlyUsedPasswordException e ) {
 
         return toResponse( CONFLICT, e );
     }

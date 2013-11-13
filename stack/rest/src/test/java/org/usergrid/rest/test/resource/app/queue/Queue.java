@@ -31,8 +31,7 @@ import com.sun.jersey.api.client.WebResource;
  *
  * @author tnine
  */
-public class Queue extends CollectionResource
-{
+public class Queue extends CollectionResource {
 
     private String clientId;
     private int limit = 0;
@@ -45,51 +44,44 @@ public class Queue extends CollectionResource
     /**
      *
      */
-    public Queue( String queueName, NamedResource parent )
-    {
+    public Queue( String queueName, NamedResource parent ) {
         super( queueName, parent );
     }
 
 
     /** Set the client id with the string */
-    public Queue withClientId( String clientId )
-    {
+    public Queue withClientId( String clientId ) {
         this.clientId = clientId;
         return this;
     }
 
 
     /** Set this with the next page size */
-    public Queue withLimit( int limit )
-    {
+    public Queue withLimit( int limit ) {
         this.limit = limit;
         return this;
     }
 
 
-    public Queue withPosition( String position )
-    {
+    public Queue withPosition( String position ) {
         this.position = position;
         return this;
     }
 
 
-    public Queue withLast( String last )
-    {
+    public Queue withLast( String last ) {
         this.last = last;
         return this;
     }
 
 
-    public Queue withTimeout( long timeout )
-    {
+    public Queue withTimeout( long timeout ) {
         this.timeout = timeout;
         return this;
     }
 
 
-    public Queue withFilters( String... filters )
-    {
+    public Queue withFilters( String... filters ) {
         this.filters = filters;
         return this;
     }
@@ -98,8 +90,7 @@ public class Queue extends CollectionResource
     /**
      * @return
      */
-    public SubscribersCollection subscribers()
-    {
+    public SubscribersCollection subscribers() {
         return new SubscribersCollection( this );
     }
 
@@ -107,14 +98,12 @@ public class Queue extends CollectionResource
     /**
      * @return
      */
-    public TransactionsCollection transactions()
-    {
+    public TransactionsCollection transactions() {
         return new TransactionsCollection( this );
     }
 
 
-    public JsonNode post( Map<String, ?> payload )
-    {
+    public JsonNode post( Map<String, ?> payload ) {
         JsonNode node = super.postInternal( payload );
         return node;
     }
@@ -125,55 +114,45 @@ public class Queue extends CollectionResource
      * @param payload
      * @return
      */
-    public JsonNode post( Map<String, ?>[] payload )
-    {
+    public JsonNode post( Map<String, ?>[] payload ) {
         JsonNode node = super.postInternal( payload );
         return node;
     }
 
 
     /** Get entities in this collection. Cursor is optional */
-    public JsonNode get()
-    {
+    public JsonNode get() {
         return jsonMedia( withQueueParams( withToken( resource() ) ) ).get( JsonNode.class );
     }
 
 
     /** post to the entity set */
-    public JsonNode delete()
-    {
+    public JsonNode delete() {
         return jsonMedia( withToken( resource() ) ).delete( JsonNode.class );
     }
 
 
     /** Set the queue client ID if set */
-    private WebResource withQueueParams( WebResource resource )
-    {
-        if ( clientId != null )
-        {
+    private WebResource withQueueParams( WebResource resource ) {
+        if ( clientId != null ) {
             resource = resource.queryParam( "consumer", clientId );
         }
-        if ( position != null )
-        {
+        if ( position != null ) {
             resource = resource.queryParam( "pos", position );
         }
-        if ( last != null )
-        {
+        if ( last != null ) {
             resource = resource.queryParam( "last", last );
         }
 
-        if ( limit > 0 )
-        {
+        if ( limit > 0 ) {
             resource = resource.queryParam( "limit", String.valueOf( limit ) );
         }
 
-        if ( timeout > 0 )
-        {
+        if ( timeout > 0 ) {
             resource = resource.queryParam( "timeout", String.valueOf( timeout ) );
         }
 
-        for ( String filter : filters )
-        {
+        for ( String filter : filters ) {
             resource = resource.queryParam( "filter", filter );
         }
 
@@ -182,8 +161,7 @@ public class Queue extends CollectionResource
 
 
     /** Get the next entry in the queue. Returns null if one doesn't exist */
-    public JsonNode getNextEntry()
-    {
+    public JsonNode getNextEntry() {
         List<JsonNode> messages = getNodesAsList( "messages", get() );
 
         return messages.size() == 1 ? messages.get( 0 ) : null;
@@ -191,14 +169,12 @@ public class Queue extends CollectionResource
 
 
     /** Get the json response of the messages nodes */
-    public List<JsonNode> getNextPage()
-    {
+    public List<JsonNode> getNextPage() {
         JsonNode response = get();
 
         JsonNode last = response.get( "last" );
 
-        if ( last != null )
-        {
+        if ( last != null ) {
             this.last = last.asText();
         }
 

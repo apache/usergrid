@@ -28,26 +28,22 @@ import org.usergrid.services.ServiceResults;
 import org.usergrid.services.ServiceResults.Type;
 
 
-public class RolesService extends org.usergrid.services.roles.RolesService
-{
+public class RolesService extends org.usergrid.services.roles.RolesService {
 
     private static final Logger logger = LoggerFactory.getLogger( RolesService.class );
 
 
-    public RolesService()
-    {
+    public RolesService() {
         super();
         logger.info( "/users/*/roles" );
     }
 
 
     @Override
-    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
         User user = em.get( context.getOwner(), User.class );
         Entity entity = sm.getService( "/roles" ).getEntity( context.getRequest(), id );
-        if ( entity != null )
-        {
+        if ( entity != null ) {
             em.addUserToRole( user.getUuid(), entity.getName() );
         }
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, null );
@@ -55,12 +51,10 @@ public class RolesService extends org.usergrid.services.roles.RolesService
 
 
     @Override
-    public ServiceResults postItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults postItemByName( ServiceContext context, String name ) throws Exception {
         User user = em.get( context.getOwner(), User.class );
         Entity entity = sm.getService( "/roles" ).getEntity( context.getRequest(), name );
-        if ( entity != null )
-        {
+        if ( entity != null ) {
             em.addUserToRole( user.getUuid(), entity.getName() );
         }
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, null );
@@ -68,12 +62,10 @@ public class RolesService extends org.usergrid.services.roles.RolesService
 
 
     @Override
-    public ServiceResults deleteItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults deleteItemById( ServiceContext context, UUID id ) throws Exception {
         User user = em.get( context.getOwner(), User.class );
         ServiceResults results = getItemById( context, id );
-        if ( !results.isEmpty() )
-        {
+        if ( !results.isEmpty() ) {
             em.removeUserFromRole( user.getUuid(), results.getEntity().getName() );
         }
         return results;
@@ -81,12 +73,10 @@ public class RolesService extends org.usergrid.services.roles.RolesService
 
 
     @Override
-    public ServiceResults deleteItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults deleteItemByName( ServiceContext context, String name ) throws Exception {
         User user = em.get( context.getOwner(), User.class );
         ServiceResults results = getItemByName( context, name );
-        if ( !results.isEmpty() )
-        {
+        if ( !results.isEmpty() ) {
             em.removeUserFromRole( user.getUuid(), results.getEntity().getName() );
         }
         return results;

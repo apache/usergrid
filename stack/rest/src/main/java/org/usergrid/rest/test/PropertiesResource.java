@@ -41,8 +41,7 @@ import org.usergrid.rest.AbstractContextResource;
 @Scope("prototype")
 @Path("/testproperties")
 @Produces({ MediaType.APPLICATION_JSON })
-public class PropertiesResource extends AbstractContextResource
-{
+public class PropertiesResource extends AbstractContextResource {
     static final Logger logger = LoggerFactory.getLogger( PropertiesResource.class );
 
 
@@ -50,22 +49,19 @@ public class PropertiesResource extends AbstractContextResource
 
 
     @POST
-    public Response setProperties( String body ) throws IOException
-    {
+    public Response setProperties( String body ) throws IOException {
 
         Properties props = management.getProperties();
 
         // only works in test mode
         String testProp = ( String ) props.get( "usergrid.test" );
-        if ( testProp == null || !Boolean.parseBoolean( testProp ) )
-        {
+        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
             throw new UnsupportedOperationException();
         }
 
         ObjectMapper mapper = new ObjectMapper();
         Map<String, String> map = mapper.readValue( body, new TypeReference<Map<String, String>>() {} );
-        for ( String key : map.keySet() )
-        {
+        for ( String key : map.keySet() ) {
             management.getProperties().setProperty( key, map.get( key ) );
         }
 
@@ -74,15 +70,13 @@ public class PropertiesResource extends AbstractContextResource
 
 
     @GET
-    public Response getProperties() throws Exception
-    {
+    public Response getProperties() throws Exception {
 
         Properties props = management.getProperties();
 
         // only works in test mode
         String testProp = ( String ) props.get( "usergrid.test" );
-        if ( testProp == null || !Boolean.parseBoolean( testProp ) )
-        {
+        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
             throw new UnsupportedOperationException();
         }
 

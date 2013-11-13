@@ -28,15 +28,13 @@ import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
  *
  * @author tnine
  */
-public class User extends EntityResource
-{
+public class User extends EntityResource {
 
     /**
      * @param entityId
      * @param parent
      */
-    public User( UUID entityId, NamedResource parent )
-    {
+    public User( UUID entityId, NamedResource parent ) {
         super( entityId, parent );
     }
 
@@ -45,14 +43,12 @@ public class User extends EntityResource
      * @param entityName
      * @param parent
      */
-    public User( String entityName, NamedResource parent )
-    {
+    public User( String entityName, NamedResource parent ) {
         super( entityName, parent );
     }
 
 
-    public DevicesCollection devices()
-    {
+    public DevicesCollection devices() {
         return new DevicesCollection( this );
     }
 }

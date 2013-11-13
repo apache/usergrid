@@ -50,8 +50,7 @@ import com.google.common.collect.Multimap;
  *
  * @author tnine
  */
-public class DupOrgRepair extends ExportingToolBase
-{
+public class DupOrgRepair extends ExportingToolBase {
 
     /**
      *
@@ -63,8 +62,7 @@ public class DupOrgRepair extends ExportingToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -89,8 +87,7 @@ public class DupOrgRepair extends ExportingToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         String outputDir = line.getOptionValue( "output" );
 
         createDir( outputDir );
@@ -110,13 +107,11 @@ public class DupOrgRepair extends ExportingToolBase
 
         Multimap<String, UUID> orgs = HashMultimap.create();
 
-        do
-        {
+        do {
 
             r = em.searchCollection( app, "groups", query );
 
-            for ( Entity entity : r.getEntities() )
-            {
+            for ( Entity entity : r.getEntities() ) {
                 String name = entity.getProperty( "path" ).toString().toLowerCase();
                 orgs.put( name, entity.getUuid() );
             }
@@ -129,12 +124,10 @@ public class DupOrgRepair extends ExportingToolBase
 
         // now go through and print out duplicate emails
 
-        for ( String name : orgs.keySet() )
-        {
+        for ( String name : orgs.keySet() ) {
             Collection<UUID> ids = orgs.get( name );
 
-            if ( ids.size() > 1 )
-            {
+            if ( ids.size() > 1 ) {
                 logger.warn( "Found multiple orgs with the name {}", name );
 
                 // look this up the same way the REST tier does. This way we will always
@@ -145,8 +138,7 @@ public class DupOrgRepair extends ExportingToolBase
 
                 ids.remove( targetOrgId );
 
-                for ( UUID sourceId : ids )
-                {
+                for ( UUID sourceId : ids ) {
                     mergeOrganizations( outputDir, sourceId, targetOrgId );
                 }
             }
@@ -163,8 +155,7 @@ public class DupOrgRepair extends ExportingToolBase
      * delete the target org
      */
     @SuppressWarnings("unchecked")
-    private void mergeOrganizations( String outputDir, UUID sourceOrgId, UUID targetOrgId ) throws Exception
-    {
+    private void mergeOrganizations( String outputDir, UUID sourceOrgId, UUID targetOrgId ) throws Exception {
 
         OrganizationInfo sourceOrgInfo = managementService.getOrganizationByUuid( sourceOrgId );
 
@@ -195,8 +186,7 @@ public class DupOrgRepair extends ExportingToolBase
         // add all the admins
         Map<String, UserInfo> admins = ( Map<String, UserInfo> ) sourceOrg.get( "users" );
 
-        for ( Entry<String, UserInfo> adminEntry : admins.entrySet() )
-        {
+        for ( Entry<String, UserInfo> adminEntry : admins.entrySet() ) {
             UserInfo admin = adminEntry.getValue();
 
             logger.info( "adding admin with uuid {} and email {} to org with name {} and uuid {}", new Object[] {
@@ -215,16 +205,13 @@ public class DupOrgRepair extends ExportingToolBase
 
         Map<String, UUID> targetApps = ( Map<String, UUID> ) targetOrg.get( "applications" );
 
-        for ( Entry<String, UUID> app : sourceApps.entrySet() )
-        {
+        for ( Entry<String, UUID> app : sourceApps.entrySet() ) {
 
             // we have colliding app names
-            if ( targetApps.get( app.getKey() ) != null )
-            {
+            if ( targetApps.get( app.getKey() ) != null ) {
 
                 // already added, skip it
-                if ( app.getValue().equals( targetApps.get( app.getKey() ) ) )
-                {
+                if ( app.getValue().equals( targetApps.get( app.getKey() ) ) ) {
                     continue;
                 }
 
@@ -239,8 +226,7 @@ public class DupOrgRepair extends ExportingToolBase
                 // get the existing target entity
                 Entity appEntity = em.get( appIdToChange );
 
-                if ( appEntity != null )
-                {
+                if ( appEntity != null ) {
 
                     String oldName = appEntity.getProperty( "name" ).toString();
                     String newName = oldName + appEntity.getUuid();

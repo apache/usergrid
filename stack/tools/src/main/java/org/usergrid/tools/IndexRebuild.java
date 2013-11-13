@@ -47,8 +47,7 @@ import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
  *
  * @author tnine
  */
-public class IndexRebuild extends ToolBase
-{
+public class IndexRebuild extends ToolBase {
 
     /**
      *
@@ -72,8 +71,7 @@ public class IndexRebuild extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -102,8 +100,7 @@ public class IndexRebuild extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         logger.info( "Starting index rebuild" );
@@ -111,15 +108,13 @@ public class IndexRebuild extends ToolBase
         /**
          * Goes through each app id specified
          */
-        for ( UUID appId : getAppIds( line ) )
-        {
+        for ( UUID appId : getAppIds( line ) ) {
 
             logger.info( "Reindexing for app id: {}", appId );
 
             Set<String> collections = getCollections( line, appId );
 
-            for ( String collection : collections )
-            {
+            for ( String collection : collections ) {
 
                 reindex( appId, collection );
             }
@@ -130,17 +125,14 @@ public class IndexRebuild extends ToolBase
 
 
     /** Get all app id */
-    private Collection<UUID> getAppIds( CommandLine line ) throws Exception
-    {
+    private Collection<UUID> getAppIds( CommandLine line ) throws Exception {
         String appId = line.getOptionValue( APPLICATION_ARG );
 
-        if ( appId != null )
-        {
+        if ( appId != null ) {
 
             UUID id = UUIDUtils.tryExtractUUID( appId );
 
-            if ( id == null )
-            {
+            if ( id == null ) {
                 id = emf.getApplications().get( appId );
             }
 
@@ -151,8 +143,7 @@ public class IndexRebuild extends ToolBase
 
         System.out.println( "Printing all apps" );
 
-        for ( Entry<String, UUID> entry : ids.entrySet() )
-        {
+        for ( Entry<String, UUID> entry : ids.entrySet() ) {
             System.out.println( entry.getKey() );
         }
 
@@ -161,13 +152,11 @@ public class IndexRebuild extends ToolBase
 
 
     /** Get collection names. If none are specified, all are returned */
-    private Set<String> getCollections( CommandLine line, UUID appId ) throws Exception
-    {
+    private Set<String> getCollections( CommandLine line, UUID appId ) throws Exception {
 
         String passedName = line.getOptionValue( COLLECTION_ARG );
 
-        if ( passedName != null )
-        {
+        if ( passedName != null ) {
             return Collections.singleton( passedName );
         }
 
@@ -178,8 +167,7 @@ public class IndexRebuild extends ToolBase
 
 
     /** The application id. The collection name. */
-    private void reindex( UUID appId, String collectionName ) throws Exception
-    {
+    private void reindex( UUID appId, String collectionName ) throws Exception {
         logger.info( "Reindexing collection: {} for app id: {}", collectionName, appId );
 
         EntityManager em = emf.getEntityManager( appId );
@@ -191,30 +179,23 @@ public class IndexRebuild extends ToolBase
         query.setLimit( PAGE_SIZE );
         Results r = null;
 
-        do
-        {
+        do {
 
             r = em.searchCollection( app, collectionName, query );
 
-            for ( Entity entity : r.getEntities() )
-            {
+            for ( Entity entity : r.getEntities() ) {
                 logger.info( "Updating entity type: {} with id: {} for app id: {}", new Object[] {
                         entity.getType(), entity.getUuid(), appId
                 } );
 
-                try
-                {
+                try {
                     em.update( entity );
                 }
-                catch ( DuplicateUniquePropertyExistsException dupee )
-                {
-                    logger.error(
-                            "duplicate property for type: {} with id: {} for app id: {}.  Property name: {} , " +
-                                    "value: {}",
-                            new Object[] {
-                                    entity.getType(), entity.getUuid(), appId, dupee.getPropertyName(),
-                                    dupee.getPropertyValue()
-                            } );
+                catch ( DuplicateUniquePropertyExistsException dupee ) {
+                    logger.error( "duplicate property for type: {} with id: {} for app id: {}.  Property name: {} , "
+                            + "value: {}", new Object[] {
+                            entity.getType(), entity.getUuid(), appId, dupee.getPropertyName(), dupee.getPropertyValue()
+                    } );
                 }
             }
 

@@ -38,8 +38,7 @@ import org.apache.commons.lang.math.RandomUtils;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
-public class ITSetup extends ExternalResource
-{
+public class ITSetup extends ExternalResource {
 
     private static final int DEFAULT_JETTY_PORT = 9998;
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
@@ -56,8 +55,7 @@ public class ITSetup extends ExternalResource
     private int jettyPort = DEFAULT_JETTY_PORT;
 
 
-    public ITSetup( CassandraResource cassandraResource )
-    {
+    public ITSetup( CassandraResource cassandraResource ) {
         this.cassandraResource = cassandraResource;
     }
 
@@ -68,16 +66,13 @@ public class ITSetup extends ExternalResource
 
 
     @Override
-    protected void before() throws Throwable
-    {
-        synchronized ( cassandraResource )
-        {
+    protected void before() throws Throwable {
+        synchronized ( cassandraResource ) {
             super.before();
 
             managementService = cassandraResource.getBean( ManagementService.class );
 
-            if ( !setupCalled )
-            {
+            if ( !setupCalled ) {
                 managementService.setup();
                 setupCalled = true;
             }
@@ -89,8 +84,7 @@ public class ITSetup extends ExternalResource
             properties = cassandraResource.getBean( "properties", Properties.class );
             smf = cassandraResource.getBean( ServiceManagerFactory.class );
 
-            while ( jetty == null )
-            {
+            while ( jetty == null ) {
                 startJetty();
             }
 
@@ -103,102 +97,86 @@ public class ITSetup extends ExternalResource
     }
 
 
-    private void startJetty()
-    {
+    private void startJetty() {
         LOG.info( "Starting the Jetty Server on port {}", jettyPort );
         jettyPort = AvailablePortFinder.getNextAvailable( DEFAULT_JETTY_PORT + RandomUtils.nextInt( 1000 ) );
 
         jetty = new Server( jettyPort );
         jetty.setHandler( new WebAppContext( "src/main/webapp", "/" ) );
 
-        try
-        {
+        try {
             jetty.start();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             jetty = null;
         }
     }
 
 
-    public void protect()
-    {
-        if ( ready )
-        {
+    public void protect() {
+        if ( ready ) {
             return;
         }
 
-        try
-        {
+        try {
             LOG.warn( "Calls made to access members without being ready ... initializing..." );
             before();
         }
-        catch ( Throwable t )
-        {
+        catch ( Throwable t ) {
             throw new RuntimeException( "Failed on before()", t );
         }
     }
 
 
-    public int getJettyPort()
-    {
+    public int getJettyPort() {
         protect();
         return jettyPort;
     }
 
 
-    public ManagementService getMgmtSvc()
-    {
+    public ManagementService getMgmtSvc() {
         protect();
         return managementService;
     }
 
 
-    public EntityManagerFactory getEmf()
-    {
+    public EntityManagerFactory getEmf() {
         protect();
         return emf;
     }
 
 
-    public ServiceManagerFactory getSmf()
-    {
+    public ServiceManagerFactory getSmf() {
         protect();
         return smf;
     }
 
 
-    public ApplicationCreator getAppCreator()
-    {
+    public ApplicationCreator getAppCreator() {
         protect();
         return applicationCreator;
     }
 
 
-    public TokenService getTokenSvc()
-    {
+    public TokenService getTokenSvc() {
         protect();
         return tokenService;
     }
 
 
-    public Properties getProps()
-    {
+    public Properties getProps() {
         protect();
         return properties;
     }
 
 
-    public SignInProviderFactory getProviderFactory()
-    {
+    public SignInProviderFactory getProviderFactory() {
         protect();
         return providerFactory;
     }
 
 
-    public URI getBaseURI()
-    {
+    public URI getBaseURI() {
         protect();
         return uri;
     }

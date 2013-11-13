@@ -16,8 +16,7 @@
 package org.usergrid.persistence.exceptions;
 
 
-public class UnexpectedEntityTypeException extends PersistenceException
-{
+public class UnexpectedEntityTypeException extends PersistenceException {
 
     /**
      *
@@ -25,26 +24,22 @@ public class UnexpectedEntityTypeException extends PersistenceException
     private static final long serialVersionUID = 8221919267880904834L;
 
 
-    public UnexpectedEntityTypeException()
-    {
+    public UnexpectedEntityTypeException() {
         super();
     }
 
 
-    public UnexpectedEntityTypeException( String message, Throwable cause )
-    {
+    public UnexpectedEntityTypeException( String message, Throwable cause ) {
         super( message, cause );
     }
 
 
-    public UnexpectedEntityTypeException( String message )
-    {
+    public UnexpectedEntityTypeException( String message ) {
         super( message );
     }
 
 
-    public UnexpectedEntityTypeException( Throwable cause )
-    {
+    public UnexpectedEntityTypeException( Throwable cause ) {
         super( cause );
     }
 }

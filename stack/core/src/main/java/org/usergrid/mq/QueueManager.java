@@ -26,8 +26,7 @@ import org.usergrid.persistence.Results;
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 
-public interface QueueManager
-{
+public interface QueueManager {
 
     public Queue getQueue( String queuePath );
 

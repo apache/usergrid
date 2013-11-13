@@ -19,23 +19,20 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class QueueResourceLong1IT extends AbstractQueueResourceIT
-{
+public class QueueResourceLong1IT extends AbstractQueueResourceIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void transactionTimeout() throws InterruptedException
-    {
+    public void transactionTimeout() throws InterruptedException {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 2;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -83,8 +80,7 @@ public class QueueResourceLong1IT extends AbstractQueueResourceIT
         // compare the replayed messages and the make sure they're in the same order
         BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
 
-        for ( int i = 0; i < originalMessageIds.size(); i++ )
-        {
+        for ( int i = 0; i < originalMessageIds.size(); i++ ) {
             // check the messages come back in the same order, they should
             assertEquals( originalMessageIds.get( i ), returned.get( i ) );
 
@@ -109,8 +105,7 @@ public class QueueResourceLong1IT extends AbstractQueueResourceIT
         // compare the replayed messages and the make sure they're in the same order
         newTransactions = transHandler.getTransactionToMessageId();
 
-        for ( int i = 0; i < originalMessageIds.size(); i++ )
-        {
+        for ( int i = 0; i < originalMessageIds.size(); i++ ) {
             // check the messages come back in the same order, they should
             assertEquals( originalMessageIds.get( i ), returned.get( i ) );
 

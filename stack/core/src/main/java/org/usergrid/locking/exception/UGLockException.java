@@ -16,8 +16,7 @@
 package org.usergrid.locking.exception;
 
 
-public class UGLockException extends Exception
-{
+public class UGLockException extends Exception {
 
     /**
      *
@@ -25,29 +24,25 @@ public class UGLockException extends Exception
     private static final long serialVersionUID = -8902830935510966393L;
 
 
-    public UGLockException()
-    {
+    public UGLockException() {
         super();
         // TODO Auto-generated constructor stub
     }
 
 
-    public UGLockException( String message, Throwable cause )
-    {
+    public UGLockException( String message, Throwable cause ) {
         super( message, cause );
         // TODO Auto-generated constructor stub
     }
 
 
-    public UGLockException( String message )
-    {
+    public UGLockException( String message ) {
         super( message );
         // TODO Auto-generated constructor stub
     }
 
 
-    public UGLockException( Throwable cause )
-    {
+    public UGLockException( Throwable cause ) {
         super( cause );
         // TODO Auto-generated constructor stub
     }

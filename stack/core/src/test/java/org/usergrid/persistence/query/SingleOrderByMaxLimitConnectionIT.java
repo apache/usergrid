@@ -20,12 +20,10 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByMaxLimitConnectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByMaxLimitConnectionIT extends AbstractIteratingQueryIT {
 
     @Test
-    public void singleOrderByMaxLimitConnection() throws Exception
-    {
+    public void singleOrderByMaxLimitConnection() throws Exception {
         singleOrderByMaxLimit( new ConnectionHelper() );
     }
 }

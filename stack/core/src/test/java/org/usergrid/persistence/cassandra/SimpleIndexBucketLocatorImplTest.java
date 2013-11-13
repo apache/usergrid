@@ -37,11 +37,9 @@ import static org.junit.Assert.assertEquals;
 
 /** @author tnine */
 @Concurrent()
-public class SimpleIndexBucketLocatorImplTest
-{
+public class SimpleIndexBucketLocatorImplTest {
     @Test
-    public void oneBucket()
-    {
+    public void oneBucket() {
 
         UUID appId = UUIDUtils.newTimeUUID();
         String entityType = "user";
@@ -72,8 +70,7 @@ public class SimpleIndexBucketLocatorImplTest
 
 
     @Test
-    public void twoBuckets()
-    {
+    public void twoBuckets() {
 
         UUID appId = UUIDUtils.newTimeUUID();
         String entityType = "user";
@@ -104,8 +101,7 @@ public class SimpleIndexBucketLocatorImplTest
 
 
     @Test
-    public void evenDistribution()
-    {
+    public void evenDistribution() {
 
         UUID appId = UUIDUtils.newTimeUUID();
         String entityType = "user";
@@ -134,8 +130,7 @@ public class SimpleIndexBucketLocatorImplTest
         /**
          * Loop through each new UUID and add it's hash to our map
          */
-        for ( int i = 0; i < testSize; i++ )
-        {
+        for ( int i = 0; i < testSize; i++ ) {
             UUID id = UUIDUtils.newTimeUUID();
 
             final TimerContext context = hashes.time();
@@ -146,8 +141,7 @@ public class SimpleIndexBucketLocatorImplTest
 
             Float count = counts.get( bucket );
 
-            if ( count == null )
-            {
+            if ( count == null ) {
                 count = 0f;
             }
 
@@ -162,13 +156,11 @@ public class SimpleIndexBucketLocatorImplTest
 
         assertEquals( bucketSize, keySize );
 
-        for ( int i = 0; i < keySize; i++ )
-        {
+        for ( int i = 0; i < keySize; i++ ) {
 
             float sourceCount = counts.get( keys.get( i ) );
 
-            for ( int j = i + 1; j < keySize; j++ )
-            {
+            for ( int j = i + 1; j < keySize; j++ ) {
                 float destCount = counts.get( keys.get( j ) );
 
                 // find the maximum allowed value for the assert based on the

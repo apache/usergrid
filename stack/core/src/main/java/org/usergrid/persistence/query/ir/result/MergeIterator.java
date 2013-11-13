@@ -21,8 +21,7 @@ import java.util.Set;
 
 
 /** @author tnine */
-public abstract class MergeIterator implements ResultIterator
-{
+public abstract class MergeIterator implements ResultIterator {
 
 
     /** kept private on purpose so advance must return the correct value */
@@ -39,8 +38,7 @@ public abstract class MergeIterator implements ResultIterator
     /**
      *
      */
-    public MergeIterator( int pageSize )
-    {
+    public MergeIterator( int pageSize ) {
         this.pageSize = pageSize;
     }
 
@@ -51,8 +49,7 @@ public abstract class MergeIterator implements ResultIterator
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<ScanColumn>> iterator()
-    {
+    public Iterator<Set<ScanColumn>> iterator() {
         return this;
     }
 
@@ -63,18 +60,15 @@ public abstract class MergeIterator implements ResultIterator
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
         //if next isn't set, try to advance
-        if ( next == null )
-        {
+        if ( next == null ) {
             doAdvance();
         }
 
         boolean results = next != null && next.size() > 0;
 
-        if ( results )
-        {
+        if ( results ) {
             last = next;
             loadCount++;
         }
@@ -84,8 +78,7 @@ public abstract class MergeIterator implements ResultIterator
 
 
     /** Advance to the next page */
-    protected void doAdvance()
-    {
+    protected void doAdvance() {
         next = advance();
     }
 
@@ -96,10 +89,8 @@ public abstract class MergeIterator implements ResultIterator
      * @see java.util.Iterator#next()
      */
     @Override
-    public Set<ScanColumn> next()
-    {
-        if ( next == null )
-        {
+    public Set<ScanColumn> next() {
+        if ( next == null ) {
             doAdvance();
         }
 
@@ -117,8 +108,7 @@ public abstract class MergeIterator implements ResultIterator
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "You can't remove from a union iterator" );
     }
 
@@ -127,10 +117,8 @@ public abstract class MergeIterator implements ResultIterator
      * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
      */
     @Override
-    public void reset()
-    {
-        if ( loadCount == 1 && last != null )
-        {
+    public void reset() {
+        if ( loadCount == 1 && last != null ) {
             next = last;
             return;
         }

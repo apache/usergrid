@@ -23,14 +23,12 @@ import org.usergrid.locking.exception.UGLockException;
 
 
 /** @author tnine */
-public class NoOpLockImpl implements Lock
-{
+public class NoOpLockImpl implements Lock {
 
     /**
      *
      */
-    public NoOpLockImpl()
-    {
+    public NoOpLockImpl() {
     }
 
 
@@ -38,8 +36,7 @@ public class NoOpLockImpl implements Lock
      * @see org.usergrid.locking.Lock#acquire(long, java.util.concurrent.TimeUnit)
      */
     @Override
-    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException
-    {
+    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException {
         //no op
         return true;
     }
@@ -49,8 +46,7 @@ public class NoOpLockImpl implements Lock
      * @see org.usergrid.locking.Lock#lock()
      */
     @Override
-    public void lock() throws UGLockException
-    {
+    public void lock() throws UGLockException {
         //no op
     }
 
@@ -59,8 +55,7 @@ public class NoOpLockImpl implements Lock
      * @see org.usergrid.locking.Lock#release()
      */
     @Override
-    public void unlock() throws UGLockException
-    {
+    public void unlock() throws UGLockException {
         //no op
     }
 }

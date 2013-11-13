@@ -10,50 +10,42 @@ import java.util.UUID;
  * @author: tnine
  *
  */
-public abstract class AbstractScanColumn implements ScanColumn
-{
+public abstract class AbstractScanColumn implements ScanColumn {
 
     private final UUID uuid;
     private final ByteBuffer buffer;
 
 
-    protected AbstractScanColumn( UUID uuid, ByteBuffer buffer )
-    {
+    protected AbstractScanColumn( UUID uuid, ByteBuffer buffer ) {
         this.uuid = uuid;
         this.buffer = buffer.duplicate();
     }
 
 
     @Override
-    public UUID getUUID()
-    {
+    public UUID getUUID() {
         return uuid;
     }
 
 
     @Override
-    public ByteBuffer getCursorValue()
-    {
+    public ByteBuffer getCursorValue() {
         return buffer.duplicate();
     }
 
 
     @Override
-    public boolean equals( Object o )
-    {
-        if ( this == o )
-        {
+    public boolean equals( Object o ) {
+        if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof AbstractScanColumn ) )
-        {
+        if ( !( o instanceof AbstractScanColumn ) ) {
             return false;
         }
 
         AbstractScanColumn that = ( AbstractScanColumn ) o;
 
-        if ( !uuid.equals( that.uuid ) )
-        {
+        if ( !uuid.equals( that.uuid ) ) {
             return false;
         }
 
@@ -62,8 +54,7 @@ public abstract class AbstractScanColumn implements ScanColumn
 
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return uuid.hashCode();
     }
 }

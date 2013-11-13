@@ -53,8 +53,7 @@ import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
  * Base class for Usergrid Tools commands. Any class that implements this can be called with java -jar {jarname}
  * org.usergrid.tools.{classname}.
  */
-public abstract class ToolBase
-{
+public abstract class ToolBase {
 
     public static final int MAX_ENTITY_FETCH = 100;
 
@@ -80,43 +79,35 @@ public abstract class ToolBase
     protected CassandraService cass;
 
 
-    public void startTool( String[] args )
-    {
+    public void startTool( String[] args ) {
         CommandLineParser parser = new GnuParser();
         CommandLine line = null;
-        try
-        {
+        try {
             line = parser.parse( createOptions(), args );
         }
-        catch ( ParseException exp )
-        {
+        catch ( ParseException exp ) {
             printCliHelp( "Parsing failed.  Reason: " + exp.getMessage() );
         }
 
-        if ( line == null )
-        {
+        if ( line == null ) {
             return;
         }
 
-        if ( line.hasOption( "host" ) )
-        {
+        if ( line.hasOption( "host" ) ) {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
         }
 
-        try
-        {
+        try {
             runTool( line );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             e.printStackTrace();
         }
         System.exit( 0 );
     }
 
 
-    public void printCliHelp( String message )
-    {
+    public void printCliHelp( String message ) {
         System.out.println( message );
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp( "java -jar usergrid-tools-0.0.1-SNAPSHOT.jar " + getToolName(), createOptions() );
@@ -124,15 +115,13 @@ public abstract class ToolBase
     }
 
 
-    public String getToolName()
-    {
+    public String getToolName() {
         return ClassUtils.getShortClassName( this.getClass() );
     }
 
 
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().withDescription( "Cassandra host" ).create( "host" );
@@ -152,8 +141,7 @@ public abstract class ToolBase
     }
 
 
-    public void startEmbedded() throws Exception
-    {
+    public void startEmbedded() throws Exception {
         // assertNotNull(client);
 
         String maven_opts = System.getenv( "MAVEN_OPTS" );
@@ -165,8 +153,7 @@ public abstract class ToolBase
     }
 
 
-    public void startSpring()
-    {
+    public void startSpring() {
 
         // copy("/testApplicationContext.xml", TMP);
         String[] locations = { "toolsApplicationContext.xml" };
@@ -182,8 +169,7 @@ public abstract class ToolBase
     }
 
 
-    public void setupCassandra() throws Exception
-    {
+    public void setupCassandra() throws Exception {
 
         Setup setup = ( ( EntityManagerFactoryImpl ) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
@@ -198,71 +184,60 @@ public abstract class ToolBase
     }
 
 
-    public void teardownEmbedded()
-    {
+    public void teardownEmbedded() {
         logger.info( "Stopping Cassandra" );
         EmbeddedServerHelper.teardown();
     }
 
 
-    void setVerbose( CommandLine line )
-    {
-        if ( line.hasOption( VERBOSE ) )
-        {
+    void setVerbose( CommandLine line ) {
+        if ( line.hasOption( VERBOSE ) ) {
             isVerboseEnabled = true;
         }
     }
 
 
     /** Log the content in the default logger(info) */
-    void echo( String content )
-    {
-        if ( isVerboseEnabled )
-        {
+    void echo( String content ) {
+        if ( isVerboseEnabled ) {
             logger.info( content );
         }
     }
 
 
     /** Print the object in JSon format. */
-    void echo( Object obj )
-    {
+    void echo( Object obj ) {
         echo( mapToFormattedJsonString( obj ) );
     }
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
         logger.info( "ManagementResource.setServiceManagerFactory" );
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService managementService )
-    {
+    public void setManagementService( ManagementService managementService ) {
         this.managementService = managementService;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
     @Autowired
-    public void setCassandraService( CassandraService cass )
-    {
+    public void setCassandraService( CassandraService cass ) {
         this.cass = cass;
     }
 

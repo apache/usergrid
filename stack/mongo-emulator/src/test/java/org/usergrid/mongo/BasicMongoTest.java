@@ -33,12 +33,10 @@ import static org.junit.Assert.assertTrue;
 
 
 @Ignore
-public class BasicMongoTest extends AbstractMongoTest
-{
+public class BasicMongoTest extends AbstractMongoTest {
 
     @Test
-    public void insertTest() throws Exception
-    {
+    public void insertTest() throws Exception {
 
         DB db = getDb();
 
@@ -108,8 +106,7 @@ public class BasicMongoTest extends AbstractMongoTest
 
 
     @Test
-    public void insertDuplicateTest() throws Exception
-    {
+    public void insertDuplicateTest() throws Exception {
 
         DB db = getDb();
 
@@ -136,12 +133,10 @@ public class BasicMongoTest extends AbstractMongoTest
 
         String message = null;
 
-        try
-        {
+        try {
             result = db.getCollection( "users" ).insert( doc );
         }
-        catch ( MongoException me )
-        {
+        catch ( MongoException me ) {
             message = me.getMessage();
         }
 
@@ -152,8 +147,7 @@ public class BasicMongoTest extends AbstractMongoTest
 
 
     @Test
-    public void updateTest() throws Exception
-    {
+    public void updateTest() throws Exception {
 
         DB db = getDb();
 
@@ -241,8 +235,7 @@ public class BasicMongoTest extends AbstractMongoTest
 
 
     @Test
-    public void deleteTest() throws Exception
-    {
+    public void deleteTest() throws Exception {
 
         DB db = getDb();
 
@@ -292,8 +285,7 @@ public class BasicMongoTest extends AbstractMongoTest
 
     @Test
     @Ignore("Really slow on the delete, not a good unit tests atm")
-    public void deleteBatchTest() throws Exception
-    {
+    public void deleteBatchTest() throws Exception {
 
         DB db = getDb();
 
@@ -301,8 +293,7 @@ public class BasicMongoTest extends AbstractMongoTest
 
         List<DBObject> docs = new ArrayList<DBObject>( count );
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             BasicDBObject doc = new BasicDBObject();
 
             doc.put( "index", i );
@@ -319,8 +310,7 @@ public class BasicMongoTest extends AbstractMongoTest
 
         DBCursor cursor = db.getCollection( "deletebatchtests" ).find();
 
-        for ( int i = 0; i < count && cursor.hasNext(); i++ )
-        {
+        for ( int i = 0; i < count && cursor.hasNext(); i++ ) {
             int index = new BasicDBObject( cursor.next().toMap() ).getInt( "index" );
 
             assertEquals( i, index );

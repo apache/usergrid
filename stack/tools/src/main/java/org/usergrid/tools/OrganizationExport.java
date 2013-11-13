@@ -29,8 +29,7 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
  *
  * @author zznate
  */
-public class OrganizationExport extends ExportingToolBase
-{
+public class OrganizationExport extends ExportingToolBase {
 
     /**
      *
@@ -40,8 +39,7 @@ public class OrganizationExport extends ExportingToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         setVerbose( line );
@@ -62,19 +60,16 @@ public class OrganizationExport extends ExportingToolBase
 
         Results organizations = null;
 
-        do
-        {
+        do {
 
             organizations = getOrganizations( query );
 
-            for ( Entity organization : organizations.getEntities() )
-            {
+            for ( Entity organization : organizations.getEntities() ) {
                 String orgName = organization.getProperty( "path" ).toString();
 
                 logger.info( "Org Name: {} key: {}", orgName, organization.getUuid() );
 
-                for ( UserInfo user : managementService.getAdminUsersForOrganization( organization.getUuid() ) )
-                {
+                for ( UserInfo user : managementService.getAdminUsersForOrganization( organization.getUuid() ) ) {
 
                     Entity admin = managementService.getAdminUserEntityByUuid( user.getUuid() );
 
@@ -99,8 +94,7 @@ public class OrganizationExport extends ExportingToolBase
 
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
         Options options = super.createOptions();
 
         @SuppressWarnings("static-access") Option queryOption =
@@ -113,8 +107,7 @@ public class OrganizationExport extends ExportingToolBase
     }
 
 
-    private Results getOrganizations( Query query ) throws Exception
-    {
+    private Results getOrganizations( Query query ) throws Exception {
 
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         return em.searchCollection( em.getApplicationRef(), "groups", query );

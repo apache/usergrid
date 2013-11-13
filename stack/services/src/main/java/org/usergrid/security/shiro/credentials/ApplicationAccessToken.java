@@ -16,11 +16,9 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public class ApplicationAccessToken extends AbstractAccessTokenCredentials implements ApplicationCredentials
-{
+public class ApplicationAccessToken extends AbstractAccessTokenCredentials implements ApplicationCredentials {
 
-    public ApplicationAccessToken( String token )
-    {
+    public ApplicationAccessToken( String token ) {
         super( token );
     }
 }

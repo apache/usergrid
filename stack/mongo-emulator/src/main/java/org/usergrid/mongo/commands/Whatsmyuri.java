@@ -28,12 +28,10 @@ import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class Whatsmyuri extends MongoCommand
-{
+public class Whatsmyuri extends MongoCommand {
 
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
         InetSocketAddress addr = ( InetSocketAddress ) e.getRemoteAddress();
         OpReply reply = new OpReply( opQuery );
         reply.addDocument(

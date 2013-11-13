@@ -21,8 +21,7 @@ import org.antlr.runtime.Token;
 
 
 /** @author tnine */
-public class LongLiteral extends Literal<Long> implements NumericLiteral
-{
+public class LongLiteral extends Literal<Long> implements NumericLiteral {
 
     private long value;
 
@@ -30,8 +29,7 @@ public class LongLiteral extends Literal<Long> implements NumericLiteral
     /**
      * @param t
      */
-    public LongLiteral( Token t )
-    {
+    public LongLiteral( Token t ) {
         super( t );
         this.value = Long.valueOf( t.getText() );
     }
@@ -41,8 +39,7 @@ public class LongLiteral extends Literal<Long> implements NumericLiteral
      *
      * @param value
      */
-    public LongLiteral( long value )
-    {
+    public LongLiteral( long value ) {
         super( new ClassicToken( 0, String.valueOf( value ) ) );
         this.value = value;
     }
@@ -52,8 +49,7 @@ public class LongLiteral extends Literal<Long> implements NumericLiteral
      *
      * @return
      */
-    public Long getValue()
-    {
+    public Long getValue() {
         return this.value;
     }
 
@@ -62,8 +58,7 @@ public class LongLiteral extends Literal<Long> implements NumericLiteral
      * @see org.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
      */
     @Override
-    public float getFloatValue()
-    {
+    public float getFloatValue() {
         return value;
     }
 }

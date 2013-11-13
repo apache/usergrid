@@ -29,8 +29,7 @@ import com.sun.jersey.api.client.WebResource.Builder;
 
 
 /** @author tnine */
-public abstract class NamedResource
-{
+public abstract class NamedResource {
 
     protected static final String SLASH = "/";
 
@@ -40,15 +39,13 @@ public abstract class NamedResource
     /**
      *
      */
-    public NamedResource( NamedResource parent )
-    {
+    public NamedResource( NamedResource parent ) {
         this.parent = parent;
     }
 
 
     /** Get the url to this resource */
-    public String url()
-    {
+    public String url() {
         StringBuilder buff = new StringBuilder();
         addToUrl( buff );
         return buff.toString();
@@ -56,34 +53,29 @@ public abstract class NamedResource
 
 
     /** Get the resource for calling the url.  Will have the token pre-loaded if the token is set */
-    protected WebResource resource()
-    {
+    protected WebResource resource() {
         return parent.resource();
     }
 
 
     /** Get the token for this request */
-    protected String token()
-    {
+    protected String token() {
         return parent.token();
     }
 
 
     /** Set the media type on the webResource */
-    protected Builder jsonMedia( WebResource resource )
-    {
+    protected Builder jsonMedia( WebResource resource ) {
         return resource.accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE );
     }
 
 
-    protected WebResource withToken( WebResource resource )
-    {
+    protected WebResource withToken( WebResource resource ) {
         String token = token();
 
         resource = resource.path( url() );
 
-        if ( token != null )
-        {
+        if ( token != null ) {
             resource = resource.queryParam( "access_token", token );
         }
 
@@ -92,43 +84,37 @@ public abstract class NamedResource
 
 
     /** Method to add params to the generated url.  Subclasses can override it */
-    protected WebResource withParams( WebResource resource )
-    {
+    protected WebResource withParams( WebResource resource ) {
         return resource;
     }
 
 
     /** Get the entity from the entity array in the response */
-    protected JsonNode getEntity( JsonNode response, int index )
-    {
+    protected JsonNode getEntity( JsonNode response, int index ) {
         return response.get( "entities" ).get( index );
     }
 
 
     /** Get the entity from the entity array in the response */
-    protected JsonNode getEntity( JsonNode response, String name )
-    {
+    protected JsonNode getEntity( JsonNode response, String name ) {
         return response.get( "entities" ).get( name );
     }
 
 
     /** Get the uuid from the entity at the specified index */
-    protected UUID getEntityId( JsonNode response, int index )
-    {
+    protected UUID getEntityId( JsonNode response, int index ) {
         return UUID.fromString( getEntity( response, index ).get( "uuid" ).asText() );
     }
 
 
     /** Parse the root response and return each entity as a json node in a list */
-    protected List<JsonNode> getEntries( JsonNode response )
-    {
+    protected List<JsonNode> getEntries( JsonNode response ) {
         return getNodesAsList( "path", response );
     }
 
 
     /** Get nodes as a list */
-    protected List<JsonNode> getNodesAsList( String path, JsonNode response )
-    {
+    protected List<JsonNode> getNodesAsList( String path, JsonNode response ) {
         JsonNode entities = response.path( path );
 
         int size = entities.size();
@@ -136,8 +122,7 @@ public abstract class NamedResource
 
         List<JsonNode> entries = new ArrayList<JsonNode>();
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
 
             entries.add( entities.get( i ) );
         }
@@ -147,8 +132,7 @@ public abstract class NamedResource
 
 
     /** Get the error response */
-    protected JsonNode getError( JsonNode response )
-    {
+    protected JsonNode getError( JsonNode response ) {
         return response.get( "error" );
     }
 

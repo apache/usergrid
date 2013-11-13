@@ -30,8 +30,7 @@ import static org.usergrid.utils.ListUtils.dequeueCopy;
 import static org.usergrid.utils.ListUtils.isEmpty;
 
 
-public class ServiceContext
-{
+public class ServiceContext {
 
     Service service;
     ServiceAction action;
@@ -46,15 +45,13 @@ public class ServiceContext
     String serviceCommand;
 
 
-    public ServiceContext()
-    {
+    public ServiceContext() {
     }
 
 
     public ServiceContext( Service service, ServiceAction action, ServiceRequest request,
                            ServiceResults previousResults, EntityRef owner, String collectionName, Query query,
-                           List<ServiceParameter> parameters, ServicePayload payload )
-    {
+                           List<ServiceParameter> parameters, ServicePayload payload ) {
         this.service = service;
         this.action = action;
         this.request = request;
@@ -69,8 +66,7 @@ public class ServiceContext
 
     public ServiceContext( Service service, ServiceAction action, ServiceRequest request,
                            ServiceResults previousResults, EntityRef owner, String collectionName,
-                           List<ServiceParameter> parameters, ServicePayload payload )
-    {
+                           List<ServiceParameter> parameters, ServicePayload payload ) {
         this.service = service;
         this.action = action;
         this.request = request;
@@ -82,208 +78,174 @@ public class ServiceContext
     }
 
 
-    public ServiceAction getAction()
-    {
+    public ServiceAction getAction() {
         return action;
     }
 
 
-    public void setAction( ServiceAction action )
-    {
+    public void setAction( ServiceAction action ) {
         this.action = action;
     }
 
 
-    public ServiceContext withAction( ServiceAction action )
-    {
+    public ServiceContext withAction( ServiceAction action ) {
         this.action = action;
         return this;
     }
 
 
-    public ServiceRequest getRequest()
-    {
+    public ServiceRequest getRequest() {
         return request;
     }
 
 
-    public String getPath()
-    {
+    public String getPath() {
         return request.getPath();
     }
 
 
-    public String getPath( String subPath )
-    {
+    public String getPath( String subPath ) {
         return request.getPath() + "/" + subPath;
     }
 
 
-    public String getPath( UUID entityId )
-    {
+    public String getPath( UUID entityId ) {
         return request.getPath() + "/" + entityId.toString();
     }
 
 
-    public String getPath( EntityRef entity )
-    {
+    public String getPath( EntityRef entity ) {
         return request.getPath() + "/" + entity.getUuid().toString();
     }
 
 
-    public String getPath( UUID entityId, String subPath )
-    {
+    public String getPath( UUID entityId, String subPath ) {
         return request.getPath() + "/" + entityId.toString() + "/" + subPath;
     }
 
 
-    public String getPath( EntityRef entity, String subPath )
-    {
+    public String getPath( EntityRef entity, String subPath ) {
         return request.getPath() + "/" + entity.getUuid().toString() + "/" + subPath;
     }
 
 
-    public void setRequest( ServiceRequest request )
-    {
+    public void setRequest( ServiceRequest request ) {
         this.request = request;
     }
 
 
-    public ServiceContext withRequest( ServiceRequest request )
-    {
+    public ServiceContext withRequest( ServiceRequest request ) {
         this.request = request;
         return this;
     }
 
 
-    public ServiceResults getPreviousResults()
-    {
+    public ServiceResults getPreviousResults() {
         return previousResults;
     }
 
 
-    public void setPreviousResults( ServiceResults previousResults )
-    {
+    public void setPreviousResults( ServiceResults previousResults ) {
         this.previousResults = previousResults;
     }
 
 
-    public ServiceContext withPreviousResults( ServiceResults previousResults )
-    {
+    public ServiceContext withPreviousResults( ServiceResults previousResults ) {
         this.previousResults = previousResults;
         return this;
     }
 
 
-    public EntityRef getOwner()
-    {
+    public EntityRef getOwner() {
         return owner;
     }
 
 
-    public void setOwner( EntityRef owner )
-    {
+    public void setOwner( EntityRef owner ) {
         this.owner = owner;
     }
 
 
-    public ServiceContext withOwner( EntityRef owner )
-    {
+    public ServiceContext withOwner( EntityRef owner ) {
         this.owner = owner;
         return this;
     }
 
 
-    public String getCollectionName()
-    {
+    public String getCollectionName() {
         return collectionName;
     }
 
 
-    public void setCollectionName( String collectionName )
-    {
+    public void setCollectionName( String collectionName ) {
         this.collectionName = collectionName;
     }
 
 
-    public ServiceContext withCollectionName( String collectionName )
-    {
+    public ServiceContext withCollectionName( String collectionName ) {
         this.collectionName = collectionName;
         return this;
     }
 
 
-    public Query getQuery()
-    {
+    public Query getQuery() {
         return query;
     }
 
 
-    public void setQuery( Query query )
-    {
+    public void setQuery( Query query ) {
         this.query = query;
     }
 
 
-    public ServiceContext withQuery( Query query )
-    {
+    public ServiceContext withQuery( Query query ) {
         this.query = query;
         return this;
     }
 
 
-    public List<ServiceParameter> getParameters()
-    {
+    public List<ServiceParameter> getParameters() {
         return parameters;
     }
 
 
-    public void setParameters( List<ServiceParameter> parameters )
-    {
+    public void setParameters( List<ServiceParameter> parameters ) {
         this.parameters = parameters;
     }
 
 
-    public ServiceContext withParameters( List<ServiceParameter> parameters )
-    {
+    public ServiceContext withParameters( List<ServiceParameter> parameters ) {
         this.parameters = parameters;
         return this;
     }
 
 
-    public ServicePayload getPayload()
-    {
+    public ServicePayload getPayload() {
         return payload;
     }
 
 
-    public Object getProperty( String property )
-    {
-        if ( payload == null )
-        {
+    public Object getProperty( String property ) {
+        if ( payload == null ) {
             return null;
         }
         return payload.getProperty( property );
     }
 
 
-    public String getStringProperty( String property )
-    {
+    public String getStringProperty( String property ) {
         Object obj = getProperty( property );
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return ( String ) obj;
         }
         return null;
     }
 
 
-    public Long getLongProperty( String property )
-    {
+    public Long getLongProperty( String property ) {
         Object obj = getProperty( property );
 
-        if ( obj instanceof Long )
-        {
+        if ( obj instanceof Long ) {
             return ( Long ) obj;
         }
 
@@ -291,177 +253,146 @@ public class ServiceContext
     }
 
 
-    public Map<String, Object> getProperties()
-    {
-        if ( payload == null )
-        {
+    public Map<String, Object> getProperties() {
+        if ( payload == null ) {
             return null;
         }
         return payload.getProperties();
     }
 
 
-    public void setPayload( ServicePayload payload )
-    {
+    public void setPayload( ServicePayload payload ) {
         this.payload = payload;
     }
 
 
-    public ServiceContext withPayload( ServicePayload payload )
-    {
+    public ServiceContext withPayload( ServicePayload payload ) {
         this.payload = payload;
         return this;
     }
 
 
-    public String getServiceMetadata()
-    {
+    public String getServiceMetadata() {
         return serviceMetadata;
     }
 
 
-    public void setServiceMetadata( String serviceMetadata )
-    {
+    public void setServiceMetadata( String serviceMetadata ) {
         this.serviceMetadata = serviceMetadata;
     }
 
 
-    public ServiceContext withServiceMetadata( String serviceMetadata )
-    {
+    public ServiceContext withServiceMetadata( String serviceMetadata ) {
         this.serviceMetadata = serviceMetadata;
         return this;
     }
 
 
-    public String getServiceCommand()
-    {
+    public String getServiceCommand() {
         return serviceCommand;
     }
 
 
-    public void setServiceCommand( String serviceCommand )
-    {
+    public void setServiceCommand( String serviceCommand ) {
         this.serviceCommand = serviceCommand;
     }
 
 
-    public ServiceContext withServiceCommand( String serviceCommand )
-    {
+    public ServiceContext withServiceCommand( String serviceCommand ) {
         this.serviceCommand = serviceCommand;
         return this;
     }
 
 
-    public boolean isByUuid()
-    {
+    public boolean isByUuid() {
         return ( ( query != null ) && query.containsSingleUuidIdentifier() );
     }
 
 
-    public boolean isByName()
-    {
+    public boolean isByName() {
         return ( ( query != null ) && query.containsSingleNameOrEmailIdentifier() );
     }
 
 
-    public boolean isByQuery()
-    {
+    public boolean isByQuery() {
         return ( ( query != null ) && !isByUuid() && !isByName() );
     }
 
 
-    public UUID getUuid()
-    {
-        if ( query != null )
-        {
+    public UUID getUuid() {
+        if ( query != null ) {
             return query.getSingleUuidIdentifier();
         }
         return null;
     }
 
 
-    public String getName()
-    {
-        if ( query != null )
-        {
+    public String getName() {
+        if ( query != null ) {
             return query.getSingleNameOrEmailIdentifier();
         }
         return null;
     }
 
 
-    public boolean moreParameters()
-    {
+    public boolean moreParameters() {
         return ( parameters != null ) && !parameters.isEmpty();
     }
 
 
-    public ServiceParameter dequeueParameter()
-    {
+    public ServiceParameter dequeueParameter() {
         return ServiceParameter.dequeueParameter( parameters );
     }
 
 
-    public void queueParameter( ServiceParameter parameter )
-    {
+    public void queueParameter( ServiceParameter parameter ) {
         ServiceParameter.queueParameter( parameters, parameter );
     }
 
 
-    public ServiceParameter firstParameter()
-    {
-        if ( parameters == null )
-        {
+    public ServiceParameter firstParameter() {
+        if ( parameters == null ) {
             return null;
         }
-        if ( parameters.size() > 0 )
-        {
+        if ( parameters.size() > 0 ) {
             return parameters.get( 0 );
         }
         return null;
     }
 
 
-    public boolean firstParameterIsName()
-    {
+    public boolean firstParameterIsName() {
         return ServiceParameter.firstParameterIsName( parameters );
     }
 
 
-    public boolean firstParameterIsQuery()
-    {
+    public boolean firstParameterIsQuery() {
         return ServiceParameter.firstParameterIsQuery( parameters );
     }
 
 
-    public boolean firstParameterIsId()
-    {
+    public boolean firstParameterIsId() {
         return ServiceParameter.firstParameterIsId( parameters );
     }
 
 
-    public int parameterCount()
-    {
+    public int parameterCount() {
         return ServiceParameter.parameterCount( parameters );
     }
 
 
-    public String getChildPath()
-    {
+    public String getChildPath() {
         return request.getChildPath();
     }
 
 
-    public List<ServiceRequest> getNextServiceRequests( EntityRef ref )
-    {
+    public List<ServiceRequest> getNextServiceRequests( EntityRef ref ) {
 
-        if ( isEmpty( parameters ) )
-        {
+        if ( isEmpty( parameters ) ) {
             return null;
         }
 
-        if ( ref == null )
-        {
+        if ( ref == null ) {
             return null;
         }
 
@@ -472,49 +403,40 @@ public class ServiceContext
     }
 
 
-    public List<ServiceRequest> getNextServiceRequests( List<EntityRef> refs )
-    {
+    public List<ServiceRequest> getNextServiceRequests( List<EntityRef> refs ) {
 
-        if ( isEmpty( parameters ) )
-        {
+        if ( isEmpty( parameters ) ) {
             return null;
         }
 
-        if ( isEmpty( refs ) )
-        {
+        if ( isEmpty( refs ) ) {
             return null;
         }
 
         String next_service = null;
 
         String name = null;
-        if ( ServiceParameter.firstParameterIsName( parameters ) )
-        {
+        if ( ServiceParameter.firstParameterIsName( parameters ) ) {
             name = parameters.get( 0 ).toString();
-            if ( "connections".equals( name ) && ( parameters.size() > 1 ) && parameters.get( 1 ).isName() )
-            {
+            if ( "connections".equals( name ) && ( parameters.size() > 1 ) && parameters.get( 1 ).isName() ) {
                 parameters = dequeueCopy( parameters );
                 name = parameters.get( 0 ).toString();
             }
             next_service = normalizeServicePattern( service.getServiceType() + "/*/" + name );
             parameters = dequeueCopy( parameters );
         }
-        else if ( ServiceParameter.moreParameters( parameters ) )
-        {
+        else if ( ServiceParameter.moreParameters( parameters ) ) {
             throw new ServiceResourceNotFoundException( this );
         }
-        else
-        {
+        else {
             return null;
         }
 
         List<ServiceRequest> requests = null;
 
-        if ( next_service != null )
-        {
+        if ( next_service != null ) {
             requests = new ArrayList<ServiceRequest>();
-            for ( EntityRef ref : refs )
-            {
+            for ( EntityRef ref : refs ) {
                 ServiceRequest req =
                         new ServiceRequest( request, ref, request.getPath() + "/" + ref.getUuid() + "/" + name, name,
                                 next_service, parameters );

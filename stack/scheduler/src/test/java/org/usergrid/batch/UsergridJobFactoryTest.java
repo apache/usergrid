@@ -14,15 +14,13 @@ import static org.junit.Assert.assertNotNull;
 
 /** @author zznate */
 @Concurrent()
-public class UsergridJobFactoryTest
-{
+public class UsergridJobFactoryTest {
 
     private static UUID jobId = UUID.randomUUID();
 
 
     @Test
-    public void verifyBuildup() throws JobNotFoundException
-    {
+    public void verifyBuildup() throws JobNotFoundException {
         JobDescriptor jobDescriptor = new JobDescriptor( "", jobId, UUID.randomUUID(), null, null, null );
 
 

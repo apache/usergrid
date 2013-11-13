@@ -44,8 +44,7 @@ import static org.usergrid.utils.JsonUtils.toJsonNode;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 
 
-public class IndexUpdate
-{
+public class IndexUpdate {
 
     private static final Logger logger = LoggerFactory.getLogger( IndexUpdate.class );
 
@@ -73,8 +72,7 @@ public class IndexUpdate
 
 
     public IndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName, Object entryValue,
-                        boolean schemaHasProperty, boolean isMultiValue, boolean removeListEntry, UUID timestampUuid )
-    {
+                        boolean schemaHasProperty, boolean isMultiValue, boolean removeListEntry, UUID timestampUuid ) {
         this.batch = batch;
         this.entity = entity;
         this.entryName = entryName;
@@ -87,171 +85,143 @@ public class IndexUpdate
     }
 
 
-    public Mutator<ByteBuffer> getBatch()
-    {
+    public Mutator<ByteBuffer> getBatch() {
         return batch;
     }
 
 
-    public void setBatch( Mutator<ByteBuffer> batch )
-    {
+    public void setBatch( Mutator<ByteBuffer> batch ) {
         this.batch = batch;
     }
 
 
-    public Entity getEntity()
-    {
+    public Entity getEntity() {
         return entity;
     }
 
 
-    public void setEntity( Entity entity )
-    {
+    public void setEntity( Entity entity ) {
         this.entity = entity;
     }
 
 
-    public UUID getId()
-    {
-        if ( associatedId != null )
-        {
+    public UUID getId() {
+        if ( associatedId != null ) {
             return associatedId;
         }
         return entity.getUuid();
     }
 
 
-    public String getEntryName()
-    {
+    public String getEntryName() {
         return entryName;
     }
 
 
-    public void setEntryName( String entryName )
-    {
+    public void setEntryName( String entryName ) {
         this.entryName = entryName;
     }
 
 
-    public Object getEntryValue()
-    {
+    public Object getEntryValue() {
         return entryValue;
     }
 
 
-    public void setEntryValue( Object entryValue )
-    {
+    public void setEntryValue( Object entryValue ) {
         this.entryValue = entryValue;
     }
 
 
-    public long getTimestamp()
-    {
+    public long getTimestamp() {
         return timestamp;
     }
 
 
-    public void setTimestamp( long timestamp )
-    {
+    public void setTimestamp( long timestamp ) {
         this.timestamp = timestamp;
     }
 
 
-    public UUID getTimestampUuid()
-    {
+    public UUID getTimestampUuid() {
         return timestampUuid;
     }
 
 
-    public List<IndexEntry> getPrevEntries()
-    {
+    public List<IndexEntry> getPrevEntries() {
         return prevEntries;
     }
 
 
-    public void addPrevEntry( String path, Object value, UUID timestamp, ByteBuffer ledgerValue )
-    {
+    public void addPrevEntry( String path, Object value, UUID timestamp, ByteBuffer ledgerValue ) {
         IndexEntry entry = new IndexEntry( path, value, timestamp, ledgerValue );
         prevEntries.add( entry );
     }
 
 
-    public List<IndexEntry> getNewEntries()
-    {
+    public List<IndexEntry> getNewEntries() {
         return newEntries;
     }
 
 
-    public void addNewEntry( String path, Object value )
-    {
+    public void addNewEntry( String path, Object value ) {
         IndexEntry entry = new IndexEntry( path, value, timestampUuid, null );
         newEntries.add( entry );
     }
 
 
-    public Set<String> getIndexesSet()
-    {
+    public Set<String> getIndexesSet() {
         return indexesSet;
     }
 
 
-    public void addIndex( String index )
-    {
+    public void addIndex( String index ) {
         logger.debug( "Indexing {}", index );
         indexesSet.add( index );
     }
 
 
-    public boolean isSchemaHasProperty()
-    {
+    public boolean isSchemaHasProperty() {
         return schemaHasProperty;
     }
 
 
-    public void setSchemaHasProperty( boolean schemaHasProperty )
-    {
+    public void setSchemaHasProperty( boolean schemaHasProperty ) {
         this.schemaHasProperty = schemaHasProperty;
     }
 
 
-    public boolean isMultiValue()
-    {
+    public boolean isMultiValue() {
         return isMultiValue;
     }
 
 
-    public void setMultiValue( boolean isMultiValue )
-    {
+    public void setMultiValue( boolean isMultiValue ) {
         this.isMultiValue = isMultiValue;
     }
 
 
-    public boolean isRemoveListEntry()
-    {
+    public boolean isRemoveListEntry() {
         return removeListEntry;
     }
 
 
-    public void setRemoveListEntry( boolean removeListEntry )
-    {
+    public void setRemoveListEntry( boolean removeListEntry ) {
         this.removeListEntry = removeListEntry;
     }
 
 
-    public void setAssociatedId( UUID associatedId )
-    {
+    public void setAssociatedId( UUID associatedId ) {
         this.associatedId = associatedId;
     }
 
 
-    public UUID getAssociatedId()
-    {
+    public UUID getAssociatedId() {
         return associatedId;
     }
 
 
-    public class IndexEntry
-    {
+    public class IndexEntry {
         private final byte code;
         private String path;
         private final Object value;
@@ -259,8 +229,7 @@ public class IndexUpdate
         private final ByteBuffer ledgerColumn;
 
 
-        public IndexEntry( String path, Object value, UUID timestampUuid, ByteBuffer ledgerColumn )
-        {
+        public IndexEntry( String path, Object value, UUID timestampUuid, ByteBuffer ledgerColumn ) {
             this.path = path;
             this.value = value;
             code = indexValueCode( value );
@@ -269,103 +238,87 @@ public class IndexUpdate
         }
 
 
-        public String getPath()
-        {
+        public String getPath() {
             return path;
         }
 
 
-        public void setPath( String path )
-        {
+        public void setPath( String path ) {
             this.path = path;
         }
 
 
-        public Object getValue()
-        {
+        public Object getValue() {
             return value;
         }
 
 
-        public byte getValueCode()
-        {
+        public byte getValueCode() {
             return code;
         }
 
 
-        public UUID getTimestampUuid()
-        {
+        public UUID getTimestampUuid() {
             return timestampUuid;
         }
 
 
-        public DynamicComposite getIndexComposite()
-        {
+        public DynamicComposite getIndexComposite() {
             return new DynamicComposite( code, value, getId(), timestampUuid );
         }
 
 
-        public DynamicComposite getIndexComposite( Object... ids )
-        {
+        public DynamicComposite getIndexComposite( Object... ids ) {
             return new DynamicComposite( code, value, asList( ids ), timestampUuid );
         }
 
 
-        public ByteBuffer getLedgerColumn()
-        {
+        public ByteBuffer getLedgerColumn() {
             return this.ledgerColumn;
         }
     }
 
 
-    public static class UniqueIndexEntry
-    {
+    public static class UniqueIndexEntry {
         private final byte code;
         private String path;
         private final Object value;
 
 
-        public UniqueIndexEntry( String path, Object value )
-        {
+        public UniqueIndexEntry( String path, Object value ) {
             this.path = path;
             this.value = value;
             code = indexValueCode( value );
         }
 
 
-        public String getPath()
-        {
+        public String getPath() {
             return path;
         }
 
 
-        public void setPath( String path )
-        {
+        public void setPath( String path ) {
             this.path = path;
         }
 
 
-        public Object getValue()
-        {
+        public Object getValue() {
             return value;
         }
 
 
-        public byte getValueCode()
-        {
+        public byte getValueCode() {
             return code;
         }
 
 
-        public DynamicComposite getIndexComposite()
-        {
+        public DynamicComposite getIndexComposite() {
             return new DynamicComposite( code, value );
         }
     }
 
 
-    private static String prepStringForIndex( String str )
-    {
+    private static String prepStringForIndex( String str ) {
         str = str.trim().toLowerCase();
         str = str.substring( 0, Math.min( INDEX_STRING_VALUE_LENGTH, str.length() ) );
         return str;
@@ -376,74 +329,58 @@ public class IndexUpdate
      * @param obj
      * @return
      */
-    public static Object toIndexableValue( Object obj )
-    {
-        if ( obj == null )
-        {
+    public static Object toIndexableValue( Object obj ) {
+        if ( obj == null ) {
             return null;
         }
 
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return prepStringForIndex( ( String ) obj );
         }
 
         // UUIDs, and BigIntegers map to Cassandra UTF8Type and IntegerType
-        if ( ( obj instanceof UUID ) || ( obj instanceof BigInteger ) )
-        {
+        if ( ( obj instanceof UUID ) || ( obj instanceof BigInteger ) ) {
             return obj;
         }
 
         // For any numeric values, turn them into a long
         // and make them BigIntegers for IntegerType
-        if ( obj instanceof Number )
-        {
+        if ( obj instanceof Number ) {
             return BigInteger.valueOf( ( ( Number ) obj ).longValue() );
         }
 
-        if ( obj instanceof Boolean )
-        {
+        if ( obj instanceof Boolean ) {
             return BigInteger.valueOf( ( ( Boolean ) obj ) ? 1L : 0L );
         }
 
-        if ( obj instanceof Date )
-        {
+        if ( obj instanceof Date ) {
             return BigInteger.valueOf( ( ( Date ) obj ).getTime() );
         }
 
-        if ( obj instanceof byte[] )
-        {
+        if ( obj instanceof byte[] ) {
             return wrap( ( byte[] ) obj );
         }
 
-        if ( obj instanceof ByteBuffer )
-        {
+        if ( obj instanceof ByteBuffer ) {
             return obj;
         }
 
         JsonNode json = toJsonNode( obj );
-        if ( ( json != null ) && json.isValueNode() )
-        {
-            if ( json.isBigInteger() )
-            {
+        if ( ( json != null ) && json.isValueNode() ) {
+            if ( json.isBigInteger() ) {
                 return json.getBigIntegerValue();
             }
-            else if ( json.isNumber() || json.isBoolean() )
-            {
+            else if ( json.isNumber() || json.isBoolean() ) {
                 return BigInteger.valueOf( json.getValueAsLong() );
             }
-            else if ( json.isTextual() )
-            {
+            else if ( json.isTextual() ) {
                 return prepStringForIndex( json.getTextValue() );
             }
-            else if ( json.isBinary() )
-            {
-                try
-                {
+            else if ( json.isBinary() ) {
+                try {
                     return wrap( json.getBinaryValue() );
                 }
-                catch ( IOException e )
-                {
+                catch ( IOException e ) {
                 }
             }
         }
@@ -452,75 +389,59 @@ public class IndexUpdate
     }
 
 
-    public static boolean validIndexableValue( Object obj )
-    {
+    public static boolean validIndexableValue( Object obj ) {
         return toIndexableValue( obj ) != null;
     }
 
 
-    public static boolean validIndexableValueOrJson( Object obj )
-    {
-        if ( ( obj instanceof Map ) || ( obj instanceof List ) || ( obj instanceof JsonNode ) )
-        {
+    public static boolean validIndexableValueOrJson( Object obj ) {
+        if ( ( obj instanceof Map ) || ( obj instanceof List ) || ( obj instanceof JsonNode ) ) {
             return true;
         }
         return toIndexableValue( obj ) != null;
     }
 
 
-    public static byte indexValueCode( Object obj )
-    {
+    public static byte indexValueCode( Object obj ) {
         obj = toIndexableValue( obj );
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             return VALUE_CODE_UTF8;
         }
-        else if ( obj instanceof UUID )
-        {
+        else if ( obj instanceof UUID ) {
             return VALUE_CODE_UUID;
         }
-        else if ( obj instanceof BigInteger )
-        {
+        else if ( obj instanceof BigInteger ) {
             return VALUE_CODE_INT;
         }
-        else if ( obj instanceof Number )
-        {
+        else if ( obj instanceof Number ) {
             return VALUE_CODE_INT;
         }
-        else
-        {
+        else {
             return VALUE_CODE_BYTES;
         }
     }
 
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static int compareIndexedValues( Object o1, Object o2 )
-    {
+    public static int compareIndexedValues( Object o1, Object o2 ) {
         o1 = toIndexableValue( o1 );
         o2 = toIndexableValue( o2 );
-        if ( ( o1 == null ) && ( o2 == null ) )
-        {
+        if ( ( o1 == null ) && ( o2 == null ) ) {
             return 0;
         }
-        else if ( o1 == null )
-        {
+        else if ( o1 == null ) {
             return -1;
         }
-        else if ( o2 == null )
-        {
+        else if ( o2 == null ) {
             return 1;
         }
         int c1 = indexValueCode( o1 );
         int c2 = indexValueCode( o2 );
-        if ( c1 == c2 )
-        {
-            if ( o1 instanceof UUID )
-            {
+        if ( c1 == c2 ) {
+            if ( o1 instanceof UUID ) {
                 UUIDComparator.staticCompare( ( UUID ) o1, ( UUID ) o2 );
             }
-            else if ( o1 instanceof Comparable )
-            {
+            else if ( o1 instanceof Comparable ) {
                 return ( ( Comparable ) o1 ).compareTo( o2 );
             }
         }

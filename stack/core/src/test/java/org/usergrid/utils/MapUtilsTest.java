@@ -24,15 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class MapUtilsTest
-{
+public class MapUtilsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( MapUtilsTest.class );
 
 
     @Test
-    public void testMapUtils()
-    {
+    public void testMapUtils() {
 
         Map<String, ?> map = MapUtils.putPath( "a.b.c", 5 );
         LOG.info( JsonUtils.mapToFormattedJsonString( map ) );

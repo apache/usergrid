@@ -54,8 +54,7 @@ import static org.usergrid.utils.ConversionUtils.getLong;
 import static org.usergrid.utils.ConversionUtils.object;
 
 
-public class CassandraMQUtils
-{
+public class CassandraMQUtils {
 
     public static final Logger logger = LoggerFactory.getLogger( CassandraMQUtils.class );
 
@@ -72,11 +71,9 @@ public class CassandraMQUtils
 
 
     public static void logBatchOperation( String operation, Object columnFamily, Object key, Object columnName,
-                                          Object columnValue, long timestamp )
-    {
+                                          Object columnValue, long timestamp ) {
 
-        if ( batch_logger.isInfoEnabled() )
-        {
+        if ( batch_logger.isInfoEnabled() ) {
             batch_logger.info( "{} cf={} key={} name={} value={}", new Object[] {
                     operation, columnFamily, key, columnName, columnValue
             } );
@@ -88,25 +85,19 @@ public class CassandraMQUtils
      * Encode a message into a set of columns. JMS properties are encoded as strings and longs everything else is binary
      * JSON.
      */
-    public static Map<ByteBuffer, ByteBuffer> serializeMessage( Message message )
-    {
-        if ( message == null )
-        {
+    public static Map<ByteBuffer, ByteBuffer> serializeMessage( Message message ) {
+        if ( message == null ) {
             return null;
         }
         Map<ByteBuffer, ByteBuffer> columns = new HashMap<ByteBuffer, ByteBuffer>();
-        for ( Entry<String, Object> property : message.getProperties().entrySet() )
-        {
-            if ( property.getValue() == null )
-            {
+        for ( Entry<String, Object> property : message.getProperties().entrySet() ) {
+            if ( property.getValue() == null ) {
                 columns.put( bytebuffer( property.getKey() ), null );
             }
-            else if ( MESSAGE_TYPE.equals( property.getKey() ) || MESSAGE_ID.equals( property.getKey() ) )
-            {
+            else if ( MESSAGE_TYPE.equals( property.getKey() ) || MESSAGE_ID.equals( property.getKey() ) ) {
                 columns.put( bytebuffer( property.getKey() ), bytebuffer( property.getValue() ) );
             }
-            else
-            {
+            else {
                 columns.put( bytebuffer( property.getKey() ), JsonUtils.toByteBuffer( property.getValue() ) );
             }
         }
@@ -114,26 +105,21 @@ public class CassandraMQUtils
     }
 
 
-    public static Mutator<ByteBuffer> addMessageToMutator( Mutator<ByteBuffer> m, Message message, long timestamp )
-    {
+    public static Mutator<ByteBuffer> addMessageToMutator( Mutator<ByteBuffer> m, Message message, long timestamp ) {
 
         Map<ByteBuffer, ByteBuffer> columns = serializeMessage( message );
 
-        if ( columns == null )
-        {
+        if ( columns == null ) {
             return m;
         }
 
-        for ( Map.Entry<ByteBuffer, ByteBuffer> column_entry : columns.entrySet() )
-        {
-            if ( ( column_entry.getValue() != null ) && column_entry.getValue().hasRemaining() )
-            {
+        for ( Map.Entry<ByteBuffer, ByteBuffer> column_entry : columns.entrySet() ) {
+            if ( ( column_entry.getValue() != null ) && column_entry.getValue().hasRemaining() ) {
                 HColumn<ByteBuffer, ByteBuffer> column =
                         createColumn( column_entry.getKey(), column_entry.getValue(), timestamp, be, be );
                 m.addInsertion( bytebuffer( message.getUuid() ), QueuesCF.MESSAGE_PROPERTIES.toString(), column );
             }
-            else
-            {
+            else {
                 m.addDeletion( bytebuffer( message.getUuid() ), QueuesCF.MESSAGE_PROPERTIES.toString(),
                         column_entry.getKey(), be, timestamp );
             }
@@ -143,25 +129,20 @@ public class CassandraMQUtils
     }
 
 
-    public static Message deserializeMessage( List<HColumn<String, ByteBuffer>> columns )
-    {
+    public static Message deserializeMessage( List<HColumn<String, ByteBuffer>> columns ) {
         Message message = null;
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        for ( HColumn<String, ByteBuffer> column : columns )
-        {
-            if ( MESSAGE_TYPE.equals( column.getName() ) || MESSAGE_ID.equals( column.getName() ) )
-            {
+        for ( HColumn<String, ByteBuffer> column : columns ) {
+            if ( MESSAGE_TYPE.equals( column.getName() ) || MESSAGE_ID.equals( column.getName() ) ) {
                 properties.put( column.getName(),
                         object( MESSAGE_PROPERTIES.get( column.getName() ), column.getValue() ) );
             }
-            else
-            {
+            else {
                 properties.put( column.getName(), JsonUtils.fromByteBuffer( column.getValue() ) );
             }
         }
-        if ( !properties.isEmpty() )
-        {
+        if ( !properties.isEmpty() ) {
             message = new Message( properties );
         }
 
@@ -169,30 +150,23 @@ public class CassandraMQUtils
     }
 
 
-    public static Map<ByteBuffer, ByteBuffer> serializeQueue( Queue queue )
-    {
-        if ( queue == null )
-        {
+    public static Map<ByteBuffer, ByteBuffer> serializeQueue( Queue queue ) {
+        if ( queue == null ) {
             return null;
         }
         Map<ByteBuffer, ByteBuffer> columns = new HashMap<ByteBuffer, ByteBuffer>();
-        for ( Entry<String, Object> property : queue.getProperties().entrySet() )
-        {
-            if ( property.getValue() == null )
-            {
+        for ( Entry<String, Object> property : queue.getProperties().entrySet() ) {
+            if ( property.getValue() == null ) {
                 continue;
             }
             if ( Queue.QUEUE_ID.equals( property.getKey() ) || QUEUE_NEWEST.equals( property.getKey() ) || QUEUE_OLDEST
-                    .equals( property.getKey() ) )
-            {
+                    .equals( property.getKey() ) ) {
                 continue;
             }
-            if ( QUEUE_PROPERTIES.containsKey( property.getKey() ) )
-            {
+            if ( QUEUE_PROPERTIES.containsKey( property.getKey() ) ) {
                 columns.put( bytebuffer( property.getKey() ), bytebuffer( property.getValue() ) );
             }
-            else
-            {
+            else {
                 columns.put( bytebuffer( property.getKey() ), JsonUtils.toByteBuffer( property.getValue() ) );
             }
         }
@@ -200,25 +174,20 @@ public class CassandraMQUtils
     }
 
 
-    public static Queue deserializeQueue( List<HColumn<String, ByteBuffer>> columns )
-    {
+    public static Queue deserializeQueue( List<HColumn<String, ByteBuffer>> columns ) {
         Queue queue = null;
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        for ( HColumn<String, ByteBuffer> column : columns )
-        {
-            if ( QUEUE_PROPERTIES.containsKey( column.getName() ) )
-            {
+        for ( HColumn<String, ByteBuffer> column : columns ) {
+            if ( QUEUE_PROPERTIES.containsKey( column.getName() ) ) {
                 properties
                         .put( column.getName(), object( QUEUE_PROPERTIES.get( column.getName() ), column.getValue() ) );
             }
-            else
-            {
+            else {
                 properties.put( column.getName(), JsonUtils.fromByteBuffer( column.getValue() ) );
             }
         }
-        if ( !properties.isEmpty() )
-        {
+        if ( !properties.isEmpty() ) {
             queue = new Queue( properties );
         }
 
@@ -226,26 +195,21 @@ public class CassandraMQUtils
     }
 
 
-    public static Mutator<ByteBuffer> addQueueToMutator( Mutator<ByteBuffer> m, Queue queue, long timestamp )
-    {
+    public static Mutator<ByteBuffer> addQueueToMutator( Mutator<ByteBuffer> m, Queue queue, long timestamp ) {
 
         Map<ByteBuffer, ByteBuffer> columns = serializeQueue( queue );
 
-        if ( columns == null )
-        {
+        if ( columns == null ) {
             return m;
         }
 
-        for ( Map.Entry<ByteBuffer, ByteBuffer> column_entry : columns.entrySet() )
-        {
-            if ( ( column_entry.getValue() != null ) && column_entry.getValue().hasRemaining() )
-            {
+        for ( Map.Entry<ByteBuffer, ByteBuffer> column_entry : columns.entrySet() ) {
+            if ( ( column_entry.getValue() != null ) && column_entry.getValue().hasRemaining() ) {
                 HColumn<ByteBuffer, ByteBuffer> column =
                         createColumn( column_entry.getKey(), column_entry.getValue(), timestamp, be, be );
                 m.addInsertion( bytebuffer( queue.getUuid() ), QueuesCF.QUEUE_PROPERTIES.toString(), column );
             }
-            else
-            {
+            else {
                 m.addDeletion( bytebuffer( queue.getUuid() ), QueuesCF.QUEUE_PROPERTIES.toString(),
                         column_entry.getKey(), be, timestamp );
             }
@@ -255,8 +219,7 @@ public class CassandraMQUtils
     }
 
 
-    public static ByteBuffer getQueueShardRowKey( UUID uuid, long ts )
-    {
+    public static ByteBuffer getQueueShardRowKey( UUID uuid, long ts ) {
         ByteBuffer bytes = ByteBuffer.allocate( 24 );
         bytes.putLong( uuid.getMostSignificantBits() );
         bytes.putLong( uuid.getLeastSignificantBits() );
@@ -266,8 +229,7 @@ public class CassandraMQUtils
 
 
     /** Get a row key in format of queueId+clientId */
-    public static ByteBuffer getQueueClientTransactionKey( UUID queueId, UUID clientId )
-    {
+    public static ByteBuffer getQueueClientTransactionKey( UUID queueId, UUID clientId ) {
         ByteBuffer bytes = ByteBuffer.allocate( 32 );
         bytes.putLong( queueId.getMostSignificantBits() );
         bytes.putLong( queueId.getLeastSignificantBits() );
@@ -277,25 +239,21 @@ public class CassandraMQUtils
     }
 
 
-    public static UUID getUUIDFromRowKey( ByteBuffer bytes )
-    {
+    public static UUID getUUIDFromRowKey( ByteBuffer bytes ) {
         return ConversionUtils.uuid( bytes );
     }
 
 
-    public static long getLongFromRowKey( ByteBuffer bytes )
-    {
+    public static long getLongFromRowKey( ByteBuffer bytes ) {
         bytes = bytes.slice();
         return getLong( 16 );
     }
 
 
     /** Get the queueId from the path */
-    public static UUID getQueueId( String path )
-    {
+    public static UUID getQueueId( String path ) {
         String queuePath = Queue.normalizeQueuePath( path );
-        if ( queuePath == null )
-        {
+        if ( queuePath == null ) {
             queuePath = "/";
         }
 
@@ -306,15 +264,12 @@ public class CassandraMQUtils
 
 
     /** Get the consumer Id from the queue id */
-    public static UUID getConsumerId( UUID queueId, QueueQuery query )
-    {
+    public static UUID getConsumerId( UUID queueId, QueueQuery query ) {
         UUID consumerId = queueId;
 
-        if ( query.getPosition() == CONSUMER )
-        {
+        if ( query.getPosition() == CONSUMER ) {
             consumerId = query.getConsumerId();
-            if ( ( consumerId == null ) && ( query.getPosition() == CONSUMER ) )
-            {
+            if ( ( consumerId == null ) && ( query.getPosition() == CONSUMER ) ) {
                 consumerId = UUIDUtils.newTimeUUID();
             }
         }

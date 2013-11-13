@@ -43,8 +43,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 /** Simple tests to test querying at the REST tier */
 @Concurrent()
-public class PagingResourceIT extends AbstractRestIT
-{
+public class PagingResourceIT extends AbstractRestIT {
 
 
     @Rule
@@ -52,8 +51,7 @@ public class PagingResourceIT extends AbstractRestIT
 
 
     @Test
-    public void collectionPaging() throws Exception
-    {
+    public void collectionPaging() throws Exception {
 
         CustomCollection things = context.application().collection( "things" );
 
@@ -61,8 +59,7 @@ public class PagingResourceIT extends AbstractRestIT
 
         List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
             things.create( entity );
 
@@ -73,13 +70,11 @@ public class PagingResourceIT extends AbstractRestIT
         ApiResponse response = null;
         Iterator<Map<String, String>> entityItr = created.iterator();
 
-        do
-        {
+        do {
 
             response = parse( things.get() );
 
-            for ( Entity e : response.getEntities() )
-            {
+            for ( Entity e : response.getEntities() ) {
                 assertTrue( entityItr.hasNext() );
                 assertEquals( entityItr.next().get( "name" ), e.getProperties().get( "name" ).asText() );
             }
@@ -94,8 +89,7 @@ public class PagingResourceIT extends AbstractRestIT
 
 
     @Test
-    public void startPaging() throws Exception
-    {
+    public void startPaging() throws Exception {
 
         CustomCollection things = context.application().collection( "things" );
 
@@ -103,8 +97,7 @@ public class PagingResourceIT extends AbstractRestIT
 
         List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
             things.create( entity );
 
@@ -117,13 +110,11 @@ public class PagingResourceIT extends AbstractRestIT
         UUID start = null;
         int index = 0;
 
-        do
-        {
+        do {
 
             response = parse( things.get() );
 
-            for ( Entity e : response.getEntities() )
-            {
+            for ( Entity e : response.getEntities() ) {
                 assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
                 index++;
             }
@@ -143,8 +134,7 @@ public class PagingResourceIT extends AbstractRestIT
 
 
     @Test
-    public void colletionBatchDeleting() throws Exception
-    {
+    public void colletionBatchDeleting() throws Exception {
 
         CustomCollection things = context.application().collection( "things" );
 
@@ -152,8 +142,7 @@ public class PagingResourceIT extends AbstractRestIT
 
         List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
             things.create( entity );
 
@@ -166,8 +155,7 @@ public class PagingResourceIT extends AbstractRestIT
 
         things = things.withLimit( deletePageSize );
 
-        for ( int i = 0; i < size / deletePageSize; i++ )
-        {
+        for ( int i = 0; i < size / deletePageSize; i++ ) {
             response = parse( things.delete() );
 
             assertEquals( "Only 10 entities should have been deleted", 10, response.getEntityCount() );
@@ -186,8 +174,7 @@ public class PagingResourceIT extends AbstractRestIT
 
 
     @Test
-    public void emptyQlandLimitIgnored() throws Exception
-    {
+    public void emptyQlandLimitIgnored() throws Exception {
 
         CustomCollection things = context.application().collection( "things" );
 
@@ -225,8 +212,7 @@ public class PagingResourceIT extends AbstractRestIT
     private static ObjectMapper mapper = new ObjectMapper();
 
 
-    private static final ApiResponse parse( JsonNode response ) throws Exception
-    {
+    private static final ApiResponse parse( JsonNode response ) throws Exception {
         return mapper.readValue( response, ApiResponse.class );
     }
 }

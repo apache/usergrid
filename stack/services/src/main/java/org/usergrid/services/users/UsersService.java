@@ -50,14 +50,12 @@ import static org.usergrid.services.ServiceResults.genericServiceResults;
 import static org.usergrid.utils.ConversionUtils.string;
 
 
-public class UsersService extends AbstractCollectionService
-{
+public class UsersService extends AbstractCollectionService {
 
     private static final Logger LOG = LoggerFactory.getLogger( UsersService.class );
 
 
-    public UsersService()
-    {
+    public UsersService() {
         super();
         LOG.info( "/users" );
 
@@ -75,30 +73,25 @@ public class UsersService extends AbstractCollectionService
 
 
     @Override
-    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception
-    {
+    public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
         String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
 
-        if ( nameProperty == null )
-        {
+        if ( nameProperty == null ) {
             nameProperty = "name";
         }
 
         EntityRef entity = null;
         Identifier id = Identifier.from( name );
 
-        if ( id != null )
-        {
+        if ( id != null ) {
             entity = em.getUserByIdentifier( id );
         }
 
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        if ( !context.moreParameters() )
-        {
+        if ( !context.moreParameters() ) {
             entity = em.get( entity );
             entity = importEntity( context, ( Entity ) entity );
         }
@@ -113,13 +106,10 @@ public class UsersService extends AbstractCollectionService
 
 
     @Override
-    public ServiceResults invokeItemWithName( ServiceContext context, String name ) throws Exception
-    {
-        if ( "me".equals( name ) )
-        {
+    public ServiceResults invokeItemWithName( ServiceContext context, String name ) throws Exception {
+        if ( "me".equals( name ) ) {
             UserInfo user = SubjectUtils.getUser();
-            if ( ( user != null ) && ( user.getUuid() != null ) )
-            {
+            if ( ( user != null ) && ( user.getUuid() != null ) ) {
                 return super.invokeItemWithId( context, user.getUuid() );
             }
         }
@@ -128,11 +118,9 @@ public class UsersService extends AbstractCollectionService
 
 
     @Override
-    public ServiceResults postCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults postCollection( ServiceContext context ) throws Exception {
         Iterator<Map<String, Object>> i = context.getPayload().payloadIterator();
-        while ( i.hasNext() )
-        {
+        while ( i.hasNext() ) {
             Map<String, Object> p = i.next();
             setGravatar( p );
         }
@@ -140,18 +128,15 @@ public class UsersService extends AbstractCollectionService
     }
 
 
-    public void setGravatar( Map<String, Object> p )
-    {
-        if ( isBlank( string( p.get( PROPERTY_PICTURE ) ) ) && isNotBlank( string( p.get( "email" ) ) ) )
-        {
+    public void setGravatar( Map<String, Object> p ) {
+        if ( isBlank( string( p.get( PROPERTY_PICTURE ) ) ) && isNotBlank( string( p.get( "email" ) ) ) ) {
             p.put( PROPERTY_PICTURE, "http://www.gravatar.com/avatar/" + md5Hex(
                     string( p.get( PROPERTY_EMAIL ) ).trim().toLowerCase() ) );
         }
     }
 
 
-    public ServiceResults getUserRoles( UUID userId ) throws Exception
-    {
+    public ServiceResults getUserRoles( UUID userId ) throws Exception {
         Map<String, Role> roles = em.getUserRolesWithTitles( userId );
         // roles.put("default", "Default");
         ServiceResults results = genericServiceResults().withData( roles );
@@ -159,23 +144,20 @@ public class UsersService extends AbstractCollectionService
     }
 
 
-    public ServiceResults getApplicationRolePermissions( String roleName ) throws Exception
-    {
+    public ServiceResults getApplicationRolePermissions( String roleName ) throws Exception {
         Set<String> permissions = em.getRolePermissions( roleName );
         ServiceResults results = genericServiceResults().withData( permissions );
         return results;
     }
 
 
-    public ServiceResults addUserRole( UUID userId, String roleName ) throws Exception
-    {
+    public ServiceResults addUserRole( UUID userId, String roleName ) throws Exception {
         em.addUserToRole( userId, roleName );
         return getUserRoles( userId );
     }
 
 
-    public ServiceResults deleteUserRole( UUID userId, String roleName ) throws Exception
-    {
+    public ServiceResults deleteUserRole( UUID userId, String roleName ) throws Exception {
         em.removeUserFromRole( userId, roleName );
         return getUserRoles( userId );
     }
@@ -183,33 +165,27 @@ public class UsersService extends AbstractCollectionService
 
     @Override
     public ServiceResults getEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                               EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                               EntityDictionaryEntry dictionary ) throws Exception {
 
-        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "rolenames" );
 
-            if ( context.parameterCount() == 0 )
-            {
+            if ( context.parameterCount() == 0 ) {
 
                 return getUserRoles( entityRef.getUuid() );
             }
-            else if ( context.parameterCount() == 1 )
-            {
+            else if ( context.parameterCount() == 1 ) {
 
                 String roleName = context.getParameters().get( 1 ).getName();
-                if ( isBlank( roleName ) )
-                {
+                if ( isBlank( roleName ) ) {
                     return null;
                 }
 
                 return getApplicationRolePermissions( roleName );
             }
         }
-        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "permissions" );
 
@@ -223,17 +199,14 @@ public class UsersService extends AbstractCollectionService
     @Override
     public ServiceResults postEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                 EntityDictionaryEntry dictionary, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "permissions".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "permissions".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "permissions" );
 
             String permission = payload.getStringProperty( "permission" );
-            if ( isBlank( permission ) )
-            {
+            if ( isBlank( permission ) ) {
                 return null;
             }
 
@@ -249,20 +222,16 @@ public class UsersService extends AbstractCollectionService
     @Override
     public ServiceResults putEntityDictionary( ServiceContext context, List<EntityRef> refs,
                                                EntityDictionaryEntry dictionary, ServicePayload payload )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "rolenames" );
 
-            if ( context.parameterCount() == 0 )
-            {
+            if ( context.parameterCount() == 0 ) {
 
                 String name = payload.getStringProperty( "name" );
-                if ( isBlank( name ) )
-                {
+                if ( isBlank( name ) ) {
                     return null;
                 }
 
@@ -276,45 +245,37 @@ public class UsersService extends AbstractCollectionService
 
     @Override
     public ServiceResults deleteEntityDictionary( ServiceContext context, List<EntityRef> refs,
-                                                  EntityDictionaryEntry dictionary ) throws Exception
-    {
+                                                  EntityDictionaryEntry dictionary ) throws Exception {
 
-        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        if ( "rolenames".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "rolenames" );
 
-            if ( context.parameterCount() == 1 )
-            {
+            if ( context.parameterCount() == 1 ) {
 
                 String roleName = context.getParameters().get( 1 ).getName();
-                if ( isBlank( roleName ) )
-                {
+                if ( isBlank( roleName ) ) {
                     return null;
                 }
 
                 return deleteUserRole( entityRef.getUuid(), roleName );
             }
         }
-        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) )
-        {
+        else if ( "permissions".equalsIgnoreCase( dictionary.getName() ) ) {
             EntityRef entityRef = refs.get( 0 );
             checkPermissionsForEntitySubPath( context, entityRef, "permissions" );
 
             Query q = context.getParameters().get( 0 ).getQuery();
-            if ( q == null )
-            {
+            if ( q == null ) {
                 return null;
             }
 
             List<String> permissions = q.getPermissions();
-            if ( permissions == null )
-            {
+            if ( permissions == null ) {
                 return null;
             }
 
-            for ( String permission : permissions )
-            {
+            for ( String permission : permissions ) {
                 em.revokeUserPermission( entityRef.getUuid(), permission );
             }
 

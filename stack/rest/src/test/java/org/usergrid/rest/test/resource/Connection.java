@@ -22,36 +22,30 @@ import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
 
 
 /** @author tnine */
-public class Connection extends ValueResource
-{
+public class Connection extends ValueResource {
 
 
-    public Connection( String name, NamedResource parent )
-    {
+    public Connection( String name, NamedResource parent ) {
         super( name, parent );
     }
 
 
-    public EntityResource entity( String deviceName )
-    {
+    public EntityResource entity( String deviceName ) {
         return new EntityResource( deviceName, this );
     }
 
 
-    public EntityResource entity( UUID entityId )
-    {
+    public EntityResource entity( UUID entityId ) {
         return new EntityResource( entityId, this );
     }
 
 
-    public DevicesCollection devices()
-    {
+    public DevicesCollection devices() {
         return new DevicesCollection( this );
     }
 
 
-    public CustomCollection collection( String name )
-    {
+    public CustomCollection collection( String name ) {
         return new CustomCollection( name, this );
     }
 }

@@ -30,58 +30,48 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-public class EncryptionServiceImplTest
-{
+public class EncryptionServiceImplTest {
 
     @Test(expected = IllegalArgumentException.class)
-    public void duplicateCommand()
-    {
+    public void duplicateCommand() {
         final String duplicate = "foo";
 
-        EncryptionCommand command1 = new EncryptionCommand()
-        {
+        EncryptionCommand command1 = new EncryptionCommand() {
 
             @Override
-            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-            {
+            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
                 return null;
             }
 
 
             @Override
-            public String getName()
-            {
+            public String getName() {
                 return duplicate;
             }
 
 
             @Override
-            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-            {
+            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
                 return null;
             }
         };
 
-        EncryptionCommand command2 = new EncryptionCommand()
-        {
+        EncryptionCommand command2 = new EncryptionCommand() {
 
             @Override
-            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-            {
+            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
                 return null;
             }
 
 
             @Override
-            public String getName()
-            {
+            public String getName() {
                 return duplicate;
             }
 
 
             @Override
-            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-            {
+            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
                 return null;
             }
         };
@@ -97,30 +87,25 @@ public class EncryptionServiceImplTest
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void missingCryptoCommand()
-    {
+    public void missingCryptoCommand() {
         final String duplicate = "foo";
 
-        EncryptionCommand command1 = new EncryptionCommand()
-        {
+        EncryptionCommand command1 = new EncryptionCommand() {
 
             @Override
-            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-            {
+            public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
                 return null;
             }
 
 
             @Override
-            public String getName()
-            {
+            public String getName() {
                 return duplicate;
             }
 
 
             @Override
-            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-            {
+            public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
                 return null;
             }
         };
@@ -143,8 +128,7 @@ public class EncryptionServiceImplTest
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void noCommands()
-    {
+    public void noCommands() {
 
         EncryptionServiceImpl service = new EncryptionServiceImpl();
         service.init();
@@ -153,8 +137,7 @@ public class EncryptionServiceImplTest
 
     /** Tests legacy md5 support for old imported md5 -> sha-1 passwords */
     @Test
-    public void legacyMd5Support()
-    {
+    public void legacyMd5Support() {
         EncryptionServiceImpl impl = new EncryptionServiceImpl();
 
         Md5HashCommand md5 = new Md5HashCommand();

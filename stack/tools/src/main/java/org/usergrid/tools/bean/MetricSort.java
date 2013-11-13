@@ -2,8 +2,7 @@ package org.usergrid.tools.bean;
 
 
 /** @author zznate */
-public enum MetricSort
-{
+public enum MetricSort {
 
     APP_REQ_COUNT( "application.requests:*:*:*" ),
     APP_USER_COUNT( "application.users:*:*:*" ),
@@ -15,14 +14,12 @@ public enum MetricSort
     private final String queryString;
 
 
-    MetricSort( String queryString )
-    {
+    MetricSort( String queryString ) {
         this.queryString = queryString;
     }
 
 
-    public String queryFilter()
-    {
+    public String queryFilter() {
         return queryString;
     }
 

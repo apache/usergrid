@@ -25,8 +25,7 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.annotations.EntityCollection;
 
 
-public class CollectionInfo
-{
+public class CollectionInfo {
 
     private String name;
     private EntityInfo container;
@@ -42,13 +41,11 @@ public class CollectionInfo
     private String sort;
 
 
-    public CollectionInfo()
-    {
+    public CollectionInfo() {
     }
 
 
-    public CollectionInfo( EntityCollection collectionAnnotation )
-    {
+    public CollectionInfo( EntityCollection collectionAnnotation ) {
         setIndexingDynamicDictionaries( collectionAnnotation.indexingDynamicDictionaries() );
         setLinkedCollection( collectionAnnotation.linkedCollection() );
         setPublic( collectionAnnotation.publicVisible() );
@@ -61,168 +58,139 @@ public class CollectionInfo
     }
 
 
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
 
-    public void setType( String type )
-    {
-        if ( "".equals( type ) )
-        {
+    public void setType( String type ) {
+        if ( "".equals( type ) ) {
             type = null;
         }
         this.type = type;
     }
 
 
-    public boolean isPropertyIndexed( String propertyName )
-    {
+    public boolean isPropertyIndexed( String propertyName ) {
         return getPropertiesIndexed().contains( propertyName );
     }
 
 
-    public boolean hasIndexedProperties()
-    {
+    public boolean hasIndexedProperties() {
         return !getPropertiesIndexed().isEmpty();
     }
 
 
-    public Set<String> getPropertiesIndexed()
-    {
-        if ( propertiesIndexed != null )
-        {
+    public Set<String> getPropertiesIndexed() {
+        if ( propertiesIndexed != null ) {
             return propertiesIndexed;
         }
         return Schema.getDefaultSchema().getEntityInfo( getType() ).getIndexedProperties();
     }
 
 
-    public void setPropertiesIndexed( Set<String> propertiesIndexed )
-    {
+    public void setPropertiesIndexed( Set<String> propertiesIndexed ) {
         this.propertiesIndexed = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
         this.propertiesIndexed.addAll( propertiesIndexed );
     }
 
 
-    public boolean isDictionaryIndexed( String propertyName )
-    {
+    public boolean isDictionaryIndexed( String propertyName ) {
         return dictionariesIndexed.contains( propertyName );
     }
 
 
-    public Set<String> getDictionariesIndexed()
-    {
+    public Set<String> getDictionariesIndexed() {
         return dictionariesIndexed;
     }
 
 
-    public void setDictionariesIndexed( Set<String> dictionariesIndexed )
-    {
+    public void setDictionariesIndexed( Set<String> dictionariesIndexed ) {
         dictionariesIndexed = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
         dictionariesIndexed.addAll( dictionariesIndexed );
     }
 
 
-    public boolean isIndexingDynamicDictionaries()
-    {
+    public boolean isIndexingDynamicDictionaries() {
         return indexingDynamicDictionaries;
     }
 
 
-    public void setIndexingDynamicDictionaries( boolean indexingDynamicDictionaries )
-    {
+    public void setIndexingDynamicDictionaries( boolean indexingDynamicDictionaries ) {
         this.indexingDynamicDictionaries = indexingDynamicDictionaries;
     }
 
 
-    public String getLinkedCollection()
-    {
+    public String getLinkedCollection() {
         return linkedCollection;
     }
 
 
-    public void setLinkedCollection( String linkedCollection )
-    {
-        if ( "".equals( linkedCollection ) )
-        {
+    public void setLinkedCollection( String linkedCollection ) {
+        if ( "".equals( linkedCollection ) ) {
             linkedCollection = null;
         }
         this.linkedCollection = linkedCollection;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
-    public EntityInfo getContainer()
-    {
+    public EntityInfo getContainer() {
         return container;
     }
 
 
-    public void setContainer( EntityInfo entityInfo )
-    {
+    public void setContainer( EntityInfo entityInfo ) {
         container = entityInfo;
     }
 
 
-    public boolean isPublic()
-    {
+    public boolean isPublic() {
         return publicVisible;
     }
 
 
-    public void setPublic( boolean publicVisible )
-    {
+    public void setPublic( boolean publicVisible ) {
         this.publicVisible = publicVisible;
     }
 
 
-    public boolean isReversed()
-    {
+    public boolean isReversed() {
         return reversed;
     }
 
 
-    public void setReversed( boolean reversed )
-    {
+    public void setReversed( boolean reversed ) {
         this.reversed = reversed;
     }
 
 
-    public void setIncludedInExport( boolean includedInExport )
-    {
+    public void setIncludedInExport( boolean includedInExport ) {
         this.includedInExport = includedInExport;
     }
 
 
-    public boolean isIncludedInExport()
-    {
+    public boolean isIncludedInExport() {
         return includedInExport;
     }
 
 
-    public String getSort()
-    {
+    public String getSort() {
         return sort;
     }
 
 
-    public void setSort( String sort )
-    {
-        if ( "".equals( sort ) )
-        {
+    public void setSort( String sort ) {
+        if ( "".equals( sort ) ) {
             sort = null;
         }
         this.sort = sort;
@@ -230,8 +198,7 @@ public class CollectionInfo
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "CollectionInfo [name=" + name + ", indexingDynamicDictionaries=" + indexingDynamicDictionaries
                 + ", linkedCollection=" + linkedCollection + ", propertiesIndexed=" + propertiesIndexed
                 + ", publicVisible=" + publicVisible + ", dictionariesIndexed=" + dictionariesIndexed + ", type=" + type

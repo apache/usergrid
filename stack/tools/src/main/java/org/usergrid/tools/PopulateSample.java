@@ -43,15 +43,13 @@ import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
 
 
-public class PopulateSample extends ToolBase
-{
+public class PopulateSample extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( Export.class );
 
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option useSpring = OptionBuilder.create( "spring" );
 
@@ -63,8 +61,7 @@ public class PopulateSample extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         logger.info( "Starting test..." );
         startSpring();
 
@@ -131,8 +128,7 @@ public class PopulateSample extends ToolBase
 
 
     public ServiceResults testRequest( ServiceManager sm, ServiceAction action, int expectedCount,
-                                       Map<String, Object> properties, Object... params ) throws Exception
-    {
+                                       Map<String, Object> properties, Object... params ) throws Exception {
         ServiceRequest request = sm.newRequest( action, parameters( params ), payload( properties ) );
 
         logger.info( "Request: " + action + " " + request.toString() );

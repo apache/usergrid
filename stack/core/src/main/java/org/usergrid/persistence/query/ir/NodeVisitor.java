@@ -17,8 +17,7 @@ package org.usergrid.persistence.query.ir;
 
 
 /** @author tnine */
-public interface NodeVisitor
-{
+public interface NodeVisitor {
 
     /**
      *

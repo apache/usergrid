@@ -26,8 +26,7 @@ import static org.usergrid.utils.ListUtils.anyNull;
  *
  * @author zznate
  */
-public class FacebookProvider extends AbstractProvider
-{
+public class FacebookProvider extends AbstractProvider {
     private static final String DEF_API_URL = "https://graph.facebook.com/me";
     private static final String DEF_PICTURE_URL = "http://graph.facebook.com/%s/picture";
 
@@ -37,65 +36,54 @@ public class FacebookProvider extends AbstractProvider
     private String pictureUrl = DEF_PICTURE_URL;
 
 
-    FacebookProvider( EntityManager entityManager, ManagementService managementService )
-    {
+    FacebookProvider( EntityManager entityManager, ManagementService managementService ) {
         super( entityManager, managementService );
     }
 
 
     @Override
-    void configure()
-    {
-        try
-        {
+    void configure() {
+        try {
             Map config = loadConfigurationFor( "facebookProvider" );
-            if ( config != null )
-            {
+            if ( config != null ) {
                 String foundApiUrl = ( String ) config.get( "api_url" );
-                if ( foundApiUrl != null )
-                {
+                if ( foundApiUrl != null ) {
                     apiUrl = foundApiUrl;
                 }
                 String foundPicUrl = ( String ) config.get( "pic_url" );
-                if ( foundPicUrl != null )
-                {
+                if ( foundPicUrl != null ) {
                     pictureUrl = foundApiUrl;
                 }
             }
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
     }
 
 
     @Override
-    public Map<Object, Object> loadConfigurationFor()
-    {
+    public Map<Object, Object> loadConfigurationFor() {
         return loadConfigurationFor( "facebookProvider" );
     }
 
 
     /** Configuration parameters we look for: <ul> <li>api_url</li> <li>pic_url</li> </ul> */
     @Override
-    public void saveToConfiguration( Map<String, Object> config )
-    {
+    public void saveToConfiguration( Map<String, Object> config ) {
         saveToConfiguration( "facebookProvider", config );
     }
 
 
     @Override
-    Map<String, Object> userFromResource( String externalToken )
-    {
+    Map<String, Object> userFromResource( String externalToken ) {
         return client.resource( apiUrl ).queryParam( "access_token", externalToken )
                      .accept( MediaType.APPLICATION_JSON ).get( Map.class );
     }
 
 
     @Override
-    public User createOrAuthenticate( String externalToken ) throws BadTokenException
-    {
+    public User createOrAuthenticate( String externalToken ) throws BadTokenException {
 
         Map<String, Object> fb_user = userFromResource( externalToken );
 
@@ -103,34 +91,28 @@ public class FacebookProvider extends AbstractProvider
         String fb_user_name = ( String ) fb_user.get( "name" );
         String fb_user_username = ( String ) fb_user.get( "username" );
         String fb_user_email = ( String ) fb_user.get( "email" );
-        if ( logger.isDebugEnabled() )
-        {
+        if ( logger.isDebugEnabled() ) {
             logger.debug( JsonUtils.mapToFormattedJsonString( fb_user ) );
         }
 
         User user = null;
 
-        if ( ( fb_user != null ) && !anyNull( fb_user_id, fb_user_name ) )
-        {
+        if ( ( fb_user != null ) && !anyNull( fb_user_id, fb_user_name ) ) {
 
             Results r = null;
-            try
-            {
+            try {
                 r = entityManager.searchCollection( entityManager.getApplicationRef(), "users",
                         Query.findForProperty( "facebook.id", fb_user_id ) );
             }
-            catch ( Exception ex )
-            {
+            catch ( Exception ex ) {
                 throw new BadTokenException( "Could not lookup user for that Facebook ID", ex );
             }
-            if ( r.size() > 1 )
-            {
+            if ( r.size() > 1 ) {
                 logger.error( "Multiple users for FB ID: " + fb_user_id );
                 throw new BadTokenException( "multiple users with same Facebook ID" );
             }
 
-            if ( r.size() < 1 )
-            {
+            if ( r.size() < 1 ) {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
                 properties.put( "facebook", fb_user );
@@ -138,75 +120,61 @@ public class FacebookProvider extends AbstractProvider
                 properties.put( "name", fb_user_name );
                 properties.put( "picture", String.format( pictureUrl, fb_user_id ) );
 
-                if ( fb_user_email != null )
-                {
-                    try
-                    {
+                if ( fb_user_email != null ) {
+                    try {
                         user = managementService.getAppUserByIdentifier( entityManager.getApplication().getUuid(),
                                 Identifier.fromEmail( fb_user_email ) );
                     }
-                    catch ( Exception ex )
-                    {
+                    catch ( Exception ex ) {
                         throw new BadTokenException(
                                 "Could not find existing user for this applicaiton for email: " + fb_user_email, ex );
                     }
                     // if we found the user by email, unbind the properties from above
                     // that will conflict
                     // then update the user
-                    if ( user != null )
-                    {
+                    if ( user != null ) {
                         properties.remove( "username" );
                         properties.remove( "name" );
-                        try
-                        {
+                        try {
                             entityManager.updateProperties( user, properties );
                         }
-                        catch ( Exception ex )
-                        {
+                        catch ( Exception ex ) {
                             throw new BadTokenException( "Could not update user with new credentials", ex );
                         }
                         user.setProperty( PROPERTY_MODIFIED, properties.get( PROPERTY_MODIFIED ) );
                     }
-                    else
-                    {
+                    else {
                         properties.put( "email", fb_user_email );
                     }
                 }
-                if ( user == null )
-                {
+                if ( user == null ) {
                     properties.put( "activated", true );
-                    try
-                    {
+                    try {
                         user = entityManager.create( "user", User.class, properties );
                     }
-                    catch ( Exception ex )
-                    {
+                    catch ( Exception ex ) {
                         throw new BadTokenException( "Could not create user for that token", ex );
                     }
                 }
             }
-            else
-            {
+            else {
                 user = ( User ) r.getEntity().toTypedEntity();
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
                 properties.put( "facebook", fb_user );
                 properties.put( "picture", String.format( pictureUrl, fb_user_id ) );
-                try
-                {
+                try {
                     entityManager.updateProperties( user, properties );
                     user.setProperty( PROPERTY_MODIFIED, properties.get( PROPERTY_MODIFIED ) );
                     user.setProperty( "facebook", fb_user );
                     user.setProperty( "picture", String.format( pictureUrl, fb_user_id ) );
                 }
-                catch ( Exception ex )
-                {
+                catch ( Exception ex ) {
                     throw new BadTokenException( "Could not update user properties", ex );
                 }
             }
         }
-        else
-        {
+        else {
             throw new BadTokenException( "Unable to confirm Facebook access token" );
         }
 

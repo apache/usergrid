@@ -35,8 +35,7 @@ import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityExc
 
 
 @Component
-public class ClientCredentialsSecurityFilter extends SecurityFilter
-{
+public class ClientCredentialsSecurityFilter extends SecurityFilter {
 
     private static final Logger logger = LoggerFactory.getLogger( ClientCredentialsSecurityFilter.class );
 
@@ -44,29 +43,24 @@ public class ClientCredentialsSecurityFilter extends SecurityFilter
     protected HttpServletRequest httpServletRequest;
 
 
-    public ClientCredentialsSecurityFilter()
-    {
+    public ClientCredentialsSecurityFilter() {
         logger.info( "ClientCredentialsSecurityFilter is installed" );
     }
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request )
-    {
+    public ContainerRequest filter( ContainerRequest request ) {
         String clientId = httpServletRequest.getParameter( "client_id" );
         String clientSecret = httpServletRequest.getParameter( "client_secret" );
 
-        if ( isNotBlank( clientId ) && isNotBlank( clientSecret ) )
-        {
-            try
-            {
+        if ( isNotBlank( clientId ) && isNotBlank( clientSecret ) ) {
+            try {
                 PrincipalCredentialsToken token =
                         management.getPrincipalCredentialsTokenForClientCredentials( clientId, clientSecret );
                 Subject subject = SubjectUtils.getSubject();
                 subject.login( token );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 throw mappableSecurityException( OAUTH2_INVALID_CLIENT );
             }
         }

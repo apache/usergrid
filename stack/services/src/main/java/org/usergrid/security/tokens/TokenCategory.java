@@ -22,8 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.usergrid.utils.CodecUtils.base64;
 
 
-public enum TokenCategory
-{
+public enum TokenCategory {
     ACCESS( "ac", true ), REFRESH( "re", false ), OFFLINE( "of", false ), EMAIL( "em", false );
 
     public static final int PREFIX_LENGTH = 3;
@@ -36,14 +35,11 @@ public enum TokenCategory
     private static Map<String, TokenCategory> base64Prefixes;
 
 
-    private synchronized static void register( TokenCategory type )
-    {
-        if ( prefixes == null )
-        {
+    private synchronized static void register( TokenCategory type ) {
+        if ( prefixes == null ) {
             prefixes = new ConcurrentHashMap<String, TokenCategory>();
         }
-        if ( base64Prefixes == null )
-        {
+        if ( base64Prefixes == null ) {
             base64Prefixes = new ConcurrentHashMap<String, TokenCategory>();
         }
         prefixes.put( type.getPrefix(), type );
@@ -51,8 +47,7 @@ public enum TokenCategory
     }
 
 
-    TokenCategory( String prefix, boolean expires )
-    {
+    TokenCategory( String prefix, boolean expires ) {
         this.prefix = prefix;
         this.expires = expires;
         base64Prefix = base64( prefix + "-" );
@@ -60,32 +55,26 @@ public enum TokenCategory
     }
 
 
-    public String getPrefix()
-    {
+    public String getPrefix() {
         return prefix;
     }
 
 
-    public boolean getExpires()
-    {
+    public boolean getExpires() {
         return expires;
     }
 
 
-    public String getBase64Prefix()
-    {
+    public String getBase64Prefix() {
         return base64Prefix;
     }
 
 
-    public static TokenCategory getFromBase64String( String token )
-    {
-        if ( token == null )
-        {
+    public static TokenCategory getFromBase64String( String token ) {
+        if ( token == null ) {
             return null;
         }
-        if ( token.length() >= 4 )
-        {
+        if ( token.length() >= 4 ) {
             return base64Prefixes.get( token.substring( 0, 4 ) );
         }
         return null;

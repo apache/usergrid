@@ -26,12 +26,10 @@ import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class Dbstats extends MongoCommand
-{
+public class Dbstats extends MongoCommand {
 
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
         OpReply reply = new OpReply( opQuery );
         reply.addDocument( map( entry( "db", "local" ), entry( "collections", 3 ), entry( "objects", 4 ),
                 entry( "avgObjSize", 53.0 ), entry( "dataSize", 212 ), entry( "storageSize", 16640 ),

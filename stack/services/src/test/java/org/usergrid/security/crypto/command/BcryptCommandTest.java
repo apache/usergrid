@@ -33,13 +33,11 @@ import static org.junit.Assert.assertArrayEquals;
 
 
 /** @author tnine */
-public class BcryptCommandTest
-{
+public class BcryptCommandTest {
 
     /** Tests bcrypt hashing with a default number of rounds */
     @Test
-    public void hashWithNoExistingImpl() throws UnsupportedEncodingException
-    {
+    public void hashWithNoExistingImpl() throws UnsupportedEncodingException {
 
         int cryptIterations = 2 ^ 4;
 
@@ -69,8 +67,7 @@ public class BcryptCommandTest
 
     /** Tests bcrypt hashing then auth.  This should fail if there's no secret. */
     @Test(expected = IllegalArgumentException.class)
-    public void authNoSecret() throws UnsupportedEncodingException
-    {
+    public void authNoSecret() throws UnsupportedEncodingException {
 
         int cryptIterations = 2 ^ 4;
 
@@ -92,8 +89,7 @@ public class BcryptCommandTest
 
     /** Tests bcrypt hashing fails when the existing secret is wrong */
     @Test(expected = IllegalArgumentException.class)
-    public void authInvalidSecret() throws UnsupportedEncodingException
-    {
+    public void authInvalidSecret() throws UnsupportedEncodingException {
 
         int cryptIterations = 2 ^ 4;
 
@@ -122,8 +118,7 @@ public class BcryptCommandTest
      * about 5 seconds to run since we want to force 500 ms per authentication attempt with bcrypt
      */
     @Test
-    public void testHashRoundSpeed() throws UnsupportedEncodingException
-    {
+    public void testHashRoundSpeed() throws UnsupportedEncodingException {
 
         int cryptIterations = 2 ^ 11;
         int numberOfTests = 10;
@@ -148,8 +143,7 @@ public class BcryptCommandTest
 
         Timer timer = Metrics.newTimer( BcryptCommandTest.class, "hashtimer" );
 
-        for ( int i = 0; i < numberOfTests; i++ )
-        {
+        for ( int i = 0; i < numberOfTests; i++ ) {
             TimerContext timerCtx = timer.time();
 
             //now check we can auth with the same phrase

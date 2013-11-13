@@ -73,8 +73,7 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import static org.usergrid.persistence.Schema.getDefaultSchema;
 
 
-public class QueryProcessor
-{
+public class QueryProcessor {
 
     private static final int PAGE_SIZE = 1000;
 
@@ -96,8 +95,7 @@ public class QueryProcessor
 
 
     public QueryProcessor( Query query, CollectionInfo collectionInfo, EntityManager em,
-                           ResultsLoaderFactory loaderFactory ) throws PersistenceException
-    {
+                           ResultsLoaderFactory loaderFactory ) throws PersistenceException {
         setQuery( query );
         this.collectionInfo = collectionInfo;
         this.em = em;
@@ -106,14 +104,12 @@ public class QueryProcessor
     }
 
 
-    public Query getQuery()
-    {
+    public Query getQuery() {
         return query;
     }
 
 
-    public void setQuery( Query query )
-    {
+    public void setQuery( Query query ) {
         this.sorts = query.getSortPredicates();
         this.cursorCache = new CursorCache( query.getCursor() );
         this.rootOperand = query.getRootOperand();
@@ -123,20 +119,17 @@ public class QueryProcessor
     }
 
 
-    public CollectionInfo getCollectionInfo()
-    {
+    public CollectionInfo getCollectionInfo() {
         return collectionInfo;
     }
 
 
-    private void process() throws PersistenceException
-    {
+    private void process() throws PersistenceException {
 
         int opCount = 0;
 
         // no operand. Check for sorts
-        if ( rootOperand != null )
-        {
+        if ( rootOperand != null ) {
             // visit the tree
 
             TreeEvaluator visitor = new TreeEvaluator();
@@ -150,8 +143,7 @@ public class QueryProcessor
 
         // see if we have sorts, if so, we can add them all as a single node at
         // the root
-        if ( sorts.size() > 0 )
-        {
+        if ( sorts.size() > 0 ) {
 
             OrderByNode order = generateSorts( opCount );
 
@@ -163,39 +155,33 @@ public class QueryProcessor
 
         //if we still don't have a root node, no query nor order by was specified,
         // just use the all node or the identifiers
-        if ( rootNode == null )
-        {
+        if ( rootNode == null ) {
 
 
             //a name alias or email alias was specified
-            if ( query.containsSingleNameOrEmailIdentifier() )
-            {
+            if ( query.containsSingleNameOrEmailIdentifier() ) {
 
                 Identifier ident = query.getSingleIdentifier();
 
                 //an email was specified.  An edge case that only applies to users.  This is fulgy to put here,
                 // but required
-                if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() )
-                {
+                if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
                     rootNode = new EmailIdentifierNode( ident );
                 }
 
                 //use the ident with the default alias.  could be an email
-                else
-                {
+                else {
                     rootNode = new NameIdentifierNode( ident.getName() );
                 }
             }
             //a uuid was specified
-            else if ( query.containsSingleUuidIdentifier() )
-            {
+            else if ( query.containsSingleUuidIdentifier() ) {
                 rootNode = new UuidIdentifierNode( query.getSingleUuidIdentifier() );
             }
 
 
             //nothing was specified, order it by uuid
-            else
-            {
+            else {
 
 
                 //this is a bit ugly, but how we handle the start parameter
@@ -205,8 +191,7 @@ public class QueryProcessor
 
                 AllNode allNode = new AllNode( 0, startResultSet );
 
-                if ( startResultSet )
-                {
+                if ( startResultSet ) {
                     cursorCache.setNextCursor( allNode.getSlice().hashCode(),
                             UUIDSerializer.get().toByteBuffer( startResult ) );
                 }
@@ -215,19 +200,16 @@ public class QueryProcessor
             }
         }
 
-        if ( opCount > 1 )
-        {
+        if ( opCount > 1 ) {
             pageSizeHint = PAGE_SIZE;
         }
-        else
-        {
+        else {
             pageSizeHint = Math.min( size, PAGE_SIZE );
         }
     }
 
 
-    public QueryNode getFirstNode()
-    {
+    public QueryNode getFirstNode() {
         return rootNode;
     }
 
@@ -236,37 +218,30 @@ public class QueryProcessor
      * Apply cursor position and sort order to this slice. This should only be invoke at evaluation time to ensure that
      * the IR tree has already been fully constructed
      */
-    public void applyCursorAndSort( QuerySlice slice )
-    {
+    public void applyCursorAndSort( QuerySlice slice ) {
         // apply the sort first, since this can change the hash code
         SortPredicate sort = getSort( slice.getPropertyName() );
 
-        if ( sort != null )
-        {
+        if ( sort != null ) {
             boolean isReversed = sort.getDirection() == SortDirection.DESCENDING;
 
             //we're reversing the direction of this slice, reverse the params as well
-            if ( isReversed != slice.isReversed() )
-            {
+            if ( isReversed != slice.isReversed() ) {
                 slice.reverse();
             }
         }
         // apply the cursor
         ByteBuffer cursor = cursorCache.getCursorBytes( slice.hashCode() );
 
-        if ( cursor != null )
-        {
+        if ( cursor != null ) {
             slice.setCursor( cursor );
         }
     }
 
 
-    private SortPredicate getSort( String propertyName )
-    {
-        for ( SortPredicate sort : sorts )
-        {
-            if ( sort.getPropertyName().equals( propertyName ) )
-            {
+    private SortPredicate getSort( String propertyName ) {
+        for ( SortPredicate sort : sorts ) {
+            if ( sort.getPropertyName().equals( propertyName ) ) {
                 return sort;
             }
         }
@@ -275,12 +250,10 @@ public class QueryProcessor
 
 
     /** Return the iterator results, ordered if required */
-    public Results getResults( SearchVisitor visitor ) throws Exception
-    {
+    public Results getResults( SearchVisitor visitor ) throws Exception {
         // if we have no order by just load the results
 
-        if ( rootNode == null )
-        {
+        if ( rootNode == null ) {
             return null;
         }
 
@@ -292,19 +265,16 @@ public class QueryProcessor
 
         CursorCache resultsCursor = new CursorCache();
 
-        while ( entityIds.size() < size && itr.hasNext() )
-        {
+        while ( entityIds.size() < size && itr.hasNext() ) {
             entityIds.addAll( itr.next() );
         }
 
         //set our cursor, we paged through more entities than we want to return
-        if ( entityIds.size() > 0 )
-        {
+        if ( entityIds.size() > 0 ) {
             int resultSize = Math.min( entityIds.size(), size );
             entityIds = entityIds.subList( 0, resultSize );
 
-            if ( resultSize == size )
-            {
+            if ( resultSize == size ) {
                 itr.finalizeCursor( resultsCursor, entityIds.get( resultSize - 1 ).getUUID() );
             }
         }
@@ -312,8 +282,7 @@ public class QueryProcessor
         final ResultsLoader loader = loaderFactory.getResultsLoader( em, query, query.getResultsLevel() );
         final Results results = loader.getResults( entityIds );
 
-        if ( results == null )
-        {
+        if ( results == null ) {
             return null;
         }
 
@@ -328,8 +297,7 @@ public class QueryProcessor
     }
 
 
-    private class TreeEvaluator implements QueryVisitor
-    {
+    private class TreeEvaluator implements QueryVisitor {
 
         // stack for nodes that will be used to construct the tree and create
         // objects
@@ -340,8 +308,7 @@ public class QueryProcessor
 
 
         /** Get the root node in our tree for runtime evaluation */
-        public QueryNode getRootNode()
-        {
+        public QueryNode getRootNode() {
             return nodes.peek();
         }
 
@@ -353,8 +320,7 @@ public class QueryProcessor
          * .persistence.query.tree.AndOperand)
          */
         @Override
-        public void visit( AndOperand op ) throws PersistenceException
-        {
+        public void visit( AndOperand op ) throws PersistenceException {
 
             op.getLeft().visit( this );
 
@@ -366,8 +332,7 @@ public class QueryProcessor
 
             // if the result of the left and right are the same, we don't want
             // to create an AND. We'll use the same SliceNode. Do nothing
-            if ( leftResult == rightResult )
-            {
+            if ( leftResult == rightResult ) {
                 return;
             }
 
@@ -389,8 +354,7 @@ public class QueryProcessor
          * .persistence.query.tree.OrOperand)
          */
         @Override
-        public void visit( OrOperand op ) throws PersistenceException
-        {
+        public void visit( OrOperand op ) throws PersistenceException {
 
             // we need to create a new slicenode for the children of this
             // operation
@@ -427,8 +391,7 @@ public class QueryProcessor
          * .persistence.query.tree.NotOperand)
          */
         @Override
-        public void visit( NotOperand op ) throws PersistenceException
-        {
+        public void visit( NotOperand op ) throws PersistenceException {
 
             // create a new context since any child of NOT will need to be
             // evaluated independently
@@ -447,13 +410,11 @@ public class QueryProcessor
          * .persistence.query.tree.ContainsOperand)
          */
         @Override
-        public void visit( ContainsOperand op ) throws NoFullTextIndexException
-        {
+        public void visit( ContainsOperand op ) throws NoFullTextIndexException {
 
             String propertyName = op.getProperty().getValue();
 
-            if ( !SCHEMA.isPropertyFulltextIndexed( entityType, propertyName ) )
-            {
+            if ( !SCHEMA.isPropertyFulltextIndexed( entityType, propertyName ) ) {
                 throw new NoFullTextIndexException( entityType, propertyName );
             }
 
@@ -466,12 +427,10 @@ public class QueryProcessor
             // sdg - if left & right have same field name, we need to create a new
             // slice
             if ( !nodes.isEmpty() && nodes.peek() instanceof SliceNode
-                    && ( ( SliceNode ) nodes.peek() ).getSlice( indexName ) != null )
-            {
+                    && ( ( SliceNode ) nodes.peek() ).getSlice( indexName ) != null ) {
                 node = newSliceNode();
             }
-            else
-            {
+            else {
                 node = getUnionNode( op );
             }
 
@@ -489,8 +448,7 @@ public class QueryProcessor
          * .persistence.query.tree.WithinOperand)
          */
         @Override
-        public void visit( WithinOperand op )
-        {
+        public void visit( WithinOperand op ) {
 
             // change the property name to coordinates
             nodes.push( new WithinNode( op.getProperty().getIndexedName(), op.getDistance().getFloatValue(),
@@ -505,8 +463,7 @@ public class QueryProcessor
          * .persistence.query.tree.LessThan)
          */
         @Override
-        public void visit( LessThan op ) throws NoIndexException
-        {
+        public void visit( LessThan op ) throws NoIndexException {
             String propertyName = op.getProperty().getValue();
 
             checkIndexed( propertyName );
@@ -522,8 +479,7 @@ public class QueryProcessor
          * .persistence.query.tree.LessThanEqual)
          */
         @Override
-        public void visit( LessThanEqual op ) throws NoIndexException
-        {
+        public void visit( LessThanEqual op ) throws NoIndexException {
 
             String propertyName = op.getProperty().getValue();
 
@@ -540,8 +496,7 @@ public class QueryProcessor
          * .persistence.query.tree.Equal)
          */
         @Override
-        public void visit( Equal op ) throws NoIndexException
-        {
+        public void visit( Equal op ) throws NoIndexException {
             String fieldName = op.getProperty().getValue();
 
             checkIndexed( fieldName );
@@ -552,20 +507,17 @@ public class QueryProcessor
             // this is an edge case. If we get more edge cases, we need to push
             // this down into the literals and let the objects
             // handle this
-            if ( literal instanceof StringLiteral )
-            {
+            if ( literal instanceof StringLiteral ) {
 
                 StringLiteral stringLiteral = ( StringLiteral ) literal;
 
                 String endValue = stringLiteral.getEndValue();
 
-                if ( endValue != null )
-                {
+                if ( endValue != null ) {
                     node.setFinish( fieldName, endValue, true );
                 }
             }
-            else
-            {
+            else {
                 node.setFinish( fieldName, literal.getValue(), true );
             }
 
@@ -580,8 +532,7 @@ public class QueryProcessor
          * .persistence.query.tree.GreaterThan)
          */
         @Override
-        public void visit( GreaterThan op ) throws NoIndexException
-        {
+        public void visit( GreaterThan op ) throws NoIndexException {
             String propertyName = op.getProperty().getValue();
 
             checkIndexed( propertyName );
@@ -597,8 +548,7 @@ public class QueryProcessor
          * .persistence.query.tree.GreaterThanEqual)
          */
         @Override
-        public void visit( GreaterThanEqual op ) throws NoIndexException
-        {
+        public void visit( GreaterThanEqual op ) throws NoIndexException {
             String propertyName = op.getProperty().getValue();
 
             checkIndexed( propertyName );
@@ -609,13 +559,11 @@ public class QueryProcessor
 
         /**
          * Return the current leaf node to add to if it exists. This means that we can compress multiple 'AND'
-         * operations
-         * and ranges into a single node. Otherwise a new node is created and pushed to the stack
+         * operations and ranges into a single node. Otherwise a new node is created and pushed to the stack
          *
          * @param current The current operand node
          */
-        private SliceNode getUnionNode( EqualityOperand current )
-        {
+        private SliceNode getUnionNode( EqualityOperand current ) {
 
             /**
              * we only create a new slice node in 3 situations 1. No nodes exist 2.
@@ -624,8 +572,7 @@ public class QueryProcessor
              * node.
              */
             // no nodes exist
-            if ( nodes.size() == 0 || !( nodes.peek() instanceof SliceNode ) )
-            {
+            if ( nodes.size() == 0 || !( nodes.peek() instanceof SliceNode ) ) {
                 return newSliceNode();
             }
 
@@ -634,8 +581,7 @@ public class QueryProcessor
 
 
         /** The new slice node */
-        private SliceNode newSliceNode()
-        {
+        private SliceNode newSliceNode() {
             SliceNode sliceNode = new SliceNode( ++contextCount );
 
             nodes.push( sliceNode );
@@ -645,24 +591,20 @@ public class QueryProcessor
 
 
         /** Create a new slice if one will be required within the context of this node */
-        private void createNewSlice( Operand child )
-        {
-            if ( child instanceof EqualityOperand || child instanceof AndOperand || child instanceof ContainsOperand )
-            {
+        private void createNewSlice( Operand child ) {
+            if ( child instanceof EqualityOperand || child instanceof AndOperand || child instanceof ContainsOperand ) {
                 newSliceNode();
             }
         }
 
 
-        public int getSliceCount()
-        {
+        public int getSliceCount() {
             return nodes.getSliceCount();
         }
     }
 
 
-    private static class CountingStack<T> extends Stack<T>
-    {
+    private static class CountingStack<T> extends Stack<T> {
 
         private int count = 0;
 
@@ -676,12 +618,10 @@ public class QueryProcessor
          * @see java.util.Stack#pop()
          */
         @Override
-        public synchronized T pop()
-        {
+        public synchronized T pop() {
             T entry = super.pop();
 
-            if ( entry instanceof SliceNode )
-            {
+            if ( entry instanceof SliceNode ) {
                 count += ( ( SliceNode ) entry ).getAllSlices().size();
             }
 
@@ -689,19 +629,16 @@ public class QueryProcessor
         }
 
 
-        public int getSliceCount()
-        {
+        public int getSliceCount() {
 
             Iterator<T> itr = this.iterator();
 
             T entry;
 
-            while ( itr.hasNext() )
-            {
+            while ( itr.hasNext() ) {
                 entry = itr.next();
 
-                if ( entry instanceof SliceNode )
-                {
+                if ( entry instanceof SliceNode ) {
                     count += ( ( SliceNode ) entry ).getAllSlices().size();
                 }
             }
@@ -712,15 +649,13 @@ public class QueryProcessor
 
 
     /** @return the pageSizeHint */
-    public int getPageSizeHint( QueryNode node )
-    {
+    public int getPageSizeHint( QueryNode node ) {
         return pageSizeHint;
     }
 
 
     /** Generate a slice node with scan ranges for all the properties in our sort cache */
-    private OrderByNode generateSorts( int opCount ) throws NoIndexException
-    {
+    private OrderByNode generateSorts( int opCount ) throws NoIndexException {
 
         // the value is irrelevant since we'll only ever have 1 slice node
         // if this is called
@@ -736,8 +671,7 @@ public class QueryProcessor
         slice.setFinish( propertyName, null, true );
 
 
-        for ( int i = 1; i < sorts.size(); i++ )
-        {
+        for ( int i = 1; i < sorts.size(); i++ ) {
             checkIndexed( sorts.get( i ).getPropertyName() );
         }
 
@@ -746,19 +680,16 @@ public class QueryProcessor
     }
 
 
-    private void checkIndexed( String propertyName ) throws NoIndexException
-    {
+    private void checkIndexed( String propertyName ) throws NoIndexException {
 
         if ( propertyName == null || propertyName.isEmpty() || ( !SCHEMA.isPropertyIndexed( entityType, propertyName )
-                && collectionInfo != null ) )
-        {
+                && collectionInfo != null ) ) {
             throw new NoIndexException( entityType, propertyName );
         }
     }
 
 
-    public EntityManager getEntityManager()
-    {
+    public EntityManager getEntityManager() {
         return em;
     }
 }

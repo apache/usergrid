@@ -22,35 +22,28 @@ import org.bson.BasicBSONDecoder;
 import org.bson.BasicBSONEncoder;
 
 
-public class BSONUtils
-{
+public class BSONUtils {
 
-    public static BSONEncoder encoder()
-    {
+    public static BSONEncoder encoder() {
         return _staticEncoder.get();
     }
 
 
-    public static BSONDecoder decoder()
-    {
+    public static BSONDecoder decoder() {
         return _staticDecoder.get();
     }
 
 
-    static ThreadLocal<BSONEncoder> _staticEncoder = new ThreadLocal<BSONEncoder>()
-    {
+    static ThreadLocal<BSONEncoder> _staticEncoder = new ThreadLocal<BSONEncoder>() {
         @Override
-        protected BSONEncoder initialValue()
-        {
+        protected BSONEncoder initialValue() {
             return new BasicBSONEncoder();
         }
     };
 
-    static ThreadLocal<BSONDecoder> _staticDecoder = new ThreadLocal<BSONDecoder>()
-    {
+    static ThreadLocal<BSONDecoder> _staticDecoder = new ThreadLocal<BSONDecoder>() {
         @Override
-        protected BSONDecoder initialValue()
-        {
+        protected BSONDecoder initialValue() {
             return new BasicBSONDecoder();
         }
     };

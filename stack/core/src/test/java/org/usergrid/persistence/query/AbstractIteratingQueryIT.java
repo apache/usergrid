@@ -42,8 +42,7 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-public abstract class AbstractIteratingQueryIT
-{
+public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
 
     @ClassRule
@@ -53,8 +52,7 @@ public abstract class AbstractIteratingQueryIT
     public CoreApplication app = new CoreApplication( setup );
 
 
-    public void singleOrderByMaxLimit( IoHelper io ) throws Exception
-    {
+    public void singleOrderByMaxLimit( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -65,8 +63,7 @@ public abstract class AbstractIteratingQueryIT
 
         LOG.info( "Writing {} entities.", size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
 
@@ -87,14 +84,12 @@ public abstract class AbstractIteratingQueryIT
 
         start = System.currentTimeMillis();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( String.valueOf( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -110,8 +105,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void singleOrderByIntersection( IoHelper io ) throws Exception
-    {
+    protected void singleOrderByIntersection( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -127,8 +121,7 @@ public abstract class AbstractIteratingQueryIT
 
         LOG.info( "Writing {} entities.", size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
 
             String name = String.valueOf( i );
@@ -141,8 +134,7 @@ public abstract class AbstractIteratingQueryIT
 
             io.writeEntity( entity );
 
-            if ( intersect )
-            {
+            if ( intersect ) {
                 expected.add( name );
             }
         }
@@ -162,14 +154,12 @@ public abstract class AbstractIteratingQueryIT
 
         start = System.currentTimeMillis();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -186,8 +176,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception
-    {
+    protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
         int size = 5000;
         int queryLimit = Query.MAX_LIMIT;
@@ -204,8 +193,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expectedResults = new ArrayList<String>( size / secondIncrement );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
 
             String name = String.valueOf( i );
@@ -218,8 +206,7 @@ public abstract class AbstractIteratingQueryIT
             entity.put( "intersect2", intersect2 );
             io.writeEntity( entity );
 
-            if ( intersect1 && intersect2 )
-            {
+            if ( intersect1 && intersect2 ) {
                 expectedResults.add( name );
             }
         }
@@ -240,14 +227,12 @@ public abstract class AbstractIteratingQueryIT
 
         start = System.currentTimeMillis();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expectedResults.get( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -264,8 +249,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void singleOrderByNoIntersection( IoHelper io ) throws Exception
-    {
+    protected void singleOrderByNoIntersection( IoHelper io ) throws Exception {
         io.doSetup();
 
         int size = 2000;
@@ -278,8 +262,7 @@ public abstract class AbstractIteratingQueryIT
 
         LOG.info( "Writing {} entities.", size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
             // if we hit the increment, set this to true
@@ -313,8 +296,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void singleOrderByComplexUnion( IoHelper io ) throws Exception
-    {
+    protected void singleOrderByComplexUnion( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -331,8 +313,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expectedResults = new ArrayList<String>( size / secondIncrement );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
 
             String name = String.valueOf( i );
@@ -345,8 +326,7 @@ public abstract class AbstractIteratingQueryIT
             entity.put( "intersect2", intersect2 );
             io.writeEntity( entity );
 
-            if ( intersect1 || intersect2 )
-            {
+            if ( intersect1 || intersect2 ) {
                 expectedResults.add( name );
             }
         }
@@ -364,14 +344,12 @@ public abstract class AbstractIteratingQueryIT
 
         start = System.currentTimeMillis();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expectedResults.get( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -388,8 +366,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void singleOrderByNot( IoHelper io ) throws Exception
-    {
+    protected void singleOrderByNot( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -406,8 +383,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expectedResults = new ArrayList<String>( size / secondIncrement );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
 
             String name = String.valueOf( i );
@@ -420,8 +396,7 @@ public abstract class AbstractIteratingQueryIT
             entity.put( "intersect2", intersect2 );
             io.writeEntity( entity );
 
-            if ( !( intersect1 && intersect2 ) )
-            {
+            if ( !( intersect1 && intersect2 ) ) {
                 expectedResults.add( name );
             }
         }
@@ -439,14 +414,12 @@ public abstract class AbstractIteratingQueryIT
 
         start = System.currentTimeMillis();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expectedResults.get( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -463,8 +436,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderByLessThanLimit( IoHelper io ) throws Exception
-    {
+    public void singleOrderByLessThanLimit( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -479,8 +451,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( matchMax );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
             boolean searched = i < matchMax;
 
@@ -490,8 +461,7 @@ public abstract class AbstractIteratingQueryIT
             entity.put( "searched", searched );
             io.writeEntity( entity );
 
-            if ( searched )
-            {
+            if ( searched ) {
                 expected.add( name );
             }
         }
@@ -512,8 +482,7 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results = io.getResults( query );
 
-        for ( int i = 0; i < results.size(); i++ )
-        {
+        for ( int i = 0; i < results.size(); i++ ) {
             assertEquals( expected.get( count ), results.getEntities().get( i ).getName() );
             count++;
         }
@@ -527,8 +496,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderBySameRangeScanLessThanEqual( IoHelper io ) throws Exception
-    {
+    public void singleOrderBySameRangeScanLessThanEqual( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -542,8 +510,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
 
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -571,13 +538,11 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results;
 
-        do
-        {
+        do {
 
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( size - delta - count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -593,8 +558,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderBySameRangeScanLessEqual( IoHelper io ) throws Exception
-    {
+    public void singleOrderBySameRangeScanLessEqual( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -608,8 +572,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
 
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -637,13 +600,11 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results;
 
-        do
-        {
+        do {
 
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( size - delta - count - 1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -659,8 +620,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderBySameRangeScanGreaterThanEqual( IoHelper io ) throws Exception
-    {
+    public void singleOrderBySameRangeScanGreaterThanEqual( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -674,8 +634,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
 
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -702,13 +661,11 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results;
 
-        do
-        {
+        do {
 
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( size - count - 1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -724,8 +681,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderBySameRangeScanGreater( IoHelper io ) throws Exception
-    {
+    public void singleOrderBySameRangeScanGreater( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -739,8 +695,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
 
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -767,13 +722,11 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results;
 
-        do
-        {
+        do {
 
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( size - count - 1 ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -789,8 +742,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderByBoundRangeScanDesc( IoHelper io ) throws Exception
-    {
+    public void singleOrderByBoundRangeScanDesc( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -805,8 +757,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
 
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -834,13 +785,11 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results;
 
-        do
-        {
+        do {
 
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( size - count - delta ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -856,8 +805,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    public void singleOrderByBoundRangeScanAsc( IoHelper io ) throws Exception
-    {
+    public void singleOrderByBoundRangeScanAsc( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -872,8 +820,7 @@ public abstract class AbstractIteratingQueryIT
 
         List<String> expected = new ArrayList<String>( size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             String name = String.valueOf( i );
 
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -901,13 +848,11 @@ public abstract class AbstractIteratingQueryIT
         // now do simple ordering, should be returned in order
         Results results;
 
-        do
-        {
+        do {
 
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( expected.get( delta + count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -928,8 +873,7 @@ public abstract class AbstractIteratingQueryIT
      *
      * @param io the io helper
      */
-    public void allIn( IoHelper io ) throws Exception
-    {
+    public void allIn( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -939,8 +883,7 @@ public abstract class AbstractIteratingQueryIT
 
         LOG.info( "Writing {} entities.", size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
 
@@ -960,14 +903,12 @@ public abstract class AbstractIteratingQueryIT
 
         start = System.currentTimeMillis();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 assertEquals( String.valueOf( count ), results.getEntities().get( i ).getName() );
                 count++;
             }
@@ -983,8 +924,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void multiOrderBy( IoHelper io ) throws Exception
-    {
+    protected void multiOrderBy( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -993,19 +933,15 @@ public abstract class AbstractIteratingQueryIT
 
         // the number of entities that should be written including an intersection
 
-        Set<Entity> sortedResults = new TreeSet<Entity>( new Comparator<Entity>()
-        {
+        Set<Entity> sortedResults = new TreeSet<Entity>( new Comparator<Entity>() {
 
             @Override
-            public int compare( Entity o1, Entity o2 )
-            {
+            public int compare( Entity o1, Entity o2 ) {
                 boolean o1Boolean = ( Boolean ) o1.getProperty( "boolean" );
                 boolean o2Boolean = ( Boolean ) o2.getProperty( "boolean" );
 
-                if ( o1Boolean != o2Boolean )
-                {
-                    if ( o1Boolean )
-                    {
+                if ( o1Boolean != o2Boolean ) {
+                    if ( o1Boolean ) {
                         return -1;
                     }
 
@@ -1015,12 +951,10 @@ public abstract class AbstractIteratingQueryIT
                 int o1Index = ( Integer ) o1.getProperty( "index" );
                 int o2Index = ( Integer ) o2.getProperty( "index" );
 
-                if ( o1Index > o2Index )
-                {
+                if ( o1Index > o2Index ) {
                     return 1;
                 }
-                else if ( o2Index > o1Index )
-                {
+                else if ( o2Index > o1Index ) {
                     return -1;
                 }
 
@@ -1033,8 +967,7 @@ public abstract class AbstractIteratingQueryIT
 
         LOG.info( "Writing {} entities.", size );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
 
             String name = String.valueOf( i );
@@ -1071,14 +1004,12 @@ public abstract class AbstractIteratingQueryIT
 
         Iterator<Entity> itr = sortedResults.iterator();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( int i = 0; i < results.size(); i++ )
-            {
+            for ( int i = 0; i < results.size(); i++ ) {
                 Entity expected = itr.next();
                 Entity returned = results.getEntities().get( i );
 
@@ -1098,8 +1029,7 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    protected void multiOrderByComplexUnion( IoHelper io ) throws Exception
-    {
+    protected void multiOrderByComplexUnion( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -1114,21 +1044,17 @@ public abstract class AbstractIteratingQueryIT
 
         LOG.info( "Writing {} entities.", size );
 
-        Set<Entity> sortedResults = new TreeSet<Entity>( new Comparator<Entity>()
-        {
+        Set<Entity> sortedResults = new TreeSet<Entity>( new Comparator<Entity>() {
 
             @Override
-            public int compare( Entity o1, Entity o2 )
-            {
+            public int compare( Entity o1, Entity o2 ) {
                 long o1Index = ( Long ) o1.getProperty( "created" );
                 long o2Index = ( Long ) o2.getProperty( "created" );
 
-                if ( o1Index > o2Index )
-                {
+                if ( o1Index > o2Index ) {
                     return 1;
                 }
-                else if ( o2Index > o1Index )
-                {
+                else if ( o2Index > o1Index ) {
                     return -1;
                 }
 
@@ -1136,10 +1062,8 @@ public abstract class AbstractIteratingQueryIT
                 boolean o1Boolean = ( Boolean ) o1.getProperty( "intersect" );
                 boolean o2Boolean = ( Boolean ) o2.getProperty( "intersect" );
 
-                if ( o1Boolean != o2Boolean )
-                {
-                    if ( o1Boolean )
-                    {
+                if ( o1Boolean != o2Boolean ) {
+                    if ( o1Boolean ) {
                         return -1;
                     }
 
@@ -1151,8 +1075,7 @@ public abstract class AbstractIteratingQueryIT
             }
         } );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
 
             String name = String.valueOf( i );
@@ -1165,8 +1088,7 @@ public abstract class AbstractIteratingQueryIT
             entity.put( "intersect2", intersect2 );
             Entity e = io.writeEntity( entity );
 
-            if ( intersect1 || intersect2 )
-            {
+            if ( intersect1 || intersect2 ) {
                 sortedResults.add( e );
             }
         }
@@ -1187,14 +1109,12 @@ public abstract class AbstractIteratingQueryIT
 
         Iterator<Entity> expected = sortedResults.iterator();
 
-        do
-        {
+        do {
 
             // now do simple ordering, should be returned in order
             results = io.getResults( query );
 
-            for ( Entity result : results.getEntities() )
-            {
+            for ( Entity result : results.getEntities() ) {
                 assertEquals( expected.next(), result );
                 count++;
             }
@@ -1217,8 +1137,7 @@ public abstract class AbstractIteratingQueryIT
      *
      * @author tnine
      */
-    private interface IoHelper
-    {
+    private interface IoHelper {
         /** Perform any setup required */
         public void doSetup() throws Exception;
 
@@ -1240,31 +1159,26 @@ public abstract class AbstractIteratingQueryIT
     }
 
 
-    class CollectionIoHelper implements IoHelper
-    {
+    class CollectionIoHelper implements IoHelper {
         @Override
-        public void doSetup() throws Exception
-        {
+        public void doSetup() throws Exception {
         }
 
 
         @Override
-        public Entity writeEntity( Map<String, Object> entity ) throws Exception
-        {
+        public Entity writeEntity( Map<String, Object> entity ) throws Exception {
             return app.getEm().create( "test", entity );
         }
 
 
         @Override
-        public Results getResults( Query query ) throws Exception
-        {
+        public Results getResults( Query query ) throws Exception {
             return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
         }
     }
 
 
-    class ConnectionHelper extends CollectionIoHelper
-    {
+    class ConnectionHelper extends CollectionIoHelper {
 
         /**
          *
@@ -1274,8 +1188,7 @@ public abstract class AbstractIteratingQueryIT
 
 
         @Override
-        public void doSetup() throws Exception
-        {
+        public void doSetup() throws Exception {
             Map<String, Object> data = new HashMap<String, Object>();
             data.put( "name", "rootentity" );
             rootEntity = app.getEm().create( "root", data );
@@ -1283,8 +1196,7 @@ public abstract class AbstractIteratingQueryIT
 
 
         @Override
-        public Entity writeEntity( Map<String, Object> entity ) throws Exception
-        {
+        public Entity writeEntity( Map<String, Object> entity ) throws Exception {
             // write to the collection
             Entity created = super.writeEntity( entity );
             app.getEm().createConnection( rootEntity, CONNECTION, created );
@@ -1301,8 +1213,7 @@ public abstract class AbstractIteratingQueryIT
          * getResults(org.usergrid.persistence.Query)
          */
         @Override
-        public Results getResults( Query query ) throws Exception
-        {
+        public Results getResults( Query query ) throws Exception {
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
             return app.getEm().searchConnectedEntities( rootEntity, query );

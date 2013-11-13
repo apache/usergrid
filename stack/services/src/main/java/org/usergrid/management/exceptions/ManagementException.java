@@ -16,32 +16,27 @@
 package org.usergrid.management.exceptions;
 
 
-public class ManagementException extends Exception
-{
+public class ManagementException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
 
-    public ManagementException()
-    {
+    public ManagementException() {
         super();
     }
 
 
-    public ManagementException( String arg0, Throwable arg1 )
-    {
+    public ManagementException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public ManagementException( String arg0 )
-    {
+    public ManagementException( String arg0 ) {
         super( arg0 );
     }
 
 
-    public ManagementException( Throwable arg0 )
-    {
+    public ManagementException( Throwable arg0 ) {
         super( arg0 );
     }
 }

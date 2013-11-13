@@ -41,16 +41,14 @@ import static org.apache.commons.collections.MapUtils.getIntValue;
  *
  * @author tnine
  */
-public class MongoQueryParser
-{
+public class MongoQueryParser {
 
     /**
      * Convert the bson object query to a native usergrid query
      *
      * @return The query
      */
-    public static Query toNativeQuery( BSONObject query, int numberToReturn )
-    {
+    public static Query toNativeQuery( BSONObject query, int numberToReturn ) {
         return toNativeQuery( query, null, numberToReturn );
     }
 
@@ -60,11 +58,9 @@ public class MongoQueryParser
      *
      * @return The query
      */
-    public static Query toNativeQuery( BSONObject query, BSONObject fieldSelector, int numberToReturn )
-    {
+    public static Query toNativeQuery( BSONObject query, BSONObject fieldSelector, int numberToReturn ) {
         // TODO overload? or add?
-        if ( query == null )
-        {
+        if ( query == null ) {
             return null;
         }
 
@@ -73,27 +69,22 @@ public class MongoQueryParser
         BasicBSONObject sort_order = null;
 
         Object o = query.get( "$query" );
-        if ( !( o instanceof BasicBSONObject ) )
-        {
+        if ( !( o instanceof BasicBSONObject ) ) {
             o = query.get( "query" );
         }
-        if ( o instanceof BasicBSONObject )
-        {
+        if ( o instanceof BasicBSONObject ) {
             query_expression = ( BasicBSONObject ) o;
         }
 
         o = query.get( "$orderby" );
-        if ( !( o instanceof BasicBSONObject ) )
-        {
+        if ( !( o instanceof BasicBSONObject ) ) {
             o = query.get( "orderby" );
         }
-        if ( o instanceof BasicBSONObject )
-        {
+        if ( o instanceof BasicBSONObject ) {
             sort_order = ( BasicBSONObject ) o;
         }
 
-        if ( ( query_expression == null ) && ( query instanceof BasicBSONObject ) )
-        {
+        if ( ( query_expression == null ) && ( query instanceof BasicBSONObject ) ) {
             query_expression = ( BasicBSONObject ) query;
             query_expression.removeField( "$orderby" );
             query_expression.removeField( "$max" );
@@ -101,51 +92,40 @@ public class MongoQueryParser
         }
 
 
-        if ( ( query_expression == null ) && ( sort_order == null ) )
-        {
+        if ( ( query_expression == null ) && ( sort_order == null ) ) {
             return null;
         }
 
-        if ( query_expression.size() == 0 && sort_order != null )
-        {
-            if ( sort_order.size() == 0 )
-            {
+        if ( query_expression.size() == 0 && sort_order != null ) {
+            if ( sort_order.size() == 0 ) {
                 return null;
             }
-            if ( ( sort_order.size() == 1 ) && sort_order.containsField( "_id" ) )
-            {
+            if ( ( sort_order.size() == 1 ) && sort_order.containsField( "_id" ) ) {
                 return null;
             }
         }
 
         Query q = new Query();
 
-        if ( numberToReturn > 0 )
-        {
+        if ( numberToReturn > 0 ) {
             q.setLimit( numberToReturn );
         }
 
-        if ( query_expression != null )
-        {
+        if ( query_expression != null ) {
             Operand root = eval( query_expression );
             q.setRootOperand( root );
         }
 
-        if ( fieldSelector != null )
-        {
-            for ( String field : fieldSelector.keySet() )
-            {
+        if ( fieldSelector != null ) {
+            for ( String field : fieldSelector.keySet() ) {
                 q.addSelect( field, field );
             }
         }
 
 
-        if ( sort_order != null )
-        {
-            for ( String sort : sort_order.keySet() )
-            {
-                if ( !"_id".equals( sort ) )
-                {
+        if ( sort_order != null ) {
+            for ( String sort : sort_order.keySet() ) {
+                if ( !"_id".equals( sort ) ) {
                     int s = getIntValue( sort_order.toMap(), "_id", 1 );
                     q.addSort( sort, s >= 0 ? SortDirection.ASCENDING : SortDirection.DESCENDING );
                 }
@@ -157,36 +137,30 @@ public class MongoQueryParser
 
 
     /** Evaluate an expression part */
-    private static Operand eval( BSONObject exp )
-    {
+    private static Operand eval( BSONObject exp ) {
         Operand current = null;
         Object fieldValue = null;
 
-        for ( String field : exp.keySet() )
-        {
+        for ( String field : exp.keySet() ) {
             fieldValue = exp.get( field );
 
-            if ( field.startsWith( "$" ) )
-            {
+            if ( field.startsWith( "$" ) ) {
                 // same as OR with multiple values
 
                 // same as OR with multiple values
-                if ( "$or".equals( field ) )
-                {
+                if ( "$or".equals( field ) ) {
                     BasicBSONList values = ( BasicBSONList ) fieldValue;
 
                     int size = values.size();
 
                     Stack<Operand> expressions = new Stack<Operand>();
 
-                    for ( int i = 0; i < size; i++ )
-                    {
+                    for ( int i = 0; i < size; i++ ) {
                         expressions.push( eval( ( BSONObject ) values.get( i ) ) );
                     }
 
                     // we need to build a tree of expressions
-                    while ( expressions.size() > 1 )
-                    {
+                    while ( expressions.size() > 1 ) {
                         OrOperand or = new OrOperand();
                         or.addChild( expressions.pop() );
                         or.addChild( expressions.pop() );
@@ -196,8 +170,7 @@ public class MongoQueryParser
                     current = expressions.pop();
                 }
 
-                else if ( "$and".equals( field ) )
-                {
+                else if ( "$and".equals( field ) ) {
 
                     BasicBSONList values = ( BasicBSONList ) fieldValue;
 
@@ -205,13 +178,11 @@ public class MongoQueryParser
 
                     Stack<Operand> expressions = new Stack<Operand>();
 
-                    for ( int i = 0; i < size; i++ )
-                    {
+                    for ( int i = 0; i < size; i++ ) {
                         expressions.push( eval( ( BSONObject ) values.get( i ) ) );
                     }
 
-                    while ( expressions.size() > 1 )
-                    {
+                    while ( expressions.size() > 1 ) {
                         AndOperand and = new AndOperand();
                         and.addChild( expressions.pop() );
                         and.addChild( expressions.pop() );
@@ -222,13 +193,11 @@ public class MongoQueryParser
                 }
             }
             // we have a nested object
-            else if ( fieldValue instanceof BSONObject )
-            {
+            else if ( fieldValue instanceof BSONObject ) {
                 current = handleOperand( field, ( BSONObject ) fieldValue );
             }
 
-            else if ( !field.equals( "_id" ) )
-            {
+            else if ( !field.equals( "_id" ) ) {
                 Equal equality = new Equal( new ClassicToken( 0, "=" ) );
                 equality.setProperty( field );
                 equality.setLiteral( exp.get( field ) );
@@ -241,18 +210,14 @@ public class MongoQueryParser
 
 
     /** Handle an operand */
-    private static Operand handleOperand( String sourceField, BSONObject exp )
-    {
+    private static Operand handleOperand( String sourceField, BSONObject exp ) {
 
         Operand current = null;
         Object value = null;
 
-        for ( String field : exp.keySet() )
-        {
-            if ( field.startsWith( "$" ) )
-            {
-                if ( "$gt".equals( field ) )
-                {
+        for ( String field : exp.keySet() ) {
+            if ( field.startsWith( "$" ) ) {
+                if ( "$gt".equals( field ) ) {
                     value = exp.get( field );
 
                     GreaterThan gt = new GreaterThan();
@@ -261,8 +226,7 @@ public class MongoQueryParser
 
                     current = gt;
                 }
-                else if ( "$gte".equals( field ) )
-                {
+                else if ( "$gte".equals( field ) ) {
                     value = exp.get( field );
 
                     GreaterThanEqual gte = new GreaterThanEqual();
@@ -274,8 +238,7 @@ public class MongoQueryParser
                     // greater than equals
                     // { "field" : { $gte: value } }
                 }
-                else if ( "$lt".equals( field ) )
-                {
+                else if ( "$lt".equals( field ) ) {
                     value = exp.get( field );
 
                     LessThan lt = new LessThan();
@@ -284,8 +247,7 @@ public class MongoQueryParser
 
                     current = lt;
                 }
-                else if ( "$lte".equals( field ) )
-                {
+                else if ( "$lte".equals( field ) ) {
                     value = exp.get( field );
 
                     LessThanEqual lte = new LessThanEqual();
@@ -294,8 +256,7 @@ public class MongoQueryParser
 
                     current = lte;
                 }
-                else if ( "$in".equals( field ) )
-                {
+                else if ( "$in".equals( field ) ) {
                     value = exp.get( field );
 
                     BasicBSONList values = ( BasicBSONList ) value;
@@ -304,8 +265,7 @@ public class MongoQueryParser
 
                     Stack<Operand> expressions = new Stack<Operand>();
 
-                    for ( int i = 0; i < size; i++ )
-                    {
+                    for ( int i = 0; i < size; i++ ) {
                         Equal equal = new Equal();
                         equal.setProperty( sourceField );
                         equal.setLiteral( values.get( i ) );
@@ -314,8 +274,7 @@ public class MongoQueryParser
                     }
 
                     // we need to build a tree of expressions
-                    while ( expressions.size() > 1 )
-                    {
+                    while ( expressions.size() > 1 ) {
                         OrOperand or = new OrOperand();
                         or.addChild( expressions.pop() );
                         or.addChild( expressions.pop() );

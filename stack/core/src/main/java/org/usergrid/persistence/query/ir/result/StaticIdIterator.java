@@ -11,8 +11,7 @@ import org.usergrid.persistence.cassandra.CursorCache;
 
 
 /** Simple iterator that just returns UUIDs that are set into it */
-public class StaticIdIterator implements ResultIterator
-{
+public class StaticIdIterator implements ResultIterator {
 
     private final Set<ScanColumn> ids;
 
@@ -22,8 +21,7 @@ public class StaticIdIterator implements ResultIterator
     /**
      *
      */
-    public StaticIdIterator( UUID id )
-    {
+    public StaticIdIterator( UUID id ) {
         final ScanColumn col = new UUIDIndexSliceParser.UUIDColumn( id, ByteBuffer.allocate( 0 ) );
 
         ids = Collections.singleton( col );
@@ -31,44 +29,38 @@ public class StaticIdIterator implements ResultIterator
 
 
     @Override
-    public void reset()
-    {
+    public void reset() {
         //no op
     }
 
 
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastValue )
-    {
+    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
         //no cursor, it's a static list
     }
 
 
     @Override
-    public Iterator<Set<ScanColumn>> iterator()
-    {
+    public Iterator<Set<ScanColumn>> iterator() {
         return this;
     }
 
 
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
         return !returnedOnce;
     }
 
 
     @Override
-    public Set<ScanColumn> next()
-    {
+    public Set<ScanColumn> next() {
         returnedOnce = true;
         return ids;
     }
 
 
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "This iterator does not support remove" );
     }
 }

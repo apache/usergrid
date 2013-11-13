@@ -26,8 +26,7 @@ import org.w3c.dom.Element;
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 
-public class ApiOperation
-{
+public class ApiOperation {
     String httpMethod;
     String nickname;
     String summary;
@@ -39,148 +38,124 @@ public class ApiOperation
     List<ApiOperationError> errorResponses;
 
 
-    public ApiOperation()
-    {
+    public ApiOperation() {
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getHttpMethod()
-    {
+    public String getHttpMethod() {
         return httpMethod;
     }
 
 
-    public void setHttpMethod( String httpMethod )
-    {
+    public void setHttpMethod( String httpMethod ) {
         this.httpMethod = httpMethod;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getNickname()
-    {
+    public String getNickname() {
         return nickname;
     }
 
 
-    public void setNickname( String nickname )
-    {
+    public void setNickname( String nickname ) {
         this.nickname = nickname;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getSummary()
-    {
+    public String getSummary() {
         return summary;
     }
 
 
-    public void setSummary( String summary )
-    {
+    public void setSummary( String summary ) {
         this.summary = summary;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getNotes()
-    {
+    public String getNotes() {
         return notes;
     }
 
 
-    public void setNotes( String notes )
-    {
+    public void setNotes( String notes ) {
         this.notes = notes;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getResponseTypeInternal()
-    {
+    public String getResponseTypeInternal() {
         return responseTypeInternal;
     }
 
 
-    public void setResponseTypeInternal( String responseTypeInternal )
-    {
+    public void setResponseTypeInternal( String responseTypeInternal ) {
         this.responseTypeInternal = responseTypeInternal;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getResponseClass()
-    {
+    public String getResponseClass() {
         return responseClass;
     }
 
 
-    public void setResponseClass( String responseClass )
-    {
+    public void setResponseClass( String responseClass ) {
         this.responseClass = responseClass;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getTags()
-    {
+    public String getTags() {
         return tags;
     }
 
 
-    public void setTags( String tags )
-    {
+    public void setTags( String tags ) {
         this.tags = tags;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public List<ApiParam> getParameters()
-    {
+    public List<ApiParam> getParameters() {
         return parameters;
     }
 
 
-    public void setParameters( List<ApiParam> parameters )
-    {
+    public void setParameters( List<ApiParam> parameters ) {
         this.parameters = parameters;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public List<ApiOperationError> getErrorResponses()
-    {
+    public List<ApiOperationError> getErrorResponses() {
         return errorResponses;
     }
 
 
-    public void setErrorResponses( List<ApiOperationError> errorResponses )
-    {
+    public void setErrorResponses( List<ApiOperationError> errorResponses ) {
         this.errorResponses = errorResponses;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return JsonUtils.mapToJsonString( this );
     }
 
 
-    public Element createWADLMethod( Document doc, Api api )
-    {
+    public Element createWADLMethod( Document doc, Api api ) {
         Element method = doc.createElement( "method" );
-        if ( httpMethod != null )
-        {
+        if ( httpMethod != null ) {
             method.setAttribute( "name", httpMethod );
         }
-        if ( summary != null )
-        {
+        if ( summary != null ) {
             method.setAttributeNS( "http://api.apigee.com/wadl/2010/07/", "apigee:displayName", summary );
         }
-        if ( nickname != null )
-        {
+        if ( nickname != null ) {
             method.setAttribute( "id", nickname );
         }
 
@@ -199,41 +174,33 @@ public class ApiOperation
         example.setAttribute( "url", api.path );
         method.appendChild( example );
 
-        if ( notes != null )
-        {
+        if ( notes != null ) {
             Element d = doc.createElement( "doc" );
             d.setTextContent( notes );
             method.appendChild( d );
         }
-        if ( ( parameters != null ) && !parameters.isEmpty() )
-        {
+        if ( ( parameters != null ) && !parameters.isEmpty() ) {
             Element request = doc.createElement( "request" );
             method.appendChild( request );
             boolean isForm = false;
             boolean isJson = false;
-            for ( ApiParam param : parameters )
-            {
-                if ( "post".equalsIgnoreCase( param.getParamType() ) )
-                {
+            for ( ApiParam param : parameters ) {
+                if ( "post".equalsIgnoreCase( param.getParamType() ) ) {
                     isForm = true;
                 }
-                else if ( "body".equalsIgnoreCase( param.getParamType() ) )
-                {
+                else if ( "body".equalsIgnoreCase( param.getParamType() ) ) {
                     isJson = true;
                 }
             }
 
-            for ( ApiParam param : parameters )
-            {
+            for ( ApiParam param : parameters ) {
                 if ( !"post".equalsIgnoreCase( param.getParamType() ) && !"body"
-                        .equalsIgnoreCase( param.getParamType() ) )
-                {
+                        .equalsIgnoreCase( param.getParamType() ) ) {
                     request.appendChild( param.createWADLParam( doc, this ) );
                 }
             }
 
-            if ( isForm )
-            {
+            if ( isForm ) {
                 Element contentType = doc.createElement( "param" );
                 contentType.setAttribute( "name", "Content-Type" );
                 contentType.setAttribute( "type", "string" );
@@ -245,16 +212,13 @@ public class ApiOperation
                 Element representation = doc.createElement( "representation" );
                 representation.setAttribute( "mediaType", "application/x-www-form-urlencoded" );
                 request.appendChild( representation );
-                for ( ApiParam param : parameters )
-                {
-                    if ( "post".equalsIgnoreCase( param.getParamType() ) )
-                    {
+                for ( ApiParam param : parameters ) {
+                    if ( "post".equalsIgnoreCase( param.getParamType() ) ) {
                         representation.appendChild( param.createWADLParam( doc, this ) );
                     }
                 }
             }
-            else if ( isJson )
-            {
+            else if ( isJson ) {
                 Element contentType = doc.createElement( "param" );
                 contentType.setAttribute( "name", "Content-Type" );
                 contentType.setAttribute( "type", "string" );

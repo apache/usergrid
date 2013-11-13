@@ -44,8 +44,7 @@ import java.util.SimpleTimeZone;
  * Note that this class doesn't use static methods because of the synchronization issues with SimpleDateFormat. This
  * lets synchronization be done on a per-object level, instead of on a per-class level.
  */
-public class DateUtils
-{
+public class DateUtils {
 
     /** ISO 8601 parser */
     protected final SimpleDateFormat iso8601DateParser = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" );
@@ -59,8 +58,7 @@ public class DateUtils
 
 
     /** Constructs a new DateUtils object, ready to parse/format dates. */
-    public DateUtils()
-    {
+    public DateUtils() {
         iso8601DateParser.setTimeZone( new SimpleTimeZone( 0, "GMT" ) );
         rfc822DateParser.setTimeZone( new SimpleTimeZone( 0, "GMT" ) );
         alternateIo8601DateParser.setTimeZone( new SimpleTimeZone( 0, "GMT" ) );
@@ -77,17 +75,14 @@ public class DateUtils
      *
      * @return The ISO 8601 string representing the specified date.
      */
-    public String formatIso8601Date( Date date )
-    {
-        synchronized ( iso8601DateParser )
-        {
+    public String formatIso8601Date( Date date ) {
+        synchronized ( iso8601DateParser ) {
             return iso8601DateParser.format( date );
         }
     }
 
 
-    public String iso8601DateNow()
-    {
+    public String iso8601DateNow() {
         return formatIso8601Date( new Date() );
     }
 }

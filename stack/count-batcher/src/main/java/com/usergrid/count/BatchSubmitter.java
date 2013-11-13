@@ -23,8 +23,7 @@ import com.usergrid.count.common.Count;
 
 
 /** @author zznate */
-public interface BatchSubmitter
-{
+public interface BatchSubmitter {
     Future<?> submit( Collection<Count> counts );
 
     void shutdown();

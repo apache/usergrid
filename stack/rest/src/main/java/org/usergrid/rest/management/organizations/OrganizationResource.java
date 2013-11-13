@@ -56,21 +56,18 @@ import com.sun.jersey.api.view.Viewable;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class OrganizationResource extends AbstractContextResource
-{
+public class OrganizationResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
     OrganizationInfo organization;
 
 
-    public OrganizationResource()
-    {
+    public OrganizationResource() {
     }
 
 
-    public OrganizationResource init( OrganizationInfo organization )
-    {
+    public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
         return this;
     }
@@ -78,24 +75,21 @@ public class OrganizationResource extends AbstractContextResource
 
     @RequireOrganizationAccess
     @Path("users")
-    public UsersResource getOrganizationUsers( @Context UriInfo ui ) throws Exception
-    {
+    public UsersResource getOrganizationUsers( @Context UriInfo ui ) throws Exception {
         return getSubResource( UsersResource.class ).init( organization );
     }
 
 
     @RequireOrganizationAccess
     @Path("applications")
-    public ApplicationsResource getOrganizationApplications( @Context UriInfo ui ) throws Exception
-    {
+    public ApplicationsResource getOrganizationApplications( @Context UriInfo ui ) throws Exception {
         return getSubResource( ApplicationsResource.class ).init( organization );
     }
 
 
     @RequireOrganizationAccess
     @Path("apps")
-    public ApplicationsResource getOrganizationApplications2( @Context UriInfo ui ) throws Exception
-    {
+    public ApplicationsResource getOrganizationApplications2( @Context UriInfo ui ) throws Exception {
         return getSubResource( ApplicationsResource.class ).init( organization );
     }
 
@@ -103,8 +97,7 @@ public class OrganizationResource extends AbstractContextResource
     @GET
     public JSONWithPadding getOrganizationDetails( @Context UriInfo ui,
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "Get details for organization: " + organization.getUuid() );
 
@@ -118,24 +111,19 @@ public class OrganizationResource extends AbstractContextResource
     @GET
     @Path("activate")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable activate( @Context UriInfo ui, @QueryParam("token") String token )
-    {
+    public Viewable activate( @Context UriInfo ui, @QueryParam("token") String token ) {
 
-        try
-        {
+        try {
             management.handleActivationTokenForOrganization( organization.getUuid(), token );
             return handleViewable( "activate", this );
         }
-        catch ( TokenException e )
-        {
+        catch ( TokenException e ) {
             return handleViewable( "bad_activation_token", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -144,28 +132,22 @@ public class OrganizationResource extends AbstractContextResource
     @GET
     @Path("confirm")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable confirm( @Context UriInfo ui, @QueryParam("token") String token )
-    {
+    public Viewable confirm( @Context UriInfo ui, @QueryParam("token") String token ) {
 
-        try
-        {
+        try {
             ActivationState state = management.handleActivationTokenForOrganization( organization.getUuid(), token );
-            if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION )
-            {
+            if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
                 return handleViewable( "confirm", this );
             }
             return handleViewable( "activate", this );
         }
-        catch ( TokenException e )
-        {
+        catch ( TokenException e ) {
             return handleViewable( "bad_activation_token", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -175,8 +157,7 @@ public class OrganizationResource extends AbstractContextResource
     @Path("reactivate")
     public JSONWithPadding reactivate( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "Send activation email for organization: " + organization.getUuid() );
 
@@ -193,8 +174,8 @@ public class OrganizationResource extends AbstractContextResource
     @GET
     @Path("feed")
     public JSONWithPadding getFeed( @Context UriInfo ui,
-                                    @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception
-    {
+                                    @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization feed" );
@@ -212,8 +193,7 @@ public class OrganizationResource extends AbstractContextResource
     @Path("credentials")
     public JSONWithPadding getCredentials( @Context UriInfo ui,
                                            @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization client credentials" );
@@ -232,8 +212,7 @@ public class OrganizationResource extends AbstractContextResource
     @Path("credentials")
     public JSONWithPadding generateCredentials( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "generate organization client credentials" );
@@ -247,8 +226,7 @@ public class OrganizationResource extends AbstractContextResource
     }
 
 
-    public OrganizationInfo getOrganization()
-    {
+    public OrganizationInfo getOrganization() {
         return organization;
     }
 
@@ -258,8 +236,7 @@ public class OrganizationResource extends AbstractContextResource
     @PUT
     public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.debug( "OrganizationResource.executePut" );
 

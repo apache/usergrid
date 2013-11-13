@@ -72,8 +72,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
 /** @author edanuff */
-public class CassandraPersistenceUtils
-{
+public class CassandraPersistenceUtils {
 
     private static final Logger logger = LoggerFactory.getLogger( CassandraPersistenceUtils.class );
 
@@ -115,11 +114,9 @@ public class CassandraPersistenceUtils
      * @param timestamp
      */
     public static void logBatchOperation( String operation, Object columnFamily, Object key, Object columnName,
-                                          Object columnValue, long timestamp )
-    {
+                                          Object columnValue, long timestamp ) {
 
-        if ( batch_logger.isDebugEnabled() )
-        {
+        if ( batch_logger.isDebugEnabled() ) {
             batch_logger.debug( "{} cf={} key={} name={} value={}",
                     new Object[] { operation, columnFamily, key, columnName, columnValue } );
         }
@@ -127,17 +124,14 @@ public class CassandraPersistenceUtils
 
 
     public static void addInsertToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, Object columnName,
-                                           Object columnValue, long timestamp )
-    {
+                                           Object columnValue, long timestamp ) {
 
         logBatchOperation( "Insert", columnFamily, key, columnName, columnValue, timestamp );
 
-        if ( columnName instanceof List<?> )
-        {
+        if ( columnName instanceof List<?> ) {
             columnName = DynamicComposite.toByteBuffer( ( List<?> ) columnName );
         }
-        if ( columnValue instanceof List<?> )
-        {
+        if ( columnValue instanceof List<?> ) {
             columnValue = DynamicComposite.toByteBuffer( ( List<?> ) columnValue );
         }
 
@@ -148,19 +142,16 @@ public class CassandraPersistenceUtils
 
 
     public static void addInsertToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, Map<?, ?> columns,
-                                           long timestamp ) throws Exception
-    {
+                                           long timestamp ) throws Exception {
 
-        for ( Entry<?, ?> entry : columns.entrySet() )
-        {
+        for ( Entry<?, ?> entry : columns.entrySet() ) {
             addInsertToMutator( m, columnFamily, key, entry.getKey(), entry.getValue(), timestamp );
         }
     }
 
 
     public static void addPropertyToMutator( Mutator<ByteBuffer> m, Object key, String entityType, String propertyName,
-                                             Object propertyValue, long timestamp )
-    {
+                                             Object propertyValue, long timestamp ) {
 
         logBatchOperation( "Insert", ApplicationCF.ENTITY_PROPERTIES, key, propertyName, propertyValue, timestamp );
 
@@ -171,11 +162,9 @@ public class CassandraPersistenceUtils
 
 
     public static void addPropertyToMutator( Mutator<ByteBuffer> m, Object key, String entityType,
-                                             Map<String, ?> columns, long timestamp ) throws Exception
-    {
+                                             Map<String, ?> columns, long timestamp ) throws Exception {
 
-        for ( Entry<String, ?> entry : columns.entrySet() )
-        {
+        for ( Entry<String, ?> entry : columns.entrySet() ) {
             addPropertyToMutator( m, key, entityType, entry.getKey(), entry.getValue(), timestamp );
         }
     }
@@ -183,8 +172,7 @@ public class CassandraPersistenceUtils
 
     /** Delete the row */
     public static void addDeleteToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, long timestamp )
-            throws Exception
-    {
+            throws Exception {
 
         logBatchOperation( "Delete", columnFamily, key, null, null, timestamp );
 
@@ -193,13 +181,11 @@ public class CassandraPersistenceUtils
 
 
     public static void addDeleteToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, Object columnName,
-                                           long timestamp ) throws Exception
-    {
+                                           long timestamp ) throws Exception {
 
         logBatchOperation( "Delete", columnFamily, key, columnName, null, timestamp );
 
-        if ( columnName instanceof List<?> )
-        {
+        if ( columnName instanceof List<?> ) {
             columnName = DynamicComposite.toByteBuffer( ( List<?> ) columnName );
         }
 
@@ -208,15 +194,12 @@ public class CassandraPersistenceUtils
 
 
     public static void addDeleteToMutator( Mutator<ByteBuffer> m, Object columnFamily, Object key, long timestamp,
-                                           Object... columnNames ) throws Exception
-    {
+                                           Object... columnNames ) throws Exception {
 
-        for ( Object columnName : columnNames )
-        {
+        for ( Object columnName : columnNames ) {
             logBatchOperation( "Delete", columnFamily, key, columnName, null, timestamp );
 
-            if ( columnName instanceof List<?> )
-            {
+            if ( columnName instanceof List<?> ) {
                 columnName = DynamicComposite.toByteBuffer( ( List<?> ) columnName );
             }
 
@@ -225,13 +208,10 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static Map<String, ByteBuffer> getColumnMap( List<HColumn<String, ByteBuffer>> columns )
-    {
+    public static Map<String, ByteBuffer> getColumnMap( List<HColumn<String, ByteBuffer>> columns ) {
         Map<String, ByteBuffer> column_map = new TreeMap<String, ByteBuffer>( String.CASE_INSENSITIVE_ORDER );
-        if ( columns != null )
-        {
-            for ( HColumn<String, ByteBuffer> column : columns )
-            {
+        if ( columns != null ) {
+            for ( HColumn<String, ByteBuffer> column : columns ) {
                 String column_name = column.getName();
                 column_map.put( column_name, column.getValue() );
             }
@@ -240,15 +220,12 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static <K, V> Map<K, V> asMap( List<HColumn<K, V>> columns )
-    {
-        if ( columns == null )
-        {
+    public static <K, V> Map<K, V> asMap( List<HColumn<K, V>> columns ) {
+        if ( columns == null ) {
             return null;
         }
         Map<K, V> column_map = new LinkedHashMap<K, V>();
-        for ( HColumn<K, V> column : columns )
-        {
+        for ( HColumn<K, V> column : columns ) {
             K column_name = column.getName();
             column_map.put( column_name, column.getValue() );
         }
@@ -256,11 +233,9 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static List<ByteBuffer> getAsByteKeys( List<UUID> ids )
-    {
+    public static List<ByteBuffer> getAsByteKeys( List<UUID> ids ) {
         List<ByteBuffer> keys = new ArrayList<ByteBuffer>();
-        for ( UUID id : ids )
-        {
+        for ( UUID id : ids ) {
             keys.add( bytebuffer( key( id ) ) );
         }
         return keys;
@@ -268,15 +243,13 @@ public class CassandraPersistenceUtils
 
 
     /** @return timestamp value for current time */
-    public static long createTimestamp()
-    {
+    public static long createTimestamp() {
         return createClockResolution( ClockResolution.MICROSECONDS ).createClock();
     }
 
 
     /** @return normalized group path */
-    public static String normalizeGroupPath( String path )
-    {
+    public static String normalizeGroupPath( String path ) {
         path = replaceAll( path.toLowerCase().trim(), "//", "/" );
         path = removeStart( path, "/" );
         path = removeEnd( path, "/" );
@@ -285,37 +258,28 @@ public class CassandraPersistenceUtils
 
 
     /** @return a composite key */
-    public static Object key( Object... objects )
-    {
-        if ( objects.length == 1 )
-        {
+    public static Object key( Object... objects ) {
+        if ( objects.length == 1 ) {
             Object obj = objects[0];
-            if ( ( obj instanceof UUID ) || ( obj instanceof ByteBuffer ) )
-            {
+            if ( ( obj instanceof UUID ) || ( obj instanceof ByteBuffer ) ) {
                 return obj;
             }
         }
         StringBuilder s = new StringBuilder();
-        for ( Object obj : objects )
-        {
-            if ( obj instanceof String )
-            {
+        for ( Object obj : objects ) {
+            if ( obj instanceof String ) {
                 s.append( ( ( String ) obj ).toLowerCase() );
             }
-            else if ( obj instanceof List<?> )
-            {
+            else if ( obj instanceof List<?> ) {
                 s.append( key( ( ( List<?> ) obj ).toArray() ) );
             }
-            else if ( obj instanceof Object[] )
-            {
+            else if ( obj instanceof Object[] ) {
                 s.append( key( ( Object[] ) obj ) );
             }
-            else if ( obj != null )
-            {
+            else if ( obj != null ) {
                 s.append( obj );
             }
-            else
-            {
+            else {
                 s.append( "*" );
             }
 
@@ -329,19 +293,15 @@ public class CassandraPersistenceUtils
 
 
     /** @return UUID for composite key */
-    public static UUID keyID( Object... objects )
-    {
-        if ( objects.length == 1 )
-        {
+    public static UUID keyID( Object... objects ) {
+        if ( objects.length == 1 ) {
             Object obj = objects[0];
-            if ( obj instanceof UUID )
-            {
+            if ( obj instanceof UUID ) {
                 return ( UUID ) obj;
             }
         }
         String keyStr = key( objects ).toString();
-        if ( keyStr.length() == 0 )
-        {
+        if ( keyStr.length() == 0 ) {
             return NULL_ID;
         }
         UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() );
@@ -351,25 +311,20 @@ public class CassandraPersistenceUtils
 
 
     /** @return UUID for entity alias */
-    public static UUID aliasID( UUID ownerId, String aliasType, String alias )
-    {
+    public static UUID aliasID( UUID ownerId, String aliasType, String alias ) {
         return keyID( ownerId, aliasType, alias );
     }
 
 
     public static Mutator<ByteBuffer> buildSetIdListMutator( Mutator<ByteBuffer> batch, UUID targetId,
                                                              String columnFamily, String keyPrefix, String keySuffix,
-                                                             List<UUID> keyIds, long timestamp ) throws Exception
-    {
-        for ( UUID keyId : keyIds )
-        {
+                                                             List<UUID> keyIds, long timestamp ) throws Exception {
+        for ( UUID keyId : keyIds ) {
             ByteBuffer key = null;
-            if ( ( StringUtils.isNotEmpty( keyPrefix ) ) || ( StringUtils.isNotEmpty( keySuffix ) ) )
-            {
+            if ( ( StringUtils.isNotEmpty( keyPrefix ) ) || ( StringUtils.isNotEmpty( keySuffix ) ) ) {
                 key = bytebuffer( keyPrefix + keyId.toString() + keySuffix );
             }
-            else
-            {
+            else {
                 key = bytebuffer( keyId );
             }
             addInsertToMutator( batch, columnFamily, key, targetId, ByteBuffer.allocate( 0 ), timestamp );
@@ -378,16 +333,12 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static MutationResult batchExecute( Mutator<?> m, int retries )
-    {
-        for ( int i = 0; i < retries; i++ )
-        {
-            try
-            {
+    public static MutationResult batchExecute( Mutator<?> m, int retries ) {
+        for ( int i = 0; i < retries; i++ ) {
+            try {
                 return m.execute();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to execute mutation, retrying...", e );
             }
         }
@@ -395,46 +346,35 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static Object toStorableValue( Object obj )
-    {
-        if ( obj == null )
-        {
+    public static Object toStorableValue( Object obj ) {
+        if ( obj == null ) {
             return null;
         }
 
-        if ( isBasicType( obj.getClass() ) )
-        {
+        if ( isBasicType( obj.getClass() ) ) {
             return obj;
         }
 
-        if ( obj instanceof ByteBuffer )
-        {
+        if ( obj instanceof ByteBuffer ) {
             return obj;
         }
 
         JsonNode json = toJsonNode( obj );
-        if ( ( json != null ) && json.isValueNode() )
-        {
-            if ( json.isBigInteger() )
-            {
+        if ( ( json != null ) && json.isValueNode() ) {
+            if ( json.isBigInteger() ) {
                 return json.getBigIntegerValue();
             }
-            else if ( json.isNumber() || json.isBoolean() )
-            {
+            else if ( json.isNumber() || json.isBoolean() ) {
                 return BigInteger.valueOf( json.getValueAsLong() );
             }
-            else if ( json.isTextual() )
-            {
+            else if ( json.isTextual() ) {
                 return json.getTextValue();
             }
-            else if ( json.isBinary() )
-            {
-                try
-                {
+            else if ( json.isBinary() ) {
+                try {
                     return wrap( json.getBinaryValue() );
                 }
-                catch ( IOException e )
-                {
+                catch ( IOException e ) {
                 }
             }
         }
@@ -443,52 +383,41 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static ByteBuffer toStorableBinaryValue( Object obj )
-    {
+    public static ByteBuffer toStorableBinaryValue( Object obj ) {
         obj = toStorableValue( obj );
-        if ( obj instanceof JsonNode )
-        {
+        if ( obj instanceof JsonNode ) {
             return JsonUtils.toByteBuffer( obj );
         }
-        else
-        {
+        else {
             return bytebuffer( obj );
         }
     }
 
 
-    public static ByteBuffer toStorableBinaryValue( Object obj, boolean forceJson )
-    {
+    public static ByteBuffer toStorableBinaryValue( Object obj, boolean forceJson ) {
         obj = toStorableValue( obj );
-        if ( ( obj instanceof JsonNode ) || ( forceJson && ( obj != null ) && !( obj instanceof ByteBuffer ) ) )
-        {
+        if ( ( obj instanceof JsonNode ) || ( forceJson && ( obj != null ) && !( obj instanceof ByteBuffer ) ) ) {
             return JsonUtils.toByteBuffer( obj );
         }
-        else
-        {
+        else {
             return bytebuffer( obj );
         }
     }
 
 
-    public static List<ColumnDefinition> getIndexMetadata( String indexes )
-    {
-        if ( indexes == null )
-        {
+    public static List<ColumnDefinition> getIndexMetadata( String indexes ) {
+        if ( indexes == null ) {
             return null;
         }
         String[] index_entries = split( indexes, ',' );
         List<ColumnDef> columns = new ArrayList<ColumnDef>();
-        for ( String index_entry : index_entries )
-        {
+        for ( String index_entry : index_entries ) {
             String column_name = stringOrSubstringBeforeFirst( index_entry, ':' ).trim();
             String comparer = substringAfterLast( index_entry, ":" ).trim();
-            if ( StringUtils.isBlank( comparer ) )
-            {
+            if ( StringUtils.isBlank( comparer ) ) {
                 comparer = "UUIDType";
             }
-            if ( StringUtils.isNotBlank( column_name ) )
-            {
+            if ( StringUtils.isNotBlank( column_name ) ) {
                 ColumnDef cd = new ColumnDef( bytebuffer( column_name ), comparer );
                 cd.setIndex_name( column_name );
                 cd.setIndex_type( IndexType.KEYS );
@@ -499,39 +428,31 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static List<ColumnFamilyDefinition> getCfDefs( Class<? extends CFEnum> cfEnum, String keyspace )
-    {
+    public static List<ColumnFamilyDefinition> getCfDefs( Class<? extends CFEnum> cfEnum, String keyspace ) {
         return getCfDefs( cfEnum, null, keyspace );
     }
 
 
     public static List<ColumnFamilyDefinition> getCfDefs( Class<? extends CFEnum> cfEnum,
-                                                          List<ColumnFamilyDefinition> cf_defs, String keyspace )
-    {
+                                                          List<ColumnFamilyDefinition> cf_defs, String keyspace ) {
 
-        if ( cf_defs == null )
-        {
+        if ( cf_defs == null ) {
             cf_defs = new ArrayList<ColumnFamilyDefinition>();
         }
 
         CFEnum[] values = null;
-        try
-        {
+        try {
             values = ( CFEnum[] ) invokeStaticMethod( cfEnum, "values", ( Object[] ) null );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Couldn't get CFEnum values", e );
         }
-        if ( values == null )
-        {
+        if ( values == null ) {
             return null;
         }
 
-        for ( CFEnum cf : values )
-        {
-            if ( !cf.create() )
-            {
+        for ( CFEnum cf : values ) {
+            if ( !cf.create() ) {
                 continue;
             }
             String defaultValidationClass = cf.getValidator();
@@ -540,8 +461,7 @@ public class CassandraPersistenceUtils
             ColumnFamilyDefinition cf_def = HFactory.createColumnFamilyDefinition( keyspace, cf.getColumnFamily(),
                     ComparatorType.getByClassName( cf.getComparator() ), metadata );
 
-            if ( defaultValidationClass != null )
-            {
+            if ( defaultValidationClass != null ) {
                 cf_def.setDefaultValidationClass( defaultValidationClass );
             }
 
@@ -552,17 +472,13 @@ public class CassandraPersistenceUtils
     }
 
 
-    public static void validateKeyspace( CFEnum[] cf_enums, KeyspaceDefinition ksDef )
-    {
+    public static void validateKeyspace( CFEnum[] cf_enums, KeyspaceDefinition ksDef ) {
         Map<String, ColumnFamilyDefinition> cfs = new HashMap<String, ColumnFamilyDefinition>();
-        for ( ColumnFamilyDefinition cf : ksDef.getCfDefs() )
-        {
+        for ( ColumnFamilyDefinition cf : ksDef.getCfDefs() ) {
             cfs.put( cf.getName(), cf );
         }
-        for ( CFEnum c : cf_enums )
-        {
-            if ( !cfs.keySet().contains( c.getColumnFamily() ) )
-            {
+        for ( CFEnum c : cf_enums ) {
+            if ( !cfs.keySet().contains( c.getColumnFamily() ) ) {
 
             }
         }

@@ -43,19 +43,16 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 /** @author tnine */
 @Concurrent()
-public class ManagementResourceIT extends AbstractRestIT
-{
+public class ManagementResourceIT extends AbstractRestIT {
 
-    public ManagementResourceIT() throws Exception
-    {
+    public ManagementResourceIT() throws Exception {
 
     }
 
 
     /** Test if we can reset our password as an admin */
     @Test
-    public void setSelfAdminPasswordAsAdmin()
-    {
+    public void setSelfAdminPasswordAsAdmin() {
 
         String newPassword = "foo";
 
@@ -83,8 +80,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void passwordMismatchErrorAdmin()
-    {
+    public void passwordMismatchErrorAdmin() {
         String origPassword = "foo";
         String newPassword = "bar";
 
@@ -98,13 +94,11 @@ public class ManagementResourceIT extends AbstractRestIT
 
         Status responseStatus = null;
 
-        try
-        {
+        try {
             resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -115,8 +109,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void setAdminPasswordAsSysAdmin()
-    {
+    public void setAdminPasswordAsSysAdmin() {
 
         String superToken = superAdminToken();
 
@@ -150,8 +143,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
     /** Test that admins can't view organizations they're not authorized to view. */
     @Test
-    public void crossOrgsNotViewable() throws Exception
-    {
+    public void crossOrgsNotViewable() throws Exception {
 
         OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "crossOrgsNotViewable",
                 "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password" );
@@ -160,14 +152,12 @@ public class ManagementResourceIT extends AbstractRestIT
 
         Status status = null;
 
-        try
-        {
+        try {
             resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getName() ) )
                     .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -176,14 +166,12 @@ public class ManagementResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getUuid() ) )
                     .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -192,13 +180,11 @@ public class ManagementResourceIT extends AbstractRestIT
 
         // this admin should have access to test org
         status = null;
-        try
-        {
+        try {
             resource().path( "/management/orgs/test-organization" ).queryParam( "access_token", adminAccessToken )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -207,14 +193,12 @@ public class ManagementResourceIT extends AbstractRestIT
         OrganizationInfo org = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
 
         status = null;
-        try
-        {
+        try {
             resource().path( String.format( "/management/orgs/%s", org.getUuid() ) )
                     .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -223,8 +207,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void mgmtUserFeed() throws Exception
-    {
+    public void mgmtUserFeed() throws Exception {
         JsonNode userdata = resource().path( "/management/users/test@usergrid.com/feed" )
                 .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                 .get( JsonNode.class );
@@ -234,8 +217,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void mgmtCreateAndGetApplication() throws Exception
-    {
+    public void mgmtCreateAndGetApplication() throws Exception {
 
         OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
         Map<String, String> data = new HashMap<String, String>();
@@ -270,8 +252,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void tokenTtl() throws Exception
-    {
+    public void tokenTtl() throws Exception {
 
         long ttl = 2000;
 
@@ -294,13 +275,11 @@ public class ManagementResourceIT extends AbstractRestIT
         Thread.sleep( ttl - ( System.currentTimeMillis() - startTime ) + 1000 );
 
         Status responseStatus = null;
-        try
-        {
+        try {
             userdata = resource().path( "/management/users/test@usergrid.com" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -309,8 +288,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void token() throws Exception
-    {
+    public void token() throws Exception {
         JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
                 .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
@@ -340,8 +318,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void meToken() throws Exception
-    {
+    public void meToken() throws Exception {
         JsonNode node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
                 .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
@@ -374,8 +351,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void meTokenPost() throws Exception
-    {
+    public void meTokenPost() throws Exception {
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" );
 
@@ -394,8 +370,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void meTokenPostForm() throws Exception
-    {
+    public void meTokenPostForm() throws Exception {
         JsonNode node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
@@ -413,21 +388,18 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void ttlNan() throws Exception
-    {
+    public void ttlNan() throws Exception {
 
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
                         .map( "ttl", "derp" );
 
         Status responseStatus = null;
-        try
-        {
+        try {
             resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -436,8 +408,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void ttlOverMax() throws Exception
-    {
+    public void ttlOverMax() throws Exception {
 
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
@@ -445,13 +416,11 @@ public class ManagementResourceIT extends AbstractRestIT
 
         Status responseStatus = null;
 
-        try
-        {
+        try {
             resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -460,8 +429,7 @@ public class ManagementResourceIT extends AbstractRestIT
 
 
     @Test
-    public void revokeToken() throws Exception
-    {
+    public void revokeToken() throws Exception {
         String token1 = super.adminToken();
         String token2 = super.adminToken();
 
@@ -485,13 +453,11 @@ public class ManagementResourceIT extends AbstractRestIT
 
         Status status = null;
 
-        try
-        {
+        try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token1 )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -499,13 +465,11 @@ public class ManagementResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token2 )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -533,13 +497,11 @@ public class ManagementResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token3 )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -547,15 +509,13 @@ public class ManagementResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token4 )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
 
             status = Status.OK;
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 

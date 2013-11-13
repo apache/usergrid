@@ -42,15 +42,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class UUIDUtilsTest
-{
+public class UUIDUtilsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( UUIDUtilsTest.class );
 
 
     @Test
-    public void testUUIDUtils()
-    {
+    public void testUUIDUtils() {
         UUID uuid = UUIDUtils.newTimeUUID();
         LOG.info( "" + uuid );
         LOG.info( "" + uuid.timestamp() );
@@ -77,8 +75,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void testAppProvidedTimestamp()
-    {
+    public void testAppProvidedTimestamp() {
         LOG.info( "UUIDUtilsTest.testAppProvidedTimestamp" );
         long ts = System.currentTimeMillis();
         System.out.println( ts );
@@ -88,8 +85,7 @@ public class UUIDUtilsTest
         int count = 1000000;
 
         LOG.info( "Generating " + count + " UUIDs..." );
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             UUID uuid = newTimeUUID( ts );
 
             assertFalse( "UUID already generated", uuids.contains( uuid ) );
@@ -102,8 +98,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void testAppProvidedTimestampOrdering()
-    {
+    public void testAppProvidedTimestampOrdering() {
         LOG.info( "UUIDUtilsTest.testAppProvidedTimestamp" );
         long ts = System.currentTimeMillis();
         System.out.println( ts );
@@ -118,8 +113,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void timeUUIDOrdering()
-    {
+    public void timeUUIDOrdering() {
         int count = 10000;
 
         long ts = System.currentTimeMillis();
@@ -127,8 +121,7 @@ public class UUIDUtilsTest
         List<UUID> uuids = new ArrayList<UUID>( count );
 
         LOG.info( "Generating " + count + " UUIDs..." );
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             UUID uuid = newTimeUUID( ts, i );
 
             uuids.add( uuid );
@@ -136,45 +129,39 @@ public class UUIDUtilsTest
             assertEquals( "Incorrect UUID timestamp value", ts, getTimestampInMillis( uuid ) );
         }
 
-        for ( int i = 0; i < count - 1; i++ )
-        {
+        for ( int i = 0; i < count - 1; i++ ) {
             assertEquals( -1, uuids.get( i ).compareTo( uuids.get( i + 1 ) ) );
         }
     }
 
 
     @Test
-    @Ignore( "This test is timing dependent." )
-    @SuppressWarnings( "unchecked" )
-    public void verifyOrderingTsOnlyAndUnique()
-    {
+    @Ignore("This test is timing dependent.")
+    @SuppressWarnings("unchecked")
+    public void verifyOrderingTsOnlyAndUnique() {
         int count = 500;
         long ts = System.currentTimeMillis();
 
         List<UUID> uuids = new ArrayList<UUID>( count );
         HashSet times = new HashSet();
         UUID lastSeen;
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             lastSeen = newTimeUUID( ts );
             uuids.add( lastSeen );
             times.add( UUIDUtils.getTimestampInMicros( lastSeen ) );
         }
         assertEquals( 500, times.size() );
-        for ( int i = 0; i < count - 1; i++ )
-        {
+        for ( int i = 0; i < count - 1; i++ ) {
             assertEquals( -1, uuids.get( i ).compareTo( uuids.get( i + 1 ) ) );
         }
     }
 
 
     /** Populate timestamp set for the methods testing uuid contention */
-    @SuppressWarnings( "unchecked" )
-    private static Set buildTsMicros( int count )
-    {
+    @SuppressWarnings("unchecked")
+    private static Set buildTsMicros( int count ) {
         HashSet created = new HashSet( count );
-        for ( int x = 0; x < count; x++ )
-        {
+        for ( int x = 0; x < count; x++ ) {
             created.add( UUIDUtils.getTimestampInMicros( UUIDUtils.newTimeUUID() ) );
         }
         return created;
@@ -182,8 +169,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void directUuidFrob()
-    {
+    public void directUuidFrob() {
         long startTime = System.currentTimeMillis();
         int count = 1000 * 1000;
 
@@ -196,13 +182,11 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void concurrentUuidFrob() throws Exception
-    {
+    public void concurrentUuidFrob() throws Exception {
         long startTime = System.currentTimeMillis();
         List<Future> jobs = executeFrob();
 
-        for ( Future f : jobs )
-        {
+        for ( Future f : jobs ) {
             LOG.info( "waiting on job..." );
             f.get();
         }
@@ -211,18 +195,14 @@ public class UUIDUtilsTest
     }
 
 
-    private List<Future> executeFrob()
-    {
+    private List<Future> executeFrob() {
         ExecutorService exec = Executors.newFixedThreadPool( 5 );
         List<Future> jobs = new ArrayList<Future>( 10 );
 
-        for ( int x = 0; x < 10; x++ )
-        {
-            jobs.add( exec.submit( new Callable<Object>()
-            {
+        for ( int x = 0; x < 10; x++ ) {
+            jobs.add( exec.submit( new Callable<Object>() {
                 @Override
-                public Object call() throws Exception
-                {
+                public Object call() throws Exception {
                     LOG.info( "call invoked" );
 
                     int count = 1000 * 100;
@@ -241,8 +221,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void timeUUIDOrderingRolls()
-    {
+    public void timeUUIDOrderingRolls() {
 
         long ts = System.currentTimeMillis();
 
@@ -257,8 +236,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void timeUUIDOrderingGaps() throws InterruptedException
-    {
+    public void timeUUIDOrderingGaps() throws InterruptedException {
 
         UUID now1 = newTimeUUID();
         UUID now2 = newTimeUUID();
@@ -288,8 +266,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void max()
-    {
+    public void max() {
         long start = System.currentTimeMillis();
 
         UUID t1 = newTimeUUID( start, 0 );
@@ -300,8 +277,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void maxFirstNull()
-    {
+    public void maxFirstNull() {
         long start = System.currentTimeMillis();
 
         UUID t1 = newTimeUUID( start, 0 );
@@ -311,8 +287,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void maxSecondNull()
-    {
+    public void maxSecondNull() {
         long start = System.currentTimeMillis();
 
         UUID t1 = newTimeUUID( start, 0 );
@@ -322,15 +297,13 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void maxBothNull()
-    {
+    public void maxBothNull() {
         assertNull( UUIDUtils.max( null, null ) );
     }
 
 
     @Test
-    public void min()
-    {
+    public void min() {
         long start = System.currentTimeMillis();
 
         UUID t1 = newTimeUUID( start, 0 );
@@ -341,8 +314,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void minFirstNull()
-    {
+    public void minFirstNull() {
         long start = System.currentTimeMillis();
 
         UUID t1 = newTimeUUID( start, 0 );
@@ -352,8 +324,7 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void minSecondNull()
-    {
+    public void minSecondNull() {
         long start = System.currentTimeMillis();
 
         UUID t1 = newTimeUUID( start, 0 );
@@ -363,15 +334,13 @@ public class UUIDUtilsTest
 
 
     @Test
-    public void minBothNull()
-    {
+    public void minBothNull() {
         assertNull( UUIDUtils.min( null, null ) );
     }
 
 
     @Test
-    public void testDecrement()
-    {
+    public void testDecrement() {
 
         int testSize = 100000;
 
@@ -379,8 +348,7 @@ public class UUIDUtilsTest
         UUID previous = current;
 
 
-        for ( int i = 0; i < testSize; i++ )
-        {
+        for ( int i = 0; i < testSize; i++ ) {
             current = UUIDUtils.decrement( current );
 
             assertEquals( -1, current.compareTo( previous ) );
@@ -390,16 +358,14 @@ public class UUIDUtilsTest
     }
 
 
-    @Test( expected = IllegalArgumentException.class )
-    public void testDecrementMin()
-    {
+    @Test(expected = IllegalArgumentException.class)
+    public void testDecrementMin() {
         UUIDUtils.decrement( UUIDUtils.MIN_TIME_UUID );
     }
 
 
-    @Test( expected = IllegalArgumentException.class )
-    public void nonTimeUUID()
-    {
+    @Test(expected = IllegalArgumentException.class)
+    public void nonTimeUUID() {
         UUIDUtils.decrement( UUID.randomUUID() );
     }
 }

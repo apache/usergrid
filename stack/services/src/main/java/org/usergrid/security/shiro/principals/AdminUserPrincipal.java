@@ -21,11 +21,9 @@ import org.usergrid.management.UserInfo;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
-public class AdminUserPrincipal extends UserPrincipal
-{
+public class AdminUserPrincipal extends UserPrincipal {
 
-    public AdminUserPrincipal( UserInfo user )
-    {
+    public AdminUserPrincipal( UserInfo user ) {
         super( MANAGEMENT_APPLICATION_ID, user );
     }
 }

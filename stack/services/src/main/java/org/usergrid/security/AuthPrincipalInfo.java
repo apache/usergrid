@@ -19,61 +19,52 @@ package org.usergrid.security;
 import java.util.UUID;
 
 
-public class AuthPrincipalInfo
-{
+public class AuthPrincipalInfo {
 
     AuthPrincipalType type;
     UUID uuid;
     UUID applicationId;
 
 
-    public AuthPrincipalInfo( AuthPrincipalType type, UUID uuid, UUID applicationId )
-    {
+    public AuthPrincipalInfo( AuthPrincipalType type, UUID uuid, UUID applicationId ) {
         this.type = type;
         this.uuid = uuid;
         this.applicationId = applicationId;
     }
 
 
-    public AuthPrincipalType getType()
-    {
+    public AuthPrincipalType getType() {
         return type;
     }
 
 
-    public void setType( AuthPrincipalType type )
-    {
+    public void setType( AuthPrincipalType type ) {
         this.type = type;
     }
 
 
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return uuid;
     }
 
 
-    public void setUuid( UUID uuid )
-    {
+    public void setUuid( UUID uuid ) {
         this.uuid = uuid;
     }
 
 
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return applicationId;
     }
 
 
-    public void setApplicationId( UUID applicationId )
-    {
+    public void setApplicationId( UUID applicationId ) {
         this.applicationId = applicationId;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "AuthPrincipalInfo [type=" + type + ", uuid=" + uuid + ( applicationId != null ?
                                                                         ", applicationId=" + applicationId : "" ) + "]";
     }

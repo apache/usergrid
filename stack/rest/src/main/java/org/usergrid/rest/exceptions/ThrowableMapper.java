@@ -21,7 +21,6 @@ import javax.ws.rs.ext.Provider;
 
 /** Will map to HTTP 500 INTERNAL_SERVER_ERROR because parent does */
 @Provider
-public class ThrowableMapper extends AbstractExceptionMapper<Throwable>
-{
+public class ThrowableMapper extends AbstractExceptionMapper<Throwable> {
 
 }

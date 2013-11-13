@@ -27,37 +27,31 @@ import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 
 
-public class RestSecurityManager extends DefaultWebSecurityManager
-{
+public class RestSecurityManager extends DefaultWebSecurityManager {
 
     private static final Logger logger = LoggerFactory.getLogger( RestSecurityManager.class );
 
 
-    public RestSecurityManager()
-    {
+    public RestSecurityManager() {
         setSessionManager( new HttpRequestSessionManager() );
     }
 
 
-    public RestSecurityManager( Realm singleRealm )
-    {
+    public RestSecurityManager( Realm singleRealm ) {
         super( singleRealm );
         setSessionManager( new HttpRequestSessionManager() );
     }
 
 
-    public RestSecurityManager( Collection<Realm> realms )
-    {
+    public RestSecurityManager( Collection<Realm> realms ) {
         super( realms );
         setSessionManager( new HttpRequestSessionManager() );
     }
 
 
     @Override
-    public void setSessionManager( SessionManager sessionManager )
-    {
-        if ( !( sessionManager instanceof HttpRequestSessionManager ) )
-        {
+    public void setSessionManager( SessionManager sessionManager ) {
+        if ( !( sessionManager instanceof HttpRequestSessionManager ) ) {
             logger.info( "Replacing " + sessionManager + " with HttpRequestSessionManager" );
             sessionManager = new HttpRequestSessionManager();
         }

@@ -19,20 +19,17 @@ package org.usergrid.security.tokens.exceptions;
 import org.usergrid.management.exceptions.ManagementException;
 
 
-public class TokenException extends ManagementException
-{
+public class TokenException extends ManagementException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public TokenException( String arg0, Throwable arg1 )
-    {
+    public TokenException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public TokenException( String arg0 )
-    {
+    public TokenException( String arg0 ) {
         super( arg0 );
     }
 }

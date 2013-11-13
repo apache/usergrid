@@ -26,8 +26,7 @@ import org.usergrid.locking.exception.UGLockException;
  *
  * @author tnine
  */
-public interface LockManager
-{
+public interface LockManager {
 
     /**
      * Acquires a lock on a particular path.

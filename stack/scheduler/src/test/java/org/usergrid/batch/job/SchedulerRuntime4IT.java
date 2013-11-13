@@ -41,22 +41,19 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
     private static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
 
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         scheduler = cassandraResource.getBean( SchedulerService.class );
 
         props = cassandraResource.getBean( "properties", Properties.class );
 
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
-        if ( jobScheduler.state() != State.RUNNING )
-        {
+        if ( jobScheduler.state() != State.RUNNING ) {
             jobScheduler.startAndWait();
         }
     }
@@ -64,12 +61,10 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT
 
     /**
      * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
-     * the
-     * retry time
+     * the retry time
      */
     @Test
-    public void delayExecution() throws Exception
-    {
+    public void delayExecution() throws Exception {
 
         long sleepTime = Long.parseLong( props.getProperty( TIMEOUT_PROP ) );
 

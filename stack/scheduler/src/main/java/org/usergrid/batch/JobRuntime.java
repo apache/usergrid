@@ -24,8 +24,7 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public interface JobRuntime
-{
+public interface JobRuntime {
 
     /** Set the transaction id for this job's runtime */
     public void setTransactionId( UUID transactionId );

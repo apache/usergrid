@@ -26,16 +26,14 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.mongo.protocol.Message;
 
 
-public class MongoMessageEncoder extends SimpleChannelHandler
-{
+public class MongoMessageEncoder extends SimpleChannelHandler {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger( MongoMessageEncoder.class );
 
 
     @Override
-    public void writeRequested( ChannelHandlerContext ctx, MessageEvent e )
-    {
+    public void writeRequested( ChannelHandlerContext ctx, MessageEvent e ) {
 
         // logger.info("Mongo message encoding...");
 

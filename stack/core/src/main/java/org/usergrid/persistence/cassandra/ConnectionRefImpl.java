@@ -40,8 +40,7 @@ import static org.usergrid.utils.ConversionUtils.uuidToBytesNullOk;
 
 
 /** @author edanuff */
-public class ConnectionRefImpl implements ConnectionRef
-{
+public class ConnectionRefImpl implements ConnectionRef {
 
     public static final int MAX_LINKS = 1;
 
@@ -88,8 +87,7 @@ public class ConnectionRefImpl implements ConnectionRef
     /**
      *
      */
-    public ConnectionRefImpl()
-    {
+    public ConnectionRefImpl() {
         connectingEntity = SimpleEntityRef.ref();
         pairedConnections = Collections.emptyList();
         connectedEntity = new ConnectedEntityRefImpl();
@@ -104,8 +102,7 @@ public class ConnectionRefImpl implements ConnectionRef
      * @param connectedEntityId
      */
     public ConnectionRefImpl( String connectingEntityType, UUID connectingEntityId, String connectionType,
-                              String connectedEntityType, UUID connectedEntityId )
-    {
+                              String connectedEntityType, UUID connectedEntityId ) {
 
         connectingEntity = ref( connectingEntityType, connectingEntityId );
 
@@ -116,8 +113,7 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     /** Create a connection from the source to the target entity */
-    public ConnectionRefImpl( EntityRef source, String connectionType, EntityRef target )
-    {
+    public ConnectionRefImpl( EntityRef source, String connectionType, EntityRef target ) {
 
         this.connectingEntity = ref( source );
 
@@ -127,14 +123,12 @@ public class ConnectionRefImpl implements ConnectionRef
     }
 
 
-    public ConnectionRefImpl( ConnectionRef connection )
-    {
+    public ConnectionRefImpl( ConnectionRef connection ) {
 
         connectingEntity = connection.getConnectingEntity();
 
         List<ConnectedEntityRef> pc = connection.getPairedConnections();
-        if ( pc == null )
-        {
+        if ( pc == null ) {
             pc = Collections.emptyList();
         }
         pairedConnections = pc;
@@ -143,20 +137,17 @@ public class ConnectionRefImpl implements ConnectionRef
     }
 
 
-    public ConnectionRefImpl( EntityRef connectingEntity, ConnectedEntityRef... connections )
-    {
+    public ConnectionRefImpl( EntityRef connectingEntity, ConnectedEntityRef... connections ) {
 
         this.connectingEntity = ref( connectingEntity );
 
         ConnectedEntityRef ce = new ConnectedEntityRefImpl();
         List<ConnectedEntityRef> pc = Collections.emptyList();
-        if ( connections.length > 0 )
-        {
+        if ( connections.length > 0 ) {
 
             ce = connections[connections.length - 1];
 
-            if ( connections.length > 1 )
-            {
+            if ( connections.length > 1 ) {
                 pc = Arrays.asList( Arrays.copyOfRange( connections, 0, connections.length - 2 ) );
             }
         }
@@ -165,18 +156,15 @@ public class ConnectionRefImpl implements ConnectionRef
     }
 
 
-    public ConnectionRefImpl( ConnectionRef connection, ConnectedEntityRef... connections )
-    {
+    public ConnectionRefImpl( ConnectionRef connection, ConnectedEntityRef... connections ) {
 
-        if ( connection == null )
-        {
+        if ( connection == null ) {
             throw new NullPointerException( "ConnectionImpl constructor \'connection\' cannot be null" );
         }
 
         connectingEntity = connection.getConnectingEntity();
 
-        if ( connections.length > 0 )
-        {
+        if ( connections.length > 0 ) {
 
             pairedConnections = new ArrayList<ConnectedEntityRef>();
             pairedConnections.addAll( connection.getPairedConnections() );
@@ -184,14 +172,12 @@ public class ConnectionRefImpl implements ConnectionRef
 
             connectedEntity = connections[connections.length - 1];
 
-            if ( connections.length > 1 )
-            {
+            if ( connections.length > 1 ) {
                 pairedConnections
                         .addAll( Arrays.asList( Arrays.copyOfRange( connections, 0, connections.length - 2 ) ) );
             }
         }
-        else
-        {
+        else {
             pairedConnections = new ArrayList<ConnectedEntityRef>();
             connectedEntity = new ConnectedEntityRefImpl();
         }
@@ -199,41 +185,35 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     public ConnectionRefImpl( EntityRef connectingEntity, List<ConnectedEntityRef> pairedConnections,
-                              ConnectedEntityRef connectedEntity )
-    {
+                              ConnectedEntityRef connectedEntity ) {
         this.connectingEntity = connectingEntity;
         this.pairedConnections = pairedConnections;
         this.connectedEntity = connectedEntity;
     }
 
 
-    public UUID getSearchIndexId()
-    {
+    public UUID getSearchIndexId() {
         return null;
     }
 
 
-    public String getSearchConnectionType()
-    {
+    public String getSearchConnectionType() {
         return null;
     }
 
 
-    public String getSearchResultType()
-    {
+    public String getSearchResultType() {
         return null;
     }
 
 
-    public String getSearchIndexName()
-    {
+    public String getSearchIndexName() {
         return null;
     }
 
 
     @Override
-    public EntityRef getConnectingEntity()
-    {
+    public EntityRef getConnectingEntity() {
         return connectingEntity;
     }
 
@@ -241,10 +221,8 @@ public class ConnectionRefImpl implements ConnectionRef
     /**
      * @return
      */
-    public String getConnectingEntityType()
-    {
-        if ( connectingEntity == null )
-        {
+    public String getConnectingEntityType() {
+        if ( connectingEntity == null ) {
             return null;
         }
         return connectingEntity.getType();
@@ -254,10 +232,8 @@ public class ConnectionRefImpl implements ConnectionRef
     /**
      * @return
      */
-    public UUID getConnectingEntityId()
-    {
-        if ( connectingEntity == null )
-        {
+    public UUID getConnectingEntityId() {
+        if ( connectingEntity == null ) {
             return null;
         }
         return connectingEntity.getUuid();
@@ -265,18 +241,15 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     @Override
-    public List<ConnectedEntityRef> getPairedConnections()
-    {
+    public List<ConnectedEntityRef> getPairedConnections() {
         return pairedConnections;
     }
 
 
-    public ConnectedEntityRef getFirstPairedConnection()
-    {
+    public ConnectedEntityRef getFirstPairedConnection() {
         ConnectedEntityRef pairedConnection = null;
 
-        if ( ( pairedConnections != null ) && ( pairedConnections.size() > 0 ) )
-        {
+        if ( ( pairedConnections != null ) && ( pairedConnections.size() > 0 ) ) {
             pairedConnection = pairedConnections.get( 0 );
         }
 
@@ -284,33 +257,27 @@ public class ConnectionRefImpl implements ConnectionRef
     }
 
 
-    public UUID getFirstPairedConnectedEntityId()
-    {
+    public UUID getFirstPairedConnectedEntityId() {
         ConnectedEntityRef pairedConnection = getFirstPairedConnection();
-        if ( pairedConnection != null )
-        {
+        if ( pairedConnection != null ) {
             return pairedConnection.getUuid();
         }
         return null;
     }
 
 
-    public String getFirstPairedConnectedEntityType()
-    {
+    public String getFirstPairedConnectedEntityType() {
         ConnectedEntityRef pairedConnection = getFirstPairedConnection();
-        if ( pairedConnection != null )
-        {
+        if ( pairedConnection != null ) {
             return pairedConnection.getType();
         }
         return null;
     }
 
 
-    public String getFirstPairedConnectionType()
-    {
+    public String getFirstPairedConnectionType() {
         ConnectedEntityRef pairedConnection = getFirstPairedConnection();
-        if ( pairedConnection != null )
-        {
+        if ( pairedConnection != null ) {
             return pairedConnection.getConnectionType();
         }
         return null;
@@ -318,8 +285,7 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     @Override
-    public ConnectedEntityRef getConnectedEntity()
-    {
+    public ConnectedEntityRef getConnectedEntity() {
         return connectedEntity;
     }
 
@@ -328,10 +294,8 @@ public class ConnectionRefImpl implements ConnectionRef
      * @return
      */
     @Override
-    public String getConnectionType()
-    {
-        if ( connectedEntity == null )
-        {
+    public String getConnectionType() {
+        if ( connectedEntity == null ) {
             return null;
         }
         return connectedEntity.getConnectionType();
@@ -341,10 +305,8 @@ public class ConnectionRefImpl implements ConnectionRef
     /**
      * @return
      */
-    public String getConnectedEntityType()
-    {
-        if ( connectedEntity == null )
-        {
+    public String getConnectedEntityType() {
+        if ( connectedEntity == null ) {
             return null;
         }
         return connectedEntity.getType();
@@ -354,8 +316,7 @@ public class ConnectionRefImpl implements ConnectionRef
     /**
      * @return
      */
-    public UUID getConnectedEntityId()
-    {
+    public UUID getConnectedEntityId() {
         return connectedEntity.getUuid();
     }
 
@@ -365,10 +326,8 @@ public class ConnectionRefImpl implements ConnectionRef
 
     /** @return connection id */
     @Override
-    public UUID getUuid()
-    {
-        if ( id == null )
-        {
+    public UUID getUuid() {
+        if ( id == null ) {
             id = getId( getConnectingEntity(), getConnectedEntity(),
                     getPairedConnections().toArray( new ConnectedEntityRef[0] ) );
         }
@@ -377,74 +336,61 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     @Override
-    public String getType()
-    {
+    public String getType() {
         return CONNECTION_ENTITY_TYPE;
     }
 
 
-    public UUID getIndexId()
-    {
+    public UUID getIndexId() {
         return getIndexId( getConnectingEntity(), getConnectionType(), getConnectedEntityType(),
                 pairedConnections.toArray( new ConnectedEntityRef[0] ) );
     }
 
 
-    public UUID getConnectingIndexId()
-    {
+    public UUID getConnectingIndexId() {
         return getIndexId( getConnectingEntity(), getConnectionType(), null,
                 pairedConnections.toArray( new ConnectedEntityRef[0] ) );
     }
 
 
-    public ConnectionRefImpl getConnectionToConnectionEntity()
-    {
+    public ConnectionRefImpl getConnectionToConnectionEntity() {
         return new ConnectionRefImpl( getConnectingEntity(),
                 new ConnectedEntityRefImpl( CONNECTION_ENTITY_CONNECTION_TYPE, CONNECTION_ENTITY_TYPE, getUuid() ) );
     }
 
 
     /** @return index ids */
-    public UUID[] getIndexIds()
-    {
+    public UUID[] getIndexIds() {
 
         return getIndexIds( getConnectingEntity(), getConnectedEntity().getConnectionType(),
                 getConnectedEntity().getType(), getPairedConnections().toArray( new ConnectedEntityRef[0] ) );
     }
 
 
-    static String typeOrDefault( String type )
-    {
-        if ( ( type == null ) || ( type.length() == 0 ) )
-        {
+    static String typeOrDefault( String type ) {
+        if ( ( type == null ) || ( type.length() == 0 ) ) {
             return NULL_ENTITY_TYPE;
         }
         return type;
     }
 
 
-    static UUID idOrDefault( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    static UUID idOrDefault( UUID uuid ) {
+        if ( uuid == null ) {
             return NULL_ID;
         }
         return uuid;
     }
 
 
-    public static boolean connectionsNull( ConnectedEntityRef... pairedConnections )
-    {
-        if ( ( pairedConnections == null ) || ( pairedConnections.length == 0 ) )
-        {
+    public static boolean connectionsNull( ConnectedEntityRef... pairedConnections ) {
+        if ( ( pairedConnections == null ) || ( pairedConnections.length == 0 ) ) {
             return true;
         }
 
-        for ( ConnectedEntityRef pairedConnection : pairedConnections )
-        {
-            if ( pairedConnection == null || pairedConnection.getUuid() == null || pairedConnection.getUuid()
-                                                                                                   .equals( NULL_ID ) )
-            {
+        for ( ConnectedEntityRef pairedConnection : pairedConnections ) {
+            if ( pairedConnection == null || pairedConnection.getUuid() == null || pairedConnection.getUuid().equals(
+                    NULL_ID ) ) {
                 return true;
             }
         }
@@ -453,37 +399,31 @@ public class ConnectionRefImpl implements ConnectionRef
     }
 
 
-    public static ConnectedEntityRef[] getConnections( ConnectedEntityRef... connections )
-    {
+    public static ConnectedEntityRef[] getConnections( ConnectedEntityRef... connections ) {
         return connections;
     }
 
 
-    public static List<ConnectedEntityRef> getConnectionsList( ConnectedEntityRef... connections )
-    {
+    public static List<ConnectedEntityRef> getConnectionsList( ConnectedEntityRef... connections ) {
         return Arrays.asList( connections );
     }
 
 
     /** @return connection id */
-    public static UUID getId( UUID connectingEntityId, String connectionType, UUID connectedEntityId )
-    {
+    public static UUID getId( UUID connectingEntityId, String connectionType, UUID connectedEntityId ) {
         return getId( connectingEntityId, null, null, connectionType, connectedEntityId );
     }
 
 
     /**
      * Connection id is constructed from packed structure of properties strings are truncated to 16 ascii bytes.
-     * Connection
-     * id is now MD5'd into a UUID via UUID.nameUUIDFromBytes() so, technically string concatenation could be used
-     * prior to
-     * MD5
+     * Connection id is now MD5'd into a UUID via UUID.nameUUIDFromBytes() so, technically string concatenation could be
+     * used prior to MD5
      *
      * @return connection id
      */
     public static UUID getId( UUID connectingEntityId, String pairedConnectionType, UUID pairedConnectingEntityId,
-                              String connectionType, UUID connectedEntityId )
-    {
+                              String connectionType, UUID connectedEntityId ) {
 
         EntityRef connectingEntity = ref( connectingEntityId );
 
@@ -497,14 +437,11 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     public static UUID getId( EntityRef connectingEntity, ConnectedEntityRef connectedEntity,
-                              ConnectedEntityRef... pairedConnections )
-    {
+                              ConnectedEntityRef... pairedConnections ) {
         UUID uuid = null;
-        try
-        {
+        try {
 
-            if ( connectionsNull( pairedConnections ) && connectionsNull( connectedEntity ) )
-            {
+            if ( connectionsNull( pairedConnections ) && connectionsNull( connectedEntity ) ) {
                 return connectingEntity.getUuid();
             }
 
@@ -512,8 +449,7 @@ public class ConnectionRefImpl implements ConnectionRef
 
             byteStream.write( uuidToBytesNullOk( connectingEntity.getUuid() ) );
 
-            for ( ConnectedEntityRef connection : pairedConnections )
-            {
+            for ( ConnectedEntityRef connection : pairedConnections ) {
                 String connectionType = connection.getConnectionType();
                 UUID connectedEntityID = connection.getUuid();
 
@@ -522,8 +458,7 @@ public class ConnectionRefImpl implements ConnectionRef
             }
 
             String connectionType = connectedEntity.getConnectionType();
-            if ( connectionType == null )
-            {
+            if ( connectionType == null ) {
                 connectionType = NULL_ENTITY_TYPE;
             }
 
@@ -542,8 +477,7 @@ public class ConnectionRefImpl implements ConnectionRef
             // logger.info("connection index uuid: " + uuid);
 
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             logger.error( "Unable to create connection UUID", e );
         }
         return uuid;
@@ -551,16 +485,14 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     /** @return connection index id */
-    public static UUID getIndexId( UUID connectingEntityId, String connectionType, String connectedEntityType )
-    {
+    public static UUID getIndexId( UUID connectingEntityId, String connectionType, String connectedEntityType ) {
         return getIndexId( connectingEntityId, null, null, connectionType, connectedEntityType );
     }
 
 
     /** @return connection index id */
     public static UUID getIndexId( UUID connectingEntityId, String pairedConnectionType, UUID pairedConnectingEntityId,
-                                   String connectionType, String connectedEntityType )
-    {
+                                   String connectionType, String connectedEntityType ) {
 
         EntityRef connectingEntity = ref( connectingEntityId );
 
@@ -572,16 +504,13 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     public static UUID getIndexId( EntityRef connectingEntity, String connectionType, String connectedEntityType,
-                                   ConnectedEntityRef... pairedConnections )
-    {
+                                   ConnectedEntityRef... pairedConnections ) {
 
         UUID uuid = null;
-        try
-        {
+        try {
 
             if ( connectionsNull( pairedConnections ) && ( ( connectionType == null ) && ( connectedEntityType
-                    == null ) ) )
-            {
+                    == null ) ) ) {
                 return connectingEntity.getUuid();
             }
 
@@ -589,8 +518,7 @@ public class ConnectionRefImpl implements ConnectionRef
 
             byteStream.write( uuidToBytesNullOk( connectingEntity.getUuid() ) );
 
-            for ( ConnectedEntityRef connection : pairedConnections )
-            {
+            for ( ConnectedEntityRef connection : pairedConnections ) {
                 String type = connection.getConnectionType();
                 UUID id = connection.getUuid();
 
@@ -598,12 +526,10 @@ public class ConnectionRefImpl implements ConnectionRef
                 byteStream.write( uuidToBytesNullOk( id ) );
             }
 
-            if ( connectionType == null )
-            {
+            if ( connectionType == null ) {
                 connectionType = NULL_ENTITY_TYPE;
             }
-            if ( connectedEntityType == null )
-            {
+            if ( connectedEntityType == null ) {
                 connectedEntityType = NULL_ENTITY_TYPE;
             }
 
@@ -618,8 +544,7 @@ public class ConnectionRefImpl implements ConnectionRef
 
             logger.info( "connection index uuid: " + uuid );
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             logger.error( "Unable to create connection index UUID", e );
         }
         return uuid;
@@ -628,8 +553,7 @@ public class ConnectionRefImpl implements ConnectionRef
 
     /** @return connection index id */
     public static UUID getIndexId( int variant, UUID connectingEntityId, String pairedConnectionType,
-                                   UUID pairedConnectingEntityId, String connectionType, String connectedEntityType )
-    {
+                                   UUID pairedConnectingEntityId, String connectionType, String connectedEntityType ) {
 
         EntityRef connectingEntity = ref( connectingEntityId );
 
@@ -641,19 +565,15 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     public static UUID getIndexId( int variant, EntityRef connectingEntity, String connectionType,
-                                   String connectedEntityType, ConnectedEntityRef... pairedConnections )
-    {
+                                   String connectedEntityType, ConnectedEntityRef... pairedConnections ) {
 
-        switch ( variant )
-        {
+        switch ( variant ) {
 
             case ALL:
-                if ( connectionsNull( pairedConnections ) )
-                {
+                if ( connectionsNull( pairedConnections ) ) {
                     return connectingEntity.getUuid();
                 }
-                else
-                {
+                else {
                     return getIndexId( connectingEntity, null, null, pairedConnections );
                 }
 
@@ -672,21 +592,19 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     /** @return index ids */
-    public static UUID[] getIndexIds( UUID connectingEntityId, String connectionType, String connectedEntityType )
-    {
+    public static UUID[] getIndexIds( UUID connectingEntityId, String connectionType, String connectedEntityType ) {
         return getIndexIds( connectingEntityId, null, null, connectionType, connectedEntityType );
     }
 
 
     /** @return index ids */
     public static UUID[] getIndexIds( UUID connectingEntityId, String pairedConnectionType,
-                                      UUID pairedConnectingEntityId, String connectionType, String connectedEntityType )
-    {
+                                      UUID pairedConnectingEntityId, String connectionType,
+                                      String connectedEntityType ) {
 
         UUID[] variants = new UUID[4];
 
-        for ( int i = 0; i < 4; i++ )
-        {
+        for ( int i = 0; i < 4; i++ ) {
             variants[i] =
                     getIndexId( i, connectingEntityId, pairedConnectionType, pairedConnectingEntityId, connectionType,
                             connectedEntityType );
@@ -697,13 +615,11 @@ public class ConnectionRefImpl implements ConnectionRef
 
 
     public static UUID[] getIndexIds( EntityRef connectingEntity, String connectionType, String connectedEntityType,
-                                      ConnectedEntityRef... pairedConnections )
-    {
+                                      ConnectedEntityRef... pairedConnections ) {
 
         UUID[] variants = new UUID[4];
 
-        for ( int i = 0; i < 4; i++ )
-        {
+        for ( int i = 0; i < 4; i++ ) {
             variants[i] = getIndexId( i, connectingEntity, connectionType, connectedEntityType, pairedConnections );
         }
 

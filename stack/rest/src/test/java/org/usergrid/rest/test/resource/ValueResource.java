@@ -29,8 +29,7 @@ import static org.junit.Assert.assertEquals;
 
 
 /** @author tnine */
-public abstract class ValueResource extends NamedResource
-{
+public abstract class ValueResource extends NamedResource {
 
     private String name;
     private String query;
@@ -41,8 +40,7 @@ public abstract class ValueResource extends NamedResource
     private Map<String, String> customParams;
 
 
-    public ValueResource( String name, NamedResource parent )
-    {
+    public ValueResource( String name, NamedResource parent ) {
         super( parent );
         this.name = name;
     }
@@ -55,8 +53,7 @@ public abstract class ValueResource extends NamedResource
      * org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
      */
     @Override
-    public void addToUrl( StringBuilder buffer )
-    {
+    public void addToUrl( StringBuilder buffer ) {
         parent.addToUrl( buffer );
 
         buffer.append( SLASH );
@@ -65,91 +62,79 @@ public abstract class ValueResource extends NamedResource
     }
 
 
-    public void addToUrlEnd( StringBuilder buffer )
-    {
+    public void addToUrlEnd( StringBuilder buffer ) {
         buffer.append( SLASH );
         buffer.append( buffer );
     }
 
 
     /** Create a new entity with the specified data */
-    public JsonNode create( Map<String, ?> entity )
-    {
+    public JsonNode create( Map<String, ?> entity ) {
         return postInternal( entity );
     }
 
 
-    public JsonNode delete()
-    {
+    public JsonNode delete() {
         return deleteInternal();
     }
 
 
     /** post to the entity set */
-    protected JsonNode postInternal( Map<String, ?> entity )
-    {
+    protected JsonNode postInternal( Map<String, ?> entity ) {
 
         return jsonMedia( withParams( withToken( resource() ) ) ).post( JsonNode.class, entity );
     }
 
 
     /** post to the entity set */
-    protected JsonNode postInternal( Map<String, ?>[] entity )
-    {
+    protected JsonNode postInternal( Map<String, ?>[] entity ) {
 
         return jsonMedia( withParams( withToken( resource() ) ) ).post( JsonNode.class, entity );
     }
 
 
-    public JsonNode put( Map<String, ?> entity )
-    {
+    public JsonNode put( Map<String, ?> entity ) {
 
         return putInternal( entity );
     }
 
 
     /** put to the entity set */
-    protected JsonNode putInternal( Map<String, ?> entity )
-    {
+    protected JsonNode putInternal( Map<String, ?> entity ) {
 
         return jsonMedia( withParams( withToken( resource() ) ) ).put( JsonNode.class, entity );
     }
 
 
     /** Get the data */
-    public JsonNode get()
-    {
+    public JsonNode get() {
         return getInternal();
     }
 
 
     @SuppressWarnings("unchecked")
-    public <T extends ValueResource> T withCursor( String cursor )
-    {
+    public <T extends ValueResource> T withCursor( String cursor ) {
         this.cursor = cursor;
         return ( T ) this;
     }
 
 
     @SuppressWarnings("unchecked")
-    public <T extends ValueResource> T withQuery( String query )
-    {
+    public <T extends ValueResource> T withQuery( String query ) {
         this.query = query;
         return ( T ) this;
     }
 
 
     @SuppressWarnings("unchecked")
-    public <T extends ValueResource> T withStart( UUID start )
-    {
+    public <T extends ValueResource> T withStart( UUID start ) {
         this.start = start;
         return ( T ) this;
     }
 
 
     @SuppressWarnings("unchecked")
-    public <T extends ValueResource> T withLimit( Integer limit )
-    {
+    public <T extends ValueResource> T withLimit( Integer limit ) {
         this.limit = limit;
         return ( T ) this;
     }
@@ -158,10 +143,8 @@ public abstract class ValueResource extends NamedResource
     /** Query this resource. */
 
     @SuppressWarnings("unchecked")
-    public <T extends ValueResource> T withParam( String name, String value )
-    {
-        if ( customParams == null )
-        {
+    public <T extends ValueResource> T withParam( String name, String value ) {
+        if ( customParams == null ) {
             customParams = new HashMap<String, String>();
         }
 
@@ -172,29 +155,24 @@ public abstract class ValueResource extends NamedResource
 
 
     /** Get entities in this collection. Cursor is optional */
-    protected JsonNode getInternal()
-    {
+    protected JsonNode getInternal() {
 
 
         WebResource resource = withParams( withToken( resource() ) );
 
-        if ( query != null )
-        {
+        if ( query != null ) {
             resource = resource.queryParam( "ql", query );
         }
 
-        if ( cursor != null )
-        {
+        if ( cursor != null ) {
             resource = resource.queryParam( "cursor", cursor );
         }
 
-        if ( start != null )
-        {
+        if ( start != null ) {
             resource = resource.queryParam( "start", start.toString() );
         }
 
-        if ( limit != null )
-        {
+        if ( limit != null ) {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 
@@ -202,26 +180,21 @@ public abstract class ValueResource extends NamedResource
     }
 
 
-    public JsonNode query( String query, String addition, String numAddition )
-    {
+    public JsonNode query( String query, String addition, String numAddition ) {
         return getInternal( query, addition, numAddition );
     }
 
 
-    protected JsonNode getInternal( String query, String addition, String numAddition )
-    {
+    protected JsonNode getInternal( String query, String addition, String numAddition ) {
         WebResource resource = withParams( withToken( resource() ) ).queryParam( "ql", query );
 
-        if ( addition != null )
-        {
+        if ( addition != null ) {
             resource = resource.queryParam( addition, numAddition );
         }
 
 
-        if ( customParams != null )
-        {
-            for ( Entry<String, String> param : customParams.entrySet() )
-            {
+        if ( customParams != null ) {
+            for ( Entry<String, String> param : customParams.entrySet() ) {
                 resource = resource.queryParam( param.getKey(), param.getValue() );
             }
         }
@@ -231,8 +204,7 @@ public abstract class ValueResource extends NamedResource
 
 
     public int verificationOfQueryResults( JsonNode[] correctValues, boolean reverse, String checkedQuery )
-            throws Exception
-    {
+            throws Exception {
 
         int totalEntitiesContained = 0;
 
@@ -241,18 +213,14 @@ public abstract class ValueResource extends NamedResource
         while ( correctValues.length != totalEntitiesContained )//correctNode.get("entities") != null)
         {
             totalEntitiesContained += checkedNodes.get( "entities" ).size();
-            if ( !reverse )
-            {
-                for ( int index = 0; index < checkedNodes.get( "entities" ).size(); index++ )
-                {
+            if ( !reverse ) {
+                for ( int index = 0; index < checkedNodes.get( "entities" ).size(); index++ ) {
                     assertEquals( correctValues[index].get( "entities" ).get( 0 ),
                             checkedNodes.get( "entities" ).get( index ) );
                 }
             }
-            else
-            {
-                for ( int index = 0; index < checkedNodes.get( "entities" ).size(); index++ )
-                {
+            else {
+                for ( int index = 0; index < checkedNodes.get( "entities" ).size(); index++ ) {
                     assertEquals( correctValues[correctValues.length - 1 - index].get( "entities" ).get( 0 ),
                             checkedNodes.get( "entities" ).get( index ) );
                 }
@@ -262,13 +230,11 @@ public abstract class ValueResource extends NamedResource
       /*works because this method checks to make sure both queries return the same thing
       therefore this if shouldn't be needed, but added just in case
        */
-            if ( checkedNodes.get( "cursor" ) != null )
-            {
+            if ( checkedNodes.get( "cursor" ) != null ) {
                 checkedNodes = this.query( checkedQuery, "cursor", checkedNodes.get( "cursor" ).toString() );
             }
 
-            else
-            {
+            else {
                 break;
             }
         }
@@ -276,23 +242,20 @@ public abstract class ValueResource extends NamedResource
     }
 
 
-    public JsonNode entityValue( String query, String valueToSearch, int index )
-    {
+    public JsonNode entityValue( String query, String valueToSearch, int index ) {
         JsonNode node = this.withQuery( query ).get();
         return node.get( "entities" ).get( index ).findValue( valueToSearch );
     }
 
 
-    public JsonNode entityIndex( String query, int index )
-    {
+    public JsonNode entityIndex( String query, int index ) {
 
         JsonNode node = this.withQuery( query ).get();
         return node.get( "entities" ).get( index );
     }
 
 
-    public JsonNode entityIndexLimit( String query, Integer limitSize, int index )
-    {
+    public JsonNode entityIndexLimit( String query, Integer limitSize, int index ) {
 
         JsonNode node = this.withQuery( query ).withLimit( limitSize ).get();
         return node.get( "entities" ).get( index );
@@ -300,29 +263,24 @@ public abstract class ValueResource extends NamedResource
 
 
     /** Get entities in this collection. Cursor is optional */
-    protected JsonNode deleteInternal()
-    {
+    protected JsonNode deleteInternal() {
 
 
         WebResource resource = withParams( withToken( resource() ) );
 
-        if ( query != null )
-        {
+        if ( query != null ) {
             resource = resource.queryParam( "ql", query );
         }
 
-        if ( cursor != null )
-        {
+        if ( cursor != null ) {
             resource = resource.queryParam( "cursor", cursor );
         }
 
-        if ( start != null )
-        {
+        if ( start != null ) {
             resource = resource.queryParam( "start", start.toString() );
         }
 
-        if ( limit != null )
-        {
+        if ( limit != null ) {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 

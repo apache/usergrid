@@ -22,23 +22,20 @@ import org.usergrid.persistence.exceptions.NoIndexException;
 
 
 /** @author tnine */
-public class LessThanEqual extends EqualityOperand
-{
+public class LessThanEqual extends EqualityOperand {
 
     /**
      * @param property
      * @param literal
      */
-    public LessThanEqual( Token t )
-    {
+    public LessThanEqual( Token t ) {
         super( t );
     }
 
 
     /**
      */
-    public LessThanEqual()
-    {
+    public LessThanEqual() {
         super( new CommonToken( 0, "<=" ) );
     }
 
@@ -51,8 +48,7 @@ public class LessThanEqual extends EqualityOperand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException
-    {
+    public void visit( QueryVisitor visitor ) throws NoIndexException {
         visitor.visit( this );
     }
 }

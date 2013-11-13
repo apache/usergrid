@@ -17,42 +17,35 @@
 package org.usergrid.utils;
 
 
-public class InflectionUtils
-{
+public class InflectionUtils {
 
-    public static String pluralize( Object word )
-    {
+    public static String pluralize( Object word ) {
         return Inflector.INSTANCE.pluralize( word );
     }
 
 
-    public static String singularize( Object word )
-    {
+    public static String singularize( Object word ) {
         return Inflector.INSTANCE.singularize( word );
     }
 
 
-    public static boolean isPlural( Object word )
-    {
+    public static boolean isPlural( Object word ) {
         return Inflector.INSTANCE.isPlural( word );
     }
 
 
-    public static boolean isSingular( Object word )
-    {
+    public static boolean isSingular( Object word ) {
         return Inflector.INSTANCE.isSingular( word );
     }
 
 
-    public static String underscore( String s )
-    {
+    public static String underscore( String s ) {
         return Inflector.INSTANCE.underscore( s );
     }
 
 
     public static String camelCase( String lowerCaseAndUnderscoredWord, boolean uppercaseFirstLetter,
-                                    char... delimiterChars )
-    {
+                                    char... delimiterChars ) {
         return Inflector.INSTANCE.camelCase( lowerCaseAndUnderscoredWord, uppercaseFirstLetter, delimiterChars );
     }
 }

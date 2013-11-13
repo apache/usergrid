@@ -70,8 +70,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
 
 
-public class Server implements ApplicationContextAware
-{
+public class Server implements ApplicationContextAware {
 
     public static final boolean INSTALL_JSP_SERVLETS = true;
 
@@ -103,54 +102,44 @@ public class Server implements ApplicationContextAware
     boolean daemon = true;
 
 
-    public Server()
-    {
+    public Server() {
         instance = this;
     }
 
 
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) {
         instance = new Server();
         instance.startServerFromCommandLine( args );
     }
 
 
-    public static Server getInstance()
-    {
+    public static Server getInstance() {
         return instance;
     }
 
 
-    public void startServerFromCommandLine( String[] args )
-    {
+    public void startServerFromCommandLine( String[] args ) {
         CommandLineParser parser = new GnuParser();
         line = null;
-        try
-        {
+        try {
             line = parser.parse( createOptions(), args );
         }
-        catch ( ParseException exp )
-        {
+        catch ( ParseException exp ) {
             printCliHelp( "Parsing failed.  Reason: " + exp.getMessage() );
         }
 
-        if ( line == null )
-        {
+        if ( line == null ) {
             return;
         }
 
         startDatabaseWithServer = line.hasOption( "db" );
         initializeDatabaseOnStart = line.hasOption( "init" );
 
-        if ( line.hasOption( "port" ) )
-        {
-            try
-            {
+        if ( line.hasOption( "port" ) ) {
+            try {
                 port = ( ( Number ) line.getParsedOptionValue( "port" ) ).intValue();
             }
-            catch ( ParseException exp )
-            {
+            catch ( ParseException exp ) {
                 printCliHelp( "Parsing failed.  Reason: " + exp.getMessage() );
                 return;
             }
@@ -159,11 +148,9 @@ public class Server implements ApplicationContextAware
     }
 
 
-    public synchronized void startServer()
-    {
+    public synchronized void startServer() {
 
-        if ( startDatabaseWithServer )
-        {
+        if ( startDatabaseWithServer ) {
             startCassandra();
         }
 
@@ -189,8 +176,8 @@ public class Server implements ApplicationContextAware
         handler.addInitParameter( ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS,
                 "org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter" );
         handler.addInitParameter( ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES,
-                "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter" +
-                        ".RolesAllowedResourceFilterFactory" );
+                "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter"
+                        + ".RolesAllowedResourceFilterFactory" );
         handler.addInitParameter( ResourceConfig.FEATURE_DISABLE_WADL, "true" );
         handler.addInitParameter( ServletContainer.JSP_TEMPLATES_BASE_PATH, "/WEB-INF/jsp" );
         handler.addInitParameter( ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX,
@@ -223,25 +210,19 @@ public class Server implements ApplicationContextAware
 
         setThreadSize();
 
-        try
-        {
+        try {
             httpServer.start();
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             e.printStackTrace();
         }
 
-        if ( daemon )
-        {
-            while ( true )
-            {
-                try
-                {
+        if ( daemon ) {
+            while ( true ) {
+                try {
                     Thread.sleep( Long.MAX_VALUE );
                 }
-                catch ( InterruptedException e )
-                {
+                catch ( InterruptedException e ) {
                     logger.warn( "Interrupted" );
                 }
             }
@@ -249,33 +230,26 @@ public class Server implements ApplicationContextAware
     }
 
 
-    private int getThreadSizeFromSystemProperties()
-    {
+    private int getThreadSizeFromSystemProperties() {
         // the default value is number of cpu core * 2.
         // see org.glassfich.grizzly.strategies.AbstractIOStrategy.createDefaultWorkerPoolconfig()
         int threadSize = Runtime.getRuntime().availableProcessors() * 2;
 
         String threadSizeString = System.getProperty( "server.threadSize" );
-        if ( threadSizeString != null )
-        {
-            try
-            {
+        if ( threadSizeString != null ) {
+            try {
                 threadSize = Integer.parseInt( threadSizeString );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 // ignore all Exception
             }
         }
-        else
-        {
-            try
-            {
+        else {
+            try {
                 threadSize = Integer.parseInt( System.getProperty( "server.threadSizeScale" ) ) * Runtime.getRuntime()
                                                                                                          .availableProcessors();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 // ignore all Exception
             }
         }
@@ -284,14 +258,12 @@ public class Server implements ApplicationContextAware
     }
 
 
-    private void setThreadSize()
-    {
+    private void setThreadSize() {
 
         int threadSize = getThreadSizeFromSystemProperties();
 
         Collection<NetworkListener> listeners = httpServer.getListeners();
-        for ( NetworkListener listener : listeners )
-        {
+        for ( NetworkListener listener : listeners ) {
             listener.getTransport().getKernelThreadPoolConfig();
             TCPNIOTransportBuilder builder = TCPNIOTransportBuilder.newInstance();
             ThreadPoolConfig config = builder.getWorkerThreadPoolConfig();
@@ -305,10 +277,8 @@ public class Server implements ApplicationContextAware
     }
 
 
-    private void setupJspMappings()
-    {
-        if ( !INSTALL_JSP_SERVLETS )
-        {
+    private void setupJspMappings() {
+        if ( !INSTALL_JSP_SERVLETS ) {
             return;
         }
 
@@ -328,9 +298,8 @@ public class Server implements ApplicationContextAware
                 "jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UsersResource.resetpw_005femail_005fform_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/management/users/UsersResource/resetpw_email_form.jsp" );
 
-        mapServlet(
-                "jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UsersResource" +
-                        ".resetpw_005femail_005fsuccess_jsp",
+        mapServlet( "jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UsersResource"
+                + ".resetpw_005femail_005fsuccess_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/management/users/UsersResource/resetpw_email_success.jsp" );
 
         mapServlet( "jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UserResource.activate_jsp",
@@ -379,9 +348,8 @@ public class Server implements ApplicationContextAware
                 "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource.resetpw_005femail_005fform_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/applications/users/UsersResource/resetpw_email_form.jsp" );
 
-        mapServlet(
-                "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource" +
-                        ".resetpw_005femail_005fsuccess_jsp",
+        mapServlet( "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource"
+                + ".resetpw_005femail_005fsuccess_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/applications/users/UsersResource/resetpw_email_success.jsp" );
 
         mapServlet( "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.activate_jsp",
@@ -397,9 +365,8 @@ public class Server implements ApplicationContextAware
                 "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.resetpw_005femail_005fform_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/resetpw_email_form.jsp" );
 
-        mapServlet(
-                "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource" +
-                        ".resetpw_005femail_005fsuccess_jsp",
+        mapServlet( "jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource"
+                + ".resetpw_005femail_005fsuccess_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/resetpw_email_success.jsp" );
 
         mapServlet(
@@ -418,21 +385,17 @@ public class Server implements ApplicationContextAware
     }
 
 
-    private void mapServlet( String cls, String mapping )
-    {
+    private void mapServlet( String cls, String mapping ) {
 
-        try
-        {
+        try {
             Servlet servlet = ( Servlet ) ClassLoaderUtil.load( cls );
-            if ( servlet != null )
-            {
+            if ( servlet != null ) {
                 ServletHandler handler = new ServletHandler( servlet );
                 handler.setServletPath( mapping );
                 httpServer.getServerConfiguration().addHttpHandler( handler, mapping );
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to add JSP page: " + mapping );
         }
 
@@ -440,54 +403,44 @@ public class Server implements ApplicationContextAware
     }
 
 
-    public synchronized void stopServer()
-    {
+    public synchronized void stopServer() {
         Collection<NetworkListener> listeners = httpServer.getListeners();
-        for ( NetworkListener listener : listeners )
-        {
-            try
-            {
+        for ( NetworkListener listener : listeners ) {
+            try {
                 listener.stop();
             }
-            catch ( IOException e )
-            {
+            catch ( IOException e ) {
                 e.printStackTrace();
             }
         }
 
-        if ( httpServer != null )
-        {
+        if ( httpServer != null ) {
             httpServer.stop();
             httpServer = null;
         }
 
-        if ( embeddedCassandra != null )
-        {
+        if ( embeddedCassandra != null ) {
             stopCassandra();
             embeddedCassandra = null;
         }
 
-        if ( ctx instanceof XmlWebApplicationContext )
-        {
+        if ( ctx instanceof XmlWebApplicationContext ) {
             ( ( XmlWebApplicationContext ) ctx ).close();
         }
     }
 
 
-    public void setDaemon( boolean daemon )
-    {
+    public void setDaemon( boolean daemon ) {
         this.daemon = daemon;
     }
 
 
-    public boolean isRunning()
-    {
+    public boolean isRunning() {
         return ( httpServer != null );
     }
 
 
-    public void printCliHelp( String message )
-    {
+    public void printCliHelp( String message ) {
         System.out.println( message );
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp( "java -jar usergrid-standalone-0.0.1-SNAPSHOT.jar ", createOptions() );
@@ -495,8 +448,7 @@ public class Server implements ApplicationContextAware
     }
 
 
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Options options = new Options();
         OptionBuilder.withDescription( "Initialize database" );
@@ -520,131 +472,109 @@ public class Server implements ApplicationContextAware
     }
 
 
-    public synchronized void startCassandra()
-    {
-        if ( embeddedCassandra == null )
-        {
+    public synchronized void startCassandra() {
+        if ( embeddedCassandra == null ) {
             embeddedCassandra = new EmbeddedServerHelper();
 
-            if ( initializeDatabaseOnStart )
-            {
+            if ( initializeDatabaseOnStart ) {
                 logger.info( "Initializing Cassandra" );
-                try
-                {
+                try {
                     embeddedCassandra.setup();
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable to initialize Cassandra", e );
                     System.exit( 0 );
                 }
             }
         }
         logger.info( "Starting Cassandra" );
-        try
-        {
+        try {
             embeddedCassandra.start();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to start Cassandra", e );
             System.exit( 0 );
         }
     }
 
 
-    public synchronized void stopCassandra()
-    {
+    public synchronized void stopCassandra() {
         logger.info( "Stopping Cassandra" );
         embeddedCassandra.stop();
     }
 
 
-    public EntityManagerFactory getEntityManagerFactory()
-    {
+    public EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
-    public ServiceManagerFactory getServiceManagerFactory()
-    {
+    public ServiceManagerFactory getServiceManagerFactory() {
         return smf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
-    public ManagementService getManagementService()
-    {
+    public ManagementService getManagementService() {
         return management;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
-    public QueueManagerFactory getQueueManagerFactory()
-    {
+    public QueueManagerFactory getQueueManagerFactory() {
         return qmf;
     }
 
 
     @Autowired
-    public void setQueueManagerFactory( QueueManagerFactory qmf )
-    {
+    public void setQueueManagerFactory( QueueManagerFactory qmf ) {
         this.qmf = qmf;
     }
 
 
-    public boolean isInitializeDatabaseOnStart()
-    {
+    public boolean isInitializeDatabaseOnStart() {
         return initializeDatabaseOnStart;
     }
 
 
-    public void setInitializeDatabaseOnStart( boolean initializeDatabaseOnStart )
-    {
+    public void setInitializeDatabaseOnStart( boolean initializeDatabaseOnStart ) {
         this.initializeDatabaseOnStart = initializeDatabaseOnStart;
     }
 
 
-    public boolean isStartDatabaseWithServer()
-    {
+    public boolean isStartDatabaseWithServer() {
         return startDatabaseWithServer;
     }
 
 
-    public void setStartDatabaseWithServer( boolean startDatabaseWithServer )
-    {
+    public void setStartDatabaseWithServer( boolean startDatabaseWithServer ) {
         this.startDatabaseWithServer = startDatabaseWithServer;
     }
 
@@ -652,18 +582,15 @@ public class Server implements ApplicationContextAware
     boolean databaseInitializationPerformed = false;
 
 
-    public void springInit()
-    {
+    public void springInit() {
         logger.info( "Initializing server with Spring" );
 
         // If we're running an embedded Cassandra, we always need to initialize
         // it since Hector wipes the data on startup.
         //
-        if ( initializeDatabaseOnStart )
-        {
+        if ( initializeDatabaseOnStart ) {
 
-            if ( databaseInitializationPerformed )
-            {
+            if ( databaseInitializationPerformed ) {
                 logger.info( "Can only attempt to initialized database once per JVM process" );
                 return;
             }
@@ -671,27 +598,22 @@ public class Server implements ApplicationContextAware
 
             logger.info( "Initializing Cassandra database" );
             Map<String, String> properties = emf.getServiceProperties();
-            if ( properties != null )
-            {
+            if ( properties != null ) {
                 logger.error( "System properties are initialized, database is set up already." );
                 return;
             }
 
-            try
-            {
+            try {
                 emf.setup();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to complete core database setup, possibly due to it being setup already", e );
             }
 
-            try
-            {
+            try {
                 management.setup();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to complete management database setup, possibly due to it being setup already",
                         e );
             }
@@ -705,36 +627,29 @@ public class Server implements ApplicationContextAware
 
 
     @Override
-    public void setApplicationContext( ApplicationContext ctx ) throws BeansException
-    {
+    public void setApplicationContext( ApplicationContext ctx ) throws BeansException {
         this.ctx = ctx;
     }
 
 
-    public String getAccessTokenForAdminUser( String email )
-    {
-        try
-        {
+    public String getAccessTokenForAdminUser( String email ) {
+        try {
             UserInfo user = management.getAdminUserByEmail( email );
             return management.getAccessTokenForAdminUser( user.getUuid(), 0 );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to get user: " + email );
         }
         return null;
     }
 
 
-    public UUID getAdminUUID( String email )
-    {
-        try
-        {
+    public UUID getAdminUUID( String email ) {
+        try {
             UserInfo user = management.getAdminUserByEmail( email );
             return user.getUuid();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to get user: " + email );
         }
         return null;

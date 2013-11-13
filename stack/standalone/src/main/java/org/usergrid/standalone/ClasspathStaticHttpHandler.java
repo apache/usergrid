@@ -87,8 +87,7 @@ import org.springframework.core.io.Resource;
  * @author Jeanfrancois Arcand
  * @author Alexey Stashok
  */
-public class ClasspathStaticHttpHandler extends HttpHandler
-{
+public class ClasspathStaticHttpHandler extends HttpHandler {
     private static final Logger LOGGER = Grizzly.logger( ClasspathStaticHttpHandler.class );
 
     protected final ArraySet<Resource> docRoots = new ArraySet<Resource>( Resource.class );
@@ -96,29 +95,23 @@ public class ClasspathStaticHttpHandler extends HttpHandler
 
     /**
      * Create <tt>HttpHandler</tt>, which, by default, will handle requests to the static resources located in the
-     * current
-     * directory.
+     * current directory.
      */
-    public ClasspathStaticHttpHandler()
-    {
+    public ClasspathStaticHttpHandler() {
         addDocRoot( "." );
     }
 
 
     /**
      * Create a new instance which will look for static pages located under the <tt>docRoot</tt>. If the
-     * <tt>docRoot</tt>
-     * is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
+     * <tt>docRoot</tt> is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
      *
      * @param docRoots the folder(s) where the static resource are located. If the <tt>docRoot</tt> is <tt>null</tt> -
      * static pages won't be served by this <tt>HttpHandler</tt>
      */
-    public ClasspathStaticHttpHandler( String... docRoots )
-    {
-        if ( docRoots != null )
-        {
-            for ( String docRoot : docRoots )
-            {
+    public ClasspathStaticHttpHandler( String... docRoots ) {
+        if ( docRoots != null ) {
+            for ( String docRoot : docRoots ) {
                 addDocRoot( docRoot );
             }
         }
@@ -127,19 +120,14 @@ public class ClasspathStaticHttpHandler extends HttpHandler
 
     /**
      * Create a new instance which will look for static pages located under the <tt>docRoot</tt>. If the
-     * <tt>docRoot</tt>
-     * is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
+     * <tt>docRoot</tt> is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
      *
      * @param docRoots the folders where the static resource are located. If the <tt>docRoot</tt> is empty - static
-     * pages
-     * won't be served by this <tt>HttpHandler</tt>
+     * pages won't be served by this <tt>HttpHandler</tt>
      */
-    public ClasspathStaticHttpHandler( Set<String> docRoots )
-    {
-        if ( docRoots != null )
-        {
-            for ( String docRoot : docRoots )
-            {
+    public ClasspathStaticHttpHandler( Set<String> docRoots ) {
+        if ( docRoots != null ) {
+            for ( String docRoot : docRoots ) {
                 addDocRoot( docRoot );
             }
         }
@@ -151,8 +139,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      *
      * @return the default directory from where file will be serviced.
      */
-    public Resource getDefaultDocRoot()
-    {
+    public Resource getDefaultDocRoot() {
         final Resource[] array = docRoots.getArray();
         return ( ( array != null ) && ( array.length > 0 ) ) ? array[0] : null;
     }
@@ -163,8 +150,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      *
      * @return the list of directories where files will be serviced from.
      */
-    public ArraySet<Resource> getDocRoots()
-    {
+    public ArraySet<Resource> getDocRoots() {
         return docRoots;
     }
 
@@ -176,10 +162,8 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      *
      * @return return the {@link File} representation of the passed <code>docRoot</code>.
      */
-    public final Resource addDocRoot( String docRoot )
-    {
-        if ( docRoot == null )
-        {
+    public final Resource addDocRoot( String docRoot ) {
+        if ( docRoot == null ) {
             throw new NullPointerException( "docRoot can't be null" );
         }
 
@@ -195,8 +179,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      *
      * @param docRoot the directory to be added to the list of directories where files will be serviced from.
      */
-    public final void addDocRoot( Resource docRoot )
-    {
+    public final void addDocRoot( Resource docRoot ) {
         docRoots.add( docRoot );
     }
 
@@ -206,8 +189,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      *
      * @param docRoot the directory to remove.
      */
-    public void removeDocRoot( File docRoot )
-    {
+    public void removeDocRoot( File docRoot ) {
         docRoots.remove( docRoot );
     }
 
@@ -220,30 +202,24 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      * @param response the {@link Response}
      */
     @Override
-    public void service( final Request request, final Response response ) throws Exception
-    {
+    public void service( final Request request, final Response response ) throws Exception {
         final String uri = getRelativeURI( request );
 
-        if ( ( uri == null ) || !handle( uri, request, response ) )
-        {
+        if ( ( uri == null ) || !handle( uri, request, response ) ) {
             onMissingResource( request, response );
         }
     }
 
 
-    protected String getRelativeURI( final Request request )
-    {
+    protected String getRelativeURI( final Request request ) {
         String uri = request.getRequestURI();
-        if ( uri.indexOf( ".." ) >= 0 )
-        {
+        if ( uri.indexOf( ".." ) >= 0 ) {
             return null;
         }
 
         final String resourcesContextPath = request.getContextPath();
-        if ( resourcesContextPath.length() > 0 )
-        {
-            if ( !uri.startsWith( resourcesContextPath ) )
-            {
+        if ( resourcesContextPath.length() > 0 ) {
+            if ( !uri.startsWith( resourcesContextPath ) ) {
                 return null;
             }
 
@@ -262,8 +238,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      * @param request the {@link Request}
      * @param response the {@link Response}
      */
-    protected void onMissingResource( final Request request, final Response response ) throws Exception
-    {
+    protected void onMissingResource( final Request request, final Response response ) throws Exception {
         response.setStatus( HttpStatus.NOT_FOUND_404 );
         customizedErrorPage( request, response );
     }
@@ -276,37 +251,31 @@ public class ClasspathStaticHttpHandler extends HttpHandler
      * @param req the {@link Request}
      * @param res the {@link Response}
      */
-    protected boolean handle( final String uri, final Request req, final Response res ) throws Exception
-    {
+    protected boolean handle( final String uri, final Request req, final Response res ) throws Exception {
 
         boolean found = false;
 
         final Resource[] fileFolders = docRoots.getArray();
-        if ( fileFolders == null )
-        {
+        if ( fileFolders == null ) {
             return false;
         }
 
         Resource resource = null;
 
-        for ( int i = 0; i < fileFolders.length; i++ )
-        {
+        for ( int i = 0; i < fileFolders.length; i++ ) {
             final Resource webDir = fileFolders[i];
             // local file
             resource = webDir.createRelative( uri );
             final boolean exists = resource.exists();
 
-            if ( exists )
-            {
+            if ( exists ) {
                 found = true;
                 break;
             }
         }
 
-        if ( !found )
-        {
-            if ( LOGGER.isLoggable( Level.FINE ) )
-            {
+        if ( !found ) {
+            if ( LOGGER.isLoggable( Level.FINE ) ) {
                 LOGGER.log( Level.FINE, "File not found  {0}", resource );
             }
             return true;
@@ -318,36 +287,29 @@ public class ClasspathStaticHttpHandler extends HttpHandler
     }
 
 
-    public static void sendFile( final Response response, final Resource file ) throws IOException
-    {
+    public static void sendFile( final Response response, final Resource file ) throws IOException {
         final String path = file.getFilename();
         final InputStream fis = file.getInputStream();
 
-        try
-        {
+        try {
             response.setStatus( HttpStatus.OK_200 );
             String substr;
             int dot = path.lastIndexOf( '.' );
-            if ( dot < 0 )
-            {
+            if ( dot < 0 ) {
                 substr = file.toString();
                 dot = substr.lastIndexOf( '.' );
             }
-            else
-            {
+            else {
                 substr = path;
             }
-            if ( dot > 0 )
-            {
+            if ( dot > 0 ) {
                 String ext = substr.substring( dot + 1 );
                 String ct = MimeType.get( ext );
-                if ( ct != null )
-                {
+                if ( ct != null ) {
                     response.setContentType( ct );
                 }
             }
-            else
-            {
+            else {
                 response.setContentType( MimeType.get( "html" ) );
             }
 
@@ -358,20 +320,16 @@ public class ClasspathStaticHttpHandler extends HttpHandler
 
             byte b[] = new byte[8192];
             int rd;
-            while ( ( rd = fis.read( b ) ) > 0 )
-            {
+            while ( ( rd = fis.read( b ) ) > 0 ) {
                 // chunk.setBytes(b, 0, rd);
                 outputBuffer.write( b, 0, rd );
             }
         }
-        finally
-        {
-            try
-            {
+        finally {
+            try {
                 fis.close();
             }
-            catch ( IOException ignore )
-            {
+            catch ( IOException ignore ) {
             }
         }
     }

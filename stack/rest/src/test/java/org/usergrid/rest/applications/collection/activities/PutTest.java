@@ -21,16 +21,14 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class PutTest extends AbstractRestIT
-{
+public class PutTest extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test //USERGRID-545
-    public void putMassUpdateTest()
-    {
+    public void putMassUpdateTest() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -43,8 +41,7 @@ public class PutTest extends AbstractRestIT
         props.put( "content", "bragh" );
 
 
-        for ( int i = 0; i < 5; i++ )
-        {
+        for ( int i = 0; i < 5; i++ ) {
 
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );

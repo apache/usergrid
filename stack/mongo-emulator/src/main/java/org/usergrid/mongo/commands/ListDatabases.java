@@ -31,20 +31,17 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class ListDatabases extends MongoCommand
-{
+public class ListDatabases extends MongoCommand {
 
     final static double DEFAULT_SIZE = 1024 * 1024 * 1024.0;
 
 
     @SuppressWarnings("unchecked")
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
         Set<String> applications = SubjectUtils.getApplications().inverse().keySet();
         List<Map<String, Object>> dbs = new ArrayList<Map<String, Object>>();
-        for ( String ns : applications )
-        {
+        for ( String ns : applications ) {
             dbs.add( ( Map<String, Object> ) map( "name", ns, "sizeOnDisk", DEFAULT_SIZE, "empty", false ) );
         }
         OpReply reply = new OpReply( opQuery );

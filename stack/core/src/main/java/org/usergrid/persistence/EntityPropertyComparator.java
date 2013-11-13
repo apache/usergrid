@@ -21,39 +21,32 @@ import java.util.Comparator;
 import static org.usergrid.persistence.cassandra.IndexUpdate.compareIndexedValues;
 
 
-public class EntityPropertyComparator implements Comparator<Entity>
-{
+public class EntityPropertyComparator implements Comparator<Entity> {
 
     final String propertyName;
     final int reverse;
 
 
-    public EntityPropertyComparator( String propertyName, boolean reverse )
-    {
+    public EntityPropertyComparator( String propertyName, boolean reverse ) {
         this.propertyName = propertyName;
         this.reverse = reverse ? -1 : 1;
     }
 
 
     @Override
-    public int compare( Entity e1, Entity e2 )
-    {
+    public int compare( Entity e1, Entity e2 ) {
 
-        if ( e1 == null )
-        {
+        if ( e1 == null ) {
             //second one is not null and first is, second is larger
-            if ( e2 != null )
-            {
+            if ( e2 != null ) {
                 return 1;
             }
-            else
-            {
+            else {
                 return 0;
             }
         }
         //first one is not null, second is
-        else if ( e2 == null )
-        {
+        else if ( e2 == null ) {
             return -1;
         }
 

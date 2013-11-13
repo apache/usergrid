@@ -62,8 +62,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
  *
  * @author tnine
  */
-public class EntityCleanup extends ToolBase
-{
+public class EntityCleanup extends ToolBase {
 
     /**
      *
@@ -77,8 +76,7 @@ public class EntityCleanup extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -98,8 +96,7 @@ public class EntityCleanup extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         logger.info( "Starting entity cleanup" );
@@ -107,8 +104,7 @@ public class EntityCleanup extends ToolBase
         Results results = null;
 
 
-        for ( Entry<String, UUID> app : emf.getApplications().entrySet() )
-        {
+        for ( Entry<String, UUID> app : emf.getApplications().entrySet() ) {
 
             logger.info( "Starting cleanup for app {}", app.getKey() );
 
@@ -124,8 +120,7 @@ public class EntityCleanup extends ToolBase
             Set<String> collectionNames = em.getApplicationCollections();
 
             // go through each collection and audit the value
-            for ( String collectionName : collectionNames )
-            {
+            for ( String collectionName : collectionNames ) {
 
                 IndexScanner scanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
                         key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null, PAGE_SIZE, false,
@@ -133,8 +128,7 @@ public class EntityCleanup extends ToolBase
 
                 SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser(), false );
 
-                while ( itr.hasNext() )
-                {
+                while ( itr.hasNext() ) {
 
                     // load all entity ids from the index itself.
 
@@ -143,16 +137,14 @@ public class EntityCleanup extends ToolBase
                     results = em.get( ScanColumnTransformer.getIds( copy ) );
                     // nothing to do they're the same size so there's no
                     // orphaned uuid's in the entity index
-                    if ( copy.size() == results.size() )
-                    {
+                    if ( copy.size() == results.size() ) {
                         continue;
                     }
 
                     // they're not the same, we have some orphaned records,
                     // remove them
 
-                    for ( Entity returned : results.getEntities() )
-                    {
+                    for ( Entity returned : results.getEntities() ) {
                         copy.remove( returned.getUuid() );
                     }
 
@@ -163,8 +155,7 @@ public class EntityCleanup extends ToolBase
                     Keyspace ko = cass.getApplicationKeyspace( applicationId );
                     Mutator<ByteBuffer> m = createMutator( ko, be );
 
-                    for ( ScanColumn col : copy )
-                    {
+                    for ( ScanColumn col : copy ) {
 
                         final UUID id = col.getUUID();
 

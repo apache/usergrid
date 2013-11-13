@@ -22,20 +22,17 @@ import static junit.framework.Assert.assertEquals;
 
 
 /** Unit test for count object machinations */
-public class CountTest
-{
+public class CountTest {
 
     @Test
-    public void testCounterName()
-    {
+    public void testCounterName() {
         Count count = new Count( "Counters", "k1", "c1", 1 );
         assertEquals( "Counters:6b31:6331", count.getCounterName() );
     }
 
 
     @Test
-    public void testApplyCount()
-    {
+    public void testApplyCount() {
         Count count = new Count( "Counters", "k1", "c1", 1 );
         Count c2 = new Count( "Counters", "k1", "c1", 1 );
         Count c3 = new Count( "Counters", "k1", "c1", 1 );
@@ -45,8 +42,7 @@ public class CountTest
 
 
     @Test
-    public void testApplyCountMixedTypes()
-    {
+    public void testApplyCountMixedTypes() {
         Count count = new Count( "Counters", 1, 3, 1 );
         Count c2 = new Count( "Counters", 1, 3, 1 );
         Count c3 = new Count( "Counters", 1, 3, 1 );
@@ -56,8 +52,7 @@ public class CountTest
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testApplyFail_onKeyname()
-    {
+    public void testApplyFail_onKeyname() {
         Count count = new Count( "Counters", "k1", "c1", 1 );
         Count c2 = new Count( "Coutenrs", "k2", "c1", 1 );
         count.apply( c2 );
@@ -65,8 +60,7 @@ public class CountTest
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testApplyFail_onColumnname()
-    {
+    public void testApplyFail_onColumnname() {
         Count count = new Count( "Counters", "k1", "c1", 1 );
         Count c2 = new Count( "Counters", "k1", "c2", 1 );
         count.apply( c2 );

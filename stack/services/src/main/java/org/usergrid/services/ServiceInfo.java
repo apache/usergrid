@@ -41,8 +41,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeLast;
 
 
-public class ServiceInfo
-{
+public class ServiceInfo {
 
     private final String name;
     private final boolean rootService;
@@ -58,8 +57,7 @@ public class ServiceInfo
 
 
     public ServiceInfo( String name, boolean rootService, String rootType, String containerType, String collectionName,
-                        String itemType, List<String> patterns, List<String> collections )
-    {
+                        String itemType, List<String> patterns, List<String> collections ) {
         this.name = name;
         this.rootService = rootService;
         this.rootType = rootType;
@@ -71,8 +69,7 @@ public class ServiceInfo
 
         Hasher hasher = Hashing.md5().newHasher();
 
-        for ( String pattern : patterns )
-        {
+        for ( String pattern : patterns ) {
             hasher.putString( pattern );
         }
 
@@ -80,10 +77,8 @@ public class ServiceInfo
     }
 
 
-    public static String normalizeServicePattern( String s )
-    {
-        if ( s == null )
-        {
+    public static String normalizeServicePattern( String s ) {
+        if ( s == null ) {
             return null;
         }
         s = s.trim().toLowerCase();
@@ -91,8 +86,7 @@ public class ServiceInfo
         s = removeEnd( s, "/" );
         s = removeEnd( s, "/*" );
 
-        if ( !s.startsWith( "/" ) )
-        {
+        if ( !s.startsWith( "/" ) ) {
             s = "/" + s;
         }
 
@@ -100,32 +94,27 @@ public class ServiceInfo
     }
 
 
-    public static List<String> getPatterns( String servicePattern )
-    {
+    public static List<String> getPatterns( String servicePattern ) {
 
         String[] collections = split( servicePattern, "/*/" );
         return getPatterns( servicePattern, collections );
     }
 
 
-    public static List<String> getPatterns( String servicePattern, String[] collections )
-    {
+    public static List<String> getPatterns( String servicePattern, String[] collections ) {
 
-        if ( collections == null )
-        {
+        if ( collections == null ) {
             collections = split( servicePattern, "/*/" );
         }
 
         List<String> patterns = new ArrayList<String>();
         patterns.add( servicePattern );
-        if ( servicePattern.indexOf( ':' ) >= 0 )
-        {
+        if ( servicePattern.indexOf( ':' ) >= 0 ) {
             patterns.add( removeTypeSpecifiers( collections ) );
         }
 
         String s = getFallbackPattern( collections, 0, collections.length - 1 );
-        while ( s != null )
-        {
+        while ( s != null ) {
             patterns.add( s );
             s = getFallbackPattern( s );
         }
@@ -134,15 +123,12 @@ public class ServiceInfo
     }
 
 
-    private static String removeTypeSpecifiers( String[] collections )
-    {
+    private static String removeTypeSpecifiers( String[] collections ) {
         String s = "";
         boolean first = true;
 
-        for ( String collection : collections )
-        {
-            if ( !first )
-            {
+        for ( String collection : collections ) {
+            if ( !first ) {
                 s += "/*";
             }
             first = false;
@@ -152,56 +138,45 @@ public class ServiceInfo
     }
 
 
-    private static String getFallbackPattern( String servicePattern )
-    {
+    private static String getFallbackPattern( String servicePattern ) {
         String[] collections = split( servicePattern, "/*/" );
         return getFallbackPattern( collections, 0, collections.length - 1 );
     }
 
 
-    private static String getFallbackPattern( String[] collections, int first, int last )
-    {
+    private static String getFallbackPattern( String[] collections, int first, int last ) {
 
-        if ( last < first )
-        {
+        if ( last < first ) {
             return null;
         }
 
-        if ( ( last - first ) == 1 )
-        {
-            if ( !collections[first].startsWith( "entities" ) )
-            {
+        if ( ( last - first ) == 1 ) {
+            if ( !collections[first].startsWith( "entities" ) ) {
                 return "/entities:" + singularize( collections[first] ) + "/*/" + collections[first + 1];
             }
             return null;
         }
 
-        if ( ( last - first ) == 0 )
-        {
-            if ( !collections[first].startsWith( "entities" ) )
-            {
+        if ( ( last - first ) == 0 ) {
+            if ( !collections[first].startsWith( "entities" ) ) {
                 return "/entities:" + singularize( collections[first] );
             }
             return null;
         }
 
         int i = last - 1;
-        while ( i >= first )
-        {
-            if ( collections[i].indexOf( ':' ) > -1 )
-            {
+        while ( i >= first ) {
+            if ( collections[i].indexOf( ':' ) > -1 ) {
                 break;
             }
             i--;
         }
 
-        if ( i >= first )
-        {
+        if ( i >= first ) {
             String type = stringOrSubstringAfterLast( collections[i], ':' );
             String fallback = "/" + pluralize( type );
             i++;
-            while ( i <= last )
-            {
+            while ( i <= last ) {
                 fallback += "/*/" + collections[i];
                 i++;
             }
@@ -209,8 +184,7 @@ public class ServiceInfo
         }
 
         String eType = determineType( collections, first, last - 1 );
-        if ( eType != "entity" )
-        {
+        if ( eType != "entity" ) {
             return "/entities:" + eType + "/*/" + collections[last];
         }
 
@@ -218,46 +192,37 @@ public class ServiceInfo
     }
 
 
-    public static String determineType( String servicePattern )
-    {
+    public static String determineType( String servicePattern ) {
 
         String[] collections = split( servicePattern, '/' );
         return determineType( collections, 0, collections.length - 1 );
     }
 
 
-    private static String determineType( String[] collections, int first, int last )
-    {
+    private static String determineType( String[] collections, int first, int last ) {
 
-        if ( last < first )
-        {
+        if ( last < first ) {
             return null;
         }
 
-        if ( first == last )
-        {
+        if ( first == last ) {
             return singularize( stringOrSubstringAfterLast( collections[0], ':' ) );
         }
 
         int i = first + 1;
         String containerType = singularize( collections[first] );
 
-        while ( i <= last )
-        {
+        while ( i <= last ) {
             String collectionName = stringOrSubstringBeforeFirst( collections[i], ':' );
             String nextType = Schema.getDefaultSchema().getCollectionType( containerType, collectionName );
-            if ( nextType == null )
-            {
-                if ( collections[i].indexOf( ':' ) >= 0 )
-                {
+            if ( nextType == null ) {
+                if ( collections[i].indexOf( ':' ) >= 0 ) {
                     nextType = stringOrSubstringAfterLast( collections[i], ':' );
                 }
-                else if ( ( i < last ) && ( collections[last].indexOf( ':' ) >= 0 ) )
-                {
+                else if ( ( i < last ) && ( collections[last].indexOf( ':' ) >= 0 ) ) {
                     nextType = stringOrSubstringAfterLast( collections[last], ':' );
                 }
-                else
-                {
+                else {
                     return "entity";
                 }
             }
@@ -270,50 +235,40 @@ public class ServiceInfo
 
     /** Hold servicePattern names in a fixed size cache */
     private static LoadingCache<String, String> servicePatternCache =
-            CacheBuilder.newBuilder().maximumSize( 5000 ).build( new CacheLoader<String, String>()
-            {
-                public String load( String key )
-                { // no checked exception
+            CacheBuilder.newBuilder().maximumSize( 5000 ).build( new CacheLoader<String, String>() {
+                public String load( String key ) { // no checked exception
                     return _getClassName( key );
                 }
             } );
 
 
     /** Delegates to _getClassName via a CacheLoader due to the expense of path name calculation */
-    public static String getClassName( String servicePattern )
-    {
-        try
-        {
+    public static String getClassName( String servicePattern ) {
+        try {
             return servicePatternCache.get( servicePattern );
         }
-        catch ( ExecutionException ee )
-        {
+        catch ( ExecutionException ee ) {
             ee.printStackTrace();
         }
         return _getClassName( servicePattern );
     }
 
 
-    private static String _getClassName( String servicePattern )
-    {
+    private static String _getClassName( String servicePattern ) {
         servicePattern = normalizeServicePattern( servicePattern );
 
         String[] collections = split( servicePattern, "/*/" );
 
-        if ( collections[0].startsWith( "entities" ) )
-        {
-            if ( collections.length == 1 )
-            {
+        if ( collections[0].startsWith( "entities" ) ) {
+            if ( collections.length == 1 ) {
                 return "generic.RootCollectionService";
             }
-            if ( collections[0].indexOf( ':' ) < 0 )
-            {
+            if ( collections[0].indexOf( ':' ) < 0 ) {
                 return "generic.GenericConnectionsService";
             }
             String container = stringOrSubstringAfterLast( collections[0], ':' );
             String collectionName = stringOrSubstringBeforeFirst( collections[1], ':' );
-            if ( Schema.getDefaultSchema().hasCollection( container, collectionName ) )
-            {
+            if ( Schema.getDefaultSchema().hasCollection( container, collectionName ) ) {
                 return "generic.GenericCollectionService";
             }
             return "generic.GenericConnectionsService";
@@ -323,25 +278,19 @@ public class ServiceInfo
 
         String types = "";
 
-        if ( collections.length == 1 )
-        {
+        if ( collections.length == 1 ) {
             packages = stringOrSubstringBeforeLast( stringOrSubstringBeforeFirst( collections[0], ':' ), '.' ) + ".";
         }
-        else
-        {
-            for ( int i = 0; i < collections.length; i++ )
-            {
-                if ( i == 0 )
-                {
+        else {
+            for ( int i = 0; i < collections.length; i++ ) {
+                if ( i == 0 ) {
                     packages = stringOrSubstringBeforeFirst( collections[i], ':' ) + ".";
                 }
-                else
-                {
+                else {
                     packages += stringOrSubstringBeforeLast( stringOrSubstringBeforeFirst( collections[i], ':' ), '.' )
                             + ".";
                 }
-                if ( ( i < ( collections.length - 1 ) ) && ( collections[i].indexOf( ':' ) >= 0 ) )
-                {
+                if ( ( i < ( collections.length - 1 ) ) && ( collections[i].indexOf( ':' ) >= 0 ) ) {
                     types += capitalize(
                             stringOrSubstringAfterLast( stringOrSubstringAfterLast( collections[i], ':' ), '.' ) );
                 }
@@ -357,10 +306,8 @@ public class ServiceInfo
     private static final Map<String, ServiceInfo> serviceInfoCache = new LinkedHashMap<String, ServiceInfo>();
 
 
-    public static ServiceInfo getServiceInfo( String servicePattern )
-    {
-        if ( servicePattern == null )
-        {
+    public static ServiceInfo getServiceInfo( String servicePattern ) {
+        if ( servicePattern == null ) {
             return null;
         }
 
@@ -368,22 +315,19 @@ public class ServiceInfo
 
         ServiceInfo info = serviceInfoCache.get( servicePattern );
 
-        if ( info != null )
-        {
+        if ( info != null ) {
             return info;
         }
 
         String[] collections = split( servicePattern, "/*/" );
 
-        if ( collections.length == 0 )
-        {
+        if ( collections.length == 0 ) {
             return null;
         }
 
         String collectionName = stringOrSubstringBeforeFirst( collections[collections.length - 1], ':' );
 
-        if ( collectionName == null )
-        {
+        if ( collectionName == null ) {
             throw new NullPointerException( "Collection name is null" );
         }
 
@@ -391,13 +335,11 @@ public class ServiceInfo
 
         String rootType = determineType( collections, 0, 0 );
 
-        if ( collections.length == 1 )
-        {
+        if ( collections.length == 1 ) {
             ownerType = "application";
         }
 
-        if ( collections.length > 1 )
-        {
+        if ( collections.length > 1 ) {
             ownerType = determineType( collections, 0, collections.length - 2 );
         }
 
@@ -413,74 +355,62 @@ public class ServiceInfo
     }
 
 
-    public String getClassName()
-    {
+    public String getClassName() {
         return getClassName( name );
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public boolean isRootService()
-    {
+    public boolean isRootService() {
         return rootService;
     }
 
 
-    public String getRootType()
-    {
+    public String getRootType() {
         return rootType;
     }
 
 
-    public boolean isGenericRootType()
-    {
+    public boolean isGenericRootType() {
         return ( "entity".equals( rootType ) ) || ( "entities".equals( rootType ) );
     }
 
 
-    public String getContainerType()
-    {
+    public String getContainerType() {
         return containerType;
     }
 
 
-    public boolean isContainerType()
-    {
+    public boolean isContainerType() {
         return ( "entity".equals( containerType ) ) || ( "entities".equals( containerType ) );
     }
 
 
-    public String getCollectionName()
-    {
+    public String getCollectionName() {
         return collectionName;
     }
 
 
-    public String getItemType()
-    {
+    public String getItemType() {
         return itemType;
     }
 
 
-    public boolean isGenericItemType()
-    {
+    public boolean isGenericItemType() {
         return "entity".equals( itemType );
     }
 
 
-    public List<String> getPatterns()
-    {
+    public List<String> getPatterns() {
         return patterns;
     }
 
 
-    public List<String> getCollections()
-    {
+    public List<String> getCollections() {
         return collections;
     }
 
@@ -489,10 +419,8 @@ public class ServiceInfo
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( obj instanceof ServiceInfo )
-        {
+    public boolean equals( Object obj ) {
+        if ( obj instanceof ServiceInfo ) {
             return hashCode == ( ( ServiceInfo ) obj ).hashCode;
         }
 
@@ -504,8 +432,7 @@ public class ServiceInfo
      * @see java.lang.Object#hashCode()
      */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return hashCode;
     }
 }

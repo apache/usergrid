@@ -17,18 +17,15 @@ package org.usergrid.rest.test.resource;
 
 
 /** @author tnine */
-public class CustomCollection extends SetResource
-{
+public class CustomCollection extends SetResource {
 
 
-    public CustomCollection( String name, NamedResource parent )
-    {
+    public CustomCollection( String name, NamedResource parent ) {
         super( name, parent );
     }
 
 
-    public EntityResource entity( String name )
-    {
+    public EntityResource entity( String name ) {
         return new EntityResource( name, this );
     }
 }

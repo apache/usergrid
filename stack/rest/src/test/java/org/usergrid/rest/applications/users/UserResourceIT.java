@@ -60,15 +60,13 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author tnine
  */
 @Concurrent()
-public class UserResourceIT extends AbstractRestIT
-{
+public class UserResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( UserResourceIT.class );
 
 
     @Test
-    public void usernameQuery()
-    {
+    public void usernameQuery() {
 
         UserRepo.INSTANCE.load( resource(), access_token );
 
@@ -85,8 +83,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void nameQuery()
-    {
+    public void nameQuery() {
 
         UserRepo.INSTANCE.load( resource(), access_token );
 
@@ -102,8 +99,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void nameQueryByUUIDs() throws Exception
-    {
+    public void nameQueryByUUIDs() throws Exception {
         UserRepo.INSTANCE.load( resource(), access_token );
 
         String ql = "select uuid name = 'John*'";
@@ -118,8 +114,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void nameFullTextQuery()
-    {
+    public void nameFullTextQuery() {
 
         UserRepo.INSTANCE.load( resource(), access_token );
 
@@ -137,8 +132,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Tests that when a full text index is run on a field that isn't full text indexed an error is thrown */
     @Test(expected = UniformInterfaceException.class)
-    public void fullTextQueryNotFullTextIndexed()
-    {
+    public void fullTextQueryNotFullTextIndexed() {
 
         UserRepo.INSTANCE.load( resource(), access_token );
 
@@ -152,8 +146,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Tests that when a full text index is run on a field that isn't full text indexed an error is thrown */
     @Test(expected = UniformInterfaceException.class)
-    public void fullQueryNotIndexed()
-    {
+    public void fullQueryNotIndexed() {
 
         UserRepo.INSTANCE.load( resource(), access_token );
 
@@ -167,8 +160,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Test that when activity is pushed with not actor, it's set to the user who created it */
     @Test
-    public void emtpyActorActivity()
-    {
+    public void emtpyActorActivity() {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
 
@@ -199,8 +191,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Insert the uuid and email if they're empty in the request */
     @Test
-    public void noUUIDorEmail()
-    {
+    public void noUUIDorEmail() {
 
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
@@ -239,8 +230,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Don't touch the UUID when it's already set in the JSON */
     @Test
-    public void ignoreUUIDandEmail()
-    {
+    public void ignoreUUIDandEmail() {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
 
@@ -284,8 +274,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Test that when activity is pushed with not actor, it's set to the user who created it */
     @Test
-    public void userActivitiesDefaultOrder()
-    {
+    public void userActivitiesDefaultOrder() {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
 
@@ -328,8 +317,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void getUserWIthEmailUsername()
-    {
+    public void getUserWIthEmailUsername() {
         UUID id = UUIDUtils.newTimeUUID();
 
         String username = "username-email" + "@usergrid.org";
@@ -364,8 +352,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Tests that when querying all users, we get the same result size when using "order by" */
     @Test
-    public void resultSizeSame()
-    {
+    public void resultSizeSame() {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId1 = UserRepo.INSTANCE.getByUserName( "user1" );
         UUID userId2 = UserRepo.INSTANCE.getByUserName( "user2" );
@@ -399,14 +386,11 @@ public class UserResourceIT extends AbstractRestIT
     }
 
 
-    private int getEntityIndex( UUID entityId, ApiResponse response )
-    {
+    private int getEntityIndex( UUID entityId, ApiResponse response ) {
         List<Entity> entities = response.getEntities();
 
-        for ( int i = 0; i < entities.size(); i++ )
-        {
-            if ( entityId.equals( entities.get( i ).getUuid() ) )
-            {
+        for ( int i = 0; i < entities.size(); i++ ) {
+            if ( entityId.equals( entities.get( i ).getUuid() ) ) {
                 return i;
             }
         }
@@ -416,8 +400,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void clientNameQuery()
-    {
+    public void clientNameQuery() {
 
         UUID id = UUIDUtils.newTimeUUID();
 
@@ -438,8 +421,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void deleteUser()
-    {
+    public void deleteUser() {
 
         UUID id = UUIDUtils.newTimeUUID();
 
@@ -473,8 +455,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void singularCollectionName()
-    {
+    public void singularCollectionName() {
         UUID id = UUIDUtils.newTimeUUID();
 
         String username = "username1" + id;
@@ -548,8 +529,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void connectionByNameAndType()
-    {
+    public void connectionByNameAndType() {
         UUID id = UUIDUtils.newTimeUUID();
 
         String username1 = "username1" + id;
@@ -596,8 +576,7 @@ public class UserResourceIT extends AbstractRestIT
 
     /** Usergrid-1222 test */
     @Test
-    public void connectionQuerybyEmail()
-    {
+    public void connectionQuerybyEmail() {
         UUID id = UUIDUtils.newTimeUUID();
 
         String name = "name1" + id;
@@ -701,14 +680,12 @@ public class UserResourceIT extends AbstractRestIT
         //query the first role, it should 404
         path = String.format( "/test-organization/test-app/roles/%s/users", roleId1 );
 
-        try
-        {
+        try {
             node = resource().path( path ).queryParam( "access_token", access_token )
                     .queryParam( "ql", "select%20*%20where%20username%20=%20'" + email + "'" )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( Status.NOT_FOUND, e.getResponse().getClientResponseStatus() );
         }
 
@@ -724,8 +701,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void connectionByNameAndDynamicType()
-    {
+    public void connectionByNameAndDynamicType() {
         UUID id = UUIDUtils.newTimeUUID();
 
         String username1 = "username1" + id;
@@ -774,8 +750,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void nameUpdate()
-    {
+    public void nameUpdate() {
         UUID id = UUIDUtils.newTimeUUID();
 
         String username = "username" + id;
@@ -827,15 +802,13 @@ public class UserResourceIT extends AbstractRestIT
      *
      * @return
      */
-    public JsonNode getActor( Entity entity )
-    {
+    public JsonNode getActor( Entity entity ) {
         return entity.getProperties().get( "actor" );
     }
 
 
     @Test
-    public void test_POST_batch()
-    {
+    public void test_POST_batch() {
 
         log.info( "UserResourceIT.test_POST_batch" );
 
@@ -866,8 +839,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void deactivateUser()
-    {
+    public void deactivateUser() {
 
         UUID newUserUuid = UUIDUtils.newTimeUUID();
 
@@ -902,16 +874,13 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void test_PUT_password_fail()
-    {
+    public void test_PUT_password_fail() {
 
         boolean fail = false;
-        try
-        {
+        try {
             client.changePassword( "edanuff", "foo", "bar" );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             fail = true;
         }
         assertTrue( fail );
@@ -919,8 +888,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void test_GET_user_ok() throws InterruptedException
-    {
+    public void test_GET_user_ok() throws InterruptedException {
 
         // TODO figure out what is being overridden? why 400?
         JsonNode node =
@@ -938,8 +906,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void test_PUT_password_ok()
-    {
+    public void test_PUT_password_ok() {
 
         ApiResponse response = client.changePassword( "edanuff", "sesame", "sesame1" );
 
@@ -958,8 +925,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void setUserPasswordAsAdmin()
-    {
+    public void setUserPasswordAsAdmin() {
 
         String newPassword = "foo";
 
@@ -980,8 +946,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void passwordMismatchErrorUser()
-    {
+    public void passwordMismatchErrorUser() {
         String origPassword = "foo";
         String newPassword = "bar";
 
@@ -994,13 +959,11 @@ public class UserResourceIT extends AbstractRestIT
         data.put( "newpassword", newPassword );
 
         Status responseStatus = null;
-        try
-        {
+        try {
             resource().path( "/test-organization/test-app/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -1011,8 +974,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void addRemoveRole()
-    {
+    public void addRemoveRole() {
 
         UUID id = UUIDUtils.newTimeUUID();
 
@@ -1074,8 +1036,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void revokeToken() throws Exception
-    {
+    public void revokeToken() throws Exception {
 
         String token1 = super.userToken( "edanuff", "sesame" );
         String token2 = super.userToken( "edanuff", "sesame" );
@@ -1101,15 +1062,13 @@ public class UserResourceIT extends AbstractRestIT
 
         Status status = null;
 
-        try
-        {
+        try {
             response =
                     resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token1 )
                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                             .get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -1117,15 +1076,13 @@ public class UserResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             response =
                     resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token2 )
                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                             .get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -1153,15 +1110,13 @@ public class UserResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             response =
                     resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token3 )
                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                             .get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -1169,8 +1124,7 @@ public class UserResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             response =
                     resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token4 )
                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
@@ -1178,8 +1132,7 @@ public class UserResourceIT extends AbstractRestIT
 
             status = Status.OK;
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -1188,8 +1141,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void getToken() throws Exception
-    {
+    public void getToken() throws Exception {
 
         createUser( "test_1", "test_1@test.com", "test123", "Test1 User" ); // client.setApiUrl(apiUrl);
         createUser( "test_2", "test_2@test.com", "test123", "Test2 User" ); // client.setApiUrl(apiUrl);
@@ -1217,27 +1169,23 @@ public class UserResourceIT extends AbstractRestIT
         Status status = null;
 
         // bad access token
-        try
-        {
+        try {
             resource().path( "/test-organization/test-app/users/test_1/token" ).queryParam( "access_token", "blah" )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
             log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
         }
 
         assertEquals( Status.UNAUTHORIZED, status );
 
-        try
-        {
+        try {
             resource().path( "/test-organization/test-app/users/test_2/token" )
                     .queryParam( "access_token", user_token_from_client_credentials )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
             log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
         }
@@ -1259,15 +1207,13 @@ public class UserResourceIT extends AbstractRestIT
         assertNotNull( getEntity( response, 0 ) );
 
         setup.getMgmtSvc().deactivateUser( appInfo.getId(), userId );
-        try
-        {
+        try {
             resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
                     .queryParam( "username", "test_1" ).queryParam( "password", "test123" )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
             fail( "request for deactivated user should fail" );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
             JsonNode body = uie.getResponse().getEntity( JsonNode.class );
             assertEquals( "user not activated", body.findPath( "error_description" ).getTextValue() );
@@ -1276,8 +1222,7 @@ public class UserResourceIT extends AbstractRestIT
 
 
     @Test
-    public void delegatePutOnNotFound() throws Exception
-    {
+    public void delegatePutOnNotFound() throws Exception {
         String randomName = "user1_" + UUIDUtils.newTimeUUID().toString();
         createUser( randomName, randomName + "@apigee.com", "password", randomName );
 
@@ -1314,8 +1259,7 @@ public class UserResourceIT extends AbstractRestIT
      * https://apigeesc.atlassian.net/browse/USERGRID-1715?
      */
     @Test
-    public void queryForUuids() throws Exception
-    {
+    public void queryForUuids() throws Exception {
 
         {
             final JsonNode response = resource().path( "/test-organization/test-app/users/" )

@@ -21,36 +21,30 @@ import org.usergrid.rest.ApiResponse;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 
-public class NoOpException extends RuntimeException
-{
+public class NoOpException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
     ApiResponse response = new ApiResponse();
 
 
-    public NoOpException()
-    {
+    public NoOpException() {
     }
 
 
-    public NoOpException( ApiResponse response )
-    {
-        if ( response != null )
-        {
+    public NoOpException( ApiResponse response ) {
+        if ( response != null ) {
             this.response = response;
         }
     }
 
 
-    public ApiResponse getApiResponse()
-    {
+    public ApiResponse getApiResponse() {
         return response;
     }
 
 
-    public String getJsonResponse()
-    {
+    public String getJsonResponse() {
         return mapToJsonString( response );
     }
 }

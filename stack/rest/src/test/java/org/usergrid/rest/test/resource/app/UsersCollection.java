@@ -27,31 +27,26 @@ import org.usergrid.utils.MapUtils;
 
 
 /** @author tnine */
-public class UsersCollection extends CollectionResource
-{
+public class UsersCollection extends CollectionResource {
 
 
-    public UsersCollection( NamedResource parent )
-    {
+    public UsersCollection( NamedResource parent ) {
         super( "users", parent );
     }
 
 
-    public User user( String username )
-    {
+    public User user( String username ) {
         return new User( username, this );
     }
 
 
-    public User user( UUID id )
-    {
+    public User user( UUID id ) {
         return new User( id, this );
     }
 
 
     /** Create the user */
-    public JsonNode create( String username, String email, String password )
-    {
+    public JsonNode create( String username, String email, String password ) {
         Map<String, String> data =
                 MapUtils.hashMap( "username", username ).map( "email", email ).map( "password", password );
 
@@ -61,8 +56,7 @@ public class UsersCollection extends CollectionResource
     }
 
 
-    public Me me()
-    {
+    public Me me() {
         return new Me( this );
     }
 }

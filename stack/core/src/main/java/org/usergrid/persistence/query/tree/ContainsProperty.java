@@ -25,21 +25,18 @@ import org.antlr.runtime.Token;
  *
  * @author tnine
  */
-public class ContainsProperty extends Property
-{
+public class ContainsProperty extends Property {
 
     private String indexedName = null;
 
 
-    public ContainsProperty( Token t )
-    {
+    public ContainsProperty( Token t ) {
         super( t );
         this.indexedName = String.format( "%s.keywords", super.getValue() );
     }
 
 
-    public ContainsProperty( String property )
-    {
+    public ContainsProperty( String property ) {
         this( new ClassicToken( 0, property ) );
     }
 
@@ -48,15 +45,13 @@ public class ContainsProperty extends Property
      * @see org.usergrid.persistence.query.tree.Property#getIndexedValue()
      */
     @Override
-    public String getIndexedValue()
-    {
+    public String getIndexedValue() {
         return this.indexedName;
     }
 
 
     /** @return the property */
-    public ContainsProperty getProperty()
-    {
+    public ContainsProperty getProperty() {
         return ( ContainsProperty ) this.children.get( 0 );
     }
 }

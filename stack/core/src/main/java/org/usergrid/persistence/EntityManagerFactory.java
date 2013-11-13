@@ -29,8 +29,7 @@ import java.util.UUID;
  * capabilities of Cassandra, they should be implementable using other relational databases such as MySql or NoSQL
  * databases such as GAE or MongoDB.
  */
-public interface EntityManagerFactory
-{
+public interface EntityManagerFactory {
 
     /**
      * A string description provided by the implementing class.

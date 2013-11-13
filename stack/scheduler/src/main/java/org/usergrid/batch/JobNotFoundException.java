@@ -7,8 +7,7 @@ package org.usergrid.batch;
  *
  * @author tnine
  */
-public class JobNotFoundException extends Exception
-{
+public class JobNotFoundException extends Exception {
 
     /**
      *
@@ -18,8 +17,7 @@ public class JobNotFoundException extends Exception
     private static final String DEF_MSG = "Unable to find the job with name %s";
 
 
-    public JobNotFoundException( String jobName )
-    {
+    public JobNotFoundException( String jobName ) {
         super( String.format( DEF_MSG, jobName ) );
     }
 }

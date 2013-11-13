@@ -15,8 +15,7 @@ import com.google.common.base.Preconditions;
  *
  * @author zznate
  */
-public class TraceTagManager
-{
+public class TraceTagManager {
     private Logger logger = LoggerFactory.getLogger( TraceTagManager.class );
 
     private static ThreadLocal<TraceTag> localTraceTag = new ThreadLocal<TraceTag>();
@@ -34,14 +33,12 @@ public class TraceTagManager
 
 
     /** Enable tracing. Off by default. */
-    public void setTraceEnabled( boolean traceEnabled )
-    {
+    public void setTraceEnabled( boolean traceEnabled ) {
         this.traceEnabled = traceEnabled;
     }
 
 
-    public boolean getTraceEnabled()
-    {
+    public boolean getTraceEnabled() {
         return traceEnabled;
     }
 
@@ -52,21 +49,18 @@ public class TraceTagManager
      * <p/>
      * The default is 100. If you have other ThreadLocal variables, you should probably lower this value.
      */
-    public int getFlushAtOpCount()
-    {
+    public int getFlushAtOpCount() {
         return flushAtOpCount;
     }
 
 
-    public void setFlushAtOpCount( int flushAtOpCount )
-    {
+    public void setFlushAtOpCount( int flushAtOpCount ) {
         this.flushAtOpCount = flushAtOpCount;
     }
 
 
     /** If set to true we log all TimedOpTag objects not attached to a Trace */
-    public void setReportUnattached( boolean reportUnattached )
-    {
+    public void setReportUnattached( boolean reportUnattached ) {
         this.reportUnattached = reportUnattached;
     }
 
@@ -76,27 +70,23 @@ public class TraceTagManager
      * you want callers to control whether or not to initiate a trace. An example would be initiating traces in a
      * ServletFilter by looking for a header or parameter as tracing all requests would be expensive.
      */
-    public boolean getExplicitOnly()
-    {
+    public boolean getExplicitOnly() {
         return explicitOnly;
     }
 
 
-    public void setExplicitOnly( boolean explicitOnly )
-    {
+    public void setExplicitOnly( boolean explicitOnly ) {
         this.explicitOnly = explicitOnly;
     }
 
 
     /** Get the tag from a ThreadLocal. Will return null if no tag is attached. */
-    public TraceTag acquire()
-    {
+    public TraceTag acquire() {
         return localTraceTag.get();
     }
 
 
-    public TimedOpTag timerInstance()
-    {
+    public TimedOpTag timerInstance() {
         return TimedOpTag.instance( acquire() );
     }
 
@@ -108,13 +98,10 @@ public class TraceTagManager
      * org.usergrid.persistence.cassandra.util.TraceTag#removeOps()} is invoked. The TraceTag stay attached with the
      * same name and ID, but now with no pending ops.
      */
-    public void addTimer( TimedOpTag timedOpTag )
-    {
-        if ( isActive() )
-        {
+    public void addTimer( TimedOpTag timedOpTag ) {
+        if ( isActive() ) {
             TraceTag tag = acquire();
-            if ( tag.getOpCount() >= flushAtOpCount )
-            {
+            if ( tag.getOpCount() >= flushAtOpCount ) {
                 traceTagReporter.report( tag );
                 tag.removeOps();
             }
@@ -122,10 +109,8 @@ public class TraceTagManager
 
             // if TraceTag#metered, send to meter by tag name
         }
-        else
-        {
-            if ( reportUnattached )
-            {
+        else {
+            if ( reportUnattached ) {
                 traceTagReporter.reportUnattached( timedOpTag );
             }
         }
@@ -133,8 +118,7 @@ public class TraceTagManager
 
 
     /** Returns true if there is a trace in progress */
-    public boolean isActive()
-    {
+    public boolean isActive() {
         return acquire() != null;
     }
 
@@ -143,8 +127,7 @@ public class TraceTagManager
      * Attache the tag to the current Thread. Will throw an IllegalStateException if there is already a trace in
      * progress.
      */
-    public void attach( TraceTag traceTag )
-    {
+    public void attach( TraceTag traceTag ) {
         Preconditions.checkState( !isActive(), "Attempt to attach on already active trace" );
         localTraceTag.set( traceTag );
         logger.debug( "Attached TraceTag {} to thread", traceTag );
@@ -152,8 +135,7 @@ public class TraceTagManager
 
 
     /** Detach the tag from the current thread. Throws an IllegalStateException if there is no trace in progress. */
-    public TraceTag detach()
-    {
+    public TraceTag detach() {
         TraceTag traceTag = localTraceTag.get();
         Preconditions.checkState( isActive(), "Attempt to detach on no active trace" );
         localTraceTag.remove();
@@ -163,14 +145,12 @@ public class TraceTagManager
 
 
     /** Create a TraceTag */
-    public TraceTag create( String tagName )
-    {
+    public TraceTag create( String tagName ) {
         return TraceTag.getInstance( UUIDUtils.newTimeUUID(), tagName );
     }
 
 
-    public TraceTag createMetered( String tagName )
-    {
+    public TraceTag createMetered( String tagName ) {
         return TraceTag.getMeteredInstance( UUIDUtils.newTimeUUID(), tagName );
     }
 }

@@ -34,8 +34,7 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 
-public class QueueManagerFactoryImpl implements QueueManagerFactory
-{
+public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
     public static final Logger logger = LoggerFactory.getLogger( QueueManagerFactoryImpl.class );
 
@@ -59,8 +58,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory
      * @param cass the cassandra client pool
      * @param counterUtils the CounterUtils
      */
-    public QueueManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, LockManager lockManager )
-    {
+    public QueueManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, LockManager lockManager ) {
         this.cass = cass;
         this.counterUtils = counterUtils;
         this.lockManager = lockManager;
@@ -68,15 +66,13 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory
 
 
     @Override
-    public String getImpementationDescription() throws Exception
-    {
+    public String getImpementationDescription() throws Exception {
         return IMPLEMENTATION_DESCRIPTION;
     }
 
 
     @Override
-    public QueueManager getQueueManager( UUID applicationId )
-    {
+    public QueueManager getQueueManager( UUID applicationId ) {
         QueueManagerImpl qm = new QueueManagerImpl();
         qm.init( cass, counterUtils, lockManager, applicationId );
         return qm;

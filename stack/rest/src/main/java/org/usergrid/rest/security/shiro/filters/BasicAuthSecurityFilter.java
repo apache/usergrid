@@ -31,30 +31,25 @@ import com.sun.jersey.spi.container.ContainerRequest;
 
 
 @Component
-public class BasicAuthSecurityFilter extends SecurityFilter
-{
+public class BasicAuthSecurityFilter extends SecurityFilter {
 
     private static final Logger logger = LoggerFactory.getLogger( BasicAuthSecurityFilter.class );
 
 
-    public BasicAuthSecurityFilter()
-    {
+    public BasicAuthSecurityFilter() {
         logger.info( "BasicAuthSecurityFilter is installed" );
     }
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request )
-    {
+    public ContainerRequest filter( ContainerRequest request ) {
         Map<String, String> auth_types = getAuthTypes( request );
-        if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) )
-        {
+        if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {
             return request;
         }
 
         String[] values = Base64.decodeToString( auth_types.get( AUTH_BASIC_TYPE ) ).split( ":" );
-        if ( values.length < 2 )
-        {
+        if ( values.length < 2 ) {
             return request;
         }
         String name = values[0].toLowerCase();
@@ -65,8 +60,7 @@ public class BasicAuthSecurityFilter extends SecurityFilter
         boolean sysadmin_login_allowed =
                 Boolean.parseBoolean( properties.getProperty( "usergrid.sysadmin.login.allowed" ) );
         if ( name.equals( sysadmin_login_name ) && password.equals( sysadmin_login_password )
-                && sysadmin_login_allowed )
-        {
+                && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
             logger.info( "System administrator access allowed" );
             return request;
@@ -76,19 +70,15 @@ public class BasicAuthSecurityFilter extends SecurityFilter
     }
 
 
-    private static class SysAdminRoleAuthenticator implements SecurityContext
-    {
+    private static class SysAdminRoleAuthenticator implements SecurityContext {
 
         private final Principal principal;
 
 
-        SysAdminRoleAuthenticator()
-        {
-            principal = new Principal()
-            {
+        SysAdminRoleAuthenticator() {
+            principal = new Principal() {
                 @Override
-                public String getName()
-                {
+                public String getName() {
                     return "sysadmin";
                 }
             };
@@ -96,29 +86,25 @@ public class BasicAuthSecurityFilter extends SecurityFilter
 
 
         @Override
-        public Principal getUserPrincipal()
-        {
+        public Principal getUserPrincipal() {
             return principal;
         }
 
 
         @Override
-        public boolean isUserInRole( String role )
-        {
+        public boolean isUserInRole( String role ) {
             return role.equals( "sysadmin" );
         }
 
 
         @Override
-        public boolean isSecure()
-        {
+        public boolean isSecure() {
             return false;
         }
 
 
         @Override
-        public String getAuthenticationScheme()
-        {
+        public String getAuthenticationScheme() {
             return SecurityContext.BASIC_AUTH;
         }
     }

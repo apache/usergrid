@@ -29,14 +29,12 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
 
-public class ServiceResults extends Results
-{
+public class ServiceResults extends Results {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceResults.class );
 
 
-    public enum Type
-    {
+    public enum Type {
         GENERIC, COLLECTION, CONNECTION, COUNTERS
     }
 
@@ -58,20 +56,17 @@ public class ServiceResults extends Results
 
     public ServiceResults( Service service, ServiceRequest request, ServiceResults previousResults, String childPath,
                            Type resultsType, Results r, Map<String, Object> serviceMetadata,
-                           List<ServiceRequest> nextRequests )
-    {
+                           List<ServiceRequest> nextRequests ) {
         super( r );
         this.service = service;
         this.request = request;
         this.previousResults = previousResults;
         this.childPath = childPath;
         this.resultsType = resultsType;
-        if ( request != null )
-        {
+        if ( request != null ) {
             path = request.getPath();
         }
-        else
-        {
+        else {
             path = null;
         }
         this.serviceMetadata = serviceMetadata;
@@ -81,20 +76,17 @@ public class ServiceResults extends Results
 
 
     public ServiceResults( Service service, ServiceContext context, Type resultsType, Results r,
-                           Map<String, Object> serviceMetadata, List<ServiceRequest> nextRequests )
-    {
+                           Map<String, Object> serviceMetadata, List<ServiceRequest> nextRequests ) {
         super( r );
         this.service = service;
         request = context.getRequest();
         previousResults = context.getPreviousResults();
         childPath = context.getRequest().getChildPath();
         this.resultsType = resultsType;
-        if ( request != null )
-        {
+        if ( request != null ) {
             path = request.getPath();
         }
-        else
-        {
+        else {
             path = null;
         }
         this.serviceMetadata = serviceMetadata;
@@ -103,151 +95,122 @@ public class ServiceResults extends Results
     }
 
 
-    public static ServiceResults genericServiceResults()
-    {
+    public static ServiceResults genericServiceResults() {
         return new ServiceResults( null, null, null, null, Type.GENERIC, null, null, null );
     }
 
 
-    public static ServiceResults genericServiceResults( Results r )
-    {
+    public static ServiceResults genericServiceResults( Results r ) {
         return new ServiceResults( null, null, null, null, Type.GENERIC, r, null, null );
     }
 
 
-    public static ServiceResults simpleServiceResults( Type resultsType )
-    {
+    public static ServiceResults simpleServiceResults( Type resultsType ) {
         return new ServiceResults( null, null, null, null, resultsType, null, null, null );
     }
 
 
-    public static ServiceResults simpleServiceResults( Type resultsType, Results r )
-    {
+    public static ServiceResults simpleServiceResults( Type resultsType, Results r ) {
         return new ServiceResults( null, null, null, null, resultsType, r, null, null );
     }
 
 
-    public Service getService()
-    {
+    public Service getService() {
         return service;
     }
 
 
-    public ServiceRequest getRequest()
-    {
+    public ServiceRequest getRequest() {
         return request;
     }
 
 
-    public ServiceResults getPreviousResults()
-    {
+    public ServiceResults getPreviousResults() {
         return previousResults;
     }
 
 
-    public Map<String, Object> getServiceMetadata()
-    {
+    public Map<String, Object> getServiceMetadata() {
         return serviceMetadata;
     }
 
 
-    public boolean hasSelection()
-    {
-        if ( request == null )
-        {
+    public boolean hasSelection() {
+        if ( request == null ) {
             return false;
         }
         Query q = getQuery();
-        if ( q != null )
-        {
+        if ( q != null ) {
             return q.hasSelectSubjects();
         }
         return false;
     }
 
 
-    public List<Object> getSelectionResults()
-    {
+    public List<Object> getSelectionResults() {
         Query q = getQuery();
-        if ( q == null )
-        {
+        if ( q == null ) {
             return null;
         }
         return q.getSelectionResults( this );
     }
 
 
-    public Object getSelectionResult()
-    {
+    public Object getSelectionResult() {
         Query q = getQuery();
-        if ( q == null )
-        {
+        if ( q == null ) {
             return null;
         }
         return q.getSelectionResult( this );
     }
 
 
-    public String getPath()
-    {
+    public String getPath() {
         return path;
     }
 
 
-    public List<ServiceRequest> getNextRequests()
-    {
+    public List<ServiceRequest> getNextRequests() {
         return nextRequests;
     }
 
 
-    public boolean hasMoreRequests()
-    {
+    public boolean hasMoreRequests() {
         return ( nextRequests != null ) && ( nextRequests.size() > 0 );
     }
 
 
-    public String getChildPath()
-    {
+    public String getChildPath() {
         return childPath;
     }
 
 
-    public Type getResultsType()
-    {
+    public Type getResultsType() {
         return resultsType;
     }
 
 
-    public void setChildResults( ServiceResults childResults )
-    {
+    public void setChildResults( ServiceResults childResults ) {
         setChildResults( childResults.getResultsType(), childResults.getRequest().getOwner().getUuid(),
                 childResults.getChildPath(), childResults.getEntities() );
     }
 
 
-    public void setChildResults( Type rtype, UUID id, String name, List<Entity> results )
-    {
-        if ( ( results == null ) || ( results.size() == 0 ) )
-        {
+    public void setChildResults( Type rtype, UUID id, String name, List<Entity> results ) {
+        if ( ( results == null ) || ( results.size() == 0 ) ) {
             return;
         }
-        if ( rtype == Type.GENERIC )
-        {
+        if ( rtype == Type.GENERIC ) {
             return;
         }
         List<Entity> entities = getEntities();
-        if ( entities != null )
-        {
-            for ( Entity entity : entities )
-            {
-                if ( entity.getUuid().equals( id ) )
-                {
-                    if ( rtype == Type.COLLECTION )
-                    {
+        if ( entities != null ) {
+            for ( Entity entity : entities ) {
+                if ( entity.getUuid().equals( id ) ) {
+                    if ( rtype == Type.COLLECTION ) {
                         entity.setCollections( name, results );
                     }
-                    else if ( rtype == Type.CONNECTION )
-                    {
+                    else if ( rtype == Type.CONNECTION ) {
                         entity.setConnections( name, results );
                     }
                 }
@@ -257,99 +220,85 @@ public class ServiceResults extends Results
 
 
     @Override
-    public ServiceResults withQuery( Query query )
-    {
+    public ServiceResults withQuery( Query query ) {
         return ( ServiceResults ) super.withQuery( query );
     }
 
 
     @Override
-    public ServiceResults withIds( List<UUID> resultsIds )
-    {
+    public ServiceResults withIds( List<UUID> resultsIds ) {
         return ( ServiceResults ) super.withIds( resultsIds );
     }
 
 
     @Override
-    public ServiceResults withRefs( List<EntityRef> resultsRefs )
-    {
+    public ServiceResults withRefs( List<EntityRef> resultsRefs ) {
         return ( ServiceResults ) super.withRefs( resultsRefs );
     }
 
 
     @Override
-    public ServiceResults withRef( EntityRef ref )
-    {
+    public ServiceResults withRef( EntityRef ref ) {
         return ( ServiceResults ) super.withRef( ref );
     }
 
 
     @Override
-    public ServiceResults withEntity( Entity resultEntity )
-    {
+    public ServiceResults withEntity( Entity resultEntity ) {
         return ( ServiceResults ) super.withEntity( resultEntity );
     }
 
 
     @Override
-    public ServiceResults withEntities( List<? extends Entity> resultsEntities )
-    {
+    public ServiceResults withEntities( List<? extends Entity> resultsEntities ) {
         return ( ServiceResults ) super.withEntities( resultsEntities );
     }
 
 
     @Override
-    public ServiceResults withDataName( String dataName )
-    {
+    public ServiceResults withDataName( String dataName ) {
         return ( ServiceResults ) super.withDataName( dataName );
     }
 
 
     @Override
-    public ServiceResults withCounters( List<AggregateCounterSet> counters )
-    {
+    public ServiceResults withCounters( List<AggregateCounterSet> counters ) {
         return ( ServiceResults ) super.withCounters( counters );
     }
 
 
     @Override
-    public ServiceResults withNextResult( UUID nextResult )
-    {
+    public ServiceResults withNextResult( UUID nextResult ) {
         return ( ServiceResults ) super.withNextResult( nextResult );
     }
 
 
     @Override
-    public ServiceResults withCursor( String cursor )
-    {
+    public ServiceResults withCursor( String cursor ) {
         return ( ServiceResults ) super.withCursor( cursor );
     }
 
 
     @Override
-    public ServiceResults withMetadata( UUID id, String name, Object value )
-    {
+    public ServiceResults withMetadata( UUID id, String name, Object value ) {
         return ( ServiceResults ) super.withMetadata( id, name, value );
     }
 
 
     @Override
-    public ServiceResults withMetadata( UUID id, Map<String, Object> data )
-    {
+    public ServiceResults withMetadata( UUID id, Map<String, Object> data ) {
         return ( ServiceResults ) super.withMetadata( id, data );
     }
 
 
     @Override
-    public ServiceResults withMetadata( Map<UUID, Map<String, Object>> metadata )
-    {
+    public ServiceResults withMetadata( Map<UUID, Map<String, Object>> metadata ) {
         return ( ServiceResults ) super.withMetadata( metadata );
     }
 
 
     @Override
-    public ServiceResults withData( Object data )
-    {
+    public ServiceResults withData( Object data ) {
         return ( ServiceResults ) super.withData( data );
     }
 }

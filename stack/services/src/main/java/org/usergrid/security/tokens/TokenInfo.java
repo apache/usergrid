@@ -7,8 +7,7 @@ import java.util.UUID;
 import org.usergrid.security.AuthPrincipalInfo;
 
 
-public class TokenInfo
-{
+public class TokenInfo {
 
     UUID uuid;
     String type;
@@ -22,8 +21,7 @@ public class TokenInfo
 
 
     public TokenInfo( UUID uuid, String type, long created, long accessed, long inactive, long duration,
-                      AuthPrincipalInfo principal, Map<String, Object> state )
-    {
+                      AuthPrincipalInfo principal, Map<String, Object> state ) {
         this.uuid = uuid;
         this.type = type;
         this.created = created;
@@ -35,54 +33,45 @@ public class TokenInfo
     }
 
 
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return uuid;
     }
 
 
-    public void setUuid( UUID uuid )
-    {
+    public void setUuid( UUID uuid ) {
         this.uuid = uuid;
     }
 
 
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
 
-    public void setType( String type )
-    {
+    public void setType( String type ) {
         this.type = type;
     }
 
 
-    public long getCreated()
-    {
+    public long getCreated() {
         return created;
     }
 
 
-    public void setCreated( long created )
-    {
+    public void setCreated( long created ) {
         this.created = created;
     }
 
 
     /** @return the expiration */
-    public long getDuration()
-    {
+    public long getDuration() {
         return duration;
     }
 
 
     /** If the expiration is undefined, return the default that's been passed in */
-    public long getExpiration( long defaultExpiration )
-    {
-        if ( duration == 0 )
-        {
+    public long getExpiration( long defaultExpiration ) {
+        if ( duration == 0 ) {
             return defaultExpiration;
         }
         return duration;
@@ -90,56 +79,47 @@ public class TokenInfo
 
 
     /** @param expiration the expiration to set */
-    public void setDuration( long expiration )
-    {
+    public void setDuration( long expiration ) {
         this.duration = expiration;
     }
 
 
-    public long getAccessed()
-    {
+    public long getAccessed() {
         return accessed;
     }
 
 
-    public void setAccessed( long accessed )
-    {
+    public void setAccessed( long accessed ) {
         this.accessed = accessed;
     }
 
 
-    public long getInactive()
-    {
+    public long getInactive() {
         return inactive;
     }
 
 
-    public void setInactive( long inactive )
-    {
+    public void setInactive( long inactive ) {
         this.inactive = inactive;
     }
 
 
-    public AuthPrincipalInfo getPrincipal()
-    {
+    public AuthPrincipalInfo getPrincipal() {
         return principal;
     }
 
 
-    public void setPrincipal( AuthPrincipalInfo principal )
-    {
+    public void setPrincipal( AuthPrincipalInfo principal ) {
         this.principal = principal;
     }
 
 
-    public Map<String, Object> getState()
-    {
+    public Map<String, Object> getState() {
         return state;
     }
 
 
-    public void setState( Map<String, Object> state )
-    {
+    public void setState( Map<String, Object> state ) {
         this.state = state;
     }
 }

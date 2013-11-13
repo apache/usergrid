@@ -33,19 +33,16 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT {
     @Test
-    public void basicScheduling() throws InterruptedException
-    {
+    public void basicScheduling() throws InterruptedException {
         int count = 1000;
 
         CountdownLatchJob counterJob = cassandraResource.getBean( CountdownLatchJob.class );
         // set the counter job latch size
         counterJob.setLatch( count );
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 

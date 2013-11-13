@@ -26,12 +26,10 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Provider
 public class DuplicateUniquePropertyExistsExceptionMapper
-        extends AbstractExceptionMapper<DuplicateUniquePropertyExistsException>
-{
+        extends AbstractExceptionMapper<DuplicateUniquePropertyExistsException> {
 
     @Override
-    public Response toResponse( DuplicateUniquePropertyExistsException e )
-    {
+    public Response toResponse( DuplicateUniquePropertyExistsException e ) {
         return toResponse( BAD_REQUEST, e.getMessage() );
     }
 }

@@ -18,8 +18,7 @@ import me.prettyprint.hector.api.exceptions.HectorException;
  *
  * @author zznate
  */
-public class UsergridSystemMonitor
-{
+public class UsergridSystemMonitor {
     private static final String TIMER_THRESHOLD_TRIGGERED_MSG =
             "TimerThreshold triggered on duration: %d \n%s\n----------------";
     private static Logger logger = LoggerFactory.getLogger( UsergridSystemMonitor.class );
@@ -33,36 +32,29 @@ public class UsergridSystemMonitor
 
     /**
      * Must be instantiated with a build number and a cluster to be of any use. Properties can be null. Threshold
-     * property
-     * must be a form compatible with {@link TimeUtils#millisFromDuration(String)}
+     * property must be a form compatible with {@link TimeUtils#millisFromDuration(String)}
      */
-    public UsergridSystemMonitor( String buildNumber, Cluster cluster, Properties properties )
-    {
+    public UsergridSystemMonitor( String buildNumber, Cluster cluster, Properties properties ) {
         this.buildNumber = buildNumber;
         this.cluster = cluster;
-        if ( properties != null )
-        {
+        if ( properties != null ) {
             timerLogThreshold = TimeUtils.millisFromDuration( properties.getProperty( LOG_THRESHOLD_PROPERTY, "15s" ) );
         }
     }
 
 
     /**
-     * Wraps "describe_thrift_version API call as this hits a static string in Cassandra. This is the most
-     * lightweight way
-     * to assure that Hector is alive and talking to the cluster.
+     * Wraps "describe_thrift_version API call as this hits a static string in Cassandra. This is the most lightweight
+     * way to assure that Hector is alive and talking to the cluster.
      *
      * @return true if we have a lit connection to the cluster.
      */
-    public boolean getIsCassandraAlive()
-    {
+    public boolean getIsCassandraAlive() {
         boolean isAlive = false;
-        try
-        {
+        try {
             isAlive = cluster.describeThriftVersion() != null;
         }
-        catch ( HectorException he )
-        {
+        catch ( HectorException he ) {
             logger.error( "Could not communicate with Cassandra cluster", he );
         }
         return isAlive;
@@ -70,8 +62,7 @@ public class UsergridSystemMonitor
 
 
     /** @return a string representing the build number */
-    public String getBuildNumber()
-    {
+    public String getBuildNumber() {
         return buildNumber;
     }
 
@@ -79,24 +70,18 @@ public class UsergridSystemMonitor
     /**
      * Uses {@link JsonUtils#mapToFormattedJsonString(Object)} against the object if the duration is greater than {@link
      * #timerLogThreshold}. When using the varargs form, the number of elements must be even such that key,value,key,
-     * value
-     * mapping via {@link MapUtils#map(Object...)} can collect all the elements.
+     * value mapping via {@link MapUtils#map(Object...)} can collect all the elements.
      * <p/>
-     * Conversion to a map this way let's us lazy create the map if and only if the triggering threshold is true or
-     * we are
-     * in debug mode.
+     * Conversion to a map this way let's us lazy create the map if and only if the triggering threshold is true or we
+     * are in debug mode.
      */
-    public void maybeLogPayload( long duration, Object... objects )
-    {
-        if ( duration > timerLogThreshold || logger.isDebugEnabled() )
-        {
+    public void maybeLogPayload( long duration, Object... objects ) {
+        if ( duration > timerLogThreshold || logger.isDebugEnabled() ) {
             String message;
-            if ( objects.length > 1 )
-            {
+            if ( objects.length > 1 ) {
                 message = formatMessage( duration, MapUtils.map( objects ) );
             }
-            else
-            {
+            else {
                 message = formatMessage( duration, objects );
             }
             logger.info( message );
@@ -104,8 +89,7 @@ public class UsergridSystemMonitor
     }
 
 
-    static String formatMessage( long duration, Object object )
-    {
+    static String formatMessage( long duration, Object object ) {
         return String.format( TIMER_THRESHOLD_TRIGGERED_MSG, duration, JsonUtils.mapToFormattedJsonString( object ) );
     }
 }

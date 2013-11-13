@@ -32,144 +32,124 @@ import org.usergrid.persistence.annotations.EntityProperty;
 
 /** An event type posted by the application. */
 @XmlRootElement
-public class Event extends TypedEntity
-{
+public class Event extends TypedEntity {
 
     public static final String ENTITY_TYPE = "event";
 
-    @EntityProperty( required = true, indexed = true, mutable = false )
+    @EntityProperty(required = true, indexed = true, mutable = false)
     long timestamp = System.currentTimeMillis();
 
-    @EntityProperty( required = false, indexed = true, mutable = false )
+    @EntityProperty(required = false, indexed = true, mutable = false)
     UUID user;
 
-    @EntityProperty( required = false, indexed = true, mutable = false )
+    @EntityProperty(required = false, indexed = true, mutable = false)
     UUID group;
 
-    @EntityProperty( fulltextIndexed = false, required = false, mutable = false, indexed = true )
+    @EntityProperty(fulltextIndexed = false, required = false, mutable = false, indexed = true)
     String category;
 
-    @EntityProperty( indexed = false, required = false, mutable = false )
+    @EntityProperty(indexed = false, required = false, mutable = false)
     Map<String, Integer> counters;
 
-    @EntityProperty( indexed = true, required = false, mutable = false )
+    @EntityProperty(indexed = true, required = false, mutable = false)
     String message;
 
-    @EntityDictionary( keyType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> connections;
 
 
-    public Event()
-    {
+    public Event() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public Event( UUID id )
-    {
+    public Event( UUID id ) {
         uuid = id;
     }
 
 
-    public long getTimestamp()
-    {
+    public long getTimestamp() {
         return timestamp;
     }
 
 
-    public void setTimestamp( long timestamp )
-    {
-        if ( timestamp == 0 )
-        {
+    public void setTimestamp( long timestamp ) {
+        if ( timestamp == 0 ) {
             timestamp = System.currentTimeMillis();
         }
         this.timestamp = timestamp;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public UUID getUser()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public UUID getUser() {
         return user;
     }
 
 
-    public void setUser( UUID user )
-    {
+    public void setUser( UUID user ) {
         this.user = user;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public UUID getGroup()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public UUID getGroup() {
         return group;
     }
 
 
-    public void setGroup( UUID group )
-    {
+    public void setGroup( UUID group ) {
         this.group = group;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getCategory()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getCategory() {
         return category;
     }
 
 
-    public void setCategory( String category )
-    {
+    public void setCategory( String category ) {
         this.category = category;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Map<String, Integer> getCounters()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, Integer> getCounters() {
         return counters;
     }
 
 
-    public void setCounters( Map<String, Integer> counters )
-    {
+    public void setCounters( Map<String, Integer> counters ) {
         this.counters = counters;
     }
 
 
-    public void addCounter( String name, int value )
-    {
-        if ( counters == null )
-        {
+    public void addCounter( String name, int value ) {
+        if ( counters == null ) {
             counters = new HashMap<String, Integer>();
         }
         counters.put( name, value );
     }
 
 
-    public String getMessage()
-    {
+    public String getMessage() {
         return message;
     }
 
 
-    public void setMessage( String message )
-    {
+    public void setMessage( String message ) {
         this.message = message;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Set<String> getConnections()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Set<String> getConnections() {
         return connections;
     }
 
 
-    public void setConnections( Set<String> connections )
-    {
+    public void setConnections( Set<String> connections ) {
         this.connections = connections;
     }
 }

@@ -38,8 +38,7 @@ import com.hazelcast.core.MessageListener;
 
 
 @Ignore
-public class HazelcastTest implements InstanceListener, MessageListener<Object>
-{
+public class HazelcastTest implements InstanceListener, MessageListener<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger( HazelcastTest.class );
 
@@ -47,8 +46,7 @@ public class HazelcastTest implements InstanceListener, MessageListener<Object>
 
 
     @Before
-    public void setup() throws Exception
-    {
+    public void setup() throws Exception {
         // assertNotNull(client);
 
         String maven_opts = System.getenv( "MAVEN_OPTS" );
@@ -64,8 +62,7 @@ public class HazelcastTest implements InstanceListener, MessageListener<Object>
 
 
     @Test
-    public void doTest()
-    {
+    public void doTest() {
         logger.info( "do test" );
         Hazelcast.addInstanceListener( this );
 
@@ -74,14 +71,12 @@ public class HazelcastTest implements InstanceListener, MessageListener<Object>
         topic.publish( "my-message-object" );
 
         Collection<Instance> instances = Hazelcast.getInstances();
-        for ( Instance instance : instances )
-        {
+        for ( Instance instance : instances ) {
             logger.info( "ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
         }
 
         Set<Member> setMembers = Hazelcast.getCluster().getMembers();
-        for ( Member member : setMembers )
-        {
+        for ( Member member : setMembers ) {
             logger.info( "isLocalMember " + member.localMember() );
             logger.info( "member.inetsocketaddress " + member.getInetSocketAddress() );
         }
@@ -89,32 +84,28 @@ public class HazelcastTest implements InstanceListener, MessageListener<Object>
 
 
     @Override
-    public void instanceCreated( InstanceEvent event )
-    {
+    public void instanceCreated( InstanceEvent event ) {
         Instance instance = event.getInstance();
         logger.info( "Created instance ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
     }
 
 
     @Override
-    public void instanceDestroyed( InstanceEvent event )
-    {
+    public void instanceDestroyed( InstanceEvent event ) {
         Instance instance = event.getInstance();
         logger.info( "Destroyed isntance ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
     }
 
 
     @After
-    public void teardown()
-    {
+    public void teardown() {
         logger.info( "Stopping test" );
         ac.close();
     }
 
 
     @Override
-    public void onMessage( Object msg )
-    {
+    public void onMessage( Object msg ) {
         logger.info( "Message received = " + msg );
     }
 }

@@ -34,20 +34,17 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent()
-public class EntityDictionaryIT extends AbstractCoreIT
-{
+public class EntityDictionaryIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityDictionaryIT.class );
 
 
-    public EntityDictionaryIT()
-    {
+    public EntityDictionaryIT() {
         super();
     }
 
 
     @Test
-    public void testApplicationDictionaries() throws Exception
-    {
+    public void testApplicationDictionaries() throws Exception {
         Application.OAuthProvider provider = new Application.OAuthProvider();
         provider.setClientId( "123456789012.apps.googleusercontent.com" );
         provider.setClientSecret( "abcdefghijklmnopqrstuvwx" );
@@ -73,8 +70,7 @@ public class EntityDictionaryIT extends AbstractCoreIT
 
 
     @Test
-    public void testUserDictionaries() throws Exception
-    {
+    public void testUserDictionaries() throws Exception {
         LOG.info( "EntityDictionaryIT.testUserDictionaries" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testUserDictionaries" );

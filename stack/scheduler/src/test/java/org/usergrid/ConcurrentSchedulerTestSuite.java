@@ -16,5 +16,4 @@ import org.usergrid.cassandra.ConcurrentSuite;
                 AppArgsTest.class, UsergridJobFactoryTest.class, BulkJobExecutionUnitTest.class,
         })
 @Concurrent()
-public class ConcurrentSchedulerTestSuite
-{}
+public class ConcurrentSchedulerTestSuite {}

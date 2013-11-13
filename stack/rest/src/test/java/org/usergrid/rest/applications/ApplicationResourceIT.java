@@ -46,12 +46,10 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author zznate
  */
 @Concurrent()
-public class ApplicationResourceIT extends AbstractRestIT
-{
+public class ApplicationResourceIT extends AbstractRestIT {
 
     @Test
-    public void applicationWithOrgCredentials() throws Exception
-    {
+    public void applicationWithOrgCredentials() throws Exception {
 
         OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
 
@@ -67,8 +65,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void applicationWithAppCredentials() throws Exception
-    {
+    public void applicationWithAppCredentials() throws Exception {
 
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
 
@@ -84,8 +81,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void applicationWithJsonCreds() throws Exception
-    {
+    public void applicationWithJsonCreds() throws Exception {
 
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
 
@@ -118,8 +114,7 @@ public class ApplicationResourceIT extends AbstractRestIT
     @Ignore("When run with all tests it fails with expected 3 but got 4, "
             + "but alone it succeeds: ApplicationResourceIT."
             + "rootApplicationWithOrgCredentials:139 expected:<3> but was:<4>")
-    public void rootApplicationWithOrgCredentials() throws Exception
-    {
+    public void rootApplicationWithOrgCredentials() throws Exception {
 
         OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
@@ -144,8 +139,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void test_GET_credentials_ok()
-    {
+    public void test_GET_credentials_ok() {
         String mgmtToken = adminToken();
 
         JsonNode node =
@@ -158,8 +152,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void testResetAppCredentials()
-    {
+    public void testResetAppCredentials() {
         String mgmtToken = adminToken();
 
         JsonNode node =
@@ -172,21 +165,18 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void noAppDelete()
-    {
+    public void noAppDelete() {
         String mgmtToken = adminToken();
 
         Status status = null;
         JsonNode node = null;
 
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app" ).queryParam( "access_token", mgmtToken )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                     .delete( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -195,8 +185,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void ttlOverMax() throws Exception
-    {
+    public void ttlOverMax() throws Exception {
 
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
@@ -204,13 +193,11 @@ public class ApplicationResourceIT extends AbstractRestIT
 
         Status responseStatus = null;
 
-        try
-        {
+        try {
             resource().path( "/test-organization/test-app/token" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -219,8 +206,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void tokenTtl() throws Exception
-    {
+    public void tokenTtl() throws Exception {
 
         long ttl = 2000;
 
@@ -247,13 +233,11 @@ public class ApplicationResourceIT extends AbstractRestIT
         Thread.sleep( ttl - ( System.currentTimeMillis() - startTime ) + 1000 );
 
         Status responseStatus = null;
-        try
-        {
+        try {
             userdata = resource().path( "/test-organization/test-app/users/ed@anuff.com" )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -262,21 +246,18 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void ttlNan() throws Exception
-    {
+    public void ttlNan() throws Exception {
 
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "ed@anuff.com" ).map( "password", "sesame" )
                         .map( "ttl", "derp" );
 
         Status responseStatus = null;
-        try
-        {
+        try {
             resource().path( "/test-organization/test-app/token" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
@@ -285,8 +266,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void updateAccessTokenTtl() throws Exception
-    {
+    public void updateAccessTokenTtl() throws Exception {
 
         JsonNode node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "sesame" )
@@ -316,8 +296,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
     @Test
     @Ignore("We need to fix JSPs in our test harness")
-    public void authorizationCodeWithWrongCredentials() throws Exception
-    {
+    public void authorizationCodeWithWrongCredentials() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
 
@@ -339,8 +318,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
     @Ignore("Our JSPs in the test runtime are borked. TODO zznate")
     @Test
-    public void authorizeWithInvalidClientIdRaisesError() throws Exception
-    {
+    public void authorizeWithInvalidClientIdRaisesError() throws Exception {
         String result =
                 resource().path( "/test-organization/test-app/authorize" ).queryParam( "response_type", "token" )
                         .queryParam( "client_id", "invalid_client_id" )
@@ -351,8 +329,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void authorizationCodeWithValidCredentials() throws Exception
-    {
+    public void authorizationCodeWithValidCredentials() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
 
@@ -367,14 +344,12 @@ public class ApplicationResourceIT extends AbstractRestIT
         client().setFollowRedirects( false );
 
         Status status = null;
-        try
-        {
+        try {
             String result = resource().path( "/test-organization/test-app/authorize" )
                     .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept( MediaType.TEXT_HTML )
                     .post( String.class, payload );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -383,8 +358,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void clientCredentialsFlowWithHeaderAuthorization() throws Exception
-    {
+    public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
@@ -406,8 +380,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void clientCredentialsFlowWithPayload() throws Exception
-    {
+    public void clientCredentialsFlowWithPayload() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
@@ -427,8 +400,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void clientCredentialsFlowWithHeaderAuthorizationAndPayload() throws Exception
-    {
+    public void clientCredentialsFlowWithHeaderAuthorizationAndPayload() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
@@ -449,18 +421,15 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void validateApigeeApmConfigAPP()
-    {
+    public void validateApigeeApmConfigAPP() {
         JsonNode node = null;
 
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app/apm/apigeeMobileConfig" ).get( JsonNode.class );
             //if things are kosher then JSON should have value for instaOpsApplicationId
             assertTrue( "it's valid json for APM", node.has( "instaOpsApplicationId" ) );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             ClientResponse response = uie.getResponse();
             //Validate that API exists
             assertTrue( "APM Config API exists", response.getStatus() != 404 ); //i.e It should not be "Not Found"
@@ -469,8 +438,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void appTokenFromOrgCreds() throws Exception
-    {
+    public void appTokenFromOrgCreds() throws Exception {
 
         OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
 
@@ -498,8 +466,7 @@ public class ApplicationResourceIT extends AbstractRestIT
 
 
     @Test
-    public void appTokenFromAppCreds() throws Exception
-    {
+    public void appTokenFromAppCreds() throws Exception {
 
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
 

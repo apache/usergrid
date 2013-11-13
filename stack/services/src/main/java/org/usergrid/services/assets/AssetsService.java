@@ -26,14 +26,12 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceResults;
 
 
-public class AssetsService extends AbstractPathBasedColllectionService
-{
+public class AssetsService extends AbstractPathBasedColllectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( AssetsService.class );
 
 
-    public AssetsService()
-    {
+    public AssetsService() {
         super();
         logger.info( "/assets" );
         declareServiceCommands( "data" );
@@ -42,8 +40,7 @@ public class AssetsService extends AbstractPathBasedColllectionService
 
     @Override
     public ServiceResults getEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
-            throws Exception
-    {
+            throws Exception {
         logger.info( "handling command: {}", command );
 
         ServiceResults sr = ServiceResults.genericServiceResults();
@@ -53,8 +50,7 @@ public class AssetsService extends AbstractPathBasedColllectionService
 
 
     @Override
-    public ServiceResults getServiceCommand( ServiceContext context, String command ) throws Exception
-    {
+    public ServiceResults getServiceCommand( ServiceContext context, String command ) throws Exception {
         logger.info( "in getServiceCommand with command: {}", command );
         return ServiceResults.genericServiceResults();
     }

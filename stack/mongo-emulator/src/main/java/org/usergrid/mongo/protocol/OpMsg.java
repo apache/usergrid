@@ -22,41 +22,35 @@ import java.nio.ByteBuffer;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 
-public class OpMsg extends Message
-{
+public class OpMsg extends Message {
 
     String message;
 
 
-    public OpMsg()
-    {
+    public OpMsg() {
         opCode = OP_MSG;
     }
 
 
-    public String getMessage()
-    {
+    public String getMessage() {
         return message;
     }
 
 
-    public void setMessage( String message )
-    {
+    public void setMessage( String message ) {
         this.message = message;
     }
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
         message = readCString( buffer );
     }
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 16; // 4 ints * 4 bytes
 
         ByteBuffer messageBytes = getCString( message );
@@ -76,8 +70,7 @@ public class OpMsg extends Message
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "OpMsg [message=" + message + ", messageLength=" + messageLength + ", requestID=" + requestID
                 + ", responseTo=" + responseTo + ", opCode=" + opCode + "]";
     }

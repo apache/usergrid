@@ -26,8 +26,7 @@ import static org.junit.Assert.assertNotNull;
 
 /** @author zznate */
 @Concurrent()
-public class FacebookProviderIT
-{
+public class FacebookProviderIT {
 
     private static SignInProviderFactory providerFactory;
     private static UUID applicationId;
@@ -40,8 +39,7 @@ public class FacebookProviderIT
 
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
         providerFactory = ServiceITSuite.cassandraResource.getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
                                   .createAdminUser( "fbuser", "Facebook User", "user@facebook.com", "test", false,
@@ -53,8 +51,7 @@ public class FacebookProviderIT
 
     @Test
     @Ignore
-    public void verifyGetOrCreateOk() throws Exception
-    {
+    public void verifyGetOrCreateOk() throws Exception {
         Application application = setup.getEmf().getEntityManager( applicationId ).getApplication();
         Map fb_user = MapUtils.hashMap( "id", "12345678" ).map( "name", "Facebook User" ).map( "username", "fb.user" );
 
@@ -68,8 +65,7 @@ public class FacebookProviderIT
 
 
     @Test
-    public void verifyConfigureOk() throws Exception
-    {
+    public void verifyConfigureOk() throws Exception {
         Application application = setup.getEmf().getEntityManager( applicationId ).getApplication();
         Map fbProps = MapUtils.hashMap( "api_url", "localhost" );
         FacebookProvider fp = ( FacebookProvider ) providerFactory.facebook( application );

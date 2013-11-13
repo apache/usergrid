@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderBySameRangeScanLessConnectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderBySameRangeScanLessConnectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderBySameRangeScanLessConnection() throws Exception
-    {
+    public void singleOrderBySameRangeScanLessConnection() throws Exception {
         singleOrderBySameRangeScanLessEqual( new ConnectionHelper() );
     }
 }

@@ -29,7 +29,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Retention(value = RUNTIME)
 @Target(value = { METHOD })
-public @interface RequireApplicationAccess
-{
+public @interface RequireApplicationAccess {
 
 }

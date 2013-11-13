@@ -16,8 +16,7 @@
 package org.usergrid.persistence;
 
 
-public interface CollectionRef extends AssociatedEntityRef
-{
+public interface CollectionRef extends AssociatedEntityRef {
 
     public EntityRef getOwnerEntity();
 

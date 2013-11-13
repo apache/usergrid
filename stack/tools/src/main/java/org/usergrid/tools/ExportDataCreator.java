@@ -34,8 +34,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author tnine
  */
-public class ExportDataCreator
-{
+public class ExportDataCreator {
 
     private EntityManagerFactory emf;
 
@@ -46,22 +45,19 @@ public class ExportDataCreator
      * @param emf
      * @param managementService
      */
-    public ExportDataCreator( EntityManagerFactory emf, ManagementService managementService )
-    {
+    public ExportDataCreator( EntityManagerFactory emf, ManagementService managementService ) {
         super();
         this.emf = emf;
         this.managementService = managementService;
     }
 
 
-    public void createTestData() throws Exception
-    {
+    public void createTestData() throws Exception {
 
         String orgName = "testexportorg";
 
         //nothing to do 
-        if ( managementService.getOrganizationByName( orgName ) != null )
-        {
+        if ( managementService.getOrganizationByName( orgName ) != null ) {
             return;
         }
 

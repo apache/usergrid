@@ -21,11 +21,9 @@ import org.usergrid.cassandra.Concurrent;
 
 
 @Concurrent()
-public class ApplicationsServiceIT extends AbstractServiceIT
-{
+public class ApplicationsServiceIT extends AbstractServiceIT {
     @Test
-    public void testPermissions() throws Exception
-    {
+    public void testPermissions() throws Exception {
         app.createRole( "manager", null, 0 );
         app.createRole( "member", null, 0 );
 

@@ -28,8 +28,7 @@ import org.usergrid.cassandra.Concurrent;
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
 // TODO - this suite actually runs correctly now so we can
 // remove this ignore if Todd is OK with it.
-public class SchedulerITSuite
-{
+public class SchedulerITSuite {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 }

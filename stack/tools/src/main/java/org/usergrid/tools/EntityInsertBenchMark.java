@@ -55,8 +55,7 @@ import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
  *
  * @author tnine
  */
-public class EntityInsertBenchMark extends ToolBase
-{
+public class EntityInsertBenchMark extends ToolBase {
 
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
@@ -65,8 +64,7 @@ public class EntityInsertBenchMark extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -100,8 +98,7 @@ public class EntityInsertBenchMark extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         logger.info( "Starting entity cleanup" );
@@ -119,8 +116,7 @@ public class EntityInsertBenchMark extends ToolBase
 
         Stack<Future<Void>> futures = new Stack<Future<Void>>();
 
-        for ( int i = 0; i < workerSize; i++ )
-        {
+        for ( int i = 0; i < workerSize; i++ ) {
             futures.push( executors.submit( new InsertWorker( i, size, appId ) ) );
         }
 
@@ -129,8 +125,7 @@ public class EntityInsertBenchMark extends ToolBase
         /**
          * Wait for all tasks to complete
          */
-        while ( !futures.isEmpty() )
-        {
+        while ( !futures.isEmpty() ) {
             futures.pop().get();
         }
 
@@ -138,8 +133,7 @@ public class EntityInsertBenchMark extends ToolBase
     }
 
 
-    private class InsertWorker implements Callable<Void>
-    {
+    private class InsertWorker implements Callable<Void> {
 
         private int count;
 
@@ -148,8 +142,7 @@ public class EntityInsertBenchMark extends ToolBase
         private UUID appId;
 
 
-        private InsertWorker( int workerNumber, int count, UUID appId )
-        {
+        private InsertWorker( int workerNumber, int count, UUID appId ) {
             this.workerNumber = workerNumber;
             this.count = count;
             this.appId = appId;
@@ -162,15 +155,13 @@ public class EntityInsertBenchMark extends ToolBase
          * @see java.util.concurrent.Callable#call()
          */
         @Override
-        public Void call() throws Exception
-        {
+        public Void call() throws Exception {
 
             Keyspace ko = EntityInsertBenchMark.this.cass.getApplicationKeyspace( appId );
             EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( appId );
             IndexBucketLocator indexBucketLocator = em.getIndexBucketLocator();
 
-            for ( int i = 0; i < count; i++ )
-            {
+            for ( int i = 0; i < count; i++ ) {
 
                 Mutator<ByteBuffer> m = createMutator( ko, be );
 
@@ -197,8 +188,7 @@ public class EntityInsertBenchMark extends ToolBase
 
                 m.execute();
 
-                if ( i % 100 == 0 )
-                {
+                if ( i % 100 == 0 ) {
                     System.out.println(
                             String.format( "%s : Written %d of %d", Thread.currentThread().getName(), i, count ) );
                 }
@@ -209,8 +199,7 @@ public class EntityInsertBenchMark extends ToolBase
     }
 
 
-    private class UniqueIndexer
-    {
+    private class UniqueIndexer {
 
         private Mutator<ByteBuffer> mutator;
 
@@ -219,16 +208,14 @@ public class EntityInsertBenchMark extends ToolBase
          * @param indexBucketLocator
          * @param mutator
          */
-        public UniqueIndexer( Mutator<ByteBuffer> mutator )
-        {
+        public UniqueIndexer( Mutator<ByteBuffer> mutator ) {
             super();
             this.mutator = mutator;
         }
 
 
         private void writeIndex( UUID applicationId, String collectionName, UUID entityId, String propName,
-                                 Object entityValue )
-        {
+                                 Object entityValue ) {
 
             Object rowKey = key( applicationId, collectionName, propName, entityValue );
 
@@ -237,8 +224,7 @@ public class EntityInsertBenchMark extends ToolBase
     }
 
 
-    public static class IndexEntry
-    {
+    public static class IndexEntry {
         private final byte code;
         private String path;
         private final Object value;
@@ -246,8 +232,7 @@ public class EntityInsertBenchMark extends ToolBase
         private final UUID entityId;
 
 
-        public IndexEntry( UUID entityId, String path, Object value, UUID timestampUuid )
-        {
+        public IndexEntry( UUID entityId, String path, Object value, UUID timestampUuid ) {
             this.entityId = entityId;
             this.path = path;
             this.value = value;
@@ -256,38 +241,32 @@ public class EntityInsertBenchMark extends ToolBase
         }
 
 
-        public String getPath()
-        {
+        public String getPath() {
             return path;
         }
 
 
-        public void setPath( String path )
-        {
+        public void setPath( String path ) {
             this.path = path;
         }
 
 
-        public Object getValue()
-        {
+        public Object getValue() {
             return value;
         }
 
 
-        public byte getValueCode()
-        {
+        public byte getValueCode() {
             return code;
         }
 
 
-        public UUID getTimestampUuid()
-        {
+        public UUID getTimestampUuid() {
             return timestampUuid;
         }
 
 
-        public DynamicComposite getIndexComposite()
-        {
+        public DynamicComposite getIndexComposite() {
             return new DynamicComposite( code, value, entityId, timestampUuid );
         }
     }

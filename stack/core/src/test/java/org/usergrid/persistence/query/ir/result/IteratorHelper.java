@@ -10,11 +10,9 @@ import java.util.UUID;
  * @author: tnine
  *
  */
-public class IteratorHelper
-{
+public class IteratorHelper {
 
-    public static ScanColumn uuidColumn( UUID value )
-    {
+    public static ScanColumn uuidColumn( UUID value ) {
         return new UUIDIndexSliceParser.UUIDColumn( value, ByteBuffer.allocate( 0 ) );
     }
 }

@@ -32,23 +32,20 @@ import com.google.common.util.concurrent.Service.State;
  *
  * @author tnine
  */
-public class AbstractSchedulerRuntimeIT
-{
+public class AbstractSchedulerRuntimeIT {
     public static CassandraResource cassandraResource = SchedulerITSuite.cassandraResource;
     protected SchedulerService scheduler;
     protected Properties props;
 
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         scheduler = cassandraResource.getBean( SchedulerService.class );
         props = cassandraResource.getBean( "properties", Properties.class );
 
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
-        if ( jobScheduler.state() != State.RUNNING )
-        {
+        if ( jobScheduler.state() != State.RUNNING ) {
             jobScheduler.startAndWait();
         }
     }

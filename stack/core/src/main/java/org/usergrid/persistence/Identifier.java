@@ -27,11 +27,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.usergrid.utils.UUIDUtils;
 
 
-public class Identifier implements Serializable
-{
+public class Identifier implements Serializable {
 
-    public enum Type
-    {
+    public enum Type {
         UUID, NAME, EMAIL
     }
 
@@ -43,38 +41,30 @@ public class Identifier implements Serializable
     static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./]*" );
 
 
-    private Identifier( Type type, Object value )
-    {
+    private Identifier( Type type, Object value ) {
         this.type = type;
         this.value = value;
     }
 
 
-    public static Identifier from( Object obj )
-    {
-        if ( obj == null )
-        {
+    public static Identifier from( Object obj ) {
+        if ( obj == null ) {
             return null;
         }
-        if ( obj instanceof UUID )
-        {
+        if ( obj instanceof UUID ) {
             return new Identifier( Type.UUID, obj );
         }
-        if ( obj instanceof String )
-        {
+        if ( obj instanceof String ) {
             UUID uuid = UUIDUtils.tryGetUUID( ( String ) obj );
-            if ( uuid != null )
-            {
+            if ( uuid != null ) {
                 return new Identifier( Type.UUID, uuid );
             }
             Matcher m = emailRegEx.matcher( ( String ) obj );
-            if ( m.matches() )
-            {
+            if ( m.matches() ) {
                 return new Identifier( Type.EMAIL, ( ( String ) obj ).toLowerCase() );
             }
             m = nameRegEx.matcher( ( String ) obj );
-            if ( m.matches() )
-            {
+            if ( m.matches() ) {
                 return new Identifier( Type.NAME, ( ( String ) obj ).toLowerCase() );
             }
         }
@@ -82,30 +72,24 @@ public class Identifier implements Serializable
     }
 
 
-    public static Identifier fromUUID( UUID uuid )
-    {
-        if ( uuid == null )
-        {
+    public static Identifier fromUUID( UUID uuid ) {
+        if ( uuid == null ) {
             return null;
         }
         return new Identifier( Type.UUID, uuid );
     }
 
 
-    public static Identifier fromName( String name )
-    {
-        if ( name == null )
-        {
+    public static Identifier fromName( String name ) {
+        if ( name == null ) {
             return null;
         }
         return new Identifier( Type.NAME, name );
     }
 
 
-    public static Identifier fromEmail( String email )
-    {
-        if ( email == null )
-        {
+    public static Identifier fromEmail( String email ) {
+        if ( email == null ) {
             return null;
         }
         return new Identifier( Type.EMAIL, email );
@@ -113,10 +97,8 @@ public class Identifier implements Serializable
 
 
     @JsonIgnore
-    public UUID getUUID()
-    {
-        if ( type != Type.UUID )
-        {
+    public UUID getUUID() {
+        if ( type != Type.UUID ) {
             return null;
         }
         return ( UUID ) value;
@@ -124,17 +106,14 @@ public class Identifier implements Serializable
 
 
     @JsonIgnore
-    public boolean isUUID()
-    {
+    public boolean isUUID() {
         return type == Type.UUID;
     }
 
 
     @JsonIgnore
-    public String getEmail()
-    {
-        if ( type != Type.EMAIL )
-        {
+    public String getEmail() {
+        if ( type != Type.EMAIL ) {
             return null;
         }
         return ( String ) value;
@@ -142,17 +121,14 @@ public class Identifier implements Serializable
 
 
     @JsonIgnore
-    public boolean isEmail()
-    {
+    public boolean isEmail() {
         return type == Type.EMAIL;
     }
 
 
     @JsonIgnore
-    public String getName()
-    {
-        if ( type != Type.NAME )
-        {
+    public String getName() {
+        if ( type != Type.NAME ) {
             return null;
         }
         return ( String ) value;
@@ -160,28 +136,24 @@ public class Identifier implements Serializable
 
 
     @JsonIgnore
-    public boolean isName()
-    {
+    public boolean isName() {
         return type == Type.NAME;
     }
 
 
-    public Type getType()
-    {
+    public Type getType() {
         return type;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return value != null ? value.toString() : null;
     }
 
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
@@ -191,52 +163,39 @@ public class Identifier implements Serializable
 
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
             return true;
         }
-        if ( obj == null )
-        {
+        if ( obj == null ) {
             return false;
         }
-        if ( getClass() != obj.getClass() )
-        {
+        if ( getClass() != obj.getClass() ) {
             return false;
         }
         Identifier other = ( Identifier ) obj;
-        if ( type != other.type )
-        {
+        if ( type != other.type ) {
             return false;
         }
-        if ( value == null )
-        {
-            if ( other.value != null )
-            {
+        if ( value == null ) {
+            if ( other.value != null ) {
                 return false;
             }
         }
-        else if ( !value.equals( other.value ) )
-        {
+        else if ( !value.equals( other.value ) ) {
             return false;
         }
         return true;
     }
 
 
-    public static List<Identifier> fromList( List<String> l )
-    {
+    public static List<Identifier> fromList( List<String> l ) {
         List<Identifier> identifiers = null;
-        if ( ( l != null ) && ( l.size() > 0 ) )
-        {
-            for ( String s : l )
-            {
+        if ( ( l != null ) && ( l.size() > 0 ) ) {
+            for ( String s : l ) {
                 Identifier identifier = Identifier.from( s );
-                if ( identifier != null )
-                {
-                    if ( identifiers == null )
-                    {
+                if ( identifier != null ) {
+                    if ( identifiers == null ) {
                         identifiers = new ArrayList<Identifier>();
                     }
                     identifiers.add( identifier );
@@ -248,22 +207,18 @@ public class Identifier implements Serializable
 
 
     // for serialization
-    public Identifier()
-    { }
+    public Identifier() { }
 
 
     // for serialization
-    public Object getValue()
-    {
+    public Object getValue() {
         return value;
     }
 
 
     // for serialization
-    public void setValue( Object value )
-    {
-        if ( isUUID() && value instanceof String )
-        {
+    public void setValue( Object value ) {
+        if ( isUUID() && value instanceof String ) {
             value = UUID.fromString( ( String ) value );
         }
         this.value = value;

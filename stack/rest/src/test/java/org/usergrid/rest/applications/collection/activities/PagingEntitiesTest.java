@@ -23,16 +23,14 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class PagingEntitiesTest extends AbstractRestIT
-{
+public class PagingEntitiesTest extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test //USERGRID-266
-    public void pageThroughConnectedEntities()
-    {
+    public void pageThroughConnectedEntities() {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -46,14 +44,12 @@ public class PagingEntitiesTest extends AbstractRestIT
         props.put( "actor", actor );
         props.put( "verb", "go" );
 
-        for ( int i = 0; i < maxSize; i++ )
-        {
+        for ( int i = 0; i < maxSize; i++ ) {
 
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
             verifyCreated[i] = activity.findValue( "created" ).getLongValue();
-            if ( i == 0 )
-            {
+            if ( i == 0 ) {
                 created = activity.findValue( "created" ).getLongValue();
             }
         }
@@ -63,17 +59,14 @@ public class PagingEntitiesTest extends AbstractRestIT
 
         JsonNode node = activities.query( query, "limit", "2" ); //activities.query(query,"");
         int index = 0;
-        while ( node.get( "entities" ).get( "created" ) != null )
-        {
+        while ( node.get( "entities" ).get( "created" ) != null ) {
             assertEquals( 2, node.get( "entities" ).size() );
 
-            if ( node.get( "cursor" ) != null )
-            {
+            if ( node.get( "cursor" ) != null ) {
                 node = activities.query( query, "cursor", node.get( "cursor" ).toString() );
             }
 
-            else
-            {
+            else {
                 break;
             }
         }
@@ -81,8 +74,7 @@ public class PagingEntitiesTest extends AbstractRestIT
 
 
     @Test //USERGRID-1253
-    public void pagingQueryReturnCorrectResults() throws Exception
-    {
+    public void pagingQueryReturnCorrectResults() throws Exception {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -95,22 +87,18 @@ public class PagingEntitiesTest extends AbstractRestIT
         props.put( "actor", actor );
         props.put( "content", "bragh" );
 
-        for ( int i = 0; i < maxSize; i++ )
-        {
+        for ( int i = 0; i < maxSize; i++ ) {
 
-            if ( i > 17 && i < 23 )
-            {
+            if ( i > 17 && i < 23 ) {
                 props.put( "verb", "stop" );
             }
-            else
-            {
+            else {
                 props.put( "verb", "go" );
             }
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
             verifyCreated[i] = activity.findValue( "created" ).getLongValue();
-            if ( i == 18 )
-            {
+            if ( i == 18 ) {
                 created = activity.findValue( "created" ).getLongValue();
             }
         }
@@ -119,8 +107,7 @@ public class PagingEntitiesTest extends AbstractRestIT
 
         JsonNode node = activities.withQuery( query ).get();
 
-        for ( int index = 0; index < 5; index++ )
-        {
+        for ( int index = 0; index < 5; index++ ) {
             assertEquals( verifyCreated[maxSize - 1 - index],
                     node.get( "entities" ).get( index ).get( "created" ).getLongValue() );
         }

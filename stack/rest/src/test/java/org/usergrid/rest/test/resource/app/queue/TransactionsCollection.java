@@ -21,18 +21,15 @@ import org.usergrid.rest.test.resource.ValueResource;
 
 
 /** @author tnine */
-public class TransactionsCollection extends ValueResource
-{
+public class TransactionsCollection extends ValueResource {
 
 
-    public TransactionsCollection( NamedResource parent )
-    {
+    public TransactionsCollection( NamedResource parent ) {
         super( "transactions", parent );
     }
 
 
-    public Transaction transaction( String id )
-    {
+    public Transaction transaction( String id ) {
         return new Transaction( id, this );
     }
 }

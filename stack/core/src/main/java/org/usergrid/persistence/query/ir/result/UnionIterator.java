@@ -31,8 +31,7 @@ import com.google.common.collect.Sets;
  *
  * @author tnine
  */
-public class UnionIterator extends MultiIterator
-{
+public class UnionIterator extends MultiIterator {
 
     /** results that were left from our previous union. These are kept and returned before advancing iterators */
     private Set<ScanColumn> remainderResults;
@@ -43,8 +42,7 @@ public class UnionIterator extends MultiIterator
     /**
      * @param pageSize
      */
-    public UnionIterator( int pageSize )
-    {
+    public UnionIterator( int pageSize ) {
         super( pageSize );
     }
 
@@ -55,25 +53,21 @@ public class UnionIterator extends MultiIterator
      * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
      */
     @Override
-    protected Set<ScanColumn> advance()
-    {
+    protected Set<ScanColumn> advance() {
 
         int size = iterators.size();
 
-        if ( size == 0 )
-        {
+        if ( size == 0 ) {
             return null;
         }
 
         Set<ScanColumn> resultSet = null;
 
-        if ( remainderResults != null )
-        {
+        if ( remainderResults != null ) {
             resultSet = remainderResults;
             remainderResults = null;
         }
-        else
-        {
+        else {
             resultSet = new LinkedHashSet<ScanColumn>();
         }
 
@@ -84,15 +78,13 @@ public class UnionIterator extends MultiIterator
 
         int complete = 0;
 
-        while ( resultSet.size() < pageSize && complete < size )
-        {
+        while ( resultSet.size() < pageSize && complete < size ) {
 
             currentIndex = ( currentIndex + 1 ) % iterators.size();
 
             ResultIterator itr = iterators.get( currentIndex );
 
-            if ( !itr.hasNext() )
-            {
+            if ( !itr.hasNext() ) {
                 complete++;
                 continue;
             }
@@ -101,21 +93,18 @@ public class UnionIterator extends MultiIterator
         }
 
         // now check if we need to split our results if they went over the page size
-        if ( resultSet.size() > pageSize )
-        {
+        if ( resultSet.size() > pageSize ) {
             Set<ScanColumn> returnSet = new LinkedHashSet<ScanColumn>( pageSize );
 
             Iterator<ScanColumn> itr = resultSet.iterator();
 
-            for ( int i = 0; i < pageSize && itr.hasNext(); i++ )
-            {
+            for ( int i = 0; i < pageSize && itr.hasNext(); i++ ) {
                 returnSet.add( itr.next() );
             }
 
             remainderResults = new LinkedHashSet<ScanColumn>( pageSize );
 
-            while ( itr.hasNext() )
-            {
+            while ( itr.hasNext() ) {
                 remainderResults.add( itr.next() );
             }
 
@@ -134,11 +123,9 @@ public class UnionIterator extends MultiIterator
      * org.usergrid.persistence.cassandra.CursorCache)
      */
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded )
-    {
+    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
         //we can create a cursor for every iterator in our union
-        for ( ResultIterator current : iterators )
-        {
+        for ( ResultIterator current : iterators ) {
             current.finalizeCursor( cache, lastLoaded );
         }
     }

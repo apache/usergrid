@@ -63,8 +63,7 @@ import static org.usergrid.utils.ConversionUtils.string;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 } )
-public class UserResource extends AbstractContextResource
-{
+public class UserResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( UserResource.class );
 
@@ -75,13 +74,11 @@ public class UserResource extends AbstractContextResource
     String token;
 
 
-    public UserResource()
-    {
+    public UserResource() {
     }
 
 
-    public UserResource init( UserInfo user )
-    {
+    public UserResource init( UserInfo user ) {
         this.user = user;
         return this;
     }
@@ -89,16 +86,14 @@ public class UserResource extends AbstractContextResource
 
     @RequireAdminUserAccess
     @Path( "organizations" )
-    public OrganizationsResource getUserOrganizations( @Context UriInfo ui ) throws Exception
-    {
+    public OrganizationsResource getUserOrganizations( @Context UriInfo ui ) throws Exception {
         return getSubResource( OrganizationsResource.class ).init( user );
     }
 
 
     @RequireAdminUserAccess
     @Path( "orgs" )
-    public OrganizationsResource getUserOrganizations2( @Context UriInfo ui ) throws Exception
-    {
+    public OrganizationsResource getUserOrganizations2( @Context UriInfo ui ) throws Exception {
         return getSubResource( OrganizationsResource.class ).init( user );
     }
 
@@ -106,15 +101,12 @@ public class UserResource extends AbstractContextResource
     @PUT
     public JSONWithPadding setUserInfo( @Context UriInfo ui, Map<String, Object> json,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( json == null )
-        {
+        if ( json == null ) {
             return null;
         }
-        if ( string( json.get( "oldpassword" ) ) != null )
-        {
+        if ( string( json.get( "oldpassword" ) ) != null ) {
             setUserPasswordPut( ui, json, callback );
             json.remove( "oldpassword" );
             json.remove( "newpassword" );
@@ -137,23 +129,19 @@ public class UserResource extends AbstractContextResource
     @Path( "password" )
     public JSONWithPadding setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( json == null )
-        {
+        if ( json == null ) {
             return null;
         }
 
         String oldPassword = string( json.get( "oldpassword" ) );
         String newPassword = string( json.get( "newpassword" ) );
 
-        if ( isServiceAdmin() )
-        {
+        if ( isServiceAdmin() ) {
             management.setAdminUserPassword( user.getUuid(), newPassword );
         }
-        else
-        {
+        else {
             management.setAdminUserPassword( user.getUuid(), oldPassword, newPassword );
         }
 
@@ -168,8 +156,7 @@ public class UserResource extends AbstractContextResource
     @Path( "password" )
     public JSONWithPadding setUserPasswordPost( @Context UriInfo ui, Map<String, Object> json,
                                                 @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
         return setUserPasswordPut( ui, json, callback );
     }
 
@@ -179,8 +166,7 @@ public class UserResource extends AbstractContextResource
     @Path( "feed" )
     public JSONWithPadding getFeed( @Context UriInfo ui,
                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get admin user feed" );
@@ -198,8 +184,7 @@ public class UserResource extends AbstractContextResource
     public JSONWithPadding getUserData( @Context UriInfo ui, @QueryParam( "ttl" ) long ttl,
                                         @QueryParam( "shallow" ) boolean shallow,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get admin user" );
@@ -217,28 +202,22 @@ public class UserResource extends AbstractContextResource
     @GET
     @Path( "resetpw" )
     @Produces( MediaType.TEXT_HTML )
-    public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token )
-    {
+    public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        try
-        {
+        try {
             this.token = token;
 
-            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) )
-            {
+            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
                 return handleViewable( "resetpw_set_form", this );
             }
-            else
-            {
+            else {
                 return handleViewable( "resetpw_email_form", this );
             }
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -252,11 +231,9 @@ public class UserResource extends AbstractContextResource
                                              @FormParam( "password1" ) String password1,
                                              @FormParam( "password2" ) String password2,
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
-                                             @FormParam( "recaptcha_response_field" ) String uresponse )
-    {
+                                             @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
-        try
-        {
+        try {
             this.token = token;
 
             //      if(user == null) {
@@ -264,31 +241,25 @@ public class UserResource extends AbstractContextResource
             //        return handleViewable("resetpw_set_form",this);
             //      }
 
-            if ( ( password1 != null ) || ( password2 != null ) )
-            {
-                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) )
-                {
-                    if ( ( password1 != null ) && password1.equals( password2 ) )
-                    {
+            if ( ( password1 != null ) || ( password2 != null ) ) {
+                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
+                    if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAdminUserPassword( user.getUuid(), password1 );
                         management.revokeAccessTokenForAdminUser( user.getUuid(), token );
                         return handleViewable( "resetpw_set_success", this );
                     }
-                    else
-                    {
+                    else {
                         errorMsg = "Passwords didn't match, let's try again...";
                         return handleViewable( "resetpw_set_form", this );
                     }
                 }
-                else
-                {
+                else {
                     errorMsg = "Sorry, you have an invalid token. Let's try again...";
                     return handleViewable( "resetpw_email_form", this );
                 }
             }
 
-            if ( !useReCaptcha() )
-            {
+            if ( !useReCaptcha() ) {
                 management.startAdminUserPasswordResetFlow( user );
                 return handleViewable( "resetpw_email_success", this );
             }
@@ -299,42 +270,35 @@ public class UserResource extends AbstractContextResource
             ReCaptchaResponse reCaptchaResponse =
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
-            if ( reCaptchaResponse.isValid() )
-            {
+            if ( reCaptchaResponse.isValid() ) {
                 management.startAdminUserPasswordResetFlow( user );
                 return handleViewable( "resetpw_email_success", this );
             }
-            else
-            {
+            else {
                 errorMsg = "Incorrect Captcha";
                 return handleViewable( "resetpw_email_form", this );
             }
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
 
 
-    public String getErrorMsg()
-    {
+    public String getErrorMsg() {
         return errorMsg;
     }
 
 
-    public String getToken()
-    {
+    public String getToken() {
         return token;
     }
 
 
-    public UserInfo getUser()
-    {
+    public UserInfo getUser() {
         return user;
     }
 
@@ -342,24 +306,19 @@ public class UserResource extends AbstractContextResource
     @GET
     @Path( "activate" )
     @Produces( MediaType.TEXT_HTML )
-    public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token )
-    {
+    public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        try
-        {
+        try {
             management.handleActivationTokenForAdminUser( user.getUuid(), token );
             return handleViewable( "activate", this );
         }
-        catch ( TokenException e )
-        {
+        catch ( TokenException e ) {
             return handleViewable( "bad_activation_token", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -368,28 +327,22 @@ public class UserResource extends AbstractContextResource
     @GET
     @Path( "confirm" )
     @Produces( MediaType.TEXT_HTML )
-    public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token )
-    {
+    public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        try
-        {
+        try {
             ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), token );
-            if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION )
-            {
+            if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
                 return handleViewable( "confirm", this );
             }
             return handleViewable( "activate", this );
         }
-        catch ( TokenException e )
-        {
+        catch ( TokenException e ) {
             return handleViewable( "bad_confirmation_token", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return new Viewable( "error", e );
         }
     }
@@ -399,8 +352,7 @@ public class UserResource extends AbstractContextResource
     @Path( "reactivate" )
     public JSONWithPadding reactivate( @Context UriInfo ui,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "Send activation email for user: " + user.getUuid() );
 
@@ -417,8 +369,7 @@ public class UserResource extends AbstractContextResource
     @Path( "revoketokens" )
     public JSONWithPadding revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         UUID adminId = user.getUuid();
 
@@ -437,8 +388,7 @@ public class UserResource extends AbstractContextResource
     @Path( "revoketokens" )
     public JSONWithPadding revokeTokensPut( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
         return revokeTokensPost( ui, callback );
     }
 
@@ -447,8 +397,7 @@ public class UserResource extends AbstractContextResource
     @Path( "revoketoken" )
     public JSONWithPadding revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                                            @QueryParam( "token" ) String token ) throws Exception
-    {
+                                            @QueryParam( "token" ) String token ) throws Exception {
 
         UUID adminId = user.getUuid();
         this.token = token;
@@ -468,8 +417,7 @@ public class UserResource extends AbstractContextResource
     @Path( "revoketoken" )
     public JSONWithPadding revokeTokenPut( @Context UriInfo ui,
                                            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                                           @QueryParam( "token" ) String token ) throws Exception
-    {
+                                           @QueryParam( "token" ) String token ) throws Exception {
         return revokeTokenPost( ui, callback, token );
     }
 }

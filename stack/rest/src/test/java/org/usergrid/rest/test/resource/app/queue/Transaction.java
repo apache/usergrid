@@ -28,8 +28,7 @@ import com.sun.jersey.api.client.WebResource;
  *
  * @author tnine
  */
-public class Transaction extends CollectionResource
-{
+public class Transaction extends CollectionResource {
 
     private String clientId;
     private long timeout = 0;
@@ -38,44 +37,37 @@ public class Transaction extends CollectionResource
     /**
      *
      */
-    public Transaction( String transactionName, NamedResource parent )
-    {
+    public Transaction( String transactionName, NamedResource parent ) {
         super( transactionName, parent );
     }
 
 
     /** Set the client id with the string */
-    public Transaction withClientId( String clientId )
-    {
+    public Transaction withClientId( String clientId ) {
         this.clientId = clientId;
         return this;
     }
 
 
     /** post to the entity set */
-    public JsonNode delete()
-    {
+    public JsonNode delete() {
         return jsonMedia( withParams( withToken( resource() ) ) ).delete( JsonNode.class );
     }
 
 
     /** Renew this transaction to the set timeout */
-    public JsonNode renew( long timeout )
-    {
+    public JsonNode renew( long timeout ) {
         this.timeout = timeout;
         return super.putInternal( null );
     }
 
 
     /** Set the queue client ID if set */
-    protected WebResource withParams( WebResource resource )
-    {
-        if ( clientId != null )
-        {
+    protected WebResource withParams( WebResource resource ) {
+        if ( clientId != null ) {
             resource = resource.queryParam( "consumer", clientId );
         }
-        if ( timeout > 0 )
-        {
+        if ( timeout > 0 ) {
             resource = resource.queryParam( "timeout", String.valueOf( timeout ) );
         }
 

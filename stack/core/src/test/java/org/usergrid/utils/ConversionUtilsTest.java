@@ -25,12 +25,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class ConversionUtilsTest
-{
+public class ConversionUtilsTest {
 
     @Test
-    public void testBytes()
-    {
+    public void testBytes() {
         byte[] bytes = ConversionUtils.bytes( true );
         assertNotNull( "bytes() on boolean true returned null", bytes );
         assertTrue( "bytes() on boolean true returned wrong size byte array:" + bytes.length, bytes.length == 1 );
@@ -44,8 +42,7 @@ public class ConversionUtilsTest
         bytes = ConversionUtils.bytes( new UUID( 0, 0 ) );
         assertNotNull( "bytes() on uuid(0, 0) returned null", bytes );
         assertTrue( "bytes() on uuid(0, 0) returned wrong size byte array:" + bytes.length, bytes.length == 16 );
-        for ( byte b : bytes )
-        {
+        for ( byte b : bytes ) {
             assertTrue( "bytes() on uuid(0, 0) returned wrong value:" + b, b == 0 );
         }
     }

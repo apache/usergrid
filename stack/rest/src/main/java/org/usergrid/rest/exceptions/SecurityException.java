@@ -27,8 +27,7 @@ import static org.usergrid.utils.JsonUtils.mapToJsonString;
  * <p> A runtime exception representing a failure to provide correct authentication credentials. Will result in the
  * browser presenting a password challenge if a realm is provided. </p>
  */
-public class SecurityException extends RuntimeException
-{
+public class SecurityException extends RuntimeException {
 
     public static final String REALM = "Usergrid Authentication";
 
@@ -38,61 +37,52 @@ public class SecurityException extends RuntimeException
     private String type = null;
 
 
-    private SecurityException( String type, String message, String realm )
-    {
+    private SecurityException( String type, String message, String realm ) {
         super( message );
         this.type = type;
         this.realm = realm;
     }
 
 
-    public String getRealm()
-    {
+    public String getRealm() {
         return realm;
     }
 
 
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
 
-    public String getJsonResponse()
-    {
+    public String getJsonResponse() {
         ApiResponse response = new ApiResponse();
         response.setError( type, getMessage(), this );
         return mapToJsonString( response );
     }
 
 
-    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo )
-    {
+    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo ) {
         return mappableSecurityException( errorInfo.getType(), errorInfo.getMessage() );
     }
 
 
-    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo, String message )
-    {
+    public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo, String message ) {
         return mappableSecurityException( errorInfo.getType(), message );
     }
 
 
-    public static MappableContainerException mappableSecurityException( String type, String message )
-    {
+    public static MappableContainerException mappableSecurityException( String type, String message ) {
         return new MappableContainerException( new SecurityException( type, message, null ) );
     }
 
 
     public static MappableContainerException mappableSecurityException( AuthErrorInfo errorInfo, String message,
-                                                                        String realm )
-    {
+                                                                        String realm ) {
         return mappableSecurityException( errorInfo.getType(), message, realm );
     }
 
 
-    public static MappableContainerException mappableSecurityException( String type, String message, String realm )
-    {
+    public static MappableContainerException mappableSecurityException( String type, String message, String realm ) {
         return new MappableContainerException( new SecurityException( type, message, realm ) );
     }
 }

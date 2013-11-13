@@ -35,8 +35,7 @@ import me.prettyprint.hector.api.beans.HColumn;
  *
  * @author tnine
  */
-public class SliceIterator implements ResultIterator
-{
+public class SliceIterator implements ResultIterator {
 
     private final LinkedHashMap<UUID, ScanColumn> cols;
     private final QuerySlice slice;
@@ -62,8 +61,7 @@ public class SliceIterator implements ResultIterator
      * @param parser The parser for the scanner results
      * @param skipFirst True if the first record should be skipped, used with cursors
      */
-    public SliceIterator( QuerySlice slice, IndexScanner scanner, SliceParser parser, boolean skipFirst )
-    {
+    public SliceIterator( QuerySlice slice, IndexScanner scanner, SliceParser parser, boolean skipFirst ) {
         this.slice = slice;
         this.parser = parser;
         this.scanner = scanner;
@@ -80,8 +78,7 @@ public class SliceIterator implements ResultIterator
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<ScanColumn>> iterator()
-    {
+    public Iterator<Set<ScanColumn>> iterator() {
         return this;
     }
 
@@ -92,10 +89,8 @@ public class SliceIterator implements ResultIterator
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext()
-    {
-        if ( lastResult == null )
-        {
+    public boolean hasNext() {
+        if ( lastResult == null ) {
             return load();
         }
 
@@ -103,10 +98,8 @@ public class SliceIterator implements ResultIterator
     }
 
 
-    private boolean load()
-    {
-        if ( !scanner.hasNext() )
-        {
+    private boolean load() {
+        if ( !scanner.hasNext() ) {
             return false;
         }
 
@@ -117,23 +110,20 @@ public class SliceIterator implements ResultIterator
         /**
          * Skip the first value, it's from the previous cursor
          */
-        if ( skipFirst && pagesLoaded == 0 && results.hasNext() )
-        {
+        if ( skipFirst && pagesLoaded == 0 && results.hasNext() ) {
             results.next();
         }
 
         parsedCols.clear();
 
-        while ( results.hasNext() )
-        {
+        while ( results.hasNext() ) {
 
             ByteBuffer colName = results.next().getName().duplicate();
 
             ScanColumn parsed = parser.parse( colName );
 
             //skip this value, the parser has discarded it
-            if ( parsed == null )
-            {
+            if ( parsed == null ) {
                 continue;
             }
 
@@ -156,8 +146,7 @@ public class SliceIterator implements ResultIterator
      * @see java.util.Iterator#next()
      */
     @Override
-    public Set<ScanColumn> next()
-    {
+    public Set<ScanColumn> next() {
         Set<ScanColumn> temp = lastResult;
         lastResult = null;
         return temp;
@@ -170,8 +159,7 @@ public class SliceIterator implements ResultIterator
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "Remove is not supported" );
     }
 
@@ -182,11 +170,9 @@ public class SliceIterator implements ResultIterator
      * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
      */
     @Override
-    public void reset()
-    {
+    public void reset() {
         // Do nothing, we'll just return the first page again
-        if ( pagesLoaded == 1 )
-        {
+        if ( pagesLoaded == 1 ) {
             lastResult = parsedCols;
             return;
         }
@@ -201,14 +187,12 @@ public class SliceIterator implements ResultIterator
      * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
      */
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded )
-    {
+    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
         int sliceHash = slice.hashCode();
 
         ByteBuffer bytes = cols.get( lastLoaded ).getCursorValue();
 
-        if ( bytes == null )
-        {
+        if ( bytes == null ) {
             return;
         }
 

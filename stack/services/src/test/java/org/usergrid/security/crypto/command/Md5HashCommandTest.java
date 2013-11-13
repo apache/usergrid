@@ -27,12 +27,10 @@ import static org.junit.Assert.assertArrayEquals;
 
 
 /** @author tnine */
-public class Md5HashCommandTest
-{
+public class Md5HashCommandTest {
 
     @Test
-    public void hashAndAuthCorrect() throws UnsupportedEncodingException
-    {
+    public void hashAndAuthCorrect() throws UnsupportedEncodingException {
 
         String test = "I'm a  test password";
 
@@ -54,8 +52,7 @@ public class Md5HashCommandTest
 
 
     @Test
-    public void legacyCompatible() throws UnsupportedEncodingException
-    {
+    public void legacyCompatible() throws UnsupportedEncodingException {
         String test = "secret";
 
 

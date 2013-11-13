@@ -24,26 +24,22 @@ import org.apache.commons.codec.binary.Base64;
 import static org.usergrid.utils.ConversionUtils.bytes;
 
 
-public class CodecUtils
-{
+public class CodecUtils {
 
     public static Base64 base64 = new Base64( true );
 
 
-    public static String base64( byte[] bytes )
-    {
+    public static String base64( byte[] bytes ) {
         return base64.encodeToString( bytes );
     }
 
 
-    public static String base64( UUID uuid )
-    {
+    public static String base64( UUID uuid ) {
         return base64.encodeToString( bytes( uuid ) );
     }
 
 
-    public static String base64( String str )
-    {
+    public static String base64( String str ) {
         return Base64.encodeBase64URLSafeString( bytes( str ) );
     }
 }

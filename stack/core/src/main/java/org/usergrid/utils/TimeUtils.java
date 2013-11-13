@@ -21,8 +21,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 
 
-public class TimeUtils
-{
+public class TimeUtils {
     /**
      * Jira-style duration parser. Supported duration strings are: <ul> <li>'S': milliseconds</li> <li>'s': seconds</li>
      * <li>'m': minutes</li> <li>'h': hours</li> <li>'d': days</li> </ul>
@@ -34,13 +33,11 @@ public class TimeUtils
      *
      * @return the number of milliseconds representing the duration
      */
-    public static long millisFromDuration( String durationStr )
-    {
+    public static long millisFromDuration( String durationStr ) {
         long total = 0;
         MultiplierToken mt;
         long dur;
-        for ( String val : Splitter.on( ',' ).trimResults().omitEmptyStrings().split( durationStr ) )
-        {
+        for ( String val : Splitter.on( ',' ).trimResults().omitEmptyStrings().split( durationStr ) ) {
             dur = Long.parseLong( CharMatcher.DIGIT.retainFrom( val ) );
             mt = MultiplierToken.from( val.charAt( val.length() - 1 ) );
             total += ( mt.multiplier * dur );
@@ -49,8 +46,7 @@ public class TimeUtils
     }
 
 
-    private enum MultiplierToken
-    {
+    private enum MultiplierToken {
         MILSEC_TOKEN( 'S', 1L ),
         SEC_TOKEN( 's', 1000L ),
         MIN_TOKEN( 'm', 60000L ),
@@ -61,17 +57,14 @@ public class TimeUtils
         final long multiplier;
 
 
-        MultiplierToken( char token, long multiplier )
-        {
+        MultiplierToken( char token, long multiplier ) {
             this.token = token;
             this.multiplier = multiplier;
         }
 
 
-        static MultiplierToken from( char c )
-        {
-            switch ( c )
-            {
+        static MultiplierToken from( char c ) {
+            switch ( c ) {
                 case 's':
                     return SEC_TOKEN;
                 case 'm':
@@ -86,8 +79,7 @@ public class TimeUtils
                     break;
             }
 
-            if ( CharMatcher.DIGIT.matches( c ) )
-            {
+            if ( CharMatcher.DIGIT.matches( c ) ) {
                 return MILSEC_TOKEN;
             }
             throw new IllegalArgumentException( "Duration token was not on of [S,s,m,h,d] but was " + c );

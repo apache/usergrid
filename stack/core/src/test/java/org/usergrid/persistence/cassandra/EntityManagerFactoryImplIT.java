@@ -47,8 +47,7 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class EntityManagerFactoryImplIT extends AbstractCoreIT
-{
+public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
@@ -56,22 +55,19 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
 
-    public EntityManagerFactoryImplIT()
-    {
+    public EntityManagerFactoryImplIT() {
         emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
     }
 
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
         logger.info( "setup" );
     }
 
 
     @AfterClass
-    public static void teardown() throws Exception
-    {
+    public static void teardown() throws Exception {
         logger.info( "teardown" );
     }
 
@@ -81,10 +77,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
     TraceTagReporter traceTagReporter;
 
 
-    public UUID createApplication( String organizationName, String applicationName ) throws Exception
-    {
-        if ( USE_DEFAULT_DOMAIN )
-        {
+    public UUID createApplication( String organizationName, String applicationName ) throws Exception {
+        if ( USE_DEFAULT_DOMAIN ) {
             return CassandraService.DEFAULT_APPLICATION_ID;
         }
         return emf.createApplication( organizationName, applicationName );
@@ -92,8 +86,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
 
 
     @Before
-    public void initTracing()
-    {
+    public void initTracing() {
         traceTagManager = CoreITSuite.cassandraResource.getBean( "traceTagManager", TraceTagManager.class );
         traceTagReporter = CoreITSuite.cassandraResource.getBean( "traceTagReporter", TraceTagReporter.class );
     }
@@ -101,8 +94,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
 
     @Test
     @Ignore("Fix this EntityManagerFactoryImplIT.testCreateAndGet:105->createApplication:90 » ApplicationAlreadyExists")
-    public void testCreateAndGet() throws Exception
-    {
+    public void testCreateAndGet() throws Exception {
         TraceTag traceTag = traceTagManager.create( "testCreateAndGet" );
         traceTagManager.attach( traceTag );
         logger.info( "EntityDaoTest.testCreateAndGet" );
@@ -114,8 +106,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
 
         int i;
         List<Entity> things = new ArrayList<Entity>();
-        for ( i = 0; i < 10; i++ )
-        {
+        for ( i = 0; i < 10; i++ ) {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", "thing" + i );
 
@@ -129,8 +120,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
         assertEquals( "should be ten entities", 10, things.size() );
 
         i = 0;
-        for ( Entity entity : things )
-        {
+        for ( Entity entity : things ) {
 
             Entity thing = em.get( entity.getUuid() );
             assertNotNull( "thing should not be null", thing );
@@ -141,8 +131,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
         }
 
         List<UUID> ids = new ArrayList<UUID>();
-        for ( Entity entity : things )
-        {
+        for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
             Entity en = em.get( entity.getUuid() );
@@ -159,8 +148,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT
 
         i = 0;
         Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
-        for ( Entity thing : results )
-        {
+        for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );

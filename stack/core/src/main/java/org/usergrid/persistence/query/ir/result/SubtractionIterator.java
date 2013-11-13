@@ -30,29 +30,25 @@ import com.google.common.collect.Sets;
  *
  * @author tnine
  */
-public class SubtractionIterator extends MergeIterator
-{
+public class SubtractionIterator extends MergeIterator {
 
     private ResultIterator keepIterator;
     private ResultIterator subtractIterator;
 
 
-    public SubtractionIterator( int pageSize )
-    {
+    public SubtractionIterator( int pageSize ) {
         super( pageSize );
     }
 
 
     /** @param subtractIterator the subtractIterator to set */
-    public void setSubtractIterator( ResultIterator subtractIterator )
-    {
+    public void setSubtractIterator( ResultIterator subtractIterator ) {
         this.subtractIterator = subtractIterator;
     }
 
 
     /** @param keepIterator the keepIterator to set */
-    public void setKeepIterator( ResultIterator keepIterator )
-    {
+    public void setKeepIterator( ResultIterator keepIterator ) {
         this.keepIterator = keepIterator;
     }
 
@@ -63,8 +59,7 @@ public class SubtractionIterator extends MergeIterator
      * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
      */
     @Override
-    public void doReset()
-    {
+    public void doReset() {
         keepIterator.reset();
         subtractIterator.reset();
     }
@@ -76,22 +71,18 @@ public class SubtractionIterator extends MergeIterator
      * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
      */
     @Override
-    protected Set<ScanColumn> advance()
-    {
-        if ( !keepIterator.hasNext() )
-        {
+    protected Set<ScanColumn> advance() {
+        if ( !keepIterator.hasNext() ) {
             return null;
         }
 
         Set<ScanColumn> results = new LinkedHashSet<ScanColumn>( pageSize );
 
-        while ( keepIterator.hasNext() && results.size() < pageSize )
-        {
+        while ( keepIterator.hasNext() && results.size() < pageSize ) {
 
             Set<ScanColumn> keepPage = keepIterator.next();
 
-            while ( subtractIterator.hasNext() && keepPage.size() > 0 )
-            {
+            while ( subtractIterator.hasNext() && keepPage.size() > 0 ) {
                 keepPage = Sets.difference( keepPage, subtractIterator.next() );
             }
 
@@ -109,9 +100,9 @@ public class SubtractionIterator extends MergeIterator
      * .CursorCache)
      */
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastLoaded )
-    {
-        //we can only keep a cursor on our keep result set, we must subtract from every page of keep when loading results
+    public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
+        //we can only keep a cursor on our keep result set, we must subtract from every page of keep when loading
+        // results
         keepIterator.finalizeCursor( cache, lastLoaded );
     }
 }

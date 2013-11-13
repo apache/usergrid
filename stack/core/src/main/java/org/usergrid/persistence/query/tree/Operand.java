@@ -27,20 +27,17 @@ import org.usergrid.persistence.exceptions.PersistenceException;
  *
  * @author tnine
  */
-public abstract class Operand extends CommonTree
-{
+public abstract class Operand extends CommonTree {
 
 
     /** Default constructor to take a token */
-    public Operand( Token t )
-    {
+    public Operand( Token t ) {
         super( t );
     }
 
 
     /** Get the pointer to the parent node */
-    public Operand getParent()
-    {
+    public Operand getParent() {
         return ( Operand ) super.getParent();
     }
 

@@ -38,8 +38,7 @@ import static org.usergrid.services.ServiceParameter.parameters;
 
 
 @Concurrent()
-public class ServiceRequestIT
-{
+public class ServiceRequestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequestIT.class );
 
@@ -51,8 +50,7 @@ public class ServiceRequestIT
 
 
     @Test
-    public void testPaths() throws Exception
-    {
+    public void testPaths() throws Exception {
 
         UUID applicationId = DEFAULT_APPLICATION_ID;
 

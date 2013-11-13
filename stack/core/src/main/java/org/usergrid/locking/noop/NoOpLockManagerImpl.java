@@ -23,11 +23,9 @@ import org.usergrid.locking.LockManager;
 
 
 /** This is a no-op manager used for testing. */
-public class NoOpLockManagerImpl implements LockManager
-{
+public class NoOpLockManagerImpl implements LockManager {
 
-    public NoOpLockManagerImpl()
-    {
+    public NoOpLockManagerImpl() {
 
     }
 
@@ -36,8 +34,7 @@ public class NoOpLockManagerImpl implements LockManager
      * @see org.usergrid.locking.LockManager#createLock(java.util.UUID, java.lang.String[])
      */
     @Override
-    public Lock createLock( UUID applicationId, String... path )
-    {
+    public Lock createLock( UUID applicationId, String... path ) {
         return new NoOpLockImpl();
     }
 }

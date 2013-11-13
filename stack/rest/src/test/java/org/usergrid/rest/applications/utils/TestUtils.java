@@ -25,23 +25,19 @@ import org.usergrid.utils.UUIDUtils;
 
 /** @author tnine */
 @Ignore("Not a test")
-public class TestUtils
-{
+public class TestUtils {
 
     /** Get the uuid at the given index for the root node.  If it doesn't exist, null is returned */
-    public static UUID getIdFromSearchResults( JsonNode rootNode, int index )
-    {
+    public static UUID getIdFromSearchResults( JsonNode rootNode, int index ) {
         JsonNode entityArray = rootNode.get( "entities" );
 
-        if ( entityArray == null )
-        {
+        if ( entityArray == null ) {
             return null;
         }
 
         JsonNode entity = entityArray.get( index );
 
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             return null;
         }
 

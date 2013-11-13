@@ -25,15 +25,13 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 
-public class Test extends ToolBase
-{
+public class Test extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( Test.class );
 
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option useSpring = OptionBuilder.create( "spring" );
 
@@ -45,12 +43,10 @@ public class Test extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         logger.info( "Starting test..." );
         boolean startSpring = line.hasOption( "spring" );
-        if ( startSpring )
-        {
+        if ( startSpring ) {
             startSpring();
         }
     }

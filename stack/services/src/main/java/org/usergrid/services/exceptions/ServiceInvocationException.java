@@ -20,8 +20,7 @@ import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceRequest;
 
 
-public class ServiceInvocationException extends ServiceException
-{
+public class ServiceInvocationException extends ServiceException {
 
     final ServiceRequest request;
     /**
@@ -30,64 +29,55 @@ public class ServiceInvocationException extends ServiceException
     private static final long serialVersionUID = 1L;
 
 
-    public ServiceInvocationException( ServiceContext context )
-    {
+    public ServiceInvocationException( ServiceContext context ) {
         super();
         request = context.getRequest();
     }
 
 
-    public ServiceInvocationException( ServiceContext context, String message, Throwable cause )
-    {
+    public ServiceInvocationException( ServiceContext context, String message, Throwable cause ) {
         super( message, cause );
         request = context.getRequest();
     }
 
 
-    public ServiceInvocationException( ServiceContext context, String message )
-    {
+    public ServiceInvocationException( ServiceContext context, String message ) {
         super( message );
         request = context.getRequest();
     }
 
 
-    public ServiceInvocationException( ServiceContext context, Throwable cause )
-    {
+    public ServiceInvocationException( ServiceContext context, Throwable cause ) {
         super( cause );
         request = context.getRequest();
     }
 
 
-    public ServiceInvocationException( ServiceRequest request )
-    {
+    public ServiceInvocationException( ServiceRequest request ) {
         super();
         this.request = request;
     }
 
 
-    public ServiceInvocationException( ServiceRequest request, String message, Throwable cause )
-    {
+    public ServiceInvocationException( ServiceRequest request, String message, Throwable cause ) {
         super( message, cause );
         this.request = request;
     }
 
 
-    public ServiceInvocationException( ServiceRequest request, String message )
-    {
+    public ServiceInvocationException( ServiceRequest request, String message ) {
         super( message );
         this.request = request;
     }
 
 
-    public ServiceInvocationException( ServiceRequest request, Throwable cause )
-    {
+    public ServiceInvocationException( ServiceRequest request, Throwable cause ) {
         super( cause );
         this.request = request;
     }
 
 
-    public ServiceRequest getServiceRequest()
-    {
+    public ServiceRequest getServiceRequest() {
         return request;
     }
 }

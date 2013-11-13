@@ -12,8 +12,7 @@ import org.usergrid.batch.repository.JobDescriptor;
  *
  * @author zznate
  */
-public interface JobFactory
-{
+public interface JobFactory {
 
     /** Return one or more BulkJob ready for execution by a worker thread */
     List<Job> jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException;

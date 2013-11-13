@@ -6,8 +6,7 @@ import com.beust.jcommander.Parameter;
 
 
 /** @author zznate */
-public class AppArgs
-{
+public class AppArgs {
 
     @Parameter(names = "-host", description = "The Cassandra host to which we will connect")
     private String host = "127.0.0.1";
@@ -25,40 +24,34 @@ public class AppArgs
     private String appContext;
 
 
-    public static AppArgs parseArgs( String[] args )
-    {
+    public static AppArgs parseArgs( String[] args ) {
         AppArgs appArgs = new AppArgs();
         JCommander jcommander = new JCommander( appArgs, args );
         return appArgs;
     }
 
 
-    public String getHost()
-    {
+    public String getHost() {
         return host;
     }
 
 
-    public int getPort()
-    {
+    public int getPort() {
         return port;
     }
 
 
-    public int getWorkerThreads()
-    {
+    public int getWorkerThreads() {
         return workerThreads;
     }
 
 
-    public int getSleepFor()
-    {
+    public int getSleepFor() {
         return sleepFor;
     }
 
 
-    public String getAppContext()
-    {
+    public String getAppContext() {
         return appContext;
     }
 }

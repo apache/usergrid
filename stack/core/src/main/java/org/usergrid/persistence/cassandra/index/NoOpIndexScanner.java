@@ -30,14 +30,12 @@ import me.prettyprint.hector.api.beans.HColumn;
  *
  * @author tnine
  */
-public class NoOpIndexScanner implements IndexScanner
-{
+public class NoOpIndexScanner implements IndexScanner {
 
     /**
      *
      */
-    public NoOpIndexScanner()
-    {
+    public NoOpIndexScanner() {
     }
 
 
@@ -45,8 +43,7 @@ public class NoOpIndexScanner implements IndexScanner
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator()
-    {
+    public Iterator<Set<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
         return this;
     }
 
@@ -55,8 +52,7 @@ public class NoOpIndexScanner implements IndexScanner
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
         return false;
     }
 
@@ -65,8 +61,7 @@ public class NoOpIndexScanner implements IndexScanner
      * @see org.usergrid.persistence.cassandra.index.IndexScanner#reset()
      */
     @Override
-    public void reset()
-    {
+    public void reset() {
         //no op
     }
 
@@ -75,8 +70,7 @@ public class NoOpIndexScanner implements IndexScanner
      * @see java.util.Iterator#next()
      */
     @Override
-    public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next()
-    {
+    public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
         return null;
     }
 
@@ -85,8 +79,7 @@ public class NoOpIndexScanner implements IndexScanner
      * @see java.util.Iterator#remove()
      */
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "Remove is not supported" );
     }
 
@@ -95,8 +88,7 @@ public class NoOpIndexScanner implements IndexScanner
      * @see org.usergrid.persistence.cassandra.index.IndexScanner#getPageSize()
      */
     @Override
-    public int getPageSize()
-    {
+    public int getPageSize() {
         return 0;
     }
 }

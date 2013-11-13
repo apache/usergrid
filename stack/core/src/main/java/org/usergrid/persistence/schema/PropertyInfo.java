@@ -19,8 +19,7 @@ package org.usergrid.persistence.schema;
 import org.usergrid.persistence.annotations.EntityProperty;
 
 
-public class PropertyInfo
-{
+public class PropertyInfo {
     private String name;
     private Class<?> type;
 
@@ -38,13 +37,11 @@ public class PropertyInfo
     private boolean encrypted = false;
 
 
-    public PropertyInfo()
-    {
+    public PropertyInfo() {
     }
 
 
-    public PropertyInfo( EntityProperty propertyAnnotation )
-    {
+    public PropertyInfo( EntityProperty propertyAnnotation ) {
         setName( propertyAnnotation.name() );
         setAliasProperty( propertyAnnotation.aliasProperty() );
         setFulltextIndexed( propertyAnnotation.fulltextIndexed() );
@@ -61,189 +58,157 @@ public class PropertyInfo
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
-        if ( "".equals( name ) )
-        {
+    public void setName( String name ) {
+        if ( "".equals( name ) ) {
             name = null;
         }
         this.name = name;
     }
 
 
-    public Class<?> getType()
-    {
+    public Class<?> getType() {
         return type;
     }
 
 
-    public void setType( Class<?> type )
-    {
-        if ( type == Object.class )
-        {
+    public void setType( Class<?> type ) {
+        if ( type == Object.class ) {
             type = null;
         }
         this.type = type;
     }
 
 
-    public boolean isIndexed()
-    {
+    public boolean isIndexed() {
         return indexed;
     }
 
 
-    public void setIndexed( boolean indexed )
-    {
+    public void setIndexed( boolean indexed ) {
         this.indexed = indexed;
     }
 
 
-    public boolean isBasic()
-    {
+    public boolean isBasic() {
         return basic;
     }
 
 
-    public void setBasic( boolean basic )
-    {
+    public void setBasic( boolean basic ) {
         this.basic = basic;
     }
 
 
-    public boolean isRequired()
-    {
+    public boolean isRequired() {
         return required;
     }
 
 
-    public void setRequired( boolean required )
-    {
+    public void setRequired( boolean required ) {
         this.required = required;
     }
 
 
-    public boolean isMutable()
-    {
+    public boolean isMutable() {
         return mutable;
     }
 
 
-    public void setMutable( boolean mutable )
-    {
+    public void setMutable( boolean mutable ) {
         this.mutable = mutable;
     }
 
 
-    public boolean isUnique()
-    {
+    public boolean isUnique() {
         return unique;
     }
 
 
-    public void setUnique( boolean unique )
-    {
+    public void setUnique( boolean unique ) {
         this.unique = unique;
     }
 
 
-    public boolean isAliasProperty()
-    {
+    public boolean isAliasProperty() {
         return aliasProperty;
     }
 
 
-    public void setAliasProperty( boolean aliasProperty )
-    {
+    public void setAliasProperty( boolean aliasProperty ) {
         this.aliasProperty = aliasProperty;
-        if ( aliasProperty )
-        {
+        if ( aliasProperty ) {
             mutable = false;
         }
     }
 
 
-    public boolean isPathBasedName()
-    {
+    public boolean isPathBasedName() {
         return pathBasedName;
     }
 
 
-    public void setPathBasedName( boolean pathBasedName )
-    {
+    public void setPathBasedName( boolean pathBasedName ) {
         this.pathBasedName = pathBasedName;
     }
 
 
-    public boolean isFulltextIndexed()
-    {
+    public boolean isFulltextIndexed() {
         return fulltextIndexed;
     }
 
 
-    public void setFulltextIndexed( boolean fulltextIndexed )
-    {
+    public void setFulltextIndexed( boolean fulltextIndexed ) {
         this.fulltextIndexed = fulltextIndexed;
     }
 
 
-    public boolean isPublic()
-    {
+    public boolean isPublic() {
         return publicVisible;
     }
 
 
-    public void setPublic( boolean publicVisible )
-    {
+    public void setPublic( boolean publicVisible ) {
         this.publicVisible = publicVisible;
     }
 
 
-    public boolean isIncludedInExport()
-    {
+    public boolean isIncludedInExport() {
         return includedInExport;
     }
 
 
-    public void setIncludedInExport( boolean includedInExport )
-    {
+    public void setIncludedInExport( boolean includedInExport ) {
         this.includedInExport = includedInExport;
     }
 
 
-    public boolean isTimestamp()
-    {
+    public boolean isTimestamp() {
         return timestamp;
     }
 
 
-    public void setTimestamp( boolean timestamp )
-    {
+    public void setTimestamp( boolean timestamp ) {
         this.timestamp = timestamp;
     }
 
 
-    public boolean isEncrypted()
-    {
+    public boolean isEncrypted() {
         return encrypted;
     }
 
 
-    public void setEncrypted( boolean encrypted )
-    {
+    public void setEncrypted( boolean encrypted ) {
         this.encrypted = encrypted;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "PropertyInfo [name=" + name + ", type=" + type + ", aliasProperty=" + aliasProperty
                 + ", fulltextIndexed=" + fulltextIndexed + ", indexed=" + indexed + ", basic=" + basic + ", mutable="
                 + mutable + ", pathBasedName=" + pathBasedName + ", publicVisible=" + publicVisible + ", required="

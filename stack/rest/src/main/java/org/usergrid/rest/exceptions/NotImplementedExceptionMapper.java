@@ -23,12 +23,10 @@ import org.usergrid.exception.NotImplementedException;
 
 
 @Provider
-public class NotImplementedExceptionMapper extends AbstractExceptionMapper<NotImplementedException>
-{
+public class NotImplementedExceptionMapper extends AbstractExceptionMapper<NotImplementedException> {
 
     @Override
-    public Response toResponse( NotImplementedException e )
-    {
+    public Response toResponse( NotImplementedException e ) {
         return toResponse( 501, e );
     }
 }

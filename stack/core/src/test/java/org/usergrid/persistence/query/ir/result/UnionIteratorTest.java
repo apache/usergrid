@@ -29,12 +29,10 @@ import static org.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn
 
 
 /** @author tnine */
-public class UnionIteratorTest
-{
+public class UnionIteratorTest {
 
     @Test
-    public void testMutipleIterators()
-    {
+    public void testMutipleIterators() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -102,8 +100,7 @@ public class UnionIteratorTest
 
 
     @Test
-    public void testOneIterator()
-    {
+    public void testOneIterator() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -133,8 +130,7 @@ public class UnionIteratorTest
 
 
     @Test
-    public void testEmptyFirstIterator()
-    {
+    public void testEmptyFirstIterator() {
 
         UUID id1 = UUIDUtils.minTimeUUID( 1 );
         UUID id2 = UUIDUtils.minTimeUUID( 2 );
@@ -167,8 +163,7 @@ public class UnionIteratorTest
 
 
     @Test
-    public void testNoIterator()
-    {
+    public void testNoIterator() {
 
         UnionIterator union = new UnionIterator( 100 );
 
@@ -178,8 +173,7 @@ public class UnionIteratorTest
 
 
     @Test
-    public void largeUnionTest()
-    {
+    public void largeUnionTest() {
 
         int size = 10000;
         int firstIntersection = 100;
@@ -197,31 +191,26 @@ public class UnionIteratorTest
 
         Set<UUID> results = new LinkedHashSet<UUID>( size / secondIntersection );
 
-        for ( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
             firstSet[i] = UUIDUtils.newTimeUUID();
             // every 100 elements, set the element equal to the first set. This way we
             // have intersection
 
             results.add( firstSet[i] );
 
-            if ( i % firstIntersection == 0 )
-            {
+            if ( i % firstIntersection == 0 ) {
                 secondSet[i] = firstSet[i];
             }
-            else
-            {
+            else {
                 secondSet[i] = UUIDUtils.newTimeUUID();
                 results.add( secondSet[i] );
             }
 
-            if ( i % secondIntersection == 0 )
-            {
+            if ( i % secondIntersection == 0 ) {
                 thirdSet[i] = firstSet[i];
             }
 
-            else
-            {
+            else {
                 thirdSet[i] = UUIDUtils.newTimeUUID();
                 results.add( thirdSet[i] );
             }
@@ -241,14 +230,12 @@ public class UnionIteratorTest
         union.addIterator( third );
 
 
-        while ( union.hasNext() )
-        {
+        while ( union.hasNext() ) {
 
             // now get the 2nd page
             Set<ScanColumn> resultSet = union.next();
 
-            for ( ScanColumn col : resultSet )
-            {
+            for ( ScanColumn col : resultSet ) {
                 results.remove( col.getUUID() );
             }
         }
@@ -258,13 +245,11 @@ public class UnionIteratorTest
     }
 
 
-    private void reverse( UUID[] array )
-    {
+    private void reverse( UUID[] array ) {
 
         UUID temp = null;
 
-        for ( int i = 0; i < array.length / 2; i++ )
-        {
+        for ( int i = 0; i < array.length / 2; i++ ) {
             temp = array[i];
             array[i] = array[array.length - i - 1];
             array[array.length - i - 1] = temp;

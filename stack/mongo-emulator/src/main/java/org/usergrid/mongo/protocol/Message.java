@@ -30,8 +30,7 @@ import org.usergrid.mongo.utils.BSONUtils;
 import org.usergrid.utils.StringUtils;
 
 
-public class Message
-{
+public class Message {
 
     public static final int OP_REPLY = 1; // Reply to a client request
     public static final int OP_MSG = 1000; // generic msg command
@@ -49,62 +48,52 @@ public class Message
     protected int opCode;
 
 
-    public Message()
-    {
+    public Message() {
 
     }
 
 
-    public int getMessageLength()
-    {
+    public int getMessageLength() {
         return messageLength;
     }
 
 
-    public void setMessageLength( int messageLength )
-    {
+    public void setMessageLength( int messageLength ) {
         this.messageLength = messageLength;
     }
 
 
-    public int getRequestID()
-    {
+    public int getRequestID() {
         return requestID;
     }
 
 
-    public void setRequestID( int requestID )
-    {
+    public void setRequestID( int requestID ) {
         this.requestID = requestID;
     }
 
 
-    public int getResponseTo()
-    {
+    public int getResponseTo() {
         return responseTo;
     }
 
 
-    public void setResponseTo( int responseTo )
-    {
+    public void setResponseTo( int responseTo ) {
         this.responseTo = responseTo;
     }
 
 
-    public int getOpCode()
-    {
+    public int getOpCode() {
         return opCode;
     }
 
 
-    public void setOpCode( int opCode )
-    {
+    public void setOpCode( int opCode ) {
         this.opCode = opCode;
     }
 
 
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         messageLength = buffer.readInt();
         requestID = buffer.readInt();
         responseTo = buffer.readInt();
@@ -112,10 +101,8 @@ public class Message
     }
 
 
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
-        if ( buffer == null )
-        {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
+        if ( buffer == null ) {
             buffer = ChannelBuffers.buffer( ByteOrder.LITTLE_ENDIAN, messageLength );
         }
         buffer.writeInt( messageLength );
@@ -126,11 +113,9 @@ public class Message
     }
 
 
-    public String readCString( ChannelBuffer buffer )
-    {
+    public String readCString( ChannelBuffer buffer ) {
         int i = buffer.bytesBefore( ( byte ) 0 );
-        if ( i < 0 )
-        {
+        if ( i < 0 ) {
             return null;
         }
         String s = buffer.toString( buffer.readerIndex(), i, Charset.forName( "UTF-8" ) );
@@ -139,21 +124,17 @@ public class Message
     }
 
 
-    public void writeCString( String str, ChannelBuffer buffer )
-    {
-        if ( str != null )
-        {
+    public void writeCString( String str, ChannelBuffer buffer ) {
+        if ( str != null ) {
             buffer.writeBytes( str.getBytes( Charset.forName( "UTF-8" ) ) );
         }
         buffer.writeByte( 0 );
     }
 
 
-    public ByteBuffer getCString( String str )
-    {
+    public ByteBuffer getCString( String str ) {
         byte[] bytes = new byte[0];
-        if ( str != null )
-        {
+        if ( str != null ) {
             bytes = str.getBytes( Charset.forName( "UTF-8" ) );
         }
         ByteBuffer buffer = ByteBuffer.allocate( bytes.length + 1 );
@@ -163,13 +144,10 @@ public class Message
     }
 
 
-    public static List<ByteBuffer> encodeDocuments( List<BSONObject> documents )
-    {
+    public static List<ByteBuffer> encodeDocuments( List<BSONObject> documents ) {
         List<ByteBuffer> encodedDocuments = new ArrayList<ByteBuffer>();
-        if ( documents != null )
-        {
-            for ( BSONObject d : documents )
-            {
+        if ( documents != null ) {
+            for ( BSONObject d : documents ) {
                 byte[] encoded = BSONUtils.encoder().encode( d );
                 encodedDocuments.add( ByteBuffer.wrap( encoded ) );
             }
@@ -178,42 +156,35 @@ public class Message
     }
 
 
-    public static int buffersSize( List<ByteBuffer> buffers )
-    {
+    public static int buffersSize( List<ByteBuffer> buffers ) {
         int l = 0;
-        for ( ByteBuffer b : buffers )
-        {
+        for ( ByteBuffer b : buffers ) {
             l += b.capacity();
         }
         return l;
     }
 
 
-    public static ByteBuffer encodeDocument( BSONObject document )
-    {
-        if ( document == null )
-        {
+    public static ByteBuffer encodeDocument( BSONObject document ) {
+        if ( document == null ) {
             return ByteBuffer.allocate( 0 );
         }
         return ByteBuffer.wrap( BSONUtils.encoder().encode( document ) );
     }
 
 
-    public static String getDatabaseName( String fullCollectionName )
-    {
+    public static String getDatabaseName( String fullCollectionName ) {
         return StringUtils.stringOrSubstringBeforeFirst( fullCollectionName, '.' );
     }
 
 
-    public static String getCollectionName( String fullCollectionName )
-    {
+    public static String getCollectionName( String fullCollectionName ) {
         return StringUtils.stringOrSubstringAfterFirst( fullCollectionName, '.' );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Message [messageLength=" + messageLength + ", requestID=" + requestID + ", responseTo=" + responseTo
                 + ", opCode=" + opCode + "]";
     }

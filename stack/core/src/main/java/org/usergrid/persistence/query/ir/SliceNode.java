@@ -32,19 +32,16 @@ import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
  *
  * @author tnine
  */
-public class SliceNode extends QueryNode
-{
+public class SliceNode extends QueryNode {
 
     /**
      * A context within a tree to allow for operand and range scan optimizations. In the event that the user enters a
-     * query
-     * in the following way
+     * query in the following way
      * <p/>
      * (x > 5 and x < 15 and z > 10 and z < 20) or (y > 10 and y < 20)
      * <p/>
-     * You will have 2 contexts. The first is for (x > 5 and x < 15 and z > 10 and z < 20),
-     * the second is for (y > 10 and y
-     * < 20). This allows us to compress these operations into a single range scan per context.
+     * You will have 2 contexts. The first is for (x > 5 and x < 15 and z > 10 and z < 20), the second is for (y > 10
+     * and y < 20). This allows us to compress these operations into a single range scan per context.
      */
     // private class TreeContext {
 
@@ -55,11 +52,9 @@ public class SliceNode extends QueryNode
 
     /**
      * Set the id for construction. Just a counter. Used for creating tokens and things like tokens where the same
-     * property
-     * can be used in 2 different subtrees
+     * property can be used in 2 different subtrees
      */
-    public SliceNode( int id )
-    {
+    public SliceNode( int id ) {
         this.id = id;
     }
 
@@ -69,13 +64,11 @@ public class SliceNode extends QueryNode
      *
      * @param start The start value. this will be processed and turned into an indexed value
      */
-    public void setStart( String fieldName, Object start, boolean inclusive )
-    {
+    public void setStart( String fieldName, Object start, boolean inclusive ) {
         QuerySlice slice = getOrCreateSlice( fieldName );
 
         // if the value is null don't set the range on the slice
-        if ( start == null )
-        {
+        if ( start == null ) {
             return;
         }
 
@@ -86,8 +79,7 @@ public class SliceNode extends QueryNode
 
         RangeValue newStart = new RangeValue( code, indexedValue, inclusive );
 
-        if ( existingStart == null )
-        {
+        if ( existingStart == null ) {
             slice.setStart( newStart );
             return;
         }
@@ -95,21 +87,18 @@ public class SliceNode extends QueryNode
         // check if we're before the currently set start in this
         // context. If so set the value to increase the range scan size;
         if ( existingStart != null && newStart == null || ( existingStart != null
-                && existingStart.compareTo( newStart, false ) < 0 ) )
-        {
+                && existingStart.compareTo( newStart, false ) < 0 ) ) {
             slice.setStart( newStart );
         }
     }
 
 
     /** Set the finish. If finish value is greater than the existing, I.E. null or higher comparison, then */
-    public void setFinish( String fieldName, Object finish, boolean inclusive )
-    {
+    public void setFinish( String fieldName, Object finish, boolean inclusive ) {
         QuerySlice slice = getOrCreateSlice( fieldName );
 
         // if the value is null don't set the range on the slice
-        if ( finish == null )
-        {
+        if ( finish == null ) {
             return;
         }
 
@@ -120,8 +109,7 @@ public class SliceNode extends QueryNode
 
         RangeValue newFinish = new RangeValue( code, indexedValue, inclusive );
 
-        if ( existingFinish == null )
-        {
+        if ( existingFinish == null ) {
             slice.setFinish( newFinish );
             return;
         }
@@ -129,20 +117,17 @@ public class SliceNode extends QueryNode
         // check if we're before the currently set start in this
         // context. If so set the value to increase the range scan size;
         if ( existingFinish != null && newFinish == null || ( existingFinish != null
-                && existingFinish.compareTo( newFinish, false ) < 0 ) )
-        {
+                && existingFinish.compareTo( newFinish, false ) < 0 ) ) {
             slice.setFinish( newFinish );
         }
     }
 
 
     /** Lazy instanciate a field pair if required. Otherwise return the existing pair */
-    private QuerySlice getOrCreateSlice( String fieldName )
-    {
+    private QuerySlice getOrCreateSlice( String fieldName ) {
         QuerySlice pair = this.pairs.get( fieldName );
 
-        if ( pair == null )
-        {
+        if ( pair == null ) {
             pair = new QuerySlice( fieldName, id );
             this.pairs.put( fieldName, pair );
         }
@@ -152,15 +137,13 @@ public class SliceNode extends QueryNode
 
 
     /** Get the slice by field name if it exists. Null otherwise */
-    public QuerySlice getSlice( String fieldName )
-    {
+    public QuerySlice getSlice( String fieldName ) {
         return this.pairs.get( fieldName );
     }
 
 
     /** Get all slices in our context */
-    public Collection<QuerySlice> getAllSlices()
-    {
+    public Collection<QuerySlice> getAllSlices() {
         return this.pairs.values();
     }
 
@@ -173,15 +156,13 @@ public class SliceNode extends QueryNode
      * .query.ir.NodeVisitor)
      */
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "SliceNode [pairs=" + pairs + ", id=" + id + "]";
     }
 }

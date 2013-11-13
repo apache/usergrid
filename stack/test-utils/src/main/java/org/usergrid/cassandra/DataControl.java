@@ -10,8 +10,7 @@ import java.lang.annotation.Target;
 /** @author zznate */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
-public @interface DataControl
-{
+public @interface DataControl {
     boolean skipTruncate() default false; // skips truncate on exit
 
     String schemaManager(); // returns the loader impl

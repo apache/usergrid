@@ -10,7 +10,6 @@ import java.lang.annotation.Target;
 /** @author Mathieu Carbou (mathieu.carbou@gmail.com) */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
-public @interface Concurrent
-{
+public @interface Concurrent {
     int threads() default 5;
 }

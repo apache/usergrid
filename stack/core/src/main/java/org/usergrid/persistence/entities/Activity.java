@@ -45,8 +45,7 @@ import static org.usergrid.utils.StringUtils.toStringFormat;
  * @see http://activitystrea.ms/specs/json/1.0/
  */
 @XmlRootElement
-public class Activity extends TypedEntity
-{
+public class Activity extends TypedEntity {
 
     public static final String ENTITY_TYPE = "activity";
 
@@ -114,52 +113,49 @@ public class Activity extends TypedEntity
     public static final String OBJECT_TYPE_SERVICE = "service";
     public static final String OBJECT_TYPE_VIDEO = "video";
 
-    @EntityProperty( required = true, mutable = false, indexed = true )
+    @EntityProperty(required = true, mutable = false, indexed = true)
     ActivityObject actor;
 
-    @EntityProperty( indexed = true, fulltextIndexed = true, required = false, mutable = false )
+    @EntityProperty(indexed = true, fulltextIndexed = true, required = false, mutable = false)
     protected String content;
 
     ActivityObject generator;
 
-    @EntityProperty( indexed = false, fulltextIndexed = false, required = false, mutable = false )
+    @EntityProperty(indexed = false, fulltextIndexed = false, required = false, mutable = false)
     protected MediaLink icon;
 
-    @EntityProperty( fulltextIndexed = false, required = false, mutable = false, indexed = true )
+    @EntityProperty(fulltextIndexed = false, required = false, mutable = false, indexed = true)
     String category;
 
-    @EntityProperty( fulltextIndexed = false, required = true, mutable = false, indexed = true )
+    @EntityProperty(fulltextIndexed = false, required = true, mutable = false, indexed = true)
     String verb;
 
-    @EntityProperty( indexed = true, required = true, mutable = false, timestamp = true )
+    @EntityProperty(indexed = true, required = true, mutable = false, timestamp = true)
     protected Long published;
 
-    @EntityProperty( indexed = false, required = false, mutable = false )
+    @EntityProperty(indexed = false, required = false, mutable = false)
     ActivityObject object;
 
-    @EntityProperty( indexed = true, fulltextIndexed = true, required = false, mutable = false )
+    @EntityProperty(indexed = true, fulltextIndexed = true, required = false, mutable = false)
     protected String title;
 
-    @EntityDictionary( keyType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> connections;
 
 
-    public Activity()
-    {
+    public Activity() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public Activity( UUID id )
-    {
+    public Activity( UUID id ) {
         uuid = id;
     }
 
 
     public static Activity newActivity( String verb, String title, String content, String category, Entity user,
                                         EntityRef object, String objectType, String objectName, String objectContent )
-            throws Exception
-    {
+            throws Exception {
 
         Activity activity = new Activity();
         activity.setVerb( verb );
@@ -169,8 +165,7 @@ public class Activity extends TypedEntity
 
         ActivityObject actor = new ActivityObject();
         actor.setObjectType( "person" );
-        if ( user != null )
-        {
+        if ( user != null ) {
             actor.setDisplayName( ( String ) user.getProperty( "name" ) );
             actor.setEntityType( user.getType() );
             actor.setUuid( user.getUuid() );
@@ -180,17 +175,14 @@ public class Activity extends TypedEntity
         ActivityObject obj = new ActivityObject();
         obj.setDisplayName( objectName );
         obj.setObjectType( objectType );
-        if ( object != null )
-        {
+        if ( object != null ) {
             obj.setEntityType( object.getType() );
             obj.setUuid( object.getUuid() );
         }
-        if ( objectContent != null )
-        {
+        if ( objectContent != null ) {
             obj.setContent( objectContent );
         }
-        else
-        {
+        else {
             obj.setContent( content );
         }
         activity.setObject( obj );
@@ -199,139 +191,118 @@ public class Activity extends TypedEntity
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public ActivityObject getActor()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public ActivityObject getActor() {
         return actor;
     }
 
 
-    public void setActor( ActivityObject actor )
-    {
+    public void setActor( ActivityObject actor ) {
         this.actor = actor;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public ActivityObject getGenerator()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public ActivityObject getGenerator() {
         return generator;
     }
 
 
-    public void setGenerator( ActivityObject generator )
-    {
+    public void setGenerator( ActivityObject generator ) {
         this.generator = generator;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getCategory()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getCategory() {
         return category;
     }
 
 
-    public void setCategory( String category )
-    {
+    public void setCategory( String category ) {
         this.category = category;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getVerb()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getVerb() {
         return verb;
     }
 
 
-    public void setVerb( String verb )
-    {
+    public void setVerb( String verb ) {
         this.verb = verb;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Long getPublished()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Long getPublished() {
         return published;
     }
 
 
-    public void setPublished( Long published )
-    {
+    public void setPublished( Long published ) {
         this.published = published;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public ActivityObject getObject()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public ActivityObject getObject() {
         return object;
     }
 
 
-    public void setObject( ActivityObject object )
-    {
+    public void setObject( ActivityObject object ) {
         this.object = object;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getTitle()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getTitle() {
         return title;
     }
 
 
-    public void setTitle( String title )
-    {
+    public void setTitle( String title ) {
         this.title = title;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public MediaLink getIcon()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public MediaLink getIcon() {
         return icon;
     }
 
 
-    public void setIcon( MediaLink icon )
-    {
+    public void setIcon( MediaLink icon ) {
         this.icon = icon;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getContent()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getContent() {
         return content;
     }
 
 
-    public void setContent( String content )
-    {
+    public void setContent( String content ) {
         this.content = content;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Set<String> getConnections()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Set<String> getConnections() {
         return connections;
     }
 
 
-    public void setConnections( Set<String> connections )
-    {
+    public void setConnections( Set<String> connections ) {
         this.connections = connections;
     }
 
 
     @XmlRootElement
-    static public class MediaLink
-    {
+    static public class MediaLink {
 
         int duration;
 
@@ -344,80 +315,68 @@ public class Activity extends TypedEntity
         protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
 
-        public MediaLink()
-        {
+        public MediaLink() {
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public int getDuration()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public int getDuration() {
             return duration;
         }
 
 
-        public void setDuration( int duration )
-        {
+        public void setDuration( int duration ) {
             this.duration = duration;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public int getHeight()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public int getHeight() {
             return height;
         }
 
 
-        public void setHeight( int height )
-        {
+        public void setHeight( int height ) {
             this.height = height;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getUrl()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getUrl() {
             return url;
         }
 
 
-        public void setUrl( String url )
-        {
+        public void setUrl( String url ) {
             this.url = url;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public int getWidth()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public int getWidth() {
             return width;
         }
 
 
-        public void setWidth( int width )
-        {
+        public void setWidth( int width ) {
             this.width = width;
         }
 
 
         @JsonAnySetter
-        public void setDynamicProperty( String key, Object value )
-        {
+        public void setDynamicProperty( String key, Object value ) {
             dynamic_properties.put( key, value );
         }
 
 
         @JsonAnyGetter
-        public Map<String, Object> getDynamicProperties()
-        {
+        public Map<String, Object> getDynamicProperties() {
             return dynamic_properties;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "MediaLink [duration=" + duration + ", height=" + height + ", url=" + url + ", width=" + width
                     + ", dynamic_properties=" + dynamic_properties + "]";
         }
@@ -425,8 +384,7 @@ public class Activity extends TypedEntity
 
 
     @XmlRootElement
-    static public class ActivityObject
-    {
+    static public class ActivityObject {
 
         ActivityObject[] attachments;
 
@@ -461,223 +419,189 @@ public class Activity extends TypedEntity
         protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
 
-        public ActivityObject()
-        {
+        public ActivityObject() {
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public ActivityObject[] getAttachments()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public ActivityObject[] getAttachments() {
             return attachments;
         }
 
 
-        public void setAttachments( ActivityObject[] attachments )
-        {
+        public void setAttachments( ActivityObject[] attachments ) {
             this.attachments = attachments;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public ActivityObject getAuthor()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public ActivityObject getAuthor() {
             return author;
         }
 
 
-        public void setAuthor( ActivityObject author )
-        {
+        public void setAuthor( ActivityObject author ) {
             this.author = author;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getContent()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getContent() {
             return content;
         }
 
 
-        public void setContent( String content )
-        {
+        public void setContent( String content ) {
             this.content = content;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getDisplayName()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getDisplayName() {
             return displayName;
         }
 
 
-        public void setDisplayName( String displayName )
-        {
+        public void setDisplayName( String displayName ) {
             this.displayName = displayName;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String[] getDownstreamDuplicates()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String[] getDownstreamDuplicates() {
             return downstreamDuplicates;
         }
 
 
-        public void setDownstreamDuplicates( String[] downstreamDuplicates )
-        {
+        public void setDownstreamDuplicates( String[] downstreamDuplicates ) {
             this.downstreamDuplicates = downstreamDuplicates;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getId()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getId() {
             return id;
         }
 
 
-        public void setId( String id )
-        {
+        public void setId( String id ) {
             this.id = id;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public MediaLink getImage()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public MediaLink getImage() {
             return image;
         }
 
 
-        public void setImage( MediaLink image )
-        {
+        public void setImage( MediaLink image ) {
             this.image = image;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getObjectType()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getObjectType() {
             return objectType;
         }
 
 
-        public void setObjectType( String objectType )
-        {
+        public void setObjectType( String objectType ) {
             this.objectType = objectType;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public Date getPublished()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public Date getPublished() {
             return published;
         }
 
 
-        public void setPublished( Date published )
-        {
+        public void setPublished( Date published ) {
             this.published = published;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getSummary()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getSummary() {
             return summary;
         }
 
 
-        public void setSummary( String summary )
-        {
+        public void setSummary( String summary ) {
             this.summary = summary;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getUpdated()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getUpdated() {
             return updated;
         }
 
 
-        public void setUpdated( String updated )
-        {
+        public void setUpdated( String updated ) {
             this.updated = updated;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getUpstreamDuplicates()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getUpstreamDuplicates() {
             return upstreamDuplicates;
         }
 
 
-        public void setUpstreamDuplicates( String upstreamDuplicates )
-        {
+        public void setUpstreamDuplicates( String upstreamDuplicates ) {
             this.upstreamDuplicates = upstreamDuplicates;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getUrl()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getUrl() {
             return url;
         }
 
 
-        public void setUrl( String url )
-        {
+        public void setUrl( String url ) {
             this.url = url;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public UUID getUuid()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public UUID getUuid() {
             return uuid;
         }
 
 
-        public void setUuid( UUID uuid )
-        {
+        public void setUuid( UUID uuid ) {
             this.uuid = uuid;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getEntityType()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getEntityType() {
             return entityType;
         }
 
 
-        public void setEntityType( String entityType )
-        {
+        public void setEntityType( String entityType ) {
             this.entityType = entityType;
         }
 
 
         @JsonAnySetter
-        public void setDynamicProperty( String key, Object value )
-        {
+        public void setDynamicProperty( String key, Object value ) {
             dynamic_properties.put( key, value );
         }
 
 
         @JsonAnyGetter
-        public Map<String, Object> getDynamicProperties()
-        {
+        public Map<String, Object> getDynamicProperties() {
             return dynamic_properties;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "ActivityObject [" + toStringFormat( attachments, "attachments=%s, " ) + toStringFormat( author,
                     "author=%s, " ) + toStringFormat( content, "content=%s, " ) + toStringFormat( displayName,
                     "displayName=%s, " ) + toStringFormat( downstreamDuplicates, "downstreamDuplicates=%s, " )
@@ -692,8 +616,7 @@ public class Activity extends TypedEntity
 
 
     @XmlRootElement
-    static public class ActivityCollection
-    {
+    static public class ActivityCollection {
 
         int totalItems;
 
@@ -704,67 +627,57 @@ public class Activity extends TypedEntity
         protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
 
-        public ActivityCollection()
-        {
+        public ActivityCollection() {
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public int getTotalItems()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public int getTotalItems() {
             return totalItems;
         }
 
 
-        public void setTotalItems( int totalItems )
-        {
+        public void setTotalItems( int totalItems ) {
             this.totalItems = totalItems;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public ActivityObject[] getItems()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public ActivityObject[] getItems() {
             return items;
         }
 
 
-        public void setItems( ActivityObject[] items )
-        {
+        public void setItems( ActivityObject[] items ) {
             this.items = items;
         }
 
 
-        @JsonSerialize( include = Inclusion.NON_NULL )
-        public String getUrl()
-        {
+        @JsonSerialize(include = Inclusion.NON_NULL)
+        public String getUrl() {
             return url;
         }
 
 
-        public void setUrl( String url )
-        {
+        public void setUrl( String url ) {
             this.url = url;
         }
 
 
         @JsonAnySetter
-        public void setDynamicProperty( String key, Object value )
-        {
+        public void setDynamicProperty( String key, Object value ) {
             dynamic_properties.put( key, value );
         }
 
 
         @JsonAnyGetter
-        public Map<String, Object> getDynamicProperties()
-        {
+        public Map<String, Object> getDynamicProperties() {
             return dynamic_properties;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "ActivityCollection [totalItems=" + totalItems + ", items=" + Arrays.toString( items ) + ", url="
                     + url + ", dynamic_properties=" + dynamic_properties + "]";
         }

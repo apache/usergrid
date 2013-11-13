@@ -34,154 +34,135 @@ import org.usergrid.persistence.annotations.EntityProperty;
 
 /** Groups are used to organize users. */
 @XmlRootElement
-public class Group extends TypedEntity
-{
+public class Group extends TypedEntity {
 
     public static final String ENTITY_TYPE = "group";
 
     public static final String CONNECTION_MEMBERSHIP = "membership";
 
-    @EntityProperty( indexed = true, fulltextIndexed = false, required = true, aliasProperty = true,
-            pathBasedName = true, mutable = true, unique = true, basic = true )
+    @EntityProperty(indexed = true, fulltextIndexed = false, required = true, aliasProperty = true,
+            pathBasedName = true, mutable = true, unique = true, basic = true)
     protected String path;
 
-    @EntityDictionary( keyType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> connections;
 
-    @EntityDictionary( keyType = java.lang.String.class, valueType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class, valueType = java.lang.String.class)
     protected Map<String, String> rolenames;
 
-    @EntityDictionary( keyType = java.lang.String.class )
+    @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> permissions;
 
-    @EntityDictionary( keyType = java.lang.String.class, valueType = CredentialsInfo.class )
+    @EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
     protected Map<String, CredentialsInfo> credentials;
 
-    @EntityCollection( type = "user", linkedCollection = "groups" )
+    @EntityCollection(type = "user", linkedCollection = "groups")
     protected List<UUID> users;
 
-    @EntityCollection( type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
     protected List<UUID> activities;
 
-    @EntityCollection( type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
     protected List<UUID> feed;
 
-    @EntityCollection( type = "role", linkedCollection = "groups", indexingDynamicDictionaries = true )
+    @EntityCollection(type = "role", linkedCollection = "groups", indexingDynamicDictionaries = true)
     protected List<UUID> roles;
 
 
-    public Group()
-    {
+    public Group() {
         // id = UUIDUtils.newTimeUUID();
     }
 
 
-    public Group( UUID id )
-    {
+    public Group( UUID id ) {
         uuid = id;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public String getPath()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getPath() {
         return path;
     }
 
 
-    public void setPath( String path )
-    {
+    public void setPath( String path ) {
         this.path = path;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getUsers()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getUsers() {
         return users;
     }
 
 
-    public void setUsers( List<UUID> users )
-    {
+    public void setUsers( List<UUID> users ) {
         this.users = users;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Set<String> getConnections()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Set<String> getConnections() {
         return connections;
     }
 
 
-    public void setConnections( Set<String> connections )
-    {
+    public void setConnections( Set<String> connections ) {
         this.connections = connections;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Map<String, String> getRolenames()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, String> getRolenames() {
         return rolenames;
     }
 
 
-    public void setRolenames( Map<String, String> rolenames )
-    {
+    public void setRolenames( Map<String, String> rolenames ) {
         this.rolenames = rolenames;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getActivities()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getActivities() {
         return activities;
     }
 
 
-    public void setActivities( List<UUID> activities )
-    {
+    public void setActivities( List<UUID> activities ) {
         this.activities = activities;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getFeed()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getFeed() {
         return feed;
     }
 
 
-    public void setFeed( List<UUID> feed )
-    {
+    public void setFeed( List<UUID> feed ) {
         this.feed = feed;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public Map<String, CredentialsInfo> getCredentials()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Map<String, CredentialsInfo> getCredentials() {
         return credentials;
     }
 
 
-    public void setCredentials( Map<String, CredentialsInfo> credentials )
-    {
+    public void setCredentials( Map<String, CredentialsInfo> credentials ) {
         this.credentials = credentials;
     }
 
 
-    @JsonSerialize( include = Inclusion.NON_NULL )
-    public List<UUID> getRoles()
-    {
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getRoles() {
         return roles;
     }
 
 
-    public void setRoles( List<UUID> roles )
-    {
+    public void setRoles( List<UUID> roles ) {
         this.roles = roles;
     }
 }

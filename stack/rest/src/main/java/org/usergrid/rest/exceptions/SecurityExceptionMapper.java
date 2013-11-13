@@ -28,21 +28,17 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
  * challenge at the client. </p>
  */
 @Provider
-public class SecurityExceptionMapper extends AbstractExceptionMapper<SecurityException>
-{
+public class SecurityExceptionMapper extends AbstractExceptionMapper<SecurityException> {
 
     @Override
-    public Response toResponse( SecurityException e )
-    {
+    public Response toResponse( SecurityException e ) {
 
-        if ( e.getRealm() != null )
-        {
+        if ( e.getRealm() != null ) {
             return Response.status( Status.UNAUTHORIZED )
                            .header( "WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"" )
                            .type( "application/json" ).entity( e.getJsonResponse() ).build();
         }
-        else
-        {
+        else {
             return toResponse( UNAUTHORIZED, e.getJsonResponse() );
         }
     }

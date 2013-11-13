@@ -90,8 +90,7 @@ import static org.usergrid.utils.MapUtils.asMap;
 import static org.usergrid.utils.MapUtils.filter;
 
 
-public class CassandraService
-{
+public class CassandraService {
 
     public static String SYSTEM_KEYSPACE = "Usergrid";
 
@@ -145,8 +144,7 @@ public class CassandraService
 
 
     public CassandraService( Properties properties, Cluster cluster,
-                             CassandraHostConfigurator cassandraHostConfigurator, LockManager lockManager )
-    {
+                             CassandraHostConfigurator cassandraHostConfigurator, LockManager lockManager ) {
         this.properties = properties;
         this.cluster = cluster;
         chc = cassandraHostConfigurator;
@@ -155,10 +153,8 @@ public class CassandraService
     }
 
 
-    public void init() throws Exception
-    {
-        if ( consistencyLevelPolicy == null )
-        {
+    public void init() throws Exception {
+        if ( consistencyLevelPolicy == null ) {
             consistencyLevelPolicy = new ConfigurableConsistencyLevel();
             ( ( ConfigurableConsistencyLevel ) consistencyLevelPolicy )
                     .setDefaultReadConsistencyLevel( HConsistencyLevel.ONE );
@@ -172,113 +168,92 @@ public class CassandraService
     }
 
 
-    public Cluster getCluster()
-    {
+    public Cluster getCluster() {
         return cluster;
     }
 
 
-    public void setCluster( Cluster cluster )
-    {
+    public void setCluster( Cluster cluster ) {
         this.cluster = cluster;
     }
 
 
-    public CassandraHostConfigurator getCassandraHostConfigurator()
-    {
+    public CassandraHostConfigurator getCassandraHostConfigurator() {
         return chc;
     }
 
 
-    public void setCassandraHostConfigurator( CassandraHostConfigurator chc )
-    {
+    public void setCassandraHostConfigurator( CassandraHostConfigurator chc ) {
         this.chc = chc;
     }
 
 
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 
 
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
-    public Map<String, String> getPropertiesMap()
-    {
-        if ( properties != null )
-        {
+    public Map<String, String> getPropertiesMap() {
+        if ( properties != null ) {
             return asMap( properties );
         }
         return null;
     }
 
 
-    public LockManager getLockManager()
-    {
+    public LockManager getLockManager() {
         return lockManager;
     }
 
 
-    public void setLockManager( LockManager lockManager )
-    {
+    public void setLockManager( LockManager lockManager ) {
         this.lockManager = lockManager;
     }
 
 
-    public ConsistencyLevelPolicy getConsistencyLevelPolicy()
-    {
+    public ConsistencyLevelPolicy getConsistencyLevelPolicy() {
         return consistencyLevelPolicy;
     }
 
 
-    public void setConsistencyLevelPolicy( ConsistencyLevelPolicy consistencyLevelPolicy )
-    {
+    public void setConsistencyLevelPolicy( ConsistencyLevelPolicy consistencyLevelPolicy ) {
         this.consistencyLevelPolicy = consistencyLevelPolicy;
     }
 
 
     /** @return keyspace for application UUID */
-    public static String keyspaceForApplication( UUID applicationId )
-    {
-        if ( USE_VIRTUAL_KEYSPACES )
-        {
+    public static String keyspaceForApplication( UUID applicationId ) {
+        if ( USE_VIRTUAL_KEYSPACES ) {
             return STATIC_APPLICATION_KEYSPACE;
         }
-        else
-        {
+        else {
             return "Application_" + applicationId.toString().replace( '-', '_' );
         }
     }
 
 
-    public static UUID prefixForApplication( UUID applicationId )
-    {
-        if ( USE_VIRTUAL_KEYSPACES )
-        {
+    public static UUID prefixForApplication( UUID applicationId ) {
+        if ( USE_VIRTUAL_KEYSPACES ) {
             return applicationId;
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
 
-    public Keyspace getKeyspace( String keyspace, UUID prefix )
-    {
+    public Keyspace getKeyspace( String keyspace, UUID prefix ) {
         Keyspace ko = null;
-        if ( USE_VIRTUAL_KEYSPACES && ( prefix != null ) )
-        {
+        if ( USE_VIRTUAL_KEYSPACES && ( prefix != null ) ) {
             ko = createVirtualKeyspace( keyspace, prefix, ue, cluster, consistencyLevelPolicy,
                     ON_FAIL_TRY_ALL_AVAILABLE, accessMap );
         }
-        else
-        {
+        else {
             ko = HFactory.createKeyspace( keyspace, cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
                     accessMap );
         }
@@ -286,8 +261,7 @@ public class CassandraService
     }
 
 
-    public Keyspace getApplicationKeyspace( UUID applicationId )
-    {
+    public Keyspace getApplicationKeyspace( UUID applicationId ) {
         assert applicationId != null;
         Keyspace ko = getKeyspace( keyspaceForApplication( applicationId ), prefixForApplication( applicationId ) );
         return ko;
@@ -295,28 +269,23 @@ public class CassandraService
 
 
     /** The Usergrid_Applications keyspace directly */
-    public Keyspace getUsergridApplicationKeyspace()
-    {
+    public Keyspace getUsergridApplicationKeyspace() {
         return getKeyspace( STATIC_APPLICATION_KEYSPACE, null );
     }
 
 
-    public Keyspace getSystemKeyspace()
-    {
+    public Keyspace getSystemKeyspace() {
         return systemKeyspace;
     }
 
 
-    public boolean checkKeyspacesExist()
-    {
+    public boolean checkKeyspacesExist() {
         boolean exists = false;
-        try
-        {
+        try {
             exists = cluster.describeKeyspace( SYSTEM_KEYSPACE ) != null
                     && cluster.describeKeyspace( STATIC_APPLICATION_KEYSPACE ) != null;
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             logger.error( "could not describe keyspaces", ex );
         }
         return exists;
@@ -327,19 +296,16 @@ public class CassandraService
      * Lazy creates a column family in the keyspace. If it doesn't exist, it will be created, then the call will sleep
      * until all nodes have acknowledged the schema change
      */
-    public void createColumnFamily( String keyspace, ColumnFamilyDefinition cfDef )
-    {
+    public void createColumnFamily( String keyspace, ColumnFamilyDefinition cfDef ) {
 
-        if ( !keySpaceExists( keyspace ) )
-        {
+        if ( !keySpaceExists( keyspace ) ) {
             createKeySpace( keyspace );
         }
 
 
         //add the cf
 
-        if ( !cfExists( keyspace, cfDef.getName() ) )
-        {
+        if ( !cfExists( keyspace, cfDef.getName() ) ) {
             cluster.addColumnFamily( cfDef, true );
             logger.info( "Created column family {} in keyspace {}", cfDef.getName(), keyspace );
         }
@@ -347,18 +313,15 @@ public class CassandraService
 
 
     /** Create the column families in the list */
-    public void createColumnFamilies( String keyspace, List<ColumnFamilyDefinition> cfDefs )
-    {
-        for ( ColumnFamilyDefinition cfDef : cfDefs )
-        {
+    public void createColumnFamilies( String keyspace, List<ColumnFamilyDefinition> cfDefs ) {
+        for ( ColumnFamilyDefinition cfDef : cfDefs ) {
             createColumnFamily( keyspace, cfDef );
         }
     }
 
 
     /** Check if the keyspace exsts */
-    public boolean keySpaceExists( String keyspace )
-    {
+    public boolean keySpaceExists( String keyspace ) {
         KeyspaceDefinition ksDef = cluster.describeKeyspace( keyspace );
 
         return ksDef != null;
@@ -366,8 +329,7 @@ public class CassandraService
 
 
     /** Create the keyspace */
-    private void createKeySpace( String keyspace )
-    {
+    private void createKeySpace( String keyspace ) {
         logger.info( "Creating keyspace: {}", keyspace );
 
         String strategy_class =
@@ -384,8 +346,7 @@ public class CassandraService
 
         @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, String> strategy_options =
                 filter( ( Map ) properties, "cassandra.keyspace.strategy.options.", true );
-        if ( strategy_options.size() > 0 )
-        {
+        if ( strategy_options.size() > 0 ) {
             logger.info( "Strategy options: {}", mapToFormattedJsonString( strategy_options ) );
             ks_def.setStrategyOptions( strategy_options );
         }
@@ -399,43 +360,34 @@ public class CassandraService
 
 
     /** Wait until all nodes agree on the same schema version */
-    private void waitForCreation( String keyspace )
-    {
+    private void waitForCreation( String keyspace ) {
 
-        while ( true )
-        {
+        while ( true ) {
             Map<String, List<String>> versions = cluster.describeSchemaVersions();
             // only 1 version, return
-            if ( versions != null && versions.size() == 1 )
-            {
+            if ( versions != null && versions.size() == 1 ) {
                 return;
             }
             // sleep and try again
-            try
-            {
+            try {
                 Thread.sleep( 100 );
             }
-            catch ( InterruptedException e )
-            {
+            catch ( InterruptedException e ) {
             }
         }
     }
 
 
     /** Return true if the column family exists */
-    public boolean cfExists( String keyspace, String cfName )
-    {
+    public boolean cfExists( String keyspace, String cfName ) {
         KeyspaceDefinition ksDef = cluster.describeKeyspace( keyspace );
 
-        if ( ksDef == null )
-        {
+        if ( ksDef == null ) {
             return false;
         }
 
-        for ( ColumnFamilyDefinition cf : ksDef.getCfDefs() )
-        {
-            if ( cfName.equals( cf.getName() ) )
-            {
+        for ( ColumnFamilyDefinition cf : ksDef.getCfDefs() ) {
+            if ( cfName.equals( cf.getName() ) ) {
                 return true;
             }
         }
@@ -457,11 +409,9 @@ public class CassandraService
      */
     public <N, V> List<HColumn<N, V>> getAllColumns( Keyspace ko, Object columnFamily, Object key,
                                                      Serializer<N> nameSerializer, Serializer<V> valueSerializer )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isInfoEnabled() )
-        {
+        if ( db_logger.isInfoEnabled() ) {
             db_logger.info( "getColumns cf={} key={}", columnFamily, key );
         }
 
@@ -473,14 +423,11 @@ public class CassandraService
         ColumnSlice<N, V> slice = r.get();
         List<HColumn<N, V>> results = slice.getColumns();
 
-        if ( db_logger.isInfoEnabled() )
-        {
-            if ( results == null )
-            {
+        if ( db_logger.isInfoEnabled() ) {
+            if ( results == null ) {
                 db_logger.info( "getColumns returned null" );
             }
-            else
-            {
+            else {
                 db_logger.info( "getColumns returned {} columns", results.size() );
             }
         }
@@ -490,18 +437,15 @@ public class CassandraService
 
 
     public List<HColumn<String, ByteBuffer>> getAllColumns( Keyspace ko, Object columnFamily, Object key )
-            throws Exception
-    {
+            throws Exception {
         return getAllColumns( ko, columnFamily, key, se, be );
     }
 
 
-    public Set<String> getAllColumnNames( Keyspace ko, Object columnFamily, Object key ) throws Exception
-    {
+    public Set<String> getAllColumnNames( Keyspace ko, Object columnFamily, Object key ) throws Exception {
         List<HColumn<String, ByteBuffer>> columns = getAllColumns( ko, columnFamily, key );
         Set<String> set = new LinkedHashSet<String>();
-        for ( HColumn<String, ByteBuffer> column : columns )
-        {
+        for ( HColumn<String, ByteBuffer> column : columns ) {
             set.add( column.getName() );
         }
         return set;
@@ -525,11 +469,9 @@ public class CassandraService
      */
     public List<HColumn<ByteBuffer, ByteBuffer>> getColumns( Keyspace ko, Object columnFamily, Object key, Object start,
                                                              Object finish, int count, boolean reversed )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getColumns cf=" + columnFamily + " key=" + key + " start=" + start + " finish=" + finish
                     + " count=" + count + " reversed=" + reversed );
         }
@@ -539,30 +481,24 @@ public class CassandraService
         q.setKey( bytebuffer( key ) );
 
         ByteBuffer start_bytes = null;
-        if ( start instanceof DynamicComposite )
-        {
+        if ( start instanceof DynamicComposite ) {
             start_bytes = ( ( DynamicComposite ) start ).serialize();
         }
-        else if ( start instanceof List )
-        {
+        else if ( start instanceof List ) {
             start_bytes = DynamicComposite.toByteBuffer( ( List<?> ) start );
         }
-        else
-        {
+        else {
             start_bytes = bytebuffer( start );
         }
 
         ByteBuffer finish_bytes = null;
-        if ( finish instanceof DynamicComposite )
-        {
+        if ( finish instanceof DynamicComposite ) {
             finish_bytes = ( ( DynamicComposite ) finish ).serialize();
         }
-        else if ( finish instanceof List )
-        {
+        else if ( finish instanceof List ) {
             finish_bytes = DynamicComposite.toByteBuffer( ( List<?> ) finish );
         }
-        else
-        {
+        else {
             finish_bytes = bytebuffer( finish );
         }
 
@@ -575,14 +511,11 @@ public class CassandraService
         ColumnSlice<ByteBuffer, ByteBuffer> slice = r.get();
         List<HColumn<ByteBuffer, ByteBuffer>> results = slice.getColumns();
 
-        if ( db_logger.isDebugEnabled() )
-        {
-            if ( results == null )
-            {
+        if ( db_logger.isDebugEnabled() ) {
+            if ( results == null ) {
                 db_logger.debug( "getColumns returned null" );
             }
-            else
-            {
+            else {
                 db_logger.debug( "getColumns returned " + results.size() + " columns" );
             }
         }
@@ -594,11 +527,9 @@ public class CassandraService
     public Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> multiGetColumns( Keyspace ko, Object columnFamily,
                                                                                    List<?> keys, Object start,
                                                                                    Object finish, int count,
-                                                                                   boolean reversed ) throws Exception
-    {
+                                                                                   boolean reversed ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "multiGetColumns cf=" + columnFamily + " keys=" + keys + " start=" + start + " finish="
                     + finish + " count=" + count + " reversed=" + reversed );
         }
@@ -608,30 +539,24 @@ public class CassandraService
         q.setKeys( bytebuffers( keys ) );
 
         ByteBuffer start_bytes = null;
-        if ( start instanceof DynamicComposite )
-        {
+        if ( start instanceof DynamicComposite ) {
             start_bytes = ( ( DynamicComposite ) start ).serialize();
         }
-        else if ( start instanceof List )
-        {
+        else if ( start instanceof List ) {
             start_bytes = DynamicComposite.toByteBuffer( ( List<?> ) start );
         }
-        else
-        {
+        else {
             start_bytes = bytebuffer( start );
         }
 
         ByteBuffer finish_bytes = null;
-        if ( finish instanceof DynamicComposite )
-        {
+        if ( finish instanceof DynamicComposite ) {
             finish_bytes = ( ( DynamicComposite ) finish ).serialize();
         }
-        else if ( finish instanceof List )
-        {
+        else if ( finish instanceof List ) {
             finish_bytes = DynamicComposite.toByteBuffer( ( List<?> ) finish );
         }
-        else
-        {
+        else {
             finish_bytes = bytebuffer( finish );
         }
 
@@ -641,8 +566,7 @@ public class CassandraService
 
         Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results =
                 new LinkedHashMap<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>>();
-        for ( Row<ByteBuffer, ByteBuffer, ByteBuffer> row : rows )
-        {
+        for ( Row<ByteBuffer, ByteBuffer, ByteBuffer> row : rows ) {
             results.put( row.getKey(), row.getColumnSlice().getColumns() );
         }
 
@@ -663,11 +587,9 @@ public class CassandraService
      */
     public <K, N, V> Rows<K, N, V> getRows( Keyspace ko, Object columnFamily, Collection<K> keys,
                                             Serializer<K> keySerializer, Serializer<N> nameSerializer,
-                                            Serializer<V> valueSerializer ) throws Exception
-    {
+                                            Serializer<V> valueSerializer ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getColumns cf=" + columnFamily + " keys=" + keys );
         }
 
@@ -678,14 +600,11 @@ public class CassandraService
         QueryResult<Rows<K, N, V>> r = q.execute();
         Rows<K, N, V> results = r.get();
 
-        if ( db_logger.isInfoEnabled() )
-        {
-            if ( results == null )
-            {
+        if ( db_logger.isInfoEnabled() ) {
+            if ( results == null ) {
                 db_logger.info( "getColumns returned null" );
             }
-            else
-            {
+            else {
                 db_logger.info( "getColumns returned " + results.getCount() + " columns" );
             }
         }
@@ -709,11 +628,9 @@ public class CassandraService
     @SuppressWarnings("unchecked")
     public <N, V> List<HColumn<N, V>> getColumns( Keyspace ko, Object columnFamily, Object key, Set<String> columnNames,
                                                   Serializer<N> nameSerializer, Serializer<V> valueSerializer )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getColumns cf=" + columnFamily + " key=" + key + " names=" + columnNames );
         }
 
@@ -728,14 +645,11 @@ public class CassandraService
         ColumnSlice<N, V> slice = r.get();
         List<HColumn<N, V>> results = slice.getColumns();
 
-        if ( db_logger.isInfoEnabled() )
-        {
-            if ( results == null )
-            {
+        if ( db_logger.isInfoEnabled() ) {
+            if ( results == null ) {
                 db_logger.info( "getColumns returned null" );
             }
-            else
-            {
+            else {
                 db_logger.info( "getColumns returned " + results.size() + " columns" );
             }
         }
@@ -760,11 +674,9 @@ public class CassandraService
     public <K, N, V> Rows<K, N, V> getRows( Keyspace ko, Object columnFamily, Collection<K> keys,
                                             Collection<String> columnNames, Serializer<K> keySerializer,
                                             Serializer<N> nameSerializer, Serializer<V> valueSerializer )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getColumns cf=" + columnFamily + " keys=" + keys + " names=" + columnNames );
         }
 
@@ -776,14 +688,11 @@ public class CassandraService
         QueryResult<Rows<K, N, V>> r = q.execute();
         Rows<K, N, V> results = r.get();
 
-        if ( db_logger.isInfoEnabled() )
-        {
-            if ( results == null )
-            {
+        if ( db_logger.isInfoEnabled() ) {
+            if ( results == null ) {
                 db_logger.info( "getColumns returned null" );
             }
-            else
-            {
+            else {
                 db_logger.info( "getColumns returned " + results.getCount() + " columns" );
             }
         }
@@ -806,11 +715,9 @@ public class CassandraService
      */
     public <N, V> HColumn<N, V> getColumn( Keyspace ko, Object columnFamily, Object key, N column,
                                            Serializer<N> nameSerializer, Serializer<V> valueSerializer )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getColumn cf=" + columnFamily + " key=" + key + " column=" + column );
         }
 
@@ -825,10 +732,8 @@ public class CassandraService
                 q.setKey( bytebuffer( key ) ).setName( column ).setColumnFamily( columnFamily.toString() ).execute();
         HColumn<N, V> result = r.get();
 
-        if ( db_logger.isInfoEnabled() )
-        {
-            if ( result == null )
-            {
+        if ( db_logger.isInfoEnabled() ) {
+            if ( result == null ) {
                 db_logger.info( "getColumn returned null" );
             }
         }
@@ -839,11 +744,9 @@ public class CassandraService
 
     public <N, V> ColumnSlice<N, V> getColumns( Keyspace ko, Object columnFamily, Object key, N[] columns,
                                                 Serializer<N> nameSerializer, Serializer<V> valueSerializer )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getColumn cf=" + columnFamily + " key=" + key + " column=" + columns );
         }
 
@@ -859,10 +762,8 @@ public class CassandraService
                  .execute();
         ColumnSlice<N, V> result = r.get();
 
-        if ( db_logger.isDebugEnabled() )
-        {
-            if ( result == null )
-            {
+        if ( db_logger.isDebugEnabled() ) {
+            if ( result == null ) {
                 db_logger.debug( "getColumn returned null" );
             }
         }
@@ -872,52 +773,43 @@ public class CassandraService
 
 
     public HColumn<String, ByteBuffer> getColumn( Keyspace ko, Object columnFamily, Object key, String column )
-            throws Exception
-    {
+            throws Exception {
         return getColumn( ko, columnFamily, key, column, se, be );
     }
 
 
     public void setColumn( Keyspace ko, Object columnFamily, Object key, Object columnName, Object columnValue )
-            throws Exception
-    {
+            throws Exception {
         this.setColumn( ko, columnFamily, key, columnName, columnValue, 0 );
     }
 
 
     public void setColumn( Keyspace ko, Object columnFamily, Object key, Object columnName, Object columnValue,
-                           int ttl ) throws Exception
-    {
+                           int ttl ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "setColumn cf=" + columnFamily + " key=" + key + " name=" + columnName + " value="
                     + columnValue );
         }
 
         ByteBuffer name_bytes = null;
-        if ( columnName instanceof List )
-        {
+        if ( columnName instanceof List ) {
             name_bytes = DynamicComposite.toByteBuffer( ( List<?> ) columnName );
         }
-        else
-        {
+        else {
             name_bytes = bytebuffer( columnName );
         }
 
         ByteBuffer value_bytes = null;
-        if ( columnValue instanceof List )
-        {
+        if ( columnValue instanceof List ) {
             value_bytes = DynamicComposite.toByteBuffer( ( List<?> ) columnValue );
         }
-        else
-        {
+        else {
             value_bytes = bytebuffer( columnValue );
         }
 
         HColumn<ByteBuffer, ByteBuffer> col = createColumn( name_bytes, value_bytes, be, be );
-        if ( ttl != 0 )
-        {
+        if ( ttl != 0 ) {
             col.setTtl( ttl );
         }
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -935,17 +827,14 @@ public class CassandraService
      *
      * @throws Exception the exception
      */
-    public void setColumns( Keyspace ko, Object columnFamily, byte[] key, Map<?, ?> map ) throws Exception
-    {
+    public void setColumns( Keyspace ko, Object columnFamily, byte[] key, Map<?, ?> map ) throws Exception {
         this.setColumns( ko, columnFamily, key, map, 0 );
     }
 
 
-    public void setColumns( Keyspace ko, Object columnFamily, byte[] key, Map<?, ?> map, int ttl ) throws Exception
-    {
+    public void setColumns( Keyspace ko, Object columnFamily, byte[] key, Map<?, ?> map, int ttl ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "setColumns cf=" + columnFamily + " key=" + key + " map=" + map + ( ttl != 0 ?
                                                                                                  " ttl=" + ttl : "" ) );
         }
@@ -953,35 +842,28 @@ public class CassandraService
         Mutator<ByteBuffer> m = createMutator( ko, be );
         long timestamp = createTimestamp();
 
-        for ( Object name : map.keySet() )
-        {
+        for ( Object name : map.keySet() ) {
             Object value = map.get( name );
-            if ( value != null )
-            {
+            if ( value != null ) {
 
                 ByteBuffer name_bytes = null;
-                if ( name instanceof List )
-                {
+                if ( name instanceof List ) {
                     name_bytes = DynamicComposite.toByteBuffer( ( List<?> ) name );
                 }
-                else
-                {
+                else {
                     name_bytes = bytebuffer( name );
                 }
 
                 ByteBuffer value_bytes = null;
-                if ( value instanceof List )
-                {
+                if ( value instanceof List ) {
                     value_bytes = DynamicComposite.toByteBuffer( ( List<?> ) value );
                 }
-                else
-                {
+                else {
                     value_bytes = bytebuffer( value );
                 }
 
                 HColumn<ByteBuffer, ByteBuffer> col = createColumn( name_bytes, value_bytes, timestamp, be, be );
-                if ( ttl != 0 )
-                {
+                if ( ttl != 0 ) {
                     col.setTtl( ttl );
                 }
                 m.addInsertion( bytebuffer( key ), columnFamily.toString(),
@@ -997,8 +879,7 @@ public class CassandraService
      *
      * @return a timestamp
      */
-    public long createTimestamp()
-    {
+    public long createTimestamp() {
         return chc.getClockResolution().createClock();
     }
 
@@ -1013,11 +894,9 @@ public class CassandraService
      *
      * @throws Exception the exception
      */
-    public void deleteColumn( Keyspace ko, Object columnFamily, Object key, Object column ) throws Exception
-    {
+    public void deleteColumn( Keyspace ko, Object columnFamily, Object key, Object column ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "deleteColumn cf=" + columnFamily + " key=" + key + " name=" + column );
         }
 
@@ -1036,11 +915,9 @@ public class CassandraService
      *
      * @throws Exception the exception
      */
-    public <K> Set<K> getRowKeySet( Keyspace ko, Object columnFamily, Serializer<K> keySerializer ) throws Exception
-    {
+    public <K> Set<K> getRowKeySet( Keyspace ko, Object columnFamily, Serializer<K> keySerializer ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "getRowKeys cf=" + columnFamily );
         }
 
@@ -1052,13 +929,11 @@ public class CassandraService
         OrderedRows<K, ByteBuffer, ByteBuffer> rows = r.get();
 
         Set<K> results = new LinkedHashSet<K>();
-        for ( Row<K, ByteBuffer, ByteBuffer> row : rows )
-        {
+        for ( Row<K, ByteBuffer, ByteBuffer> row : rows ) {
             results.add( row.getKey() );
         }
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             {
                 db_logger.debug( "getRowKeys returned " + results.size() + " rows" );
             }
@@ -1078,8 +953,7 @@ public class CassandraService
      *
      * @throws Exception the exception
      */
-    public <K> List<K> getRowKeyList( Keyspace ko, Object columnFamily, Serializer<K> keySerializer ) throws Exception
-    {
+    public <K> List<K> getRowKeyList( Keyspace ko, Object columnFamily, Serializer<K> keySerializer ) throws Exception {
 
         RangeSlicesQuery<K, ByteBuffer, ByteBuffer> q = createRangeSlicesQuery( ko, keySerializer, be, be );
         q.setColumnFamily( columnFamily.toString() );
@@ -1089,8 +963,7 @@ public class CassandraService
         OrderedRows<K, ByteBuffer, ByteBuffer> rows = r.get();
 
         List<K> list = new ArrayList<K>();
-        for ( Row<K, ByteBuffer, ByteBuffer> row : rows )
-        {
+        for ( Row<K, ByteBuffer, ByteBuffer> row : rows ) {
             list.add( row.getKey() );
             // K uuid = row.getKey();
             // if (uuid != UUIDUtils.ZERO_UUID) {
@@ -1111,11 +984,9 @@ public class CassandraService
      *
      * @throws Exception the exception
      */
-    public void deleteRow( Keyspace ko, final Object columnFamily, final Object key ) throws Exception
-    {
+    public void deleteRow( Keyspace ko, final Object columnFamily, final Object key ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key );
         }
 
@@ -1123,11 +994,9 @@ public class CassandraService
     }
 
 
-    public void deleteRow( Keyspace ko, final Object columnFamily, final String key ) throws Exception
-    {
+    public void deleteRow( Keyspace ko, final Object columnFamily, final String key ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key );
         }
 
@@ -1146,11 +1015,9 @@ public class CassandraService
      * @throws Exception the exception
      */
     public void deleteRow( Keyspace ko, final Object columnFamily, final Object key, final long timestamp )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( db_logger.isDebugEnabled() )
-        {
+        if ( db_logger.isDebugEnabled() ) {
             db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key + " timestamp=" + timestamp );
         }
 
@@ -1177,16 +1044,13 @@ public class CassandraService
      */
     public IndexScanner getIdList( Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
                                    IndexBucketLocator locator, UUID applicationId, String collectionName )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( count <= 0 )
-        {
+        if ( count <= 0 ) {
             count = DEFAULT_COUNT;
         }
 
-        if ( NULL_ID.equals( start ) )
-        {
+        if ( NULL_ID.equals( start ) ) {
             start = null;
         }
 
@@ -1198,8 +1062,7 @@ public class CassandraService
     }
 
 
-    public int countColumns( Keyspace ko, Object columnFamily, Object key ) throws Exception
-    {
+    public int countColumns( Keyspace ko, Object columnFamily, Object key ) throws Exception {
 
 
         CountQuery<ByteBuffer, ByteBuffer> cq = HFactory.createCountQuery( ko, be, be );
@@ -1207,8 +1070,7 @@ public class CassandraService
         cq.setKey( bytebuffer( key ) );
         cq.setRange( ByteBuffer.allocate( 0 ), ByteBuffer.allocate( 0 ), 100000000 );
         QueryResult<Integer> r = cq.execute();
-        if ( r == null )
-        {
+        if ( r == null ) {
             return 0;
         }
         return r.get();
@@ -1229,8 +1091,7 @@ public class CassandraService
      * @throws Exception the exception
      */
     public void setIdList( Keyspace ko, UUID targetId, String keyPrefix, String keySuffix, List<UUID> keyIds )
-            throws Exception
-    {
+            throws Exception {
         long timestamp = createTimestamp();
         Mutator<ByteBuffer> batch = createMutator( ko, be );
         batch = buildSetIdListMutator( batch, targetId, ENTITY_ID_SETS.toString(), keyPrefix, keySuffix, keyIds,
@@ -1242,20 +1103,15 @@ public class CassandraService
     boolean clusterUp = false;
 
 
-    public void startClusterHealthCheck()
-    {
+    public void startClusterHealthCheck() {
 
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleWithFixedDelay( new Runnable()
-        {
+        executorService.scheduleWithFixedDelay( new Runnable() {
             @Override
-            public void run()
-            {
-                if ( cluster != null )
-                {
+            public void run() {
+                if ( cluster != null ) {
                     HConnectionManager connectionManager = cluster.getConnectionManager();
-                    if ( connectionManager != null )
-                    {
+                    if ( connectionManager != null ) {
                         clusterUp = !connectionManager.getHosts().isEmpty();
                     }
                 }

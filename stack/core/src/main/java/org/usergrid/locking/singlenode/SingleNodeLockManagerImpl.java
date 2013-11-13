@@ -40,8 +40,7 @@ import com.google.common.cache.RemovalNotification;
  * <p/>
  * The hector based implementation is the preferred production locking system
  */
-public class SingleNodeLockManagerImpl implements LockManager
-{
+public class SingleNodeLockManagerImpl implements LockManager {
 
     private static final Logger logger = LoggerFactory.getLogger( SingleNodeLockManagerImpl.class );
 
@@ -53,28 +52,23 @@ public class SingleNodeLockManagerImpl implements LockManager
                     // use weakValues. We want want entries removed if they're not being
                     // referenced by another
                     // thread somewhere and GC occurs
-                    .weakValues().removalListener( new RemovalListener<String, ReentrantLock>()
-            {
+                    .weakValues().removalListener( new RemovalListener<String, ReentrantLock>() {
 
                 @Override
-                public void onRemoval( RemovalNotification<String, ReentrantLock> notification )
-                {
+                public void onRemoval( RemovalNotification<String, ReentrantLock> notification ) {
                     logger.debug( "Evicting reentrant lock for {}", notification.getKey() );
                 }
-            } ).build( new CacheLoader<String, ReentrantLock>()
-            {
+            } ).build( new CacheLoader<String, ReentrantLock>() {
 
                 @Override
-                public ReentrantLock load( String arg0 ) throws Exception
-                {
+                public ReentrantLock load( String arg0 ) throws Exception {
                     return new ReentrantLock( true );
                 }
             } );
 
 
     /** Default constructor. */
-    public SingleNodeLockManagerImpl()
-    {
+    public SingleNodeLockManagerImpl() {
     }
 
 
@@ -85,17 +79,14 @@ public class SingleNodeLockManagerImpl implements LockManager
    * java.lang.String[])
    */
     @Override
-    public Lock createLock( UUID applicationId, String... path )
-    {
+    public Lock createLock( UUID applicationId, String... path ) {
 
         String lockPath = LockPathBuilder.buildPath( applicationId, path );
 
-        try
-        {
+        try {
             return new SingleNodeLockImpl( locks.get( lockPath ) );
         }
-        catch ( ExecutionException e )
-        {
+        catch ( ExecutionException e ) {
             throw new RuntimeException( "Unable to create lock in cache", e );
         }
     }

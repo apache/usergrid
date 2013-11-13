@@ -53,8 +53,7 @@ import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
-public class Import extends ToolBase
-{
+public class Import extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( Import.class );
 
@@ -70,8 +69,7 @@ public class Import extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().withDescription( "Cassandra host" ).create( "host" );
@@ -92,8 +90,7 @@ public class Import extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
         setVerbose( line );
@@ -114,19 +111,15 @@ public class Import extends ToolBase
 
 
     /** Import applications */
-    private void importApplications() throws Exception
-    {
+    private void importApplications() throws Exception {
         String[] nanemspaceFileNames = importDir.list( new PrefixFileFilter( "application." ) );
         logger.info( "Applications to read: " + nanemspaceFileNames.length );
 
-        for ( String applicationName : nanemspaceFileNames )
-        {
-            try
-            {
+        for ( String applicationName : nanemspaceFileNames ) {
+            try {
                 importApplication( applicationName );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.warn( "Unable to import application: " + applicationName, e );
             }
         }
@@ -138,8 +131,7 @@ public class Import extends ToolBase
      *
      * @param applicationName file name where the application was exported.
      */
-    private void importApplication( String applicationName ) throws Exception
-    {
+    private void importApplication( String applicationName ) throws Exception {
         // Open up application file.
         File applicationFile = new File( importDir, applicationName );
 
@@ -161,8 +153,7 @@ public class Import extends ToolBase
 
         OrganizationInfo info = managementService.getOrganizationByName( orgName );
 
-        if ( info == null )
-        {
+        if ( info == null ) {
             logger.error( "Unable to import application '{}' for organisation with name '{}'", application.getName(),
                     orgName );
             return;
@@ -171,16 +162,13 @@ public class Import extends ToolBase
 
         UUID appId = null;
 
-        try
-        {
+        try {
             appId = managementService.importApplication( info.getUuid(), application );
         }
-        catch ( ApplicationAlreadyExistsException aaee )
-        {
+        catch ( ApplicationAlreadyExistsException aaee ) {
             ApplicationInfo appInfo = managementService.getApplicationInfo( orgName + "/" + application.getName() );
 
-            if ( appInfo != null )
-            {
+            if ( appInfo != null ) {
                 appId = appInfo.getId();
             }
         }
@@ -191,8 +179,7 @@ public class Import extends ToolBase
 
         // we now need to remove all roles, they'll be imported again below
 
-        for ( Entry<String, String> entry : em.getRoles().entrySet() )
-        {
+        for ( Entry<String, String> entry : em.getRoles().entrySet() ) {
             em.deleteRole( entry.getKey() );
         }
 
@@ -200,15 +187,13 @@ public class Import extends ToolBase
         @SuppressWarnings("unchecked") Map<String, Object> dictionaries =
                 ( Map<String, Object> ) application.getMetadata( "dictionaries" );
 
-        if ( dictionaries != null )
-        {
+        if ( dictionaries != null ) {
             EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
             Entity appEntity = rootEm.get( appId );
 
 
-            for ( Entry<String, Object> dictionary : dictionaries.entrySet() )
-            {
+            for ( Entry<String, Object> dictionary : dictionaries.entrySet() ) {
                 @SuppressWarnings("unchecked") Map<Object, Object> value =
                         ( Map<Object, Object> ) dictionary.getValue();
 
@@ -238,31 +223,26 @@ public class Import extends ToolBase
         @SuppressWarnings("unchecked") List<String> collections =
                 ( List<String> ) application.getMetadata( "collections" );
 
-        for ( String collectionName : collections )
-        {
+        for ( String collectionName : collections ) {
             em.createApplicationCollection( collectionName );
         }
 
 
-        while ( jp.nextValue() != JsonToken.END_ARRAY )
-        {
+        while ( jp.nextValue() != JsonToken.END_ARRAY ) {
             @SuppressWarnings("unchecked") Map<String, Object> entityProps = jp.readValueAs( HashMap.class );
             // Import/create the entity
             UUID uuid = getId( entityProps );
             String type = getType( entityProps );
 
-            try
-            {
+            try {
                 em.create( uuid, type, entityProps );
             }
-            catch ( DuplicateUniquePropertyExistsException de )
-            {
+            catch ( DuplicateUniquePropertyExistsException de ) {
                 logger.error( "Unable to create entity.  It appears to be a duplicate", de );
                 continue;
             }
 
-            if ( em.get( uuid ) == null )
-            {
+            if ( em.get( uuid ) == null ) {
                 logger.error( "Holy hell, we wrote an entity and it's missing.  Entity Id was {} and type is {}", uuid,
                         type );
                 System.exit( 1 );
@@ -278,43 +258,35 @@ public class Import extends ToolBase
     }
 
 
-    private String getType( Map<String, Object> entityProps )
-    {
+    private String getType( Map<String, Object> entityProps ) {
         return ( String ) entityProps.get( PROPERTY_TYPE );
     }
 
 
-    private UUID getId( Map<String, Object> entityProps )
-    {
+    private UUID getId( Map<String, Object> entityProps ) {
         return UUID.fromString( ( String ) entityProps.get( PROPERTY_UUID ) );
     }
 
 
-    private void validateStartArray( JsonToken token )
-    {
-        if ( token != JsonToken.START_ARRAY )
-        {
+    private void validateStartArray( JsonToken token ) {
+        if ( token != JsonToken.START_ARRAY ) {
             throw new RuntimeException( "Token should be START ARRAY but it is:" + token.asString() );
         }
     }
 
 
     /** Import organizations */
-    private void importOrganizations() throws Exception
-    {
+    private void importOrganizations() throws Exception {
 
         String[] organizationFileNames = importDir.list( new PrefixFileFilter( "organization." ) );
         logger.info( "Organizations to read: " + organizationFileNames.length );
 
-        for ( String organizationFileName : organizationFileNames )
-        {
+        for ( String organizationFileName : organizationFileNames ) {
 
-            try
-            {
+            try {
                 importOrganization( organizationFileName );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.warn( "Unable to import organization:" + organizationFileName, e );
             }
         }
@@ -326,8 +298,7 @@ public class Import extends ToolBase
      *
      * @param organizationFileName file where the organization was exported
      */
-    private void importOrganization( String organizationFileName ) throws Exception
-    {
+    private void importOrganization( String organizationFileName ) throws Exception {
         ExportOrg acc = null;
 
         // Open up organization dir.
@@ -348,20 +319,17 @@ public class Import extends ToolBase
         OrganizationInfo org = managementService.getOrganizationByName( acc.getName() );
 
         //only import if the org doesn't exist
-        if ( org == null )
-        {
+        if ( org == null ) {
             org = managementService.importOrganization( acc.getUuid(), acc, properties );
         }
 
 
         //now go through and add each admin from the original org to the newly imported
 
-        for ( String exportedUser : acc.getAdmins() )
-        {
+        for ( String exportedUser : acc.getAdmins() ) {
             UserInfo existing = managementService.getAdminUserByUsername( exportedUser );
 
-            if ( existing != null )
-            {
+            if ( existing != null ) {
                 managementService.addAdminUserToOrganization( existing, org, false );
             }
         }
@@ -371,8 +339,7 @@ public class Import extends ToolBase
     }
 
 
-    private JsonParser getJsonParserForFile( File organizationFile ) throws Exception
-    {
+    private JsonParser getJsonParserForFile( File organizationFile ) throws Exception {
         JsonParser jp = jsonFactory.createJsonParser( organizationFile );
         jp.setCodec( new ObjectMapper() );
         return jp;
@@ -380,41 +347,34 @@ public class Import extends ToolBase
 
 
     /** Import collections. Collections files are named: collections.<application_name>.Timestamp.json */
-    private void importCollections() throws Exception
-    {
+    private void importCollections() throws Exception {
         String[] collectionsFileNames = importDir.list( new PrefixFileFilter( "collections." ) );
         logger.info( "Collections to read: " + collectionsFileNames.length );
 
-        for ( String collectionName : collectionsFileNames )
-        {
-            try
-            {
+        for ( String collectionName : collectionsFileNames ) {
+            try {
                 importCollection( collectionName );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.warn( "Unable to import collection: " + collectionName, e );
             }
         }
     }
 
 
-    private void importCollection( String collectionFileName ) throws Exception
-    {
+    private void importCollection( String collectionFileName ) throws Exception {
         // Retrieve the namepsace for this collection. It's part of the name
         String applicationName = getApplicationFromColllection( collectionFileName );
 
         UUID appId = emf.lookupApplication( applicationName );
 
         //no org in path, this is a pre public beta so we need to create the new path
-        if ( appId == null && !applicationName.contains( "/" ) )
-        {
+        if ( appId == null && !applicationName.contains( "/" ) ) {
             String fileName = collectionFileName.replace( "collections", "application" );
 
             File applicationFile = new File( importDir, fileName );
 
-            if ( !applicationFile.exists() )
-            {
+            if ( !applicationFile.exists() ) {
                 logger.error( "Could not load application file {} to search for org information",
                         applicationFile.getAbsolutePath() );
                 return;
@@ -442,8 +402,7 @@ public class Import extends ToolBase
 
             OrganizationInfo info = managementService.getOrganizationByName( orgName );
 
-            if ( info == null )
-            {
+            if ( info == null ) {
                 logger.error( "Could not find org with name {}", orgName );
                 return;
             }
@@ -454,8 +413,7 @@ public class Import extends ToolBase
         }
 
 
-        if ( appId == null )
-        {
+        if ( appId == null ) {
             logger.error( "Unable to find application with name {}.  Skipping collections", appId );
             return;
         }
@@ -471,8 +429,7 @@ public class Import extends ToolBase
 
         EntityManager em = emf.getEntityManager( appId );
 
-        while ( jp.nextToken() != JsonToken.END_OBJECT )
-        {
+        while ( jp.nextToken() != JsonToken.END_OBJECT ) {
             importEntitysStuff( jp, em );
         }
 
@@ -486,8 +443,7 @@ public class Import extends ToolBase
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
-    private void importEntitysStuff( JsonParser jp, EntityManager em ) throws Exception
-    {
+    private void importEntitysStuff( JsonParser jp, EntityManager em ) throws Exception {
         // The entity that owns the collections
         String entityOwnerId = jp.getCurrentName();
         EntityRef ownerEntityRef = em.getRef( UUID.fromString( entityOwnerId ) );
@@ -495,21 +451,17 @@ public class Import extends ToolBase
         jp.nextToken(); // start object
 
         // Go inside the value after getting the owner entity id.
-        while ( jp.nextToken() != JsonToken.END_OBJECT )
-        {
+        while ( jp.nextToken() != JsonToken.END_OBJECT ) {
             String collectionName = jp.getCurrentName();
 
-            if ( collectionName.equals( "connections" ) )
-            {
+            if ( collectionName.equals( "connections" ) ) {
 
                 jp.nextToken(); // START_OBJECT
-                while ( jp.nextToken() != JsonToken.END_OBJECT )
-                {
+                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
                     String connectionType = jp.getCurrentName();
 
                     jp.nextToken(); // START_ARRAY
-                    while ( jp.nextToken() != JsonToken.END_ARRAY )
-                    {
+                    while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                         String entryId = jp.getText();
                         EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
                         // Store in DB
@@ -517,12 +469,10 @@ public class Import extends ToolBase
                     }
                 }
             }
-            else if ( collectionName.equals( "dictionaries" ) )
-            {
+            else if ( collectionName.equals( "dictionaries" ) ) {
 
                 jp.nextToken(); // START_OBJECT
-                while ( jp.nextToken() != JsonToken.END_OBJECT )
-                {
+                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
 
 
                     String dictionaryName = jp.getCurrentName();
@@ -535,13 +485,11 @@ public class Import extends ToolBase
                 }
             }
 
-            else
-            {
+            else {
                 // Regular collections
 
                 jp.nextToken(); // START_ARRAY
-                while ( jp.nextToken() != JsonToken.END_ARRAY )
-                {
+                while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                     String entryId = jp.getText();
                     EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
 
@@ -567,8 +515,7 @@ public class Import extends ToolBase
      *
      * @return the application name for this collections file name
      */
-    private String getApplicationFromColllection( String collectionFileName )
-    {
+    private String getApplicationFromColllection( String collectionFileName ) {
         int firstDot = collectionFileName.indexOf( "." );
         int secondDot = collectionFileName.indexOf( ".", firstDot + 1 );
 
@@ -581,17 +528,14 @@ public class Import extends ToolBase
 
 
     /** Open up the import directory based on <code>importDir</code> */
-    private void openImportDirectory( CommandLine line )
-    {
+    private void openImportDirectory( CommandLine line ) {
 
         boolean hasInputDir = line.hasOption( INPUT_DIR );
 
-        if ( hasInputDir )
-        {
+        if ( hasInputDir ) {
             importDir = new File( line.getOptionValue( INPUT_DIR ) );
         }
-        else
-        {
+        else {
             importDir = new File( DEFAULT_INPUT_DIR );
         }
 

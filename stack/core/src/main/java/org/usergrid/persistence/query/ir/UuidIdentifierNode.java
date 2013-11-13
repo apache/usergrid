@@ -9,28 +9,24 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public class UuidIdentifierNode extends QueryNode
-{
+public class UuidIdentifierNode extends QueryNode {
 
 
     private final UUID uuid;
 
 
-    public UuidIdentifierNode( UUID uuid )
-    {
+    public UuidIdentifierNode( UUID uuid ) {
         this.uuid = uuid;
     }
 
 
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return uuid;
     }
 }

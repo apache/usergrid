@@ -16,32 +16,27 @@
 package org.usergrid.management.exceptions;
 
 
-public class UnableToLeaveOrganizationException extends ManagementException
-{
+public class UnableToLeaveOrganizationException extends ManagementException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public UnableToLeaveOrganizationException()
-    {
+    public UnableToLeaveOrganizationException() {
         super();
     }
 
 
-    public UnableToLeaveOrganizationException( String arg0, Throwable arg1 )
-    {
+    public UnableToLeaveOrganizationException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public UnableToLeaveOrganizationException( String arg0 )
-    {
+    public UnableToLeaveOrganizationException( String arg0 ) {
         super( arg0 );
     }
 
 
-    public UnableToLeaveOrganizationException( Throwable arg0 )
-    {
+    public UnableToLeaveOrganizationException( Throwable arg0 ) {
         super( arg0 );
     }
 }

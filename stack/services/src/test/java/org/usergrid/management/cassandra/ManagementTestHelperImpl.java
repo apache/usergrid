@@ -32,8 +32,7 @@ import org.usergrid.security.tokens.TokenService;
 
 
 @Component
-public class ManagementTestHelperImpl implements ManagementTestHelper
-{
+public class ManagementTestHelperImpl implements ManagementTestHelper {
     private static final Logger logger = LoggerFactory.getLogger( ManagementTestHelperImpl.class );
 
     EntityManagerFactory emf;
@@ -43,51 +42,44 @@ public class ManagementTestHelperImpl implements ManagementTestHelper
 
 
     @Override
-    public void setup() throws Exception
-    {
+    public void setup() throws Exception {
         String maven_opts = System.getenv( "MAVEN_OPTS" );
         logger.info( "Maven options: " + maven_opts );
     }
 
 
     @Override
-    public void teardown()
-    {
+    public void teardown() {
     }
 
 
     @Override
-    public EntityManagerFactory getEntityManagerFactory()
-    {
+    public EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
 
     @Override
-    public ManagementService getManagementService()
-    {
+    public ManagementService getManagementService() {
         return management;
     }
 
 
     @Override
-    public Properties getProperties()
-    {
+    public Properties getProperties() {
         return properties;
     }
 
 
     @Override
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
     @Override
-    public TokenService getTokenService()
-    {
+    public TokenService getTokenService() {
         return tokens;
     }
 }

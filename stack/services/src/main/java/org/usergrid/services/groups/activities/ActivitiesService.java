@@ -29,22 +29,19 @@ import org.usergrid.services.ServiceResults;
 import org.usergrid.services.generic.GenericCollectionService;
 
 
-public class ActivitiesService extends GenericCollectionService
-{
+public class ActivitiesService extends GenericCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( ActivitiesService.class );
 
 
-    public ActivitiesService()
-    {
+    public ActivitiesService() {
         super();
         logger.info( "/groups/*/activities" );
     }
 
 
     @Override
-    public ServiceResults postCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults postCollection( ServiceContext context ) throws Exception {
 
         ServiceResults results = super.postCollection( context );
 
@@ -54,8 +51,7 @@ public class ActivitiesService extends GenericCollectionService
 
 
     @Override
-    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
 
         ServiceResults results = super.postItemById( context, id );
 
@@ -64,17 +60,14 @@ public class ActivitiesService extends GenericCollectionService
     }
 
 
-    public void distribute( EntityRef group, Entity activity ) throws Exception
-    {
-        if ( activity == null )
-        {
+    public void distribute( EntityRef group, Entity activity ) throws Exception {
+        if ( activity == null ) {
             return;
         }
         em.addToCollection( group, "feed", activity );
         Results r = em.getCollection( group, "users", null, 10000, Results.Level.REFS, false );
         List<EntityRef> refs = r.getRefs();
-        if ( refs != null )
-        {
+        if ( refs != null ) {
             em.addToCollections( refs, "feed", activity );
         }
     }

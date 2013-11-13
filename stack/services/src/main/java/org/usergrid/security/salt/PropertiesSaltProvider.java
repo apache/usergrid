@@ -26,8 +26,7 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public class PropertiesSaltProvider implements SaltProvider
-{
+public class PropertiesSaltProvider implements SaltProvider {
 
     private Properties saltProperties;
 
@@ -36,22 +35,19 @@ public class PropertiesSaltProvider implements SaltProvider
      * @see org.usergrid.security.salt.SaltProvider#getSalt(java.util.UUID, java.util.UUID)
      */
     @Override
-    public String getSalt( UUID applicationId, UUID userId )
-    {
+    public String getSalt( UUID applicationId, UUID userId ) {
         return saltProperties.getProperty( applicationId.toString() );
     }
 
 
     /** @return the saltProperties */
-    public Properties getSaltProperties()
-    {
+    public Properties getSaltProperties() {
         return saltProperties;
     }
 
 
     /** @param saltProperties the saltProperties to set */
-    public void setSaltProperties( Properties saltProperties )
-    {
+    public void setSaltProperties( Properties saltProperties ) {
         this.saltProperties = saltProperties;
     }
 }

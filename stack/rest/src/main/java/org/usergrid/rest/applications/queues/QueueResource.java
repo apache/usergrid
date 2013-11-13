@@ -57,8 +57,7 @@ import com.sun.jersey.core.provider.EntityHolder;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class QueueResource extends AbstractContextResource
-{
+public class QueueResource extends AbstractContextResource {
 
     static final Logger logger = LoggerFactory.getLogger( QueueResource.class );
 
@@ -66,13 +65,11 @@ public class QueueResource extends AbstractContextResource
     String queuePath = "";
 
 
-    public QueueResource()
-    {
+    public QueueResource() {
     }
 
 
-    public QueueResource init( QueueManager mq, String queuePath )
-    {
+    public QueueResource init( QueueManager mq, String queuePath ) {
         this.mq = mq;
         this.queuePath = queuePath;
         return this;
@@ -80,8 +77,7 @@ public class QueueResource extends AbstractContextResource
 
 
     @Path("{subPath}")
-    public QueueResource getSubPath( @Context UriInfo ui, @PathParam("subPath") String subPath ) throws Exception
-    {
+    public QueueResource getSubPath( @Context UriInfo ui, @PathParam("subPath") String subPath ) throws Exception {
 
         logger.info( "QueueResource.getSubPath" );
 
@@ -90,8 +86,7 @@ public class QueueResource extends AbstractContextResource
 
 
     @Path("subscribers")
-    public QueueSubscriberResource getSubscribers( @Context UriInfo ui ) throws Exception
-    {
+    public QueueSubscriberResource getSubscribers( @Context UriInfo ui ) throws Exception {
 
         logger.info( "QueueResource.getSubscribers" );
 
@@ -100,8 +95,7 @@ public class QueueResource extends AbstractContextResource
 
 
     @Path("subscriptions")
-    public QueueSubscriptionResource getSubscriptions( @Context UriInfo ui ) throws Exception
-    {
+    public QueueSubscriptionResource getSubscriptions( @Context UriInfo ui ) throws Exception {
 
         logger.info( "QueueResource.getSubscriptions" );
 
@@ -113,8 +107,7 @@ public class QueueResource extends AbstractContextResource
     @GET
     public JSONWithPadding getProperties( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "QueueResource.getProperties" );
 
@@ -127,8 +120,7 @@ public class QueueResource extends AbstractContextResource
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding putProperties( @Context UriInfo ui, Map<String, Object> json,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "QueueResource.putProperties" );
 
@@ -140,11 +132,9 @@ public class QueueResource extends AbstractContextResource
     public JSONWithPadding executeGet( @Context UriInfo ui, @QueryParam("start") String firstQueuePath,
                                        @QueryParam("limit") @DefaultValue("10") int limit,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( StringUtils.isNotBlank( queuePath ) )
-        {
+        if ( StringUtils.isNotBlank( queuePath ) ) {
             logger.info( "QueueResource.executeGet: " + queuePath );
 
             QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
@@ -163,20 +153,17 @@ public class QueueResource extends AbstractContextResource
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "QueueResource.executePost: " + queuePath );
         Object json = body.getEntity();
 
-        if ( json instanceof Map )
-        {
+        if ( json instanceof Map ) {
             return new JSONWithPadding(
                     new QueueResults( mq.postToQueue( queuePath, new Message( ( Map<String, Object> ) json ) ) ),
                     callback );
         }
-        else if ( json instanceof List )
-        {
+        else if ( json instanceof List ) {
             return new JSONWithPadding( new QueueResults(
                     mq.postToQueue( queuePath, Message.fromList( ( List<Map<String, Object>> ) json ) ) ), callback );
         }
@@ -189,8 +176,7 @@ public class QueueResource extends AbstractContextResource
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "QueueResource.executePut: " + queuePath );
 
@@ -203,15 +189,13 @@ public class QueueResource extends AbstractContextResource
     @DELETE
     public JSONWithPadding executeDelete( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         throw new NotImplementedException( "Queue delete is not implemented yet" );
     }
 
 
     @Path("transactions")
-    public QueueTransactionsResource getTransactions( @Context UriInfo ui ) throws Exception
-    {
+    public QueueTransactionsResource getTransactions( @Context UriInfo ui ) throws Exception {
 
         logger.info( "QueueResource.getSubscriptions" );
 

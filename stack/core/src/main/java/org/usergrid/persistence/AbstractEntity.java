@@ -42,8 +42,7 @@ import static org.usergrid.persistence.Schema.PROPERTY_NAME;
  * @author edanuff
  */
 @XmlRootElement
-public abstract class AbstractEntity implements Entity
-{
+public abstract class AbstractEntity implements Entity {
 
     protected UUID uuid;
 
@@ -59,47 +58,40 @@ public abstract class AbstractEntity implements Entity
     @Override
     @EntityProperty(required = true, mutable = false, basic = true, indexed = false)
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return uuid;
     }
 
 
     @Override
-    public void setUuid( UUID uuid )
-    {
+    public void setUuid( UUID uuid ) {
         this.uuid = uuid;
     }
 
 
     @Override
     @EntityProperty(required = true, mutable = false, basic = true, indexed = false)
-    public String getType()
-    {
+    public String getType() {
         return Schema.getDefaultSchema().getEntityType( this.getClass() );
     }
 
 
     @Override
-    public void setType( String type )
-    {
+    public void setType( String type ) {
     }
 
 
     @Override
     @EntityProperty(indexed = true, required = true, mutable = false)
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Long getCreated()
-    {
+    public Long getCreated() {
         return created;
     }
 
 
     @Override
-    public void setCreated( Long created )
-    {
-        if ( created == null )
-        {
+    public void setCreated( Long created ) {
+        if ( created == null ) {
             created = System.currentTimeMillis();
         }
         this.created = created;
@@ -109,17 +101,14 @@ public abstract class AbstractEntity implements Entity
     @Override
     @EntityProperty(indexed = true, required = true, mutable = true)
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Long getModified()
-    {
+    public Long getModified() {
         return modified;
     }
 
 
     @Override
-    public void setModified( Long modified )
-    {
-        if ( modified == null )
-        {
+    public void setModified( Long modified ) {
+        if ( modified == null ) {
             modified = System.currentTimeMillis();
         }
         this.modified = modified;
@@ -128,12 +117,10 @@ public abstract class AbstractEntity implements Entity
 
     @Override
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getName()
-    {
+    public String getName() {
         Object value = getProperty( PROPERTY_NAME );
 
-        if ( value instanceof UUID )
-        {
+        if ( value instanceof UUID ) {
             // fixes existing data that uses UUID in USERGRID-2099
             return value.toString();
         }
@@ -144,43 +131,36 @@ public abstract class AbstractEntity implements Entity
 
     @Override
     @JsonIgnore
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return Schema.getDefaultSchema().getEntityProperties( this );
     }
 
 
     @Override
-    public final Object getProperty( String propertyName )
-    {
+    public final Object getProperty( String propertyName ) {
         return Schema.getDefaultSchema().getEntityProperty( this, propertyName );
     }
 
 
     @Override
-    public final void setProperty( String propertyName, Object propertyValue )
-    {
+    public final void setProperty( String propertyName, Object propertyValue ) {
         Schema.getDefaultSchema().setEntityProperty( this, propertyName, propertyValue );
     }
 
 
     @Override
-    public void setProperties( Map<String, Object> properties )
-    {
+    public void setProperties( Map<String, Object> properties ) {
         dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
         addProperties( properties );
     }
 
 
     @Override
-    public void addProperties( Map<String, Object> properties )
-    {
-        if ( properties == null )
-        {
+    public void addProperties( Map<String, Object> properties ) {
+        if ( properties == null ) {
             return;
         }
-        for ( Entry<String, Object> entry : properties.entrySet() )
-        {
+        for ( Entry<String, Object> entry : properties.entrySet() ) {
             setProperty( entry.getKey(), entry.getValue() );
         }
     }
@@ -188,42 +168,35 @@ public abstract class AbstractEntity implements Entity
 
     @Override
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Object getMetadata( String key )
-    {
+    public Object getMetadata( String key ) {
         return getDataset( "metadata", key );
     }
 
 
     @Override
-    public void setMetadata( String key, Object value )
-    {
+    public void setMetadata( String key, Object value ) {
         setDataset( "metadata", key, value );
     }
 
 
     @Override
-    public void mergeMetadata( Map<String, Object> new_metadata )
-    {
+    public void mergeMetadata( Map<String, Object> new_metadata ) {
         mergeDataset( "metadata", new_metadata );
     }
 
 
     @Override
-    public void clearMetadata()
-    {
+    public void clearMetadata() {
         clearDataset( "metadata" );
     }
 
 
-    public <T> T getDataset( String property, String key )
-    {
+    public <T> T getDataset( String property, String key ) {
         Object md = dynamic_properties.get( property );
-        if ( md == null )
-        {
+        if ( md == null ) {
             return null;
         }
-        if ( !( md instanceof Map<?, ?> ) )
-        {
+        if ( !( md instanceof Map<?, ?> ) ) {
             return null;
         }
         @SuppressWarnings("unchecked") Map<String, T> metadata = ( Map<String, T> ) md;
@@ -231,15 +204,12 @@ public abstract class AbstractEntity implements Entity
     }
 
 
-    public <T> void setDataset( String property, String key, T value )
-    {
-        if ( key == null )
-        {
+    public <T> void setDataset( String property, String key, T value ) {
+        if ( key == null ) {
             return;
         }
         Object md = dynamic_properties.get( property );
-        if ( !( md instanceof Map<?, ?> ) )
-        {
+        if ( !( md instanceof Map<?, ?> ) ) {
             md = new HashMap<String, T>();
             dynamic_properties.put( property, md );
         }
@@ -248,11 +218,9 @@ public abstract class AbstractEntity implements Entity
     }
 
 
-    public <T> void mergeDataset( String property, Map<String, T> new_metadata )
-    {
+    public <T> void mergeDataset( String property, Map<String, T> new_metadata ) {
         Object md = dynamic_properties.get( property );
-        if ( !( md instanceof Map<?, ?> ) )
-        {
+        if ( !( md instanceof Map<?, ?> ) ) {
             md = new HashMap<String, T>();
             dynamic_properties.put( property, md );
         }
@@ -261,86 +229,73 @@ public abstract class AbstractEntity implements Entity
     }
 
 
-    public void clearDataset( String property )
-    {
+    public void clearDataset( String property ) {
         dynamic_properties.remove( property );
     }
 
 
     @Override
-    public List<Entity> getCollections( String key )
-    {
+    public List<Entity> getCollections( String key ) {
         return getDataset( "collections", key );
     }
 
 
     @Override
-    public void setCollections( String key, List<Entity> results )
-    {
+    public void setCollections( String key, List<Entity> results ) {
         setDataset( "collections", key, results );
     }
 
 
     @Override
-    public List<Entity> getConnections( String key )
-    {
+    public List<Entity> getConnections( String key ) {
         return getDataset( "connections", key );
     }
 
 
     @Override
-    public void setConnections( String key, List<Entity> results )
-    {
+    public void setConnections( String key, List<Entity> results ) {
         setDataset( "connections", key, results );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Entity(" + getProperties() + ")";
     }
 
 
     @Override
     @JsonAnySetter
-    public void setDynamicProperty( String key, Object value )
-    {
+    public void setDynamicProperty( String key, Object value ) {
         dynamic_properties.put( key, value );
     }
 
 
     @Override
     @JsonAnyGetter
-    public Map<String, Object> getDynamicProperties()
-    {
+    public Map<String, Object> getDynamicProperties() {
         return dynamic_properties;
     }
 
 
     @Override
-    public final int compareTo( Entity o )
-    {
-        if ( o == null )
-        {
+    public final int compareTo( Entity o ) {
+        if ( o == null ) {
             return 1;
         }
-        try
-        {
+        try {
             long t1 = getUuid().timestamp();
             long t2 = o.getUuid().timestamp();
             return ( t1 < t2 ) ? -1 : ( t1 == t2 ) ? 0 : 1;
         }
-        catch ( UnsupportedOperationException e )
-        {
+        catch ( UnsupportedOperationException e ) {
         }
         return getUuid().compareTo( o.getUuid() );
     }
 
 
     @Override
-    public Entity toTypedEntity()
-    {
+    public Entity toTypedEntity() {
         Entity entity = EntityFactory.newEntity( getUuid(), getType() );
         entity.setProperties( getProperties() );
         return entity;
@@ -351,8 +306,7 @@ public abstract class AbstractEntity implements Entity
      * @see java.lang.Object#hashCode()
      */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( uuid == null ) ? 0 : uuid.hashCode() );
@@ -364,30 +318,23 @@ public abstract class AbstractEntity implements Entity
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
             return true;
         }
-        if ( obj == null )
-        {
+        if ( obj == null ) {
             return false;
         }
-        if ( getClass() != obj.getClass() )
-        {
+        if ( getClass() != obj.getClass() ) {
             return false;
         }
         AbstractEntity other = ( AbstractEntity ) obj;
-        if ( uuid == null )
-        {
-            if ( other.uuid != null )
-            {
+        if ( uuid == null ) {
+            if ( other.uuid != null ) {
                 return false;
             }
         }
-        else if ( !uuid.equals( other.uuid ) )
-        {
+        else if ( !uuid.equals( other.uuid ) ) {
             return false;
         }
         return true;

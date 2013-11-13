@@ -22,17 +22,14 @@ import org.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class AndOperand extends BooleanOperand
-{
+public class AndOperand extends BooleanOperand {
 
-    public AndOperand()
-    {
+    public AndOperand() {
         super( new CommonToken( 0, "and" ) );
     }
 
 
-    public AndOperand( Token t )
-    {
+    public AndOperand( Token t ) {
         super( t );
     }
 
@@ -45,8 +42,7 @@ public class AndOperand extends BooleanOperand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException
-    {
+    public void visit( QueryVisitor visitor ) throws PersistenceException {
         visitor.visit( this );
     }
 }

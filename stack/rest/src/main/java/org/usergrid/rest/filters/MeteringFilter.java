@@ -52,8 +52,7 @@ import com.yammer.metrics.core.TimerContext;
 
 
 @Component
-public class MeteringFilter implements ContainerRequestFilter, ContainerResponseFilter
-{
+public class MeteringFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     @Context
     protected HttpServletRequest httpServletRequest;
@@ -69,8 +68,7 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
     private static final Logger logger = LoggerFactory.getLogger( MeteringFilter.class );
 
 
-    public MeteringFilter()
-    {
+    public MeteringFilter() {
         logger.info( "MeteringFilter installed" );
         this.activeRequests = Metrics.newCounter( MeteringFilter.class, "activeRequests" );
         this.requestTimer =
@@ -79,121 +77,100 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
     @Autowired
-    public void setUsergridSystemMonitor( UsergridSystemMonitor usergridSystemMonitor )
-    {
+    public void setUsergridSystemMonitor( UsergridSystemMonitor usergridSystemMonitor ) {
         this.usergridSystemMonitor = usergridSystemMonitor;
     }
 
 
     @Override
-    public ContainerRequest filter( ContainerRequest request )
-    {
+    public ContainerRequest filter( ContainerRequest request ) {
 
-        try
-        {
+        try {
             activeRequests.inc();
             request.setEntityInputStream( new InputStreamAdapter( request.getEntityInputStream() ) );
             httpServletRequest.setAttribute( "application.request.timetamp", System.currentTimeMillis() );
             httpServletRequest.setAttribute( "application.request.requestTimer", requestTimer.time() );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to capture request", e );
         }
         return request;
     }
 
 
-    public void countDataWritten( long written )
-    {
+    public void countDataWritten( long written ) {
         TimerContext timer = ( TimerContext ) httpServletRequest.getAttribute( "application.request.requestTimer" );
-        try
-        {
+        try {
             UUID applicationId = ( UUID ) httpServletRequest.getAttribute( "applicationId" );
             Long timestamp = ( Long ) httpServletRequest.getAttribute( "application.request.timetamp" );
             long time;
-            if ( ( timestamp != null ) && ( timestamp > 0 ) )
-            {
+            if ( ( timestamp != null ) && ( timestamp > 0 ) ) {
                 time = System.currentTimeMillis() - timestamp;
             }
-            else
-            {
+            else {
                 time = -1;
             }
             usergridSystemMonitor.maybeLogPayload( time, "path", httpServletRequest.getRequestURI(), "applicationId",
                     applicationId );
-            if ( applicationId != null )
-            {
+            if ( applicationId != null ) {
 
                 Map<String, Long> counters = new HashMap<String, Long>();
 
 
-                if ( time > 0 )
-                {
+                if ( time > 0 ) {
                     logger.info( "Application: {}, spent {} milliseconds of CPU time", applicationId, time );
                     counters.put( "application.request.time", time );
                 }
 
                 Long read = ( Long ) httpServletRequest.getAttribute( "application.request.upload" );
-                if ( ( read != null ) && ( read > 0 ) )
-                {
+                if ( ( read != null ) && ( read > 0 ) ) {
                     logger.info( "Application: {}, received {} bytes", applicationId, written );
                     counters.put( "application.request.upload", read );
                 }
 
-                if ( written > 0 )
-                {
+                if ( written > 0 ) {
                     logger.info( "Application: {}, sending {} bytes", applicationId, written );
                     counters.put( "application.request.download", written );
                 }
 
-                if ( emf != null )
-                {
+                if ( emf != null ) {
                     EntityManager em = emf.getEntityManager( applicationId );
                     em.incrementAggregateCounters( null, null, null, counters );
                 }
-                else
-                {
+                else {
                     logger.error( "No EntityManagerFactory configured" );
                 }
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to capture output", e );
         }
-        finally
-        {
-            if ( timer != null )
-            {
+        finally {
+            if ( timer != null ) {
                 timer.stop();
             }
             activeRequests.dec();
@@ -201,52 +178,42 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
     }
 
 
-    public void countDataRead( long read )
-    {
-        try
-        {
-            if ( read > 0 )
-            {
+    public void countDataRead( long read ) {
+        try {
+            if ( read > 0 ) {
                 httpServletRequest.setAttribute( "application.request.upload", read );
             }
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to capture input", e );
         }
     }
 
 
-    private final class InputStreamAdapter extends FilterInputStream
-    {
+    private final class InputStreamAdapter extends FilterInputStream {
 
         long total = 0;
 
 
-        protected InputStreamAdapter( InputStream in )
-        {
+        protected InputStreamAdapter( InputStream in ) {
             super( in );
         }
 
 
         @Override
-        public int available() throws IOException
-        {
+        public int available() throws IOException {
             int i = super.available();
             return i;
         }
 
 
         @Override
-        public int read() throws IOException
-        {
+        public int read() throws IOException {
             int b = super.read();
-            if ( b != -1 )
-            {
+            if ( b != -1 ) {
                 total++;
             }
-            else
-            {
+            else {
                 countDataRead( total );
                 total = 0;
             }
@@ -255,15 +222,12 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
         @Override
-        public int read( byte[] b, int off, int len ) throws IOException
-        {
+        public int read( byte[] b, int off, int len ) throws IOException {
             int l = super.read( b, off, len );
-            if ( l != -1 )
-            {
+            if ( l != -1 ) {
                 total += l;
             }
-            if ( ( l == -1 ) || ( l < len ) )
-            {
+            if ( ( l == -1 ) || ( l < len ) ) {
                 countDataRead( total );
                 total = 0;
             }
@@ -272,15 +236,12 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
         @Override
-        public int read( byte[] b ) throws IOException
-        {
+        public int read( byte[] b ) throws IOException {
             int l = super.read( b );
-            if ( l != -1 )
-            {
+            if ( l != -1 ) {
                 total += l;
             }
-            if ( ( l == -1 ) || ( l < b.length ) )
-            {
+            if ( ( l == -1 ) || ( l < b.length ) ) {
                 countDataRead( total );
                 total = 0;
             }
@@ -289,36 +250,31 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
         @Override
-        public void close() throws IOException
-        {
+        public void close() throws IOException {
             super.close();
             countDataRead( total );
         }
     }
 
 
-    private final class ContainerResponseWriterAdapter implements ContainerResponseWriter
-    {
+    private final class ContainerResponseWriterAdapter implements ContainerResponseWriter {
 
         private final ContainerResponseWriter crw;
         private OutputStreamAdapter out = null;
 
 
-        ContainerResponseWriterAdapter( ContainerResponseWriter crw )
-        {
+        ContainerResponseWriterAdapter( ContainerResponseWriter crw ) {
             this.crw = crw;
         }
 
 
         @Override
-        public OutputStream writeStatusAndHeaders( long contentLength, ContainerResponse response ) throws IOException
-        {
+        public OutputStream writeStatusAndHeaders( long contentLength, ContainerResponse response ) throws IOException {
 
             // logger.info("Wrapping output stream");
             OutputStream o = crw.writeStatusAndHeaders( contentLength, response );
 
-            if ( out == null )
-            {
+            if ( out == null ) {
                 out = new OutputStreamAdapter( o );
             }
 
@@ -327,53 +283,45 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
         @Override
-        public void finish() throws IOException
-        {
+        public void finish() throws IOException {
             crw.finish();
-            if ( out != null )
-            {
+            if ( out != null ) {
                 countDataWritten( out.getTotal() );
             }
         }
 
 
-        private final class OutputStreamAdapter extends FilterOutputStream
-        {
+        private final class OutputStreamAdapter extends FilterOutputStream {
 
             long total = 0;
 
 
-            public OutputStreamAdapter( OutputStream out )
-            {
+            public OutputStreamAdapter( OutputStream out ) {
                 super( out );
             }
 
 
-            public long getTotal()
-            {
+            public long getTotal() {
                 return total;
             }
 
 
             @Override
-            public void write( byte[] b, int off, int len ) throws IOException
-            {
+            public void write( byte[] b, int off, int len ) throws IOException {
                 out.write( b, off, len );
                 total += len;
             }
 
 
             @Override
-            public void write( byte[] b ) throws IOException
-            {
+            public void write( byte[] b ) throws IOException {
                 out.write( b );
                 total += b.length;
             }
 
 
             @Override
-            public void write( int b ) throws IOException
-            {
+            public void write( int b ) throws IOException {
                 out.write( b );
                 total += 1;
             }
@@ -382,15 +330,12 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
     @Override
-    public ContainerResponse filter( ContainerRequest request, ContainerResponse response )
-    {
-        try
-        {
+    public ContainerResponse filter( ContainerRequest request, ContainerResponse response ) {
+        try {
             response.setContainerResponseWriter(
                     new ContainerResponseWriterAdapter( response.getContainerResponseWriter() ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to capture response", e );
         }
         return response;

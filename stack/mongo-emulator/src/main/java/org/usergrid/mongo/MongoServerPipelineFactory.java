@@ -27,8 +27,7 @@ import org.usergrid.services.ServiceManagerFactory;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 
 
-public class MongoServerPipelineFactory implements ChannelPipelineFactory
-{
+public class MongoServerPipelineFactory implements ChannelPipelineFactory {
 
     private final ExecutionHandler executionHandler;
     private final EntityManagerFactory emf;
@@ -39,8 +38,7 @@ public class MongoServerPipelineFactory implements ChannelPipelineFactory
 
     public MongoServerPipelineFactory( EntityManagerFactory emf, ServiceManagerFactory smf,
                                        ManagementService management, SessionsSecurityManager securityManager,
-                                       ExecutionHandler executionHandler )
-    {
+                                       ExecutionHandler executionHandler ) {
         this.emf = emf;
         this.smf = smf;
         this.management = management;
@@ -50,8 +48,7 @@ public class MongoServerPipelineFactory implements ChannelPipelineFactory
 
 
     @Override
-    public ChannelPipeline getPipeline() throws Exception
-    {
+    public ChannelPipeline getPipeline() throws Exception {
         return Channels.pipeline( new MongoMessageEncoder(), new MongoMessageDecoder(), executionHandler,
                 new MongoChannelHandler( emf, smf, management, securityManager ) );
     }

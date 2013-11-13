@@ -31,14 +31,12 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
-public class SchemaTest
-{
+public class SchemaTest {
     private static final Logger LOG = LoggerFactory.getLogger( SchemaTest.class );
 
 
     @Test
-    public void testTypes() throws Exception
-    {
+    public void testTypes() throws Exception {
         LOG.info( "" + Schema.getDefaultSchema().getEntityClass( "sample_entity" ) );
         LOG.info( "" + Schema.getDefaultSchema().getEntityType( SampleEntity.class ) );
 
@@ -48,16 +46,14 @@ public class SchemaTest
 
 
     @Test
-    public void testThirdPartyEntityTypes() throws Exception
-    {
+    public void testThirdPartyEntityTypes() throws Exception {
         String thirdPartyPackage = "io.baas";
         Schema schema = Schema.getDefaultSchema();
         schema.addEntitiesPackage( thirdPartyPackage );
         schema.scanEntities();
 
         List<String> entitiesPackage = schema.getEntitiesPackage();
-        for ( String entityPackage : entitiesPackage )
-        {
+        for ( String entityPackage : entitiesPackage ) {
             LOG.info( entityPackage );
         }
 
@@ -70,8 +66,7 @@ public class SchemaTest
 
 
     @Test
-    public void testSchema() throws Exception
-    {
+    public void testSchema() throws Exception {
 
         dumpSetNames( "application" );
         dumpSetNames( "user" );
@@ -79,16 +74,14 @@ public class SchemaTest
     }
 
 
-    public void dumpSetNames( String entityType )
-    {
+    public void dumpSetNames( String entityType ) {
         LOG.info( entityType + " entity has the following sets: " + Schema.getDefaultSchema()
                                                                           .getDictionaryNames( entityType ) );
     }
 
 
     @Test
-    public void testJsonSchema() throws Exception
-    {
+    public void testJsonSchema() throws Exception {
 
         LOG.info( mapToFormattedJsonString( Schema.getDefaultSchema().getEntityJsonSchema( "user" ) ) );
 
@@ -97,16 +90,14 @@ public class SchemaTest
 
 
     @Test
-    public void hasPropertyTyped()
-    {
+    public void hasPropertyTyped() {
         assertFalse( Schema.getDefaultSchema().hasProperty( "user", "" ) );
         assertTrue( Schema.getDefaultSchema().hasProperty( "user", "username" ) );
     }
 
 
     @Test
-    public void hasPropertyDynamic()
-    {
+    public void hasPropertyDynamic() {
 
         assertFalse( Schema.getDefaultSchema().hasProperty( "things", "" ) );
 
@@ -116,8 +107,7 @@ public class SchemaTest
 
     /** Should always return true */
     @Test
-    public void indexedTyped()
-    {
+    public void indexedTyped() {
 
         assertTrue( Schema.getDefaultSchema().isPropertyIndexed( "user", "" ) );
 
@@ -127,8 +117,7 @@ public class SchemaTest
 
     /** Should always return true for dynamic types */
     @Test
-    public void indexedUnTyped()
-    {
+    public void indexedUnTyped() {
 
 
         assertTrue( Schema.getDefaultSchema().isPropertyIndexed( "things", "" ) );

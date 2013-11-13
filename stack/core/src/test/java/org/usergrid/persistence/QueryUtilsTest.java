@@ -14,8 +14,7 @@ import static org.junit.Assert.assertEquals;
 
 /** @author zznate */
 @Concurrent()
-public class QueryUtilsTest
-{
+public class QueryUtilsTest {
 
     private static final String FAKE_QL = "select color from cat";
 
@@ -23,8 +22,7 @@ public class QueryUtilsTest
 
 
     @Test
-    public void extractQueryAlias()
-    {
+    public void extractQueryAlias() {
         params.put( QueryUtils.PARAM_QL, Arrays.asList( FAKE_QL ) );
         String query = QueryUtils.queryStrFrom( params );
         assertEquals( FAKE_QL, query );

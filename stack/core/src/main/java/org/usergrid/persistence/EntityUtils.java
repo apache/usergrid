@@ -20,18 +20,14 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
-public class EntityUtils
-{
+public class EntityUtils {
 
-    public static Map<String, Object> getSchemaProperties( String entityType, Map<String, Object> properties )
-    {
+    public static Map<String, Object> getSchemaProperties( String entityType, Map<String, Object> properties ) {
 
         Map<String, Object> sys_props = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
-        for ( String propName : properties.keySet() )
-        {
-            if ( Schema.getDefaultSchema().hasProperty( entityType, propName ) )
-            {
+        for ( String propName : properties.keySet() ) {
+            if ( Schema.getDefaultSchema().hasProperty( entityType, propName ) ) {
                 Object propValue = properties.get( propName );
                 sys_props.put( propName, propValue );
             }
@@ -41,15 +37,12 @@ public class EntityUtils
     }
 
 
-    public static Map<String, Object> getDynamicProperties( String entityType, Map<String, Object> properties )
-    {
+    public static Map<String, Object> getDynamicProperties( String entityType, Map<String, Object> properties ) {
 
         Map<String, Object> sys_props = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
-        for ( String propName : properties.keySet() )
-        {
-            if ( !Schema.getDefaultSchema().hasProperty( entityType, propName ) )
-            {
+        for ( String propName : properties.keySet() ) {
+            if ( !Schema.getDefaultSchema().hasProperty( entityType, propName ) ) {
                 Object propValue = properties.get( propName );
                 sys_props.put( propName, propValue );
             }

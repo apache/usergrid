@@ -27,12 +27,10 @@ import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
 
-public class ServerStatus extends MongoCommand
-{
+public class ServerStatus extends MongoCommand {
 
     @Override
-    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery )
-    {
+    public OpReply execute( MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery ) {
         OpReply reply = new OpReply( opQuery );
         reply.addDocument( map( entry( "host", "api.usergrid.com:27017" ), entry( "version", "1.8.1" ),
                 entry( "process", "mongod" ), entry( "uptime", 1000.0 ), entry( "uptimeEstimate", 1000.0 ),

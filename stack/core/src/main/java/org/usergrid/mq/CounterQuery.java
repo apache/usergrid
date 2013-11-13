@@ -34,8 +34,7 @@ import static org.usergrid.utils.ListUtils.isEmpty;
 import static org.usergrid.utils.MapUtils.toMapList;
 
 
-public class CounterQuery
-{
+public class CounterQuery {
 
     public static final Logger logger = LoggerFactory.getLogger( CounterQuery.class );
 
@@ -52,15 +51,12 @@ public class CounterQuery
     private List<CounterFilterPredicate> counterFilters;
 
 
-    public CounterQuery()
-    {
+    public CounterQuery() {
     }
 
 
-    public CounterQuery( CounterQuery q )
-    {
-        if ( q != null )
-        {
+    public CounterQuery( CounterQuery q ) {
+        if ( q != null ) {
             limit = q.limit;
             limitSet = q.limitSet;
             startTime = q.startTime;
@@ -74,21 +70,17 @@ public class CounterQuery
     }
 
 
-    public static CounterQuery newQueryIfNull( CounterQuery query )
-    {
-        if ( query == null )
-        {
+    public static CounterQuery newQueryIfNull( CounterQuery query ) {
+        if ( query == null ) {
             query = new CounterQuery();
         }
         return query;
     }
 
 
-    public static CounterQuery fromJsonString( String json )
-    {
+    public static CounterQuery fromJsonString( String json ) {
         Object o = JsonUtils.parse( json );
-        if ( o instanceof Map )
-        {
+        if ( o instanceof Map ) {
             @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, List<String>> params =
                     cast( toMapList( ( Map ) o ) );
             return fromQueryParams( params );
@@ -97,8 +89,7 @@ public class CounterQuery
     }
 
 
-    public static CounterQuery fromQueryParams( Map<String, List<String>> params )
-    {
+    public static CounterQuery fromQueryParams( Map<String, List<String>> params ) {
 
         CounterQuery q = null;
         Integer limit = null;
@@ -116,59 +107,50 @@ public class CounterQuery
         finishTime = firstLong( params.get( "end_time" ) );
 
         l = params.get( "resolution" );
-        if ( !isEmpty( l ) )
-        {
+        if ( !isEmpty( l ) ) {
             resolution = CounterResolution.fromString( l.get( 0 ) );
         }
 
         categories = params.get( "category" );
 
         l = params.get( "counter" );
-        if ( !isEmpty( l ) )
-        {
+        if ( !isEmpty( l ) ) {
             counterFilters = CounterFilterPredicate.fromList( l );
         }
 
         pad = firstBoolean( params.get( "pad" ) );
 
-        if ( limit != null )
-        {
+        if ( limit != null ) {
             q = newQueryIfNull( q );
             q.setLimit( limit );
         }
 
-        if ( startTime != null )
-        {
+        if ( startTime != null ) {
             q = newQueryIfNull( q );
             q.setStartTime( startTime );
         }
 
-        if ( finishTime != null )
-        {
+        if ( finishTime != null ) {
             q = newQueryIfNull( q );
             q.setFinishTime( finishTime );
         }
 
-        if ( resolution != null )
-        {
+        if ( resolution != null ) {
             q = newQueryIfNull( q );
             q.setResolution( resolution );
         }
 
-        if ( categories != null )
-        {
+        if ( categories != null ) {
             q = newQueryIfNull( q );
             q.setCategories( categories );
         }
 
-        if ( counterFilters != null )
-        {
+        if ( counterFilters != null ) {
             q = newQueryIfNull( q );
             q.setCounterFilters( counterFilters );
         }
 
-        if ( pad != null )
-        {
+        if ( pad != null ) {
             q = newQueryIfNull( q );
             q.setPad( pad );
         }
@@ -177,22 +159,17 @@ public class CounterQuery
     }
 
 
-    public int getLimit()
-    {
+    public int getLimit() {
         return getLimit( DEFAULT_MAX_RESULTS );
     }
 
 
-    public int getLimit( int defaultMax )
-    {
-        if ( limit <= 0 )
-        {
-            if ( defaultMax > 0 )
-            {
+    public int getLimit( int defaultMax ) {
+        if ( limit <= 0 ) {
+            if ( defaultMax > 0 ) {
                 return defaultMax;
             }
-            else
-            {
+            else {
                 return DEFAULT_MAX_RESULTS;
             }
         }
@@ -200,113 +177,95 @@ public class CounterQuery
     }
 
 
-    public void setLimit( int limit )
-    {
+    public void setLimit( int limit ) {
         limitSet = true;
         this.limit = limit;
     }
 
 
-    public CounterQuery withLimit( int limit )
-    {
+    public CounterQuery withLimit( int limit ) {
         limitSet = true;
         this.limit = limit;
         return this;
     }
 
 
-    public boolean isLimitSet()
-    {
+    public boolean isLimitSet() {
         return limitSet;
     }
 
 
-    public Long getStartTime()
-    {
+    public Long getStartTime() {
         return startTime;
     }
 
 
-    public void setStartTime( Long startTime )
-    {
+    public void setStartTime( Long startTime ) {
         this.startTime = startTime;
     }
 
 
-    public CounterQuery withStartTime( Long startTime )
-    {
+    public CounterQuery withStartTime( Long startTime ) {
         this.startTime = startTime;
         return this;
     }
 
 
-    public Long getFinishTime()
-    {
+    public Long getFinishTime() {
         return finishTime;
     }
 
 
-    public void setFinishTime( Long finishTime )
-    {
+    public void setFinishTime( Long finishTime ) {
         this.finishTime = finishTime;
     }
 
 
-    public CounterQuery withFinishTime( Long finishTime )
-    {
+    public CounterQuery withFinishTime( Long finishTime ) {
         this.finishTime = finishTime;
         return this;
     }
 
 
-    public boolean isPad()
-    {
+    public boolean isPad() {
         return pad;
     }
 
 
-    public void setPad( boolean pad )
-    {
+    public void setPad( boolean pad ) {
         this.pad = pad;
     }
 
 
-    public CounterQuery withPad( boolean pad )
-    {
+    public CounterQuery withPad( boolean pad ) {
         this.pad = pad;
         return this;
     }
 
 
-    public void setResolution( CounterResolution resolution )
-    {
+    public void setResolution( CounterResolution resolution ) {
         this.resolution = resolution;
     }
 
 
-    public CounterResolution getResolution()
-    {
+    public CounterResolution getResolution() {
         return resolution;
     }
 
 
-    public CounterQuery withResolution( CounterResolution resolution )
-    {
+    public CounterQuery withResolution( CounterResolution resolution ) {
         this.resolution = resolution;
         return this;
     }
 
 
-    public List<String> getCategories()
-    {
+    public List<String> getCategories() {
         return categories;
     }
 
 
-    public CounterQuery addCategory( String category )
-    {
-        if ( categories == null )
-        {
+    public CounterQuery addCategory( String category ) {
+        if ( categories == null ) {
             categories = new ArrayList<String>();
         }
         categories.add( category );
@@ -314,34 +273,28 @@ public class CounterQuery
     }
 
 
-    public void setCategories( List<String> categories )
-    {
+    public void setCategories( List<String> categories ) {
         this.categories = categories;
     }
 
 
-    public CounterQuery withCategories( List<String> categories )
-    {
+    public CounterQuery withCategories( List<String> categories ) {
         this.categories = categories;
         return this;
     }
 
 
-    public List<CounterFilterPredicate> getCounterFilters()
-    {
+    public List<CounterFilterPredicate> getCounterFilters() {
         return counterFilters;
     }
 
 
-    public CounterQuery addCounterFilter( String counter )
-    {
+    public CounterQuery addCounterFilter( String counter ) {
         CounterFilterPredicate p = CounterFilterPredicate.fromString( counter );
-        if ( p == null )
-        {
+        if ( p == null ) {
             return this;
         }
-        if ( counterFilters == null )
-        {
+        if ( counterFilters == null ) {
             counterFilters = new ArrayList<CounterFilterPredicate>();
         }
         counterFilters.add( p );
@@ -349,14 +302,12 @@ public class CounterQuery
     }
 
 
-    public void setCounterFilters( List<CounterFilterPredicate> counterFilters )
-    {
+    public void setCounterFilters( List<CounterFilterPredicate> counterFilters ) {
         this.counterFilters = counterFilters;
     }
 
 
-    public CounterQuery withCounterFilters( List<CounterFilterPredicate> counterFilters )
-    {
+    public CounterQuery withCounterFilters( List<CounterFilterPredicate> counterFilters ) {
         this.counterFilters = counterFilters;
         return this;
     }

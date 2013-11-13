@@ -22,18 +22,15 @@ import org.usergrid.rest.test.resource.app.Device;
 
 
 /** @author tnine */
-public class DevicesCollection extends ValueResource
-{
+public class DevicesCollection extends ValueResource {
 
 
-    public DevicesCollection( NamedResource parent )
-    {
+    public DevicesCollection( NamedResource parent ) {
         super( "devices", parent );
     }
 
 
-    public Device device( String deviceName )
-    {
+    public Device device( String deviceName ) {
         return new Device( deviceName, this );
     }
 }

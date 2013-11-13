@@ -16,32 +16,27 @@
 package org.usergrid.management.exceptions;
 
 
-public class UnactivatedOrganizationException extends ManagementException
-{
+public class UnactivatedOrganizationException extends ManagementException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public UnactivatedOrganizationException()
-    {
+    public UnactivatedOrganizationException() {
         super();
     }
 
 
-    public UnactivatedOrganizationException( String arg0, Throwable arg1 )
-    {
+    public UnactivatedOrganizationException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public UnactivatedOrganizationException( String arg0 )
-    {
+    public UnactivatedOrganizationException( String arg0 ) {
         super( arg0 );
     }
 
 
-    public UnactivatedOrganizationException( Throwable arg0 )
-    {
+    public UnactivatedOrganizationException( Throwable arg0 ) {
         super( arg0 );
     }
 }

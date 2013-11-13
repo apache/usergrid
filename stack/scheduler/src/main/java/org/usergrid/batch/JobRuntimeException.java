@@ -7,8 +7,7 @@ package org.usergrid.batch;
  *
  * @author tnine
  */
-public class JobRuntimeException extends RuntimeException
-{
+public class JobRuntimeException extends RuntimeException {
 
     /**
      *
@@ -19,8 +18,7 @@ public class JobRuntimeException extends RuntimeException
     /**
      *
      */
-    public JobRuntimeException()
-    {
+    public JobRuntimeException() {
         super();
     }
 
@@ -29,8 +27,7 @@ public class JobRuntimeException extends RuntimeException
      * @param arg0
      * @param arg1
      */
-    public JobRuntimeException( String arg0, Throwable arg1 )
-    {
+    public JobRuntimeException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
@@ -38,8 +35,7 @@ public class JobRuntimeException extends RuntimeException
     /**
      * @param arg0
      */
-    public JobRuntimeException( String arg0 )
-    {
+    public JobRuntimeException( String arg0 ) {
         super( arg0 );
     }
 
@@ -47,8 +43,7 @@ public class JobRuntimeException extends RuntimeException
     /**
      * @param arg0
      */
-    public JobRuntimeException( Throwable arg0 )
-    {
+    public JobRuntimeException( Throwable arg0 ) {
         super( arg0 );
     }
 }

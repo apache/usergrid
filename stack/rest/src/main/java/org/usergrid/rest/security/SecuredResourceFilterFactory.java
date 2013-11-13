@@ -59,8 +59,7 @@ import static org.usergrid.security.shiro.utils.SubjectUtils.loginApplicationGue
 
 
 @Component
-public class SecuredResourceFilterFactory implements ResourceFilterFactory
-{
+public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
     private static final Logger logger = LoggerFactory.getLogger( SecuredResourceFilterFactory.class );
 
@@ -76,103 +75,85 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory
     ManagementService management;
 
 
-    public SecuredResourceFilterFactory()
-    {
+    public SecuredResourceFilterFactory() {
         logger.info( "SecuredResourceFilterFactory is installed" );
     }
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
-    public EntityManagerFactory getEntityManagerFactory()
-    {
+    public EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
 
     @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf )
-    {
+    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
-    public ServiceManagerFactory getServiceManagerFactory()
-    {
+    public ServiceManagerFactory getServiceManagerFactory() {
         return smf;
     }
 
 
     @Autowired
-    public void setProperties( Properties properties )
-    {
+    public void setProperties( Properties properties ) {
         this.properties = properties;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
     @Override
-    public List<ResourceFilter> create( AbstractMethod am )
-    {
-        if ( am.isAnnotationPresent( RequireApplicationAccess.class ) )
-        {
+    public List<ResourceFilter> create( AbstractMethod am ) {
+        if ( am.isAnnotationPresent( RequireApplicationAccess.class ) ) {
             return Collections.<ResourceFilter>singletonList( new ApplicationFilter() );
         }
-        else if ( am.isAnnotationPresent( RequireOrganizationAccess.class ) )
-        {
+        else if ( am.isAnnotationPresent( RequireOrganizationAccess.class ) ) {
             return Collections.<ResourceFilter>singletonList( new OrganizationFilter() );
         }
-        else if ( am.isAnnotationPresent( RequireSystemAccess.class ) )
-        {
+        else if ( am.isAnnotationPresent( RequireSystemAccess.class ) ) {
             return Collections.<ResourceFilter>singletonList( new SystemFilter() );
         }
-        else if ( am.isAnnotationPresent( RequireAdminUserAccess.class ) )
-        {
+        else if ( am.isAnnotationPresent( RequireAdminUserAccess.class ) ) {
             return Collections.<ResourceFilter>singletonList( new AdminUserFilter() );
         }
         return null;
     }
 
 
-    public abstract class AbstractFilter implements ResourceFilter, ContainerRequestFilter
-    {
-        public AbstractFilter()
-        {
+    public abstract class AbstractFilter implements ResourceFilter, ContainerRequestFilter {
+        public AbstractFilter() {
         }
 
 
         @Override
-        public ContainerRequestFilter getRequestFilter()
-        {
+        public ContainerRequestFilter getRequestFilter() {
             return this;
         }
 
 
         @Override
-        public ContainerResponseFilter getResponseFilter()
-        {
+        public ContainerResponseFilter getResponseFilter() {
             return null;
         }
 
 
         @Override
-        public ContainerRequest filter( ContainerRequest request )
-        {
+        public ContainerRequest filter( ContainerRequest request ) {
             logger.debug( "Filtering {}", request.getRequestUri().toString() );
 
-            if ( request.getMethod().equalsIgnoreCase( "OPTIONS" ) )
-            {
+            if ( request.getMethod().equalsIgnoreCase( "OPTIONS" ) ) {
                 logger.debug( "Skipping option request" );
                 return request;
             }
@@ -188,21 +169,17 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory
         public abstract void authorize( ContainerRequest request );
 
 
-        public Identifier getApplicationIdentifier()
-        {
+        public Identifier getApplicationIdentifier() {
             Identifier application = null;
 
             MultivaluedMap<java.lang.String, java.lang.String> pathParams = uriInfo.getPathParameters();
             String applicationIdStr = pathParams.getFirst( "applicationId" );
-            if ( isNotEmpty( applicationIdStr ) )
-            {
+            if ( isNotEmpty( applicationIdStr ) ) {
                 application = Identifier.from( applicationIdStr );
             }
-            else
-            {
+            else {
                 String applicationName = PathingUtils.assembleAppName( uriInfo.getPathParameters() );
-                if ( logger.isDebugEnabled() )
-                {
+                if ( logger.isDebugEnabled() ) {
                     logger.debug( "Pulled applicationName {}", applicationName );
                 }
                 application = Identifier.fromName( applicationName );
@@ -212,18 +189,15 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory
         }
 
 
-        public Identifier getOrganizationIdentifier()
-        {
+        public Identifier getOrganizationIdentifier() {
             Identifier organization = null;
 
             MultivaluedMap<java.lang.String, java.lang.String> pathParams = uriInfo.getPathParameters();
             String organizationIdStr = pathParams.getFirst( "organizationId" );
-            if ( isNotEmpty( organizationIdStr ) )
-            {
+            if ( isNotEmpty( organizationIdStr ) ) {
                 organization = Identifier.from( organizationIdStr );
             }
-            else
-            {
+            else {
                 String organizationName = pathParams.getFirst( "organizationName" );
                 organization = Identifier.fromName( organizationName );
             }
@@ -232,23 +206,19 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory
         }
 
 
-        public Identifier getUserIdentifier()
-        {
+        public Identifier getUserIdentifier() {
 
             MultivaluedMap<java.lang.String, java.lang.String> pathParams = uriInfo.getPathParameters();
             String userIdStr = pathParams.getFirst( "userId" );
-            if ( isNotEmpty( userIdStr ) )
-            {
+            if ( isNotEmpty( userIdStr ) ) {
                 return Identifier.from( userIdStr );
             }
             String username = pathParams.getFirst( "username" );
-            if ( username != null )
-            {
+            if ( username != null ) {
                 return Identifier.fromName( username );
             }
             String email = pathParams.getFirst( "email" );
-            if ( email != null )
-            {
+            if ( email != null ) {
                 return Identifier.fromEmail( email );
             }
             return null;
@@ -256,103 +226,81 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory
     }
 
 
-    private class OrganizationFilter extends AbstractFilter
-    {
+    private class OrganizationFilter extends AbstractFilter {
 
-        protected OrganizationFilter()
-        {
+        protected OrganizationFilter() {
         }
 
 
         @Override
-        public void authorize( ContainerRequest request )
-        {
+        public void authorize( ContainerRequest request ) {
             logger.debug( "OrganizationFilter.authorize" );
 
-            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) )
-            {
+            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) ) {
                 throw mappableSecurityException( "unauthorized", "No organization access authorized" );
             }
         }
     }
 
 
-    private class ApplicationFilter extends AbstractFilter
-    {
+    private class ApplicationFilter extends AbstractFilter {
 
-        protected ApplicationFilter()
-        {
+        protected ApplicationFilter() {
         }
 
 
         @Override
-        public void authorize( ContainerRequest request )
-        {
+        public void authorize( ContainerRequest request ) {
             logger.debug( "ApplicationFilter.authorize" );
-            if ( SubjectUtils.isAnonymous() )
-            {
+            if ( SubjectUtils.isAnonymous() ) {
                 ApplicationInfo application = null;
-                try
-                {
+                try {
                     // TODO not safe. could load arbitrary application
                     application = management.getApplicationInfo( getApplicationIdentifier() );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     e.printStackTrace();
                 }
                 EntityManager em = emf.getEntityManager( application.getId() );
                 Map<String, String> roles = null;
-                try
-                {
+                try {
                     roles = em.getRoles();
                     logger.debug( "found roles {}", roles );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable retrieve roles", e );
                 }
-                if ( ( roles != null ) && roles.containsKey( "guest" ) )
-                {
+                if ( ( roles != null ) && roles.containsKey( "guest" ) ) {
                     loginApplicationGuest( application );
                 }
-                else
-                {
+                else {
                     throw mappableSecurityException( "unauthorized", "No application guest access authorized" );
                 }
             }
-            if ( !isPermittedAccessToApplication( getApplicationIdentifier() ) )
-            {
+            if ( !isPermittedAccessToApplication( getApplicationIdentifier() ) ) {
                 throw mappableSecurityException( "unauthorized", "No application access authorized" );
             }
         }
     }
 
 
-    public class SystemFilter extends AbstractFilter
-    {
-        public SystemFilter()
-        {
+    public class SystemFilter extends AbstractFilter {
+        public SystemFilter() {
         }
 
 
         @Override
-        public void authorize( ContainerRequest request )
-        {
+        public void authorize( ContainerRequest request ) {
             logger.debug( "SystemFilter.authorize" );
-            try
-            {
-                if ( !request.isUserInRole( "sysadmin" ) )
-                {
+            try {
+                if ( !request.isUserInRole( "sysadmin" ) ) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                             SecurityException.REALM );
                 }
             }
-            catch ( IllegalStateException e )
-            {
+            catch ( IllegalStateException e ) {
                 if ( ( request.getUserPrincipal() == null ) || !"sysadmin"
-                        .equals( request.getUserPrincipal().getName() ) )
-                {
+                        .equals( request.getUserPrincipal().getName() ) ) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                             SecurityException.REALM );
                 }
@@ -361,19 +309,15 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory
     }
 
 
-    public class AdminUserFilter extends AbstractFilter
-    {
-        public AdminUserFilter()
-        {
+    public class AdminUserFilter extends AbstractFilter {
+        public AdminUserFilter() {
         }
 
 
         @Override
-        public void authorize( ContainerRequest request )
-        {
+        public void authorize( ContainerRequest request ) {
             logger.debug( "AdminUserFilter.authorize" );
-            if ( !isUser( getUserIdentifier() ) )
-            {
+            if ( !isUser( getUserIdentifier() ) ) {
                 throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
             }
         }

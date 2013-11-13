@@ -17,13 +17,11 @@
 package org.usergrid.exception;
 
 
-public class JsonWriteException extends RuntimeException
-{
+public class JsonWriteException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
 
-    public JsonWriteException( String msg, Throwable t )
-    {
+    public JsonWriteException( String msg, Throwable t ) {
         super( msg, t );
     }
 }

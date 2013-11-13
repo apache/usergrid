@@ -33,12 +33,10 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent()
 @Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
-public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT
-{
+public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
     /** Test the scheduler ramps up correctly when there are more jobs to be read after a pause */
     @Test
-    public void schedulingWithNoJobs() throws InterruptedException
-    {
+    public void schedulingWithNoJobs() throws InterruptedException {
 
         int count = 200;
 
@@ -46,8 +44,7 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT
         // set the counter job latch size
         counterJob.setLatch( count );
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 
@@ -61,8 +58,7 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT
         // set the counter job latch size
         counterJob.setLatch( count );
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 

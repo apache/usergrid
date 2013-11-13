@@ -24,21 +24,18 @@ import java.util.UUID;
  *
  * @author eanuff
  */
-public class LockPathBuilder
-{
+public class LockPathBuilder {
 
     private static final String SLASH = "/";
 
 
     /** Build a string path for this lock */
-    public static String buildPath( UUID applicationId, String... path )
-    {
+    public static String buildPath( UUID applicationId, String... path ) {
         StringBuilder builder = new StringBuilder();
         builder.append( SLASH );
         builder.append( applicationId.toString() );
 
-        for ( String element : path )
-        {
+        for ( String element : path ) {
             builder.append( SLASH );
             builder.append( element );
         }
@@ -52,13 +49,11 @@ public class LockPathBuilder
      * @param The binary value to append to the end of the lock path
      * @param path The values to prepend to build path
      */
-    public static String buildPath( String binaryValue, String... path )
-    {
+    public static String buildPath( String binaryValue, String... path ) {
 
         StringBuilder builder = new StringBuilder();
 
-        for ( String element : path )
-        {
+        for ( String element : path ) {
             builder.append( SLASH );
             builder.append( element );
         }

@@ -19,8 +19,7 @@ package org.usergrid.persistence;
 import java.util.UUID;
 
 
-public interface EntityRef
-{
+public interface EntityRef {
 
     /**
      * Gets the id.

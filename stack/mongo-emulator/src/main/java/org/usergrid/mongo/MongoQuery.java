@@ -19,14 +19,12 @@ package org.usergrid.mongo;
 import org.bson.BSONObject;
 
 
-public class MongoQuery
-{
+public class MongoQuery {
 
     BSONObject query;
 
 
-    public MongoQuery( BSONObject query )
-    {
+    public MongoQuery( BSONObject query ) {
         this.query = query;
     }
 }

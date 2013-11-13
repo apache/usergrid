@@ -15,8 +15,7 @@ import me.prettyprint.cassandra.utils.Assert;
  * @author zznate
  * @author tnine
  */
-public class JobDescriptor extends TypedEntity
-{
+public class JobDescriptor extends TypedEntity {
 
     private final String jobName;
     private final UUID jobId;
@@ -27,8 +26,7 @@ public class JobDescriptor extends TypedEntity
 
 
     public JobDescriptor( String jobName, UUID jobId, UUID transactionId, JobData data, JobStat stats,
-                          JobRuntimeService runtime )
-    {
+                          JobRuntimeService runtime ) {
         Assert.notNull( jobName, "Job name cannot be null" );
         Assert.notNull( jobId != null, "A JobId is required" );
         Assert.notNull( transactionId != null, "A transactionId is required" );
@@ -46,43 +44,37 @@ public class JobDescriptor extends TypedEntity
 
 
     /** @return the jobName */
-    public String getJobName()
-    {
+    public String getJobName() {
         return jobName;
     }
 
 
     /** @return the jobId */
-    public UUID getJobId()
-    {
+    public UUID getJobId() {
         return jobId;
     }
 
 
     /** @return the transactionId */
-    public UUID getTransactionId()
-    {
+    public UUID getTransactionId() {
         return transactionId;
     }
 
 
     /** @return the data */
-    public JobData getData()
-    {
+    public JobData getData() {
         return data;
     }
 
 
     /** @return the scheduler */
-    public JobRuntimeService getRuntime()
-    {
+    public JobRuntimeService getRuntime() {
         return runtime;
     }
 
 
     /** @return the stats */
-    public JobStat getStats()
-    {
+    public JobStat getStats() {
         return stats;
     }
 }

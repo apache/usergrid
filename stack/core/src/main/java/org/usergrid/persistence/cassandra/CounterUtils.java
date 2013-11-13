@@ -55,8 +55,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
 
-public class CounterUtils
-{
+public class CounterUtils {
 
     public static final Logger logger = LoggerFactory.getLogger( CounterUtils.class );
 
@@ -70,34 +69,28 @@ public class CounterUtils
     private Batcher batcher;
 
 
-    public void setBatcher( Batcher batcher )
-    {
+    public void setBatcher( Batcher batcher ) {
         this.batcher = batcher;
     }
 
 
     /** Set the type to 'new' ("n"), 'parallel' ("p"), 'old' ("o" - the default) If not one of the above, do nothing */
-    public void setCounterType( String counterType )
-    {
-        if ( counterType == null )
-        {
+    public void setCounterType( String counterType ) {
+        if ( counterType == null ) {
             return;
         }
-        if ( "n".equals( counterType ) || "p".equals( counterType ) || "o".equals( counterType ) )
-        {
+        if ( "n".equals( counterType ) || "p".equals( counterType ) || "o".equals( counterType ) ) {
             this.counterType = counterType;
         }
     }
 
 
-    public boolean getIsCounterBatched()
-    {
+    public boolean getIsCounterBatched() {
         return "n".equals( counterType );
     }
 
 
-    public static class AggregateCounterSelection
-    {
+    public static class AggregateCounterSelection {
         public static final String COLON = ":";
         public static final String STAR = "*";
         String name;
@@ -107,8 +100,7 @@ public class CounterUtils
         String category;
 
 
-        public AggregateCounterSelection( String name, UUID userId, UUID groupId, UUID queueId, String category )
-        {
+        public AggregateCounterSelection( String name, UUID userId, UUID groupId, UUID queueId, String category ) {
             this.name = name.toLowerCase();
             this.userId = userId;
             this.groupId = groupId;
@@ -117,8 +109,7 @@ public class CounterUtils
         }
 
 
-        public void apply( String name, UUID userId, UUID groupId, UUID queueId, String category )
-        {
+        public void apply( String name, UUID userId, UUID groupId, UUID queueId, String category ) {
             this.name = name.toLowerCase();
             this.userId = userId;
             this.groupId = groupId;
@@ -127,75 +118,63 @@ public class CounterUtils
         }
 
 
-        public String getName()
-        {
+        public String getName() {
             return name;
         }
 
 
-        public void setName( String name )
-        {
+        public void setName( String name ) {
             this.name = name;
         }
 
 
-        public UUID getUserId()
-        {
+        public UUID getUserId() {
             return userId;
         }
 
 
-        public void setUserId( UUID userId )
-        {
+        public void setUserId( UUID userId ) {
             this.userId = userId;
         }
 
 
-        public UUID getGroupId()
-        {
+        public UUID getGroupId() {
             return groupId;
         }
 
 
-        public void setGroupId( UUID groupId )
-        {
+        public void setGroupId( UUID groupId ) {
             this.groupId = groupId;
         }
 
 
-        public UUID getQueueId()
-        {
+        public UUID getQueueId() {
             return queueId;
         }
 
 
-        public void setQueueId( UUID queueId )
-        {
+        public void setQueueId( UUID queueId ) {
             this.queueId = queueId;
         }
 
 
-        public String getCategory()
-        {
+        public String getCategory() {
             return category;
         }
 
 
-        public void setCategory( String category )
-        {
+        public void setCategory( String category ) {
             this.category = category;
         }
 
 
-        public String getRow( CounterResolution resolution )
-        {
+        public String getRow( CounterResolution resolution ) {
             return rowBuilder( name, userId, groupId, queueId, category, resolution );
         }
 
 
         public static String rowBuilder( String name, UUID userId, UUID groupId, UUID queueId, String category,
-                                         CounterResolution resolution )
-        {
+                                         CounterResolution resolution ) {
             StringBuilder builder = new StringBuilder( name );
             builder.append( COLON ).append( ( userId != null ? userId.toString() : STAR ) ).append( COLON )
                    .append( groupId != null ? groupId.toString() : STAR ).append( COLON )
@@ -206,12 +185,9 @@ public class CounterUtils
     }
 
 
-    public void addEventCounterMutations( Mutator<ByteBuffer> m, UUID applicationId, Event event, long timestamp )
-    {
-        if ( event.getCounters() != null )
-        {
-            for ( Entry<String, Integer> value : event.getCounters().entrySet() )
-            {
+    public void addEventCounterMutations( Mutator<ByteBuffer> m, UUID applicationId, Event event, long timestamp ) {
+        if ( event.getCounters() != null ) {
+            for ( Entry<String, Integer> value : event.getCounters().entrySet() ) {
                 batchIncrementAggregateCounters( m, applicationId, event.getUser(), event.getGroup(), null,
                         event.getCategory(), value.getKey().toLowerCase(), value.getValue(), event.getTimestamp(),
                         timestamp );
@@ -221,12 +197,9 @@ public class CounterUtils
 
 
     public void addMessageCounterMutations( Mutator<ByteBuffer> m, UUID applicationId, UUID queueId, Message msg,
-                                            long timestamp )
-    {
-        if ( msg.getCounters() != null )
-        {
-            for ( Entry<String, Integer> value : msg.getCounters().entrySet() )
-            {
+                                            long timestamp ) {
+        if ( msg.getCounters() != null ) {
+            for ( Entry<String, Integer> value : msg.getCounters().entrySet() ) {
                 batchIncrementAggregateCounters( m, applicationId, null, null, queueId, msg.getCategory(),
                         value.getKey().toLowerCase(), value.getValue(), msg.getTimestamp(), timestamp );
             }
@@ -236,12 +209,9 @@ public class CounterUtils
 
     public void batchIncrementAggregateCounters( Mutator<ByteBuffer> m, UUID applicationId, UUID userId, UUID groupId,
                                                  UUID queueId, String category, Map<String, Long> counters,
-                                                 long timestamp )
-    {
-        if ( counters != null )
-        {
-            for ( Entry<String, Long> value : counters.entrySet() )
-            {
+                                                 long timestamp ) {
+        if ( counters != null ) {
+            for ( Entry<String, Long> value : counters.entrySet() ) {
                 batchIncrementAggregateCounters( m, applicationId, userId, groupId, queueId, category,
                         value.getKey().toLowerCase(), value.getValue(), timestamp );
             }
@@ -251,8 +221,7 @@ public class CounterUtils
 
     public void batchIncrementAggregateCounters( Mutator<ByteBuffer> m, UUID applicationId, UUID userId, UUID groupId,
                                                  UUID queueId, String category, String name, long value,
-                                                 long cassandraTimestamp )
-    {
+                                                 long cassandraTimestamp ) {
         batchIncrementAggregateCounters( m, applicationId, userId, groupId, queueId, category, name, value,
                 cassandraTimestamp / 1000, cassandraTimestamp );
     }
@@ -260,22 +229,18 @@ public class CounterUtils
 
     public void batchIncrementAggregateCounters( Mutator<ByteBuffer> m, UUID applicationId, UUID userId, UUID groupId,
                                                  UUID queueId, String category, String name, long value,
-                                                 long counterTimestamp, long cassandraTimestamp )
-    {
-        for ( CounterResolution resolution : CounterResolution.values() )
-        {
+                                                 long counterTimestamp, long cassandraTimestamp ) {
+        for ( CounterResolution resolution : CounterResolution.values() ) {
             logger.debug( "BIAC for resolution {}", resolution );
             batchIncrementAggregateCounters( m, userId, groupId, queueId, category, resolution, name, value,
                     counterTimestamp, applicationId );
             logger.debug( "DONE BIAC for resolution {}", resolution );
         }
         batchIncrementEntityCounter( m, applicationId, name, value, cassandraTimestamp, applicationId );
-        if ( userId != null )
-        {
+        if ( userId != null ) {
             batchIncrementEntityCounter( m, userId, name, value, cassandraTimestamp, applicationId );
         }
-        if ( groupId != null )
-        {
+        if ( groupId != null ) {
             batchIncrementEntityCounter( m, groupId, name, value, cassandraTimestamp, applicationId );
         }
     }
@@ -283,16 +248,13 @@ public class CounterUtils
 
     private void batchIncrementAggregateCounters( Mutator<ByteBuffer> m, UUID userId, UUID groupId, UUID queueId,
                                                   String category, CounterResolution resolution, String name,
-                                                  long value, long counterTimestamp, UUID applicationId )
-    {
+                                                  long value, long counterTimestamp, UUID applicationId ) {
 
         String[] segments = StringUtils.split( name, '.' );
-        for ( int j = 0; j < segments.length; j++ )
-        {
+        for ( int j = 0; j < segments.length; j++ ) {
             name = StringUtils.join( segments, '.', 0, j + 1 );
             // skip system counter
-            if ( "system".equals( name ) )
-            {
+            if ( "system".equals( name ) ) {
                 continue;
             }
 
@@ -302,8 +264,7 @@ public class CounterUtils
                     resolution.round( counterTimestamp ), value, applicationId );
             String currentRow = null;
             HashSet<String> rowSet = new HashSet<String>( 16 );
-            for ( int i = 0; i < 16; i++ )
-            {
+            for ( int i = 0; i < 16; i++ ) {
 
                 boolean include_user = ( i & 0x01 ) != 0;
                 boolean include_group = ( i & 0x02 ) != 0;
@@ -315,10 +276,8 @@ public class CounterUtils
                         include_category ? category : null
                 };
                 int non_null = 0;
-                for ( Object p : parameters )
-                {
-                    if ( p != null )
-                    {
+                for ( Object p : parameters ) {
+                    if ( p != null ) {
                         non_null++;
                     }
                 }
@@ -326,8 +285,7 @@ public class CounterUtils
                         .rowBuilder( name, ( UUID ) parameters[0], ( UUID ) parameters[1], ( UUID ) parameters[2],
                                 ( String ) parameters[3], resolution );
 
-                if ( non_null > 0 && !rowSet.contains( currentRow ) )
-                {
+                if ( non_null > 0 && !rowSet.contains( currentRow ) ) {
                     rowSet.add( currentRow );
                     handleAggregateCounterRow( m, currentRow, resolution.round( counterTimestamp ), value,
                             applicationId );
@@ -338,23 +296,18 @@ public class CounterUtils
 
 
     private void handleAggregateCounterRow( Mutator<ByteBuffer> m, String key, long column, long value,
-                                            UUID applicationId )
-    {
-        if ( logger.isDebugEnabled() )
-        {
+                                            UUID applicationId ) {
+        if ( logger.isDebugEnabled() ) {
             logger.info( "HACR: aggregateRow for app {} with key {} column {} and value {}",
                     new Object[] { applicationId, key, column, value } );
         }
-        if ( "o".equals( counterType ) || "p".equals( counterType ) )
-        {
-            if ( m != null )
-            {
+        if ( "o".equals( counterType ) || "p".equals( counterType ) ) {
+            if ( m != null ) {
                 HCounterColumn<Long> c = createCounterColumn( column, value, le );
                 m.addCounter( bytebuffer( key ), APPLICATION_AGGREGATE_COUNTERS.toString(), c );
             }
         }
-        if ( "n".equals( counterType ) || "p".equals( counterType ) )
-        {
+        if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
             // create and add Count
             PrefixedSerializer ps =
                     new PrefixedSerializer( applicationId, UUIDSerializer.get(), StringSerializer.get() );
@@ -365,25 +318,21 @@ public class CounterUtils
 
 
     public AggregateCounterSelection getAggregateCounterSelection( String name, UUID userId, UUID groupId, UUID queueId,
-                                                                   String category )
-    {
+                                                                   String category ) {
         return new AggregateCounterSelection( name, userId, groupId, queueId, category );
     }
 
 
     public String getAggregateCounterRow( String name, UUID userId, UUID groupId, UUID queueId, String category,
-                                          CounterResolution resolution )
-    {
+                                          CounterResolution resolution ) {
         return AggregateCounterSelection.rowBuilder( name, userId, groupId, queueId, category, resolution );
     }
 
 
     public List<String> getAggregateCounterRows( List<AggregateCounterSelection> selections,
-                                                 CounterResolution resolution )
-    {
+                                                 CounterResolution resolution ) {
         List<String> keys = new ArrayList<String>();
-        for ( AggregateCounterSelection selection : selections )
-        {
+        for ( AggregateCounterSelection selection : selections ) {
             keys.add( selection.getRow( resolution ) );
         }
         return keys;
@@ -391,21 +340,17 @@ public class CounterUtils
 
 
     private Mutator<ByteBuffer> batchIncrementEntityCounter( Mutator<ByteBuffer> m, UUID entityId, String name,
-                                                             Long value, long timestamp, UUID applicationId )
-    {
-        if ( logger.isDebugEnabled() )
-        {
+                                                             Long value, long timestamp, UUID applicationId ) {
+        if ( logger.isDebugEnabled() ) {
             logger.debug( "BIEC: Incrementing property {} of entity {} by value {}",
                     new Object[] { name, entityId, value } );
         }
         addInsertToMutator( m, ENTITY_DICTIONARIES, key( entityId, DICTIONARY_COUNTERS ), name, null, timestamp );
-        if ( "o".equals( counterType ) || "p".equals( counterType ) )
-        {
+        if ( "o".equals( counterType ) || "p".equals( counterType ) ) {
             HCounterColumn<String> c = createCounterColumn( name, value );
             m.addCounter( bytebuffer( entityId ), ENTITY_COUNTERS.toString(), c );
         }
-        if ( "n".equals( counterType ) || "p".equals( counterType ) )
-        {
+        if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
             PrefixedSerializer ps = new PrefixedSerializer( applicationId, UUIDSerializer.get(), UUIDSerializer.get() );
             batcher.add( new Count( ENTITY_COUNTERS.toString(), ps.toByteBuffer( entityId ), name, value ) );
         }
@@ -414,24 +359,20 @@ public class CounterUtils
 
 
     public Mutator<ByteBuffer> batchIncrementQueueCounter( Mutator<ByteBuffer> m, UUID queueId, String name, long value,
-                                                           long timestamp, UUID applicationId )
-    {
-        if ( logger.isDebugEnabled() )
-        {
+                                                           long timestamp, UUID applicationId ) {
+        if ( logger.isDebugEnabled() ) {
             logger.debug( "BIQC: Incrementing property {} of queue {} by value {}",
                     new Object[] { name, queueId, value } );
         }
         m.addInsertion( bytebuffer( key( queueId, DICTIONARY_COUNTERS ).toString() ),
                 QueuesCF.QUEUE_DICTIONARIES.toString(),
                 createColumn( name, ByteBuffer.allocate( 0 ), timestamp, se, be ) );
-        if ( "o".equals( counterType ) || "p".equals( counterType ) )
-        {
+        if ( "o".equals( counterType ) || "p".equals( counterType ) ) {
             HCounterColumn<String> c = createCounterColumn( name, value );
             ByteBuffer keybytes = bytebuffer( queueId );
             m.addCounter( keybytes, QueuesCF.COUNTERS.toString(), c );
         }
-        if ( "n".equals( counterType ) || "p".equals( counterType ) )
-        {
+        if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
             PrefixedSerializer ps = new PrefixedSerializer( applicationId, UUIDSerializer.get(), UUIDSerializer.get() );
             batcher.add( new Count( QueuesCF.COUNTERS.toString(), ps.toByteBuffer( queueId ), name, value ) );
         }
@@ -441,10 +382,8 @@ public class CounterUtils
 
     public Mutator<ByteBuffer> batchIncrementQueueCounters( Mutator<ByteBuffer> m, UUID queueId,
                                                             Map<String, Long> values, long timestamp,
-                                                            UUID applicationId )
-    {
-        for ( Entry<String, Long> entry : values.entrySet() )
-        {
+                                                            UUID applicationId ) {
+        for ( Entry<String, Long> entry : values.entrySet() ) {
             batchIncrementQueueCounter( m, queueId, entry.getKey(), entry.getValue(), timestamp, applicationId );
         }
         return m;
@@ -452,10 +391,8 @@ public class CounterUtils
 
 
     public Mutator<ByteBuffer> batchIncrementQueueCounters( Mutator<ByteBuffer> m, Map<UUID, Map<String, Long>> values,
-                                                            long timestamp, UUID applicationId )
-    {
-        for ( Entry<UUID, Map<String, Long>> entry : values.entrySet() )
-        {
+                                                            long timestamp, UUID applicationId ) {
+        for ( Entry<UUID, Map<String, Long>> entry : values.entrySet() ) {
             batchIncrementQueueCounters( m, entry.getKey(), entry.getValue(), timestamp, applicationId );
         }
         return m;

@@ -34,57 +34,48 @@ import static org.usergrid.utils.ListUtils.isEmpty;
 import static org.usergrid.utils.ListUtils.queue;
 
 
-public abstract class ServiceParameter
-{
+public abstract class ServiceParameter {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceParameter.class );
 
 
-    ServiceParameter()
-    {
+    ServiceParameter() {
 
     }
 
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return null;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return null;
     }
 
 
-    public Query getQuery()
-    {
+    public Query getQuery() {
         return null;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "";
     }
 
 
-    public boolean isQuery()
-    {
+    public boolean isQuery() {
         return false;
     }
 
 
-    public boolean isId()
-    {
+    public boolean isId() {
         return false;
     }
 
 
-    public boolean isName()
-    {
+    public boolean isName() {
         return false;
     }
 
@@ -92,16 +83,13 @@ public abstract class ServiceParameter
     public abstract Identifier getIdentifier();
 
 
-    public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, UUID entityId )
-    {
+    public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, UUID entityId ) {
 
-        if ( parameters == null )
-        {
+        if ( parameters == null ) {
             parameters = new ArrayList<ServiceParameter>();
         }
 
-        if ( entityId == null )
-        {
+        if ( entityId == null ) {
             return parameters;
         }
 
@@ -111,21 +99,17 @@ public abstract class ServiceParameter
     }
 
 
-    public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, String name )
-    {
+    public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, String name ) {
 
-        if ( parameters == null )
-        {
+        if ( parameters == null ) {
             parameters = new ArrayList<ServiceParameter>();
         }
 
-        if ( name == null )
-        {
+        if ( name == null ) {
             return parameters;
         }
 
-        if ( "all".equals( name ) )
-        {
+        if ( "all".equals( name ) ) {
             Query query = new Query();
             ServiceParameter p = new QueryParameter( query );
             parameters.add( p );
@@ -138,21 +122,17 @@ public abstract class ServiceParameter
     }
 
 
-    public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, Query query )
-    {
+    public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, Query query ) {
 
-        if ( parameters == null )
-        {
+        if ( parameters == null ) {
             parameters = new ArrayList<ServiceParameter>();
         }
 
-        if ( query == null )
-        {
+        if ( query == null ) {
             return parameters;
         }
 
-        if ( lastParameterIsQuery( parameters ) )
-        {
+        if ( lastParameterIsQuery( parameters ) ) {
             logger.error( "Adding two queries in a row" );
         }
 
@@ -163,31 +143,24 @@ public abstract class ServiceParameter
 
 
     public static List<ServiceParameter> addParameters( List<ServiceParameter> parameters, Object... params )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( parameters == null )
-        {
+        if ( parameters == null ) {
             parameters = new ArrayList<ServiceParameter>();
         }
 
-        if ( params == null )
-        {
+        if ( params == null ) {
             return parameters;
         }
 
-        for ( Object param : params )
-        {
-            if ( param instanceof UUID )
-            {
+        for ( Object param : params ) {
+            if ( param instanceof UUID ) {
                 addParameter( parameters, ( UUID ) param );
             }
-            else if ( param instanceof String )
-            {
+            else if ( param instanceof String ) {
                 addParameter( parameters, ( String ) param );
             }
-            else if ( param instanceof Query )
-            {
+            else if ( param instanceof Query ) {
                 addParameter( parameters, ( Query ) param );
             }
         }
@@ -196,76 +169,61 @@ public abstract class ServiceParameter
     }
 
 
-    public static List<ServiceParameter> parameters( Object... params ) throws Exception
-    {
+    public static List<ServiceParameter> parameters( Object... params ) throws Exception {
         return addParameters( null, params );
     }
 
 
-    public static boolean firstParameterIsName( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static boolean firstParameterIsName( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( 0 ).isName();
         }
         return false;
     }
 
 
-    public static boolean lastParameterIsName( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static boolean lastParameterIsName( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( parameters.size() - 1 ).isName();
         }
         return false;
     }
 
 
-    public static boolean firstParameterIsQuery( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static boolean firstParameterIsQuery( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( 0 ).isQuery();
         }
         return false;
     }
 
 
-    public static boolean lastParameterIsQuery( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static boolean lastParameterIsQuery( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( parameters.size() - 1 ).isQuery();
         }
         return false;
     }
 
 
-    public static boolean firstParameterIsId( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static boolean firstParameterIsId( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( 0 ).isId();
         }
         return false;
     }
 
 
-    public static boolean lastParameterIsId( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static boolean lastParameterIsId( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( parameters.size() - 1 ).isId();
         }
         return false;
     }
 
 
-    public static ServiceParameter firstParameter( List<ServiceParameter> parameters )
-    {
-        if ( !isEmpty( parameters ) )
-        {
+    public static ServiceParameter firstParameter( List<ServiceParameter> parameters ) {
+        if ( !isEmpty( parameters ) ) {
             return parameters.get( 0 );
         }
 
@@ -273,24 +231,18 @@ public abstract class ServiceParameter
     }
 
 
-    public static boolean moreParameters( List<ServiceParameter> parameters )
-    {
+    public static boolean moreParameters( List<ServiceParameter> parameters ) {
         return moreParameters( parameters, true );
     }
 
 
-    public static boolean moreParameters( List<ServiceParameter> parameters, boolean ignoreTrailingQueries )
-    {
-        if ( isEmpty( parameters ) )
-        {
+    public static boolean moreParameters( List<ServiceParameter> parameters, boolean ignoreTrailingQueries ) {
+        if ( isEmpty( parameters ) ) {
             return false;
         }
-        if ( ignoreTrailingQueries )
-        {
-            for ( ServiceParameter parameter : parameters )
-            {
-                if ( !( parameter instanceof QueryParameter ) )
-                {
+        if ( ignoreTrailingQueries ) {
+            for ( ServiceParameter parameter : parameters ) {
+                if ( !( parameter instanceof QueryParameter ) ) {
                     return true;
                 }
             }
@@ -300,30 +252,23 @@ public abstract class ServiceParameter
     }
 
 
-    public static int parameterCount( List<ServiceParameter> parameters )
-    {
+    public static int parameterCount( List<ServiceParameter> parameters ) {
         return parameterCount( parameters, false );
     }
 
 
-    public static int parameterCount( List<ServiceParameter> parameters, boolean ignoreTrailingQueries )
-    {
-        if ( isEmpty( parameters ) )
-        {
+    public static int parameterCount( List<ServiceParameter> parameters, boolean ignoreTrailingQueries ) {
+        if ( isEmpty( parameters ) ) {
             return 0;
         }
         int count = parameters.size();
-        if ( ignoreTrailingQueries )
-        {
+        if ( ignoreTrailingQueries ) {
             count = 0;
-            for ( ServiceParameter parameter : parameters )
-            {
-                if ( !( parameter instanceof QueryParameter ) )
-                {
+            for ( ServiceParameter parameter : parameters ) {
+                if ( !( parameter instanceof QueryParameter ) ) {
                     count++;
                 }
-                else
-                {
+                else {
                     return count;
                 }
             }
@@ -332,22 +277,18 @@ public abstract class ServiceParameter
     }
 
 
-    public static ServiceParameter dequeueParameter( List<ServiceParameter> parameters )
-    {
+    public static ServiceParameter dequeueParameter( List<ServiceParameter> parameters ) {
         return dequeue( parameters );
     }
 
 
-    public static void queueParameter( List<ServiceParameter> parameters, ServiceParameter parameter )
-    {
+    public static void queueParameter( List<ServiceParameter> parameters, ServiceParameter parameter ) {
         parameters = queue( parameters, parameter );
     }
 
 
-    public static List<ServiceParameter> mergeQueries( Query query, List<ServiceParameter> parameters )
-    {
-        while ( firstParameterIsQuery( parameters ) )
-        {
+    public static List<ServiceParameter> mergeQueries( Query query, List<ServiceParameter> parameters ) {
+        while ( firstParameterIsQuery( parameters ) ) {
             parameters = dequeueCopy( parameters );
         }
         return parameters;
@@ -355,57 +296,44 @@ public abstract class ServiceParameter
 
 
     public static List<ServiceParameter> filter( List<ServiceParameter> parameters,
-                                                 Map<List<String>, List<String>> replaceParameters )
-    {
-        if ( replaceParameters == null )
-        {
+                                                 Map<List<String>, List<String>> replaceParameters ) {
+        if ( replaceParameters == null ) {
             return parameters;
         }
-        if ( ( parameters == null ) || ( parameters.size() == 0 ) )
-        {
+        if ( ( parameters == null ) || ( parameters.size() == 0 ) ) {
             return parameters;
         }
-        for ( Entry<List<String>, List<String>> replaceSet : replaceParameters.entrySet() )
-        {
-            if ( parameters.size() < replaceSet.getKey().size() )
-            {
+        for ( Entry<List<String>, List<String>> replaceSet : replaceParameters.entrySet() ) {
+            if ( parameters.size() < replaceSet.getKey().size() ) {
                 continue;
             }
             boolean found = true;
-            for ( int i = 0; i < replaceSet.getKey().size(); i++ )
-            {
+            for ( int i = 0; i < replaceSet.getKey().size(); i++ ) {
                 String matchStr = replaceSet.getKey().get( i );
                 ServiceParameter param = parameters.get( i );
                 if ( matchStr.equals( "$id" ) && ( ( param instanceof IdParameter )
-                        || ( param instanceof NameParameter ) ) )
-                {
+                        || ( param instanceof NameParameter ) ) ) {
                     continue;
                 }
-                else if ( matchStr.equals( "$query" ) && ( param instanceof QueryParameter ) )
-                {
+                else if ( matchStr.equals( "$query" ) && ( param instanceof QueryParameter ) ) {
                     continue;
                 }
-                else if ( matchStr.equalsIgnoreCase( param.getName() ) )
-                {
+                else if ( matchStr.equalsIgnoreCase( param.getName() ) ) {
                     continue;
                 }
                 found = false;
                 break;
             }
-            if ( !found )
-            {
+            if ( !found ) {
                 continue;
             }
             ArrayList<ServiceParameter> p = new ArrayList<ServiceParameter>();
-            for ( String name : replaceSet.getValue() )
-            {
-                if ( name.startsWith( "\\" ) )
-                {
+            for ( String name : replaceSet.getValue() ) {
+                if ( name.startsWith( "\\" ) ) {
                     int i = Integer.parseInt( name.substring( 1 ) );
                     p.add( parameters.get( i ) );
                 }
-                else
-                {
+                else {
                     p.add( new NameParameter( name ) );
                 }
             }
@@ -416,118 +344,100 @@ public abstract class ServiceParameter
     }
 
 
-    public static class IdParameter extends ServiceParameter
-    {
+    public static class IdParameter extends ServiceParameter {
         UUID entityId;
 
 
-        public IdParameter( UUID entityId )
-        {
+        public IdParameter( UUID entityId ) {
             this.entityId = entityId;
         }
 
 
         @Override
-        public UUID getId()
-        {
+        public UUID getId() {
             return entityId;
         }
 
 
         @Override
-        public boolean isId()
-        {
+        public boolean isId() {
             return true;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return entityId.toString();
         }
 
 
         @Override
-        public Identifier getIdentifier()
-        {
+        public Identifier getIdentifier() {
             return Identifier.from( entityId );
         }
     }
 
 
-    public static class NameParameter extends ServiceParameter
-    {
+    public static class NameParameter extends ServiceParameter {
         String name;
 
 
-        public NameParameter( String name )
-        {
+        public NameParameter( String name ) {
             name = name.trim().toLowerCase();
             this.name = name;
         }
 
 
         @Override
-        public String getName()
-        {
+        public String getName() {
             return name;
         }
 
 
         @Override
-        public boolean isName()
-        {
+        public boolean isName() {
             return true;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return name;
         }
 
 
         @Override
-        public Identifier getIdentifier()
-        {
+        public Identifier getIdentifier() {
             return Identifier.from( name );
         }
     }
 
 
-    public static class QueryParameter extends ServiceParameter
-    {
+    public static class QueryParameter extends ServiceParameter {
         Query query;
 
 
-        public QueryParameter( Query query )
-        {
+        public QueryParameter( Query query ) {
             this.query = query;
         }
 
 
         @Override
-        public Query getQuery()
-        {
+        public Query getQuery() {
             return query;
         }
 
 
         @Override
-        public boolean isQuery()
-        {
+        public boolean isQuery() {
             return true;
         }
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             String queryStr = query.toString();
-            if ( isNotBlank( queryStr ) )
-            {
+            if ( isNotBlank( queryStr ) ) {
                 return queryStr;
             }
             return "";
@@ -535,8 +445,7 @@ public abstract class ServiceParameter
 
 
         @Override
-        public Identifier getIdentifier()
-        {
+        public Identifier getIdentifier() {
             return null;
         }
     }

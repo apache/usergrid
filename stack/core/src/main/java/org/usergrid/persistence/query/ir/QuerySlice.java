@@ -31,8 +31,7 @@ import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
  *
  * @author tnine
  */
-public class QuerySlice
-{
+public class QuerySlice {
 
     private final String propertyName;
     private final int nodeId;
@@ -47,16 +46,14 @@ public class QuerySlice
      * @param propertyName
      * @param nodeId
      */
-    public QuerySlice( String propertyName, int nodeId )
-    {
+    public QuerySlice( String propertyName, int nodeId ) {
         this.propertyName = propertyName;
         this.nodeId = nodeId;
     }
 
 
     /** Reverse this slice. Flips the reversed switch and correctly changes the start and finish */
-    public void reverse()
-    {
+    public void reverse() {
         reversed = !reversed;
 
         RangeValue oldStart = start;
@@ -67,57 +64,48 @@ public class QuerySlice
     }
 
 
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 
 
-    public RangeValue getStart()
-    {
+    public RangeValue getStart() {
         return start;
     }
 
 
-    public void setStart( RangeValue start )
-    {
+    public void setStart( RangeValue start ) {
         this.start = start;
     }
 
 
-    public RangeValue getFinish()
-    {
+    public RangeValue getFinish() {
         return finish;
     }
 
 
-    public void setFinish( RangeValue finish )
-    {
+    public void setFinish( RangeValue finish ) {
         this.finish = finish;
     }
 
 
-    public ByteBuffer getCursor()
-    {
+    public ByteBuffer getCursor() {
         return hasCursor() ? cursor.duplicate() : null;
     }
 
 
-    public void setCursor( ByteBuffer cursor )
-    {
+    public void setCursor( ByteBuffer cursor ) {
         this.cursor = cursor;
     }
 
 
     /** True if a cursor has been set */
-    public boolean hasCursor()
-    {
+    public boolean hasCursor() {
         return this.cursor != null;
     }
 
 
-    public boolean isReversed()
-    {
+    public boolean isReversed() {
         return reversed;
     }
 
@@ -126,8 +114,7 @@ public class QuerySlice
      * Return true if we have a cursor and it's empty. This means that we've already returned all possible values from
      * this slice range with our existing data in a previous invocation of search
      */
-    public boolean isComplete()
-    {
+    public boolean isComplete() {
         return cursor != null && cursor.remaining() == 0;
     }
 
@@ -138,35 +125,29 @@ public class QuerySlice
      * @return An array of dynamic composites to use. Index 0 is the start, index 1 is the finish. One or more could be
      *         null
      */
-    public DynamicComposite[] getRange()
-    {
+    public DynamicComposite[] getRange() {
         DynamicComposite startComposite = null;
         DynamicComposite finishComposite = null;
 
         // calc
-        if ( hasCursor() )
-        {
+        if ( hasCursor() ) {
             startComposite = DynamicComposite.fromByteBuffer( cursor.duplicate() );
         }
 
-        else if ( start != null )
-        {
+        else if ( start != null ) {
             startComposite = new DynamicComposite( start.getCode(), start.getValue() );
 
             // forward scanning from a >= 100 OR //reverse scanning from MAX to >= 100
-            if ( ( !reversed && !start.isInclusive() ) || ( reversed && start.isInclusive() ) )
-            {
+            if ( ( !reversed && !start.isInclusive() ) || ( reversed && start.isInclusive() ) ) {
                 setEqualityFlag( startComposite, ComponentEquality.GREATER_THAN_EQUAL );
             }
         }
 
-        if ( finish != null )
-        {
+        if ( finish != null ) {
             finishComposite = new DynamicComposite( finish.getCode(), finish.getValue() );
 
             // forward scan to <= 100 OR reverse scan ININITY to > 100
-            if ( ( !reversed && finish.isInclusive() ) || reversed && !finish.isInclusive() )
-            {
+            if ( ( !reversed && finish.isInclusive() ) || reversed && !finish.isInclusive() ) {
                 setEqualityFlag( finishComposite, ComponentEquality.GREATER_THAN_EQUAL );
             }
         }
@@ -176,8 +157,7 @@ public class QuerySlice
 
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( finish == null ) ? 0 : finish.hashCode() );
@@ -190,56 +170,42 @@ public class QuerySlice
 
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
             return true;
         }
-        if ( obj == null )
-        {
+        if ( obj == null ) {
             return false;
         }
-        if ( getClass() != obj.getClass() )
-        {
+        if ( getClass() != obj.getClass() ) {
             return false;
         }
         QuerySlice other = ( QuerySlice ) obj;
-        if ( finish == null )
-        {
-            if ( other.finish != null )
-            {
+        if ( finish == null ) {
+            if ( other.finish != null ) {
                 return false;
             }
         }
-        else if ( !finish.equals( other.finish ) )
-        {
+        else if ( !finish.equals( other.finish ) ) {
             return false;
         }
-        if ( propertyName == null )
-        {
-            if ( other.propertyName != null )
-            {
+        if ( propertyName == null ) {
+            if ( other.propertyName != null ) {
                 return false;
             }
         }
-        else if ( !propertyName.equals( other.propertyName ) )
-        {
+        else if ( !propertyName.equals( other.propertyName ) ) {
             return false;
         }
-        if ( reversed != other.reversed )
-        {
+        if ( reversed != other.reversed ) {
             return false;
         }
-        if ( start == null )
-        {
-            if ( other.start != null )
-            {
+        if ( start == null ) {
+            if ( other.start != null ) {
                 return false;
             }
         }
-        else if ( !start.equals( other.start ) )
-        {
+        else if ( !start.equals( other.start ) ) {
             return false;
         }
         return true;
@@ -252,49 +218,42 @@ public class QuerySlice
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "QuerySlice [propertyName=" + propertyName + ", start=" + start + ", finish=" + finish + ", cursor="
                 + cursor + ", reversed=" + reversed + ", nodeId=" + nodeId + "]";
     }
 
 
-    public static class RangeValue
-    {
+    public static class RangeValue {
         final byte code;
         final Object value;
         final boolean inclusive;
 
 
-        public RangeValue( byte code, Object value, boolean inclusive )
-        {
+        public RangeValue( byte code, Object value, boolean inclusive ) {
             this.code = code;
             this.value = value;
             this.inclusive = inclusive;
         }
 
 
-        public byte getCode()
-        {
+        public byte getCode() {
             return code;
         }
 
 
-        public Object getValue()
-        {
+        public Object getValue() {
             return value;
         }
 
 
-        public boolean isInclusive()
-        {
+        public boolean isInclusive() {
             return inclusive;
         }
 
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             final int prime = 31;
             int result = 1;
             result = prime * result + code;
@@ -305,72 +264,55 @@ public class QuerySlice
 
 
         @Override
-        public boolean equals( Object obj )
-        {
-            if ( this == obj )
-            {
+        public boolean equals( Object obj ) {
+            if ( this == obj ) {
                 return true;
             }
-            if ( obj == null )
-            {
+            if ( obj == null ) {
                 return false;
             }
-            if ( getClass() != obj.getClass() )
-            {
+            if ( getClass() != obj.getClass() ) {
                 return false;
             }
             RangeValue other = ( RangeValue ) obj;
-            if ( code != other.code )
-            {
+            if ( code != other.code ) {
                 return false;
             }
-            if ( inclusive != other.inclusive )
-            {
+            if ( inclusive != other.inclusive ) {
                 return false;
             }
-            if ( value == null )
-            {
-                if ( other.value != null )
-                {
+            if ( value == null ) {
+                if ( other.value != null ) {
                     return false;
                 }
             }
-            else if ( !value.equals( other.value ) )
-            {
+            else if ( !value.equals( other.value ) ) {
                 return false;
             }
             return true;
         }
 
 
-        public int compareTo( RangeValue other, boolean finish )
-        {
-            if ( other == null )
-            {
+        public int compareTo( RangeValue other, boolean finish ) {
+            if ( other == null ) {
                 return 1;
             }
-            if ( code != other.code )
-            {
+            if ( code != other.code ) {
                 return NumberUtils.sign( code - other.code );
             }
             @SuppressWarnings({ "unchecked", "rawtypes" }) int c = ( ( Comparable ) value ).compareTo( other.value );
-            if ( c != 0 )
-            {
+            if ( c != 0 ) {
                 return c;
             }
-            if ( finish )
-            {
+            if ( finish ) {
                 // for finish values, inclusive means <= which is greater than <
-                if ( inclusive != other.inclusive )
-                {
+                if ( inclusive != other.inclusive ) {
                     return inclusive ? 1 : -1;
                 }
             }
-            else
-            {
+            else {
                 // for start values, inclusive means >= which is lest than >
-                if ( inclusive != other.inclusive )
-                {
+                if ( inclusive != other.inclusive ) {
                     return inclusive ? -1 : 1;
                 }
             }
@@ -384,18 +326,14 @@ public class QuerySlice
          * @see java.lang.Object#toString()
          */
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "RangeValue [code=" + code + ", value=" + value + ", inclusive=" + inclusive + "]";
         }
 
 
-        public static int compare( RangeValue v1, RangeValue v2, boolean finish )
-        {
-            if ( v1 == null )
-            {
-                if ( v2 == null )
-                {
+        public static int compare( RangeValue v1, RangeValue v2, boolean finish ) {
+            if ( v1 == null ) {
+                if ( v2 == null ) {
                     return 0;
                 }
                 return -1;

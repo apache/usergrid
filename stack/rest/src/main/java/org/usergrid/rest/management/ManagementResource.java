@@ -77,8 +77,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 } )
-public class ManagementResource extends AbstractContextResource
-{
+public class ManagementResource extends AbstractContextResource {
 
     /*-
      * New endpoints:
@@ -95,51 +94,43 @@ public class ManagementResource extends AbstractContextResource
     private static final Logger logger = LoggerFactory.getLogger( ManagementResource.class );
 
 
-    public ManagementResource()
-    {
+    public ManagementResource() {
         logger.info( "ManagementResource initialized" );
     }
 
 
-    private static String wrapWithCallback( AccessInfo accessInfo, String callback )
-    {
+    private static String wrapWithCallback( AccessInfo accessInfo, String callback ) {
         return wrapWithCallback( mapToJsonString( accessInfo ), callback );
     }
 
 
-    private static String wrapWithCallback( String json, String callback )
-    {
-        if ( StringUtils.isNotBlank( callback ) )
-        {
+    private static String wrapWithCallback( String json, String callback ) {
+        if ( StringUtils.isNotBlank( callback ) ) {
             json = callback + "(" + json + ")";
         }
         return json;
     }
 
 
-    private static MediaType jsonMediaType( String callback )
-    {
+    private static MediaType jsonMediaType( String callback ) {
         return isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
     }
 
 
     @Path( "organizations" )
-    public OrganizationsResource getOrganizations()
-    {
+    public OrganizationsResource getOrganizations() {
         return getSubResource( OrganizationsResource.class );
     }
 
 
     @Path( "orgs" )
-    public OrganizationsResource getOrganizations2()
-    {
+    public OrganizationsResource getOrganizations2() {
         return getSubResource( OrganizationsResource.class );
     }
 
 
     @Path( "users" )
-    public UsersResource getUsers()
-    {
+    public UsersResource getUsers() {
         return getSubResource( UsersResource.class );
     }
 
@@ -155,8 +146,7 @@ public class ManagementResource extends AbstractContextResource
                                          @QueryParam( "ttl" ) long ttl,
                                          @QueryParam( "access_token" ) String access_token,
                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception
-    {
+            throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false );
     }
@@ -170,8 +160,7 @@ public class ManagementResource extends AbstractContextResource
                                     @QueryParam( "password" ) String password,
                                     @QueryParam( "client_id" ) String client_id,
                                     @QueryParam( "client_secret" ) String client_secret, @QueryParam( "ttl" ) long ttl,
-                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception
-    {
+                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, true );
     }
@@ -179,14 +168,11 @@ public class ManagementResource extends AbstractContextResource
 
     private Response getAccessTokenInternal( UriInfo ui, String authorization, String grant_type, String username,
                                              String password, String client_id, String client_secret, long ttl,
-                                             String callback, boolean loadAdminData ) throws Exception
-    {
+                                             String callback, boolean loadAdminData ) throws Exception {
         UserInfo user = null;
 
-        try
-        {
-            if ( SubjectUtils.getUser() != null )
-            {
+        try {
+            if ( SubjectUtils.getUser() != null ) {
                 user = SubjectUtils.getUser();
             }
 
@@ -194,19 +180,15 @@ public class ManagementResource extends AbstractContextResource
 
             String errorDescription = "invalid username or password";
 
-            if ( user == null )
-            {
-                if ( authorization != null )
-                {
+            if ( user == null ) {
+                if ( authorization != null ) {
                     String type = stringOrSubstringBeforeFirst( authorization, ' ' ).toUpperCase();
 
-                    if ( "BASIC".equals( type ) )
-                    {
+                    if ( "BASIC".equals( type ) ) {
                         String token = stringOrSubstringAfterFirst( authorization, ' ' );
                         String[] values = Base64.decodeToString( token ).split( ":" );
 
-                        if ( values.length >= 2 )
-                        {
+                        if ( values.length >= 2 ) {
                             client_id = values[0].toLowerCase();
                             client_secret = values[1];
                         }
@@ -215,29 +197,23 @@ public class ManagementResource extends AbstractContextResource
 
 
                 // do checking for different grant types
-                if ( GrantType.PASSWORD.toString().equals( grant_type ) )
-                {
-                    try
-                    {
+                if ( GrantType.PASSWORD.toString().equals( grant_type ) ) {
+                    try {
                         user = management.verifyAdminUserPasswordCredentials( username, password );
 
-                        if ( user != null )
-                        {
+                        if ( user != null ) {
                             logger.info( "found user from verify: {}", user.getUuid() );
                         }
                     }
-                    catch ( UnactivatedAdminUserException uaue )
-                    {
+                    catch ( UnactivatedAdminUserException uaue ) {
                         errorDescription = "user not activated";
                         logger.error( errorDescription, uaue );
                     }
-                    catch ( DisabledAdminUserException daue )
-                    {
+                    catch ( DisabledAdminUserException daue ) {
                         errorDescription = "user disabled";
                         logger.error( errorDescription, daue );
                     }
-                    catch ( UnconfirmedAdminUserException uaue )
-                    {
+                    catch ( UnconfirmedAdminUserException uaue ) {
                         errorDescription = "User must be confirmed to authenticate";
                         logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" );
 
@@ -249,32 +225,26 @@ public class ManagementResource extends AbstractContextResource
                         return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                                        .entity( wrapWithCallback( response.getBody(), callback ) ).build();
                     }
-                    catch ( Exception e1 )
-                    {
+                    catch ( Exception e1 ) {
                         logger.error( errorDescription, e1 );
                     }
                 }
-                else if ( "client_credentials".equals( grant_type ) )
-                {
-                    try
-                    {
+                else if ( "client_credentials".equals( grant_type ) ) {
+                    try {
                         AccessInfo access_info = management.authorizeClient( client_id, client_secret, ttl );
-                        if ( access_info != null )
-                        {
+                        if ( access_info != null ) {
 
                             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                                            .entity( wrapWithCallback( access_info, callback ) ).build();
                         }
                     }
-                    catch ( Exception e1 )
-                    {
+                    catch ( Exception e1 ) {
                         logger.error( "failed authorizeClient", e1 );
                     }
                 }
             }
 
-            if ( user == null )
-            {
+            if ( user == null ) {
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
@@ -297,8 +267,7 @@ public class ManagementResource extends AbstractContextResource
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
         }
-        catch ( OAuthProblemException e )
-        {
+        catch ( OAuthProblemException e ) {
             logger.error( "OAuth Error", e );
             OAuthResponse res = OAuthResponse.errorResponse( SC_BAD_REQUEST ).error( e ).buildJSONMessage();
             return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
@@ -316,8 +285,8 @@ public class ManagementResource extends AbstractContextResource
                                         @FormParam( "password" ) String password,
                                         @FormParam( "client_id" ) String client_id, @FormParam( "ttl" ) long ttl,
                                         @FormParam( "client_secret" ) String client_secret,
-                                        @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception
-    {
+                                        @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+            throws Exception {
 
         logger.info( "ManagementResource.getAccessTokenPost" );
 
@@ -338,8 +307,7 @@ public class ManagementResource extends AbstractContextResource
                                              @QueryParam( "ttl" ) long ttl,
                                              @QueryParam( "access_token" ) String access_token,
                                              @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception
-    {
+            throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false );
     }
@@ -351,8 +319,7 @@ public class ManagementResource extends AbstractContextResource
     public Response getAccessTokenPostJson( @Context UriInfo ui, @HeaderParam( "Authorization" ) String authorization,
                                             Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -361,14 +328,11 @@ public class ManagementResource extends AbstractContextResource
         String client_secret = ( String ) json.get( "client_secret" );
         long ttl = 0;
 
-        if ( json.get( "ttl" ) != null )
-        {
-            try
-            {
+        if ( json.get( "ttl" ) != null ) {
+            try {
                 ttl = Long.parseLong( json.get( "ttl" ).toString() );
             }
-            catch ( NumberFormatException nfe )
-            {
+            catch ( NumberFormatException nfe ) {
                 throw new IllegalArgumentException( "ttl must be a number >= 0" );
             }
         }
@@ -383,8 +347,7 @@ public class ManagementResource extends AbstractContextResource
     @Consumes( APPLICATION_JSON )
     public Response getAccessTokenMePostJson( @Context UriInfo ui, Map<String, Object> json,
                                               @QueryParam( "callback" ) @DefaultValue( "" ) String callback,
-                                              @HeaderParam( "Authorization" ) String authorization ) throws Exception
-    {
+                                              @HeaderParam( "Authorization" ) String authorization ) throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -393,14 +356,11 @@ public class ManagementResource extends AbstractContextResource
         String client_secret = ( String ) json.get( "client_secret" );
         long ttl = 0;
 
-        if ( json.get( "ttl" ) != null )
-        {
-            try
-            {
+        if ( json.get( "ttl" ) != null ) {
+            try {
                 ttl = Long.parseLong( json.get( "ttl" ).toString() );
             }
-            catch ( NumberFormatException nfe )
-            {
+            catch ( NumberFormatException nfe ) {
                 throw new IllegalArgumentException( "ttl must be a number >= 0" );
             }
         }
@@ -416,8 +376,7 @@ public class ManagementResource extends AbstractContextResource
     public Viewable showAuthorizeForm( @Context UriInfo ui, @QueryParam( "response_type" ) String response_type,
                                        @QueryParam( "client_id" ) String client_id,
                                        @QueryParam( "redirect_uri" ) String redirect_uri,
-                                       @QueryParam( "scope" ) String scope, @QueryParam( "state" ) String state )
-    {
+                                       @QueryParam( "scope" ) String scope, @QueryParam( "state" ) String state ) {
 
         responseType = response_type;
         clientId = client_id;
@@ -437,11 +396,9 @@ public class ManagementResource extends AbstractContextResource
                                          @FormParam( "redirect_uri" ) String redirect_uri,
                                          @FormParam( "scope" ) String scope, @FormParam( "state" ) String state,
                                          @FormParam( "username" ) String username,
-                                         @FormParam( "password" ) String password )
-    {
+                                         @FormParam( "password" ) String password ) {
 
-        try
-        {
+        try {
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;
@@ -449,43 +406,34 @@ public class ManagementResource extends AbstractContextResource
             this.state = state;
 
             UserInfo user = null;
-            try
-            {
+            try {
                 user = management.verifyAdminUserPasswordCredentials( username, password );
             }
-            catch ( Exception e1 )
-            {
+            catch ( Exception e1 ) {
             }
-            if ( ( user != null ) && isNotBlank( redirect_uri ) )
-            {
-                if ( !redirect_uri.contains( "?" ) )
-                {
+            if ( ( user != null ) && isNotBlank( redirect_uri ) ) {
+                if ( !redirect_uri.contains( "?" ) ) {
                     redirect_uri += "?";
                 }
-                else
-                {
+                else {
                     redirect_uri += "&";
                 }
                 redirect_uri += "code=" + management.getAccessTokenForAdminUser( user.getUuid(), 0 );
-                if ( isNotBlank( state ) )
-                {
+                if ( isNotBlank( state ) ) {
                     redirect_uri += "&state=" + URLEncoder.encode( state, "UTF-8" );
                 }
                 throw new RedirectionException( state );
             }
-            else
-            {
+            else {
                 errorMsg = "Username or password do not match";
             }
 
             return handleViewable( "authorize_form", this );
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
@@ -499,38 +447,32 @@ public class ManagementResource extends AbstractContextResource
     String state;
 
 
-    public String getErrorMsg()
-    {
+    public String getErrorMsg() {
         return errorMsg;
     }
 
 
-    public String getResponseType()
-    {
+    public String getResponseType() {
         return responseType;
     }
 
 
-    public String getClientId()
-    {
+    public String getClientId() {
         return clientId;
     }
 
 
-    public String getRedirectUri()
-    {
+    public String getRedirectUri() {
         return redirectUri;
     }
 
 
-    public String getScope()
-    {
+    public String getScope() {
         return scope;
     }
 
 
-    public String getState()
-    {
+    public String getState() {
         return state;
     }
 }

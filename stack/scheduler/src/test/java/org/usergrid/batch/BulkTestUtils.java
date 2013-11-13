@@ -10,33 +10,27 @@ import org.usergrid.batch.repository.JobDescriptor;
 
 /** @author zznate */
 @Ignore
-public class BulkTestUtils
-{
+public class BulkTestUtils {
 
-    public static JobFactory getBulkJobFactory()
-    {
+    public static JobFactory getBulkJobFactory() {
         return new MyBulkJobFactory();
     }
 
 
-    private static class MyBulkJobFactory implements JobFactory
-    {
+    private static class MyBulkJobFactory implements JobFactory {
         /* (non-Javadoc)
          * @see org.usergrid.batch.JobFactory#jobsFrom(org.usergrid.batch.repository.JobDescriptor)
          */
         @Override
-        public List<Job> jobsFrom( JobDescriptor descriptor )
-        {
+        public List<Job> jobsFrom( JobDescriptor descriptor ) {
             return Arrays.asList( new Job[] { new MyBulkJob() } );
         }
     }
 
 
-    private static class MyBulkJob implements Job
-    {
+    private static class MyBulkJob implements Job {
         @Override
-        public void execute( JobExecution execution ) throws Exception
-        {
+        public void execute( JobExecution execution ) throws Exception {
             // do some stuff
 
         }

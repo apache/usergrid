@@ -178,8 +178,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
  * @author edanuff
  * @author tnine
  */
-public class EntityManagerImpl implements EntityManager
-{
+public class EntityManagerImpl implements EntityManager {
 
     /** The log4j logger. */
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerImpl.class );
@@ -209,14 +208,12 @@ public class EntityManagerImpl implements EntityManager
     public static final LongSerializer le = new LongSerializer();
 
 
-    public EntityManagerImpl()
-    {
+    public EntityManagerImpl() {
     }
 
 
     public EntityManagerImpl init( EntityManagerFactoryImpl emf, CassandraService cass, CounterUtils counterUtils,
-                                   UUID applicationId, boolean skipAggregateCounters )
-    {
+                                   UUID applicationId, boolean skipAggregateCounters ) {
         this.emf = emf;
         this.cass = cass;
         this.counterUtils = counterUtils;
@@ -225,42 +222,35 @@ public class EntityManagerImpl implements EntityManager
         qmf = ( QueueManagerFactoryImpl ) getApplicationContext().getBean( "queueManagerFactory" );
         indexBucketLocator = ( IndexBucketLocator ) getApplicationContext().getBean( "indexBucketLocator" );
         // prime the application entity for the EM
-        try
-        {
+        try {
             getApplication();
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
         return this;
     }
 
 
-    public void setApplicationId( UUID applicationId )
-    {
+    public void setApplicationId( UUID applicationId ) {
         this.applicationId = applicationId;
     }
 
 
-    public ApplicationContext getApplicationContext()
-    {
+    public ApplicationContext getApplicationContext() {
         return emf.applicationContext;
     }
 
 
     @Override
-    public EntityRef getApplicationRef()
-    {
+    public EntityRef getApplicationRef() {
         return ref( TYPE_APPLICATION, applicationId );
     }
 
 
     @Override
-    public Application getApplication() throws Exception
-    {
-        if ( application == null )
-        {
+    public Application getApplication() throws Exception {
+        if ( application == null ) {
             application = get( applicationId, Application.class );
         }
         return application;
@@ -268,24 +258,21 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void updateApplication( Application app ) throws Exception
-    {
+    public void updateApplication( Application app ) throws Exception {
         update( app );
         this.application = app;
     }
 
 
     @Override
-    public void updateApplication( Map<String, Object> properties ) throws Exception
-    {
+    public void updateApplication( Map<String, Object> properties ) throws Exception {
         this.updateProperties( applicationId, properties );
         this.application = get( applicationId, Application.class );
     }
 
 
     @Override
-    public RelationManagerImpl getRelationManager( EntityRef entityRef )
-    {
+    public RelationManagerImpl getRelationManager( EntityRef entityRef ) {
         //RelationManagerImpl rmi = applicationContext.getBean(RelationManagerImpl.class);
         RelationManagerImpl rmi = new RelationManagerImpl();
         rmi.init( this, cass, applicationId, entityRef, indexBucketLocator );
@@ -307,16 +294,14 @@ public class EntityManagerImpl implements EntityManager
      * @throws Exception the exception
      */
     public Mutator<ByteBuffer> batchSetProperty( Mutator<ByteBuffer> batch, EntityRef entity, String propertyName,
-                                                 Object propertyValue, UUID timestampUuid ) throws Exception
-    {
+                                                 Object propertyValue, UUID timestampUuid ) throws Exception {
         return this.batchSetProperty( batch, entity, propertyName, propertyValue, false, false, timestampUuid );
     }
 
 
     public Mutator<ByteBuffer> batchSetProperty( Mutator<ByteBuffer> batch, EntityRef entity, String propertyName,
                                                  Object propertyValue, boolean force, boolean noRead,
-                                                 UUID timestampUuid ) throws Exception
-    {
+                                                 UUID timestampUuid ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
@@ -328,11 +313,9 @@ public class EntityManagerImpl implements EntityManager
 
         Schema defaultSchema = Schema.getDefaultSchema();
 
-        if ( PROPERTY_TYPE.equalsIgnoreCase( propertyName ) && ( propertyValue != null ) )
-        {
+        if ( PROPERTY_TYPE.equalsIgnoreCase( propertyName ) && ( propertyValue != null ) ) {
             if ( "entity".equalsIgnoreCase( propertyValue.toString() ) || "dynamicentity"
-                    .equalsIgnoreCase( propertyValue.toString() ) )
-            {
+                    .equalsIgnoreCase( propertyValue.toString() ) ) {
                 String errorMsg =
                         "Unable to dictionary entity type to " + propertyValue + " because that is not a valid type.";
                 logger.error( errorMsg );
@@ -340,20 +323,16 @@ public class EntityManagerImpl implements EntityManager
             }
         }
 
-        if ( entitySchemaHasProperty )
-        {
+        if ( entitySchemaHasProperty ) {
 
-            if ( !force )
-            {
-                if ( !defaultSchema.isPropertyMutable( entity.getType(), propertyName ) )
-                {
+            if ( !force ) {
+                if ( !defaultSchema.isPropertyMutable( entity.getType(), propertyName ) ) {
                     return batch;
                 }
 
                 // Passing null for propertyValue indicates delete the property
                 // so if required property, exit
-                if ( ( propertyValue == null ) && defaultSchema.isRequiredProperty( entity.getType(), propertyName ) )
-                {
+                if ( ( propertyValue == null ) && defaultSchema.isRequiredProperty( entity.getType(), propertyName ) ) {
                     return batch;
                 }
             }
@@ -362,19 +341,16 @@ public class EntityManagerImpl implements EntityManager
             /**
              * Unique property, load the old value and remove it, check if it's not a duplicate
              */
-            if ( defaultSchema.getEntityInfo( entity.getType() ).isPropertyUnique( propertyName ) )
-            {
+            if ( defaultSchema.getEntityInfo( entity.getType() ).isPropertyUnique( propertyName ) ) {
 
                 Lock lock = getUniqueUpdateLock( cass.getLockManager(), applicationId, propertyValue, entity.getType(),
                         propertyName );
 
-                try
-                {
+                try {
                     lock.lock();
 
                     if ( !isPropertyValueUniqueForEntity( entity.getUuid(), entity.getType(), propertyName,
-                            propertyValue ) )
-                    {
+                            propertyValue ) ) {
                         throw new DuplicateUniquePropertyExistsException( entity.getType(), propertyName,
                                 propertyValue );
                     }
@@ -387,15 +363,13 @@ public class EntityManagerImpl implements EntityManager
                     uniquePropertyWrite( batch, collectionName, propertyName, propertyValue, entity.getUuid(),
                             timestamp );
                 }
-                finally
-                {
+                finally {
                     lock.unlock();
                 }
             }
         }
 
-        if ( getDefaultSchema().isPropertyIndexed( entity.getType(), propertyName ) )
-        {
+        if ( getDefaultSchema().isPropertyIndexed( entity.getType(), propertyName ) ) {
             //this call is incorrect.  The current entity is NOT the head entity
             getRelationManager( entity )
                     .batchUpdatePropertyIndexes( batch, propertyName, propertyValue, entitySchemaHasProperty, noRead,
@@ -403,22 +377,19 @@ public class EntityManagerImpl implements EntityManager
         }
 
 
-        if ( propertyValue != null )
-        {
+        if ( propertyValue != null ) {
             // Set the new value
             addPropertyToMutator( batch, key( entity.getUuid() ), entity.getType(), propertyName, propertyValue,
                     timestamp );
 
-            if ( !entitySchemaHasProperty )
-            {
+            if ( !entitySchemaHasProperty ) {
                 // Make a list of all the properties ever dictionary on this
                 // entity
                 addInsertToMutator( batch, ENTITY_DICTIONARIES, key( entity.getUuid(), DICTIONARY_PROPERTIES ),
                         propertyName, null, timestamp );
             }
         }
-        else
-        {
+        else {
             addDeleteToMutator( batch, ENTITY_PROPERTIES, key( entity.getUuid() ), propertyName, timestamp );
         }
 
@@ -440,11 +411,9 @@ public class EntityManagerImpl implements EntityManager
      */
     public Mutator<ByteBuffer> batchUpdateProperties( Mutator<ByteBuffer> batch, EntityRef entity,
                                                       Map<String, Object> properties, UUID timestampUuid )
-            throws Exception
-    {
+            throws Exception {
 
-        for ( String propertyName : properties.keySet() )
-        {
+        for ( String propertyName : properties.keySet() ) {
             Object propertyValue = properties.get( propertyName );
 
             batch = batchSetProperty( batch, entity, propertyName, propertyValue, timestampUuid );
@@ -471,8 +440,7 @@ public class EntityManagerImpl implements EntityManager
     public Mutator<ByteBuffer> batchUpdateDictionary( Mutator<ByteBuffer> batch, EntityRef entity,
                                                       String dictionaryName, Object elementValue,
                                                       boolean removeFromDictionary, UUID timestampUuid )
-            throws Exception
-    {
+            throws Exception {
         return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, removeFromDictionary,
                 timestampUuid );
     }
@@ -481,32 +449,27 @@ public class EntityManagerImpl implements EntityManager
     public Mutator<ByteBuffer> batchUpdateDictionary( Mutator<ByteBuffer> batch, EntityRef entity,
                                                       String dictionaryName, Object elementValue, Object elementCoValue,
                                                       boolean removeFromDictionary, UUID timestampUuid )
-            throws Exception
-    {
+            throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
         // dictionaryName = dictionaryName.toLowerCase();
-        if ( elementCoValue == null )
-        {
+        if ( elementCoValue == null ) {
             elementCoValue = ByteBuffer.allocate( 0 );
         }
 
         boolean entityHasDictionary = getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
         // Don't index dynamic dictionaries not defined by the schema
-        if ( entityHasDictionary )
-        {
+        if ( entityHasDictionary ) {
             getRelationManager( entity )
                     .batchUpdateSetIndexes( batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
         }
 
         ApplicationCF dictionary_cf = entityHasDictionary ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
 
-        if ( elementValue != null )
-        {
-            if ( !removeFromDictionary )
-            {
+        if ( elementValue != null ) {
+            if ( !removeFromDictionary ) {
                 // Set the new value
 
                 elementCoValue = toStorableBinaryValue( elementCoValue, !entityHasDictionary );
@@ -514,14 +477,12 @@ public class EntityManagerImpl implements EntityManager
                 addInsertToMutator( batch, dictionary_cf, key( entity.getUuid(), dictionaryName ),
                         entityHasDictionary ? elementValue : asList( elementValue ), elementCoValue, timestamp );
 
-                if ( !entityHasDictionary )
-                {
+                if ( !entityHasDictionary ) {
                     addInsertToMutator( batch, ENTITY_DICTIONARIES, key( entity.getUuid(), DICTIONARY_SETS ),
                             dictionaryName, null, timestamp );
                 }
             }
-            else
-            {
+            else {
                 addDeleteToMutator( batch, dictionary_cf, key( entity.getUuid(), dictionaryName ),
                         entityHasDictionary ? elementValue : asList( elementValue ), timestamp );
             }
@@ -538,16 +499,13 @@ public class EntityManagerImpl implements EntityManager
      */
     @Metered( group = "core", name = "EntityManager_isPropertyValueUniqueForEntity" )
     public boolean isPropertyValueUniqueForEntity( UUID ownerEntityId, String entityType, String propertyName,
-                                                   Object propertyValue ) throws Exception
-    {
+                                                   Object propertyValue ) throws Exception {
 
-        if ( !getDefaultSchema().isPropertyUnique( entityType, propertyName ) )
-        {
+        if ( !getDefaultSchema().isPropertyUnique( entityType, propertyName ) ) {
             return true;
         }
 
-        if ( propertyValue == null )
-        {
+        if ( propertyValue == null ) {
             return true;
         }
 
@@ -575,8 +533,7 @@ public class EntityManagerImpl implements EntityManager
      * @param propertyValue The value of the unique property
      */
     private Set<UUID> getUUIDsForUniqueProperty( UUID ownerEntityId, String collectionName, String propertyName,
-                                                 Object propertyValue ) throws Exception
-    {
+                                                 Object propertyValue ) throws Exception {
 
 
         String collectionNameInternal = defaultCollectionName( collectionName );
@@ -589,17 +546,14 @@ public class EntityManagerImpl implements EntityManager
 
 
         //No columns at all, it's unique
-        if ( cols.size() == 0 )
-        {
+        if ( cols.size() == 0 ) {
             return Collections.emptySet();
         }
 
         //shouldn't happen, but it's an error case
-        if ( cols.size() > 1 )
-        {
-            logger.error(
-                    "INDEX CORRUPTION: More than 1 unique value exists for entities in ownerId {} of type {} on " +
-                            "property {} with value {}",
+        if ( cols.size() > 1 ) {
+            logger.error( "INDEX CORRUPTION: More than 1 unique value exists for entities in ownerId {} of type {} on "
+                    + "property {} with value {}",
                     new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
         }
 
@@ -611,8 +565,7 @@ public class EntityManagerImpl implements EntityManager
 
         Set<UUID> results = new HashSet<UUID>( cols.size() );
 
-        for ( HColumn<ByteBuffer, ByteBuffer> col : cols )
-        {
+        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
             results.add( ue.fromByteBuffer( col.getName() ) );
         }
 
@@ -623,16 +576,14 @@ public class EntityManagerImpl implements EntityManager
     /** Add this unique index to the delete */
     private void uniquePropertyDelete( Mutator<ByteBuffer> m, String collectionName, String entityType,
                                        String propertyName, Object propertyValue, UUID entityId, long timestamp )
-            throws Exception
-    {
+            throws Exception {
         //read the old value and delete it
 
         Object oldValue = getProperty( new SimpleEntityRef( entityType, entityId ), propertyName );
 
         //we have an old value.  If the new value is empty, we want to delete the old value.  If the new value is
         // different we want to delete, otherwise we don't issue the delete
-        if ( oldValue != null && ( propertyValue == null || !oldValue.equals( propertyValue ) ) )
-        {
+        if ( oldValue != null && ( propertyValue == null || !oldValue.equals( propertyValue ) ) ) {
             Object key = createUniqueIndexKey( applicationId, collectionName, propertyName, oldValue );
 
             addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, entityId );
@@ -642,8 +593,7 @@ public class EntityManagerImpl implements EntityManager
 
     /** Add this unique index to the delete */
     private void uniquePropertyWrite( Mutator<ByteBuffer> m, String collectionName, String propertyName,
-                                      Object propertyValue, UUID entityId, long timestamp ) throws Exception
-    {
+                                      Object propertyValue, UUID entityId, long timestamp ) throws Exception {
         Object key = createUniqueIndexKey( applicationId, collectionName, propertyName, propertyValue );
 
         addInsertToMutator( m, ENTITY_UNIQUE, key, entityId, null, timestamp );
@@ -654,16 +604,14 @@ public class EntityManagerImpl implements EntityManager
      * Create a row key for the entity of the given type with the name and value in the property.  Used for fast unique
      * index lookups
      */
-    private Object createUniqueIndexKey( UUID ownerId, String collectionName, String propertyName, Object value )
-    {
+    private Object createUniqueIndexKey( UUID ownerId, String collectionName, String propertyName, Object value ) {
         return key( ownerId, collectionName, propertyName, value );
     }
 
 
     @Override
     @Metered( group = "core", name = "EntityManager_getAlias_single" )
-    public EntityRef getAlias( UUID ownerId, String collectionType, String aliasValue ) throws Exception
-    {
+    public EntityRef getAlias( UUID ownerId, String collectionType, String aliasValue ) throws Exception {
 
         Assert.notNull( ownerId, "ownerId is required" );
         Assert.notNull( collectionType, "collectionType is required" );
@@ -671,19 +619,16 @@ public class EntityManagerImpl implements EntityManager
 
         Map<String, EntityRef> results = getAlias( ownerId, collectionType, Collections.singletonList( aliasValue ) );
 
-        if ( results == null || results.size() == 0 )
-        {
+        if ( results == null || results.size() == 0 ) {
             return null;
         }
 
         //add a warn statement so we can see if we have data migration issues.
         //TODO When we get an event system, trigger a repair if this is detected
-        if ( results.size() > 1 )
-        {
+        if ( results.size() > 1 ) {
             logger.warn(
-                    "More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists.  This is a duplicate " +
-                            "alias, and needs audited",
-                    new Object[] { ownerId, collectionType, aliasValue } );
+                    "More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists.  This is a duplicate "
+                            + "alias, and needs audited", new Object[] { ownerId, collectionType, aliasValue } );
         }
 
         return results.get( aliasValue );
@@ -691,16 +636,15 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception
-    {
+    public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception {
         return getAlias( applicationId, aliasType, aliases );
     }
 
 
     @Override
     @Metered( group = "core", name = "EntityManager_getAlias_multi" )
-    public Map<String, EntityRef> getAlias( UUID ownerId, String collectionName, List<String> aliases ) throws Exception
-    {
+    public Map<String, EntityRef> getAlias( UUID ownerId, String collectionName, List<String> aliases )
+            throws Exception {
 
         Assert.notNull( ownerId, "ownerId is required" );
         Assert.notNull( collectionName, "collectionName is required" );
@@ -711,10 +655,8 @@ public class EntityManagerImpl implements EntityManager
 
         Map<String, EntityRef> results = new HashMap<String, EntityRef>();
 
-        for ( String alias : aliases )
-        {
-            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collectionName, propertyName, alias ) )
-            {
+        for ( String alias : aliases ) {
+            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collectionName, propertyName, alias ) ) {
                 results.put( alias, new SimpleEntityRef( collectionName, id ) );
             }
         }
@@ -726,19 +668,16 @@ public class EntityManagerImpl implements EntityManager
     @SuppressWarnings( "unchecked" )
     @Override
     public <A extends Entity> A create( String entityType, Class<A> entityClass, Map<String, Object> properties )
-            throws Exception
-    {
-        if ( ( entityType != null ) && ( entityType.startsWith( TYPE_ENTITY ) || entityType.startsWith( "entities" ) ) )
-        {
+            throws Exception {
+        if ( ( entityType != null ) && ( entityType.startsWith( TYPE_ENTITY ) || entityType
+                .startsWith( "entities" ) ) ) {
             throw new IllegalArgumentException( "Invalid entity type" );
         }
         A e = null;
-        try
-        {
+        try {
             e = ( A ) create( entityType, ( Class<Entity> ) entityClass, properties, null );
         }
-        catch ( ClassCastException e1 )
-        {
+        catch ( ClassCastException e1 ) {
             logger.error( "Unable to create typed entity", e1 );
         }
         return e;
@@ -746,24 +685,21 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception
-    {
+    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception {
         return create( entityType, null, properties, importId );
     }
 
 
     @SuppressWarnings( "unchecked" )
     @Override
-    public <A extends TypedEntity> A create( A entity ) throws Exception
-    {
+    public <A extends TypedEntity> A create( A entity ) throws Exception {
         return ( A ) create( entity.getType(), entity.getClass(), entity.getProperties() );
     }
 
 
     @Override
     @TraceParticipant
-    public Entity create( String entityType, Map<String, Object> properties ) throws Exception
-    {
+    public Entity create( String entityType, Map<String, Object> properties ) throws Exception {
         return create( entityType, null, properties );
     }
 
@@ -783,8 +719,7 @@ public class EntityManagerImpl implements EntityManager
     @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
     public <A extends Entity> A create( String entityType, Class<A> entityClass, Map<String, Object> properties,
-                                        UUID importId ) throws Exception
-    {
+                                        UUID importId ) throws Exception {
 
         UUID timestampUuid = newTimeUUID();
 
@@ -802,8 +737,7 @@ public class EntityManagerImpl implements EntityManager
     @Metered( group = "core", name = "EntityManager_batchCreate" )
     public <A extends Entity> A batchCreate( Mutator<ByteBuffer> m, String entityType, Class<A> entityClass,
                                              Map<String, Object> properties, UUID importId, UUID timestampUuid )
-            throws Exception
-    {
+            throws Exception {
 
         String eType = Schema.normalizeEntityType( entityType );
 
@@ -811,8 +745,7 @@ public class EntityManagerImpl implements EntityManager
 
         boolean is_application = TYPE_APPLICATION.equals( eType );
 
-        if ( ( ( applicationId == null ) || applicationId.equals( UUIDUtils.ZERO_UUID ) ) && !is_application )
-        {
+        if ( ( ( applicationId == null ) || applicationId.equals( UUIDUtils.ZERO_UUID ) ) && !is_application ) {
             return null;
         }
 
@@ -820,73 +753,56 @@ public class EntityManagerImpl implements EntityManager
 
         UUID itemId = UUIDUtils.newTimeUUID();
 
-        if ( is_application )
-        {
+        if ( is_application ) {
             itemId = applicationId;
         }
-        if ( importId != null )
-        {
+        if ( importId != null ) {
             itemId = importId;
         }
         boolean emptyPropertyMap = false;
-        if ( properties == null )
-        {
+        if ( properties == null ) {
             properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
-        if ( properties.isEmpty() )
-        {
+        if ( properties.isEmpty() ) {
             emptyPropertyMap = true;
         }
 
-        if ( importId != null )
-        {
-            if ( isTimeBased( importId ) )
-            {
+        if ( importId != null ) {
+            if ( isTimeBased( importId ) ) {
                 timestamp = UUIDUtils.getTimestampInMicros( importId );
             }
-            else if ( properties.get( PROPERTY_CREATED ) != null )
-            {
+            else if ( properties.get( PROPERTY_CREATED ) != null ) {
                 timestamp = getLong( properties.get( PROPERTY_CREATED ) ) * 1000;
             }
         }
 
-        if ( entityClass == null )
-        {
+        if ( entityClass == null ) {
             entityClass = ( Class<A> ) Schema.getDefaultSchema().getEntityClass( entityType );
         }
 
         Set<String> required = schema.getRequiredProperties( entityType );
 
-        if ( required != null )
-        {
-            for ( String p : required )
-            {
+        if ( required != null ) {
+            for ( String p : required ) {
                 if ( !PROPERTY_UUID.equals( p ) && !PROPERTY_TYPE.equals( p ) && !PROPERTY_CREATED.equals( p )
-                        && !PROPERTY_MODIFIED.equals( p ) )
-                {
+                        && !PROPERTY_MODIFIED.equals( p ) ) {
                     Object v = properties.get( p );
-                    if ( schema.isPropertyTimestamp( entityType, p ) )
-                    {
-                        if ( v == null )
-                        {
+                    if ( schema.isPropertyTimestamp( entityType, p ) ) {
+                        if ( v == null ) {
                             properties.put( p, timestamp / 1000 );
                         }
-                        else
-                        {
+                        else {
                             long ts = getLong( v );
-                            if ( ts <= 0 )
-                            {
+                            if ( ts <= 0 ) {
                                 properties.put( p, timestamp / 1000 );
                             }
                         }
                         continue;
                     }
-                    if ( v == null )
-                    {
+                    if ( v == null ) {
                         throw new RequiredPropertyNotFoundException( entityType, p );
                     }
-                    else if ( ( v instanceof String ) && isBlank( ( String ) v ) )
-                    {
+                    else if ( ( v instanceof String ) && isBlank( ( String ) v ) ) {
                         throw new RequiredPropertyNotFoundException( entityType, p );
                     }
                 }
@@ -902,13 +818,11 @@ public class EntityManagerImpl implements EntityManager
 
         CollectionInfo collection = null;
 
-        if ( !is_application )
-        {
+        if ( !is_application ) {
             // Add entity to collection
 
 
-            if ( !emptyPropertyMap )
-            {
+            if ( !emptyPropertyMap ) {
                 addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
             }
 
@@ -921,27 +835,22 @@ public class EntityManagerImpl implements EntityManager
                     asList( TYPE_APPLICATION, collection_name, applicationId ), null, timestamp );
         }
 
-        if ( emptyPropertyMap )
-        {
+        if ( emptyPropertyMap ) {
             return null;
         }
         properties.put( PROPERTY_UUID, itemId );
         properties.put( PROPERTY_TYPE, Schema.normalizeEntityType( entityType, false ) );
 
-        if ( importId != null )
-        {
-            if ( properties.get( PROPERTY_CREATED ) == null )
-            {
+        if ( importId != null ) {
+            if ( properties.get( PROPERTY_CREATED ) == null ) {
                 properties.put( PROPERTY_CREATED, timestamp / 1000 );
             }
 
-            if ( properties.get( PROPERTY_MODIFIED ) == null )
-            {
+            if ( properties.get( PROPERTY_MODIFIED ) == null ) {
                 properties.put( PROPERTY_MODIFIED, timestamp / 1000 );
             }
         }
-        else
-        {
+        else {
             properties.put( PROPERTY_CREATED, timestamp / 1000 );
             properties.put( PROPERTY_MODIFIED, timestamp / 1000 );
         }
@@ -950,11 +859,9 @@ public class EntityManagerImpl implements EntityManager
         // and dictionary their timestamp values if not set
         // this is sure to break something for someone someday
 
-        if ( properties.containsKey( PROPERTY_TIMESTAMP ) )
-        {
+        if ( properties.containsKey( PROPERTY_TIMESTAMP ) ) {
             long ts = getLong( properties.get( PROPERTY_TIMESTAMP ) );
-            if ( ts <= 0 )
-            {
+            if ( ts <= 0 ) {
                 properties.put( PROPERTY_TIMESTAMP, timestamp / 1000 );
             }
         }
@@ -962,14 +869,11 @@ public class EntityManagerImpl implements EntityManager
         A entity = EntityFactory.newEntity( itemId, eType, entityClass );
         logger.info( "Entity created of type {}", entity.getClass().getName() );
 
-        if ( Event.ENTITY_TYPE.equals( eType ) )
-        {
+        if ( Event.ENTITY_TYPE.equals( eType ) ) {
             Event event = ( Event ) entity.toTypedEntity();
-            for ( String prop_name : properties.keySet() )
-            {
+            for ( String prop_name : properties.keySet() ) {
                 Object propertyValue = properties.get( prop_name );
-                if ( propertyValue != null )
-                {
+                if ( propertyValue != null ) {
                     event.setProperty( prop_name, propertyValue );
                 }
             }
@@ -980,19 +884,16 @@ public class EntityManagerImpl implements EntityManager
             return entity;
         }
 
-        for ( String prop_name : properties.keySet() )
-        {
+        for ( String prop_name : properties.keySet() ) {
 
             Object propertyValue = properties.get( prop_name );
 
-            if ( propertyValue == null )
-            {
+            if ( propertyValue == null ) {
                 continue;
             }
 
 
-            if ( User.ENTITY_TYPE.equals( entityType ) && "me".equals( prop_name ) )
-            {
+            if ( User.ENTITY_TYPE.equals( entityType ) && "me".equals( prop_name ) ) {
                 throw new DuplicateUniquePropertyExistsException( entityType, prop_name, propertyValue );
             }
 
@@ -1001,8 +902,7 @@ public class EntityManagerImpl implements EntityManager
             batchSetProperty( m, entity, prop_name, propertyValue, true, true, timestampUuid );
         }
 
-        if ( !is_application )
-        {
+        if ( !is_application ) {
             incrementEntityCollection( collection_name, timestamp );
         }
 
@@ -1010,61 +910,49 @@ public class EntityManagerImpl implements EntityManager
     }
 
 
-    private void incrementEntityCollection( String collection_name, long cassandraTimestamp )
-    {
-        try
-        {
+    private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
+        try {
             incrementAggregateCounters( null, null, null, new String( APPLICATION_COLLECTION + collection_name ),
                     ONE_COUNT, cassandraTimestamp );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to increment counter application.collection." + collection_name, e );
         }
-        try
-        {
+        try {
             incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to increment counter application.entities", e );
         }
     }
 
 
-    public void decrementEntityCollection( String collection_name )
-    {
+    public void decrementEntityCollection( String collection_name ) {
 
         long cassandraTimestamp = cass.createTimestamp();
         decrementEntityCollection( collection_name, cassandraTimestamp );
     }
 
 
-    public void decrementEntityCollection( String collection_name, long cassandraTimestamp )
-    {
-        try
-        {
+    public void decrementEntityCollection( String collection_name, long cassandraTimestamp ) {
+        try {
             incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name, -ONE_COUNT,
                     cassandraTimestamp );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to decrement counter application.collection." + collection_name, e );
         }
-        try
-        {
+        try {
             incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, -ONE_COUNT, cassandraTimestamp );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to decrement counter application.entities", e );
         }
     }
 
 
     @Metered( group = "core", name = "EntityManager_insertEntity" )
-    public void insertEntity( String type, UUID entityId ) throws Exception
-    {
+    public void insertEntity( String type, UUID entityId ) throws Exception {
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1080,8 +968,7 @@ public class EntityManagerImpl implements EntityManager
     }
 
 
-    public Message storeEventAsMessage( Mutator<ByteBuffer> m, Event event, long timestamp )
-    {
+    public Message storeEventAsMessage( Mutator<ByteBuffer> m, Event event, long timestamp ) {
 
         counterUtils.addEventCounterMutations( m, applicationId, event, timestamp );
 
@@ -1108,14 +995,12 @@ public class EntityManagerImpl implements EntityManager
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_getEntityType" )
-    public String getEntityType( UUID entityId ) throws Exception
-    {
+    public String getEntityType( UUID entityId ) throws Exception {
 
         HColumn<String, String> column =
                 cass.getColumn( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, key( entityId ),
                         PROPERTY_TYPE, se, se );
-        if ( column != null )
-        {
+        if ( column != null ) {
             return column.getValue();
         }
         return null;
@@ -1133,34 +1018,29 @@ public class EntityManagerImpl implements EntityManager
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_loadPartialEntity" )
-    public DynamicEntity loadPartialEntity( UUID entityId, String... propertyNames ) throws Exception
-    {
+    public DynamicEntity loadPartialEntity( UUID entityId, String... propertyNames ) throws Exception {
 
         List<HColumn<String, ByteBuffer>> results = null;
-        if ( ( propertyNames != null ) && ( propertyNames.length > 0 ) )
-        {
+        if ( ( propertyNames != null ) && ( propertyNames.length > 0 ) ) {
             Set<String> column_names = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
 
             column_names.add( PROPERTY_TYPE );
             column_names.add( PROPERTY_UUID );
 
-            for ( String propertyName : propertyNames )
-            {
+            for ( String propertyName : propertyNames ) {
                 column_names.add( propertyName );
             }
 
             results = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, key( entityId ),
                     column_names, se, be );
         }
-        else
-        {
+        else {
             results = cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES,
                     key( entityId ) );
         }
 
         Map<String, Object> entityProperties = deserializeEntityProperties( results );
-        if ( entityProperties == null )
-        {
+        if ( entityProperties == null ) {
             return null;
         }
 
@@ -1181,8 +1061,7 @@ public class EntityManagerImpl implements EntityManager
      *
      * @throws Exception the exception
      */
-    public <A extends Entity> A getEntity( UUID entityId, Class<A> entityClass ) throws Exception
-    {
+    public <A extends Entity> A getEntity( UUID entityId, Class<A> entityClass ) throws Exception {
 
         Object entity_key = key( entityId );
         Map<String, Object> results = null;
@@ -1196,8 +1075,7 @@ public class EntityManagerImpl implements EntityManager
         // EntityCF.PROPERTIES, entity_key, columnNames, se, be);
         // }
 
-        if ( results == null )
-        {
+        if ( results == null ) {
             logger.warn( "getEntity(): No properties found for entity " + entityId + ", probably doesn't exist..." );
             return null;
         }
@@ -1205,8 +1083,7 @@ public class EntityManagerImpl implements EntityManager
         UUID id = uuid( results.get( PROPERTY_UUID ) );
         String type = string( results.get( PROPERTY_TYPE ) );
 
-        if ( !entityId.equals( id ) )
-        {
+        if ( !entityId.equals( id ) ) {
 
             logger.error( "Expected entity id " + entityId + ", found " + id, new Throwable() );
             return null;
@@ -1230,13 +1107,11 @@ public class EntityManagerImpl implements EntityManager
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_getEntities" )
-    public <A extends Entity> List<A> getEntities( Collection<UUID> entityIds, Class<A> entityClass ) throws Exception
-    {
+    public <A extends Entity> List<A> getEntities( Collection<UUID> entityIds, Class<A> entityClass ) throws Exception {
 
         List<A> entities = new ArrayList<A>();
 
-        if ( ( entityIds == null ) || ( entityIds.size() == 0 ) )
-        {
+        if ( ( entityIds == null ) || ( entityIds.size() == 0 ) ) {
             return entities;
         }
 
@@ -1254,14 +1129,11 @@ public class EntityManagerImpl implements EntityManager
         // entityIds, columnNames, ue, se, be);
         // }
 
-        if ( results != null )
-        {
-            for ( UUID key : entityIds )
-            {
+        if ( results != null ) {
+            for ( UUID key : entityIds ) {
                 Map<String, Object> properties = deserializeEntityProperties( results.getByKey( key ) );
 
-                if ( properties == null )
-                {
+                if ( properties == null ) {
                     logger.error( "Error deserializing entity with key " + key
                             + ", entity probaby doesn't exist, where did this key come from?" );
                     continue;
@@ -1270,8 +1142,7 @@ public class EntityManagerImpl implements EntityManager
                 UUID id = uuid( properties.get( PROPERTY_UUID ) );
                 String type = string( properties.get( PROPERTY_TYPE ) );
 
-                if ( ( id == null ) || ( type == null ) )
-                {
+                if ( ( id == null ) || ( type == null ) ) {
                     logger.error( "Error retrieving entity with key " + key
                             + ", no type or id deseriazable, where did this key come from?" );
                     continue;
@@ -1282,11 +1153,9 @@ public class EntityManagerImpl implements EntityManager
                 resultSet.put( id, entity );
             }
 
-            for ( UUID entityId : entityIds )
-            {
+            for ( UUID entityId : entityIds ) {
                 A entity = resultSet.get( entityId );
-                if ( entity != null )
-                {
+                if ( entity != null ) {
                     entities.add( entity );
                 }
             }
@@ -1297,25 +1166,21 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Metered( group = "core", name = "EntityManager_getPropertyNames" )
-    public Set<String> getPropertyNames( EntityRef entity ) throws Exception
-    {
+    public Set<String> getPropertyNames( EntityRef entity ) throws Exception {
 
         Set<String> propertyNames = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
         List<HColumn<String, ByteBuffer>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
                         key( entity.getUuid(), DICTIONARY_PROPERTIES ) );
-        for ( HColumn<String, ByteBuffer> result : results )
-        {
+        for ( HColumn<String, ByteBuffer> result : results ) {
             String str = string( result.getName() );
-            if ( str != null )
-            {
+            if ( str != null ) {
                 propertyNames.add( str );
             }
         }
 
         Set<String> schemaProperties = getDefaultSchema().getPropertyNames( entity.getType() );
-        if ( ( schemaProperties != null ) && !schemaProperties.isEmpty() )
-        {
+        if ( ( schemaProperties != null ) && !schemaProperties.isEmpty() ) {
             propertyNames.addAll( schemaProperties );
         }
 
@@ -1324,25 +1189,21 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Metered( group = "core", name = "EntityManager_getDictionaryNames" )
-    public Set<String> getDictionaryNames( EntityRef entity ) throws Exception
-    {
+    public Set<String> getDictionaryNames( EntityRef entity ) throws Exception {
 
         Set<String> dictionaryNames = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
         List<HColumn<String, ByteBuffer>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
                         key( entity.getUuid(), DICTIONARY_SETS ) );
-        for ( HColumn<String, ByteBuffer> result : results )
-        {
+        for ( HColumn<String, ByteBuffer> result : results ) {
             String str = string( result.getName() );
-            if ( str != null )
-            {
+            if ( str != null ) {
                 dictionaryNames.add( str );
             }
         }
 
         Set<String> schemaSets = getDefaultSchema().getDictionaryNames( entity.getType() );
-        if ( ( schemaSets != null ) && !schemaSets.isEmpty() )
-        {
+        if ( ( schemaSets != null ) && !schemaSets.isEmpty() ) {
             dictionaryNames.addAll( schemaSets );
         }
 
@@ -1353,8 +1214,7 @@ public class EntityManagerImpl implements EntityManager
     @Override
     @Metered( group = "core", name = "EntityManager_getDictionaryElementValue" )
     public Object getDictionaryElementValue( EntityRef entity, String dictionaryName, String elementName )
-            throws Exception
-    {
+            throws Exception {
 
         Object value = null;
 
@@ -1362,12 +1222,10 @@ public class EntityManagerImpl implements EntityManager
 
         boolean entityHasDictionary = getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
-        if ( entityHasDictionary )
-        {
+        if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
         }
-        else
-        {
+        else {
             dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
         }
 
@@ -1379,19 +1237,15 @@ public class EntityManagerImpl implements EntityManager
                         key( entity.getUuid(), dictionaryName ),
                         entityHasDictionary ? bytebuffer( elementName ) : DynamicComposite.toByteBuffer( elementName ),
                         be, be );
-        if ( result != null )
-        {
-            if ( entityHasDictionary && coTypeIsBasic )
-            {
+        if ( result != null ) {
+            if ( entityHasDictionary && coTypeIsBasic ) {
                 value = object( dictionaryCoType, result.getValue() );
             }
-            else if ( result.getValue().remaining() > 0 )
-            {
+            else if ( result.getValue().remaining() > 0 ) {
                 value = Schema.deserializePropertyValueFromJsonBinary( result.getValue().slice(), dictionaryCoType );
             }
         }
-        else
-        {
+        else {
             logger.info( "Results of EntityManagerImpl.getDictionaryElementValue is null" );
         }
 
@@ -1401,8 +1255,7 @@ public class EntityManagerImpl implements EntityManager
 
     @Metered( group = "core", name = "EntityManager_getDictionaryElementValues" )
     public Map<String, Object> getDictionaryElementValues( EntityRef entity, String dictionaryName,
-                                                           String... elementNames ) throws Exception
-    {
+                                                           String... elementNames ) throws Exception {
 
         Map<String, Object> values = null;
 
@@ -1410,12 +1263,10 @@ public class EntityManagerImpl implements EntityManager
 
         boolean entityHasDictionary = getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
-        if ( entityHasDictionary )
-        {
+        if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
         }
-        else
-        {
+        else {
             dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
         }
 
@@ -1423,8 +1274,7 @@ public class EntityManagerImpl implements EntityManager
         boolean coTypeIsBasic = ClassUtils.isBasicType( dictionaryCoType );
 
         ByteBuffer[] columnNames = new ByteBuffer[elementNames.length];
-        for ( int i = 0; i < elementNames.length; i++ )
-        {
+        for ( int i = 0; i < elementNames.length; i++ ) {
             columnNames[i] = entityHasDictionary ? bytebuffer( elementNames[i] ) :
                              DynamicComposite.toByteBuffer( elementNames[i] );
         }
@@ -1432,26 +1282,21 @@ public class EntityManagerImpl implements EntityManager
         ColumnSlice<ByteBuffer, ByteBuffer> results =
                 cass.getColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
                         key( entity.getUuid(), dictionaryName ), columnNames, be, be );
-        if ( results != null )
-        {
+        if ( results != null ) {
             values = new HashMap<String, Object>();
-            for ( HColumn<ByteBuffer, ByteBuffer> result : results.getColumns() )
-            {
+            for ( HColumn<ByteBuffer, ByteBuffer> result : results.getColumns() ) {
                 String name = entityHasDictionary ? string( result.getName() ) :
                               DynamicComposite.fromByteBuffer( result.getName() ).get( 0, se );
-                if ( entityHasDictionary && coTypeIsBasic )
-                {
+                if ( entityHasDictionary && coTypeIsBasic ) {
                     values.put( name, object( dictionaryCoType, result.getValue() ) );
                 }
-                else if ( result.getValue().remaining() > 0 )
-                {
+                else if ( result.getValue().remaining() > 0 ) {
                     values.put( name, Schema.deserializePropertyValueFromJsonBinary( result.getValue().slice(),
                             dictionaryCoType ) );
                 }
             }
         }
-        else
-        {
+        else {
             logger.error( "Results of EntityManagerImpl.getDictionaryElementValues is null" );
         }
 
@@ -1471,8 +1316,7 @@ public class EntityManagerImpl implements EntityManager
      */
     @Override
     @Metered( group = "core", name = "EntityManager_getDictionaryAsMap" )
-    public Map<Object, Object> getDictionaryAsMap( EntityRef entity, String dictionaryName ) throws Exception
-    {
+    public Map<Object, Object> getDictionaryAsMap( EntityRef entity, String dictionaryName ) throws Exception {
 
         entity = validate( entity );
 
@@ -1482,12 +1326,10 @@ public class EntityManagerImpl implements EntityManager
 
         boolean entityHasDictionary = getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
-        if ( entityHasDictionary )
-        {
+        if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
         }
-        else
-        {
+        else {
             dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
         }
 
@@ -1498,28 +1340,22 @@ public class EntityManagerImpl implements EntityManager
         List<HColumn<ByteBuffer, ByteBuffer>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
                         key( entity.getUuid(), dictionaryName ), be, be );
-        for ( HColumn<ByteBuffer, ByteBuffer> result : results )
-        {
+        for ( HColumn<ByteBuffer, ByteBuffer> result : results ) {
             Object name = null;
-            if ( entityHasDictionary )
-            {
+            if ( entityHasDictionary ) {
                 name = object( setType, result.getName() );
             }
-            else
-            {
+            else {
                 name = CompositeUtils.deserialize( result.getName() );
             }
             Object value = null;
-            if ( entityHasDictionary && coTypeIsBasic )
-            {
+            if ( entityHasDictionary && coTypeIsBasic ) {
                 value = object( setCoType, result.getValue() );
             }
-            else if ( result.getValue().remaining() > 0 )
-            {
+            else if ( result.getValue().remaining() > 0 ) {
                 value = Schema.deserializePropertyValueFromJsonBinary( result.getValue().slice(), setCoType );
             }
-            if ( name != null )
-            {
+            if ( name != null ) {
                 dictionary.put( name, value );
             }
         }
@@ -1529,8 +1365,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<Object> getDictionaryAsSet( EntityRef entity, String dictionaryName ) throws Exception
-    {
+    public Set<Object> getDictionaryAsSet( EntityRef entity, String dictionaryName ) throws Exception {
         return new LinkedHashSet<Object>( getDictionaryAsMap( entity, dictionaryName ).keySet() );
     }
 
@@ -1544,12 +1379,10 @@ public class EntityManagerImpl implements EntityManager
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_updateProperties" )
-    public void updateProperties( UUID entityId, Map<String, Object> properties ) throws Exception
-    {
+    public void updateProperties( UUID entityId, Map<String, Object> properties ) throws Exception {
 
         EntityRef entity = getRef( entityId );
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             return;
         }
 
@@ -1566,14 +1399,12 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Metered( group = "core", name = "EntityManager_deleteEntity" )
-    public void deleteEntity( UUID entityId ) throws Exception
-    {
+    public void deleteEntity( UUID entityId ) throws Exception {
 
         logger.info( "deleteEntity {} of application {}", entityId, applicationId );
 
         EntityRef entity = getRef( entityId );
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             return;
         }
 
@@ -1591,10 +1422,8 @@ public class EntityManagerImpl implements EntityManager
         // delete all core properties and any dynamic property that's ever been
         // dictionary for this entity
         Set<String> properties = getPropertyNames( entity );
-        if ( properties != null )
-        {
-            for ( String propertyName : properties )
-            {
+        if ( properties != null ) {
+            for ( String propertyName : properties ) {
                 m = batchSetProperty( m, entity, propertyName, null, true, false, timestampUuid );
             }
         }
@@ -1602,15 +1431,11 @@ public class EntityManagerImpl implements EntityManager
         // delete any core dictionaries and dynamic dictionaries associated with
         // this entity
         Set<String> dictionaries = getDictionaryNames( entity );
-        if ( dictionaries != null )
-        {
-            for ( String dictionary : dictionaries )
-            {
+        if ( dictionaries != null ) {
+            for ( String dictionary : dictionaries ) {
                 Set<Object> values = getDictionaryAsSet( entity, dictionary );
-                if ( values != null )
-                {
-                    for ( Object value : values )
-                    {
+                if ( values != null ) {
+                    for ( Object value : values ) {
                         batchUpdateDictionary( m, entity, dictionary, value, true, timestampUuid );
                     }
                 }
@@ -1621,8 +1446,7 @@ public class EntityManagerImpl implements EntityManager
         getRelationManager( entity ).batchRemoveFromContainers( m, timestampUuid );
 
         //decrease entity count
-        if ( !TYPE_APPLICATION.equals( entity.getType() ) )
-        {
+        if ( !TYPE_APPLICATION.equals( entity.getType() ) ) {
             String collection_name = Schema.defaultCollectionName( entity.getType() );
             decrementEntityCollection( collection_name );
         }
@@ -1630,10 +1454,8 @@ public class EntityManagerImpl implements EntityManager
 
         timestamp += 1;
 
-        if ( dictionaries != null )
-        {
-            for ( String dictionary : dictionaries )
-            {
+        if ( dictionaries != null ) {
+            for ( String dictionary : dictionaries ) {
 
                 ApplicationCF cf =
                         getDefaultSchema().hasDictionary( entity.getType(), dictionary ) ? ENTITY_DICTIONARIES :
@@ -1650,34 +1472,28 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void delete( EntityRef entityRef ) throws Exception
-    {
+    public void delete( EntityRef entityRef ) throws Exception {
         deleteEntity( entityRef.getUuid() );
     }
 
 
     public void batchCreateRole( Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle,
-                                 long inactivity, RoleRef roleRef, UUID timestampUuid ) throws Exception
-    {
+                                 long inactivity, RoleRef roleRef, UUID timestampUuid ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        if ( roleRef == null )
-        {
+        if ( roleRef == null ) {
             roleRef = new SimpleRoleRef( groupId, roleName );
         }
-        if ( roleTitle == null )
-        {
+        if ( roleTitle == null ) {
             roleTitle = roleRef.getRoleName();
         }
 
         EntityRef ownerRef = null;
-        if ( roleRef.getGroupId() != null )
-        {
+        if ( roleRef.getGroupId() != null ) {
             ownerRef = new SimpleEntityRef( Group.ENTITY_TYPE, roleRef.getGroupId() );
         }
-        else
-        {
+        else {
             ownerRef = new SimpleEntityRef( Application.ENTITY_TYPE, applicationId );
         }
 
@@ -1700,30 +1516,24 @@ public class EntityManagerImpl implements EntityManager
         addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), DICTIONARY_SETS ),
                 Schema.DICTIONARY_ROLENAMES, null, timestamp );
 
-        if ( roleRef.getGroupId() != null )
-        {
+        if ( roleRef.getGroupId() != null ) {
             getRelationManager( ownerRef ).batchAddToCollection( batch, COLLECTION_ROLES, role, timestampUuid );
         }
     }
 
 
     @Override
-    public EntityRef getUserByIdentifier( Identifier identifier ) throws Exception
-    {
-        if ( identifier == null )
-        {
+    public EntityRef getUserByIdentifier( Identifier identifier ) throws Exception {
+        if ( identifier == null ) {
             return null;
         }
-        if ( identifier.isUUID() )
-        {
+        if ( identifier.isUUID() ) {
             return new SimpleEntityRef( "user", identifier.getUUID() );
         }
-        if ( identifier.isName() )
-        {
+        if ( identifier.isName() ) {
             return this.getAlias( applicationId, "user", identifier.getName() );
         }
-        if ( identifier.isEmail() )
-        {
+        if ( identifier.isEmail() ) {
 
             Query query = new Query();
             query.setEntityType( "user" );
@@ -1732,12 +1542,10 @@ public class EntityManagerImpl implements EntityManager
             query.setResultsLevel( REFS );
 
             Results r = getRelationManager( ref( applicationId ) ).searchCollection( "users", query );
-            if ( r != null && r.getRef() != null )
-            {
+            if ( r != null && r.getRef() != null ) {
                 return r.getRef();
             }
-            else
-            {
+            else {
                 // look-aside as it might be an email in the name field
                 return this.getAlias( applicationId, "user", identifier.getEmail() );
             }
@@ -1747,18 +1555,14 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public EntityRef getGroupByIdentifier( Identifier identifier ) throws Exception
-    {
-        if ( identifier == null )
-        {
+    public EntityRef getGroupByIdentifier( Identifier identifier ) throws Exception {
+        if ( identifier == null ) {
             return null;
         }
-        if ( identifier.isUUID() )
-        {
+        if ( identifier.isUUID() ) {
             return new SimpleEntityRef( "group", identifier.getUUID() );
         }
-        if ( identifier.isName() )
-        {
+        if ( identifier.isName() ) {
             return this.getAlias( applicationId, "group", identifier.getName() );
         }
         return null;
@@ -1767,8 +1571,7 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public Results getAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad )
-    {
+                                         CounterResolution resolution, long start, long finish, boolean pad ) {
         return this
                 .getAggregateCounters( userId, groupId, null, category, counterName, resolution, start, finish, pad );
     }
@@ -1777,8 +1580,7 @@ public class EntityManagerImpl implements EntityManager
     @Override
     @Metered( group = "core", name = "EntityManager_getAggregateCounters" )
     public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad )
-    {
+                                         CounterResolution resolution, long start, long finish, boolean pad ) {
         start = resolution.round( start );
         finish = resolution.round( finish );
         long expected_time = start;
@@ -1790,13 +1592,10 @@ public class EntityManagerImpl implements EntityManager
                 counterUtils.getAggregateCounterRow( counterName, userId, groupId, queueId, category, resolution ) )
                                              .execute();
         List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
-        for ( HCounterColumn<Long> column : r.get().getColumns() )
-        {
+        for ( HCounterColumn<Long> column : r.get().getColumns() ) {
             AggregateCounter count = new AggregateCounter( column.getName(), column.getValue() );
-            if ( pad && !( resolution == CounterResolution.ALL ) )
-            {
-                while ( count.getTimestamp() != expected_time )
-                {
+            if ( pad && !( resolution == CounterResolution.ALL ) ) {
+                while ( count.getTimestamp() != expected_time ) {
                     counters.add( new AggregateCounter( expected_time, 0 ) );
                     expected_time = resolution.next( expected_time );
                 }
@@ -1804,10 +1603,8 @@ public class EntityManagerImpl implements EntityManager
             }
             counters.add( count );
         }
-        if ( pad && !( resolution == CounterResolution.ALL ) )
-        {
-            while ( expected_time <= finish )
-            {
+        if ( pad && !( resolution == CounterResolution.ALL ) ) {
+            while ( expected_time <= finish ) {
                 counters.add( new AggregateCounter( expected_time, 0 ) );
                 expected_time = resolution.next( expected_time );
             }
@@ -1818,47 +1615,39 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     @Metered( group = "core", name = "EntityManager_getAggregateCounters_fromQueryObj" )
-    public Results getAggregateCounters( Query query ) throws Exception
-    {
+    public Results getAggregateCounters( Query query ) throws Exception {
         CounterResolution resolution = query.getResolution();
-        if ( resolution == null )
-        {
+        if ( resolution == null ) {
             resolution = CounterResolution.ALL;
         }
         long start = query.getStartTime() != null ? query.getStartTime() : 0;
         long finish = query.getFinishTime() != null ? query.getFinishTime() : 0;
         boolean pad = query.isPad();
-        if ( start <= 0 )
-        {
+        if ( start <= 0 ) {
             start = 0;
         }
-        if ( ( finish <= 0 ) || ( finish < start ) )
-        {
+        if ( ( finish <= 0 ) || ( finish < start ) ) {
             finish = System.currentTimeMillis();
         }
         start = resolution.round( start );
         finish = resolution.round( finish );
         long expected_time = start;
 
-        if ( pad && ( resolution != CounterResolution.ALL ) )
-        {
+        if ( pad && ( resolution != CounterResolution.ALL ) ) {
             long max_counters = ( finish - start ) / resolution.interval();
-            if ( max_counters > 1000 )
-            {
+            if ( max_counters > 1000 ) {
                 finish = resolution.round( start + ( resolution.interval() * 1000 ) );
             }
         }
 
         List<CounterFilterPredicate> filters = query.getCounterFilters();
-        if ( filters == null )
-        {
+        if ( filters == null ) {
             return null;
         }
         Map<String, AggregateCounterSelection> selections = new HashMap<String, AggregateCounterSelection>();
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
 
-        for ( CounterFilterPredicate filter : filters )
-        {
+        for ( CounterFilterPredicate filter : filters ) {
             AggregateCounterSelection selection =
                     new AggregateCounterSelection( filter.getName(), getUuid( getUserByIdentifier( filter.getUser() ) ),
                             getUuid( getGroupByIdentifier( filter.getGroup() ) ),
@@ -1872,17 +1661,13 @@ public class EntityManagerImpl implements EntityManager
         QueryResult<CounterRows<String, Long>> rows = q.setKeys( selections.keySet() ).execute();
 
         List<AggregateCounterSet> countSets = new ArrayList<AggregateCounterSet>();
-        for ( CounterRow<String, Long> r : rows.get() )
-        {
+        for ( CounterRow<String, Long> r : rows.get() ) {
             expected_time = start;
             List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
-            for ( HCounterColumn<Long> column : r.getColumnSlice().getColumns() )
-            {
+            for ( HCounterColumn<Long> column : r.getColumnSlice().getColumns() ) {
                 AggregateCounter count = new AggregateCounter( column.getName(), column.getValue() );
-                if ( pad && ( resolution != CounterResolution.ALL ) )
-                {
-                    while ( count.getTimestamp() != expected_time )
-                    {
+                if ( pad && ( resolution != CounterResolution.ALL ) ) {
+                    while ( count.getTimestamp() != expected_time ) {
                         counters.add( new AggregateCounter( expected_time, 0 ) );
                         expected_time = resolution.next( expected_time );
                     }
@@ -1890,10 +1675,8 @@ public class EntityManagerImpl implements EntityManager
                 }
                 counters.add( count );
             }
-            if ( pad && ( resolution != CounterResolution.ALL ) )
-            {
-                while ( expected_time <= finish )
-                {
+            if ( pad && ( resolution != CounterResolution.ALL ) ) {
+                while ( expected_time <= finish ) {
                     counters.add( new AggregateCounter( expected_time, 0 ) );
                     expected_time = resolution.next( expected_time );
                 }
@@ -1903,11 +1686,9 @@ public class EntityManagerImpl implements EntityManager
                     selection.getCategory(), counters ) );
         }
 
-        Collections.sort( countSets, new Comparator<AggregateCounterSet>()
-        {
+        Collections.sort( countSets, new Comparator<AggregateCounterSet>() {
             @Override
-            public int compare( AggregateCounterSet o1, AggregateCounterSet o2 )
-            {
+            public int compare( AggregateCounterSet o1, AggregateCounterSet o2 ) {
                 String s1 = o1.getName();
                 String s2 = o2.getName();
                 return s1.compareTo( s2 );
@@ -1919,8 +1700,7 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     @Metered( group = "core", name = "EntityManager_getEntityCounters" )
-    public Map<String, Long> getEntityCounters( UUID entityId ) throws Exception
-    {
+    public Map<String, Long> getEntityCounters( UUID entityId ) throws Exception {
 
         Map<String, Long> counters = new HashMap<String, Long>();
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
@@ -1928,8 +1708,7 @@ public class EntityManagerImpl implements EntityManager
         q.setColumnFamily( ENTITY_COUNTERS.toString() );
         q.setRange( null, null, false, ALL_COUNT );
         QueryResult<CounterSlice<String>> r = q.setKey( entityId ).execute();
-        for ( HCounterColumn<String> column : r.get().getColumns() )
-        {
+        for ( HCounterColumn<String> column : r.get().getColumns() ) {
             counters.put( column.getName(), column.getValue() );
         }
         return counters;
@@ -1937,16 +1716,14 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Map<String, Long> getApplicationCounters() throws Exception
-    {
+    public Map<String, Long> getApplicationCounters() throws Exception {
         return getEntityCounters( applicationId );
     }
 
 
     @Override
     @Metered( group = "core", name = "EntityManager_createApplicationCollection" )
-    public void createApplicationCollection( String entityType ) throws Exception
-    {
+    public void createApplicationCollection( String entityType ) throws Exception {
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1963,43 +1740,34 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public EntityRef getAlias( String aliasType, String alias ) throws Exception
-    {
+    public EntityRef getAlias( String aliasType, String alias ) throws Exception {
         return getAlias( applicationId, aliasType, alias );
     }
 
 
     @Override
-    public EntityRef validate( EntityRef entityRef ) throws Exception
-    {
+    public EntityRef validate( EntityRef entityRef ) throws Exception {
         return validate( entityRef, true );
     }
 
 
-    public EntityRef validate( EntityRef entityRef, boolean verify ) throws Exception
-    {
-        if ( ( entityRef == null ) || ( entityRef.getUuid() == null ) )
-        {
+    public EntityRef validate( EntityRef entityRef, boolean verify ) throws Exception {
+        if ( ( entityRef == null ) || ( entityRef.getUuid() == null ) ) {
             return null;
         }
-        if ( ( entityRef.getType() == null ) || verify )
-        {
+        if ( ( entityRef.getType() == null ) || verify ) {
             UUID entityId = entityRef.getUuid();
             String entityType = entityRef.getType();
-            try
-            {
+            try {
                 entityRef = getRef( entityRef.getUuid() );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Unable to load entity" + entityRef.getUuid().toString(), e );
             }
-            if ( entityRef == null )
-            {
+            if ( entityRef == null ) {
                 throw new EntityNotFoundException( "Entity " + entityId.toString() + " cannot be verified" );
             }
-            if ( ( entityType != null ) && !entityType.equalsIgnoreCase( entityRef.getType() ) )
-            {
+            if ( ( entityType != null ) && !entityType.equalsIgnoreCase( entityRef.getType() ) ) {
                 throw new UnexpectedEntityTypeException(
                         "Entity " + entityId + " is not the expected type, expected " + entityType + ", found "
                                 + entityRef.getType() );
@@ -2010,16 +1778,13 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public String getType( UUID entityid ) throws Exception
-    {
+    public String getType( UUID entityid ) throws Exception {
         return getEntityType( entityid );
     }
 
 
-    public String getType( EntityRef entity ) throws Exception
-    {
-        if ( entity.getType() != null )
-        {
+    public String getType( EntityRef entity ) throws Exception {
+        if ( entity.getType() != null ) {
             return entity.getType();
         }
         return getEntityType( entity.getUuid() );
@@ -2027,18 +1792,15 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Entity get( UUID entityid ) throws Exception
-    {
+    public Entity get( UUID entityid ) throws Exception {
         return getEntity( entityid, null );
     }
 
 
     @Override
-    public EntityRef getRef( UUID entityId ) throws Exception
-    {
+    public EntityRef getRef( UUID entityId ) throws Exception {
         String entityType = getEntityType( entityId );
-        if ( entityType == null )
-        {
+        if ( entityType == null ) {
             logger.warn( "Unable to get type for entity " + entityId, new Exception() );
             return null;
         }
@@ -2047,10 +1809,8 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Entity get( EntityRef entityRef ) throws Exception
-    {
-        if ( entityRef == null )
-        {
+    public Entity get( EntityRef entityRef ) throws Exception {
+        if ( entityRef == null ) {
             return null;
         }
         return getEntity( entityRef.getUuid(), null );
@@ -2058,10 +1818,8 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception
-    {
-        if ( entityRef == null )
-        {
+    public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception {
+        if ( entityRef == null ) {
             return null;
         }
         return get( entityRef.getUuid(), entityClass );
@@ -2070,15 +1828,12 @@ public class EntityManagerImpl implements EntityManager
 
     @SuppressWarnings( "unchecked" )
     @Override
-    public <A extends Entity> A get( UUID entityId, Class<A> entityClass ) throws Exception
-    {
+    public <A extends Entity> A get( UUID entityId, Class<A> entityClass ) throws Exception {
         A e = null;
-        try
-        {
+        try {
             e = ( A ) getEntity( entityId, ( Class<Entity> ) entityClass );
         }
-        catch ( ClassCastException e1 )
-        {
+        catch ( ClassCastException e1 ) {
             logger.error( "Unable to get typed entity", e1 );
         }
         return e;
@@ -2086,8 +1841,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Results get( Collection<UUID> entityIds, Results.Level resultsLevel ) throws Exception
-    {
+    public Results get( Collection<UUID> entityIds, Results.Level resultsLevel ) throws Exception {
         List<? extends Entity> results = getEntities( entityIds, null );
         return Results.fromEntities( results );
     }
@@ -2097,80 +1851,65 @@ public class EntityManagerImpl implements EntityManager
    * @see org.usergrid.persistence.EntityManager#get(java.util.Collection)
    */
     @Override
-    public Results get( Collection<UUID> entityIds ) throws Exception
-    {
+    public Results get( Collection<UUID> entityIds ) throws Exception {
         return fromEntities( getEntities( entityIds, null ) );
     }
 
 
     @Override
     public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, Results.Level resultsLevel )
-            throws Exception
-    {
+            throws Exception {
         return fromEntities( getEntities( entityIds, entityClass ) );
     }
 
 
     @Override
     public Results get( Collection<UUID> entityIds, String entityType, Class<? extends Entity> entityClass,
-                        Results.Level resultsLevel ) throws Exception
-    {
+                        Results.Level resultsLevel ) throws Exception {
         return fromEntities( getEntities( entityIds, entityClass ) );
     }
 
 
-    public Results loadEntities( Results results, Results.Level resultsLevel, int count ) throws Exception
-    {
+    public Results loadEntities( Results results, Results.Level resultsLevel, int count ) throws Exception {
         return loadEntities( results, resultsLevel, null, count );
     }
 
 
     public Results loadEntities( Results results, Results.Level resultsLevel, Map<UUID, UUID> associatedMap, int count )
-            throws Exception
-    {
+            throws Exception {
 
         results = results.trim( count );
-        if ( resultsLevel.ordinal() <= results.getLevel().ordinal() )
-        {
+        if ( resultsLevel.ordinal() <= results.getLevel().ordinal() ) {
             return results;
         }
 
         results.setEntities( getEntities( results.getIds(), null ) );
 
-        if ( resultsLevel == Results.Level.LINKED_PROPERTIES )
-        {
+        if ( resultsLevel == Results.Level.LINKED_PROPERTIES ) {
             List<Entity> entities = results.getEntities();
             BiMap<UUID, UUID> associatedIds = null;
 
-            if ( associatedMap != null )
-            {
+            if ( associatedMap != null ) {
                 associatedIds = HashBiMap.create( associatedMap );
             }
-            else
-            {
+            else {
                 associatedIds = HashBiMap.create( entities.size() );
-                for ( Entity entity : entities )
-                {
+                for ( Entity entity : entities ) {
                     Object id = entity.getMetadata( PROPERTY_ASSOCIATED );
-                    if ( id instanceof UUID )
-                    {
+                    if ( id instanceof UUID ) {
                         associatedIds.put( entity.getUuid(), ( UUID ) id );
                     }
                 }
             }
             List<DynamicEntity> linked = getEntities( new ArrayList<UUID>( associatedIds.values() ), null );
-            for ( DynamicEntity l : linked )
-            {
+            for ( DynamicEntity l : linked ) {
                 Map<String, Object> p = l.getDynamicProperties();
-                if ( ( p != null ) && ( p.size() > 0 ) )
-                {
+                if ( ( p != null ) && ( p.size() > 0 ) ) {
                     Entity e = results.getEntitiesMap().get( associatedIds.inverse().get( l.getUuid() ) );
-                    if ( l.getType().endsWith( TYPE_MEMBER ) )
-                    {
+                    if ( l.getType().endsWith( TYPE_MEMBER ) ) {
                         e.setProperty( TYPE_MEMBER, p );
                     }
-                    else if ( l.getType().endsWith( TYPE_CONNECTION ) )
-                    {
+                    else if ( l.getType().endsWith( TYPE_CONNECTION ) ) {
                         e.setProperty( TYPE_CONNECTION, p );
                     }
                 }
@@ -2182,19 +1921,16 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void update( Entity entity ) throws Exception
-    {
+    public void update( Entity entity ) throws Exception {
         updateProperties( entity.getUuid(), entity.getProperties() );
     }
 
 
     @Override
-    public Object getProperty( EntityRef entityRef, String propertyName ) throws Exception
-    {
+    public Object getProperty( EntityRef entityRef, String propertyName ) throws Exception {
         Entity entity = loadPartialEntity( entityRef.getUuid(), propertyName );
 
-        if ( entity == null )
-        {
+        if ( entity == null ) {
             return null;
         }
 
@@ -2203,8 +1939,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Map<String, Object> getProperties( EntityRef entityRef ) throws Exception
-    {
+    public Map<String, Object> getProperties( EntityRef entityRef ) throws Exception {
         Entity entity = loadPartialEntity( entityRef.getUuid() );
         Map<String, Object> props = entity.getProperties();
         return props;
@@ -2212,13 +1947,11 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public List<Entity> getPartialEntities( Collection<UUID> ids, Collection<String> fields ) throws Exception
-    {
+    public List<Entity> getPartialEntities( Collection<UUID> ids, Collection<String> fields ) throws Exception {
 
         List<Entity> entities = new ArrayList<Entity>( ids.size() );
 
-        if ( ids == null || ids.size() == 0 )
-        {
+        if ( ids == null || ids.size() == 0 ) {
             return entities;
         }
 
@@ -2230,13 +1963,11 @@ public class EntityManagerImpl implements EntityManager
         results = cass.getRows( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, ids, fields, ue, se,
                 be );
 
-        if ( results == null )
-        {
+        if ( results == null ) {
             return entities;
         }
 
-        for ( Row<UUID, String, ByteBuffer> row : results )
-        {
+        for ( Row<UUID, String, ByteBuffer> row : results ) {
 
 
             Map<String, Object> properties =
@@ -2244,8 +1975,7 @@ public class EntityManagerImpl implements EntityManager
                             false );
 
             //Could get a tombstoned row if the index is behind, just ignore it
-            if ( properties == null )
-            {
+            if ( properties == null ) {
                 logger.warn( "Received row key {} with no type or properties, skipping", row.getKey() );
                 continue;
             }
@@ -2253,8 +1983,7 @@ public class EntityManagerImpl implements EntityManager
             UUID id = uuid( properties.get( PROPERTY_UUID ) );
             String type = string( properties.get( PROPERTY_TYPE ) );
 
-            if ( id == null || type == null )
-            {
+            if ( id == null || type == null ) {
                 logger.warn( "Error retrieving entity with key {} no type or id deseriazable, skipping", row.getKey() );
                 continue;
             }
@@ -2271,8 +2000,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void setProperty( EntityRef entityRef, String propertyName, Object propertyValue ) throws Exception
-    {
+    public void setProperty( EntityRef entityRef, String propertyName, Object propertyValue ) throws Exception {
 
         setProperty( entityRef, propertyName, propertyValue, false );
     }
@@ -2280,11 +2008,9 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public void setProperty( EntityRef entityRef, String propertyName, Object propertyValue, boolean override )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( ( propertyValue instanceof String ) && ( ( String ) propertyValue ).equals( "" ) )
-        {
+        if ( ( propertyValue instanceof String ) && ( ( String ) propertyValue ).equals( "" ) ) {
             propertyValue = null;
         }
 
@@ -2303,8 +2029,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) throws Exception
-    {
+    public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) throws Exception {
         entityRef = validate( entityRef );
         properties = getDefaultSchema().cleanUpdatedProperties( entityRef.getType(), properties, false );
         updateProperties( entityRef.getUuid(), properties );
@@ -2312,19 +2037,16 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) throws Exception
-    {
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) throws Exception {
         addToDictionary( entityRef, dictionaryName, elementValue, null );
     }
 
 
     @Override
     public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue,
-                                 Object elementCoValue ) throws Exception
-    {
+                                 Object elementCoValue ) throws Exception {
 
-        if ( elementValue == null )
-        {
+        if ( elementValue == null ) {
             return;
         }
 
@@ -2341,11 +2063,10 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void addSetToDictionary( EntityRef entityRef, String dictionaryName, Set<?> elementValues ) throws Exception
-    {
+    public void addSetToDictionary( EntityRef entityRef, String dictionaryName, Set<?> elementValues )
+            throws Exception {
 
-        if ( ( elementValues == null ) || elementValues.isEmpty() )
-        {
+        if ( ( elementValues == null ) || elementValues.isEmpty() ) {
             return;
         }
 
@@ -2354,8 +2075,7 @@ public class EntityManagerImpl implements EntityManager
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
 
-        for ( Object elementValue : elementValues )
-        {
+        for ( Object elementValue : elementValues ) {
             batch = batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, false, timestampUuid );
         }
 
@@ -2365,11 +2085,9 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public void addMapToDictionary( EntityRef entityRef, String dictionaryName, Map<?, ?> elementValues )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( ( elementValues == null ) || elementValues.isEmpty() || entityRef == null )
-        {
+        if ( ( elementValues == null ) || elementValues.isEmpty() || entityRef == null ) {
             return;
         }
 
@@ -2378,8 +2096,7 @@ public class EntityManagerImpl implements EntityManager
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
 
-        for ( Map.Entry<?, ?> elementValue : elementValues.entrySet() )
-        {
+        for ( Map.Entry<?, ?> elementValue : elementValues.entrySet() ) {
             batch = batchUpdateDictionary( batch, entity, dictionaryName, elementValue.getKey(),
                     elementValue.getValue(), false, timestampUuid );
         }
@@ -2389,11 +2106,10 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void removeFromDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) throws Exception
-    {
+    public void removeFromDictionary( EntityRef entityRef, String dictionaryName, Object elementValue )
+            throws Exception {
 
-        if ( elementValue == null )
-        {
+        if ( elementValue == null ) {
             return;
         }
 
@@ -2409,41 +2125,32 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getDictionaries( EntityRef entity ) throws Exception
-    {
+    public Set<String> getDictionaries( EntityRef entity ) throws Exception {
         return getDictionaryNames( entity );
     }
 
 
     @Override
-    public void deleteProperty( EntityRef entityRef, String propertyName ) throws Exception
-    {
+    public void deleteProperty( EntityRef entityRef, String propertyName ) throws Exception {
         setProperty( entityRef, propertyName, null );
     }
 
 
     @Override
-    public Set<String> getApplicationCollections() throws Exception
-    {
+    public Set<String> getApplicationCollections() throws Exception {
         Set<String> collections = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
         Set<String> dynamic_collections = cast( getDictionaryAsSet( getApplicationRef(), DICTIONARY_COLLECTIONS ) );
-        if ( dynamic_collections != null )
-        {
-            for ( String collection : dynamic_collections )
-            {
-                if ( !Schema.isAssociatedEntityType( collection ) )
-                {
+        if ( dynamic_collections != null ) {
+            for ( String collection : dynamic_collections ) {
+                if ( !Schema.isAssociatedEntityType( collection ) ) {
                     collections.add( collection );
                 }
             }
         }
         Set<String> system_collections = getDefaultSchema().getCollectionNames( Application.ENTITY_TYPE );
-        if ( system_collections != null )
-        {
-            for ( String collection : system_collections )
-            {
-                if ( !Schema.isAssociatedEntityType( collection ) )
-                {
+        if ( system_collections != null ) {
+            for ( String collection : system_collections ) {
+                if ( !Schema.isAssociatedEntityType( collection ) ) {
                     collections.add( collection );
                 }
             }
@@ -2453,11 +2160,9 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public long getApplicationCollectionSize( String collectionName ) throws Exception
-    {
+    public long getApplicationCollectionSize( String collectionName ) throws Exception {
         Long count = null;
-        if ( !Schema.isAssociatedEntityType( collectionName ) )
-        {
+        if ( !Schema.isAssociatedEntityType( collectionName ) ) {
             Map<String, Long> counts = getApplicationCounters();
             count = counts.get( new String( APPLICATION_COLLECTION + collectionName ) );
         }
@@ -2466,20 +2171,16 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Map<String, Object> getApplicationCollectionMetadata() throws Exception
-    {
+    public Map<String, Object> getApplicationCollectionMetadata() throws Exception {
         Set<String> collections = getApplicationCollections();
         Map<String, Long> counts = getApplicationCounters();
         Map<String, Object> metadata = new HashMap<String, Object>();
-        if ( collections != null )
-        {
-            for ( String collectionName : collections )
-            {
-                if ( !Schema.isAssociatedEntityType( collectionName ) )
-                {
+        if ( collections != null ) {
+            for ( String collectionName : collections ) {
+                if ( !Schema.isAssociatedEntityType( collectionName ) ) {
                     Long count = counts.get( APPLICATION_COLLECTION + collectionName );
                     /*
-					 * int count = emf .countColumns(
+                     * int count = emf .countColumns(
 					 * getApplicationKeyspace(applicationId),
 					 * ApplicationCF.ENTITY_ID_SETS, key(applicationId,
 					 * DICTIONARY_COLLECTIONS, collectionName));
@@ -2501,55 +2202,46 @@ public class EntityManagerImpl implements EntityManager
     }
 
 
-    public Object getRolePermissionsKey( String roleName )
-    {
+    public Object getRolePermissionsKey( String roleName ) {
         return key( getIdForRoleName( roleName ), DICTIONARY_PERMISSIONS );
     }
 
 
-    public Object getRolePermissionsKey( UUID groupId, String roleName )
-    {
+    public Object getRolePermissionsKey( UUID groupId, String roleName ) {
         return key( getIdForGroupIdAndRoleName( groupId, roleName ), DICTIONARY_PERMISSIONS );
     }
 
 
-    public EntityRef userRef( UUID userId )
-    {
+    public EntityRef userRef( UUID userId ) {
         return ref( User.ENTITY_TYPE, userId );
     }
 
 
-    public EntityRef groupRef( UUID groupId )
-    {
+    public EntityRef groupRef( UUID groupId ) {
         return ref( Group.ENTITY_TYPE, groupId );
     }
 
 
-    public EntityRef roleRef( String roleName )
-    {
+    public EntityRef roleRef( String roleName ) {
         return ref( TYPE_ROLE, getIdForRoleName( roleName ) );
     }
 
 
-    public EntityRef roleRef( UUID groupId, String roleName )
-    {
+    public EntityRef roleRef( UUID groupId, String roleName ) {
         return ref( TYPE_ROLE, getIdForGroupIdAndRoleName( groupId, roleName ) );
     }
 
 
     @Override
-    public Map<String, String> getRoles() throws Exception
-    {
+    public Map<String, String> getRoles() throws Exception {
         return cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
     }
 
 
     @Override
-    public String getRoleTitle( String roleName ) throws Exception
-    {
+    public String getRoleTitle( String roleName ) throws Exception {
         String title = string( getDictionaryElementValue( getApplicationRef(), DICTIONARY_ROLENAMES, roleName ) );
-        if ( title == null )
-        {
+        if ( title == null ) {
             title = roleName;
         }
         return title;
@@ -2557,34 +2249,29 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Map<String, Role> getRolesWithTitles( Set<String> roleNames ) throws Exception
-    {
+    public Map<String, Role> getRolesWithTitles( Set<String> roleNames ) throws Exception {
 
         Map<String, Role> rolesWithTitles = new HashMap<String, Role>();
 
         Map<String, Object> nameResults = null;
 
-        if ( roleNames != null )
-        {
+        if ( roleNames != null ) {
             nameResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLENAMES,
                     roleNames.toArray( new String[0] ) );
         }
-        else
-        {
+        else {
             nameResults = cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
             roleNames = nameResults.keySet();
         }
         Map<String, Object> timeResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLETIMES,
                 roleNames.toArray( new String[0] ) );
 
-        for ( String roleName : roleNames )
-        {
+        for ( String roleName : roleNames ) {
 
             String savedTitle = string( nameResults.get( roleName ) );
 
             // no title, skip the role
-            if ( savedTitle == null )
-            {
+            if ( savedTitle == null ) {
                 continue;
             }
 
@@ -2601,8 +2288,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Entity createRole( String roleName, String roleTitle, long inactivity ) throws Exception
-    {
+    public Entity createRole( String roleName, String roleTitle, long inactivity ) throws Exception {
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         batchCreateRole( batch, null, roleName, roleTitle, inactivity, null, timestampUuid );
@@ -2612,8 +2298,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void grantRolePermission( String roleName, String permission ) throws Exception
-    {
+    public void grantRolePermission( String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
@@ -2625,13 +2310,11 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void grantRolePermissions( String roleName, Collection<String> permissions ) throws Exception
-    {
+    public void grantRolePermissions( String roleName, Collection<String> permissions ) throws Exception {
         roleName = roleName.toLowerCase();
         long timestamp = cass.createTimestamp();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-        for ( String permission : permissions )
-        {
+        for ( String permission : permissions ) {
             permission = permission.toLowerCase();
             addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ), permission,
                     ByteBuffer.allocate( 0 ), timestamp );
@@ -2641,8 +2324,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void revokeRolePermission( String roleName, String permission ) throws Exception
-    {
+    public void revokeRolePermission( String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
@@ -2655,8 +2337,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getRolePermissions( String roleName ) throws Exception
-    {
+    public Set<String> getRolePermissions( String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
                 getRolePermissionsKey( roleName ) );
@@ -2664,8 +2345,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void deleteRole( String roleName ) throws Exception
-    {
+    public void deleteRole( String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         removeFromDictionary( getApplicationRef(), DICTIONARY_ROLENAMES, roleName );
         removeFromDictionary( getApplicationRef(), DICTIONARY_ROLETIMES, roleName );
@@ -2673,22 +2353,19 @@ public class EntityManagerImpl implements EntityManager
     }
 
 
-    public CollectionRef memberRef( UUID groupId, UUID userId )
-    {
+    public CollectionRef memberRef( UUID groupId, UUID userId ) {
         return new SimpleCollectionRef( groupRef( groupId ), COLLECTION_USERS, userRef( userId ) );
     }
 
 
     @Override
-    public Map<String, String> getGroupRoles( UUID groupId ) throws Exception
-    {
+    public Map<String, String> getGroupRoles( UUID groupId ) throws Exception {
         return cast( getDictionaryAsMap( groupRef( groupId ), DICTIONARY_ROLENAMES ) );
     }
 
 
     @Override
-    public Entity createGroupRole( UUID groupId, String roleName, long inactivity ) throws Exception
-    {
+    public Entity createGroupRole( UUID groupId, String roleName, long inactivity ) throws Exception {
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         batchCreateRole( batch, groupId, roleName, null, inactivity, null, timestampUuid );
@@ -2698,8 +2375,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void grantGroupRolePermission( UUID groupId, String roleName, String permission ) throws Exception
-    {
+    public void grantGroupRolePermission( UUID groupId, String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
@@ -2711,8 +2387,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void revokeGroupRolePermission( UUID groupId, String roleName, String permission ) throws Exception
-    {
+    public void revokeGroupRolePermission( UUID groupId, String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
@@ -2724,8 +2399,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getGroupRolePermissions( UUID groupId, String roleName ) throws Exception
-    {
+    public Set<String> getGroupRolePermissions( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
                 getRolePermissionsKey( groupId, roleName ) );
@@ -2733,8 +2407,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void deleteGroupRole( UUID groupId, String roleName ) throws Exception
-    {
+    public void deleteGroupRole( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         removeFromDictionary( groupRef( groupId ), DICTIONARY_ROLENAMES, roleName );
         cass.deleteRow( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
@@ -2743,24 +2416,21 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getUserRoles( UUID userId ) throws Exception
-    {
+    public Set<String> getUserRoles( UUID userId ) throws Exception {
         return cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) );
     }
 
 
     @SuppressWarnings( "unchecked" )
     @Override
-    public Map<String, Role> getUserRolesWithTitles( UUID userId ) throws Exception
-    {
+    public Map<String, Role> getUserRolesWithTitles( UUID userId ) throws Exception {
         return getRolesWithTitles(
                 ( Set<String> ) cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) ) );
     }
 
 
     @Override
-    public void addUserToRole( UUID userId, String roleName ) throws Exception
-    {
+    public void addUserToRole( UUID userId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         addToDictionary( userRef( userId ), DICTIONARY_ROLENAMES, roleName, roleName );
         addToCollection( userRef( userId ), COLLECTION_ROLES, roleRef( roleName ) );
@@ -2770,8 +2440,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void removeUserFromRole( UUID userId, String roleName ) throws Exception
-    {
+    public void removeUserFromRole( UUID userId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         removeFromDictionary( userRef( userId ), DICTIONARY_ROLENAMES, roleName );
         removeFromCollection( userRef( userId ), COLLECTION_ROLES, roleRef( roleName ) );
@@ -2781,39 +2450,34 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getUserPermissions( UUID userId ) throws Exception
-    {
+    public Set<String> getUserPermissions( UUID userId ) throws Exception {
         return cast( getDictionaryAsSet( userRef( userId ), Schema.DICTIONARY_PERMISSIONS ) );
     }
 
 
     @Override
-    public void grantUserPermission( UUID userId, String permission ) throws Exception
-    {
+    public void grantUserPermission( UUID userId, String permission ) throws Exception {
         permission = permission.toLowerCase();
         addToDictionary( userRef( userId ), DICTIONARY_PERMISSIONS, permission );
     }
 
 
     @Override
-    public void revokeUserPermission( UUID userId, String permission ) throws Exception
-    {
+    public void revokeUserPermission( UUID userId, String permission ) throws Exception {
         permission = permission.toLowerCase();
         removeFromDictionary( userRef( userId ), DICTIONARY_PERMISSIONS, permission );
     }
 
 
     @Override
-    public Map<String, String> getUserGroupRoles( UUID userId, UUID groupId ) throws Exception
-    {
+    public Map<String, String> getUserGroupRoles( UUID userId, UUID groupId ) throws Exception {
         // TODO this never returns anything - write path not invoked
         return cast( getDictionaryAsMap( memberRef( groupId, userId ), DICTIONARY_ROLENAMES ) );
     }
 
 
     @Override
-    public void addUserToGroupRole( UUID userId, UUID groupId, String roleName ) throws Exception
-    {
+    public void addUserToGroupRole( UUID userId, UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         EntityRef memberRef = memberRef( groupId, userId );
         EntityRef roleRef = roleRef( groupId, roleName );
@@ -2824,8 +2488,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void removeUserFromGroupRole( UUID userId, UUID groupId, String roleName ) throws Exception
-    {
+    public void removeUserFromGroupRole( UUID userId, UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         EntityRef memberRef = memberRef( groupId, userId );
         EntityRef roleRef = roleRef( groupId, roleName );
@@ -2836,27 +2499,24 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Results getUsersInGroupRole( UUID groupId, String roleName, Results.Level level ) throws Exception
-    {
+    public Results getUsersInGroupRole( UUID groupId, String roleName, Results.Level level ) throws Exception {
         EntityRef roleRef = roleRef( groupId, roleName );
         return this.getCollection( roleRef, COLLECTION_USERS, null, 10000, level, false );
     }
 
 
     @Override
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName, long value )
-    {
+    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
+                                            long value ) {
         long cassandraTimestamp = cass.createTimestamp();
         incrementAggregateCounters( userId, groupId, category, counterName, value, cassandraTimestamp );
     }
 
 
     private void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName, long value,
-                                             long cassandraTimestamp )
-    {
+                                             long cassandraTimestamp ) {
         // TODO short circuit
-        if ( !skipAggregateCounters )
-        {
+        if ( !skipAggregateCounters ) {
             Mutator<ByteBuffer> m = createMutator( cass.getApplicationKeyspace( applicationId ), be );
 
             counterUtils
@@ -2869,11 +2529,9 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, Map<String, Long> counters )
-    {
+    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, Map<String, Long> counters ) {
         // TODO shortcircuit
-        if ( !skipAggregateCounters )
-        {
+        if ( !skipAggregateCounters ) {
             long timestamp = cass.createTimestamp();
             Mutator<ByteBuffer> m = createMutator( cass.getApplicationKeyspace( applicationId ), be );
             counterUtils.batchIncrementAggregateCounters( m, applicationId, userId, groupId, null, category, counters,
@@ -2885,8 +2543,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getCounterNames() throws Exception
-    {
+    public Set<String> getCounterNames() throws Exception {
         Set<String> names = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
         Set<String> nameSet = cast( getDictionaryAsSet( getApplicationRef(), Schema.DICTIONARY_COUNTERS ) );
         names.addAll( nameSet );
@@ -2896,50 +2553,46 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public boolean isPropertyValueUniqueForEntity( String entityType, String propertyName, Object propertyValue )
-            throws Exception
-    {
+            throws Exception {
         return isPropertyValueUniqueForEntity( applicationId, entityType, propertyName, propertyValue );
     }
 
 
     @Override
-    public Map<String, Map<UUID, Set<String>>> getOwners( EntityRef entityRef ) throws Exception
-    {
+    public Map<String, Map<UUID, Set<String>>> getOwners( EntityRef entityRef ) throws Exception {
         return getRelationManager( entityRef ).getOwners();
     }
 
 
     /* (non-Javadoc)
-   * @see org.usergrid.persistence.EntityManager#isOwner(org.usergrid.persistence.EntityRef, org.usergrid.persistence.EntityRef)
+   * @see org.usergrid.persistence.EntityManager#isOwner(org.usergrid.persistence.EntityRef,
+   * org.usergrid.persistence.EntityRef)
    */
     @Override
-    public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) throws Exception
-    {
+    public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) throws Exception {
         return getRelationManager( owner ).isCollectionMember( collectionName, entity );
     }
 
 
     /* (non-Javadoc)
-   * @see org.usergrid.persistence.EntityManager#isConnectionMember(org.usergrid.persistence.EntityRef, java.lang.String, org.usergrid.persistence.EntityRef)
+   * @see org.usergrid.persistence.EntityManager#isConnectionMember(org.usergrid.persistence.EntityRef,
+   * java.lang.String, org.usergrid.persistence.EntityRef)
    */
     @Override
-    public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception
-    {
+    public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception {
         return getRelationManager( owner ).isConnectionMember( connectionName, entity );
     }
 
 
     @Override
-    public Set<String> getCollections( EntityRef entityRef ) throws Exception
-    {
+    public Set<String> getCollections( EntityRef entityRef ) throws Exception {
         return getRelationManager( entityRef ).getCollections();
     }
 
 
     @Override
     public Results getCollection( EntityRef entityRef, String collectionName, UUID startResult, int count,
-                                  Level resultsLevel, boolean reversed ) throws Exception
-    {
+                                  Level resultsLevel, boolean reversed ) throws Exception {
         return getRelationManager( entityRef )
                 .getCollection( collectionName, startResult, count, resultsLevel, reversed );
     }
@@ -2947,75 +2600,65 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public Results getCollection( UUID entityId, String collectionName, Query query, Level resultsLevel )
-            throws Exception
-    {
+            throws Exception {
         return getRelationManager( ref( entityId ) ).getCollection( collectionName, query, resultsLevel );
     }
 
 
     @Override
-    public Entity addToCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception
-    {
+    public Entity addToCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
         return getRelationManager( entityRef ).addToCollection( collectionName, itemRef );
     }
 
 
     @Override
     public Entity addToCollections( List<EntityRef> ownerEntities, String collectionName, EntityRef itemRef )
-            throws Exception
-    {
+            throws Exception {
         return getRelationManager( itemRef ).addToCollections( ownerEntities, collectionName );
     }
 
 
     @Override
     public Entity createItemInCollection( EntityRef entityRef, String collectionName, String itemType,
-                                          Map<String, Object> properties ) throws Exception
-    {
+                                          Map<String, Object> properties ) throws Exception {
         return getRelationManager( entityRef ).createItemInCollection( collectionName, itemType, properties );
     }
 
 
     @Override
-    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception
-    {
+    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
         getRelationManager( entityRef ).removeFromCollection( collectionName, itemRef );
     }
 
 
     @Override
     public void copyRelationships( EntityRef srcEntityRef, String srcRelationName, EntityRef dstEntityRef,
-                                   String dstRelationName ) throws Exception
-    {
+                                   String dstRelationName ) throws Exception {
         getRelationManager( srcEntityRef ).copyRelationships( srcRelationName, dstEntityRef, dstRelationName );
     }
 
 
     @Override
-    public Results searchCollection( EntityRef entityRef, String collectionName, Query query ) throws Exception
-    {
+    public Results searchCollection( EntityRef entityRef, String collectionName, Query query ) throws Exception {
         return getRelationManager( entityRef ).searchCollection( collectionName, query );
     }
 
 
     @Override
-    public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) throws Exception
-    {
+    public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) throws Exception {
         return getRelationManager( entity ).getCollectionIndexes( collectionName );
     }
 
 
     @Override
-    public ConnectionRef createConnection( ConnectionRef connection ) throws Exception
-    {
+    public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
         return getRelationManager( connection ).createConnection( connection );
     }
 
 
     @Override
     public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType,
-                                           EntityRef connectedEntityRef ) throws Exception
-    {
+                                           EntityRef connectedEntityRef ) throws Exception {
         return getRelationManager( connectingEntity ).createConnection( connectionType, connectedEntityRef );
     }
 
@@ -3023,8 +2666,7 @@ public class EntityManagerImpl implements EntityManager
     @Override
     public ConnectionRef createConnection( EntityRef connectingEntity, String pairedConnectionType,
                                            EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef )
-            throws Exception
-    {
+            throws Exception {
         return getRelationManager( connectingEntity )
                 .createConnection( pairedConnectionType, pairedEntity, connectionType, connectedEntityRef );
     }
@@ -3032,54 +2674,47 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public ConnectionRef createConnection( EntityRef connectingEntity, ConnectedEntityRef... connections )
-            throws Exception
-    {
+            throws Exception {
         return getRelationManager( connectingEntity ).createConnection( connections );
     }
 
 
     @Override
     public ConnectionRef connectionRef( EntityRef connectingEntity, String connectionType,
-                                        EntityRef connectedEntityRef ) throws Exception
-    {
+                                        EntityRef connectedEntityRef ) throws Exception {
         return getRelationManager( connectingEntity ).connectionRef( connectionType, connectedEntityRef );
     }
 
 
     @Override
     public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity,
-                                        String connectionType, EntityRef connectedEntityRef ) throws Exception
-    {
+                                        String connectionType, EntityRef connectedEntityRef ) throws Exception {
         return getRelationManager( connectingEntity )
                 .connectionRef( pairedConnectionType, pairedEntity, connectionType, connectedEntityRef );
     }
 
 
     @Override
-    public ConnectionRef connectionRef( EntityRef connectingEntity, ConnectedEntityRef... connections )
-    {
+    public ConnectionRef connectionRef( EntityRef connectingEntity, ConnectedEntityRef... connections ) {
         return getRelationManager( connectingEntity ).connectionRef( connections );
     }
 
 
     @Override
-    public void deleteConnection( ConnectionRef connectionRef ) throws Exception
-    {
+    public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
         getRelationManager( connectionRef ).deleteConnection( connectionRef );
     }
 
 
     @Override
-    public Set<String> getConnectionTypes( EntityRef ref ) throws Exception
-    {
+    public Set<String> getConnectionTypes( EntityRef ref ) throws Exception {
         return getRelationManager( ref ).getConnectionTypes();
     }
 
 
     @Override
     public Results getConnectedEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                         Level resultsLevel ) throws Exception
-    {
+                                         Level resultsLevel ) throws Exception {
         return getRelationManager( ref( entityId ) )
                 .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
     }
@@ -3087,95 +2722,78 @@ public class EntityManagerImpl implements EntityManager
 
     @Override
     public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                          Level resultsLevel ) throws Exception
-    {
+                                          Level resultsLevel ) throws Exception {
         return getRelationManager( ref( entityId ) )
                 .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
     }
 
 
     @Override
-    public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception
-    {
+    public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception {
 
         return getRelationManager( connectingEntity ).searchConnectedEntities( query );
     }
 
 
     @Override
-    public Set<String> getConnectionIndexes( EntityRef entity, String connectionType ) throws Exception
-    {
+    public Set<String> getConnectionIndexes( EntityRef entity, String connectionType ) throws Exception {
         return getRelationManager( entity ).getConnectionIndexes( connectionType );
     }
 
 
     @Override
-    public void resetRoles() throws Exception
-    {
+    public void resetRoles() throws Exception {
 
-        try
-        {
+        try {
             createRole( "admin", "Administrator", 0 );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Could not create admin role, may already exist", e );
         }
 
-        try
-        {
+        try {
             createRole( "default", "Default", 0 );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Could not create default role, may already exist", e );
         }
 
-        try
-        {
+        try {
             createRole( "guest", "Guest", 0 );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Could not create guest role, may already exist", e );
         }
 
-        try
-        {
+        try {
             grantRolePermissions( "default", Arrays.asList( "get,put,post,delete:/**" ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Could not populate default role", e );
         }
 
-        try
-        {
+        try {
             grantRolePermissions( "guest", Arrays.asList( "post:/users", "post:/devices", "put:/devices/*" ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Could not populate guest role", e );
         }
     }
 
 
     /** @return the applicationId */
-    public UUID getApplicationId()
-    {
+    public UUID getApplicationId() {
         return applicationId;
     }
 
 
     /** @return the cass */
-    public CassandraService getCass()
-    {
+    public CassandraService getCass() {
         return cass;
     }
 
 
-    public GeoIndexManager getGeoIndexManager()
-    {
+    public GeoIndexManager getGeoIndexManager() {
         GeoIndexManager gim = new GeoIndexManager();
         gim.init( this );
         return gim;
@@ -3185,24 +2803,21 @@ public class EntityManagerImpl implements EntityManager
 
 
     /** @return the indexBucketLocator */
-    public IndexBucketLocator getIndexBucketLocator()
-    {
+    public IndexBucketLocator getIndexBucketLocator() {
         return indexBucketLocator;
     }
 
 
     @SuppressWarnings( "unchecked" )
     @Override
-    public Map<String, Role> getGroupRolesWithTitles( UUID groupId ) throws Exception
-    {
+    public Map<String, Role> getGroupRolesWithTitles( UUID groupId ) throws Exception {
         return getRolesWithTitles(
                 ( Set<String> ) cast( getDictionaryAsSet( groupRef( groupId ), DICTIONARY_ROLENAMES ) ) );
     }
 
 
     @Override
-    public void addGroupToRole( UUID groupId, String roleName ) throws Exception
-    {
+    public void addGroupToRole( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         addToDictionary( groupRef( groupId ), DICTIONARY_ROLENAMES, roleName, roleName );
         addToCollection( groupRef( groupId ), COLLECTION_ROLES, roleRef( roleName ) );
@@ -3210,8 +2825,7 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public void removeGroupFromRole( UUID groupId, String roleName ) throws Exception
-    {
+    public void removeGroupFromRole( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
         removeFromDictionary( groupRef( groupId ), DICTIONARY_ROLENAMES, roleName );
         removeFromCollection( groupRef( groupId ), COLLECTION_ROLES, roleRef( roleName ) );
@@ -3219,23 +2833,20 @@ public class EntityManagerImpl implements EntityManager
 
 
     @Override
-    public Set<String> getGroupPermissions( UUID groupId ) throws Exception
-    {
+    public Set<String> getGroupPermissions( UUID groupId ) throws Exception {
         return cast( getDictionaryAsSet( groupRef( groupId ), Schema.DICTIONARY_PERMISSIONS ) );
     }
 
 
     @Override
-    public void grantGroupPermission( UUID groupId, String permission ) throws Exception
-    {
+    public void grantGroupPermission( UUID groupId, String permission ) throws Exception {
         permission = permission.toLowerCase();
         addToDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
     }
 
 
     @Override
-    public void revokeGroupPermission( UUID groupId, String permission ) throws Exception
-    {
+    public void revokeGroupPermission( UUID groupId, String permission ) throws Exception {
         permission = permission.toLowerCase();
         removeFromDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
     }

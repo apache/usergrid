@@ -15,17 +15,14 @@ import com.sun.jersey.api.client.WebResource;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public enum UserRepo
-{
+public enum UserRepo {
     INSTANCE;
 
     private final Map<String, UUID> loaded = new HashMap<String, UUID>();
 
 
-    public void load( WebResource resource, String accessToken )
-    {
-        if ( loaded.size() > 0 )
-        {
+    public void load( WebResource resource, String accessToken ) {
+        if ( loaded.size() > 0 ) {
             return;
         }
 
@@ -36,8 +33,7 @@ public enum UserRepo
 
 
     private void createUser( String username, String email, String password, String fullName, WebResource resource,
-                             String accessToken )
-    {
+                             String accessToken ) {
 
         Map<String, String> payload = hashMap( "email", email ).map( "username", username ).map( "name", fullName )
                 .map( "password", password ).map( "pin", "1234" );
@@ -48,15 +44,13 @@ public enum UserRepo
     }
 
 
-    public UUID getByUserName( String name )
-    {
+    public UUID getByUserName( String name ) {
         return loaded.get( name );
     }
 
 
     /** Create a user via the REST API and post it. Return the response */
-    private UUID createUser( Map<String, String> payload, WebResource resource, String access_token )
-    {
+    private UUID createUser( Map<String, String> payload, WebResource resource, String access_token ) {
 
         JsonNode response =
                 resource.path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )

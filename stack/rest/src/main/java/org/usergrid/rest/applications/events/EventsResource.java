@@ -41,8 +41,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Component("org.usergrid.rest.applications.events.EventsResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
-public class EventsResource extends ServiceResource
-{
+public class EventsResource extends ServiceResource {
 
     public static final Logger logger = LoggerFactory.getLogger( EventsResource.class );
 
@@ -50,8 +49,7 @@ public class EventsResource extends ServiceResource
     User user;
 
 
-    public EventsResource()
-    {
+    public EventsResource() {
     }
 
 
@@ -59,11 +57,9 @@ public class EventsResource extends ServiceResource
     @GET
     public JSONWithPadding executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception
-    {
+            throws Exception {
         QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
-        if ( query == null )
-        {
+        if ( query == null ) {
             query = new QueueQuery();
         }
         query.setPosition( QueuePosition.START );

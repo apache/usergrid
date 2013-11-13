@@ -13,31 +13,26 @@ import org.slf4j.LoggerFactory;
  *
  * @author zznate
  */
-public class TraceTagAspect
-{
+public class TraceTagAspect {
     private static final Logger logger = LoggerFactory.getLogger( TraceTagAspect.class );
 
     @Resource
     private TraceTagManager traceTagManager;
 
 
-    public Object applyTrace( ProceedingJoinPoint pjp ) throws Throwable
-    {
+    public Object applyTrace( ProceedingJoinPoint pjp ) throws Throwable {
         String tagName = pjp.toLongString();
         logger.debug( "Applyng trace on {}", tagName );
         TimedOpTag timedOpTag = traceTagManager.timerInstance();
         boolean success = true;
-        try
-        {
+        try {
             return pjp.proceed();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             success = false;
             throw e;
         }
-        finally
-        {
+        finally {
             timedOpTag.stopAndApply( tagName, success );
             traceTagManager.addTimer( timedOpTag );
             logger.debug( "TimedOpTag added in Aspect on {}", tagName );

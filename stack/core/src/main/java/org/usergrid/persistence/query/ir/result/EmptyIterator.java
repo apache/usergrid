@@ -9,46 +9,39 @@ import org.usergrid.persistence.cassandra.CursorCache;
 
 
 /** Iterator that never returns results */
-public class EmptyIterator implements ResultIterator
-{
+public class EmptyIterator implements ResultIterator {
     @Override
-    public void reset()
-    {
+    public void reset() {
         //no op
     }
 
 
     @Override
-    public void finalizeCursor( CursorCache cache, UUID lastValue )
-    {
+    public void finalizeCursor( CursorCache cache, UUID lastValue ) {
         //no op
     }
 
 
     @Override
-    public Iterator<Set<ScanColumn>> iterator()
-    {
+    public Iterator<Set<ScanColumn>> iterator() {
         return this;
     }
 
 
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
         return false;
     }
 
 
     @Override
-    public Set<ScanColumn> next()
-    {
+    public Set<ScanColumn> next() {
         return null;
     }
 
 
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "Not supported" );
     }
 }

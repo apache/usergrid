@@ -33,15 +33,13 @@ import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
-public class EntityTest
-{
+public class EntityTest {
     private static final Logger logger = LoggerFactory.getLogger( EntityTest.class );
 
 
     @Test
     // @Ignore( "Fix this then enable EntityTest.testEntityClasses:45 » ConcurrentModification" )
-    public void testEntityClasses() throws Exception
-    {
+    public void testEntityClasses() throws Exception {
         logger.info( "testEntityClasses" );
 
         Schema mapper = Schema.getDefaultSchema();
@@ -77,8 +75,7 @@ public class EntityTest
     @SuppressWarnings("unchecked")
     @Test
     // @Ignore( "Fix this and enable: EntityTest.testJson:83 » ConcurrentModification" )
-    public void testJson() throws Exception
-    {
+    public void testJson() throws Exception {
 
         User user = new User();
         // user.setId(UUIDUtils.newTimeUUID());

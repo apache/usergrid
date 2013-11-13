@@ -33,8 +33,7 @@ import org.usergrid.services.ServiceManagerFactory;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 
 
-public class PropertiesResourceIT extends AbstractRestIT
-{
+public class PropertiesResourceIT extends AbstractRestIT {
     static final Logger logger = LoggerFactory.getLogger( PropertiesResourceIT.class );
 
     @Autowired
@@ -42,8 +41,7 @@ public class PropertiesResourceIT extends AbstractRestIT
 
 
     @Test
-    public void testBasicOperation()
-    {
+    public void testBasicOperation() {
 
         // set property locally
         setup.getMgmtSvc().getProperties().put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );

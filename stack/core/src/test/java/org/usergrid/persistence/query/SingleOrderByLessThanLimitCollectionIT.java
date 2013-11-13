@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByLessThanLimitCollectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByLessThanLimitCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByLessThanLimitCollection() throws Exception
-    {
+    public void singleOrderByLessThanLimitCollection() throws Exception {
         singleOrderByLessThanLimit( new CollectionIoHelper() );
     }
 }

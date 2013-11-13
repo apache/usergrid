@@ -25,8 +25,7 @@ import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 
 
-public enum AuthErrorInfo
-{
+public enum AuthErrorInfo {
 
     OAUTH2_INVALID_REQUEST( "invalid_request", "Unable to authenticate (OAuth)" ), //
     OAUTH2_INVALID_CLIENT( "invalid_client", "Unable to authenticate (OAuth)" ), //
@@ -63,61 +62,48 @@ public enum AuthErrorInfo
     private final String message;
 
 
-    AuthErrorInfo( String type, String message )
-    {
+    AuthErrorInfo( String type, String message ) {
         this.type = type;
         this.message = message;
     }
 
 
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
 
-    public String getMessage()
-    {
+    public String getMessage() {
         return message;
     }
 
 
-    public static AuthErrorInfo getForException( Throwable e )
-    {
-        if ( e instanceof DisabledAdminUserException )
-        {
+    public static AuthErrorInfo getForException( Throwable e ) {
+        if ( e instanceof DisabledAdminUserException ) {
             return DISABLED_ADMIN;
         }
-        else if ( e instanceof ExpiredTokenException )
-        {
+        else if ( e instanceof ExpiredTokenException ) {
             return EXPIRED_ACCESS_TOKEN_ERROR;
         }
-        else if ( e instanceof IncorrectPasswordException )
-        {
+        else if ( e instanceof IncorrectPasswordException ) {
             return INVALID_USERNAME_OR_PASSWORD_ERROR;
         }
-        else if ( e instanceof InvalidTokenException )
-        {
+        else if ( e instanceof InvalidTokenException ) {
             return BAD_ACCESS_TOKEN_ERROR;
         }
-        else if ( e instanceof UnactivatedOrganizationException )
-        {
+        else if ( e instanceof UnactivatedOrganizationException ) {
             return UNACTIVATED_ORGANIZATION;
         }
-        else if ( e instanceof UnactivatedAdminUserException )
-        {
+        else if ( e instanceof UnactivatedAdminUserException ) {
             return UNACTIVATED_ADMIN;
         }
-        else if ( e instanceof BadTokenException )
-        {
+        else if ( e instanceof BadTokenException ) {
             return BAD_ACCESS_TOKEN_ERROR;
         }
-        else if ( e instanceof UnactivatedAdminUserException )
-        {
+        else if ( e instanceof UnactivatedAdminUserException ) {
             return UNACTIVATED_APPUSER;
         }
-        else if ( e instanceof DisabledAdminUserException )
-        {
+        else if ( e instanceof DisabledAdminUserException ) {
             return DISABLED_APPUSER;
         }
         return null;

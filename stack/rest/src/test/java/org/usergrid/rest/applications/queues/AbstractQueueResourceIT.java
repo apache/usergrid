@@ -21,15 +21,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 
-public class AbstractQueueResourceIT extends AbstractRestIT
-{
+public class AbstractQueueResourceIT extends AbstractRestIT {
     /**
      * Commands for editing queue information
      *
      * @author tnine
      */
-    protected interface QueueCommand
-    {
+    protected interface QueueCommand {
 
         /** Perform any modifications on the queue and return it */
         public Queue processQueue( Queue queue );
@@ -41,8 +39,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected interface ResponseHandler
-    {
+    protected interface ResponseHandler {
         /** Do something with the response */
         public void response( JsonNode node );
 
@@ -51,16 +48,14 @@ public class AbstractQueueResourceIT extends AbstractRestIT
     }
 
 
-    protected class QueueClient implements Callable<Void>
-    {
+    protected class QueueClient implements Callable<Void> {
 
         private ResponseHandler handler;
         private QueueCommand[] commands;
         private Queue queue;
 
 
-        protected QueueClient( Queue queue, ResponseHandler handler, QueueCommand... commands )
-        {
+        protected QueueClient( Queue queue, ResponseHandler handler, QueueCommand... commands ) {
             this.queue = queue;
             this.handler = handler;
             this.commands = commands;
@@ -73,21 +68,17 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * @see java.util.concurrent.Callable#call()
          */
         @Override
-        public Void call() throws Exception
-        {
+        public Void call() throws Exception {
             List<JsonNode> entries = null;
 
-            do
-            {
-                for ( QueueCommand command : commands )
-                {
+            do {
+                for ( QueueCommand command : commands ) {
                     queue = command.processQueue( queue );
                 }
 
                 entries = queue.getNextPage();
 
-                for ( JsonNode entry : entries )
-                {
+                for ( JsonNode entry : entries ) {
                     handler.response( entry );
                 }
             }
@@ -98,8 +89,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
     }
 
 
-    protected class NoLastCommand implements QueueCommand
-    {
+    protected class NoLastCommand implements QueueCommand {
 
         /*
          * (non-Javadoc)
@@ -109,21 +99,18 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * processQueue(org.usergrid.rest.test.resource.app.Queue)
          */
         @Override
-        public Queue processQueue( Queue queue )
-        {
+        public Queue processQueue( Queue queue ) {
             return queue.withLast( null );
         }
     }
 
 
-    protected class ClientId implements QueueCommand
-    {
+    protected class ClientId implements QueueCommand {
 
         private String clientId;
 
 
-        public ClientId( String clientId )
-        {
+        public ClientId( String clientId ) {
             this.clientId = clientId;
         }
 
@@ -136,8 +123,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * processQueue(org.usergrid.rest.test.resource.app.Queue)
          */
         @Override
-        public Queue processQueue( Queue queue )
-        {
+        public Queue processQueue( Queue queue ) {
             return queue.withClientId( clientId );
         }
     }
@@ -148,15 +134,13 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected class IncrementHandler implements ResponseHandler
-    {
+    protected class IncrementHandler implements ResponseHandler {
 
         int max;
         int current = 0;
 
 
-        protected IncrementHandler( int max )
-        {
+        protected IncrementHandler( int max ) {
             this.max = max;
         }
 
@@ -169,10 +153,8 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * #response(org.codehaus.jackson.JsonNode)
          */
         @Override
-        public void response( JsonNode node )
-        {
-            if ( current > max )
-            {
+        public void response( JsonNode node ) {
+            if ( current > max ) {
                 fail( String.format( "Received %d messages, but we should only receive %d", current, max ) );
             }
 
@@ -182,8 +164,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         @Override
-        public void assertResults()
-        {
+        public void assertResults() {
             assertEquals( max, current );
         }
     }
@@ -194,16 +175,14 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected class DecrementHandler implements ResponseHandler
-    {
+    protected class DecrementHandler implements ResponseHandler {
 
         int max;
         int current;
         int count = 0;
 
 
-        protected DecrementHandler( int max )
-        {
+        protected DecrementHandler( int max ) {
             this.max = max;
             current = max - 1;
         }
@@ -217,10 +196,8 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * #response(org.codehaus.jackson.JsonNode)
          */
         @Override
-        public void response( JsonNode node )
-        {
-            if ( current < 0 )
-            {
+        public void response( JsonNode node ) {
+            if ( current < 0 ) {
                 fail( String.format( "Received %d messages, but we should only receive %d", current, max ) );
             }
 
@@ -231,8 +208,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         @Override
-        public void assertResults()
-        {
+        public void assertResults() {
             assertEquals( max, count );
         }
     }
@@ -243,16 +219,14 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected class ForwardMatchHandler implements ResponseHandler
-    {
+    protected class ForwardMatchHandler implements ResponseHandler {
 
         int startValue;
         int count;
         int current = 0;
 
 
-        protected ForwardMatchHandler( int startValue, int count )
-        {
+        protected ForwardMatchHandler( int startValue, int count ) {
             this.startValue = startValue;
             this.count = count;
         }
@@ -266,8 +240,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * #response(org.codehaus.jackson.JsonNode)
          */
         @Override
-        public void response( JsonNode node )
-        {
+        public void response( JsonNode node ) {
 
             assertEquals( startValue + current, node.get( "id" ).asInt() );
 
@@ -276,8 +249,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         @Override
-        public void assertResults()
-        {
+        public void assertResults() {
             // only ever invoked once
             assertEquals( count, current );
         }
@@ -289,16 +261,14 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected class ReverseMatchHandler implements ResponseHandler
-    {
+    protected class ReverseMatchHandler implements ResponseHandler {
 
         int startValue;
         int count;
         int current = 0;
 
 
-        protected ReverseMatchHandler( int startValue, int count )
-        {
+        protected ReverseMatchHandler( int startValue, int count ) {
             this.startValue = startValue;
             this.count = count;
         }
@@ -312,8 +282,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * #response(org.codehaus.jackson.JsonNode)
          */
         @Override
-        public void response( JsonNode node )
-        {
+        public void response( JsonNode node ) {
 
             assertEquals( startValue - count, node.get( "id" ).asInt() );
 
@@ -322,8 +291,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         @Override
-        public void assertResults()
-        {
+        public void assertResults() {
             // only ever invoked once
             assertEquals( count, current );
         }
@@ -335,14 +303,12 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected class TransactionResponseHandler extends IncrementHandler
-    {
+    protected class TransactionResponseHandler extends IncrementHandler {
 
         List<JsonNode> responses = new ArrayList<JsonNode>();
 
 
-        protected TransactionResponseHandler( int max )
-        {
+        protected TransactionResponseHandler( int max ) {
             super( max );
         }
 
@@ -355,8 +321,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * #response(org.codehaus.jackson.JsonNode)
          */
         @Override
-        public void response( JsonNode node )
-        {
+        public void response( JsonNode node ) {
             super.response( node );
 
             JsonNode transaction = node.get( "transaction" );
@@ -368,12 +333,10 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         /** Get transaction ids from messages. Key is messageId, value is transactionId */
-        public BiMap<String, String> getTransactionToMessageId()
-        {
+        public BiMap<String, String> getTransactionToMessageId() {
             BiMap<String, String> map = HashBiMap.create( responses.size() );
 
-            for ( JsonNode message : responses )
-            {
+            for ( JsonNode message : responses ) {
                 map.put( message.get( "uuid" ).asText(), message.get( "transaction" ).asText() );
             }
 
@@ -382,12 +345,10 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         /** Get all message ids from the response */
-        public List<String> getMessageIds()
-        {
+        public List<String> getMessageIds() {
             List<String> results = new ArrayList<String>( responses.size() );
 
-            for ( JsonNode message : responses )
-            {
+            for ( JsonNode message : responses ) {
                 results.add( message.get( "uuid" ).asText() );
             }
 
@@ -401,16 +362,14 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      *
      * @author tnine
      */
-    protected class AsyncTransactionResponseHandler implements ResponseHandler
-    {
+    protected class AsyncTransactionResponseHandler implements ResponseHandler {
 
         private TreeMap<Integer, JsonNode> responses = new TreeMap<Integer, JsonNode>();
         private Map<Integer, String> threads = new HashMap<Integer, String>();
         private int max;
 
 
-        protected AsyncTransactionResponseHandler( int max )
-        {
+        protected AsyncTransactionResponseHandler( int max ) {
             this.max = max;
         }
 
@@ -423,8 +382,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT
          * #response(org.codehaus.jackson.JsonNode)
          */
         @Override
-        public void response( JsonNode node )
-        {
+        public void response( JsonNode node ) {
             JsonNode transaction = node.get( "transaction" );
 
             assertNotNull( transaction );
@@ -442,12 +400,10 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         /** Get transaction ids from messages. Key is messageId, value is transactionId */
-        public BiMap<String, String> getTransactionToMessageId()
-        {
+        public BiMap<String, String> getTransactionToMessageId() {
             BiMap<String, String> map = HashBiMap.create( responses.size() );
 
-            for ( JsonNode message : responses.values() )
-            {
+            for ( JsonNode message : responses.values() ) {
                 map.put( message.get( "uuid" ).asText(), message.get( "transaction" ).asText() );
             }
 
@@ -456,12 +412,10 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         /** Get all message ids from the response */
-        public List<String> getMessageIds()
-        {
+        public List<String> getMessageIds() {
             List<String> results = new ArrayList<String>( responses.size() );
 
-            for ( JsonNode message : responses.values() )
-            {
+            for ( JsonNode message : responses.values() ) {
                 results.add( message.get( "uuid" ).asText() );
             }
 
@@ -470,12 +424,10 @@ public class AbstractQueueResourceIT extends AbstractRestIT
 
 
         @Override
-        public void assertResults()
-        {
+        public void assertResults() {
             int count = 0;
 
-            for ( JsonNode message : responses.values() )
-            {
+            for ( JsonNode message : responses.values() ) {
                 assertEquals( count, message.get( "id" ).asInt() );
                 count++;
             }
@@ -493,21 +445,17 @@ public class AbstractQueueResourceIT extends AbstractRestIT
      * @param handler the handler
      * @param commands the commands
      */
-    protected void testMessages( Queue queue, ResponseHandler handler, QueueCommand... commands )
-    {
+    protected void testMessages( Queue queue, ResponseHandler handler, QueueCommand... commands ) {
         List<JsonNode> entries = null;
 
-        do
-        {
-            for ( QueueCommand command : commands )
-            {
+        do {
+            for ( QueueCommand command : commands ) {
                 queue = command.processQueue( queue );
             }
 
             entries = queue.getNextPage();
 
-            for ( JsonNode entry : entries )
-            {
+            for ( JsonNode entry : entries ) {
                 handler.response( entry );
             }
         }

@@ -21,8 +21,7 @@ import java.util.List;
 import me.prettyprint.hector.api.ddl.ColumnDefinition;
 
 
-public interface CFEnum
-{
+public interface CFEnum {
 
     public String getColumnFamily();
 

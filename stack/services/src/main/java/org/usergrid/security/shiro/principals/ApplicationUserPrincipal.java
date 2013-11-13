@@ -21,18 +21,15 @@ import java.util.UUID;
 import org.usergrid.management.UserInfo;
 
 
-public class ApplicationUserPrincipal extends UserPrincipal
-{
+public class ApplicationUserPrincipal extends UserPrincipal {
 
-    public ApplicationUserPrincipal( UUID applicationId, UserInfo user )
-    {
+    public ApplicationUserPrincipal( UUID applicationId, UserInfo user ) {
         super( applicationId, user );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "user[" + user.getApplicationId() + "/" + user.getUuid() + "]";
     }
 }

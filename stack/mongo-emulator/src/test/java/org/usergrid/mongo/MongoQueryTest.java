@@ -24,12 +24,10 @@ import static org.junit.Assert.assertTrue;
 
 
 @Ignore
-public class MongoQueryTest extends AbstractMongoTest
-{
+public class MongoQueryTest extends AbstractMongoTest {
 
     @Test
-    public void stringEqual() throws Exception
-    {
+    public void stringEqual() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -67,8 +65,7 @@ public class MongoQueryTest extends AbstractMongoTest
         DBCursor cur = coll.find();
         int count = 0;
 
-        while ( cur.hasNext() )
-        {
+        while ( cur.hasNext() ) {
             cur.next();
             count++;
         }
@@ -90,8 +87,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void greaterThan() throws Exception
-    {
+    public void greaterThan() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -142,8 +138,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void greaterThanEqual() throws Exception
-    {
+    public void greaterThanEqual() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -198,8 +193,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void lessThan() throws Exception
-    {
+    public void lessThan() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -250,8 +244,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void lessThanEqual() throws Exception
-    {
+    public void lessThanEqual() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -306,8 +299,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void in() throws Exception
-    {
+    public void in() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -362,8 +354,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void or() throws Exception
-    {
+    public void or() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -418,8 +409,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void and() throws Exception
-    {
+    public void and() throws Exception {
 
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
@@ -469,8 +459,7 @@ public class MongoQueryTest extends AbstractMongoTest
 
 
     @Test
-    public void withFieldSelector() throws Exception
-    {
+    public void withFieldSelector() throws Exception {
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
 

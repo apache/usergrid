@@ -27,103 +27,82 @@ import org.slf4j.LoggerFactory;
 import static org.usergrid.utils.ConversionUtils.string;
 
 
-public class StringUtils extends org.apache.commons.lang.StringUtils
-{
+public class StringUtils extends org.apache.commons.lang.StringUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger( StringUtils.class );
 
 
-    public static Object lower( Object obj )
-    {
-        if ( !( obj instanceof String ) )
-        {
+    public static Object lower( Object obj ) {
+        if ( !( obj instanceof String ) ) {
             return obj;
         }
         return ( ( String ) obj ).toLowerCase();
     }
 
 
-    public static String stringOrSubstringAfterLast( String str, char c )
-    {
-        if ( str == null )
-        {
+    public static String stringOrSubstringAfterLast( String str, char c ) {
+        if ( str == null ) {
             return null;
         }
         int i = str.lastIndexOf( c );
-        if ( i != -1 )
-        {
+        if ( i != -1 ) {
             return str.substring( i + 1 );
         }
         return str;
     }
 
 
-    public static String stringOrSubstringBeforeLast( String str, char c )
-    {
-        if ( str == null )
-        {
+    public static String stringOrSubstringBeforeLast( String str, char c ) {
+        if ( str == null ) {
             return null;
         }
         int i = str.lastIndexOf( c );
-        if ( i != -1 )
-        {
+        if ( i != -1 ) {
             return str.substring( 0, i );
         }
         return str;
     }
 
 
-    public static String stringOrSubstringBeforeFirst( String str, char c )
-    {
-        if ( str == null )
-        {
+    public static String stringOrSubstringBeforeFirst( String str, char c ) {
+        if ( str == null ) {
             return null;
         }
         int i = str.indexOf( c );
-        if ( i != -1 )
-        {
+        if ( i != -1 ) {
             return str.substring( 0, i );
         }
         return str;
     }
 
 
-    public static String stringOrSubstringAfterFirst( String str, char c )
-    {
-        if ( str == null )
-        {
+    public static String stringOrSubstringAfterFirst( String str, char c ) {
+        if ( str == null ) {
             return null;
         }
         int i = str.indexOf( c );
-        if ( i != -1 )
-        {
+        if ( i != -1 ) {
             return str.substring( i + 1 );
         }
         return str;
     }
 
 
-    public static String compactWhitespace( String str )
-    {
-        if ( str == null )
-        {
+    public static String compactWhitespace( String str ) {
+        if ( str == null ) {
             return null;
         }
         boolean prevWS = false;
         StringBuilder builder = new StringBuilder();
-        for ( int i = 0; i < str.length(); i++ )
-        {
+        for ( int i = 0; i < str.length(); i++ ) {
             char c = str.charAt( i );
-            if ( Character.isWhitespace( c ) )
-            {
-                if ( !prevWS )
-                {
+            if ( Character.isWhitespace( c ) ) {
+                if ( !prevWS ) {
                     builder.append( ' ' );
                 }
                 prevWS = true;
             }
-            else
-            {
+            else {
                 prevWS = false;
                 builder.append( c );
             }
@@ -133,44 +112,34 @@ public class StringUtils extends org.apache.commons.lang.StringUtils
 
 
     /** @return new string with replace applied */
-    public static String replaceAll( String source, String find, String replace )
-    {
-        if ( source == null )
-        {
+    public static String replaceAll( String source, String find, String replace ) {
+        if ( source == null ) {
             return null;
         }
-        while ( true )
-        {
+        while ( true ) {
             String old = source;
             source = source.replaceAll( find, replace );
-            if ( source.equals( old ) )
-            {
+            if ( source.equals( old ) ) {
                 return source;
             }
         }
     }
 
 
-    public static String toString( Object obj )
-    {
+    public static String toString( Object obj ) {
         return string( obj );
     }
 
 
-    public static String toStringFormat( Object obj, String format )
-    {
-        if ( obj != null )
-        {
-            if ( format != null )
-            {
-                if ( obj.getClass().isArray() )
-                {
+    public static String toStringFormat( Object obj, String format ) {
+        if ( obj != null ) {
+            if ( format != null ) {
+                if ( obj.getClass().isArray() ) {
                     return String.format( format, Arrays.toString( ( Object[] ) obj ) );
                 }
                 return String.format( format, string( obj ) );
             }
-            else
-            {
+            else {
                 return string( obj );
             }
         }
@@ -178,30 +147,24 @@ public class StringUtils extends org.apache.commons.lang.StringUtils
     }
 
 
-    public static boolean isString( Object obj )
-    {
+    public static boolean isString( Object obj ) {
         return obj instanceof String;
     }
 
 
-    public static boolean isStringOrNull( Object obj )
-    {
-        if ( obj == null )
-        {
+    public static boolean isStringOrNull( Object obj ) {
+        if ( obj == null ) {
             return true;
         }
         return obj instanceof String;
     }
 
 
-    public static String readClasspathFileAsString( String filePath )
-    {
-        try
-        {
+    public static String readClasspathFileAsString( String filePath ) {
+        try {
             return IOUtils.toString( StringUtils.class.getResourceAsStream( filePath ) );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.error( "Error getting file from classpath: " + filePath, e );
         }
         return null;

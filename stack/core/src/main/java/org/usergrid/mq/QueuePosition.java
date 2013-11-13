@@ -21,15 +21,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-public enum QueuePosition
-{
+public enum QueuePosition {
     START( "start" ), END( "end" ), LAST( "last" ), CONSUMER( "consumer" );
 
     private final String shortName;
 
 
-    QueuePosition( String shortName )
-    {
+    QueuePosition( String shortName ) {
         this.shortName = shortName;
     }
 
@@ -37,22 +35,17 @@ public enum QueuePosition
     static Map<String, QueuePosition> nameMap = new ConcurrentHashMap<String, QueuePosition>();
 
 
-    static
-    {
-        for ( QueuePosition op : EnumSet.allOf( QueuePosition.class ) )
-        {
-            if ( op.shortName != null )
-            {
+    static {
+        for ( QueuePosition op : EnumSet.allOf( QueuePosition.class ) ) {
+            if ( op.shortName != null ) {
                 nameMap.put( op.shortName, op );
             }
         }
     }
 
 
-    public static QueuePosition find( String s )
-    {
-        if ( s == null )
-        {
+    public static QueuePosition find( String s ) {
+        if ( s == null ) {
             return null;
         }
         return nameMap.get( s.toLowerCase() );
@@ -60,8 +53,7 @@ public enum QueuePosition
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return shortName;
     }
 }

@@ -37,8 +37,7 @@ import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 /** Entities are the base object type in the service. */
 @XmlRootElement
 @JsonPropertyOrder({ PROPERTY_UUID, PROPERTY_TYPE, PROPERTY_URI, PROPERTY_NAME })
-public interface Entity extends EntityRef, Comparable<Entity>
-{
+public interface Entity extends EntityRef, Comparable<Entity> {
 
     @Override
     @EntityProperty(required = true, mutable = false, basic = true, indexed = false)

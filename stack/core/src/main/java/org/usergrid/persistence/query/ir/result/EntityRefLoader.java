@@ -24,14 +24,12 @@ import org.usergrid.persistence.Results;
 import org.usergrid.persistence.SimpleEntityRef;
 
 
-public class EntityRefLoader implements ResultsLoader
-{
+public class EntityRefLoader implements ResultsLoader {
 
     private String type;
 
 
-    public EntityRefLoader( String type )
-    {
+    public EntityRefLoader( String type ) {
         this.type = type;
     }
 
@@ -40,12 +38,10 @@ public class EntityRefLoader implements ResultsLoader
      * @see org.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
      */
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception
-    {
+    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
         Results r = new Results();
         List<EntityRef> refs = new ArrayList<EntityRef>( entityIds.size() );
-        for ( ScanColumn id : entityIds )
-        {
+        for ( ScanColumn id : entityIds ) {
             refs.add( new SimpleEntityRef( type, id.getUUID() ) );
         }
         r.setRefs( refs );

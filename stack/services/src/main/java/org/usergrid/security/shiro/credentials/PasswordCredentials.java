@@ -16,8 +16,7 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public interface PasswordCredentials extends PrincipalCredentials
-{
+public interface PasswordCredentials extends PrincipalCredentials {
 
     public String getPassword();
 }

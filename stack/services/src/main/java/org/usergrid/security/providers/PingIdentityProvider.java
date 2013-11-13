@@ -22,8 +22,7 @@ import org.usergrid.security.tokens.exceptions.BadTokenException;
  *
  * @author zznate
  */
-public class PingIdentityProvider extends AbstractProvider
-{
+public class PingIdentityProvider extends AbstractProvider {
 
     private Logger logger = LoggerFactory.getLogger( PingIdentityProvider.class );
 
@@ -32,53 +31,43 @@ public class PingIdentityProvider extends AbstractProvider
     private String clientSecret;
 
 
-    PingIdentityProvider( EntityManager entityManager, ManagementService managementService )
-    {
+    PingIdentityProvider( EntityManager entityManager, ManagementService managementService ) {
         super( entityManager, managementService );
     }
 
 
     @Override
-    public User createOrAuthenticate( String externalToken ) throws BadTokenException
-    {
+    public User createOrAuthenticate( String externalToken ) throws BadTokenException {
         Map<String, Object> pingUser = userFromResource( externalToken );
 
         User user = null;
-        try
-        {
+        try {
             user = managementService.getAppUserByIdentifier( entityManager.getApplication().getUuid(),
                     Identifier.fromEmail( pingUser.get( "username" ).toString() ) );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
             // TODO what to do here?
         }
 
-        if ( user == null )
-        {
+        if ( user == null ) {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.putAll( pingUser );
             properties.put( "activated", true );
             properties.put( "confirmed", true );
-            try
-            {
+            try {
                 user = entityManager.create( "user", User.class, properties );
             }
-            catch ( Exception ex )
-            {
+            catch ( Exception ex ) {
                 throw new BadTokenException( "Could not create user for that token", ex );
             }
         }
-        else
-        {
+        else {
             user.setProperty( "expiration", pingUser.get( "expiration" ) );
-            try
-            {
+            try {
                 entityManager.update( user );
             }
-            catch ( Exception ex )
-            {
+            catch ( Exception ex ) {
                 ex.printStackTrace();
             }
         }
@@ -87,42 +76,35 @@ public class PingIdentityProvider extends AbstractProvider
 
 
     @Override
-    void configure()
-    {
-        try
-        {
+    void configure() {
+        try {
             Map config = loadConfigurationFor();
-            if ( config != null )
-            {
+            if ( config != null ) {
                 apiUrl = ( String ) config.get( "api_url" );
                 clientId = ( String ) config.get( "client_id" );
                 clientSecret = ( String ) config.get( "client_secret" );
             }
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
     }
 
 
     @Override
-    public Map<Object, Object> loadConfigurationFor()
-    {
+    public Map<Object, Object> loadConfigurationFor() {
         return loadConfigurationFor( "pingIdentProvider" );
     }
 
 
     @Override
-    public void saveToConfiguration( Map<String, Object> config )
-    {
+    public void saveToConfiguration( Map<String, Object> config ) {
         saveToConfiguration( "pingIdentProvider", config );
     }
 
 
     @Override
-    Map<String, Object> userFromResource( String externalToken )
-    {
+    Map<String, Object> userFromResource( String externalToken ) {
 
         JsonNode node = client.resource( apiUrl )
                               .queryParam( "grant_type", "urn:pingidentity.com:oauth2:grant_type:validate_bearer" )
@@ -146,17 +128,14 @@ public class PingIdentityProvider extends AbstractProvider
     }
 
 
-    public static String pingUsernameFrom( String rawEmail )
-    {
+    public static String pingUsernameFrom( String rawEmail ) {
         return String.format( "pinguser_%s", rawEmail );
     }
 
 
-    public static long extractExpiration( User user )
-    {
+    public static long extractExpiration( User user ) {
         Long expiration = ( Long ) user.getProperty( "expiration" );
-        if ( expiration == null )
-        {
+        if ( expiration == null ) {
             expiration = new Long( 7200 );
         }
         return expiration.longValue() * 1000;

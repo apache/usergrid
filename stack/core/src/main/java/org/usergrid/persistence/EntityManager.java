@@ -31,8 +31,7 @@ import org.usergrid.persistence.entities.Role;
  * The interface class for the data access object for Applications. Each application contains a set of users as well as
  * a hierarchy of groups. A application also includes a set of message inboxes and a set of assets.
  */
-public interface EntityManager
-{
+public interface EntityManager {
 
     public void setApplicationId( UUID applicationId );
 

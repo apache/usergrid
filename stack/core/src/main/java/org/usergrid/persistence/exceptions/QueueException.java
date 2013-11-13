@@ -20,8 +20,7 @@ package org.usergrid.persistence.exceptions;
 
 
 /** General Exception for queue related operations. */
-public class QueueException extends RuntimeException
-{
+public class QueueException extends RuntimeException {
 
     /**
      *
@@ -32,16 +31,14 @@ public class QueueException extends RuntimeException
     /**
      *
      */
-    public QueueException()
-    {
+    public QueueException() {
     }
 
 
     /**
      * @param arg0
      */
-    public QueueException( String arg0 )
-    {
+    public QueueException( String arg0 ) {
         super( arg0 );
     }
 
@@ -49,8 +46,7 @@ public class QueueException extends RuntimeException
     /**
      * @param arg0
      */
-    public QueueException( Throwable arg0 )
-    {
+    public QueueException( Throwable arg0 ) {
         super( arg0 );
     }
 
@@ -59,8 +55,7 @@ public class QueueException extends RuntimeException
      * @param arg0
      * @param arg1
      */
-    public QueueException( String arg0, Throwable arg1 )
-    {
+    public QueueException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 }

@@ -35,8 +35,7 @@ import org.usergrid.services.UsersServiceIT;
                 ServiceInvocationIT.class, UsersServiceIT.class
         })
 @Concurrent()
-public class ServiceITSuite
-{
+public class ServiceITSuite {
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 }

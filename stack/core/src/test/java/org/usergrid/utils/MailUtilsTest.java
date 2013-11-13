@@ -28,16 +28,14 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 
-public class MailUtilsTest
-{
+public class MailUtilsTest {
 
     private Properties props;
     private MailUtils mailUtils;
 
 
     @Before
-    public void setupLocal()
-    {
+    public void setupLocal() {
         props = new Properties();
         props.put( "mail.transport.protocol", "smtp" );
         props.put( "mail.smtp.host", "usergrid.com" );
@@ -49,8 +47,7 @@ public class MailUtilsTest
 
 
     @Test
-    public void verifyConstructionOk() throws Exception
-    {
+    public void verifyConstructionOk() throws Exception {
         String email = consistentEmail();
 
         sendTestEmail( email );
@@ -62,37 +59,32 @@ public class MailUtilsTest
 
 
     @Test
-    public void failedConstruction() throws Exception
-    {
+    public void failedConstruction() throws Exception {
 
         sendTestEmail( "foo@bar." );
     }
 
 
     @Test
-    public void propertiesExtraction()
-    {
+    public void propertiesExtraction() {
         props.put( "some.other.prop", "foo" );
         assertEquals( 5, props.size() );
         assertEquals( 4, MailUtils.getMailProperties( props ).size() );
     }
 
 
-    @Test( expected = IllegalArgumentException.class )
-    public void verifyMissingTemplateFail()
-    {
+    @Test(expected = IllegalArgumentException.class)
+    public void verifyMissingTemplateFail() {
         mailUtils.sendHtmlMail( props, "foo@bar", "user@usergrid.com", "", "" );
     }
 
 
-    private void sendTestEmail( String email )
-    {
+    private void sendTestEmail( String email ) {
         mailUtils.sendHtmlMail( props, email, "user@usergrid.com", "test subject", "Email body" );
     }
 
 
-    private String consistentEmail()
-    {
+    private String consistentEmail() {
         return String.format( "user-%s@mockserver.com", UUIDUtils.newTimeUUID().toString() );
     }
 }

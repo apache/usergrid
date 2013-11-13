@@ -24,8 +24,7 @@ import org.w3c.dom.Element;
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 
-public class ApiParam
-{
+public class ApiParam {
     String name;
     String dataType;
     String description;
@@ -37,174 +36,144 @@ public class ApiParam
     String paramType;
 
 
-    public ApiParam()
-    {
+    public ApiParam() {
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getDataType()
-    {
+    public String getDataType() {
         return dataType;
     }
 
 
-    public void setDataType( String dataType )
-    {
+    public void setDataType( String dataType ) {
         this.dataType = dataType;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
 
-    public void setDescription( String description )
-    {
+    public void setDescription( String description ) {
         this.description = description;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getDefaultValue()
-    {
+    public String getDefaultValue() {
         return defaultValue;
     }
 
 
-    public void setDefaultValue( String defaultValue )
-    {
+    public void setDefaultValue( String defaultValue ) {
         this.defaultValue = defaultValue;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public ApiParamAllowableValues getAllowableValues()
-    {
+    public ApiParamAllowableValues getAllowableValues() {
         return allowableValues;
     }
 
 
-    public void setAllowableValues( ApiParamAllowableValues allowableValues )
-    {
+    public void setAllowableValues( ApiParamAllowableValues allowableValues ) {
         this.allowableValues = allowableValues;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public Boolean isRequired()
-    {
+    public Boolean isRequired() {
         return required;
     }
 
 
-    public void setRequired( Boolean required )
-    {
+    public void setRequired( Boolean required ) {
         this.required = required;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getAccess()
-    {
+    public String getAccess() {
         return access;
     }
 
 
-    public void setAccess( String access )
-    {
+    public void setAccess( String access ) {
         this.access = access;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public Boolean isAllowMultiple()
-    {
+    public Boolean isAllowMultiple() {
         return allowMultiple;
     }
 
 
-    public void setAllowMultiple( Boolean allowMultiple )
-    {
+    public void setAllowMultiple( Boolean allowMultiple ) {
         this.allowMultiple = allowMultiple;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getParamType()
-    {
+    public String getParamType() {
         return paramType;
     }
 
 
-    public void setParamType( String paramType )
-    {
+    public void setParamType( String paramType ) {
         this.paramType = paramType;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return JsonUtils.mapToJsonString( this );
     }
 
 
-    public Element createWADLParam( Document doc, ApiOperation operation )
-    {
+    public Element createWADLParam( Document doc, ApiOperation operation ) {
         Element param = doc.createElement( "param" );
-        if ( name != null )
-        {
+        if ( name != null ) {
             param.setAttribute( "name", name );
         }
-        if ( ( required != null ) && required )
-        {
+        if ( ( required != null ) && required ) {
             param.setAttribute( "required", required.toString() );
         }
-        if ( ( allowMultiple != null ) && allowMultiple )
-        {
+        if ( ( allowMultiple != null ) && allowMultiple ) {
             param.setAttribute( "repeating", allowMultiple.toString() );
         }
-        if ( dataType != null )
-        {
+        if ( dataType != null ) {
             param.setAttribute( "type", "xsd:" + dataType.toLowerCase() );
         }
-        if ( defaultValue != null )
-        {
+        if ( defaultValue != null ) {
             param.setAttribute( "default", defaultValue );
         }
-        if ( description != null )
-        {
+        if ( description != null ) {
             Element d = doc.createElement( "doc" );
             d.setTextContent( description );
             param.appendChild( d );
         }
-        if ( paramType != null )
-        {
+        if ( paramType != null ) {
             param.setAttribute( "style", "post".equalsIgnoreCase( paramType ) ? "query" :
                                          "path".equalsIgnoreCase( paramType ) ? "template" : paramType );
         }
         if ( ( allowableValues != null ) && ( allowableValues.values != null ) && ( !allowableValues.values
-                                                                                                    .isEmpty() ) )
-        {
-            for ( String v : allowableValues.values )
-            {
+                                                                                                    .isEmpty() ) ) {
+            for ( String v : allowableValues.values ) {
                 Element option = doc.createElement( "option" );
                 option.setAttribute( "value", v );
                 param.appendChild( option );

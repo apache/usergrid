@@ -17,37 +17,32 @@ package org.usergrid.persistence.query.ir;
 
 
 /** @author tnine */
-public abstract class BooleanNode extends QueryNode
-{
+public abstract class BooleanNode extends QueryNode {
 
     protected QueryNode left;
     protected QueryNode right;
 
 
-    public BooleanNode( QueryNode left, QueryNode right )
-    {
+    public BooleanNode( QueryNode left, QueryNode right ) {
         this.left = left;
         this.right = right;
     }
 
 
     /** @return the left */
-    public QueryNode getLeft()
-    {
+    public QueryNode getLeft() {
         return left;
     }
 
 
     /** @return the right */
-    public QueryNode getRight()
-    {
+    public QueryNode getRight() {
         return right;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "BooleanNode [left=" + left + ", right=" + right + "]";
     }
 }

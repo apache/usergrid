@@ -25,19 +25,16 @@ import static junit.framework.Assert.assertEquals;
 
 
 /** Unit test for simple SimpleBatcher. */
-public class SimpleBatcherTest
-{
+public class SimpleBatcherTest {
 
     @Before
-    public void setupLocal()
-    {
+    public void setupLocal() {
 
     }
 
 
     @Test
-    public void testBatchSizeTrigger()
-    {
+    public void testBatchSizeTrigger() {
         SimpleBatcher simpleBatcher = new SimpleBatcher();
         simpleBatcher.setBatchSubmitter( new Slf4JBatchSubmitter() );
         simpleBatcher.setBatchSize( 4 );

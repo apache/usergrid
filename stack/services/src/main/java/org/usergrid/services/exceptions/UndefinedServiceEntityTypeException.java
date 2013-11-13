@@ -16,8 +16,7 @@
 package org.usergrid.services.exceptions;
 
 
-public class UndefinedServiceEntityTypeException extends ServiceException
-{
+public class UndefinedServiceEntityTypeException extends ServiceException {
 
     /**
      *
@@ -25,26 +24,22 @@ public class UndefinedServiceEntityTypeException extends ServiceException
     private static final long serialVersionUID = 1L;
 
 
-    public UndefinedServiceEntityTypeException()
-    {
+    public UndefinedServiceEntityTypeException() {
         super();
     }
 
 
-    public UndefinedServiceEntityTypeException( String message, Throwable cause )
-    {
+    public UndefinedServiceEntityTypeException( String message, Throwable cause ) {
         super( message, cause );
     }
 
 
-    public UndefinedServiceEntityTypeException( String message )
-    {
+    public UndefinedServiceEntityTypeException( String message ) {
         super( message );
     }
 
 
-    public UndefinedServiceEntityTypeException( Throwable cause )
-    {
+    public UndefinedServiceEntityTypeException( Throwable cause ) {
         super( cause );
     }
 }

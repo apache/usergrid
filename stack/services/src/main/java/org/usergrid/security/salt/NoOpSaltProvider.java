@@ -24,15 +24,13 @@ import java.util.UUID;
  *
  * @author tnine
  */
-public class NoOpSaltProvider implements SaltProvider
-{
+public class NoOpSaltProvider implements SaltProvider {
 
     /* (non-Javadoc)
      * @see org.usergrid.security.salt.SaltProvider#getSalt(java.util.UUID, java.util.UUID)
      */
     @Override
-    public String getSalt( UUID applicationId, UUID userId )
-    {
+    public String getSalt( UUID applicationId, UUID userId ) {
         return "";
     }
 }

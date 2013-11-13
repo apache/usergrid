@@ -25,12 +25,10 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 
 @Provider
-public class TransactionNotFoundExceptionMapper extends AbstractExceptionMapper<TransactionNotFoundException>
-{
+public class TransactionNotFoundExceptionMapper extends AbstractExceptionMapper<TransactionNotFoundException> {
 
     @Override
-    public Response toResponse( TransactionNotFoundException e )
-    {
+    public Response toResponse( TransactionNotFoundException e ) {
         return toResponse( NOT_FOUND, e );
     }
 }

@@ -9,45 +9,38 @@ import java.util.Iterator;
  * <p/>
  * Meant as a wrapper to an existing iterator
  */
-public class PeekingIterator<T> implements Iterable<T>, Iterator<T>
-{
+public class PeekingIterator<T> implements Iterable<T>, Iterator<T> {
 
     private Iterator<T> delegate;
     private T peeked;
 
 
-    public PeekingIterator( Iterator<T> delegate )
-    {
+    public PeekingIterator( Iterator<T> delegate ) {
         this.delegate = delegate;
     }
 
 
     @Override
-    public Iterator<T> iterator()
-    {
+    public Iterator<T> iterator() {
         return this;
     }
 
 
     @Override
-    public boolean hasNext()
-    {
+    public boolean hasNext() {
         return peeked != null || delegate.hasNext();
     }
 
 
     @Override
-    public T next()
-    {
+    public T next() {
         T toReturn = null;
 
-        if ( peeked != null )
-        {
+        if ( peeked != null ) {
             toReturn = peeked;
             peeked = null;
         }
-        else
-        {
+        else {
             toReturn = delegate.next();
         }
 
@@ -56,10 +49,8 @@ public class PeekingIterator<T> implements Iterable<T>, Iterator<T>
 
 
     /** Peek ahead in the iterator.  Assumes a next is present and has been checked */
-    public T peek()
-    {
-        if ( peeked == null && delegate.hasNext() )
-        {
+    public T peek() {
+        if ( peeked == null && delegate.hasNext() ) {
             peeked = delegate.next();
         }
         return peeked;
@@ -67,8 +58,7 @@ public class PeekingIterator<T> implements Iterable<T>, Iterator<T>
 
 
     @Override
-    public void remove()
-    {
+    public void remove() {
         throw new UnsupportedOperationException( "Remove is unsupported" );
     }
 }

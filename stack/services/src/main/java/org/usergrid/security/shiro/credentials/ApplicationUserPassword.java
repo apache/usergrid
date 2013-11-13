@@ -16,11 +16,9 @@
 package org.usergrid.security.shiro.credentials;
 
 
-public class ApplicationUserPassword extends AbstractPasswordCredentials implements ApplicationUserCredentials
-{
+public class ApplicationUserPassword extends AbstractPasswordCredentials implements ApplicationUserCredentials {
 
-    public ApplicationUserPassword( String password )
-    {
+    public ApplicationUserPassword( String password ) {
         super( password );
     }
 }

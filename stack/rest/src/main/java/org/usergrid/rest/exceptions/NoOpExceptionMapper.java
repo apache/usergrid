@@ -23,12 +23,10 @@ import static javax.ws.rs.core.Response.Status.OK;
 
 
 @Provider
-public class NoOpExceptionMapper extends AbstractExceptionMapper<NoOpException>
-{
+public class NoOpExceptionMapper extends AbstractExceptionMapper<NoOpException> {
 
     @Override
-    public Response toResponse( NoOpException e )
-    {
+    public Response toResponse( NoOpException e ) {
         return toResponse( OK, e.getJsonResponse() );
     }
 }

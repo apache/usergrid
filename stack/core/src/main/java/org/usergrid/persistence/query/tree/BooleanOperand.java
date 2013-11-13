@@ -25,28 +25,24 @@ import org.antlr.runtime.Token;
  *
  * @author tnine
  */
-public abstract class BooleanOperand extends Operand
-{
+public abstract class BooleanOperand extends Operand {
 
 
     /**
      * @param property
      * @param literal
      */
-    public BooleanOperand( Token t )
-    {
+    public BooleanOperand( Token t ) {
         super( t );
     }
 
 
-    public Operand getLeft()
-    {
+    public Operand getLeft() {
         return ( Operand ) this.children.get( 0 );
     }
 
 
-    public Operand getRight()
-    {
+    public Operand getRight() {
         return ( Operand ) this.children.get( 1 );
     }
 }

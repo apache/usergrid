@@ -30,14 +30,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class MongoProxyServer
-{
+public class MongoProxyServer {
 
     private static final Logger logger = LoggerFactory.getLogger( MongoProxyServer.class );
 
 
-    public static void main( String[] args ) throws Exception
-    {
+    public static void main( String[] args ) throws Exception {
         logger.info( "Starting Usergrid Mongo Proxy Server" );
 
         // Configure the server.

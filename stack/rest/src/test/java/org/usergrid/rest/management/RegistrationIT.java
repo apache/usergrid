@@ -58,20 +58,17 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_E
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public class RegistrationIT extends AbstractRestIT
-{
+public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( RegistrationIT.class );
 
 
     @Test
-    public void postCreateOrgAndAdmin() throws Exception
-    {
+    public void postCreateOrgAndAdmin() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
@@ -96,32 +93,28 @@ public class RegistrationIT extends AbstractRestIT
             logger.info( token );
 
             setup.getMgmtSvc().disableAdminUser( owner_uuid );
-            try
-            {
+            try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .get( JsonNode.class );
                 fail( "request for disabled user should fail" );
             }
-            catch ( UniformInterfaceException uie )
-            {
+            catch ( UniformInterfaceException uie ) {
                 ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
                 JsonNode body = uie.getResponse().getEntity( JsonNode.class );
                 assertEquals( "user disabled", body.findPath( "error_description" ).getTextValue() );
             }
 
             setup.getMgmtSvc().deactivateUser( CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid );
-            try
-            {
+            try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .get( JsonNode.class );
                 fail( "request for deactivated user should fail" );
             }
-            catch ( UniformInterfaceException uie )
-            {
+            catch ( UniformInterfaceException uie ) {
                 ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
                 JsonNode body = uie.getResponse().getEntity( JsonNode.class );
                 assertEquals( "user not activated", body.findPath( "error_description" ).getTextValue() );
@@ -139,15 +132,13 @@ public class RegistrationIT extends AbstractRestIT
             //      assertEquals("User Account Activated", account_activation_message.getSubject());
 
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
-    public String getTokenFromMessage( Message msg ) throws IOException, MessagingException
-    {
+    public String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
         String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
         String token = StringUtils.substringAfterLast( body, "token=" );
         // TODO better token extraction
@@ -158,8 +149,7 @@ public class RegistrationIT extends AbstractRestIT
 
 
     public JsonNode postCreateOrgAndAdmin( String organizationName, String username, String name, String email,
-                                           String password )
-    {
+                                           String password ) {
         JsonNode node = null;
         Map<String, String> payload =
                 hashMap( "email", email ).map( "username", username ).map( "name", name ).map( "password", password )
@@ -175,8 +165,7 @@ public class RegistrationIT extends AbstractRestIT
 
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public JsonNode postAddAdminToOrg( String organizationName, String email, String password, String token )
-    {
+    public JsonNode postAddAdminToOrg( String organizationName, String email, String password, String token ) {
         JsonNode node = null;
 
         MultivaluedMap formData = new MultivaluedMapImpl();
@@ -194,13 +183,11 @@ public class RegistrationIT extends AbstractRestIT
 
 
     @Test
-    public void putAddToOrganizationFail() throws Exception
-    {
+    public void putAddToOrganizationFail() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
@@ -209,32 +196,27 @@ public class RegistrationIT extends AbstractRestIT
             String t = adminToken();
             MultivaluedMap formData = new MultivaluedMapImpl();
             formData.add( "foo", "bar" );
-            try
-            {
+            try {
                 resource().path( "/management/organizations/test-organization/users/test-admin-null@mockserver.com" )
                         .queryParam( "access_token", t ).accept( MediaType.APPLICATION_JSON )
                         .type( MediaType.APPLICATION_FORM_URLENCODED ).put( JsonNode.class, formData );
             }
-            catch ( UniformInterfaceException e )
-            {
+            catch ( UniformInterfaceException e ) {
                 assertEquals( "Should receive a 400 Not Found", 400, e.getResponse().getStatus() );
             }
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
     @Test
-    public void postAddToOrganization() throws Exception
-    {
+    public void postAddToOrganization() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
@@ -243,21 +225,18 @@ public class RegistrationIT extends AbstractRestIT
             String t = adminToken();
             postAddAdminToOrg( "test-organization", "test-admin@mockserver.com", "password", t );
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
     @Test
-    public void addNewAdminUserWithNoPwdToOrganization() throws Exception
-    {
+    public void addNewAdminUserWithNoPwdToOrganization() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             Mailbox.clearAll();
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
@@ -293,21 +272,18 @@ public class RegistrationIT extends AbstractRestIT
             String token = getTokenFromMessage( msgs[0] );
             assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userId, token ) );
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
     @Test
-    public void addExistingAdminUserToOrganization() throws Exception
-    {
+    public void addExistingAdminUserToOrganization() throws Exception {
 
         Map<String, String> originalProperties = getRemoteTestProperties();
 
-        try
-        {
+        try {
             Mailbox.clearAll();
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
@@ -347,15 +323,13 @@ public class RegistrationIT extends AbstractRestIT
             assertNotSame( resetpwd, msgs[1].getSubject() );
             assertEquals( invited, msgs[1].getSubject() );
         }
-        finally
-        {
+        finally {
             setTestProperties( originalProperties );
         }
     }
 
 
-    private Message[] getMessages( String host, String user, String password ) throws MessagingException, IOException
-    {
+    private Message[] getMessages( String host, String user, String password ) throws MessagingException, IOException {
 
         Session session = Session.getDefaultInstance( new Properties() );
         Store store = session.getStore( "imap" );
@@ -365,8 +339,7 @@ public class RegistrationIT extends AbstractRestIT
         folder.open( Folder.READ_ONLY );
         Message[] msgs = folder.getMessages();
 
-        for ( Message m : msgs )
-        {
+        for ( Message m : msgs ) {
             logger.info( "Subject: " + m.getSubject() );
             logger.info(
                     "Body content 0 " + ( String ) ( ( MimeMultipart ) m.getContent() ).getBodyPart( 0 ).getContent() );

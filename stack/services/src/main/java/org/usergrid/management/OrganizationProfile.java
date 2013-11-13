@@ -24,8 +24,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "Organizations")
-public class OrganizationProfile
-{
+public class OrganizationProfile {
 
     @Id
     private String name;
@@ -42,56 +41,47 @@ public class OrganizationProfile
     private String paypal;
 
 
-    public OrganizationProfile()
-    {
+    public OrganizationProfile() {
 
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
 
-    public String getEmail()
-    {
+    public String getEmail() {
         return email;
     }
 
 
-    public void setEmail( String email )
-    {
+    public void setEmail( String email ) {
         this.email = email;
     }
 
 
-    public String getContact()
-    {
+    public String getContact() {
         return contact;
     }
 
 
-    public void setContact( String contact )
-    {
+    public void setContact( String contact ) {
         this.contact = contact;
     }
 
 
-    public String getPaypal()
-    {
+    public String getPaypal() {
         return paypal;
     }
 
 
-    public void setPaypal( String paypal )
-    {
+    public void setPaypal( String paypal ) {
         this.paypal = paypal;
     }
 }

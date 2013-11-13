@@ -77,8 +77,7 @@ import static org.usergrid.utils.ConversionUtils.uuid;
  *
  * @author edanuff
  */
-public class EntityManagerFactoryImpl implements EntityManagerFactory, ApplicationContextAware
-{
+public class EntityManagerFactoryImpl implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImpl.class );
 
@@ -101,10 +100,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     private boolean skipAggregateCounters;
 
     private LoadingCache<UUID, EntityManager> entityManagers =
-            CacheBuilder.newBuilder().maximumSize( 100 ).build( new CacheLoader<UUID, EntityManager>()
-            {
-                public EntityManager load( UUID appId )
-                { // no checked exception
+            CacheBuilder.newBuilder().maximumSize( 100 ).build( new CacheLoader<UUID, EntityManager>() {
+                public EntityManager load( UUID appId ) { // no checked exception
                     return _getEntityManager( appId );
                 }
             } );
@@ -115,13 +112,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      *
      * @param cass the cassandraService instance
      */
-    public EntityManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, boolean skipAggregateCounters )
-    {
+    public EntityManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, boolean skipAggregateCounters ) {
         this.cass = cass;
         this.counterUtils = counterUtils;
         this.skipAggregateCounters = skipAggregateCounters;
-        if ( skipAggregateCounters )
-        {
+        if ( skipAggregateCounters ) {
             logger.warn( "NOTE: Counters have been disabled by configuration..." );
         }
     }
@@ -133,8 +128,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      * @see org.usergrid.core.Datastore#getImpementationDescription()
      */
     @Override
-    public String getImpementationDescription()
-    {
+    public String getImpementationDescription() {
         return IMPLEMENTATION_DESCRIPTION;
     }
 
@@ -146,22 +140,18 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      * java.util.UUID)
      */
     @Override
-    public EntityManager getEntityManager( UUID applicationId )
-    {
-        try
-        {
+    public EntityManager getEntityManager( UUID applicationId ) {
+        try {
             return entityManagers.get( applicationId );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ex.printStackTrace();
         }
         return _getEntityManager( applicationId );
     }
 
 
-    private EntityManager _getEntityManager( UUID applicationId )
-    {
+    private EntityManager _getEntityManager( UUID applicationId ) {
         //EntityManagerImpl em = new EntityManagerImpl();
         EntityManager em = applicationContext.getBean( "entityManager", EntityManager.class );
         //em.init(this,cass,counterUtils,applicationId, skipAggregateCounters);
@@ -170,8 +160,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
-    public ApplicationContext getApplicationContext()
-    {
+    public ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 
@@ -181,22 +170,19 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      *
      * @return Setup helper
      */
-    public Setup getSetup()
-    {
+    public Setup getSetup() {
         return new Setup( this, cass );
     }
 
 
     @Override
-    public void setup() throws Exception
-    {
+    public void setup() throws Exception {
         Setup setup = getSetup();
 
         setup.setup();
 
 
-        if ( cass.getPropertiesMap() != null )
-        {
+        if ( cass.getPropertiesMap() != null ) {
             updateServiceProperties( cass.getPropertiesMap() );
         }
     }
@@ -208,8 +194,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      * @see org.usergrid.core.Datastore#createApplication(java.lang.String)
      */
     @Override
-    public UUID createApplication( String organization, String name ) throws Exception
-    {
+    public UUID createApplication( String organization, String name ) throws Exception {
         return createApplication( organization, name, null );
     }
 
@@ -222,15 +207,13 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      */
     @Override
     public UUID createApplication( String organizationName, String name, Map<String, Object> properties )
-            throws Exception
-    {
+            throws Exception {
 
         String appName = buildAppName( organizationName, name );
 
         HColumn<String, ByteBuffer> column =
                 cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, appName, PROPERTY_UUID );
-        if ( column != null )
-        {
+        if ( column != null ) {
             throw new ApplicationAlreadyExistsException( name );
             // UUID uuid = uuid(column.getValue());
             // return uuid;
@@ -245,24 +228,20 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
-    private String buildAppName( String organizationName, String name )
-    {
+    private String buildAppName( String organizationName, String name ) {
         return StringUtils.lowerCase( name.contains( "/" ) ? name : organizationName + "/" + name );
     }
 
 
     public UUID initializeApplication( String organizationName, UUID applicationId, String name,
-                                       Map<String, Object> properties ) throws Exception
-    {
+                                       Map<String, Object> properties ) throws Exception {
 
         String appName = buildAppName( organizationName, name );
         // check for pre-existing
-        if ( lookupApplication( appName ) != null )
-        {
+        if ( lookupApplication( appName ) != null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
-        if ( properties == null )
-        {
+        if ( properties == null ) {
             properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
 
@@ -292,15 +271,13 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public UUID importApplication( String organizationName, UUID applicationId, String name,
-                                   Map<String, Object> properties ) throws Exception
-    {
+                                   Map<String, Object> properties ) throws Exception {
 
         name = buildAppName( organizationName, name );
 
         HColumn<String, ByteBuffer> column =
                 cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
-        if ( column != null )
-        {
+        if ( column != null ) {
             throw new ApplicationAlreadyExistsException( name );
             // UUID uuid = uuid(column.getValue());
             // return uuid;
@@ -312,13 +289,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     @Metered(group = "core", name = "EntityManagerFactory_lookupApplication_byName")
-    public UUID lookupApplication( String name ) throws Exception
-    {
+    public UUID lookupApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
                 cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
-        if ( column != null )
-        {
+        if ( column != null ) {
             UUID uuid = uuid( column.getValue() );
             return uuid;
         }
@@ -336,13 +311,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      * @throws Exception the exception
      */
     @Metered(group = "core", name = "EntityManagerFactory_getApplication")
-    public Application getApplication( String name ) throws Exception
-    {
+    public Application getApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
                 cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
-        if ( column == null )
-        {
+        if ( column == null ) {
             return null;
         }
 
@@ -354,8 +327,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public Map<String, UUID> getApplications() throws Exception
-    {
+    public Map<String, UUID> getApplications() throws Exception {
         Map<String, UUID> applications = new TreeMap<String, UUID>( CASE_INSENSITIVE_ORDER );
         Keyspace ko = cass.getSystemKeyspace();
         RangeSlicesQuery<String, String, UUID> q = createRangeSlicesQuery( ko, se, se, ue );
@@ -365,8 +337,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         q.setRowCount( 10000 );
         QueryResult<OrderedRows<String, String, UUID>> r = q.execute();
         Rows<String, String, UUID> rows = r.get();
-        for ( Row<String, String, UUID> row : rows )
-        {
+        for ( Row<String, String, UUID> row : rows ) {
             ColumnSlice<String, UUID> slice = row.getColumnSlice();
             HColumn<String, UUID> column = slice.getColumnByName( PROPERTY_UUID );
             applications.put( row.getKey(), column.getValue() );
@@ -376,15 +347,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public boolean setServiceProperty( String name, String value )
-    {
-        try
-        {
+    public boolean setServiceProperty( String name, String value ) {
+        try {
             cass.setColumn( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name, value );
             return true;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to set property " + name + ": " + e.getMessage() );
         }
         return false;
@@ -392,15 +360,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public boolean deleteServiceProperty( String name )
-    {
-        try
-        {
+    public boolean deleteServiceProperty( String name ) {
+        try {
             cass.deleteColumn( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name );
             return true;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to delete property " + name + ": " + e.getMessage() );
         }
         return false;
@@ -408,15 +373,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public boolean updateServiceProperties( Map<String, String> properties )
-    {
-        try
-        {
+    public boolean updateServiceProperties( Map<String, String> properties ) {
+        try {
             cass.setColumns( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF.getBytes(), properties );
             return true;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to update properties: " + e.getMessage() );
         }
         return false;
@@ -424,16 +386,13 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public Map<String, String> getServiceProperties()
-    {
+    public Map<String, String> getServiceProperties() {
         Map<String, String> properties = null;
-        try
-        {
+        try {
             properties = asMap( cass.getAllColumns( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, se, se ) );
             return properties;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "Unable to load properties: " + e.getMessage() );
         }
         return null;
@@ -441,14 +400,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException
-    {
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
 
-    public void setCounterUtils( CounterUtils counterUtils )
-    {
+    public void setCounterUtils( CounterUtils counterUtils ) {
         this.counterUtils = counterUtils;
     }
 }

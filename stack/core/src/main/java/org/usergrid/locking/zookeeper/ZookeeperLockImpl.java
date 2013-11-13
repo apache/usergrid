@@ -29,8 +29,7 @@ import com.netflix.curator.framework.recipes.locks.InterProcessMutex;
  *
  * @author tnine
  */
-public class ZookeeperLockImpl implements Lock
-{
+public class ZookeeperLockImpl implements Lock {
 
 
     private InterProcessMutex zkMutex;
@@ -39,8 +38,7 @@ public class ZookeeperLockImpl implements Lock
     /**
      *
      */
-    public ZookeeperLockImpl( InterProcessMutex zkMutex )
-    {
+    public ZookeeperLockImpl( InterProcessMutex zkMutex ) {
         this.zkMutex = zkMutex;
     }
 
@@ -49,15 +47,12 @@ public class ZookeeperLockImpl implements Lock
      * @see org.usergrid.locking.Lock#tryLock(long, java.util.concurrent.TimeUnit)
      */
     @Override
-    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException
-    {
+    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException {
 
-        try
-        {
+        try {
             return zkMutex.acquire( timeout, time );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new UGLockException( "Unable to obtain lock", e );
         }
     }
@@ -67,14 +62,11 @@ public class ZookeeperLockImpl implements Lock
      * @see org.usergrid.locking.Lock#lock()
      */
     @Override
-    public void lock() throws UGLockException
-    {
-        try
-        {
+    public void lock() throws UGLockException {
+        try {
             zkMutex.acquire();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new UGLockException( "Unable to obtain lock", e );
         }
     }
@@ -84,14 +76,11 @@ public class ZookeeperLockImpl implements Lock
      * @see org.usergrid.locking.Lock#unlock()
      */
     @Override
-    public void unlock() throws UGLockException
-    {
-        try
-        {
+    public void unlock() throws UGLockException {
+        try {
             zkMutex.release();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             throw new UGLockException( "Unable to obtain lock", e );
         }
     }

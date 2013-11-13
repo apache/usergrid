@@ -40,8 +40,7 @@ import static org.apache.commons.collections.MapUtils.getString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public class Queue
-{
+public class Queue {
 
     public static final String QUEUE_ID = "uuid";
     public static final String QUEUE_PATH = "path";
@@ -58,68 +57,57 @@ public class Queue
     protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
 
-    public Queue( String path )
-    {
+    public Queue( String path ) {
         setPath( path );
     }
 
 
-    public Queue( Map<String, Object> properties )
-    {
+    public Queue( Map<String, Object> properties ) {
         this.properties.putAll( properties );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return getPath();
     }
 
 
     @JsonIgnore
-    public String getPath()
-    {
+    public String getPath() {
         return getString( properties, QUEUE_PATH );
     }
 
 
-    public void setPath( String path )
-    {
+    public void setPath( String path ) {
         properties.put( QUEUE_PATH, path );
     }
 
 
     @JsonIgnore
-    public long getCreated()
-    {
+    public long getCreated() {
         return getLongValue( properties, QUEUE_CREATED );
     }
 
 
-    public void setCreated( long created )
-    {
+    public void setCreated( long created ) {
         properties.put( QUEUE_CREATED, created );
     }
 
 
     @JsonIgnore
-    public long getModified()
-    {
+    public long getModified() {
         return getLongValue( properties, QUEUE_MODIFIED );
     }
 
 
-    public void setModified( long modified )
-    {
+    public void setModified( long modified ) {
         properties.put( QUEUE_MODIFIED, modified );
     }
 
 
-    public static Queue getDestination( String path )
-    {
-        if ( path == null )
-        {
+    public static Queue getDestination( String path ) {
+        if ( path == null ) {
             return null;
         }
         return new Queue( path );
@@ -127,95 +115,78 @@ public class Queue
 
 
     @JsonAnySetter
-    public void setProperty( String key, Object value )
-    {
+    public void setProperty( String key, Object value ) {
         properties.put( key, value );
     }
 
 
     @JsonAnyGetter
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
-    public static String[] getQueueParentPaths( String queuePath )
-    {
+    public static String[] getQueueParentPaths( String queuePath ) {
         queuePath = queuePath.toLowerCase().trim();
         String[] segments = StringUtils.split( queuePath, '/' );
         String[] paths = new String[segments.length + 1];
         paths[0] = "/";
-        for ( int i = 0; i < segments.length; i++ )
-        {
+        for ( int i = 0; i < segments.length; i++ ) {
             paths[i + 1] = "/" + StringUtils.join( segments, '/', 0, i + 1 ) + "/";
         }
         return paths;
     }
 
 
-    public static String[] getQueuePathSegments( String queuePath )
-    {
+    public static String[] getQueuePathSegments( String queuePath ) {
         queuePath = queuePath.toLowerCase().trim();
         String[] segments = StringUtils.split( queuePath, '/' );
         return segments;
     }
 
 
-    public static String normalizeQueuePath( String queuePath )
-    {
-        if ( queuePath == null )
-        {
+    public static String normalizeQueuePath( String queuePath ) {
+        if ( queuePath == null ) {
             return null;
         }
         queuePath = queuePath.toLowerCase().trim();
-        if ( queuePath.length() == 0 )
-        {
+        if ( queuePath.length() == 0 ) {
             return null;
         }
         queuePath = "/" + StringUtils.join( StringUtils.split( queuePath, '/' ), '/' );
-        if ( !queuePath.endsWith( "/" ) )
-        {
+        if ( !queuePath.endsWith( "/" ) ) {
             queuePath += "/";
         }
         return queuePath;
     }
 
 
-    public static UUID getQueueId( String queuePath )
-    {
-        if ( queuePath == null )
-        {
+    public static UUID getQueueId( String queuePath ) {
+        if ( queuePath == null ) {
             return null;
         }
         // is the queuePath already a UUID?
         UUID uuid = UUIDUtils.tryGetUUID( queuePath );
-        if ( uuid != null )
-        {
+        if ( uuid != null ) {
             return uuid;
         }
         // UUID queuePath string might have been normalized
         // look for /00000000-0000-0000-0000-000000000000/
         // or /00000000-0000-0000-0000-000000000000
-        if ( ( queuePath.length() == 38 ) && queuePath.startsWith( "/" ) && queuePath.endsWith( "/" ) )
-        {
+        if ( ( queuePath.length() == 38 ) && queuePath.startsWith( "/" ) && queuePath.endsWith( "/" ) ) {
             uuid = UUIDUtils.tryExtractUUID( queuePath, 1 );
-            if ( uuid != null )
-            {
+            if ( uuid != null ) {
                 return uuid;
             }
         }
-        else if ( ( queuePath.length() == 37 ) && queuePath.startsWith( "/" ) )
-        {
+        else if ( ( queuePath.length() == 37 ) && queuePath.startsWith( "/" ) ) {
             uuid = UUIDUtils.tryExtractUUID( queuePath, 1 );
-            if ( uuid != null )
-            {
+            if ( uuid != null ) {
                 return uuid;
             }
         }
         queuePath = normalizeQueuePath( queuePath );
-        if ( queuePath == null )
-        {
+        if ( queuePath == null ) {
             return null;
         }
         uuid = nameUUIDFromBytes( queuePath.getBytes() );
@@ -224,116 +195,97 @@ public class Queue
 
 
     @JsonIgnore
-    public UUID getUuid()
-    {
+    public UUID getUuid() {
         return getQueueId( getPath() );
     }
 
 
-    public float getFloatProperty( String name )
-    {
+    public float getFloatProperty( String name ) {
         return getFloatValue( properties, name );
     }
 
 
-    public void setFloatProperty( String name, float value )
-    {
+    public void setFloatProperty( String name, float value ) {
         properties.put( name, value );
     }
 
 
-    public double getDoubleProperty( String name )
-    {
+    public double getDoubleProperty( String name ) {
         return getDoubleValue( properties, name );
     }
 
 
-    public void setDoubleProperty( String name, double value )
-    {
+    public void setDoubleProperty( String name, double value ) {
         properties.put( name, value );
     }
 
 
-    public int getIntProperty( String name )
-    {
+    public int getIntProperty( String name ) {
         return getIntValue( properties, name );
     }
 
 
-    public void setIntProperty( String name, int value )
-    {
+    public void setIntProperty( String name, int value ) {
         properties.put( name, value );
     }
 
 
-    public long getLongProperty( String name )
-    {
+    public long getLongProperty( String name ) {
         return getLongValue( properties, name );
     }
 
 
-    public void setLongProperty( String name, long value )
-    {
+    public void setLongProperty( String name, long value ) {
         properties.put( name, value );
     }
 
 
-    public Object getObjectProperty( String name )
-    {
+    public Object getObjectProperty( String name ) {
         return properties.get( name );
     }
 
 
-    public void setObjectProperty( String name, Object value )
-    {
+    public void setObjectProperty( String name, Object value ) {
         properties.put( name, value );
     }
 
 
-    public short getShortProperty( String name )
-    {
+    public short getShortProperty( String name ) {
         return getShortValue( properties, name );
     }
 
 
-    public void setShortProperty( String name, short value )
-    {
+    public void setShortProperty( String name, short value ) {
         properties.put( name, value );
     }
 
 
-    public String getStringProperty( String name )
-    {
+    public String getStringProperty( String name ) {
         return getString( properties, name );
     }
 
 
-    public void setStringProperty( String name, String value )
-    {
+    public void setStringProperty( String name, String value ) {
         properties.put( name, value );
     }
 
 
-    public boolean getBooleanProperty( String name )
-    {
+    public boolean getBooleanProperty( String name ) {
         return getBooleanValue( properties, name );
     }
 
 
-    public void setBooleanProperty( String name, boolean value )
-    {
+    public void setBooleanProperty( String name, boolean value ) {
         properties.put( name, value );
     }
 
 
-    public byte getByteProperty( String name )
-    {
+    public byte getByteProperty( String name ) {
         return getByteValue( properties, name );
     }
 
 
-    public void setByteProperty( String name, byte value )
-    {
+    public void setByteProperty( String name, byte value ) {
         properties.put( name, value );
     }
 }

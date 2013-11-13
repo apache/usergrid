@@ -33,14 +33,12 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 
-public class JSONPUtils
-{
+public class JSONPUtils {
 
     static Map<String, Set<String>> javascriptTypes = new HashMap<String, Set<String>>();
 
 
-    static
-    {
+    static {
         // application/javascript, application/x-javascript, text/ecmascript,
         // application/ecmascript, text/jscript
         javascriptTypes.put( "application",
@@ -49,16 +47,13 @@ public class JSONPUtils
     }
 
 
-    public static boolean isJavascript( MediaType m )
-    {
-        if ( m == null )
-        {
+    public static boolean isJavascript( MediaType m ) {
+        if ( m == null ) {
             return false;
         }
 
         Set<String> subtypes = javascriptTypes.get( m.getType() );
-        if ( subtypes == null )
-        {
+        if ( subtypes == null ) {
             return false;
         }
 
@@ -66,12 +61,9 @@ public class JSONPUtils
     }
 
 
-    public static boolean isJavascript( List<MediaType> l )
-    {
-        for ( MediaType m : l )
-        {
-            if ( isJavascript( m ) )
-            {
+    public static boolean isJavascript( List<MediaType> l ) {
+        for ( MediaType m : l ) {
+            if ( isJavascript( m ) ) {
                 return true;
             }
         }
@@ -79,41 +71,33 @@ public class JSONPUtils
     }
 
 
-    public static String wrapJSONPResponse( String callback, String jsonResponse )
-    {
-        if ( isNotBlank( callback ) )
-        {
+    public static String wrapJSONPResponse( String callback, String jsonResponse ) {
+        if ( isNotBlank( callback ) ) {
             return callback + "(" + jsonResponse + ")";
         }
-        else
-        {
+        else {
             return jsonResponse;
         }
     }
 
 
-    public static String wrapJSONPResponse( MediaType m, String callback, String jsonResponse )
-    {
-        if ( isJavascript( m ) && isNotBlank( callback ) )
-        {
+    public static String wrapJSONPResponse( MediaType m, String callback, String jsonResponse ) {
+        if ( isJavascript( m ) && isNotBlank( callback ) ) {
             String jsResponse = callback + "(" + jsonResponse + ")";
             return jsResponse;
         }
-        else
-        {
+        else {
             return jsonResponse;
         }
     }
 
 
-    public static MediaType jsonMediaType( String callback )
-    {
+    public static MediaType jsonMediaType( String callback ) {
         return isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
     }
 
 
-    public static String wrapWithCallback( AccessInfo accessInfo, String callback )
-    {
+    public static String wrapWithCallback( AccessInfo accessInfo, String callback ) {
         return wrapJSONPResponse( callback, mapToJsonString( accessInfo ) );
     }
 }

@@ -16,32 +16,27 @@
 package org.usergrid.management.exceptions;
 
 
-public class UnconfirmedAdminUserException extends ManagementException
-{
+public class UnconfirmedAdminUserException extends ManagementException {
 
     private static final long serialVersionUID = 1L;
 
 
-    public UnconfirmedAdminUserException()
-    {
+    public UnconfirmedAdminUserException() {
         super();
     }
 
 
-    public UnconfirmedAdminUserException( String arg0, Throwable arg1 )
-    {
+    public UnconfirmedAdminUserException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
 
-    public UnconfirmedAdminUserException( String arg0 )
-    {
+    public UnconfirmedAdminUserException( String arg0 ) {
         super( arg0 );
     }
 
 
-    public UnconfirmedAdminUserException( Throwable arg0 )
-    {
+    public UnconfirmedAdminUserException( Throwable arg0 ) {
         super( arg0 );
     }
 }

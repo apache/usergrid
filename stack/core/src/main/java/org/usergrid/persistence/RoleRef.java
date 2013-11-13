@@ -19,8 +19,7 @@ package org.usergrid.persistence;
 import java.util.UUID;
 
 
-public interface RoleRef extends EntityRef
-{
+public interface RoleRef extends EntityRef {
 
     public UUID getGroupId();
 

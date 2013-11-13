@@ -28,26 +28,21 @@ import static org.usergrid.utils.ConversionUtils.bytes;
 
 
 /** @author tnine */
-public class LockHelper
-{
+public class LockHelper {
 
 
     private static final NoOpLockImpl NO_OP_LOCK = new NoOpLockImpl();
 
 
     /**
-     * Build a string path for this lock.  Since it's specifically for updating a property,
-     * the property needs appended to
-     * the path.  If the property is null, it's getting deleted, so a lock on it isn't neccessary.  In that case,
-     * a no op
-     * lock is returned
+     * Build a string path for this lock.  Since it's specifically for updating a property, the property needs appended
+     * to the path.  If the property is null, it's getting deleted, so a lock on it isn't neccessary.  In that case, a
+     * no op lock is returned
      */
     public static Lock getUniqueUpdateLock( LockManager manager, UUID applicationId, Object value, String... path )
-            throws UGLockException
-    {
+            throws UGLockException {
         //we have no value, therefore there's nothing to lock
-        if ( value == null )
-        {
+        if ( value == null ) {
             return NO_OP_LOCK;
         }
 

@@ -26,7 +26,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /** Requires that the current Shiro security subject be the user specified in the current REST request path. */
 @Retention(value = RUNTIME)
 @Target(value = { METHOD })
-public @interface RequireAdminUserAccess
-{
+public @interface RequireAdminUserAccess {
 
 }

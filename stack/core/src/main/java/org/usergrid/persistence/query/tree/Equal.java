@@ -22,21 +22,18 @@ import org.usergrid.persistence.exceptions.NoIndexException;
 
 
 /** @author tnine */
-public class Equal extends EqualityOperand
-{
+public class Equal extends EqualityOperand {
 
     /**
      * @param property
      * @param literal
      */
-    public Equal( Token t )
-    {
+    public Equal( Token t ) {
         super( t );
     }
 
 
-    public Equal()
-    {
+    public Equal() {
         super( new ClassicToken( 0, "=" ) );
     }
 
@@ -49,8 +46,7 @@ public class Equal extends EqualityOperand
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException
-    {
+    public void visit( QueryVisitor visitor ) throws NoIndexException {
         visitor.visit( this );
     }
 }

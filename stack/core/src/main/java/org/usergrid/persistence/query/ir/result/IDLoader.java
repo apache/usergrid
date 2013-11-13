@@ -6,11 +6,9 @@ import java.util.List;
 import org.usergrid.persistence.Results;
 
 
-public class IDLoader implements ResultsLoader
-{
+public class IDLoader implements ResultsLoader {
 
-    public IDLoader()
-    {
+    public IDLoader() {
     }
 
 
@@ -18,8 +16,7 @@ public class IDLoader implements ResultsLoader
      * @see org.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
      */
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception
-    {
+    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
         Results r = new Results();
         r.setIds( ScanColumnTransformer.getIds( entityIds ) );
         return r;

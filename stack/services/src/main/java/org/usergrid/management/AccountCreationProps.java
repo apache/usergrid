@@ -19,8 +19,7 @@ package org.usergrid.management;
 import java.util.Properties;
 
 
-public interface AccountCreationProps
-{
+public interface AccountCreationProps {
     public static final String PROPERTIES_MAILER_EMAIL = "usergrid.management.mailer";
 
     public static final String PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED =

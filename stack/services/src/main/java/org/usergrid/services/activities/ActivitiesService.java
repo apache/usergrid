@@ -21,14 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.services.AbstractCollectionService;
 
 
-public class ActivitiesService extends AbstractCollectionService
-{
+public class ActivitiesService extends AbstractCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( ActivitiesService.class );
 
 
-    public ActivitiesService()
-    {
+    public ActivitiesService() {
         super();
         logger.info( "/activities" );
     }

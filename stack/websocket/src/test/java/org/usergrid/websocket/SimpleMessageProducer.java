@@ -30,8 +30,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
 
-public class SimpleMessageProducer
-{
+public class SimpleMessageProducer {
 
     private static final Logger logger = LoggerFactory.getLogger( SimpleMessageProducer.class );
 
@@ -41,20 +40,16 @@ public class SimpleMessageProducer
     protected int numberOfMessages = 100;
 
 
-    public void sendMessages() throws JMSException
-    {
+    public void sendMessages() throws JMSException {
 
-        for ( int i = 0; i < numberOfMessages; ++i )
-        {
+        for ( int i = 0; i < numberOfMessages; ++i ) {
 
             final StringBuilder payload = new StringBuilder();
             payload.append( "Message [" ).append( i ).append( "] sent at: " ).append( new Date() );
             final int j = i;
-            jmsTemplate.send( new MessageCreator()
-            {
+            jmsTemplate.send( new MessageCreator() {
                 @Override
-                public Message createMessage( Session session ) throws JMSException
-                {
+                public Message createMessage( Session session ) throws JMSException {
                     TextMessage message = session.createTextMessage( payload.toString() );
                     message.setIntProperty( "messageCount", j );
                     logger.info( "Sending message number [" + j + "]" );

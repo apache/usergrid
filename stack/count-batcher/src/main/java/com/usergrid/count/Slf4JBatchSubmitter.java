@@ -37,8 +37,7 @@ import com.yammer.metrics.core.TimerContext;
  *
  * @author zznate
  */
-public class Slf4JBatchSubmitter implements BatchSubmitter
-{
+public class Slf4JBatchSubmitter implements BatchSubmitter {
 
     // TODO custom logger for printing counts
     // - should be configed programatically
@@ -52,20 +51,16 @@ public class Slf4JBatchSubmitter implements BatchSubmitter
 
 
     @Override
-    public Future submit( final Collection<Count> counts )
-    {
-        return executor.submit( new Callable<Object>()
-        {
+    public Future submit( final Collection<Count> counts ) {
+        return executor.submit( new Callable<Object>() {
             final TimerContext timer = addTimer.time();
 
 
             @Override
-            public Object call() throws Exception
-            {
+            public Object call() throws Exception {
                 // TODO perhaps this could be pushed down further into CountProducer Impl?
                 // - this would leave generic submitter class
-                for ( Count c : counts )
-                {
+                for ( Count c : counts ) {
                     log.info( "found count {}", c );
                 }
                 timer.stop();
@@ -75,8 +70,7 @@ public class Slf4JBatchSubmitter implements BatchSubmitter
     }
 
 
-    public void shutdown()
-    {
+    public void shutdown() {
         log.warn( "Shutdown Slf4jBatchSubmitter" );
         executor.shutdown();
     }

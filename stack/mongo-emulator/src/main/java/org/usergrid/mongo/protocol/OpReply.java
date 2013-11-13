@@ -29,8 +29,7 @@ import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.usergrid.mongo.utils.BSONUtils;
 
 
-public class OpReply extends Message
-{
+public class OpReply extends Message {
 
     int responseFlags = 8;
     long cursorID;
@@ -39,77 +38,64 @@ public class OpReply extends Message
     List<BSONObject> documents = new ArrayList<BSONObject>();
 
 
-    public OpReply()
-    {
+    public OpReply() {
         opCode = OP_REPLY;
     }
 
 
-    public OpReply( Message message )
-    {
+    public OpReply( Message message ) {
         opCode = OP_REPLY;
         responseTo = message.getRequestID();
     }
 
 
-    public int getResponseFlags()
-    {
+    public int getResponseFlags() {
         return responseFlags;
     }
 
 
-    public void setResponseFlags( int responseFlags )
-    {
+    public void setResponseFlags( int responseFlags ) {
         this.responseFlags = responseFlags;
     }
 
 
-    public long getCursorID()
-    {
+    public long getCursorID() {
         return cursorID;
     }
 
 
-    public void setCursorID( long cursorID )
-    {
+    public void setCursorID( long cursorID ) {
         this.cursorID = cursorID;
     }
 
 
-    public int getStartingFrom()
-    {
+    public int getStartingFrom() {
         return startingFrom;
     }
 
 
-    public void setStartingFrom( int startingFrom )
-    {
+    public void setStartingFrom( int startingFrom ) {
         this.startingFrom = startingFrom;
     }
 
 
-    public int getNumberReturned()
-    {
+    public int getNumberReturned() {
         return numberReturned;
     }
 
 
-    public void setNumberReturned( int numberReturned )
-    {
+    public void setNumberReturned( int numberReturned ) {
         this.numberReturned = numberReturned;
     }
 
 
-    public List<BSONObject> getDocuments()
-    {
+    public List<BSONObject> getDocuments() {
         return documents;
     }
 
 
-    public void setDocuments( List<BSONObject> documents )
-    {
-        if ( documents == null )
-        {
+    public void setDocuments( List<BSONObject> documents ) {
+        if ( documents == null ) {
             documents = new ArrayList<BSONObject>();
         }
         this.documents = documents;
@@ -117,15 +103,13 @@ public class OpReply extends Message
     }
 
 
-    public void addDocument( BSONObject document )
-    {
+    public void addDocument( BSONObject document ) {
         documents.add( document );
         numberReturned = documents.size();
     }
 
 
-    public void addDocument( Map<?, ?> map )
-    {
+    public void addDocument( Map<?, ?> map ) {
         BSONObject b = new BasicBSONObject();
         b.putAll( map );
         documents.add( b );
@@ -134,8 +118,7 @@ public class OpReply extends Message
 
 
     @Override
-    public void decode( ChannelBuffer buffer ) throws IOException
-    {
+    public void decode( ChannelBuffer buffer ) throws IOException {
         super.decode( buffer );
 
         responseFlags = buffer.readInt();
@@ -143,16 +126,14 @@ public class OpReply extends Message
         startingFrom = buffer.readInt();
         numberReturned = buffer.readInt();
 
-        while ( buffer.readable() )
-        {
+        while ( buffer.readable() ) {
             documents.add( BSONUtils.decoder().readObject( new ChannelBufferInputStream( buffer ) ) );
         }
     }
 
 
     @Override
-    public ChannelBuffer encode( ChannelBuffer buffer )
-    {
+    public ChannelBuffer encode( ChannelBuffer buffer ) {
         int l = 36; // (9 ints * 4 bytes)
 
         List<ByteBuffer> encodedDocuments = encodeDocuments( documents );
@@ -168,8 +149,7 @@ public class OpReply extends Message
         buffer.writeInt( startingFrom );
         buffer.writeInt( numberReturned );
 
-        for ( ByteBuffer d : encodedDocuments )
-        {
+        for ( ByteBuffer d : encodedDocuments ) {
             buffer.writeBytes( d );
         }
 
@@ -177,8 +157,7 @@ public class OpReply extends Message
     }
 
 
-    public static OpReply errorReply( String message )
-    {
+    public static OpReply errorReply( String message ) {
         OpReply reply = new OpReply();
         // reply.responseFlags = 1;
         BSONObject b = new BasicBSONObject();
@@ -193,15 +172,12 @@ public class OpReply extends Message
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         String docs_str = null;
-        try
-        {
+        try {
             docs_str = documents.toString();
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             docs_str = "error(" + e.getMessage() + ")";
         }
 

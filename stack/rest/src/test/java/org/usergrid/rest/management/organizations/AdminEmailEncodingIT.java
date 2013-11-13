@@ -20,16 +20,14 @@ import static org.junit.Assert.assertNotNull;
  * @author tnine
  */
 @Concurrent()
-public class AdminEmailEncodingIT extends AbstractRestIT
-{
+public class AdminEmailEncodingIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void getTokenPlus() throws Exception
-    {
+    public void getTokenPlus() throws Exception {
         String org = "AdminEmailEncodingTestgetTokenPlus";
         String app = "Plus";
 
@@ -38,8 +36,7 @@ public class AdminEmailEncodingIT extends AbstractRestIT
 
 
     @Test
-    public void getTokenUnderscore() throws Exception
-    {
+    public void getTokenUnderscore() throws Exception {
         String org = "AdminEmailEncodingTestgetTokenUnderscore";
         String app = "Underscore";
 
@@ -48,8 +45,7 @@ public class AdminEmailEncodingIT extends AbstractRestIT
 
 
     @Test
-    public void getTokenDash() throws Exception
-    {
+    public void getTokenDash() throws Exception {
         String org = "AdminEmailEncodingTestgetTokenDash";
         String app = "Dash";
 
@@ -57,8 +53,7 @@ public class AdminEmailEncodingIT extends AbstractRestIT
     }
 
 
-    private void doTest( String symbol, String org, String app )
-    {
+    private void doTest( String symbol, String org, String app ) {
 
         org = org.toLowerCase();
         app = app.toLowerCase();

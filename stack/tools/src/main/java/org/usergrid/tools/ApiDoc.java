@@ -47,15 +47,13 @@ import org.apache.commons.io.FileUtils;
 import static org.usergrid.utils.StringUtils.readClasspathFileAsString;
 
 
-public class ApiDoc extends ToolBase
-{
+public class ApiDoc extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( ApiDoc.class );
 
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option generateWadl = OptionBuilder.create( "wadl" );
 
@@ -67,8 +65,7 @@ public class ApiDoc extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         logger.info( "Generating applications docs..." );
 
         ApiListing listing = loadListing( "applications" );
@@ -83,8 +80,7 @@ public class ApiDoc extends ToolBase
     }
 
 
-    public ApiListing loadListing( String section )
-    {
+    public ApiListing loadListing( String section ) {
         Yaml yaml = new Yaml( new Constructor( ApiListing.class ) );
         String yamlString = readClasspathFileAsString( "/apidoc/" + section + ".yaml" );
         ApiListing listing = ( ApiListing ) yaml.load( yamlString );
@@ -92,8 +88,7 @@ public class ApiDoc extends ToolBase
     }
 
 
-    public void output( ApiListing listing, String section ) throws IOException, TransformerException
-    {
+    public void output( ApiListing listing, String section ) throws IOException, TransformerException {
         Document doc = listing.createWADLApplication();
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -112,8 +107,7 @@ public class ApiDoc extends ToolBase
     }
 
 
-    public void addCollections( ApiListing listing )
-    {
+    public void addCollections( ApiListing listing ) {
         Map<String, CollectionInfo> collections = Schema.getDefaultSchema().getCollections( Application.ENTITY_TYPE );
         collections.clear();
     }

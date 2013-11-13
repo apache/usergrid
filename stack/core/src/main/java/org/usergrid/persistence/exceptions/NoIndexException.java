@@ -21,8 +21,7 @@ package org.usergrid.persistence.exceptions;
  *
  * @author tnine
  */
-public class NoIndexException extends PersistenceException
-{
+public class NoIndexException extends PersistenceException {
 
     /**
      *
@@ -32,8 +31,7 @@ public class NoIndexException extends PersistenceException
     final String propertyName;
 
 
-    public NoIndexException( String entityType, String propertyName )
-    {
+    public NoIndexException( String entityType, String propertyName ) {
         super( "Entity '" + entityType + "' with property named '" + propertyName
                 + "' is not indexed.  You cannot use the this field in queries." );
         this.entityType = entityType;
@@ -41,14 +39,12 @@ public class NoIndexException extends PersistenceException
     }
 
 
-    public String getEntityType()
-    {
+    public String getEntityType() {
         return entityType;
     }
 
 
-    public String getPropertyName()
-    {
+    public String getPropertyName() {
         return propertyName;
     }
 }

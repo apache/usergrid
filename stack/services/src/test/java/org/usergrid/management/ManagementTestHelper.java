@@ -22,8 +22,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.security.tokens.TokenService;
 
 
-public interface ManagementTestHelper
-{
+public interface ManagementTestHelper {
 
     public abstract EntityManagerFactory getEntityManagerFactory();
 

@@ -27,8 +27,7 @@ import org.usergrid.persistence.CredentialsInfo;
 
 /** @author tnine */
 @Component("org.usergrid.security.crypto.command.Sha1HashCommand")
-public class Sha1HashCommand extends SaltedHasherCommand
-{
+public class Sha1HashCommand extends SaltedHasherCommand {
 
     private static final Logger logger = LoggerFactory.getLogger( Sha1HashCommand.class );
 
@@ -38,15 +37,12 @@ public class Sha1HashCommand extends SaltedHasherCommand
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
     @Override
-    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         java.security.MessageDigest d = null;
-        try
-        {
+        try {
             d = java.security.MessageDigest.getInstance( "SHA-1" );
         }
-        catch ( NoSuchAlgorithmException e )
-        {
+        catch ( NoSuchAlgorithmException e ) {
             logger.error( "Unable to get SHA1 algorithm", e );
             throw new RuntimeException( e );
         }
@@ -62,8 +58,7 @@ public class Sha1HashCommand extends SaltedHasherCommand
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
     @Override
-    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         return hash( input, info, userId, applicationId );
     }
 
@@ -72,8 +67,7 @@ public class Sha1HashCommand extends SaltedHasherCommand
      * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
      */
     @Override
-    public String getName()
-    {
+    public String getName() {
         return SHA1;
     }
 }

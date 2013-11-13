@@ -16,45 +16,38 @@
 package org.usergrid.management;
 
 
-public class OrganizationOwnerInfo
-{
+public class OrganizationOwnerInfo {
 
     UserInfo owner;
     OrganizationInfo organization;
 
 
-    public OrganizationOwnerInfo()
-    {
+    public OrganizationOwnerInfo() {
     }
 
 
-    public OrganizationOwnerInfo( UserInfo owner, OrganizationInfo organization )
-    {
+    public OrganizationOwnerInfo( UserInfo owner, OrganizationInfo organization ) {
         this.owner = owner;
         this.organization = organization;
     }
 
 
-    public UserInfo getOwner()
-    {
+    public UserInfo getOwner() {
         return owner;
     }
 
 
-    public void setOwner( UserInfo owner )
-    {
+    public void setOwner( UserInfo owner ) {
         this.owner = owner;
     }
 
 
-    public OrganizationInfo getOrganization()
-    {
+    public OrganizationInfo getOrganization() {
         return organization;
     }
 
 
-    public void setOrganization( OrganizationInfo organization )
-    {
+    public void setOrganization( OrganizationInfo organization ) {
         this.organization = organization;
     }
 }

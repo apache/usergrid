@@ -6,8 +6,7 @@ import java.util.Map;
 import org.usergrid.security.AuthPrincipalInfo;
 
 
-public interface TokenService
-{
+public interface TokenService {
 
     /**
      * Create the token with the given duration.  A duration value of 0 equals the default value specified in the
@@ -34,8 +33,7 @@ public interface TokenService
 
     /**
      * Remove all tokens currently issued for the given AuthPrincipal.  Removes the specified type of token for the
-     * given
-     * principal uuid and application uuid
+     * given principal uuid and application uuid
      */
     public void removeTokens( AuthPrincipalInfo principal ) throws Exception;
 }

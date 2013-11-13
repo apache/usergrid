@@ -31,23 +31,20 @@ import static org.junit.Assert.assertNotNull;
 
 
 @Concurrent()
-public class ServiceFactoryIT extends AbstractServiceIT
-{
+public class ServiceFactoryIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceFactoryIT.class );
 
 
     @Ignore
     @Test
-    public void testServiceFactory() throws Exception
-    {
+    public void testServiceFactory() throws Exception {
         logger.info( "test service factory" );
     }
 
 
     @Test
-    public void testPackagePrefixes() throws Exception
-    {
+    public void testPackagePrefixes() throws Exception {
         logger.info( "test package prefixes" );
 
         UUID applicationId = setup.getEmf().createApplication( "org", "app" );

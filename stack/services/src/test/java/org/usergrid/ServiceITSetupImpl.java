@@ -18,8 +18,7 @@ import org.usergrid.services.ServiceManagerFactory;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
-public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetup
-{
+public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetup {
     private static final Logger LOG = LoggerFactory.getLogger( ServiceITSetupImpl.class );
 
     private ServiceManagerFactory smf;
@@ -30,21 +29,18 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private Properties properties;
 
 
-    public ServiceITSetupImpl( CassandraResource cassandraResource )
-    {
+    public ServiceITSetupImpl( CassandraResource cassandraResource ) {
         super( cassandraResource );
     }
 
 
-    protected void after( Description description )
-    {
+    protected void after( Description description ) {
         super.after( description );
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
     }
 
 
-    protected void before( Description description ) throws Throwable
-    {
+    protected void before( Description description ) throws Throwable {
         super.before( description );
         managementService = cassandraResource.getBean( ManagementService.class );
         applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
@@ -58,21 +54,16 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
 
     @Override
-    public Statement apply( final Statement base, final Description description )
-    {
-        return new Statement()
-        {
+    public Statement apply( final Statement base, final Description description ) {
+        return new Statement() {
             @Override
-            public void evaluate() throws Throwable
-            {
+            public void evaluate() throws Throwable {
                 before( description );
 
-                try
-                {
+                try {
                     base.evaluate();
                 }
-                finally
-                {
+                finally {
                     after( description );
                 }
             }
@@ -81,23 +72,19 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
 
     @Override
-    public CassandraService getCassSvc()
-    {
+    public CassandraService getCassSvc() {
         return cassandraResource.getBean( CassandraService.class );
     }
 
 
     @Override
-    public ManagementService getMgmtSvc()
-    {
+    public ManagementService getMgmtSvc() {
         return managementService;
     }
 
 
-    public ServiceManagerFactory getSmf()
-    {
-        if ( smf == null )
-        {
+    public ServiceManagerFactory getSmf() {
+        if ( smf == null ) {
             smf = cassandraResource.getBean( ServiceManagerFactory.class );
         }
 
@@ -106,43 +93,37 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
 
     @Override
-    public ApplicationCreator getAppCreator()
-    {
+    public ApplicationCreator getAppCreator() {
         return applicationCreator;
     }
 
 
     @Override
-    public TokenService getTokenSvc()
-    {
+    public TokenService getTokenSvc() {
         return tokenService;
     }
 
 
     @Override
-    public Properties getProps()
-    {
+    public Properties getProps() {
         return properties;
     }
 
 
     @Override
-    public Object set( String key, String value )
-    {
+    public Object set( String key, String value ) {
         return properties.setProperty( key, value );
     }
 
 
     @Override
-    public String get( String key )
-    {
+    public String get( String key ) {
         return properties.getProperty( key );
     }
 
 
     @Override
-    public SignInProviderFactory getProviderFactory()
-    {
+    public SignInProviderFactory getProviderFactory() {
         return providerFactory;
     }
 }

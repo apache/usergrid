@@ -28,23 +28,20 @@ import static org.junit.Assert.fail;
 
 
 @Concurrent()
-public class QueueResourceShortIT extends AbstractQueueResourceIT
-{
+public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void inOrder()
-    {
+    public void inOrder() {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -59,14 +56,12 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
 
     @Test
-    public void inOrderPaging()
-    {
+    public void inOrderPaging() {
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -86,15 +81,13 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
     /** Read all messages with the client, then re-issue the reads from the start position to test we do this
      * properly */
     @Test
-    public void startPaging()
-    {
+    public void startPaging() {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -118,15 +111,13 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
 
     @Test
-    public void reverseOrderPaging()
-    {
+    public void reverseOrderPaging() {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -148,17 +139,14 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
     /** Tests that after delete, we can't receive messages */
     @Test
-    public void delete()
-    {
+    public void delete() {
 
         Queue queue = context.application().queues().queue( "test" );
 
-        try
-        {
+        try {
             queue.delete();
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             assertEquals( 501, uie.getResponse().getClientResponseStatus().getStatusCode() );
             return;
         }
@@ -170,15 +158,13 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
     /** Read messages ad-hoc with filtering */
     @Test
     @Ignore("Currently unsupported.  Needs fixed with iterators")
-    public void filterForward()
-    {
+    public void filterForward() {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             Map<String, Object> data = new HashMap<String, Object>();
             data.put( "name", "todd" );
             data.put( "id", i );
@@ -205,15 +191,13 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
     /** Read messages ad-hoc with filtering */
     @Test
     @Ignore("Currently unsupported.  Needs fixed with iterators")
-    public void filterReverse()
-    {
+    public void filterReverse() {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "name", "todd" ).map( "id", String.valueOf( i ) ).map( "indexed", "true" ) );
         }
 
@@ -233,15 +217,13 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
 
     @Test
-    public void topic()
-    {
+    public void topic() {
 
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -270,8 +252,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
 
     @Test
-    public void subscribe()
-    {
+    public void subscribe() {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -280,8 +261,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -312,8 +292,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
     /** Tests that after unsubscribing, we don't continue to deliver messages to other queues */
     @Test
-    public void unsubscribe()
-    {
+    public void unsubscribe() {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -322,8 +301,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
         final int count = 30;
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -353,8 +331,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
         queue.subscribers().unsubscribe( "testsub1" );
 
-        for ( int i = 0; i < count; i++ )
-        {
+        for ( int i = 0; i < count; i++ ) {
             queue.post( MapUtils.hashMap( "id", i ) );
         }
 
@@ -383,10 +360,9 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
 
     @Test
-    @Ignore("This is caused by timeuuids getting generated out of order within a millisecond.  Disabling until the " +
-            "timeuuid issue is resolved next sprint.  For job scheduling, this is not an issue")
-    public void concurrentConsumers() throws InterruptedException, ExecutionException
-    {
+    @Ignore("This is caused by timeuuids getting generated out of order within a millisecond.  Disabling until the "
+            + "timeuuid issue is resolved next sprint.  For job scheduling, this is not an issue")
+    public void concurrentConsumers() throws InterruptedException, ExecutionException {
 
         int consumerSize = 8;
         int count = 10000;
@@ -397,13 +373,11 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
         Queue queue = context.application().queues().queue( "test" );
 
         // post the messages in batch
-        for ( int i = 0; i < count / batchsize; i++ )
-        {
+        for ( int i = 0; i < count / batchsize; i++ ) {
 
             @SuppressWarnings("unchecked") Map<String, ?>[] elements = new Map[batchsize];
 
-            for ( int j = 0; j < batchsize; j++ )
-            {
+            for ( int j = 0; j < batchsize; j++ ) {
                 elements[j] = MapUtils.hashMap( "id", i * batchsize + j );
             }
 
@@ -423,16 +397,14 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT
 
         List<Future<Void>> futures = new ArrayList<Future<Void>>( consumerSize );
 
-        for ( int i = 0; i < consumerSize; i++ )
-        {
+        for ( int i = 0; i < consumerSize; i++ ) {
             Future<Void> future = executor.submit( new QueueClient( queue, transHandler, command ) );
 
             futures.add( future );
         }
 
         // wait for tests to finish
-        for ( Future<Void> future : futures )
-        {
+        for ( Future<Void> future : futures ) {
             future.get();
         }
 

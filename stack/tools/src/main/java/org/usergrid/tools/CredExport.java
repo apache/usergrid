@@ -29,13 +29,11 @@ import org.apache.commons.cli.Options;
 
 
 /** @author tnine */
-public class CredExport extends ToolBase
-{
+public class CredExport extends ToolBase {
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
@@ -65,8 +63,7 @@ public class CredExport extends ToolBase
      * org.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         String appOption = line.getOptionValue( "app" );
         String orgOption = line.getOptionValue( "org" );
 
@@ -76,17 +73,14 @@ public class CredExport extends ToolBase
 
         OrganizationInfo org = null;
 
-        if ( orgId != null )
-        {
+        if ( orgId != null ) {
             org = managementService.getOrganizationByUuid( orgId );
         }
-        else
-        {
+        else {
             org = managementService.getOrganizationByName( orgOption );
         }
 
-        if ( org == null )
-        {
+        if ( org == null ) {
             System.out.println( String.format( "Unable to find org with name or id %s", orgOption ) );
             System.exit( 1 );
         }
@@ -95,17 +89,14 @@ public class CredExport extends ToolBase
 
         ApplicationInfo app = null;
 
-        if ( appID != null )
-        {
+        if ( appID != null ) {
             app = managementService.getApplicationInfo( appID );
         }
-        else
-        {
+        else {
             app = managementService.getApplicationInfo( orgOption + "/" + appOption );
         }
 
-        if ( app == null )
-        {
+        if ( app == null ) {
             System.err.println( String.format( "Could not find an appliation with the name or id of %s", appOption ) );
             System.exit( 2 );
         }

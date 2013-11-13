@@ -33,18 +33,15 @@ import org.usergrid.mongo.protocol.OpReply;
 import org.usergrid.mongo.protocol.OpUpdate;
 
 
-public class MongoMessageDecoder extends FrameDecoder
-{
+public class MongoMessageDecoder extends FrameDecoder {
 
     private static final Logger logger = LoggerFactory.getLogger( MongoMessageDecoder.class );
 
 
     @Override
-    protected Object decode( ChannelHandlerContext ctx, Channel channel, ChannelBuffer buf ) throws Exception
-    {
+    protected Object decode( ChannelHandlerContext ctx, Channel channel, ChannelBuffer buf ) throws Exception {
 
-        if ( buf.readableBytes() < 4 )
-        {
+        if ( buf.readableBytes() < 4 ) {
             logger.info( "Needed at least 4 bytes, only " + buf.readableBytes() + " available" );
             return null;
         }
@@ -53,14 +50,12 @@ public class MongoMessageDecoder extends FrameDecoder
 
         int length = buf.getInt( buf.readerIndex() );
 
-        if ( length < 0 )
-        {
+        if ( length < 0 ) {
             logger.info( "Negative length " + length );
             return null;
         }
 
-        if ( buf.readableBytes() < length )
-        {
+        if ( buf.readableBytes() < length ) {
             logger.info( "Needed " + length + " bytes, only " + buf.readableBytes() + " available" );
             return null;
         }
@@ -73,45 +68,35 @@ public class MongoMessageDecoder extends FrameDecoder
         // logger.info("Mongo message opcode " + opCode + " received");
 
         Message message = null;
-        if ( opCode == Message.OP_DELETE )
-        {
+        if ( opCode == Message.OP_DELETE ) {
             message = new OpDelete();
         }
-        else if ( opCode == Message.OP_GET_MORE )
-        {
+        else if ( opCode == Message.OP_GET_MORE ) {
             message = new OpGetMore();
         }
-        else if ( opCode == Message.OP_INSERT )
-        {
+        else if ( opCode == Message.OP_INSERT ) {
             message = new OpInsert();
         }
-        else if ( opCode == Message.OP_KILL_CURSORS )
-        {
+        else if ( opCode == Message.OP_KILL_CURSORS ) {
             message = new OpKillCursors();
         }
-        else if ( opCode == Message.OP_MSG )
-        {
+        else if ( opCode == Message.OP_MSG ) {
             message = new OpMsg();
         }
-        else if ( opCode == Message.OP_QUERY )
-        {
+        else if ( opCode == Message.OP_QUERY ) {
             message = new OpQuery();
         }
-        else if ( opCode == Message.OP_REPLY )
-        {
+        else if ( opCode == Message.OP_REPLY ) {
             message = new OpReply();
         }
-        else if ( opCode == Message.OP_UPDATE )
-        {
+        else if ( opCode == Message.OP_UPDATE ) {
             message = new OpUpdate();
         }
 
-        if ( message != null )
-        {
+        if ( message != null ) {
             message.decode( frame );
         }
-        else
-        {
+        else {
             logger.info( "Mongo unrecongnized message opcode " + opCode + " received" );
         }
 
@@ -124,8 +109,7 @@ public class MongoMessageDecoder extends FrameDecoder
     static MongoMessageDecoder _instance = new MongoMessageDecoder();
 
 
-    public static Message decode( ChannelBuffer buf ) throws Exception
-    {
+    public static Message decode( ChannelBuffer buf ) throws Exception {
         return ( Message ) _instance.decode( null, null, buf.duplicate() );
     }
 }

@@ -20,8 +20,7 @@ import com.sun.jersey.api.client.WebResource;
 
 
 /** @author tnine */
-public class RootResource extends NamedResource
-{
+public class RootResource extends NamedResource {
 
     private WebResource resource;
     private String token;
@@ -30,8 +29,7 @@ public class RootResource extends NamedResource
     /**
      * @param parent
      */
-    public RootResource( WebResource resource, String token )
-    {
+    public RootResource( WebResource resource, String token ) {
         super( null );
         this.resource = resource;
         this.token = token;
@@ -42,8 +40,7 @@ public class RootResource extends NamedResource
      * @see org.usergrid.rest.test.resource.NamedResource#resource()
      */
     @Override
-    protected WebResource resource()
-    {
+    protected WebResource resource() {
         return this.resource;
     }
 
@@ -52,8 +49,7 @@ public class RootResource extends NamedResource
      * @see org.usergrid.rest.test.resource.NamedResource#token()
      */
     @Override
-    protected String token()
-    {
+    protected String token() {
         return this.token;
     }
 
@@ -62,8 +58,7 @@ public class RootResource extends NamedResource
      * @see org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
      */
     @Override
-    public void addToUrl( StringBuilder buffer )
-    {
+    public void addToUrl( StringBuilder buffer ) {
         //do nothing on purpose, callers will append "/" for the root
     }
 }

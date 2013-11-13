@@ -6,8 +6,7 @@ package org.usergrid.persistence.query.ir;
  *
  * @author tnine
  */
-public class AllNode extends QueryNode
-{
+public class AllNode extends QueryNode {
 
 
     private final QuerySlice slice;
@@ -21,8 +20,7 @@ public class AllNode extends QueryNode
      * @param forceKeepFirst True if we don't allow the iterator to skip the first result, regardless of cursor state.
      * Used for startUUID paging
      */
-    public AllNode( int id, boolean forceKeepFirst )
-    {
+    public AllNode( int id, boolean forceKeepFirst ) {
         this.slice = new QuerySlice( "uuid", id );
         this.forceKeepFirst = forceKeepFirst;
     }
@@ -32,29 +30,25 @@ public class AllNode extends QueryNode
      * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
      */
     @Override
-    public void visit( NodeVisitor visitor ) throws Exception
-    {
+    public void visit( NodeVisitor visitor ) throws Exception {
         visitor.visit( this );
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "AllNode";
     }
 
 
     /** @return the slice */
-    public QuerySlice getSlice()
-    {
+    public QuerySlice getSlice() {
         return slice;
     }
 
 
     /** @return the skipFirstMatch */
-    public boolean isForceKeepFirst()
-    {
+    public boolean isForceKeepFirst() {
         return forceKeepFirst;
     }
 }

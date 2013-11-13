@@ -39,8 +39,7 @@ import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
  * @author zznate
  */
 @JsonAutoDetect(creatorVisibility = Visibility.PUBLIC_ONLY)
-public class Count<K, C>
-{
+public class Count<K, C> {
     private static final StringSerializer se = StringSerializer.get();
 
     @JsonProperty
@@ -59,8 +58,7 @@ public class Count<K, C>
 
     @JsonCreator
     public Count( @JsonProperty(value = "tableName") String tableName, @JsonProperty(value = "keyName") K keyName,
-                  @JsonProperty(value = "columnName") C columnName, @JsonProperty(value = "value") long value )
-    {
+                  @JsonProperty(value = "columnName") C columnName, @JsonProperty(value = "value") long value ) {
         this.tableName = tableName;
         this.keyName = keyName;
         this.columnName = columnName;
@@ -70,10 +68,8 @@ public class Count<K, C>
     }
 
 
-    public Count apply( Count count )
-    {
-        if ( !StringUtils.equals( count.getCounterName(), getCounterName() ) )
-        {
+    public Count apply( Count count ) {
+        if ( !StringUtils.equals( count.getCounterName(), getCounterName() ) ) {
             throw new IllegalArgumentException( "Attempt to apply a counter with a different name" );
         }
         this.value += count.getValue();
@@ -83,10 +79,8 @@ public class Count<K, C>
 
     /** the counter name should uniquely identify the entity being counted. */
     @JsonIgnore
-    public String getCounterName()
-    {
-        if ( counterName == null )
-        {
+    public String getCounterName() {
+        if ( counterName == null ) {
             counterName = tableName + ":" + Hex.encodeHexString( getKeyNameBytes().array() ) + ":" + Hex
                     .encodeHexString( getColumnNameBytes().array() );
         }
@@ -94,61 +88,52 @@ public class Count<K, C>
     }
 
 
-    public long getValue()
-    {
+    public long getValue() {
         return value;
     }
 
 
-    public C getColumnName()
-    {
+    public C getColumnName() {
         return columnName;
     }
 
 
-    public K getKeyName()
-    {
+    public K getKeyName() {
         return keyName;
     }
 
 
     @JsonIgnore
-    public ByteBuffer getKeyNameBytes()
-    {
+    public ByteBuffer getKeyNameBytes() {
         return keySerializer.toByteBuffer( keyName );
     }
 
 
     @JsonIgnore
-    public ByteBuffer getColumnNameBytes()
-    {
+    public ByteBuffer getColumnNameBytes() {
         return columnNameSerializer.toByteBuffer( columnName );
     }
 
 
     @JsonIgnore
-    public Serializer<K> getKeySerializer()
-    {
+    public Serializer<K> getKeySerializer() {
         return keySerializer;
     }
 
 
     @JsonIgnore
-    public Serializer<C> getColumnNameSerializer()
-    {
+    public Serializer<C> getColumnNameSerializer() {
         return columnNameSerializer;
     }
 
 
-    public String getTableName()
-    {
+    public String getTableName() {
         return tableName;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Counter Name: ".concat( getCounterName() ).concat( " value: " ).concat( Long.toString( value ) );
     }
 }

@@ -21,18 +21,15 @@ import org.usergrid.rest.test.resource.ValueResource;
 
 
 /** @author tnine */
-public class QueuesCollection extends ValueResource
-{
+public class QueuesCollection extends ValueResource {
 
 
-    public QueuesCollection( NamedResource parent )
-    {
+    public QueuesCollection( NamedResource parent ) {
         super( "queues", parent );
     }
 
 
-    public Queue queue( String queueName )
-    {
+    public Queue queue( String queueName ) {
         return new Queue( queueName, this );
     }
 }

@@ -25,8 +25,7 @@ import org.usergrid.persistence.annotations.EntityProperty;
  *
  * @author tnine
  */
-public class JobData extends TypedEntity
-{
+public class JobData extends TypedEntity {
 
 
     @EntityProperty(required = true, basic = true, indexed = true)
@@ -37,22 +36,19 @@ public class JobData extends TypedEntity
      * @param jobName
      * @param startTime
      */
-    public JobData()
-    {
+    public JobData() {
         super();
     }
 
 
     /** @return the jobName */
-    public String getJobName()
-    {
+    public String getJobName() {
         return jobName;
     }
 
 
     /** @param jobName the jobName to set */
-    public void setJobName( String jobName )
-    {
+    public void setJobName( String jobName ) {
         this.jobName = jobName;
     }
 }

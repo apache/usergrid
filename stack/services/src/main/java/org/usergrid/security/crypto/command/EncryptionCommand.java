@@ -26,8 +26,7 @@ import org.usergrid.persistence.CredentialsInfo;
  *
  * @author tnine
  */
-public abstract class EncryptionCommand
-{
+public abstract class EncryptionCommand {
 
     /** The default implementations provided by subclasses */
     public static final String SHA1 = "sha-1";

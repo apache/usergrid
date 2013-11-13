@@ -37,8 +37,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 
 
-public abstract class GeoIndexSearcher
-{
+public abstract class GeoIndexSearcher {
 
     private static final Logger logger = LoggerFactory.getLogger( GeoIndexSearcher.class );
 
@@ -63,8 +62,7 @@ public abstract class GeoIndexSearcher
      * @param propertyName
      * @param distance
      */
-    public GeoIndexSearcher( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass )
-    {
+    public GeoIndexSearcher( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass ) {
         this.em = entityManager;
         this.locator = locator;
         this.cass = cass;
@@ -85,8 +83,7 @@ public abstract class GeoIndexSearcher
      */
     public final SearchResults proximitySearch( final EntityLocationRef minMatch, final List<String> geoCells,
                                                 Point searchPoint, String propertyName, double minDistance,
-                                                double maxDistance, final int maxResults ) throws Exception
-    {
+                                                double maxDistance, final int maxResults ) throws Exception {
 
         List<EntityLocationRef> entityLocations = new ArrayList<EntityLocationRef>( maxResults );
 
@@ -94,14 +91,12 @@ public abstract class GeoIndexSearcher
         String curContainingGeocell = null;
 
         // we have some cells used from last time, re-use them
-        if ( geoCells != null && geoCells.size() > 0 )
-        {
+        if ( geoCells != null && geoCells.size() > 0 ) {
             curGeocells.addAll( geoCells );
             curContainingGeocell = geoCells.get( 0 );
         }
         // start at the bottom
-        else
-        {
+        else {
 
       /*
        * The currently-being-searched geocells. NOTES: Start with max possible.
@@ -112,8 +107,7 @@ public abstract class GeoIndexSearcher
             curGeocells.add( curContainingGeocell );
         }
 
-        if ( minMatch != null )
-        {
+        if ( minMatch != null ) {
             minMatch.calcDistance( searchPoint );
         }
         // Set of already searched cells
@@ -134,11 +128,9 @@ public abstract class GeoIndexSearcher
         boolean done = false;
         UUID lastReturned = null;
 
-        while ( !curGeocells.isEmpty() && entityLocations.size() < maxResults )
-        {
+        while ( !curGeocells.isEmpty() && entityLocations.size() < maxResults ) {
             closestPossibleNextResultDist = sortedEdgesDistances.get( 0 ).getSecond();
-            if ( maxDistance > 0 && closestPossibleNextResultDist > maxDistance )
-            {
+            if ( maxDistance > 0 && closestPossibleNextResultDist > maxDistance ) {
                 break;
             }
 
@@ -153,12 +145,10 @@ public abstract class GeoIndexSearcher
             // we need to keep searching everything in our tiles until we don't get
             // any more results, then we'll have the closest points and can move on
             // do the next tiles
-            do
-            {
+            do {
                 queryResults = doSearch( curGeocellsUnique, lastReturned, searchPoint, propertyName, MAX_FETCH_SIZE );
 
-                if ( logger.isDebugEnabled() )
-                {
+                if ( logger.isDebugEnabled() ) {
                     logger.debug( "fetch complete for: {}", StringUtils.join( curGeocellsUnique, ", " ) );
                 }
 
@@ -168,8 +158,7 @@ public abstract class GeoIndexSearcher
                 // search center along with the search result itself, in a tuple.
 
                 // Merge new_results into results
-                for ( HColumn<ByteBuffer, ByteBuffer> column : queryResults )
-                {
+                for ( HColumn<ByteBuffer, ByteBuffer> column : queryResults ) {
 
                     DynamicComposite composite = DynamicComposite.fromByteBuffer( column.getName() );
 
@@ -191,16 +180,14 @@ public abstract class GeoIndexSearcher
                     // discard, it's too close or too far, of closer than the minimum we
                     // should match, skip it
                     if ( distance < minDistance || ( maxDistance != 0 && distance > maxDistance ) || ( minMatch != null
-                            && COMP.compare( entityLocation, minMatch ) <= 0 ) )
-                    {
+                            && COMP.compare( entityLocation, minMatch ) <= 0 ) ) {
                         continue;
                     }
 
                     int index = Collections.binarySearch( entityLocations, entityLocation, COMP );
 
                     // already in the index
-                    if ( index > -1 )
-                    {
+                    if ( index > -1 ) {
                         continue;
                     }
 
@@ -208,8 +195,7 @@ public abstract class GeoIndexSearcher
                     index = ( index + 1 ) * -1;
 
                     // no point in adding it
-                    if ( index >= maxResults )
-                    {
+                    if ( index >= maxResults ) {
                         continue;
                     }
 
@@ -221,8 +207,7 @@ public abstract class GeoIndexSearcher
                      * Discard an additional entries as we iterate to avoid holding them
                      * all in ram
                      */
-                    while ( entityLocations.size() > maxResults )
-                    {
+                    while ( entityLocations.size() > maxResults ) {
                         entityLocations.remove( entityLocations.size() - 1 );
                     }
                 }
@@ -234,15 +219,13 @@ public abstract class GeoIndexSearcher
              * "current" tiles to search next time for the cursor, since cass could
              * contain more results
              */
-            if ( done || entityLocations.size() == maxResults )
-            {
+            if ( done || entityLocations.size() == maxResults ) {
                 break;
             }
 
             sortedEdgesDistances = GeocellUtils.distanceSortedEdges( curGeocells, searchPoint );
 
-            if ( queryResults.size() == 0 || curGeocells.size() == 4 )
-            {
+            if ( queryResults.size() == 0 || curGeocells.size() == 4 ) {
         /*
          * Either no results (in which case we optimize by not looking at
          * adjacents, go straight to the parent) or we've searched 4 adjacent
@@ -251,48 +234,39 @@ public abstract class GeoIndexSearcher
          */
                 curContainingGeocell =
                         curContainingGeocell.substring( 0, Math.max( curContainingGeocell.length() - 1, 0 ) );
-                if ( curContainingGeocell.length() == 0 )
-                {
+                if ( curContainingGeocell.length() == 0 ) {
                     // final check - top level tiles
                     curGeocells.clear();
                     String[] items = "0123456789abcdef".split( "(?!^)" );
-                    for ( String item : items )
-                    {
+                    for ( String item : items ) {
                         curGeocells.add( item );
                     }
                     done = true;
                 }
-                else
-                {
+                else {
                     List<String> oldCurGeocells = new ArrayList<String>( curGeocells );
                     curGeocells.clear();
-                    for ( String cell : oldCurGeocells )
-                    {
-                        if ( cell.length() > 0 )
-                        {
+                    for ( String cell : oldCurGeocells ) {
+                        if ( cell.length() > 0 ) {
                             String newCell = cell.substring( 0, cell.length() - 1 );
-                            if ( !curGeocells.contains( newCell ) )
-                            {
+                            if ( !curGeocells.contains( newCell ) ) {
                                 curGeocells.add( newCell );
                             }
                         }
                     }
                 }
             }
-            else if ( curGeocells.size() == 1 )
-            {
+            else if ( curGeocells.size() == 1 ) {
                 // Get adjacent in one direction.
                 // TODO(romannurik): Watch for +/- 90 degree latitude edge case
                 // geocells.
-                for ( int i = 0; i < sortedEdgesDistances.size(); i++ )
-                {
+                for ( int i = 0; i < sortedEdgesDistances.size(); i++ ) {
 
                     int nearestEdge[] = sortedEdgesDistances.get( i ).getFirst();
                     String edge = GeocellUtils.adjacent( curGeocells.get( 0 ), nearestEdge );
 
                     // we're at the edge of the world, search in a different direction
-                    if ( edge == null )
-                    {
+                    if ( edge == null ) {
                         continue;
                     }
 
@@ -300,40 +274,32 @@ public abstract class GeoIndexSearcher
                     break;
                 }
             }
-            else if ( curGeocells.size() == 2 )
-            {
+            else if ( curGeocells.size() == 2 ) {
                 // Get adjacents in perpendicular direction.
                 int nearestEdge[] =
                         GeocellUtils.distanceSortedEdges( Arrays.asList( curContainingGeocell ), searchPoint ).get( 0 )
                                     .getFirst();
                 int[] perpendicularNearestEdge = { 0, 0 };
-                if ( nearestEdge[0] == 0 )
-                {
+                if ( nearestEdge[0] == 0 ) {
                     // Was vertical, perpendicular is horizontal.
-                    for ( Tuple<int[], Double> edgeDistance : sortedEdgesDistances )
-                    {
-                        if ( edgeDistance.getFirst()[0] != 0 )
-                        {
+                    for ( Tuple<int[], Double> edgeDistance : sortedEdgesDistances ) {
+                        if ( edgeDistance.getFirst()[0] != 0 ) {
                             perpendicularNearestEdge = edgeDistance.getFirst();
                             break;
                         }
                     }
                 }
-                else
-                {
+                else {
                     // Was horizontal, perpendicular is vertical.
-                    for ( Tuple<int[], Double> edgeDistance : sortedEdgesDistances )
-                    {
-                        if ( edgeDistance.getFirst()[0] == 0 )
-                        {
+                    for ( Tuple<int[], Double> edgeDistance : sortedEdgesDistances ) {
+                        if ( edgeDistance.getFirst()[0] == 0 ) {
                             perpendicularNearestEdge = edgeDistance.getFirst();
                             break;
                         }
                     }
                 }
                 List<String> tempCells = new ArrayList<String>();
-                for ( String cell : curGeocells )
-                {
+                for ( String cell : curGeocells ) {
                     tempCells.add( GeocellUtils.adjacent( cell, perpendicularNearestEdge ) );
                 }
                 curGeocells.addAll( tempCells );
@@ -350,28 +316,24 @@ public abstract class GeoIndexSearcher
 
     protected TreeSet<HColumn<ByteBuffer, ByteBuffer>> query( Object key, List<String> curGeocellsUnique,
                                                               Point searchPoint, UUID startId, int count )
-            throws Exception
-    {
+            throws Exception {
 
         List<Object> keys = new ArrayList<Object>();
 
         UUID appId = em.getApplicationRef().getUuid();
 
-        for ( String geoCell : curGeocellsUnique )
-        {
+        for ( String geoCell : curGeocellsUnique ) {
 
             // add buckets for each geoCell
 
-            for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, geoCell ) )
-            {
+            for ( String indexBucket : locator.getBuckets( appId, IndexType.GEO, geoCell ) ) {
                 keys.add( key( key, DICTIONARY_GEOCELL, geoCell, indexBucket ) );
             }
         }
 
         DynamicComposite start = null;
 
-        if ( startId != null )
-        {
+        if ( startId != null ) {
             start = new DynamicComposite( startId );
             setEqualityFlag( start, ComponentEquality.GREATER_THAN_EQUAL );
         }
@@ -388,8 +350,7 @@ public abstract class GeoIndexSearcher
                                                                           int pageSize ) throws Exception;
 
 
-    public static class SearchResults
-    {
+    public static class SearchResults {
 
         public final List<EntityLocationRef> entityLocations;
         public final List<String> lastSearchedGeoCells;
@@ -399,8 +360,7 @@ public abstract class GeoIndexSearcher
          * @param entityLocations
          * @param curGeocells
          */
-        public SearchResults( List<EntityLocationRef> entityLocations, List<String> lastSearchedGeoCells )
-        {
+        public SearchResults( List<EntityLocationRef> entityLocations, List<String> lastSearchedGeoCells ) {
             this.entityLocations = entityLocations;
             this.lastSearchedGeoCells = lastSearchedGeoCells;
         }

@@ -24,19 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class MongoMessageFrame extends FrameDecoder
-{
+public class MongoMessageFrame extends FrameDecoder {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger( MongoMessageFrame.class );
 
 
     @Override
-    protected Object decode( ChannelHandlerContext ctx, Channel channel, ChannelBuffer buf ) throws Exception
-    {
+    protected Object decode( ChannelHandlerContext ctx, Channel channel, ChannelBuffer buf ) throws Exception {
 
-        if ( buf.readableBytes() < 4 )
-        {
+        if ( buf.readableBytes() < 4 ) {
             return null;
         }
 
@@ -44,13 +41,11 @@ public class MongoMessageFrame extends FrameDecoder
 
         int length = buf.getInt( buf.readerIndex() );
 
-        if ( length < 0 )
-        {
+        if ( length < 0 ) {
             return null;
         }
 
-        if ( buf.readableBytes() < length )
-        {
+        if ( buf.readableBytes() < length ) {
             return null;
         }
 

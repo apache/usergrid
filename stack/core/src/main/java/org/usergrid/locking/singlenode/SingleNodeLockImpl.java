@@ -24,8 +24,7 @@ import org.usergrid.locking.exception.UGLockException;
 
 
 /** @author tnine */
-public class SingleNodeLockImpl implements Lock
-{
+public class SingleNodeLockImpl implements Lock {
 
     private final ReentrantLock lock;
 
@@ -33,8 +32,7 @@ public class SingleNodeLockImpl implements Lock
     /**
      *
      */
-    public SingleNodeLockImpl( ReentrantLock lock )
-    {
+    public SingleNodeLockImpl( ReentrantLock lock ) {
         this.lock = lock;
     }
 
@@ -43,14 +41,11 @@ public class SingleNodeLockImpl implements Lock
      * @see org.usergrid.locking.Lock#acquire(long)
      */
     @Override
-    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException
-    {
-        try
-        {
+    public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException {
+        try {
             return this.lock.tryLock( timeout, time );
         }
-        catch ( InterruptedException e )
-        {
+        catch ( InterruptedException e ) {
             throw new UGLockException( "Couldn't get the lock", e );
         }
     }
@@ -60,8 +55,7 @@ public class SingleNodeLockImpl implements Lock
      * @see org.usergrid.locking.Lock#lock()
      */
     @Override
-    public void lock() throws UGLockException
-    {
+    public void lock() throws UGLockException {
         this.lock.lock();
     }
 
@@ -70,8 +64,7 @@ public class SingleNodeLockImpl implements Lock
      * @see org.usergrid.locking.Lock#release()
      */
     @Override
-    public void unlock() throws UGLockException
-    {
+    public void unlock() throws UGLockException {
         this.lock.unlock();
     }
 }

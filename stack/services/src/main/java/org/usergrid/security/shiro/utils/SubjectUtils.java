@@ -44,47 +44,38 @@ import static org.usergrid.security.shiro.Realm.ROLE_ORGANIZATION_ADMIN;
 import static org.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
 
 
-public class SubjectUtils
-{
+public class SubjectUtils {
 
     private static final Logger logger = LoggerFactory.getLogger( SubjectUtils.class );
 
 
-    public static boolean isAnonymous()
-    {
+    public static boolean isAnonymous() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return true;
         }
-        if ( !currentUser.isAuthenticated() && !currentUser.isRemembered() )
-        {
+        if ( !currentUser.isAuthenticated() && !currentUser.isRemembered() ) {
             return true;
         }
         return false;
     }
 
 
-    public static boolean isOrganizationAdmin()
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isOrganizationAdmin() {
+        if ( isServiceAdmin() ) {
             return true;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.hasRole( ROLE_ORGANIZATION_ADMIN );
     }
 
 
-    public static BiMap<UUID, String> getOrganizations()
-    {
+    public static BiMap<UUID, String> getOrganizations() {
         Subject currentUser = getSubject();
-        if ( !isOrganizationAdmin() )
-        {
+        if ( !isOrganizationAdmin() ) {
             return null;
         }
         Session session = currentUser.getSession();
@@ -94,66 +85,53 @@ public class SubjectUtils
     }
 
 
-    public static boolean isPermittedAccessToOrganization( Identifier identifier )
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isPermittedAccessToOrganization( Identifier identifier ) {
+        if ( isServiceAdmin() ) {
             return true;
         }
         OrganizationInfo organization = getOrganization( identifier );
-        if ( organization == null )
-        {
+        if ( organization == null ) {
             return false;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.isPermitted( "organizations:access:" + organization.getUuid() );
     }
 
 
-    public static OrganizationInfo getOrganization( Identifier identifier )
-    {
-        if ( identifier == null )
-        {
+    public static OrganizationInfo getOrganization( Identifier identifier ) {
+        if ( identifier == null ) {
             return null;
         }
         UUID organizationId = null;
         String organizationName = null;
         BiMap<UUID, String> organizations = getOrganizations();
-        if ( organizations == null )
-        {
+        if ( organizations == null ) {
             return null;
         }
-        if ( identifier.isName() )
-        {
+        if ( identifier.isName() ) {
             organizationName = identifier.getName().toLowerCase();
             organizationId = organizations.inverse().get( organizationName );
         }
-        else if ( identifier.isUUID() )
-        {
+        else if ( identifier.isUUID() ) {
             organizationId = identifier.getUUID();
             organizationName = organizations.get( organizationId );
         }
-        if ( ( organizationId != null ) && ( organizationName != null ) )
-        {
+        if ( ( organizationId != null ) && ( organizationName != null ) ) {
             return new OrganizationInfo( organizationId, organizationName );
         }
         return null;
     }
 
 
-    public static OrganizationInfo getOrganization()
-    {
+    public static OrganizationInfo getOrganization() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return null;
         }
-        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) )
-        {
+        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) ) {
             return null;
         }
         Session session = currentUser.getSession();
@@ -162,77 +140,62 @@ public class SubjectUtils
     }
 
 
-    public static String getOrganizationName()
-    {
+    public static String getOrganizationName() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return null;
         }
-        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) )
-        {
+        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) ) {
             return null;
         }
         Session session = currentUser.getSession();
         OrganizationInfo organization = ( OrganizationInfo ) session.getAttribute( "organization" );
-        if ( organization == null )
-        {
+        if ( organization == null ) {
             return null;
         }
         return organization.getName();
     }
 
 
-    public static UUID getOrganizationId()
-    {
+    public static UUID getOrganizationId() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return null;
         }
-        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) )
-        {
+        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) ) {
             return null;
         }
         Session session = currentUser.getSession();
         OrganizationInfo organization = ( OrganizationInfo ) session.getAttribute( "organization" );
-        if ( organization == null )
-        {
+        if ( organization == null ) {
             return null;
         }
         return organization.getUuid();
     }
 
 
-    public static Set<String> getOrganizationNames()
-    {
+    public static Set<String> getOrganizationNames() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return null;
         }
-        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) )
-        {
+        if ( !currentUser.hasRole( ROLE_ORGANIZATION_ADMIN ) ) {
             return null;
         }
         BiMap<UUID, String> organizations = getOrganizations();
-        if ( organizations == null )
-        {
+        if ( organizations == null ) {
             return null;
         }
         return organizations.inverse().keySet();
     }
 
 
-    public static boolean isApplicationAdmin()
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isApplicationAdmin() {
+        if ( isServiceAdmin() ) {
             return true;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         boolean admin = currentUser.hasRole( ROLE_APPLICATION_ADMIN );
@@ -240,79 +203,63 @@ public class SubjectUtils
     }
 
 
-    public static boolean isPermittedAccessToApplication( Identifier identifier )
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isPermittedAccessToApplication( Identifier identifier ) {
+        if ( isServiceAdmin() ) {
             return true;
         }
         ApplicationInfo application = getApplication( identifier );
-        if ( application == null )
-        {
+        if ( application == null ) {
             return false;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.isPermitted( "applications:access:" + application.getId() );
     }
 
 
-    public static boolean isApplicationAdmin( Identifier identifier )
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isApplicationAdmin( Identifier identifier ) {
+        if ( isServiceAdmin() ) {
             return true;
         }
         ApplicationInfo application = getApplication( identifier );
-        if ( application == null )
-        {
+        if ( application == null ) {
             return false;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.isPermitted( "applications:admin:" + application.getId() );
     }
 
 
-    public static ApplicationInfo getApplication( Identifier identifier )
-    {
-        if ( identifier == null )
-        {
+    public static ApplicationInfo getApplication( Identifier identifier ) {
+        if ( identifier == null ) {
             return null;
         }
-        if ( !isApplicationAdmin() && !isApplicationUser() )
-        {
+        if ( !isApplicationAdmin() && !isApplicationUser() ) {
             return null;
         }
         String applicationName = null;
         UUID applicationId = null;
         BiMap<UUID, String> applications = getApplications();
-        if ( applications == null )
-        {
+        if ( applications == null ) {
             return null;
         }
-        if ( identifier.isName() )
-        {
+        if ( identifier.isName() ) {
             applicationName = identifier.getName().toLowerCase();
             applicationId = applications.inverse().get( applicationName );
-            if ( applicationId == null )
-            {
+            if ( applicationId == null ) {
                 applicationId = applications.inverse().get( identifier.getName() );
             }
         }
-        else if ( identifier.isUUID() )
-        {
+        else if ( identifier.isUUID() ) {
             applicationId = identifier.getUUID();
             applicationName = applications.get( identifier.getUUID() );
         }
-        if ( ( applicationId != null ) && ( applicationName != null ) )
-        {
+        if ( ( applicationId != null ) && ( applicationName != null ) ) {
             return new ApplicationInfo( applicationId, applicationName );
         }
         return null;
@@ -320,15 +267,12 @@ public class SubjectUtils
 
 
     @SuppressWarnings( "unchecked" )
-    public static BiMap<UUID, String> getApplications()
-    {
+    public static BiMap<UUID, String> getApplications() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return null;
         }
-        if ( !currentUser.hasRole( ROLE_APPLICATION_ADMIN ) && !currentUser.hasRole( ROLE_APPLICATION_USER ) )
-        {
+        if ( !currentUser.hasRole( ROLE_APPLICATION_ADMIN ) && !currentUser.hasRole( ROLE_APPLICATION_USER ) ) {
             return null;
         }
         Session session = currentUser.getSession();
@@ -336,52 +280,42 @@ public class SubjectUtils
     }
 
 
-    public static boolean isServiceAdmin()
-    {
+    public static boolean isServiceAdmin() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.hasRole( ROLE_SERVICE_ADMIN );
     }
 
 
-    public static boolean isApplicationUser()
-    {
+    public static boolean isApplicationUser() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.hasRole( ROLE_APPLICATION_USER );
     }
 
 
-    public static boolean isAdminUser()
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isAdminUser() {
+        if ( isServiceAdmin() ) {
             return true;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.hasRole( ROLE_ADMIN_USER );
     }
 
 
-    public static UserInfo getUser()
-    {
+    public static UserInfo getUser() {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return null;
         }
-        if ( !( currentUser.getPrincipal() instanceof UserPrincipal ) )
-        {
+        if ( !( currentUser.getPrincipal() instanceof UserPrincipal ) ) {
             return null;
         }
         UserPrincipal principal = ( UserPrincipal ) currentUser.getPrincipal();
@@ -389,23 +323,19 @@ public class SubjectUtils
     }
 
 
-    public static UserInfo getAdminUser()
-    {
+    public static UserInfo getAdminUser() {
         UserInfo user = getUser();
-        if ( user == null )
-        {
+        if ( user == null ) {
             return null;
         }
         return user.isAdminUser() ? user : null;
     }
 
 
-    public static UUID getSubjectUserId()
-    {
+    public static UUID getSubjectUserId() {
 
         UserInfo info = getUser();
-        if ( info == null )
-        {
+        if ( info == null ) {
             return null;
         }
 
@@ -413,76 +343,61 @@ public class SubjectUtils
     }
 
 
-    public static boolean isUserActivated()
-    {
+    public static boolean isUserActivated() {
         UserInfo user = getUser();
-        if ( user == null )
-        {
+        if ( user == null ) {
             return false;
         }
         return user.isActivated();
     }
 
 
-    public static boolean isUserEnabled()
-    {
+    public static boolean isUserEnabled() {
         UserInfo user = getUser();
-        if ( user == null )
-        {
+        if ( user == null ) {
             return false;
         }
         return !user.isDisabled();
     }
 
 
-    public static boolean isUser( Identifier identifier )
-    {
-        if ( identifier == null )
-        {
+    public static boolean isUser( Identifier identifier ) {
+        if ( identifier == null ) {
             return false;
         }
         UserInfo user = getUser();
-        if ( user == null )
-        {
+        if ( user == null ) {
             return false;
         }
-        if ( identifier.isUUID() )
-        {
+        if ( identifier.isUUID() ) {
             return user.getUuid().equals( identifier.getUUID() );
         }
-        if ( identifier.isEmail() )
-        {
+        if ( identifier.isEmail() ) {
             return user.getEmail().equalsIgnoreCase( identifier.getEmail() );
         }
-        if ( identifier.isName() )
-        {
+        if ( identifier.isName() ) {
             return user.getUsername().equals( identifier.getName() );
         }
         return false;
     }
 
 
-    public static boolean isPermittedAccessToUser( UUID userId )
-    {
-        if ( isServiceAdmin() )
-        {
+    public static boolean isPermittedAccessToUser( UUID userId ) {
+        if ( isServiceAdmin() ) {
             return true;
         }
-        if ( userId == null )
-        {
+        if ( userId == null ) {
             return false;
         }
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return false;
         }
         return currentUser.isPermitted( "users:access:" + userId );
     }
 
 
-    public static String getPermissionFromPath( UUID applicationId, String operations, String... paths )
-    {
+    public static String getPermissionFromPath( UUID applicationId, String operations, String... paths ) {
         String permission = "applications:" + operations + ":" + applicationId;
         String p = StringUtils.join( paths, ',' );
         permission += ( isNotBlank( p ) ? ":" + p : "" );
@@ -490,55 +405,44 @@ public class SubjectUtils
     }
 
 
-    public static Subject getSubject()
-    {
+    public static Subject getSubject() {
         Subject currentUser = null;
-        try
-        {
+        try {
             currentUser = SecurityUtils.getSubject();
         }
-        catch ( UnavailableSecurityManagerException e )
-        {
+        catch ( UnavailableSecurityManagerException e ) {
             logger.error( "getSubject(): Attempt to use Shiro prior to initialization" );
         }
         return currentUser;
     }
 
 
-    public static void checkPermission( String permission )
-    {
+    public static void checkPermission( String permission ) {
         Subject currentUser = getSubject();
-        if ( currentUser == null )
-        {
+        if ( currentUser == null ) {
             return;
         }
-        try
-        {
+        try {
             currentUser.checkPermission( permission );
         }
-        catch ( org.apache.shiro.authz.UnauthenticatedException e )
-        {
+        catch ( org.apache.shiro.authz.UnauthenticatedException e ) {
             logger.error( "checkPermission(): Subject is anonymous" );
         }
     }
 
 
-    public static void loginApplicationGuest( ApplicationInfo application )
-    {
-        if ( application == null )
-        {
+    public static void loginApplicationGuest( ApplicationInfo application ) {
+        if ( application == null ) {
             logger.error( "loginApplicationGuest(): Null application" );
             return;
         }
-        if ( isAnonymous() )
-        {
+        if ( isAnonymous() ) {
             Subject subject = SubjectUtils.getSubject();
             PrincipalCredentialsToken token =
                     PrincipalCredentialsToken.getGuestCredentialsFromApplicationInfo( application );
             subject.login( token );
         }
-        else
-        {
+        else {
             logger.error( "loginApplicationGuest(): Logging in non-anonymous user as guest not allowed" );
         }
     }

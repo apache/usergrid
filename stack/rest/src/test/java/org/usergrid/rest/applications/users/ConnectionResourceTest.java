@@ -28,15 +28,13 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class ConnectionResourceTest extends AbstractRestIT
-{
+public class ConnectionResourceTest extends AbstractRestIT {
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test
-    public void connectionsQueryTest()
-    {
+    public void connectionsQueryTest() {
 
 
         CustomCollection activities = context.collection( "peeps" );
@@ -79,15 +77,13 @@ public class ConnectionResourceTest extends AbstractRestIT
         String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
 
 
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app/users/scott/likes/" + uuid )
                     .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
             assert ( false );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             assertEquals( 404, uie.getResponse().getClientResponseStatus().getStatusCode() );
             return;
         }
@@ -95,8 +91,7 @@ public class ConnectionResourceTest extends AbstractRestIT
 
 
     @Test
-    public void connectionsLoopbackTest()
-    {
+    public void connectionsLoopbackTest() {
 
         CustomCollection things = context.collection( "things" );
 
@@ -151,8 +146,7 @@ public class ConnectionResourceTest extends AbstractRestIT
 
 
     @Test
-    public void connectionsUUIDTest()
-    {
+    public void connectionsUUIDTest() {
 
         CustomCollection things = context.collection( "things" );
 

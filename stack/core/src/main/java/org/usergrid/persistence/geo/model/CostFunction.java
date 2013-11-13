@@ -21,8 +21,7 @@ package org.usergrid.persistence.geo.model;
  *
  * @author Alexandre Gellibert
  */
-public interface CostFunction
-{
+public interface CostFunction {
 
     /**
      * @param numCells number of cells found

@@ -35,8 +35,7 @@ import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;
 
 
-public class MongoChannelHandler extends SimpleChannelUpstreamHandler
-{
+public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 
     private static final Logger logger = LoggerFactory.getLogger( MongoChannelHandler.class );
 
@@ -49,8 +48,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler
 
 
     public MongoChannelHandler( EntityManagerFactory emf, ServiceManagerFactory smf, ManagementService management,
-                                SessionsSecurityManager securityManager )
-    {
+                                SessionsSecurityManager securityManager ) {
         super();
 
         logger.info( "Starting new client connection..." );
@@ -59,81 +57,67 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler
         this.management = management;
         this.securityManager = securityManager;
 
-        if ( securityManager != null )
-        {
+        if ( securityManager != null ) {
             subject = new Subject.Builder( securityManager ).buildSubject();
         }
     }
 
 
-    public EntityManagerFactory getEmf()
-    {
+    public EntityManagerFactory getEmf() {
         return emf;
     }
 
 
-    public ServiceManagerFactory getSmf()
-    {
+    public ServiceManagerFactory getSmf() {
         return smf;
     }
 
 
-    public ManagementService getOrganizations()
-    {
+    public ManagementService getOrganizations() {
         return management;
     }
 
 
-    public SessionsSecurityManager getSecurityManager()
-    {
+    public SessionsSecurityManager getSecurityManager() {
         return securityManager;
     }
 
 
     @Override
-    public void messageReceived( ChannelHandlerContext ctx, MessageEvent e )
-    {
+    public void messageReceived( ChannelHandlerContext ctx, MessageEvent e ) {
 
         ThreadState threadState = null;
-        if ( subject != null )
-        {
+        if ( subject != null ) {
             threadState = new SubjectThreadState( subject );
             threadState.bind();
             // logger.info("Security subject bound to thread");
         }
 
-        try
-        {
+        try {
 
             Message message = null;
-            if ( e.getMessage() instanceof Message )
-            {
+            if ( e.getMessage() instanceof Message ) {
                 message = ( Message ) e.getMessage();
             }
 
-            if ( message != null )
-            {
+            if ( message != null ) {
                 logger.info( ">>> {}\n", message );
                 OpReply reply = handleMessage( ctx, e, message );
                 logger.info( "<<< {}\n", reply );
 
-                if ( reply != null )
-                {
+                if ( reply != null ) {
                     e.getChannel().write( reply );
                 }
             }
         }
         //an error occurred.  Set this as the attachment so subsequent calls to getlastError can return correct
         //errors
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             ctx.setAttachment( ex );
         }
 
-        finally
-        {
-            if ( threadState != null )
-            {
+        finally {
+            if ( threadState != null ) {
                 threadState.clear();
                 // logger.info("Security subject unbound from thread");
             }
@@ -142,18 +126,15 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler
 
 
     @Override
-    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e )
-    {
+    public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) {
         logger.warn( "Unexpected exception from downstream.", e.getCause() );
         e.getChannel().close();
     }
 
 
-    public OpReply handleMessage( ChannelHandlerContext ctx, MessageEvent e, Message message )
-    {
+    public OpReply handleMessage( ChannelHandlerContext ctx, MessageEvent e, Message message ) {
         logger.debug( "message type: {}", message.getClass().getCanonicalName() );
-        if ( message instanceof OpCrud )
-        {
+        if ( message instanceof OpCrud ) {
             return ( ( OpCrud ) message ).doOp( this, ctx, e );
         }
 

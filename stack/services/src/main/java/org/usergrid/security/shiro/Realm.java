@@ -85,8 +85,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
-public class Realm extends AuthorizingRealm
-{
+public class Realm extends AuthorizingRealm {
     private static final Logger logger = LoggerFactory.getLogger( Realm.class );
 
     public final static String ROLE_SERVICE_ADMIN = "service-admin";
@@ -106,40 +105,34 @@ public class Realm extends AuthorizingRealm
     private String superUser;
 
 
-    public Realm()
-    {
+    public Realm() {
         setCredentialsMatcher( new AllowAllCredentialsMatcher() );
         setPermissionResolver( new CustomPermissionResolver() );
     }
 
 
-    public Realm( CacheManager cacheManager )
-    {
+    public Realm( CacheManager cacheManager ) {
         super( cacheManager );
         setCredentialsMatcher( new AllowAllCredentialsMatcher() );
         setPermissionResolver( new CustomPermissionResolver() );
     }
 
 
-    public Realm( CredentialsMatcher matcher )
-    {
+    public Realm( CredentialsMatcher matcher ) {
         super( new AllowAllCredentialsMatcher() );
         setPermissionResolver( new CustomPermissionResolver() );
     }
 
 
-    public Realm( CacheManager cacheManager, CredentialsMatcher matcher )
-    {
+    public Realm( CacheManager cacheManager, CredentialsMatcher matcher ) {
         super( cacheManager, new AllowAllCredentialsMatcher() );
         setPermissionResolver( new CustomPermissionResolver() );
     }
 
 
     @Override
-    public void setCredentialsMatcher( CredentialsMatcher credentialsMatcher )
-    {
-        if ( !( credentialsMatcher instanceof AllowAllCredentialsMatcher ) )
-        {
+    public void setCredentialsMatcher( CredentialsMatcher credentialsMatcher ) {
+        if ( !( credentialsMatcher instanceof AllowAllCredentialsMatcher ) ) {
             logger.debug( "Replacing {} with AllowAllCredentialsMatcher", credentialsMatcher );
             credentialsMatcher = new AllowAllCredentialsMatcher();
         }
@@ -148,10 +141,8 @@ public class Realm extends AuthorizingRealm
 
 
     @Override
-    public void setPermissionResolver( PermissionResolver permissionResolver )
-    {
-        if ( !( permissionResolver instanceof CustomPermissionResolver ) )
-        {
+    public void setPermissionResolver( PermissionResolver permissionResolver ) {
+        if ( !( permissionResolver instanceof CustomPermissionResolver ) ) {
             logger.debug( "Replacing {} with AllowAllCredentialsMatcher", permissionResolver );
             permissionResolver = new CustomPermissionResolver();
         }
@@ -160,33 +151,28 @@ public class Realm extends AuthorizingRealm
 
 
     @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf )
-    {
+    public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
     @Autowired
-    public void setManagementService( ManagementService management )
-    {
+    public void setManagementService( ManagementService management ) {
         this.management = management;
     }
 
 
     @Autowired
-    public void setTokenService( TokenService tokens )
-    {
+    public void setTokenService( TokenService tokens ) {
         this.tokens = tokens;
     }
 
 
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo( AuthenticationToken token ) throws AuthenticationException
-    {
+    protected AuthenticationInfo doGetAuthenticationInfo( AuthenticationToken token ) throws AuthenticationException {
         PrincipalCredentialsToken pcToken = ( PrincipalCredentialsToken ) token;
 
-        if ( pcToken.getCredentials() == null )
-        {
+        if ( pcToken.getCredentials() == null ) {
             throw new CredentialsException( "Missing credentials" );
         }
 
@@ -195,46 +181,37 @@ public class Realm extends AuthorizingRealm
         PrincipalIdentifier principal = pcToken.getPrincipal();
         PrincipalCredentials credentials = pcToken.getCredentials();
 
-        if ( credentials instanceof ClientCredentials )
-        {
+        if ( credentials instanceof ClientCredentials ) {
             authenticated = true;
         }
-        else if ( ( principal instanceof AdminUserPrincipal ) && ( credentials instanceof AdminUserPassword ) )
-        {
+        else if ( ( principal instanceof AdminUserPrincipal ) && ( credentials instanceof AdminUserPassword ) ) {
             authenticated = true;
         }
-        else if ( ( principal instanceof AdminUserPrincipal ) && ( credentials instanceof AdminUserAccessToken ) )
-        {
+        else if ( ( principal instanceof AdminUserPrincipal ) && ( credentials instanceof AdminUserAccessToken ) ) {
             authenticated = true;
         }
         else if ( ( principal instanceof ApplicationUserPrincipal )
-                && ( credentials instanceof ApplicationUserAccessToken ) )
-        {
+                && ( credentials instanceof ApplicationUserAccessToken ) ) {
             authenticated = true;
         }
-        else if ( ( principal instanceof ApplicationPrincipal ) && ( credentials instanceof ApplicationAccessToken ) )
-        {
+        else if ( ( principal instanceof ApplicationPrincipal ) && ( credentials instanceof ApplicationAccessToken ) ) {
             authenticated = true;
         }
-        else if ( ( principal instanceof OrganizationPrincipal ) && ( credentials instanceof OrganizationAccessToken ) )
-        {
+        else if ( ( principal instanceof OrganizationPrincipal )
+                && ( credentials instanceof OrganizationAccessToken ) ) {
             authenticated = true;
         }
 
-        if ( principal != null )
-        {
-            if ( !principal.isActivated() )
-            {
+        if ( principal != null ) {
+            if ( !principal.isActivated() ) {
                 throw new AuthenticationException( "Unactivated identity" );
             }
-            if ( principal.isDisabled() )
-            {
+            if ( principal.isDisabled() ) {
                 throw new AuthenticationException( "Disabled identity" );
             }
         }
 
-        if ( !authenticated )
-        {
+        if ( !authenticated ) {
             throw new AuthenticationException( "Unable to authenticate" );
         }
 
@@ -247,8 +224,7 @@ public class Realm extends AuthorizingRealm
 
 
     @Override
-    protected AuthorizationInfo doGetAuthorizationInfo( PrincipalCollection principals )
-    {
+    protected AuthorizationInfo doGetAuthorizationInfo( PrincipalCollection principals ) {
         SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
 
         Map<UUID, String> organizationSet = HashBiMap.create();
@@ -256,11 +232,9 @@ public class Realm extends AuthorizingRealm
         OrganizationInfo organization = null;
         ApplicationInfo application = null;
 
-        for ( PrincipalIdentifier principal : principals.byType( PrincipalIdentifier.class ) )
-        {
+        for ( PrincipalIdentifier principal : principals.byType( PrincipalIdentifier.class ) ) {
 
-            if ( principal instanceof OrganizationPrincipal )
-            {
+            if ( principal instanceof OrganizationPrincipal ) {
                 // OrganizationPrincipals are usually only through OAuth
                 // They have access to a single organization
 
@@ -273,25 +247,21 @@ public class Realm extends AuthorizingRealm
                 organizationSet.put( organization.getUuid(), organization.getName() );
 
                 Map<UUID, String> applications = null;
-                try
-                {
+                try {
                     applications = management.getApplicationsForOrganization( organization.getUuid() );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                if ( ( applications != null ) && !applications.isEmpty() )
-                {
+                if ( ( applications != null ) && !applications.isEmpty() ) {
                     grant( info, principal, "applications:admin,access,get,put,post,delete:" + StringUtils
                             .join( applications.keySet(), ',' ) );
 
                     applicationSet.putAll( applications );
                 }
             }
-            else if ( principal instanceof ApplicationPrincipal )
-            {
+            else if ( principal instanceof ApplicationPrincipal ) {
                 // ApplicationPrincipal are usually only through OAuth
                 // They have access to a single application
 
@@ -301,16 +271,14 @@ public class Realm extends AuthorizingRealm
                 grant( info, principal, "applications:admin,access,get,put,post,delete:" + application.getId() );
                 applicationSet.put( application.getId(), application.getName() );
             }
-            else if ( principal instanceof AdminUserPrincipal )
-            {
+            else if ( principal instanceof AdminUserPrincipal ) {
                 // AdminUserPrincipals are through basic auth and sessions
                 // They have access to organizations and organization
                 // applications
 
                 UserInfo user = ( ( AdminUserPrincipal ) principal ).getUser();
 
-                if ( superUserEnabled && ( superUser != null ) && superUser.equals( user.getUsername() ) )
-                {
+                if ( superUserEnabled && ( superUser != null ) && superUser.equals( user.getUsername() ) ) {
                     // The system user has access to everything
 
                     role( info, principal, ROLE_SERVICE_ADMIN );
@@ -331,8 +299,7 @@ public class Realm extends AuthorizingRealm
                     grant( info, principal,
                             getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "get,put,post,delete", "/**" ) );
                 }
-                else
-                {
+                else {
 
                     // For regular service users, we find what organizations
                     // they're associated with
@@ -348,23 +315,19 @@ public class Realm extends AuthorizingRealm
 
                     role( info, principal, ROLE_ADMIN_USER );
 
-                    try
-                    {
+                    try {
 
                         Map<UUID, String> userOrganizations = management.getOrganizationsForAdminUser( user.getUuid() );
 
-                        if ( userOrganizations != null )
-                        {
-                            for ( UUID id : userOrganizations.keySet() )
-                            {
+                        if ( userOrganizations != null ) {
+                            for ( UUID id : userOrganizations.keySet() ) {
                                 grant( info, principal, "organizations:admin,access,get,put,post,delete:" + id );
                             }
                             organizationSet.putAll( userOrganizations );
 
                             Map<UUID, String> userApplications =
                                     management.getApplicationsForOrganizations( userOrganizations.keySet() );
-                            if ( ( userApplications != null ) && !userApplications.isEmpty() )
-                            {
+                            if ( ( userApplications != null ) && !userApplications.isEmpty() ) {
                                 grant( info, principal, "applications:admin,access,get,put,post,delete:" + StringUtils
                                         .join( userApplications.keySet(), ',' ) );
                                 applicationSet.putAll( userApplications );
@@ -374,14 +337,12 @@ public class Realm extends AuthorizingRealm
                             role( info, principal, ROLE_APPLICATION_ADMIN );
                         }
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                         logger.error( "Unable to construct admin user permissions", e );
                     }
                 }
             }
-            else if ( principal instanceof ApplicationUserPrincipal )
-            {
+            else if ( principal instanceof ApplicationUserPrincipal ) {
 
                 role( info, principal, ROLE_APPLICATION_USER );
 
@@ -390,14 +351,11 @@ public class Realm extends AuthorizingRealm
                 AccessTokenCredentials tokenCredentials =
                         ( ( ApplicationUserPrincipal ) principal ).getAccessTokenCredentials();
                 TokenInfo token = null;
-                if ( tokenCredentials != null )
-                {
-                    try
-                    {
+                if ( tokenCredentials != null ) {
+                    try {
                         token = tokens.getTokenInfo( tokenCredentials.getToken() );
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                         logger.error( "Unable to retrieve token info", e );
                     }
                     logger.debug( "Token: {}", token );
@@ -414,69 +372,57 @@ public class Realm extends AuthorizingRealm
                  */
 
                 EntityManager em = emf.getEntityManager( applicationId );
-                try
-                {
+                try {
                     String appName = ( String ) em.getProperty( em.getApplicationRef(), "name" );
                     applicationSet.put( applicationId, appName );
                     application = new ApplicationInfo( applicationId, appName );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                 }
 
-                try
-                {
+                try {
                     Set<String> permissions = em.getRolePermissions( "default" );
                     grant( info, principal, applicationId, permissions );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable to get user default role permissions", e );
                 }
 
                 UserInfo user = ( ( ApplicationUserPrincipal ) principal ).getUser();
-                try
-                {
+                try {
                     Set<String> permissions = em.getUserPermissions( user.getUuid() );
                     grant( info, principal, applicationId, permissions );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable to get user permissions", e );
                 }
 
-                try
-                {
+                try {
                     Set<String> rolenames = em.getUserRoles( user.getUuid() );
                     grantAppRoles( info, em, applicationId, token, principal, rolenames );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable to get user role permissions", e );
                 }
 
-                try
-                {
+                try {
                     //TODO TN.  This is woefully inefficient, but temporary.  Introduce cassandra backed shiro
                     // caching so this only ever happens once.
                     //See USERGRID-779 for details
                     Results r =
                             em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ), "groups", null,
                                     1000, Level.IDS, false );
-                    if ( r != null )
-                    {
+                    if ( r != null ) {
 
                         Set<String> rolenames = new HashSet<String>();
 
-                        for ( UUID groupId : r.getIds() )
-                        {
+                        for ( UUID groupId : r.getIds() ) {
 
                             Results roleResults =
                                     em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, groupId ), "roles", null,
                                             1000, Level.CORE_PROPERTIES, false );
 
-                            for ( Entity entity : roleResults.getEntities() )
-                            {
+                            for ( Entity entity : roleResults.getEntities() ) {
                                 rolenames.add( entity.getName() );
                             }
                         }
@@ -485,37 +431,31 @@ public class Realm extends AuthorizingRealm
                         grantAppRoles( info, em, applicationId, token, principal, rolenames );
                     }
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable to get user group role permissions", e );
                 }
             }
-            else if ( principal instanceof ApplicationGuestPrincipal )
-            {
+            else if ( principal instanceof ApplicationGuestPrincipal ) {
                 role( info, principal, ROLE_APPLICATION_USER );
 
                 UUID applicationId = ( ( ApplicationGuestPrincipal ) principal ).getApplicationId();
 
                 EntityManager em = emf.getEntityManager( applicationId );
-                try
-                {
+                try {
                     String appName = ( String ) em.getProperty( em.getApplicationRef(), "name" );
                     applicationSet.put( applicationId, appName );
                     application = new ApplicationInfo( applicationId, appName );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                 }
 
                 grant( info, principal, getPermissionFromPath( applicationId, "access" ) );
 
-                try
-                {
+                try {
                     Set<String> permissions = em.getRolePermissions( "guest" );
                     grant( info, principal, applicationId, permissions );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                     logger.error( "Unable to get user default role permissions", e );
                 }
             }
@@ -528,12 +468,10 @@ public class Realm extends AuthorizingRealm
         Session session = currentUser.getSession();
         session.setAttribute( "applications", applicationSet );
         session.setAttribute( "organizations", organizationSet );
-        if ( organization != null )
-        {
+        if ( organization != null ) {
             session.setAttribute( "organization", organization );
         }
-        if ( application != null )
-        {
+        if ( application != null ) {
             session.setAttribute( "application", application );
         }
 
@@ -543,18 +481,14 @@ public class Realm extends AuthorizingRealm
 
     /** Grant all permissions for the role names on this application */
     private void grantAppRoles( SimpleAuthorizationInfo info, EntityManager em, UUID applicationId, TokenInfo token,
-                                PrincipalIdentifier principal, Set<String> rolenames ) throws Exception
-    {
+                                PrincipalIdentifier principal, Set<String> rolenames ) throws Exception {
         Map<String, Role> app_roles = em.getRolesWithTitles( rolenames );
 
-        for ( String rolename : rolenames )
-        {
-            if ( ( app_roles != null ) && ( token != null ) )
-            {
+        for ( String rolename : rolenames ) {
+            if ( ( app_roles != null ) && ( token != null ) ) {
                 Role role = app_roles.get( rolename );
                 if ( ( role != null ) && ( role.getInactivity() > 0 ) && ( token.getInactive() > role
-                        .getInactivity() ) )
-                {
+                        .getInactivity() ) ) {
                     continue;
                 }
             }
@@ -566,36 +500,28 @@ public class Realm extends AuthorizingRealm
     }
 
 
-    public static void grant( SimpleAuthorizationInfo info, PrincipalIdentifier principal, String permission )
-    {
+    public static void grant( SimpleAuthorizationInfo info, PrincipalIdentifier principal, String permission ) {
         logger.debug( "Principal {} granted permission: {}", principal, permission );
         info.addStringPermission( permission );
     }
 
 
-    public static void role( SimpleAuthorizationInfo info, PrincipalIdentifier principal, String role )
-    {
+    public static void role( SimpleAuthorizationInfo info, PrincipalIdentifier principal, String role ) {
         logger.debug( "Principal {} added to role: {}", principal, role );
         info.addRole( role );
     }
 
 
     private static void grant( SimpleAuthorizationInfo info, PrincipalIdentifier principal, UUID applicationId,
-                               Set<String> permissions )
-    {
-        if ( permissions != null )
-        {
-            for ( String permission : permissions )
-            {
-                if ( isNotBlank( permission ) )
-                {
+                               Set<String> permissions ) {
+        if ( permissions != null ) {
+            for ( String permission : permissions ) {
+                if ( isNotBlank( permission ) ) {
                     String operations = "*";
-                    if ( permission.indexOf( ':' ) != -1 )
-                    {
+                    if ( permission.indexOf( ':' ) != -1 ) {
                         operations = stringOrSubstringBeforeFirst( permission, ':' );
                     }
-                    if ( isBlank( operations ) )
-                    {
+                    if ( isBlank( operations ) ) {
                         operations = "*";
                     }
                     permission = stringOrSubstringAfterFirst( permission, ':' );
@@ -608,8 +534,7 @@ public class Realm extends AuthorizingRealm
 
 
     @Override
-    public boolean supports( AuthenticationToken token )
-    {
+    public boolean supports( AuthenticationToken token ) {
         return token instanceof PrincipalCredentialsToken;
     }
 }

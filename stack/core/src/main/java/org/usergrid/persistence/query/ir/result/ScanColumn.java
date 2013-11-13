@@ -6,8 +6,7 @@ import java.util.UUID;
 
 
 /** An interface that represents a column */
-public interface ScanColumn
-{
+public interface ScanColumn {
 
     /** Get the uuid from the column */
     public UUID getUUID();

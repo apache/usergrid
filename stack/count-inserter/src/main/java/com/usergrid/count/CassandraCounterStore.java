@@ -40,53 +40,43 @@ import me.prettyprint.hector.api.mutation.Mutator;
  *
  * @author zznate
  */
-public class CassandraCounterStore implements CounterStore
-{
+public class CassandraCounterStore implements CounterStore {
     private Logger log = LoggerFactory.getLogger( CassandraCounterStore.class );
 
     private final Keyspace keyspace;
 
 
-    public CassandraCounterStore( Keyspace keyspace )
-    {
+    public CassandraCounterStore( Keyspace keyspace ) {
         this.keyspace = keyspace;
     }
 
 
-    public void save( Count count )
-    {
+    public void save( Count count ) {
         this.save( Arrays.asList( count ) );
     }
 
 
-    public void save( Collection<Count> counts )
-    {
+    public void save( Collection<Count> counts ) {
         Map<String, Count> countHolder = new HashMap<String, Count>();
-        for ( Count count : counts )
-        {
+        for ( Count count : counts ) {
             Count c = countHolder.get( count.getCounterName() );
-            if ( c != null )
-            {
+            if ( c != null ) {
                 c.apply( count );
             }
-            else
-            {
+            else {
                 countHolder.put( count.getCounterName(), count );
             }
         }
         Mutator<ByteBuffer> mutator = HFactory.createMutator( keyspace, ByteBufferSerializer.get() );
-        for ( Count count : countHolder.values() )
-        {
+        for ( Count count : countHolder.values() ) {
             mutator.addCounter( count.getKeyNameBytes(), count.getTableName(),
                     new HCounterColumnImpl( count.getColumnName(), count.getValue(),
                             count.getColumnNameSerializer() ) );
         }
-        try
-        {
+        try {
             mutator.execute();
         }
-        catch ( HectorException he )
-        {
+        catch ( HectorException he ) {
             log.error( "Insert failed. Reason: ", he );
         }
     }

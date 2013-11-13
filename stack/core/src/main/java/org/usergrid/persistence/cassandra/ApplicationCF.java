@@ -24,8 +24,7 @@ import static me.prettyprint.hector.api.ddl.ComparatorType.COUNTERTYPE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.getIndexMetadata;
 
 
-public enum ApplicationCF implements CFEnum
-{
+public enum ApplicationCF implements CFEnum {
 
     /** This is where the entity objects are stored */
     ENTITY_PROPERTIES( "Entity_Properties", "BytesType" ),
@@ -34,16 +33,14 @@ public enum ApplicationCF implements CFEnum
     ENTITY_DICTIONARIES( "Entity_Dictionaries", "BytesType" ),
 
     /**
-     * Rows that are full of UUIDs. Used when we want to have a row full of references to other entities. Mainly,
-     * this is
-     * for collections. Collections are represented by this CF.
+     * Rows that are full of UUIDs. Used when we want to have a row full of references to other entities. Mainly, this
+     * is for collections. Collections are represented by this CF.
      */
     ENTITY_ID_SETS( "Entity_Id_Sets", "UUIDType" ),
 
     /**
      * Typed vs. untyped dictionary. Dynamic entity dictionaries end up here. {@link
-     * EntityManagerImpl#getDictionaryAsMap(org.usergrid.persistence.EntityRef,
-     * String)}
+     * EntityManagerImpl#getDictionaryAsMap(org.usergrid.persistence.EntityRef, String)}
      */
     ENTITY_COMPOSITE_DICTIONARIES( "Entity_Composite_Dictionaries",
             "DynamicCompositeType(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType," +
@@ -92,8 +89,7 @@ public enum ApplicationCF implements CFEnum
     private final boolean create;
 
 
-    ApplicationCF( String cf, String comparator )
-    {
+    ApplicationCF( String cf, String comparator ) {
         this.cf = cf;
         this.comparator = comparator;
         validator = null;
@@ -102,8 +98,7 @@ public enum ApplicationCF implements CFEnum
     }
 
 
-    ApplicationCF( String cf, String comparator, String validator )
-    {
+    ApplicationCF( String cf, String comparator, String validator ) {
         this.cf = cf;
         this.comparator = comparator;
         this.validator = validator;
@@ -112,8 +107,7 @@ public enum ApplicationCF implements CFEnum
     }
 
 
-    ApplicationCF( String cf, String comparator, String validator, String indexes )
-    {
+    ApplicationCF( String cf, String comparator, String validator, String indexes ) {
         this.cf = cf;
         this.comparator = comparator;
         this.validator = validator;
@@ -123,50 +117,43 @@ public enum ApplicationCF implements CFEnum
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return cf;
     }
 
 
     @Override
-    public String getColumnFamily()
-    {
+    public String getColumnFamily() {
         return cf;
     }
 
 
     @Override
-    public String getComparator()
-    {
+    public String getComparator() {
         return comparator;
     }
 
 
     @Override
-    public String getValidator()
-    {
+    public String getValidator() {
         return validator;
     }
 
 
     @Override
-    public boolean isComposite()
-    {
+    public boolean isComposite() {
         return comparator.startsWith( "DynamicCompositeType" );
     }
 
 
     @Override
-    public List<ColumnDefinition> getMetadata()
-    {
+    public List<ColumnDefinition> getMetadata() {
         return getIndexMetadata( indexes );
     }
 
 
     @Override
-    public boolean create()
-    {
+    public boolean create() {
         return create;
     }
 

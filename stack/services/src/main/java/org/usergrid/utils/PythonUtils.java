@@ -24,24 +24,20 @@ import org.slf4j.LoggerFactory;
 import static org.usergrid.utils.StringUtils.compactWhitespace;
 
 
-public class PythonUtils
-{
+public class PythonUtils {
 
     private static final Logger logger = LoggerFactory.getLogger( PythonUtils.class );
 
 
-    public static PyObject getPyClass( String moduleName, String clsName )
-    {
+    public static PyObject getPyClass( String moduleName, String clsName ) {
         PyObject pyObject = null;
         PythonInterpreter interpreter = new PythonInterpreter();
 
-        try
-        {
+        try {
             interpreter.exec( "from " + moduleName + " import " + clsName );
             pyObject = interpreter.get( clsName );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             logger.error( "The Python module '" + moduleName + "' is not found: " + compactWhitespace( e.toString() ) );
         }
         return pyObject;
@@ -49,8 +45,7 @@ public class PythonUtils
 
 
     @SuppressWarnings("unchecked")
-    public static <T> T createObject( Class<T> interfaceType, PyObject pyClass )
-    {
+    public static <T> T createObject( Class<T> interfaceType, PyObject pyClass ) {
 
         Object javaObj = null;
 
@@ -62,22 +57,19 @@ public class PythonUtils
     }
 
 
-    public static Object createObject( Object interfaceType, String moduleName, String clsName )
-    {
+    public static Object createObject( Object interfaceType, String moduleName, String clsName ) {
 
         PyObject pyObject = getPyClass( moduleName, clsName );
 
         Object javaObj = null;
-        try
-        {
+        try {
 
             PyObject newObj = pyObject.__call__();
 
             javaObj = newObj.__tojava__( Class.forName( interfaceType.toString().substring(
                     interfaceType.toString().indexOf( " " ) + 1, interfaceType.toString().length() ) ) );
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             logger.error( "Unable to create Python object: " + compactWhitespace( ex.toString() ) );
         }
 
@@ -85,30 +77,24 @@ public class PythonUtils
     }
 
 
-    public static String getModuleName( String s )
-    {
-        if ( s == null )
-        {
+    public static String getModuleName( String s ) {
+        if ( s == null ) {
             return null;
         }
         int i = s.lastIndexOf( '.' );
-        if ( i < 0 )
-        {
+        if ( i < 0 ) {
             return s;
         }
         return s.substring( 0, i );
     }
 
 
-    public static String getClassName( String s )
-    {
-        if ( s == null )
-        {
+    public static String getClassName( String s ) {
+        if ( s == null ) {
             return null;
         }
         int i = s.lastIndexOf( '.' );
-        if ( i < 0 )
-        {
+        if ( i < 0 ) {
             return s;
         }
         return s.substring( i + 1, s.length() );

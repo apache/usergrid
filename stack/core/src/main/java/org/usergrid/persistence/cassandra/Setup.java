@@ -47,8 +47,7 @@ import static org.usergrid.persistence.cassandra.CassandraService.keyspaceForApp
  *
  * @author edanuff
  */
-public class Setup
-{
+public class Setup {
 
     private static final Logger logger = LoggerFactory.getLogger( Setup.class );
 
@@ -61,8 +60,7 @@ public class Setup
      *
      * @param emf the emf
      */
-    public Setup( EntityManagerFactoryImpl emf, CassandraService cass )
-    {
+    public Setup( EntityManagerFactoryImpl emf, CassandraService cass ) {
         this.emf = emf;
         this.cass = cass;
     }
@@ -73,8 +71,7 @@ public class Setup
      *
      * @throws Exception the exception
      */
-    public synchronized void setup() throws Exception
-    {
+    public synchronized void setup() throws Exception {
         init();
 
         setupSystemKeyspace();
@@ -85,14 +82,12 @@ public class Setup
     }
 
 
-    public void init() throws Exception
-    {
+    public void init() throws Exception {
         cass.init();
     }
 
 
-    public void createDefaultApplications() throws Exception
-    {
+    public void createDefaultApplications() throws Exception {
         // TODO unique check?
         ( ( EntityManagerFactoryImpl ) emf )
                 .initializeApplication( DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID, DEFAULT_APPLICATION, null );
@@ -107,8 +102,7 @@ public class Setup
      *
      * @throws Exception the exception
      */
-    public void setupSystemKeyspace() throws Exception
-    {
+    public void setupSystemKeyspace() throws Exception {
 
         logger.info( "Initialize system keyspace" );
 
@@ -136,11 +130,9 @@ public class Setup
      *
      * @throws Exception the exception
      */
-    public void setupApplicationKeyspace( final UUID applicationId, String applicationName ) throws Exception
-    {
+    public void setupApplicationKeyspace( final UUID applicationId, String applicationName ) throws Exception {
 
-        if ( !USE_VIRTUAL_KEYSPACES )
-        {
+        if ( !USE_VIRTUAL_KEYSPACES ) {
             String app_keyspace = keyspaceForApplication( applicationId );
 
             logger.info( "Creating application keyspace " + app_keyspace + " for " + applicationName + " application" );
@@ -154,11 +146,9 @@ public class Setup
     }
 
 
-    public void setupStaticKeyspace() throws Exception
-    {
+    public void setupStaticKeyspace() throws Exception {
 
-        if ( USE_VIRTUAL_KEYSPACES )
-        {
+        if ( USE_VIRTUAL_KEYSPACES ) {
 
             logger.info( "Creating static application keyspace " + STATIC_APPLICATION_KEYSPACE );
 
@@ -174,49 +164,41 @@ public class Setup
     }
 
 
-    public boolean keyspacesExist()
-    {
+    public boolean keyspacesExist() {
         return cass.checkKeyspacesExist();
     }
 
 
-    public static void logCFPermissions()
-    {
+    public static void logCFPermissions() {
         System.out.println( SYSTEM_KEYSPACE + "." + APPLICATIONS_CF + ".<rw>=usergrid" );
         System.out.println( SYSTEM_KEYSPACE + "." + PROPERTIES_CF + ".<rw>=usergrid" );
-        for ( CFEnum cf : ApplicationCF.values() )
-        {
+        for ( CFEnum cf : ApplicationCF.values() ) {
             System.out.println( STATIC_APPLICATION_KEYSPACE + "." + cf + ".<rw>=usergrid" );
         }
-        for ( CFEnum cf : QueuesCF.values() )
-        {
+        for ( CFEnum cf : QueuesCF.values() ) {
             System.out.println( STATIC_APPLICATION_KEYSPACE + "." + cf + ".<rw>=usergrid" );
         }
     }
 
 
     /** @return staticly constructed reference to the management application */
-    public static Application getManagementApp()
-    {
+    public static Application getManagementApp() {
         return SystemDefaults.managementApp;
     }
 
 
     /** @return statically constructed reference to the default application */
-    public static Application getDefaultApp()
-    {
+    public static Application getDefaultApp() {
         return SystemDefaults.defaultApp;
     }
 
 
-    static class SystemDefaults
-    {
+    static class SystemDefaults {
         private static final Application managementApp = new Application( MANAGEMENT_APPLICATION_ID );
         private static final Application defaultApp = new Application( DEFAULT_APPLICATION_ID );
 
 
-        static
-        {
+        static {
             managementApp.setName( MANAGEMENT_APPLICATION );
             defaultApp.setName( DEFAULT_APPLICATION );
         }

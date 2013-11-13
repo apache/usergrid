@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderBySameRangeScanLessThanEqualCollectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderBySameRangeScanLessThanEqualCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderBySameRangeScanLessThanEqualCollection() throws Exception
-    {
+    public void singleOrderBySameRangeScanLessThanEqualCollection() throws Exception {
         singleOrderBySameRangeScanLessThanEqual( new CollectionIoHelper() );
     }
 }

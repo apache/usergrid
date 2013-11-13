@@ -29,114 +29,96 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 @XmlRootElement
-public class QueueSet
-{
+public class QueueSet {
 
     List<QueueInfo> queues = new ArrayList<QueueInfo>();
     boolean more;
 
 
-    public QueueSet()
-    {
+    public QueueSet() {
 
     }
 
 
-    public List<QueueInfo> getQueues()
-    {
+    public List<QueueInfo> getQueues() {
         return queues;
     }
 
 
-    public void setQueues( List<QueueInfo> queues )
-    {
-        if ( queues == null )
-        {
+    public void setQueues( List<QueueInfo> queues ) {
+        if ( queues == null ) {
             queues = new ArrayList<QueueInfo>();
         }
         this.queues = queues;
     }
 
 
-    public QueueSet addQueue( String queuePath, UUID queueId )
-    {
+    public QueueSet addQueue( String queuePath, UUID queueId ) {
         QueueInfo queue = new QueueInfo( queuePath, queueId );
         queues.add( queue );
         return this;
     }
 
 
-    public boolean isMore()
-    {
+    public boolean isMore() {
         return more;
     }
 
 
-    public void setMore( boolean more )
-    {
+    public void setMore( boolean more ) {
         this.more = more;
     }
 
 
-    public boolean hasMore()
-    {
+    public boolean hasMore() {
         return more;
     }
 
 
-    public int size()
-    {
+    public int size() {
         return queues.size();
     }
 
 
     @XmlRootElement
-    public static class QueueInfo
-    {
+    public static class QueueInfo {
 
         String path;
         UUID uuid;
 
 
-        public QueueInfo()
-        {
+        public QueueInfo() {
         }
 
 
-        public QueueInfo( String path, UUID uuid )
-        {
+        public QueueInfo( String path, UUID uuid ) {
             this.path = path;
             this.uuid = uuid;
         }
 
 
-        public String getPath()
-        {
+        public String getPath() {
             return path;
         }
 
 
-        public void setPath( String path )
-        {
+        public void setPath( String path ) {
             this.path = path;
         }
 
 
-        public UUID getUuid()
-        {
+        public UUID getUuid() {
             return uuid;
         }
 
 
-        public void setUuid( UUID uuid )
-        {
+        public void setUuid( UUID uuid ) {
             this.uuid = uuid;
         }
 
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             final int prime = 31;
             int result = 1;
             result = ( prime * result ) + ( ( path == null ) ? 0 : path.hashCode() );
@@ -146,41 +128,31 @@ public class QueueSet
 
 
         @Override
-        public boolean equals( Object obj )
-        {
-            if ( this == obj )
-            {
+        public boolean equals( Object obj ) {
+            if ( this == obj ) {
                 return true;
             }
-            if ( obj == null )
-            {
+            if ( obj == null ) {
                 return false;
             }
-            if ( getClass() != obj.getClass() )
-            {
+            if ( getClass() != obj.getClass() ) {
                 return false;
             }
             QueueInfo other = ( QueueInfo ) obj;
-            if ( path == null )
-            {
-                if ( other.path != null )
-                {
+            if ( path == null ) {
+                if ( other.path != null ) {
                     return false;
                 }
             }
-            else if ( !path.equals( other.path ) )
-            {
+            else if ( !path.equals( other.path ) ) {
                 return false;
             }
-            if ( uuid == null )
-            {
-                if ( other.uuid != null )
-                {
+            if ( uuid == null ) {
+                if ( other.uuid != null ) {
                     return false;
                 }
             }
-            else if ( !uuid.equals( other.uuid ) )
-            {
+            else if ( !uuid.equals( other.uuid ) ) {
                 return false;
             }
             return true;
@@ -188,36 +160,30 @@ public class QueueSet
 
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "QueueInfo [path=" + path + ", uuid=" + uuid + "]";
         }
     }
 
 
-    public void setCursorToLastResult()
-    {
+    public void setCursorToLastResult() {
         // TODO Auto-generated method stub
 
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public Object getCursor()
-    {
+    public Object getCursor() {
         // TODO Auto-generated method stub
         return null;
     }
 
 
-    public void and( QueueSet r )
-    {
+    public void and( QueueSet r ) {
         Set<QueueInfo> oldSet = new HashSet<QueueInfo>( queues );
         List<QueueInfo> newList = new ArrayList<QueueInfo>();
-        for ( QueueInfo q : r.getQueues() )
-        {
-            if ( oldSet.contains( q ) )
-            {
+        for ( QueueInfo q : r.getQueues() ) {
+            if ( oldSet.contains( q ) ) {
                 newList.add( q );
             }
         }

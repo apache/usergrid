@@ -20,8 +20,7 @@ package org.usergrid.persistence.exceptions;
 
 
 /** General Exception for locking related operations. */
-public class LockingException extends Exception
-{
+public class LockingException extends Exception {
 
     /**
      *
@@ -32,8 +31,7 @@ public class LockingException extends Exception
     /**
      *
      */
-    public LockingException()
-    {
+    public LockingException() {
         // TODO Auto-generated constructor stub
     }
 
@@ -41,8 +39,7 @@ public class LockingException extends Exception
     /**
      * @param arg0
      */
-    public LockingException( String arg0 )
-    {
+    public LockingException( String arg0 ) {
         super( arg0 );
         // TODO Auto-generated constructor stub
     }
@@ -51,8 +48,7 @@ public class LockingException extends Exception
     /**
      * @param arg0
      */
-    public LockingException( Throwable arg0 )
-    {
+    public LockingException( Throwable arg0 ) {
         super( arg0 );
         // TODO Auto-generated constructor stub
     }
@@ -62,8 +58,7 @@ public class LockingException extends Exception
      * @param arg0
      * @param arg1
      */
-    public LockingException( String arg0, Throwable arg1 )
-    {
+    public LockingException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
         // TODO Auto-generated constructor stub
     }

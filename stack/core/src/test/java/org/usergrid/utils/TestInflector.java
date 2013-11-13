@@ -24,14 +24,12 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 
 
-public class TestInflector
-{
+public class TestInflector {
     private static final Logger LOG = LoggerFactory.getLogger( TestInflector.class );
 
 
     @Test
-    public void testInflector()
-    {
+    public void testInflector() {
 
         testSingularize( "users", "user" );
         testSingularize( "groups", "group" );
@@ -68,16 +66,14 @@ public class TestInflector
     }
 
 
-    public void testSingularize( String p, String expected )
-    {
+    public void testSingularize( String p, String expected ) {
         String s = Inflector.getInstance().singularize( p );
         LOG.info( "Inflector says singular form of " + p + " is " + s );
         assertEquals( "singular form of " + p + " not expected value", expected, s );
     }
 
 
-    public void testPluralize( String s, String expected )
-    {
+    public void testPluralize( String s, String expected ) {
         String p = Inflector.getInstance().pluralize( s );
         LOG.info( "Inflector says plural form of " + s + " is " + p );
         assertEquals( "plural form of " + s + " not expected value", expected, p );

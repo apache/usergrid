@@ -16,8 +16,7 @@ import com.google.common.base.Preconditions;
 
 
 /** @author zznate */
-public class MetricQuery
-{
+public class MetricQuery {
 
     private final UUID appId;
     private final MetricSort metricSort;
@@ -27,64 +26,54 @@ public class MetricQuery
     private boolean padding = false;
 
 
-    private MetricQuery( UUID appId, MetricSort metricSort )
-    {
+    private MetricQuery( UUID appId, MetricSort metricSort ) {
         this.appId = appId;
         this.metricSort = metricSort;
     }
 
 
-    public static MetricQuery getInstance( UUID appId, MetricSort metricSort )
-    {
+    public static MetricQuery getInstance( UUID appId, MetricSort metricSort ) {
         return new MetricQuery( appId, metricSort );
     }
 
 
-    public MetricQuery resolution( CounterResolution counterResolution )
-    {
+    public MetricQuery resolution( CounterResolution counterResolution ) {
         this.counterResolution = counterResolution;
         return this;
     }
 
 
-    public MetricQuery startDate( long startDate )
-    {
+    public MetricQuery startDate( long startDate ) {
         this.startDate = startDate;
         return this;
     }
 
 
-    public MetricQuery endDate( long endDate )
-    {
+    public MetricQuery endDate( long endDate ) {
         this.endDate = endDate;
         return this;
     }
 
 
-    public MetricQuery pad()
-    {
+    public MetricQuery pad() {
         this.padding = true;
         return this;
     }
 
 
     /** @return A List (potentially empty) of the AggregateCounter values found. */
-    public MetricLine execute( EntityManager entityManager ) throws Exception
-    {
+    public MetricLine execute( EntityManager entityManager ) throws Exception {
         Query query = new Query();
         query.addCounterFilter( metricSort.queryFilter() ); // TODO MetricSort.queryFilter
-        if ( startDate > 0 )
-        {
+        if ( startDate > 0 ) {
             query.setStartTime( startDate );
         }
-        if ( endDate > 0 )
-        {
+        if ( endDate > 0 ) {
             Preconditions
                     .checkArgument( endDate > startDate, "The endDate (%s) must be greater than the startDate (%s)",
                             endDate, startDate );
         }
-        else
-        {
+        else {
             endDate = System.currentTimeMillis();
         }
         query.setFinishTime( endDate );
@@ -94,10 +83,8 @@ public class MetricQuery
 
         List<AggregateCounterSet> qc = r.getCounters();
         List<AggregateCounter> counters = new ArrayList();
-        if ( qc != null && qc.size() > 0 )
-        {
-            if ( qc.get( 0 ) != null && qc.get( 0 ).getValues() != null )
-            {
+        if ( qc != null && qc.size() > 0 ) {
+            if ( qc.get( 0 ) != null && qc.get( 0 ).getValues() != null ) {
                 counters.addAll( qc.get( 0 ).getValues() );
             }
         }

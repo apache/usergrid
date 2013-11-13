@@ -19,11 +19,10 @@ package org.usergrid.security.shiro.credentials;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 
 
-public class AbstractClientCredentials extends ClientCredentialsInfo implements ClientCredentials, PrincipalCredentials
-{
+public class AbstractClientCredentials extends ClientCredentialsInfo
+        implements ClientCredentials, PrincipalCredentials {
 
-    public AbstractClientCredentials( String key, String secret )
-    {
+    public AbstractClientCredentials( String key, String secret ) {
         super( key, secret );
     }
 }

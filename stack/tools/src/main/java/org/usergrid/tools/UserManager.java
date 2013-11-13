@@ -10,12 +10,10 @@ import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /** @author zznate */
-public class UserManager extends ToolBase
-{
+public class UserManager extends ToolBase {
 
     @Override
-    public Options createOptions()
-    {
+    public Options createOptions() {
         Options options = super.createOptions();
         options.addOption( "u", "username", true, "The username to lookup" );
         options.addOption( "p", "password", true, "The password to set for the user" );
@@ -24,14 +22,12 @@ public class UserManager extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
         String userName = line.getOptionValue( "u" );
 
         UserInfo userInfo = managementService.findAdminUser( userName );
-        if ( userInfo == null )
-        {
+        if ( userInfo == null ) {
             logger.info( "user {} not found", userName );
             return;
         }
@@ -39,8 +35,7 @@ public class UserManager extends ToolBase
         logger.info( mapToFormattedJsonString( userInfo ) );
 
 
-        if ( line.hasOption( "p" ) )
-        {
+        if ( line.hasOption( "p" ) ) {
             String password = line.getOptionValue( "p" );
             managementService.setAdminUserPassword( userInfo.getUuid(), password );
             logger.info( "new password match?: " + managementService

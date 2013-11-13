@@ -31,8 +31,7 @@ import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
 
-public class LogViewerFrame extends JFrame
-{
+public class LogViewerFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,8 +40,7 @@ public class LogViewerFrame extends JFrame
     App app;
 
 
-    public LogViewerFrame( App app ) throws IOException
-    {
+    public LogViewerFrame( App app ) throws IOException {
         super( "Log" );
         this.app = app;
 
@@ -62,54 +60,44 @@ public class LogViewerFrame extends JFrame
     }
 
 
-    public void appendMessage( final String message )
-    {
-        SwingUtilities.invokeLater( new Runnable()
-        {
+    public void appendMessage( final String message ) {
+        SwingUtilities.invokeLater( new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 textArea.append( message );
-                try
-                {
+                try {
                     textArea.setCaretPosition( textArea.getDocument().getLength() );
                 }
-                catch ( Exception e )
-                {
+                catch ( Exception e ) {
                 }
             }
         } );
     }
 
 
-    public class Log4jAppender extends AppenderSkeleton
-    {
+    public class Log4jAppender extends AppenderSkeleton {
 
         PatternLayout layout;
 
 
-        public Log4jAppender()
-        {
+        public Log4jAppender() {
             layout = new PatternLayout( "[%d{dd-MMM-yyyy HH:mm:ss,SSS}][%p][%t] %l %m%n" );
         }
 
 
         @Override
-        public void close()
-        {
+        public void close() {
         }
 
 
         @Override
-        public boolean requiresLayout()
-        {
+        public boolean requiresLayout() {
             return false;
         }
 
 
         @Override
-        protected void append( LoggingEvent loggingEvent )
-        {
+        protected void append( LoggingEvent loggingEvent ) {
             appendMessage( layout.format( loggingEvent ) );
         }
     }

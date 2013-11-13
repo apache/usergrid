@@ -35,21 +35,18 @@ import static org.junit.Assert.assertNull;
 
 
 @Concurrent()
-public class PermissionsIT extends AbstractCoreIT
-{
+public class PermissionsIT extends AbstractCoreIT {
 
     private static final Logger logger = LoggerFactory.getLogger( PermissionsIT.class );
 
 
-    public PermissionsIT()
-    {
+    public PermissionsIT() {
         super();
     }
 
 
     @Test
-    public void testPermissionTimeout() throws Exception
-    {
+    public void testPermissionTimeout() throws Exception {
         UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" );
 
         assertNotNull( applicationId );
@@ -97,8 +94,7 @@ public class PermissionsIT extends AbstractCoreIT
 
 
     @Test
-    public void testPermissions() throws Exception
-    {
+    public void testPermissions() throws Exception {
         logger.info( "PermissionsIT.testPermissions" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testPermissions" );

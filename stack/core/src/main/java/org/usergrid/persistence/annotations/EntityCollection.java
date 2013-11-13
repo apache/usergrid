@@ -24,8 +24,7 @@ import java.lang.annotation.Target;
 
 @Target(value = { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EntityCollection
-{
+public @interface EntityCollection {
     String type();
 
     String[] dictionariesIndexed() default { };

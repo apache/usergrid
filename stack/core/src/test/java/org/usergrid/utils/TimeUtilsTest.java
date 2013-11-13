@@ -23,12 +23,10 @@ import org.junit.Test;
 import static junit.framework.Assert.assertEquals;
 
 
-public class TimeUtilsTest
-{
+public class TimeUtilsTest {
 
     @Test
-    public void fromSingleValues()
-    {
+    public void fromSingleValues() {
         assertEquals( 172800000L, TimeUtils.millisFromDuration( "2d" ) );
         assertEquals( 420000L, TimeUtils.millisFromDuration( "7m" ) );
         assertEquals( 90000L, TimeUtils.millisFromDuration( "90s" ) );
@@ -38,8 +36,7 @@ public class TimeUtilsTest
 
 
     @Test
-    public void compoundValues()
-    {
+    public void compoundValues() {
         assertEquals( 65000L, TimeUtils.millisFromDuration( "1m,5s" ) );
         assertEquals( 1293484000L, TimeUtils.millisFromDuration( "14d,23h,18m,4s" ) );
         assertEquals( 1293484000L, TimeUtils.millisFromDuration( "18m,23h,4s,14d" ) );
@@ -48,16 +45,14 @@ public class TimeUtilsTest
     }
 
 
-    @Test( expected = IllegalArgumentException.class )
-    public void meaningfulFailure()
-    {
+    @Test(expected = IllegalArgumentException.class)
+    public void meaningfulFailure() {
         TimeUtils.millisFromDuration( "14z" );
     }
 
 
     @Test
-    public void passThrough()
-    {
+    public void passThrough() {
         assertEquals( 5508L, TimeUtils.millisFromDuration( "5508" ) );
     }
 }

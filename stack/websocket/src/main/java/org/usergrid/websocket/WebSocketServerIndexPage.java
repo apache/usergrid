@@ -43,14 +43,12 @@ import org.jboss.netty.util.CharsetUtil;
  * @author <a href="http://gleamynode.net/">Trustin Lee</a>
  * @version $Rev: 2080 $, $Date: 2010-01-26 18:04:19 +0900 (Tue, 26 Jan 2010) $
  */
-public class WebSocketServerIndexPage
-{
+public class WebSocketServerIndexPage {
 
     private static final String NEWLINE = "\r\n";
 
 
-    public static ChannelBuffer getContent( String webSocketLocation )
-    {
+    public static ChannelBuffer getContent( String webSocketLocation ) {
         return ChannelBuffers.copiedBuffer(
                 "<html><head><title>Web Socket Test</title></head>" + NEWLINE + "<body>" + NEWLINE
                         + "<script type=\"text/javascript\">" + NEWLINE + "var socket;" + NEWLINE
@@ -67,8 +65,7 @@ public class WebSocketServerIndexPage
                         + "</script>" + NEWLINE + "<form onsubmit=\"return false;\">" + NEWLINE
                         + "<input type=\"text\" name=\"message\" value=\"Hello, World!\"/>"
                         + "<input type=\"button\" value=\"Send Web Socket Data\" onclick=\"send(this.form.message" +
-                        ".value)\" />"
-                        + NEWLINE + "</form>" + NEWLINE + "</body>" + NEWLINE + "</html>" + NEWLINE,
+                        ".value)\" />" + NEWLINE + "</form>" + NEWLINE + "</body>" + NEWLINE + "</html>" + NEWLINE,
                 CharsetUtil.US_ASCII );
     }
 }

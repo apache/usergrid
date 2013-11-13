@@ -15,18 +15,15 @@ import org.usergrid.AbstractCoreIT;
 import static org.junit.Assert.assertEquals;
 
 
-public class PathQueryIT extends AbstractCoreIT
-{
+public class PathQueryIT extends AbstractCoreIT {
 
     @Test
-    public void testUserDevicePathQuery() throws Exception
-    {
+    public void testUserDevicePathQuery() throws Exception {
         UUID applicationId = setup.createApplication( "testOrganization", "testUserDevicePathQuery" );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> users = new ArrayList<Entity>();
-        for ( int i = 0; i < 15; i++ )
-        {
+        for ( int i = 0; i < 15; i++ ) {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "index", i );
             properties.put( "username", "user " + i );
@@ -35,10 +32,8 @@ public class PathQueryIT extends AbstractCoreIT
         }
 
         List<UUID> deviceIds = new ArrayList<UUID>();
-        for ( Entity user : users )
-        {
-            for ( int i = 0; i < 5; i++ )
-            {
+        for ( Entity user : users ) {
+            for ( int i = 0; i < 5; i++ ) {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
                 properties.put( "index", i );
                 Entity created = em.create( "device", properties );
@@ -64,8 +59,7 @@ public class PathQueryIT extends AbstractCoreIT
         Results results = em.searchCollection( em.getApplicationRef(), "users", userQuery );
         PagingResultsIterator pri = new PagingResultsIterator( results );
         int count = 2;
-        while ( pri.hasNext() )
-        {
+        while ( pri.hasNext() ) {
             Entity e = ( Entity ) pri.next();
             assertEquals( count++, ( ( Long ) e.getProperty( "index" ) ).intValue() );
         }
@@ -82,8 +76,7 @@ public class PathQueryIT extends AbstractCoreIT
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
         HashSet set = new HashSet( expectedUserQuerySize * expectedDeviceQuerySize );
         Iterator<Entity> i = devicesPQ.iterator( em );
-        while ( i.hasNext() )
-        {
+        while ( i.hasNext() ) {
             set.add( i.next() );
         }
         assertEquals( expectedUserQuerySize * expectedDeviceQuerySize, set.size() );
@@ -91,15 +84,13 @@ public class PathQueryIT extends AbstractCoreIT
 
 
     @Test
-    public void testGroupUserDevicePathQuery() throws Exception
-    {
+    public void testGroupUserDevicePathQuery() throws Exception {
 
         UUID applicationId = setup.createApplication( "testOrganization", "testGroupUserDevicePathQuery" );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> groups = new ArrayList<Entity>();
-        for ( int i = 0; i < 4; i++ )
-        {
+        for ( int i = 0; i < 4; i++ ) {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "index", i );
             properties.put( "path", "group_" + i );
@@ -108,10 +99,8 @@ public class PathQueryIT extends AbstractCoreIT
         }
 
         List<Entity> users = new ArrayList<Entity>();
-        for ( Entity group : groups )
-        {
-            for ( int i = 0; i < 7; i++ )
-            {
+        for ( Entity group : groups ) {
+            for ( int i = 0; i < 7; i++ ) {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
                 properties.put( "index", i );
                 properties.put( "username", group.getProperty( "path" ) + " user " + i );
@@ -126,10 +115,8 @@ public class PathQueryIT extends AbstractCoreIT
         assertEquals( 7, ru.size() );
 
         List<UUID> devices = new ArrayList<UUID>();
-        for ( Entity user : users )
-        {
-            for ( int i = 0; i < 7; i++ )
-            {
+        for ( Entity user : users ) {
+            for ( int i = 0; i < 7; i++ ) {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
                 properties.put( "index", i );
                 Entity created = em.create( "device", properties );
@@ -169,8 +156,7 @@ public class PathQueryIT extends AbstractCoreIT
 
         HashSet set = new HashSet( expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize );
         Iterator<Entity> i = devicesPQ.iterator( em );
-        while ( i.hasNext() )
-        {
+        while ( i.hasNext() ) {
             set.add( i.next() );
         }
         assertEquals( expectedGroupQuerySize * expectedUserQuerySize * expectedDeviceQuerySize, set.size() );

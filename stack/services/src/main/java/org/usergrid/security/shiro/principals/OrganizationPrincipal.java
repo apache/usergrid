@@ -21,33 +21,28 @@ import java.util.UUID;
 import org.usergrid.management.OrganizationInfo;
 
 
-public class OrganizationPrincipal extends PrincipalIdentifier
-{
+public class OrganizationPrincipal extends PrincipalIdentifier {
 
     final OrganizationInfo organization;
 
 
-    public OrganizationPrincipal( OrganizationInfo organization )
-    {
+    public OrganizationPrincipal( OrganizationInfo organization ) {
         this.organization = organization;
     }
 
 
-    public OrganizationInfo getOrganization()
-    {
+    public OrganizationInfo getOrganization() {
         return organization;
     }
 
 
-    public UUID getOrganizationId()
-    {
+    public UUID getOrganizationId() {
         return organization.getUuid();
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return organization.toString();
     }
 }

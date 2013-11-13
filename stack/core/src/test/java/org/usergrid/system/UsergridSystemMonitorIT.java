@@ -17,35 +17,30 @@ import static org.junit.Assert.assertTrue;
 
 /** @author zznate */
 @Concurrent
-public class UsergridSystemMonitorIT
-{
+public class UsergridSystemMonitorIT {
     private UsergridSystemMonitor usergridSystemMonitor;
 
 
     @Before
-    public void setupLocal()
-    {
+    public void setupLocal() {
         usergridSystemMonitor = CoreITSuite.cassandraResource.getBean( UsergridSystemMonitor.class );
     }
 
 
     @Test
-    public void testVersionNumber()
-    {
+    public void testVersionNumber() {
         assertEquals( "0.1", usergridSystemMonitor.getBuildNumber() );
     }
 
 
     @Test
-    public void testIsCassandraAlive()
-    {
+    public void testIsCassandraAlive() {
         assertTrue( usergridSystemMonitor.getIsCassandraAlive() );
     }
 
 
     @Test
-    public void verifyLogDump()
-    {
+    public void verifyLogDump() {
         String str = UsergridSystemMonitor.formatMessage( 1600L, MapUtils.hashMap( "message", "hello" ) );
 
         assertTrue( StringUtils.contains( str, "hello" ) );

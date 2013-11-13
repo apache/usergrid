@@ -11,19 +11,16 @@ import org.apache.shiro.subject.support.SubjectThreadState;
 
 
 /** A {@link org.junit.rules.TestRule} that cleans up the Shiro Subject's ThreadState. */
-public class ClearShiroSubject extends ExternalResource
-{
+public class ClearShiroSubject extends ExternalResource {
     private static final Logger LOG = LoggerFactory.getLogger( ClearShiroSubject.class );
 
 
     @Override
-    protected void after()
-    {
+    protected void after() {
         super.after();
         Subject subject = SecurityUtils.getSubject();
 
-        if ( subject == null )
-        {
+        if ( subject == null ) {
             LOG.info( "Shiro Subject was null. No need to clear." );
             return;
         }

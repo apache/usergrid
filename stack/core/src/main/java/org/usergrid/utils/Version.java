@@ -57,8 +57,7 @@ import org.apache.commons.lang.StringUtils;
  * The Version class can be used to parse a standard version string into its four components,
  * MAJOR.MINOR.BUILD.REVISION.
  */
-public class Version implements Serializable, Cloneable, Comparable<Version>
-{
+public class Version implements Serializable, Cloneable, Comparable<Version> {
     /** A serial version UID. */
     private static final long serialVersionUID = -4316270526722986552L;
 
@@ -68,8 +67,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     /** Initialize a new Version object that is set to "0.0.0.0". */
-    public Version()
-    {
+    public Version() {
     }
 
 
@@ -88,8 +86,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @return Everything before the version in the string that was parsed.
      */
-    public String getPrefix()
-    {
+    public String getPrefix() {
         return prefix;
     }
 
@@ -103,12 +100,10 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @throws Exception When there is an error parsing the String.
      */
-    public static Version parse( String toParse ) throws Exception
-    {
+    public static Version parse( String toParse ) throws Exception {
         Matcher m = STD_VERSION_PATT.matcher( toParse );
 
-        if ( !m.find() )
-        {
+        if ( !m.find() ) {
             throw new Exception( String.format( "Error parsing version from '%s'", toParse ) );
         }
 
@@ -116,23 +111,19 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
         v.rawVersion = toParse;
         v.prefix = m.group( 1 );
 
-        if ( StringUtils.isNotEmpty( m.group( 2 ) ) )
-        {
+        if ( StringUtils.isNotEmpty( m.group( 2 ) ) ) {
             v.setMajor( m.group( 2 ) );
         }
 
-        if ( StringUtils.isNotEmpty( m.group( 3 ) ) )
-        {
+        if ( StringUtils.isNotEmpty( m.group( 3 ) ) ) {
             v.setMinor( m.group( 3 ) );
         }
 
-        if ( StringUtils.isNotEmpty( m.group( 4 ) ) )
-        {
+        if ( StringUtils.isNotEmpty( m.group( 4 ) ) ) {
             v.setBuild( m.group( 4 ) );
         }
 
-        if ( StringUtils.isNotEmpty( m.group( 5 ) ) )
-        {
+        if ( StringUtils.isNotEmpty( m.group( 5 ) ) ) {
             v.setRevision( m.group( 5 ) );
         }
 
@@ -153,20 +144,16 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @throws IllegalArgumentException When a null or non-numeric value is given.
      */
-    public void setMajor( String toSet ) throws IllegalArgumentException
-    {
-        if ( StringUtils.isEmpty( toSet ) )
-        {
+    public void setMajor( String toSet ) throws IllegalArgumentException {
+        if ( StringUtils.isEmpty( toSet ) ) {
             throw new IllegalArgumentException( "Argument is null" );
         }
 
-        if ( !toSet.matches( "\\d+" ) )
-        {
+        if ( !toSet.matches( "\\d+" ) ) {
             throw new IllegalArgumentException( "Argument is not numeric" );
         }
 
-        if ( numberOfComponents < 1 )
-        {
+        if ( numberOfComponents < 1 ) {
             numberOfComponents = 1;
         }
 
@@ -175,8 +162,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     /** The version's MAJOR component as an integer. */
-    private int getMajorAsInt()
-    {
+    private int getMajorAsInt() {
         return Integer.parseInt( major );
     }
 
@@ -192,20 +178,16 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @throws IllegalArgumentException When a null or non-numeric value is given.
      */
-    public void setMinor( String toSet ) throws IllegalArgumentException
-    {
-        if ( StringUtils.isEmpty( toSet ) )
-        {
+    public void setMinor( String toSet ) throws IllegalArgumentException {
+        if ( StringUtils.isEmpty( toSet ) ) {
             throw new IllegalArgumentException( "Argument is null" );
         }
 
-        if ( !toSet.matches( "\\d+" ) )
-        {
+        if ( !toSet.matches( "\\d+" ) ) {
             throw new IllegalArgumentException( "Argument is not numeric" );
         }
 
-        if ( numberOfComponents < 2 )
-        {
+        if ( numberOfComponents < 2 ) {
             numberOfComponents = 2;
         }
 
@@ -214,8 +196,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     /** The version's MINOR component as an integer. */
-    private int getMinorAsInt()
-    {
+    private int getMinorAsInt() {
         return Integer.parseInt( minor );
     }
 
@@ -225,8 +206,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     /** The version's BUILD component as an integer. */
-    private int getBuildAsInt()
-    {
+    private int getBuildAsInt() {
         return Integer.parseInt( build );
     }
 
@@ -236,8 +216,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @return The version's BUILD component.
      */
-    public String getBuild()
-    {
+    public String getBuild() {
         return build;
     }
 
@@ -249,20 +228,16 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @throws IllegalArgumentException When a null or non-numeric value is given.
      */
-    public void setBuild( String toSet ) throws IllegalArgumentException
-    {
-        if ( StringUtils.isEmpty( toSet ) )
-        {
+    public void setBuild( String toSet ) throws IllegalArgumentException {
+        if ( StringUtils.isEmpty( toSet ) ) {
             throw new IllegalArgumentException( "Argument is null" );
         }
 
-        if ( !toSet.matches( "\\d+" ) )
-        {
+        if ( !toSet.matches( "\\d+" ) ) {
             throw new IllegalArgumentException( "Argument is not numeric" );
         }
 
-        if ( numberOfComponents < 3 )
-        {
+        if ( numberOfComponents < 3 ) {
             numberOfComponents = 3;
         }
 
@@ -275,8 +250,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @param toSet The version's BUILD component.
      */
-    public void setBuild( int toSet )
-    {
+    public void setBuild( int toSet ) {
         setBuild( String.valueOf( toSet ) );
     }
 
@@ -286,8 +260,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     /** The version's REVISION component as an integer. */
-    private int getRevisionAsInt()
-    {
+    private int getRevisionAsInt() {
         return Integer.parseInt( revision );
     }
 
@@ -299,20 +272,16 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @throws IllegalArgumentException When a null or non-numeric value is given.
      */
-    public void setRevision( String toSet ) throws IllegalArgumentException
-    {
-        if ( StringUtils.isEmpty( toSet ) )
-        {
+    public void setRevision( String toSet ) throws IllegalArgumentException {
+        if ( StringUtils.isEmpty( toSet ) ) {
             throw new IllegalArgumentException( "Argument is null" );
         }
 
-        if ( !toSet.matches( "\\d+" ) )
-        {
+        if ( !toSet.matches( "\\d+" ) ) {
             throw new IllegalArgumentException( "Argument is not numeric" );
         }
 
-        if ( numberOfComponents < 4 )
-        {
+        if ( numberOfComponents < 4 ) {
             numberOfComponents = 4;
         }
 
@@ -328,9 +297,8 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     @Override
-    @SuppressWarnings( "all" )
-    public Object clone() throws CloneNotSupportedException
-    {
+    @SuppressWarnings("all")
+    public Object clone() throws CloneNotSupportedException {
         Version v = new Version();
 
         v.rawVersion = rawVersion;
@@ -349,17 +317,14 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     @Override
-    public boolean equals( Object toCompare )
-    {
+    public boolean equals( Object toCompare ) {
         // Compare pointers
-        if ( toCompare == this )
-        {
+        if ( toCompare == this ) {
             return true;
         }
 
         // Compare types
-        if ( !( toCompare instanceof Version ) )
-        {
+        if ( !( toCompare instanceof Version ) ) {
             return false;
         }
 
@@ -368,15 +333,13 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return toString().hashCode();
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return String.format( "%s.%s.%s.%s", major, minor, build, revision );
     }
 
@@ -389,18 +352,15 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
      *
      * @return The version as a string using the specified number of components.
      */
-    public String toString( int components )
-    {
+    public String toString( int components ) {
         StringBuilder buff = new StringBuilder();
         buff.append( major );
 
-        if ( components > 4 )
-        {
+        if ( components > 4 ) {
             components = 4;
         }
 
-        switch ( components )
-        {
+        switch ( components ) {
             case 2:
                 buff.append( String.format( ".%s", minor ) );
                 break;
@@ -418,15 +378,12 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
     }
 
 
-    private int compareInts( int x, int y )
-    {
-        if ( x == y )
-        {
+    private int compareInts( int x, int y ) {
+        if ( x == y ) {
             return 0;
         }
 
-        if ( x < y )
-        {
+        if ( x < y ) {
             return -1;
         }
 
@@ -435,40 +392,34 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
 
     @Override
-    public int compareTo( Version toCompare )
-    {
+    public int compareTo( Version toCompare ) {
         int result = toString().compareTo( toCompare.toString() );
 
-        if ( result == 0 )
-        {
+        if ( result == 0 ) {
             return result;
         }
 
         result = compareInts( getMajorAsInt(), toCompare.getMajorAsInt() );
 
-        if ( result != 0 )
-        {
+        if ( result != 0 ) {
             return result;
         }
 
         result = compareInts( getMinorAsInt(), toCompare.getMinorAsInt() );
 
-        if ( result != 0 )
-        {
+        if ( result != 0 ) {
             return result;
         }
 
         result = compareInts( getBuildAsInt(), toCompare.getBuildAsInt() );
 
-        if ( result != 0 )
-        {
+        if ( result != 0 ) {
             return result;
         }
 
         result = compareInts( getRevisionAsInt(), toCompare.getRevisionAsInt() );
 
-        if ( result != 0 )
-        {
+        if ( result != 0 ) {
             return result;
         }
 

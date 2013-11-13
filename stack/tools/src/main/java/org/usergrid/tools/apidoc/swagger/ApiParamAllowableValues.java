@@ -24,46 +24,39 @@ import org.usergrid.utils.JsonUtils;
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 
-public class ApiParamAllowableValues
-{
+public class ApiParamAllowableValues {
     List<String> values;
     String valueType;
 
 
-    public ApiParamAllowableValues()
-    {
+    public ApiParamAllowableValues() {
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public List<String> getValues()
-    {
+    public List<String> getValues() {
         return values;
     }
 
 
-    public void setValues( List<String> values )
-    {
+    public void setValues( List<String> values ) {
         this.values = values;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getValueType()
-    {
+    public String getValueType() {
         return valueType;
     }
 
 
-    public void setValueType( String valueType )
-    {
+    public void setValueType( String valueType ) {
         this.valueType = valueType;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return JsonUtils.mapToJsonString( this );
     }
 }

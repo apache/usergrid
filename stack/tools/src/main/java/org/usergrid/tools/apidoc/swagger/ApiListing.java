@@ -32,8 +32,7 @@ import org.w3c.dom.Element;
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
 
 
-public class ApiListing
-{
+public class ApiListing {
     String basePath;
     String swaggerVersion;
     String apiVersion;
@@ -41,93 +40,78 @@ public class ApiListing
     Map<String, Map<String, Object>> models;
 
 
-    public ApiListing()
-    {
+    public ApiListing() {
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getBasePath()
-    {
+    public String getBasePath() {
         return basePath;
     }
 
 
-    public void setBasePath( String basePath )
-    {
+    public void setBasePath( String basePath ) {
         this.basePath = basePath;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getSwaggerVersion()
-    {
+    public String getSwaggerVersion() {
         return swaggerVersion;
     }
 
 
-    public void setSwaggerVersion( String swaggerVersion )
-    {
+    public void setSwaggerVersion( String swaggerVersion ) {
         this.swaggerVersion = swaggerVersion;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public String getApiVersion()
-    {
+    public String getApiVersion() {
         return apiVersion;
     }
 
 
-    public void setApiVersion( String apiVersion )
-    {
+    public void setApiVersion( String apiVersion ) {
         this.apiVersion = apiVersion;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public List<Api> getApis()
-    {
+    public List<Api> getApis() {
         return apis;
     }
 
 
-    public void setApis( List<Api> apis )
-    {
+    public void setApis( List<Api> apis ) {
         this.apis = apis;
     }
 
 
     @JsonSerialize(include = NON_NULL)
-    public Map<String, Map<String, Object>> getModels()
-    {
+    public Map<String, Map<String, Object>> getModels() {
         return models;
     }
 
 
-    public void setModels( Map<String, Map<String, Object>> models )
-    {
+    public void setModels( Map<String, Map<String, Object>> models ) {
         this.models = models;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return JsonUtils.mapToJsonString( this );
     }
 
 
-    public Document createWADLApplication()
-    {
+    public Document createWADLApplication() {
         DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = null;
-        try
-        {
+        try {
             docBuilder = dbfac.newDocumentBuilder();
         }
-        catch ( ParserConfigurationException e )
-        {
+        catch ( ParserConfigurationException e ) {
         }
         DOMImplementation domImpl = docBuilder.getDOMImplementation();
         Document doc = domImpl.createDocument( "http://wadl.dev.java.net/2009/02", "application", null );
@@ -140,23 +124,19 @@ public class ApiListing
         application.setAttributeNS( "http://www.w3.org/2000/xmlns/", "xmlns:apigee",
                 "http://api.apigee.com/wadl/2010/07/" );
         application.setAttributeNS( "http://www.w3.org/2001/XMLSchema-instance", "xsi:schemaLocation",
-                "http://wadl.dev.java.net/2009/02 http://apigee.com/schemas/wadl-schema.xsd http://api.apigee" +
-                        ".com/wadl/2010/07/ http://apigee.com/schemas/apigee-wadl-extensions.xsd" );
+                "http://wadl.dev.java.net/2009/02 http://apigee.com/schemas/wadl-schema.xsd http://api.apigee"
+                        + ".com/wadl/2010/07/ http://apigee.com/schemas/apigee-wadl-extensions.xsd" );
 
-        if ( apis != null )
-        {
+        if ( apis != null ) {
             Element resources = doc.createElement( "resources" );
-            if ( basePath != null )
-            {
+            if ( basePath != null ) {
                 resources.setAttribute( "base", basePath );
             }
-            else
-            {
+            else {
                 resources.setAttribute( "base", "http://api.usergrid.com" );
             }
             application.appendChild( resources );
-            for ( Api api : apis )
-            {
+            for ( Api api : apis ) {
                 resources.appendChild( api.createWADLResource( doc, this ) );
             }
         }

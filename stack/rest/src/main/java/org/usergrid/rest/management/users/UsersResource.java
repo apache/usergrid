@@ -58,8 +58,7 @@ import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityExc
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 } )
-public class UsersResource extends AbstractContextResource
-{
+public class UsersResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( UsersResource.class );
 
@@ -67,15 +66,13 @@ public class UsersResource extends AbstractContextResource
     UserInfo user;
 
 
-    public UsersResource()
-    {
+    public UsersResource() {
         logger.info( "ManagementUsersResource initialized" );
     }
 
 
     @Path( "{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
-    public UserResource getUserById( @Context UriInfo ui, @PathParam( "userId" ) String userIdStr ) throws Exception
-    {
+    public UserResource getUserById( @Context UriInfo ui, @PathParam( "userId" ) String userIdStr ) throws Exception {
 
         return getSubResource( UserResource.class )
                 .init( management.getAdminUserByUuid( UUID.fromString( userIdStr ) ) );
@@ -84,14 +81,11 @@ public class UsersResource extends AbstractContextResource
 
     @Path( "{username}" )
     public UserResource getUserByUsername( @Context UriInfo ui, @PathParam( "username" ) String username )
-            throws Exception
-    {
+            throws Exception {
 
-        if ( "me".equals( username ) )
-        {
+        if ( "me".equals( username ) ) {
             UserInfo user = SubjectUtils.getAdminUser();
-            if ( ( user != null ) && ( user.getUuid() != null ) )
-            {
+            if ( ( user != null ) && ( user.getUuid() != null ) ) {
                 return getSubResource( UserResource.class ).init( management.getAdminUserByUuid( user.getUuid() ) );
             }
             throw mappableSecurityException( "unauthorized", "No admin identity for access credentials provided" );
@@ -102,8 +96,7 @@ public class UsersResource extends AbstractContextResource
 
 
     @Path( "{email: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}}" )
-    public UserResource getUserByEmail( @Context UriInfo ui, @PathParam( "email" ) String email ) throws Exception
-    {
+    public UserResource getUserByEmail( @Context UriInfo ui, @PathParam( "email" ) String email ) throws Exception {
 
         return getSubResource( UserResource.class ).init( management.getAdminUserByEmail( email ) );
     }
@@ -115,8 +108,7 @@ public class UsersResource extends AbstractContextResource
                                        @FormParam( "name" ) String name, @FormParam( "email" ) String email,
                                        @FormParam( "password" ) String password,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception
-    {
+            throws Exception {
 
         logger.info( "Create user: " + username );
 
@@ -125,14 +117,12 @@ public class UsersResource extends AbstractContextResource
 
         UserInfo user = management.createAdminUser( username, name, email, password, false, false );
         Map<String, Object> result = new LinkedHashMap<String, Object>();
-        if ( user != null )
-        {
+        if ( user != null ) {
             result.put( "user", user );
             response.setData( result );
             response.setSuccess();
         }
-        else
-        {
+        else {
             throw mappableSecurityException( AuthErrorInfo.BAD_CREDENTIALS_SYNTAX_ERROR );
         }
 
@@ -160,8 +150,7 @@ public class UsersResource extends AbstractContextResource
     @GET
     @Path( "resetpw" )
     @Produces( MediaType.TEXT_HTML )
-    public Viewable showPasswordResetForm( @Context UriInfo ui )
-    {
+    public Viewable showPasswordResetForm( @Context UriInfo ui ) {
         return handleViewable( "resetpw_email_form", this );
     }
 
@@ -172,13 +161,10 @@ public class UsersResource extends AbstractContextResource
     @Produces( MediaType.TEXT_HTML )
     public Viewable handlePasswordResetForm( @Context UriInfo ui, @FormParam( "email" ) String email,
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
-                                             @FormParam( "recaptcha_response_field" ) String uresponse )
-    {
+                                             @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
-        try
-        {
-            if ( isBlank( email ) )
-            {
+        try {
+            if ( isBlank( email ) ) {
                 errorMsg = "No email provided, try again...";
                 return handleViewable( "resetpw_email_form", this );
             }
@@ -189,45 +175,37 @@ public class UsersResource extends AbstractContextResource
             ReCaptchaResponse reCaptchaResponse =
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
-            if ( !useReCaptcha() || reCaptchaResponse.isValid() )
-            {
+            if ( !useReCaptcha() || reCaptchaResponse.isValid() ) {
                 user = management.findAdminUser( email );
-                if ( user != null )
-                {
+                if ( user != null ) {
                     management.startAdminUserPasswordResetFlow( user );
                     return handleViewable( "resetpw_email_success", this );
                 }
-                else
-                {
+                else {
                     errorMsg = "We don't recognize that email, try again...";
                     return handleViewable( "resetpw_email_form", this );
                 }
             }
-            else
-            {
+            else {
                 errorMsg = "Incorrect Captcha, try again...";
                 return handleViewable( "resetpw_email_form", this );
             }
         }
-        catch ( RedirectionException e )
-        {
+        catch ( RedirectionException e ) {
             throw e;
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             return handleViewable( "error", e );
         }
     }
 
 
-    public String getErrorMsg()
-    {
+    public String getErrorMsg() {
         return errorMsg;
     }
 
 
-    public UserInfo getUser()
-    {
+    public UserInfo getUser() {
         return user;
     }
 }

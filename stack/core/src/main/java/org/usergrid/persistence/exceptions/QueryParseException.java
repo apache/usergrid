@@ -21,8 +21,7 @@ package org.usergrid.persistence.exceptions;
  *
  * @author tnine
  */
-public class QueryParseException extends RuntimeException
-{
+public class QueryParseException extends RuntimeException {
 
     /**
      *
@@ -33,8 +32,7 @@ public class QueryParseException extends RuntimeException
     /**
      *
      */
-    public QueryParseException()
-    {
+    public QueryParseException() {
         super();
     }
 
@@ -43,8 +41,7 @@ public class QueryParseException extends RuntimeException
      * @param arg0
      * @param arg1
      */
-    public QueryParseException( String arg0, Throwable arg1 )
-    {
+    public QueryParseException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
@@ -52,8 +49,7 @@ public class QueryParseException extends RuntimeException
     /**
      * @param arg0
      */
-    public QueryParseException( String arg0 )
-    {
+    public QueryParseException( String arg0 ) {
         super( arg0 );
     }
 
@@ -61,8 +57,7 @@ public class QueryParseException extends RuntimeException
     /**
      * @param arg0
      */
-    public QueryParseException( Throwable arg0 )
-    {
+    public QueryParseException( Throwable arg0 ) {
         super( arg0 );
     }
 }

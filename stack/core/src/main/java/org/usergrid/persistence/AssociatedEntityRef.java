@@ -16,7 +16,6 @@
 package org.usergrid.persistence;
 
 
-public interface AssociatedEntityRef extends EntityRef
-{
+public interface AssociatedEntityRef extends EntityRef {
 
 }

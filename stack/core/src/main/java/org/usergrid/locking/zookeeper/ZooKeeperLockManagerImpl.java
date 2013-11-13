@@ -34,8 +34,7 @@ import com.netflix.curator.retry.ExponentialBackoffRetry;
 
 
 /** Implementation for Zookeeper service that handles global locks. */
-public final class ZooKeeperLockManagerImpl implements LockManager
-{
+public final class ZooKeeperLockManagerImpl implements LockManager {
 
     private String hostPort;
 
@@ -46,8 +45,7 @@ public final class ZooKeeperLockManagerImpl implements LockManager
     private CuratorFramework client;
 
 
-    public ZooKeeperLockManagerImpl( String hostPort, int sessionTimeout, int maxAttemps )
-    {
+    public ZooKeeperLockManagerImpl( String hostPort, int sessionTimeout, int maxAttemps ) {
         this.hostPort = hostPort;
         this.sessionTimeout = sessionTimeout;
         this.maxAttempts = maxAttemps;
@@ -55,14 +53,12 @@ public final class ZooKeeperLockManagerImpl implements LockManager
     }
 
 
-    public ZooKeeperLockManagerImpl()
-    {
+    public ZooKeeperLockManagerImpl() {
     }
 
 
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         RetryPolicy retryPolicy = new ExponentialBackoffRetry( sessionTimeout, maxAttempts );
         client = CuratorFrameworkFactory.newClient( hostPort, retryPolicy );
         client.start();
@@ -79,8 +75,7 @@ public final class ZooKeeperLockManagerImpl implements LockManager
      * java.lang.String[])
      */
     @Override
-    public Lock createLock( UUID applicationId, String... path )
-    {
+    public Lock createLock( UUID applicationId, String... path ) {
         String lockPath = LockPathBuilder.buildPath( applicationId, path );
 
 
@@ -88,38 +83,32 @@ public final class ZooKeeperLockManagerImpl implements LockManager
     }
 
 
-    public String getHostPort()
-    {
+    public String getHostPort() {
         return hostPort;
     }
 
 
-    public void setHostPort( String hostPort )
-    {
+    public void setHostPort( String hostPort ) {
         this.hostPort = hostPort;
     }
 
 
-    public int getSessionTimeout()
-    {
+    public int getSessionTimeout() {
         return sessionTimeout;
     }
 
 
-    public void setSessionTimeout( int sessionTimeout )
-    {
+    public void setSessionTimeout( int sessionTimeout ) {
         this.sessionTimeout = sessionTimeout;
     }
 
 
-    public int getMaxAttempts()
-    {
+    public int getMaxAttempts() {
         return maxAttempts;
     }
 
 
-    public void setMaxAttempts( int maxAttemps )
-    {
+    public void setMaxAttempts( int maxAttemps ) {
         this.maxAttempts = maxAttemps;
     }
 }

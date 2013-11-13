@@ -38,8 +38,7 @@ import org.apache.commons.cli.Options;
  *
  * @author zznate
  */
-public abstract class ExportingToolBase extends ToolBase
-{
+public abstract class ExportingToolBase extends ToolBase {
 
     protected Logger logger = LoggerFactory.getLogger( ExportingToolBase.class );
 
@@ -56,8 +55,7 @@ public abstract class ExportingToolBase extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Options options = super.createOptions();
 
@@ -71,22 +69,18 @@ public abstract class ExportingToolBase extends ToolBase
     }
 
 
-    protected void prepareBaseOutputFileName( CommandLine line )
-    {
+    protected void prepareBaseOutputFileName( CommandLine line ) {
 
         boolean hasOutputDir = line.hasOption( OUTPUT_DIR );
 
-        if ( hasOutputDir )
-        {
+        if ( hasOutputDir ) {
             baseOutputDirName = line.getOptionValue( OUTPUT_DIR );
         }
     }
 
 
-    protected void applyOrgId( CommandLine line )
-    {
-        if ( line.hasOption( "orgId" ) )
-        {
+    protected void applyOrgId( CommandLine line ) {
+        if ( line.hasOption( "orgId" ) ) {
             orgId = ConversionUtils.uuid( line.getOptionValue( "orgId" ) );
         }
     }
@@ -100,56 +94,46 @@ public abstract class ExportingToolBase extends ToolBase
      * @param content string to be written
      */
     @SuppressWarnings("unused")
-    protected void writeOutput( PrintWriter out, String content )
-    {
+    protected void writeOutput( PrintWriter out, String content ) {
         echo( content );
         out.print( content );
     }
 
 
-    protected File createOutputParentDir()
-    {
+    protected File createOutputParentDir() {
         return createDir( baseOutputDirName );
     }
 
 
-    protected File createOutputFile( String type, String name )
-    {
+    protected File createOutputFile( String type, String name ) {
         return new File( outputDir, prepareOutputFileName( type, name ) );
     }
 
 
-    protected File createOutputFile( File parent, String type, String name )
-    {
+    protected File createOutputFile( File parent, String type, String name ) {
         return new File( parent, prepareOutputFileName( type, name ) );
     }
 
 
-    protected File createCollectionsDir( String applicationName )
-    {
+    protected File createCollectionsDir( String applicationName ) {
         return createDir( String.format( "%s/%s.applicationName.collections", outputDir, applicationName ) );
     }
 
 
-    protected File createDir( String dirName )
-    {
+    protected File createDir( String dirName ) {
         File file = new File( dirName );
 
-        if ( file.exists() )
-        {
-            if ( file.isDirectory() )
-            {
+        if ( file.exists() ) {
+            if ( file.isDirectory() ) {
                 return file;
             }
-            else
-            {
+            else {
                 throw new RuntimeException(
                         String.format( "Unable to create directory %s.  It already exists as a file", dirName ) );
             }
         }
 
-        if ( !file.mkdirs() )
-        {
+        if ( !file.mkdirs() ) {
 
             throw new RuntimeException( String.format( "Unable to create diretory %s", dirName ) );
         }
@@ -163,8 +147,7 @@ public abstract class ExportingToolBase extends ToolBase
      *
      * @return the file name concatenated with the type and the name of the collection
      */
-    protected String prepareOutputFileName( String type, String name )
-    {
+    protected String prepareOutputFileName( String type, String name ) {
         name = name.replace( "/", PATH_REPLACEMENT );
         // Add application and timestamp
         StringBuilder str = new StringBuilder();
@@ -185,14 +168,12 @@ public abstract class ExportingToolBase extends ToolBase
     }
 
 
-    protected JsonGenerator getJsonGenerator( String outFile ) throws IOException
-    {
+    protected JsonGenerator getJsonGenerator( String outFile ) throws IOException {
         return getJsonGenerator( new File( outputDir, outFile ) );
     }
 
 
-    protected JsonGenerator getJsonGenerator( File outFile ) throws IOException
-    {
+    protected JsonGenerator getJsonGenerator( File outFile ) throws IOException {
         PrintWriter out = new PrintWriter( outFile, "UTF-8" );
         JsonGenerator jg = jsonFactory.createJsonGenerator( out );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );

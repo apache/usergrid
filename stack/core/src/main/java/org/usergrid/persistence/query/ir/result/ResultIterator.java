@@ -32,8 +32,7 @@ import org.usergrid.persistence.cassandra.CursorCache;
  *
  * @author tnine
  */
-public interface ResultIterator extends Iterable<Set<ScanColumn>>, Iterator<Set<ScanColumn>>
-{
+public interface ResultIterator extends Iterable<Set<ScanColumn>>, Iterator<Set<ScanColumn>> {
 
 
     /** Reset this iterator to the start to begin iterating again */

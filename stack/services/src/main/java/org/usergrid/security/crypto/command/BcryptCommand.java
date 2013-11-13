@@ -33,8 +33,7 @@ import static org.apache.commons.codec.binary.Base64.decodeBase64;
  * @author tnine
  */
 @Component("org.usergrid.security.crypto.command.BcryptCommand")
-public class BcryptCommand extends EncryptionCommand
-{
+public class BcryptCommand extends EncryptionCommand {
 
     private static final Charset UTF8 = Charset.forName( "UTF-8" );
 
@@ -50,8 +49,7 @@ public class BcryptCommand extends EncryptionCommand
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
     @Override
-    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         return BCrypt.hashpw( new String( input, UTF8 ), BCrypt.gensalt( defaultIterations ) ).getBytes();
     }
 
@@ -60,8 +58,7 @@ public class BcryptCommand extends EncryptionCommand
      * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[],
      * org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
      */
-    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId )
-    {
+    public byte[] auth( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
         //our existing has the salt in it, extract it and re-use it
 
         String infoSecret = info.getSecret();
@@ -75,14 +72,12 @@ public class BcryptCommand extends EncryptionCommand
 
 
     /**
-     * Set the number of default iterations to use.  If the password was previously hashed,
-     * the number of iterations will
-     * be in the CredentialsInfo.  Otherwise the default is used
+     * Set the number of default iterations to use.  If the password was previously hashed, the number of iterations
+     * will be in the CredentialsInfo.  Otherwise the default is used
      *
      * @param defaultIterations the defaultIterations to set
      */
-    public void setDefaultIterations( int defaultIterations )
-    {
+    public void setDefaultIterations( int defaultIterations ) {
         this.defaultIterations = defaultIterations;
     }
 
@@ -91,8 +86,7 @@ public class BcryptCommand extends EncryptionCommand
      * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
      */
     @Override
-    public String getName()
-    {
+    public String getName() {
         return BCRYPT;
     }
 }

@@ -47,8 +47,7 @@ import org.apache.commons.cli.Options;
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
 
 
-public class Cli extends ToolBase
-{
+public class Cli extends ToolBase {
 
     public static final int MAX_ENTITY_FETCH = 100;
 
@@ -59,8 +58,7 @@ public class Cli extends ToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().withDescription( "Cassandra host" ).create( "host" );
@@ -76,53 +74,42 @@ public class Cli extends ToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
         handleInput();
     }
 
 
-    public void handleInput() throws QueryParseException
-    {
+    public void handleInput() throws QueryParseException {
         BufferedReader d = new BufferedReader( new InputStreamReader( System.in ) );
 
         UUID applicationId = DEFAULT_APPLICATION_ID;
 
-        while ( true )
-        {
+        while ( true ) {
             System.out.println();
             System.out.print( ">" );
             String s = null;
-            try
-            {
+            try {
                 s = d.readLine();
             }
-            catch ( IOException e )
-            {
+            catch ( IOException e ) {
             }
-            if ( s == null )
-            {
+            if ( s == null ) {
                 System.exit( 0 );
             }
 
             s = s.trim().toLowerCase();
-            if ( s.startsWith( "use " ) )
-            {
+            if ( s.startsWith( "use " ) ) {
                 s = s.substring( 4 );
                 applicationId = UUIDUtils.tryExtractUUID( s );
-                if ( applicationId == null )
-                {
-                    try
-                    {
+                if ( applicationId == null ) {
+                    try {
                         applicationId = emf.lookupApplication( s.trim() );
                     }
-                    catch ( Exception e )
-                    {
+                    catch ( Exception e ) {
                     }
                 }
-                if ( applicationId == null )
-                {
+                if ( applicationId == null ) {
                     applicationId = DEFAULT_APPLICATION_ID;
                 }
                 System.out.println( "Using application " + applicationId );
@@ -130,27 +117,22 @@ public class Cli extends ToolBase
             }
 
             ServiceAction action = ServiceAction.GET;
-            if ( s.startsWith( "get " ) )
-            {
+            if ( s.startsWith( "get " ) ) {
                 s = s.substring( "get ".length() ).trim();
             }
-            else if ( s.startsWith( "post " ) )
-            {
+            else if ( s.startsWith( "post " ) ) {
                 s = s.substring( "post ".length() ).trim();
                 action = ServiceAction.POST;
             }
-            else if ( s.startsWith( "put " ) )
-            {
+            else if ( s.startsWith( "put " ) ) {
                 s = s.substring( "put".length() ).trim();
                 action = ServiceAction.PUT;
             }
-            else if ( s.startsWith( "delete " ) )
-            {
+            else if ( s.startsWith( "delete " ) ) {
                 s = s.substring( "delete ".length() ).trim();
                 action = ServiceAction.DELETE;
             }
-            else if ( s.startsWith( "quit" ) )
-            {
+            else if ( s.startsWith( "quit" ) ) {
                 return;
             }
 
@@ -160,39 +142,31 @@ public class Cli extends ToolBase
             boolean next_is_payload = false;
             boolean next_is_json = false;
             ServicePayload payload = null;
-            while ( i < s.length() )
-            {
+            while ( i < s.length() ) {
                 boolean is_query = next_is_query;
-                if ( next_is_payload )
-                {
+                if ( next_is_payload ) {
                     String str = s.substring( i );
                     payload = ServicePayload.stringPayload( str );
                     break;
                 }
-                else if ( next_is_json )
-                {
+                else if ( next_is_json ) {
                     next_is_json = false;
                     int start = i - 1;
                     int bracket_count = 1;
-                    while ( i < s.length() )
-                    {
+                    while ( i < s.length() ) {
                         char c = s.charAt( i );
-                        if ( c == '{' )
-                        {
+                        if ( c == '{' ) {
                             bracket_count++;
                         }
-                        else if ( c == '}' )
-                        {
+                        else if ( c == '}' ) {
                             bracket_count--;
                         }
-                        if ( bracket_count == 0 )
-                        {
+                        if ( bracket_count == 0 ) {
                             i++;
                             String json = s.substring( start, i );
                             Query query = Query.fromJsonString( json );
                             ServiceParameter.addParameter( parameters, query );
-                            if ( ( i < s.length() ) && ( s.charAt( i ) == '/' ) )
-                            {
+                            if ( ( i < s.length() ) && ( s.charAt( i ) == '/' ) ) {
                                 i++;
                             }
                             break;
@@ -212,33 +186,28 @@ public class Cli extends ToolBase
                 int bracket = s.indexOf( '{', i );
                 int j = s.length();
 
-                if ( ( slash >= 0 ) && ( slash < j ) )
-                {
+                if ( ( slash >= 0 ) && ( slash < j ) ) {
                     j = slash;
                 }
 
-                if ( ( space >= 0 ) && ( space < j ) )
-                {
+                if ( ( space >= 0 ) && ( space < j ) ) {
                     j = space;
                     next_is_payload = true;
                 }
 
-                if ( ( semicolon >= 0 ) && ( semicolon < j ) )
-                {
+                if ( ( semicolon >= 0 ) && ( semicolon < j ) ) {
                     next_is_query = true;
                     next_is_payload = false;
                     j = semicolon;
                 }
 
-                if ( ( question >= 0 ) && ( question < j ) )
-                {
+                if ( ( question >= 0 ) && ( question < j ) ) {
                     next_is_query = true;
                     next_is_payload = false;
                     j = question;
                 }
 
-                if ( ( bracket >= 0 ) && ( bracket < j ) )
-                {
+                if ( ( bracket >= 0 ) && ( bracket < j ) ) {
                     next_is_query = false;
                     next_is_payload = false;
                     next_is_json = true;
@@ -246,23 +215,18 @@ public class Cli extends ToolBase
                 }
 
                 String segment = s.substring( i, j );
-                if ( segment.length() > 0 )
-                {
-                    if ( is_query )
-                    {
+                if ( segment.length() > 0 ) {
+                    if ( is_query ) {
                         Map<String, List<String>> params = HttpUtils.parseQueryString( segment );
                         Query query = Query.fromQueryParams( params );
                         ServiceParameter.addParameter( parameters, query );
                     }
-                    else
-                    {
+                    else {
                         UUID uuid = UUIDUtils.tryGetUUID( segment );
-                        if ( uuid != null )
-                        {
+                        if ( uuid != null ) {
                             ServiceParameter.addParameter( parameters, uuid );
                         }
-                        else
-                        {
+                        else {
                             ServiceParameter.addParameter( parameters, segment );
                         }
                     }
@@ -271,39 +235,31 @@ public class Cli extends ToolBase
                 i = j + 1;
             }
 
-            if ( parameters.size() == 0 )
-            {
+            if ( parameters.size() == 0 ) {
                 continue;
             }
 
             System.out.println( action + " " + parameters + " " + payload );
             ServiceManager services = smf.getServiceManager( applicationId );
             ServiceRequest r = null;
-            try
-            {
+            try {
                 r = services.newRequest( action, parameters, payload );
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Error", e );
             }
             ServiceResults results = null;
-            try
-            {
+            try {
                 results = r.execute();
             }
-            catch ( Exception e )
-            {
+            catch ( Exception e ) {
                 logger.error( "Error", e );
             }
-            if ( results != null )
-            {
-                if ( results.hasData() )
-                {
+            if ( results != null ) {
+                if ( results.hasData() ) {
                     System.out.println( JsonUtils.mapToFormattedJsonString( results.getData() ) );
                 }
-                if ( results.getServiceMetadata() != null )
-                {
+                if ( results.getServiceMetadata() != null ) {
                     System.out.println( JsonUtils.mapToFormattedJsonString( results.getServiceMetadata() ) );
                 }
                 System.out.println( JsonUtils.mapToFormattedJsonString( results.getEntities() ) );

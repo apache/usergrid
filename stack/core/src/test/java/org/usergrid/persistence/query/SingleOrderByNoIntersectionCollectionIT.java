@@ -20,11 +20,9 @@ import org.junit.Test;
 
 
 /** @author tnine */
-public class SingleOrderByNoIntersectionCollectionIT extends AbstractIteratingQueryIT
-{
+public class SingleOrderByNoIntersectionCollectionIT extends AbstractIteratingQueryIT {
     @Test
-    public void singleOrderByNoIntersectionCollection() throws Exception
-    {
+    public void singleOrderByNoIntersectionCollection() throws Exception {
         singleOrderByNoIntersection( new CollectionIoHelper() );
     }
 }

@@ -30,22 +30,19 @@ import org.usergrid.services.ServiceResults;
 import org.usergrid.services.generic.GenericCollectionService;
 
 
-public class ActivitiesService extends GenericCollectionService
-{
+public class ActivitiesService extends GenericCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( ActivitiesService.class );
 
 
-    public ActivitiesService()
-    {
+    public ActivitiesService() {
         super();
         logger.info( "/groups/*/users/*/activities" );
     }
 
 
     @Override
-    public ServiceResults postCollection( ServiceContext context ) throws Exception
-    {
+    public ServiceResults postCollection( ServiceContext context ) throws Exception {
 
         ServiceResults results = super.postCollection( context );
 
@@ -55,8 +52,7 @@ public class ActivitiesService extends GenericCollectionService
 
 
     @Override
-    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception
-    {
+    public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
 
         ServiceResults results = super.postItemById( context, id );
 
@@ -65,28 +61,23 @@ public class ActivitiesService extends GenericCollectionService
     }
 
 
-    public void distribute( EntityRef group, EntityRef user, Entity activity ) throws Exception
-    {
-        if ( activity == null )
-        {
+    public void distribute( EntityRef group, EntityRef user, Entity activity ) throws Exception {
+        if ( activity == null ) {
             return;
         }
         em.addToCollection( user, "feed", activity );
         Results r1 = em.getCollection( group, "users", null, 10000, Results.Level.IDS, false );
-        if ( ( r1 == null ) || ( r1.isEmpty() ) )
-        {
+        if ( ( r1 == null ) || ( r1.isEmpty() ) ) {
             return;
         }
         Results r2 = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.IDS );
 
-        if ( ( r2 == null ) || ( r2.isEmpty() ) )
-        {
+        if ( ( r2 == null ) || ( r2.isEmpty() ) ) {
             return;
         }
         r1.and( r2 );
         List<EntityRef> refs = Results.fromIdList( r1.getIds(), User.ENTITY_TYPE ).getRefs();
-        if ( refs != null )
-        {
+        if ( refs != null ) {
             em.addToCollections( refs, "feed", activity );
         }
     }

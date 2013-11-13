@@ -21,16 +21,14 @@ import org.usergrid.rest.test.resource.TestContext;
 
 
 /** @author tnine */
-public class TestAdminUser extends TestUser
-{
+public class TestAdminUser extends TestUser {
 
     /**
      * @param user
      * @param password
      * @param email
      */
-    public TestAdminUser( String user, String password, String email )
-    {
+    public TestAdminUser( String user, String password, String email ) {
         super( user, password, email );
     }
 
@@ -40,8 +38,7 @@ public class TestAdminUser extends TestUser
      * org.usergrid.rest.test.resource.TestContext)
      */
     @Override
-    protected String getToken( TestContext context )
-    {
+    protected String getToken( TestContext context ) {
         return context.management().tokenGet( user, password );
     }
 
@@ -50,8 +47,7 @@ public class TestAdminUser extends TestUser
      * @see org.usergrid.rest.test.security.TestUser#create(org.usergrid.rest.test.resource.TestContext)
      */
     @Override
-    protected JsonNode createInternal( TestContext context )
-    {
+    protected JsonNode createInternal( TestContext context ) {
         return context.application().users().create( user, email, password );
     }
 }

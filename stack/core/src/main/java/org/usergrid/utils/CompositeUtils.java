@@ -25,36 +25,30 @@ import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 
 
-public class CompositeUtils
-{
+public class CompositeUtils {
 
-    public static Object deserialize( ByteBuffer bytes )
-    {
+    public static Object deserialize( ByteBuffer bytes ) {
         List<Object> objects = DynamicComposite.fromByteBuffer( bytes );
-        if ( objects.size() > 0 )
-        {
+        if ( objects.size() > 0 ) {
             return objects.get( 0 );
         }
         return null;
     }
 
 
-    @SuppressWarnings( "unchecked" )
-    public static DynamicComposite setEqualityFlag( DynamicComposite composite, ComponentEquality eq )
-    {
-        if ( composite.isEmpty() )
-        {
+    @SuppressWarnings("unchecked")
+    public static DynamicComposite setEqualityFlag( DynamicComposite composite, ComponentEquality eq ) {
+        if ( composite.isEmpty() ) {
             return composite;
         }
         int i = composite.size() - 1;
-        @SuppressWarnings( "rawtypes" ) Component c = composite.getComponent( i );
+        @SuppressWarnings("rawtypes") Component c = composite.getComponent( i );
         composite.setComponent( i, c.getValue(), c.getSerializer(), c.getComparator(), eq );
         return composite;
     }
 
 
-    public static DynamicComposite setGreaterThanEqualityFlag( DynamicComposite composite )
-    {
+    public static DynamicComposite setGreaterThanEqualityFlag( DynamicComposite composite ) {
         return setEqualityFlag( composite, ComponentEquality.GREATER_THAN_EQUAL );
     }
 }

@@ -27,18 +27,14 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 
 @Provider
-public class ServiceResourceNotFoundExceptionMapper extends AbstractExceptionMapper<ServiceResourceNotFoundException>
-{
+public class ServiceResourceNotFoundExceptionMapper extends AbstractExceptionMapper<ServiceResourceNotFoundException> {
 
     @Override
-    public Response toResponse( ServiceResourceNotFoundException e )
-    {
-        if ( SubjectUtils.getSubjectUserId() == null )
-        {
+    public Response toResponse( ServiceResourceNotFoundException e ) {
+        if ( SubjectUtils.getSubjectUserId() == null ) {
             return toResponse( UNAUTHORIZED, e );
         }
-        else
-        {
+        else {
             return toResponse( NOT_FOUND, e );
         }
     }

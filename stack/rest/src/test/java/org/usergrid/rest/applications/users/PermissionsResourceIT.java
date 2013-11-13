@@ -50,23 +50,20 @@ import static org.usergrid.utils.MapUtils.hashMap;
  * @author tnine
  */
 @Concurrent()
-public class PermissionsResourceIT extends AbstractRestIT
-{
+public class PermissionsResourceIT extends AbstractRestIT {
 
     private static final String ROLE = "permtestrole";
 
     private static final String USER = "edanuff";
 
 
-    public PermissionsResourceIT() throws Exception
-    {
+    public PermissionsResourceIT() throws Exception {
 
     }
 
 
     @Test
-    public void deleteUserFromRole()
-    {
+    public void deleteUserFromRole() {
         Map<String, String> data = hashMap( "name", ROLE );
 
         JsonNode node =
@@ -110,8 +107,7 @@ public class PermissionsResourceIT extends AbstractRestIT
 
 
     @Test
-    public void deleteUserGroup()
-    {
+    public void deleteUserGroup() {
 
         // don't populate the user, it will use the currently authenticated
         // user.
@@ -158,8 +154,7 @@ public class PermissionsResourceIT extends AbstractRestIT
      * IDEA! That being said, this should technically work, and needs testing.
      */
     @Test
-    public void dictionaryPermissions() throws Exception
-    {
+    public void dictionaryPermissions() throws Exception {
         UUID id = UUIDUtils.newTimeUUID();
 
         String applicationName = "testapp";
@@ -214,8 +209,7 @@ public class PermissionsResourceIT extends AbstractRestIT
      * Create a user reviewer 2 and add them to the "reveiwergroup"
      */
     @Test
-    public void applicationPermissions() throws Exception
-    {
+    public void applicationPermissions() throws Exception {
         UUID id = UUIDUtils.newTimeUUID();
 
         String applicationName = "test";
@@ -296,14 +290,12 @@ public class PermissionsResourceIT extends AbstractRestIT
 
         ClientResponse.Status status = null;
 
-        try
-        {
+        try {
             resource().path( String.format( "/%s/%s/reviews/noca", orgname, applicationName ) )
                     .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -311,14 +303,12 @@ public class PermissionsResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             resource().path( String.format( "/%s/%s/reviews/4peaks", orgname, applicationName ) )
                     .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -377,14 +367,12 @@ public class PermissionsResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             resource().path( String.format( "/%s/%s/reviews/cowboyciao", orgname, applicationName ) )
                     .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -392,14 +380,12 @@ public class PermissionsResourceIT extends AbstractRestIT
 
         status = null;
 
-        try
-        {
+        try {
             resource().path( String.format( "/%s/%s/reviews/currycorner", orgname, applicationName ) )
                     .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
@@ -409,8 +395,7 @@ public class PermissionsResourceIT extends AbstractRestIT
 
     /**
      * Tests the scenario where we have roles declarations such as: <ul> <li>GET /users/[star]/reviews "any user can
-     * read
-     * any others book review"</li> <li>POST /users/[user1]/reviews "cannot post as user2 to user1's reviews"</li>
+     * read any others book review"</li> <li>POST /users/[user1]/reviews "cannot post as user2 to user1's reviews"</li>
      * <ii>POST /users/[star]/reviews/feedback/* "can post as user2 to user1's feedback/good or /bad</ii> </ul>
      * <p/>
      * Scenario is as follows: Create an application
@@ -420,8 +405,7 @@ public class PermissionsResourceIT extends AbstractRestIT
      * Create a book collection for user1
      */
     @Test
-    public void wildcardMiddlePermission() throws Exception
-    {
+    public void wildcardMiddlePermission() throws Exception {
         Map<String, String> params = buildOrgAppParams();
         OrganizationOwnerInfo orgs = setup.getMgmtSvc().createOwnerAndOrganization( params.get( "orgName" ),
                 params.get( "username" ), "noname", params.get( "email" ), params.get( "password" ), true, false );
@@ -514,15 +498,13 @@ public class PermissionsResourceIT extends AbstractRestIT
         logNode( node );
         // now try to post the same thing to books to verify as userOne the failure
         Status status = null;
-        try
-        {
+        try {
             node = resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
                     .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
             logNode( node );
         }
-        catch ( UniformInterfaceException uie )
-        {
+        catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
         }
         assertEquals( Status.UNAUTHORIZED, status );
@@ -559,8 +541,7 @@ public class PermissionsResourceIT extends AbstractRestIT
      */
     @Test
     @Ignore
-    public void wildcardFollowingPermission() throws Exception
-    {
+    public void wildcardFollowingPermission() throws Exception {
         UUID id = UUIDUtils.newTimeUUID();
 
         String applicationName = "test";
@@ -622,8 +603,7 @@ public class PermissionsResourceIT extends AbstractRestIT
     }
 
 
-    private Map<String, String> buildOrgAppParams()
-    {
+    private Map<String, String> buildOrgAppParams() {
         UUID id = UUIDUtils.newTimeUUID();
         Map<String, String> props =
                 hashMap( "username", "wcpermadmin" ).map( "orgName", "orgnamewcperm" ).map( "appName", "test" )
@@ -640,8 +620,7 @@ public class PermissionsResourceIT extends AbstractRestIT
      * @return the userid
      */
     private UUID createRoleUser( UUID orgId, UUID appId, String adminToken, String username, String email )
-            throws Exception
-    {
+            throws Exception {
 
         Map<String, String> props = hashMap( "email", email ).map( "username", username ).map( "name", username )
                 .map( "password", "password" );
@@ -662,8 +641,7 @@ public class PermissionsResourceIT extends AbstractRestIT
 
 
     /** Test adding the permission to the role */
-    private void addPermission( String orgname, String appname, String adminToken, String rolename, String grant )
-    {
+    private void addPermission( String orgname, String appname, String adminToken, String rolename, String grant ) {
         Map<String, String> props = hashMap( "permission", grant );
 
         String rolePath = String.format( "/%s/%s/roles/%s/permissions", orgname, appname, rolename );
@@ -681,10 +659,8 @@ public class PermissionsResourceIT extends AbstractRestIT
 
         Iterator<JsonNode> iterator = data.getElements();
 
-        while ( iterator.hasNext() )
-        {
-            if ( grant.equals( iterator.next().asText() ) )
-            {
+        while ( iterator.hasNext() ) {
+            if ( grant.equals( iterator.next().asText() ) ) {
                 return;
             }
         }
@@ -694,8 +670,7 @@ public class PermissionsResourceIT extends AbstractRestIT
 
 
     /** Test adding the permission to the role */
-    private void addPermission( String orgname, String appname, String rolename, String grant )
-    {
+    private void addPermission( String orgname, String appname, String rolename, String grant ) {
         Map<String, String> props = hashMap( "permission", grant );
 
         String rolePath = String.format( "/%s/%s/roles/%s/permissions", orgname, appname, rolename );
@@ -713,10 +688,8 @@ public class PermissionsResourceIT extends AbstractRestIT
 
         Iterator<JsonNode> iterator = data.getElements();
 
-        while ( iterator.hasNext() )
-        {
-            if ( grant.equals( iterator.next().asText() ) )
-            {
+        while ( iterator.hasNext() ) {
+            if ( grant.equals( iterator.next().asText() ) ) {
                 return;
             }
         }

@@ -48,8 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class IndexUtils
-{
+public class IndexUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger( IndexUtils.class );
 
@@ -57,154 +56,121 @@ public class IndexUtils
 
 
     private static void buildKeyValueSet( Object node, Map<String, List<Object>> keyValues, String path,
-                                          boolean fulltextIndex, Object... history )
-    {
+                                          boolean fulltextIndex, Object... history ) {
 
-        if ( node == null )
-        {
+        if ( node == null ) {
             return;
         }
 
-        if ( node instanceof Collection )
-        {
+        if ( node instanceof Collection ) {
             Object[] newHistory = Arrays.copyOf( history, history.length + 1 );
             newHistory[history.length] = node;
-            @SuppressWarnings( "unchecked" ) Collection<Object> c = ( Collection<Object> ) node;
-            for ( Object o : c )
-            {
+            @SuppressWarnings("unchecked") Collection<Object> c = ( Collection<Object> ) node;
+            for ( Object o : c ) {
                 buildKeyValueSet( o, keyValues, path, fulltextIndex, newHistory );
             }
         }
-        else if ( node instanceof Map )
-        {
+        else if ( node instanceof Map ) {
             Object[] newHistory = Arrays.copyOf( history, history.length + 1 );
             newHistory[history.length] = node;
-            @SuppressWarnings( "unchecked" ) Map<Object, Object> m = ( Map<Object, Object> ) node;
-            for ( Entry<Object, Object> e : m.entrySet() )
-            {
+            @SuppressWarnings("unchecked") Map<Object, Object> m = ( Map<Object, Object> ) node;
+            for ( Entry<Object, Object> e : m.entrySet() ) {
                 String newPath;
                 String key = e.getKey().toString();
                 key = quoteString( key );
-                if ( key.indexOf( '\\' ) == -1 )
-                {
-                    if ( path != null )
-                    {
+                if ( key.indexOf( '\\' ) == -1 ) {
+                    if ( path != null ) {
                         newPath = path + "." + key;
                     }
-                    else
-                    {
+                    else {
                         newPath = "" + key;
                     }
                 }
-                else
-                {
-                    if ( path != null )
-                    {
+                else {
+                    if ( path != null ) {
                         newPath = path + "[\"" + key + "\"]";
                     }
-                    else
-                    {
+                    else {
                         newPath = "" + "[\"" + key + "\"]";
                     }
                 }
                 buildKeyValueSet( e.getValue(), keyValues, newPath, fulltextIndex, newHistory );
             }
         }
-        else if ( node instanceof ArrayNode )
-        {
+        else if ( node instanceof ArrayNode ) {
             Object[] newHistory = Arrays.copyOf( history, history.length + 1 );
             newHistory[history.length] = node;
             ArrayNode c = ( ArrayNode ) node;
-            for ( JsonNode o : c )
-            {
+            for ( JsonNode o : c ) {
                 buildKeyValueSet( o, keyValues, path, fulltextIndex, newHistory );
             }
         }
-        else if ( node instanceof ObjectNode )
-        {
+        else if ( node instanceof ObjectNode ) {
             Object[] newHistory = Arrays.copyOf( history, history.length + 1 );
             newHistory[history.length] = node;
             ObjectNode c = ( ObjectNode ) node;
             Iterator<Entry<String, JsonNode>> i = c.getFields();
-            while ( i.hasNext() )
-            {
+            while ( i.hasNext() ) {
                 Entry<String, JsonNode> e = i.next();
                 String newPath;
                 String key = e.getKey();
                 key = quoteString( key );
-                if ( key.indexOf( '\\' ) == -1 )
-                {
-                    if ( path != null )
-                    {
+                if ( key.indexOf( '\\' ) == -1 ) {
+                    if ( path != null ) {
                         newPath = path + "." + key;
                     }
-                    else
-                    {
+                    else {
                         newPath = "" + key;
                     }
                 }
-                else
-                {
-                    if ( path != null )
-                    {
+                else {
+                    if ( path != null ) {
                         newPath = path + "[\"" + key + "\"]";
                     }
-                    else
-                    {
+                    else {
                         newPath = "" + "[\"" + key + "\"]";
                     }
                 }
                 buildKeyValueSet( e.getValue(), keyValues, newPath, fulltextIndex, newHistory );
             }
         }
-        else if ( !isBasicType( node.getClass() ) && ( !( node instanceof JsonNode ) ) )
-        {
+        else if ( !isBasicType( node.getClass() ) && ( !( node instanceof JsonNode ) ) ) {
             buildKeyValueSet( toJsonNode( node ), keyValues, path, fulltextIndex, history );
         }
-        else
-        {
+        else {
 
-            if ( node instanceof JsonNode )
-            {
-                if ( ( ( JsonNode ) node ).isTextual() )
-                {
+            if ( node instanceof JsonNode ) {
+                if ( ( ( JsonNode ) node ).isTextual() ) {
                     node = ( ( JsonNode ) node ).getTextValue();
                     UUID uuid = UUIDUtils.tryGetUUID( ( String ) node );
-                    if ( uuid != null )
-                    {
+                    if ( uuid != null ) {
                         node = uuid;
                     }
                 }
-                else if ( ( ( JsonNode ) node ).isNumber() )
-                {
+                else if ( ( ( JsonNode ) node ).isNumber() ) {
                     node = ( ( JsonNode ) node ).getNumberValue();
                 }
-                else
-                {
+                else {
                     return;
                 }
             }
 
-            if ( path == null )
-            {
+            if ( path == null ) {
                 path = "";
             }
             List<Object> l = keyValues.get( path );
-            if ( l == null )
-            {
+            if ( l == null ) {
                 l = new ArrayList<Object>();
                 keyValues.put( path, l );
             }
 
             l.add( node );
 
-            if ( ( node instanceof String ) && fulltextIndex )
-            {
+            if ( ( node instanceof String ) && fulltextIndex ) {
                 String keywordsPath = ( path.length() > 0 ) ? path + ".keywords" : "keywords";
                 List<Object> keywords = cast( keywords( ( String ) node ) );
 
-                if ( keywords.size() > 0 )
-                {
+                if ( keywords.size() > 0 ) {
                     keyValues.put( keywordsPath, keywords );
                 }
             }
@@ -212,22 +178,18 @@ public class IndexUtils
     }
 
 
-    public static Map<String, List<Object>> getKeyValues( String path, Object obj, boolean fulltextIndex )
-    {
+    public static Map<String, List<Object>> getKeyValues( String path, Object obj, boolean fulltextIndex ) {
         Map<String, List<Object>> keys = new LinkedHashMap<String, List<Object>>();
         buildKeyValueSet( obj, keys, path, fulltextIndex );
         return keys;
     }
 
 
-    public static List<Map.Entry<String, Object>> getKeyValueList( String path, Object obj, boolean fulltextIndex )
-    {
+    public static List<Map.Entry<String, Object>> getKeyValueList( String path, Object obj, boolean fulltextIndex ) {
         Map<String, List<Object>> map = getKeyValues( path, obj, fulltextIndex );
         List<Map.Entry<String, Object>> list = new ArrayList<Map.Entry<String, Object>>();
-        for ( Entry<String, List<Object>> entry : map.entrySet() )
-        {
-            for ( Object value : entry.getValue() )
-            {
+        for ( Entry<String, List<Object>> entry : map.entrySet() ) {
+            for ( Object value : entry.getValue() ) {
                 list.add( new AbstractMap.SimpleEntry<String, Object>( entry.getKey(), value ) );
             }
         }
@@ -235,25 +197,20 @@ public class IndexUtils
     }
 
 
-    public static List<Entry<String, Object>> getKeyValueList( Object obj, boolean fulltextIndex )
-    {
+    public static List<Entry<String, Object>> getKeyValueList( Object obj, boolean fulltextIndex ) {
         return getKeyValueList( null, obj, fulltextIndex );
     }
 
 
-    public static List<String> keywords( String source )
-    {
+    public static List<String> keywords( String source ) {
         TokenStream ts = analyzer.tokenStream( "keywords", new StringReader( source ) );
         List<String> keywords = new ArrayList<String>();
-        try
-        {
-            while ( ts.incrementToken() )
-            {
+        try {
+            while ( ts.incrementToken() ) {
                 keywords.add( ts.getAttribute( TermAttribute.class ).term() );
             }
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             LOG.error( "Error getting keywords ", e );
         }
         return keywords;

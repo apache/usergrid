@@ -19,11 +19,9 @@ package org.usergrid.services.generic;
 import org.usergrid.services.AbstractCollectionService;
 
 
-public class GenericCollectionService extends AbstractCollectionService
-{
+public class GenericCollectionService extends AbstractCollectionService {
 
-    public GenericCollectionService()
-    {
+    public GenericCollectionService() {
 
     }
 }

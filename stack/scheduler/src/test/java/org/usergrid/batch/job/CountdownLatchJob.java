@@ -32,8 +32,7 @@ import org.usergrid.batch.JobExecution;
  */
 @Component("countdownLatch")
 @Ignore("Not a test")
-public class CountdownLatchJob implements Job
-{
+public class CountdownLatchJob implements Job {
 
     private CountDownLatch latch = null;
 
@@ -41,8 +40,7 @@ public class CountdownLatchJob implements Job
     /**
      *
      */
-    public CountdownLatchJob()
-    {
+    public CountdownLatchJob() {
     }
 
 
@@ -52,20 +50,17 @@ public class CountdownLatchJob implements Job
      * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
      */
     @Override
-    public void execute( JobExecution execution ) throws Exception
-    {
+    public void execute( JobExecution execution ) throws Exception {
         latch.countDown();
     }
 
 
-    public void setLatch( int size )
-    {
+    public void setLatch( int size ) {
         latch = new CountDownLatch( size );
     }
 
 
-    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException
-    {
+    public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException {
         return latch.await( timeout, unit );
     }
 }

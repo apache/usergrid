@@ -40,8 +40,7 @@ import static org.junit.Assert.fail;
 
 
 @Concurrent()
-public class OrganizationIT
-{
+public class OrganizationIT {
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -51,8 +50,7 @@ public class OrganizationIT
 
 
     @Test
-    public void testCreateOrganization() throws Exception
-    {
+    public void testCreateOrganization() throws Exception {
         UserInfo user =
                 setup.getMgmtSvc().createAdminUser( "edanuff2", "Ed Anuff", "ed@anuff.com2", "test", false, false );
         assertNotNull( user );
@@ -102,8 +100,7 @@ public class OrganizationIT
 
 
     @Test
-    public void testPasswordHistoryCheck() throws Exception
-    {
+    public void testPasswordHistoryCheck() throws Exception {
 
         String[] passwords = new String[] { "password1", "password2", "password3", "password4", "password5" };
 
@@ -131,13 +128,11 @@ public class OrganizationIT
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[3] ); // ok
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[4] ); // ok
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] ); // ok
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[2] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
 
@@ -150,31 +145,25 @@ public class OrganizationIT
         // check the history
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] ); // ok
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[2] ); // ok
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[2] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[3] ); // ok
@@ -187,13 +176,11 @@ public class OrganizationIT
         setup.getMgmtSvc().updateOrganization( organization );
 
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] ); // ok
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
 
@@ -209,41 +196,33 @@ public class OrganizationIT
         organization2.setProperties( props );
         setup.getMgmtSvc().updateOrganization( organization2 );
 
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[2] );
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
-        try
-        {
+        try {
             setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] );
             fail( "password change should fail" );
         }
-        catch ( RecentlyUsedPasswordException e )
-        {
+        catch ( RecentlyUsedPasswordException e ) {
             // ok
         }
     }

@@ -27,77 +27,64 @@ import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 
 
-public class ApplicationInfo
-{
+public class ApplicationInfo {
 
     private final UUID id;
     private final String name;
 
 
-    public ApplicationInfo( UUID id, String name )
-    {
+    public ApplicationInfo( UUID id, String name ) {
         this.id = id;
         this.name = name;
     }
 
 
-    public ApplicationInfo( Map<String, Object> properties )
-    {
+    public ApplicationInfo( Map<String, Object> properties ) {
         id = ( UUID ) properties.get( PROPERTY_UUID );
         name = ( String ) properties.get( PROPERTY_NAME );
     }
 
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return id;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public static List<ApplicationInfo> fromNameIdMap( Map<String, UUID> map )
-    {
+    public static List<ApplicationInfo> fromNameIdMap( Map<String, UUID> map ) {
         List<ApplicationInfo> list = new ArrayList<ApplicationInfo>();
-        for ( Entry<String, UUID> s : map.entrySet() )
-        {
+        for ( Entry<String, UUID> s : map.entrySet() ) {
             list.add( new ApplicationInfo( s.getValue(), s.getKey() ) );
         }
         return list;
     }
 
 
-    public static List<ApplicationInfo> fromIdNameMap( Map<UUID, String> map )
-    {
+    public static List<ApplicationInfo> fromIdNameMap( Map<UUID, String> map ) {
         List<ApplicationInfo> list = new ArrayList<ApplicationInfo>();
-        for ( Entry<UUID, String> s : map.entrySet() )
-        {
+        for ( Entry<UUID, String> s : map.entrySet() ) {
             list.add( new ApplicationInfo( s.getKey(), s.getValue() ) );
         }
         return list;
     }
 
 
-    public static Map<String, UUID> toNameIdMap( List<ApplicationInfo> list )
-    {
+    public static Map<String, UUID> toNameIdMap( List<ApplicationInfo> list ) {
         Map<String, UUID> map = new LinkedHashMap<String, UUID>();
-        for ( ApplicationInfo i : list )
-        {
+        for ( ApplicationInfo i : list ) {
             map.put( i.getName(), i.getId() );
         }
         return map;
     }
 
 
-    public static Map<UUID, String> toIdNameMap( List<ApplicationInfo> list )
-    {
+    public static Map<UUID, String> toIdNameMap( List<ApplicationInfo> list ) {
         Map<UUID, String> map = new LinkedHashMap<UUID, String>();
-        for ( ApplicationInfo i : list )
-        {
+        for ( ApplicationInfo i : list ) {
             map.put( i.getId(), i.getName() );
         }
         return map;
@@ -105,8 +92,7 @@ public class ApplicationInfo
 
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
@@ -116,41 +102,31 @@ public class ApplicationInfo
 
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
             return true;
         }
-        if ( obj == null )
-        {
+        if ( obj == null ) {
             return false;
         }
-        if ( getClass() != obj.getClass() )
-        {
+        if ( getClass() != obj.getClass() ) {
             return false;
         }
         ApplicationInfo other = ( ApplicationInfo ) obj;
-        if ( id == null )
-        {
-            if ( other.id != null )
-            {
+        if ( id == null ) {
+            if ( other.id != null ) {
                 return false;
             }
         }
-        else if ( !id.equals( other.id ) )
-        {
+        else if ( !id.equals( other.id ) ) {
             return false;
         }
-        if ( name == null )
-        {
-            if ( other.name != null )
-            {
+        if ( name == null ) {
+            if ( other.name != null ) {
                 return false;
             }
         }
-        else if ( !name.equals( other.name ) )
-        {
+        else if ( !name.equals( other.name ) ) {
             return false;
         }
         return true;

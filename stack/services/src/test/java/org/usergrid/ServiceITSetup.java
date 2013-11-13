@@ -10,8 +10,7 @@ import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
 
-public interface ServiceITSetup extends CoreITSetup
-{
+public interface ServiceITSetup extends CoreITSetup {
     ManagementService getMgmtSvc();
 
     ApplicationCreator getAppCreator();

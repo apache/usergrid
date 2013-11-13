@@ -82,8 +82,7 @@ import static org.usergrid.persistence.Schema.getDefaultSchema;
  * existing *.csv files in the output directory and starts from last end date found. With no -endTime, ends at current
  * time - 1 hour. Explicitly sets "cassandra.readcl=ONE" for efficiency.
  */
-public class WarehouseExport extends ExportingToolBase
-{
+public class WarehouseExport extends ExportingToolBase {
 
     private static final Logger LOG = LoggerFactory.getLogger( WarehouseExport.class );
     private static final char SEPARATOR = '|';
@@ -112,8 +111,7 @@ public class WarehouseExport extends ExportingToolBase
     private static final Map<String, String[]> URAP_ATTRIBUTES = new HashMap<String, String[]>();
 
 
-    static
-    {
+    static {
         URAP_ATTRIBUTES.put( "notification", NOTIFICATION_ATTRIBUTES );
         URAP_ATTRIBUTES.put( "notifier", NOTIFIER_ATTRIBUTES );
         URAP_ATTRIBUTES.put( "receipt", RECEIPT_ATTRIBUTES );
@@ -127,8 +125,7 @@ public class WarehouseExport extends ExportingToolBase
 
 
     @Override
-    public void runTool( CommandLine line ) throws Exception
-    {
+    public void runTool( CommandLine line ) throws Exception {
 
         // keep it light and fast
         System.setProperty( "cassandra.readcl", "ONE" );
@@ -145,8 +142,7 @@ public class WarehouseExport extends ExportingToolBase
         applyStartTime( line );
         applyEndTime( line );
         LOG.error( "startTime: {}, endTime: {}", startTime, endTime );
-        if ( startTime.getTime() >= endTime.getTime() )
-        {
+        if ( startTime.getTime() >= endTime.getTime() ) {
             LOG.error( "startTime must be before endTime. exiting." );
             System.exit( 1 );
         }
@@ -163,34 +159,29 @@ public class WarehouseExport extends ExportingToolBase
         FileWriter fw = new FileWriter( fileName );
         writer = new CSVWriter( fw, SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER, '\'' );
 
-        try
-        {
+        try {
             writeMetadata();
             writeHeaders();
 
             // Loop through the organizations
             Map<UUID, String> organizations = getOrganizations();
-            for ( Entry<UUID, String> orgIdAndName : organizations.entrySet() )
-            {
+            for ( Entry<UUID, String> orgIdAndName : organizations.entrySet() ) {
                 exportApplicationsForOrg( orgIdAndName, queryString );
             }
         }
-        finally
-        {
+        finally {
             writer.close();
         }
 
         // now that file is written, copy it to S3
-        if ( line.hasOption( "upload" ) )
-        {
+        if ( line.hasOption( "upload" ) ) {
             LOG.info( "Copy to S3" );
             copyToS3( fileName );
         }
     }
 
 
-    private void copyToS3( String fileName )
-    {
+    private void copyToS3( String fileName ) {
 
         String bucketName = ( String ) properties.get( BUCKET_PROPNAME );
         String accessId = ( String ) properties.get( ACCESS_ID_PROPNAME );
@@ -209,24 +200,20 @@ public class WarehouseExport extends ExportingToolBase
                               .overrides( overrides ).buildView( BlobStoreContext.class );
 
         // Create Container (the bucket in s3)
-        try
-        {
+        try {
             AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
             // BlobStore (returns false if it already exists)
             ListenableFuture<Boolean> container = blobStore.createContainerInLocation( null, bucketName );
-            if ( container.get() )
-            {
+            if ( container.get() ) {
                 LOG.info( "Created bucket " + bucketName );
             }
         }
-        catch ( Exception ex )
-        {
+        catch ( Exception ex ) {
             logger.error( "Could not start binary service: {}", ex.getMessage() );
             throw new RuntimeException( ex );
         }
 
-        try
-        {
+        try {
             File file = new File( fileName );
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
@@ -239,8 +226,7 @@ public class WarehouseExport extends ExportingToolBase
 
             LOG.info( "Uploaded file etag=" + futureETag.get() );
         }
-        catch ( Exception e )
-        {
+        catch ( Exception e ) {
             LOG.error( "Error uploading to blob store", e );
         }
     }
@@ -248,8 +234,7 @@ public class WarehouseExport extends ExportingToolBase
 
     @Override
     @SuppressWarnings("static-access")
-    public Options createOptions()
-    {
+    public Options createOptions() {
 
         Options options = super.createOptions();
 
@@ -268,30 +253,23 @@ public class WarehouseExport extends ExportingToolBase
     }
 
 
-    private void applyStartTime( CommandLine line ) throws Exception
-    {
+    private void applyStartTime( CommandLine line ) throws Exception {
 
-        if ( line.hasOption( START_TIME ) )
-        {
+        if ( line.hasOption( START_TIME ) ) {
             startTime = new Date( Long.parseLong( line.getOptionValue( START_TIME ) ) );
         }
-        else
-        {
+        else {
             // attempt to read last end time from directory
-            File[] files = outputDir.listFiles( new FilenameFilter()
-            {
+            File[] files = outputDir.listFiles( new FilenameFilter() {
                 @Override
-                public boolean accept( File dir, String name )
-                {
+                public boolean accept( File dir, String name ) {
                     return name.endsWith( ".csv" );
                 }
             } );
             long lastEndTime = 0;
-            for ( File file : files )
-            {
+            for ( File file : files ) {
                 long endTime = readEndTime( file );
-                if ( endTime > lastEndTime )
-                {
+                if ( endTime > lastEndTime ) {
                     lastEndTime = endTime;
                 }
             }
@@ -300,63 +278,51 @@ public class WarehouseExport extends ExportingToolBase
     }
 
 
-    private void applyEndTime( CommandLine line )
-    {
-        if ( line.hasOption( END_TIME ) )
-        {
+    private void applyEndTime( CommandLine line ) {
+        if ( line.hasOption( END_TIME ) ) {
             endTime = new Date( Long.parseLong( line.getOptionValue( END_TIME ) ) );
         }
-        else
-        {
+        else {
             endTime = new Date( System.currentTimeMillis() - TimeUnit.MILLISECONDS.convert( 1L, TimeUnit.HOURS ) );
         }
     }
 
 
-    private long readEndTime( File file ) throws Exception
-    {
+    private long readEndTime( File file ) throws Exception {
         CSVReader reader = new CSVReader( new FileReader( file ), SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER, '\'' );
-        try
-        {
+        try {
             String[] firstLine = reader.readNext();
-            if ( "start".equals( firstLine[0] ) && "end".equals( firstLine[2] ) )
-            {
+            if ( "start".equals( firstLine[0] ) && "end".equals( firstLine[2] ) ) {
                 return Long.parseLong( firstLine[3] );
             }
         }
-        finally
-        {
+        finally {
             reader.close();
         }
         return 0;
     }
 
 
-    private void writeMetadata()
-    {
+    private void writeMetadata() {
         writer.writeNext( new String[] { "start", "" + startTime.getTime(), "end", "" + endTime.getTime() } );
     }
 
 
-    private void writeHeaders()
-    {
+    private void writeHeaders() {
         writer.writeNext( getHeaders() );
     }
 
 
-    private String[] getHeaders()
-    {
+    private String[] getHeaders() {
 
         List<String> headers = new ArrayList<String>();
         headers.addAll( Arrays.asList( BASE_ATTRIBUTES ) );
 
         Map<String, String[]> cfm = getCollectionFieldMap();
-        for ( Map.Entry<String, String[]> entry : cfm.entrySet() )
-        {
+        for ( Map.Entry<String, String[]> entry : cfm.entrySet() ) {
             String collection = entry.getKey();
             String[] attributes = entry.getValue();
-            for ( String attribute : attributes )
-            {
+            for ( String attribute : attributes ) {
                 headers.add( collection + "_" + attribute );
             }
         }
@@ -366,32 +332,26 @@ public class WarehouseExport extends ExportingToolBase
     }
 
 
-    private Map<String, String[]> getCollectionFieldMap()
-    {
+    private Map<String, String[]> getCollectionFieldMap() {
 
-        if ( collectionFieldMap != null )
-        {
+        if ( collectionFieldMap != null ) {
             return collectionFieldMap;
         }
 
         // get basic stuff from Schema
         String[] collectionTypes = getCollectionTypes();
         collectionFieldMap = new TreeMap<String, String[]>();
-        for ( String type : collectionTypes )
-        {
+        for ( String type : collectionTypes ) {
             Set<String> propertyNames = Schema.getDefaultSchema().getPropertyNames( type );
-            for ( String attr : BASE_ATTRIBUTES )
-            {
+            for ( String attr : BASE_ATTRIBUTES ) {
                 propertyNames.remove( attr );
             }
 
             Iterator<String> i = propertyNames.iterator();
-            while ( i.hasNext() )
-            {
+            while ( i.hasNext() ) {
                 String property = i.next();
                 Class cls = Schema.getDefaultSchema().getPropertyType( type, property );
-                if ( !cls.isPrimitive() && cls != String.class && cls != Date.class )
-                {
+                if ( !cls.isPrimitive() && cls != String.class && cls != Date.class ) {
                     i.remove();
                 }
             }
@@ -402,8 +362,7 @@ public class WarehouseExport extends ExportingToolBase
         }
 
         // add URAP stuff that's not visible to usergrid-stack
-        for ( Map.Entry<String, String[]> entry : URAP_ATTRIBUTES.entrySet() )
-        {
+        for ( Map.Entry<String, String[]> entry : URAP_ATTRIBUTES.entrySet() ) {
             String type = entry.getKey();
             String[] attributes = entry.getValue();
             Arrays.sort( attributes );
@@ -415,22 +374,18 @@ public class WarehouseExport extends ExportingToolBase
 
 
     /** @return Map of Organization UUID -> Name */
-    private Map<UUID, String> getOrganizations() throws Exception
-    {
+    private Map<UUID, String> getOrganizations() throws Exception {
 
         Map<UUID, String> organizationNames;
 
-        if ( orgId == null )
-        {
+        if ( orgId == null ) {
             organizationNames = managementService.getOrganizations();
         }
-        else
-        {
+        else {
 
             OrganizationInfo info = managementService.getOrganizationByUuid( orgId );
 
-            if ( info == null )
-            {
+            if ( info == null ) {
                 LOG.error( "Organization info is null!" );
                 System.exit( 1 );
             }
@@ -443,11 +398,9 @@ public class WarehouseExport extends ExportingToolBase
     }
 
 
-    private String[] getCollectionTypes()
-    {
+    private String[] getCollectionTypes() {
 
-        if ( collectionNames != null )
-        {
+        if ( collectionNames != null ) {
             return collectionNames;
         }
 
@@ -455,10 +408,8 @@ public class WarehouseExport extends ExportingToolBase
                 getDefaultSchema().getCollections( Application.ENTITY_TYPE ).values();
 
         ArrayList<String> collections = new ArrayList<String>( system_collections.size() );
-        for ( CollectionInfo collection : system_collections )
-        {
-            if ( !Schema.isAssociatedEntityType( collection.getType() ) )
-            {
+        for ( CollectionInfo collection : system_collections ) {
+            if ( !Schema.isAssociatedEntityType( collection.getType() ) ) {
                 collections.add( collection.getType() );
             }
         }
@@ -469,16 +420,14 @@ public class WarehouseExport extends ExportingToolBase
     }
 
 
-    private void exportApplicationsForOrg( Entry<UUID, String> orgIdAndName, String queryString ) throws Exception
-    {
+    private void exportApplicationsForOrg( Entry<UUID, String> orgIdAndName, String queryString ) throws Exception {
 
         LOG.info( "organization: {} / {}", orgIdAndName.getValue(), orgIdAndName.getKey() );
 
         String orgName = orgIdAndName.getValue();
 
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( orgIdAndName.getKey() );
-        for ( Entry<UUID, String> appIdAndName : applications.entrySet() )
-        {
+        for ( Entry<UUID, String> appIdAndName : applications.entrySet() ) {
 
             String appName = appIdAndName.getValue();
             appName = appName.substring( appName.indexOf( '/' ) + 1 );
@@ -490,8 +439,7 @@ public class WarehouseExport extends ExportingToolBase
 
             // Loop through the collections of the Application
             Set<String> collections = em.getApplicationCollections();
-            for ( String collectionName : collections )
-            {
+            for ( String collectionName : collections ) {
 
                 // set up for retrieving only the necessary properties
                 String entityType = InflectionUtils.singularize( collectionName );
@@ -499,8 +447,7 @@ public class WarehouseExport extends ExportingToolBase
                 Collection<String> properties =
                         new ArrayList<String>( BASE_ATTRIBUTES.length + ( props != null ? props.length : 0 ) );
                 properties.addAll( Arrays.asList( BASE_ATTRIBUTES ) );
-                if ( props != null )
-                {
+                if ( props != null ) {
                     properties.addAll( Arrays.asList( props ) );
                 }
 
@@ -509,18 +456,15 @@ public class WarehouseExport extends ExportingToolBase
                 query.setResultsLevel( Level.REFS );
                 Results results = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
-                while ( results.size() > 0 )
-                {
+                while ( results.size() > 0 ) {
 
                     List<Entity> entities = em.getPartialEntities( results.getIds(), properties );
 
-                    for ( Entity entity : entities )
-                    {
+                    for ( Entity entity : entities ) {
                         write( orgName, appName, entity, em );
                     }
 
-                    if ( results.getCursor() == null )
-                    {
+                    if ( results.getCursor() == null ) {
                         break;
                     }
 
@@ -532,8 +476,7 @@ public class WarehouseExport extends ExportingToolBase
     }
 
 
-    private void write( String orgName, String appName, Entity entity, EntityManager em ) throws Exception
-    {
+    private void write( String orgName, String appName, Entity entity, EntityManager em ) throws Exception {
 
         Map<String, String[]> cfm = getCollectionFieldMap();
 
@@ -550,22 +493,17 @@ public class WarehouseExport extends ExportingToolBase
         values.add( created );
         values.add( modified );
 
-        for ( Map.Entry<String, String[]> entry : cfm.entrySet() )
-        {
+        for ( Map.Entry<String, String[]> entry : cfm.entrySet() ) {
             String collection = entry.getKey();
             String[] attributes = entry.getValue();
-            if ( collection.equals( type ) )
-            {
-                for ( String attribute : attributes )
-                {
+            if ( collection.equals( type ) ) {
+                for ( String attribute : attributes ) {
                     Object prop = entity.getProperty( attribute );
                     values.add( prop != null ? prop.toString() : null );
                 }
             }
-            else
-            {
-                for ( String attribute : attributes )
-                {
+            else {
+                for ( String attribute : attributes ) {
                     values.add( null );
                 }
             }

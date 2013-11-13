@@ -37,20 +37,17 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-public class BasicIT extends AbstractRestIT
-{
+public class BasicIT extends AbstractRestIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( BasicIT.class );
 
 
-    public BasicIT() throws Exception
-    {
+    public BasicIT() throws Exception {
         super();
     }
 
 
-    public void tryTest()
-    {
+    public void tryTest() {
         WebResource webResource = resource();
         String json = webResource.path( "/test/hello" ).accept( MediaType.APPLICATION_JSON ).get( String.class );
         assertTrue( isNotBlank( json ) );
@@ -64,8 +61,7 @@ public class BasicIT extends AbstractRestIT
      * string.
      */
     @Test
-    public void testGenericCollectionEntityNameUuid() throws Exception
-    {
+    public void testGenericCollectionEntityNameUuid() throws Exception {
         JsonNode node = null;
 
         String token = userToken( "ed@anuff.com", "sesame" );
@@ -99,19 +95,16 @@ public class BasicIT extends AbstractRestIT
 
 
     @Test
-    public void testNonexistentUserAccessViaGuest()
-    {
+    public void testNonexistentUserAccessViaGuest() {
         JsonNode node = null;
 
-        try
-        {
+        try {
             WebResource resource = resource();
             resource.path( "/test-organization/test-app/users/foobarNonexistent" );
             resource.accept( MediaType.APPLICATION_JSON );
             node = resource.get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             logNode( node );
             assertEquals( "Guests should not be able to get a 404", 401, e.getResponse().getStatus() );
         }
@@ -119,21 +112,18 @@ public class BasicIT extends AbstractRestIT
 
 
     @Test
-    public void testToken()
-    {
+    public void testToken() {
         JsonNode node = null;
 
         // test get token for admin user with bad password
 
         boolean err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                     .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "blahblah" )
                     .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
             err_thrown = true;
         }
@@ -157,14 +147,12 @@ public class BasicIT extends AbstractRestIT
         // test login user with incorrect password
 
         err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/test-app/token" ).queryParam( "grant_type", "password" )
                     .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "blahblah" )
                     .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
             err_thrown = true;
         }
@@ -173,14 +161,12 @@ public class BasicIT extends AbstractRestIT
         // test login user with incorrect pin
 
         err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/test-app/token" ).queryParam( "grant_type", "pin" )
                     .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "4321" )
                     .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
             err_thrown = true;
         }
@@ -200,16 +186,13 @@ public class BasicIT extends AbstractRestIT
         // test get app user collection with insufficient permissions
 
         err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app/users" )
                     .queryParam( "access_token", user_access_token ).accept( MediaType.APPLICATION_JSON )
                     .get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
-            if ( e.getResponse().getStatus() != 401 )
-            {
+        catch ( UniformInterfaceException e ) {
+            if ( e.getResponse().getStatus() != 401 ) {
                 throw e;
             }
             err_thrown = true;
@@ -228,15 +211,12 @@ public class BasicIT extends AbstractRestIT
         // test get app user collection with bad token
 
         err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", "blahblahblah" )
                     .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
-            if ( e.getResponse().getStatus() != 401 )
-            {
+        catch ( UniformInterfaceException e ) {
+            if ( e.getResponse().getStatus() != 401 ) {
                 throw e;
             }
             err_thrown = true;
@@ -246,13 +226,11 @@ public class BasicIT extends AbstractRestIT
         // test get app user collection with no token
 
         err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
                     .get( JsonNode.class );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 401 Unauthorized", 401, e.getResponse().getStatus() );
             err_thrown = true;
         }
@@ -319,13 +297,11 @@ public class BasicIT extends AbstractRestIT
         payload = hashMap( "foo", "bar" );
 
         err_thrown = false;
-        try
-        {
+        try {
             node = resource().path( "/test-organization/test-app/items" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
-        catch ( UniformInterfaceException e )
-        {
+        catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 401 Unauthorized", 401, e.getResponse().getStatus() );
             err_thrown = true;
         }

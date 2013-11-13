@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory;
 
 
 @Concurrent()
-public class OkThisIsTheLastIT
-{
+public class OkThisIsTheLastIT {
     public static final Logger logger = LoggerFactory.getLogger( CassandraResource.class );
     private static final long WAIT = 200L;
 
@@ -21,8 +20,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testUsage() throws Exception
-    {
+    public void testUsage() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got the test bean: " + testBean );
         logger.info( "Check it my test name is: {}", name.getMethodName() );
@@ -30,8 +28,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testItAgainAndAgain() throws Exception
-    {
+    public void testItAgainAndAgain() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
         Thread.sleep( WAIT );
@@ -39,8 +36,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testItAgainAndAgain2() throws Exception
-    {
+    public void testItAgainAndAgain2() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
         Thread.sleep( WAIT );
@@ -48,8 +44,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testItAgainAndAgain3() throws Exception
-    {
+    public void testItAgainAndAgain3() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
         Thread.sleep( WAIT );
@@ -57,8 +52,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testItAgainAndAgain4() throws Exception
-    {
+    public void testItAgainAndAgain4() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
         Thread.sleep( WAIT );
@@ -66,8 +60,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testItAgainAndAgain5() throws Exception
-    {
+    public void testItAgainAndAgain5() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
         Thread.sleep( WAIT );
@@ -75,8 +68,7 @@ public class OkThisIsTheLastIT
 
 
     @Test
-    public void testItAgainAndAgain6() throws Exception
-    {
+    public void testItAgainAndAgain6() throws Exception {
         String testBean = cassandraResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
         Thread.sleep( WAIT );
