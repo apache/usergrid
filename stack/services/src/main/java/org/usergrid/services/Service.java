@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,39 +15,36 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+
 import java.util.UUID;
 
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 
-public interface Service {
 
-	public static final String GENERIC_ENTITY_TYPE = "entity";
+public interface Service
+{
 
-	public String getServiceType();
+    public static final String GENERIC_ENTITY_TYPE = "entity";
 
-	public Class<? extends Entity> getEntityClass();
+    public String getServiceType();
 
-	public String getEntityType();
+    public Class<? extends Entity> getEntityClass();
 
-	public boolean isRootService();
+    public String getEntityType();
 
-	public ServiceResults invoke(ServiceAction action, ServiceRequest request,
-			ServiceResults previousResults, ServicePayload payload)
-			throws Exception;
+    public boolean isRootService();
 
-	public Entity getEntity(ServiceRequest request, UUID uuid) throws Exception;
+    public ServiceResults invoke( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
+                                  ServicePayload payload ) throws Exception;
 
-	public Entity getEntity(ServiceRequest request, String name)
-			throws Exception;
+    public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception;
 
-	public Entity importEntity(ServiceRequest request, Entity entity)
-			throws Exception;
+    public Entity getEntity( ServiceRequest request, String name ) throws Exception;
 
-	public Entity writeEntity(ServiceRequest request, Entity entity)
-			throws Exception;
+    public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception;
 
-	public Entity updateEntity(ServiceRequest request, EntityRef ref,
-			ServicePayload payload) throws Exception;
+    public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception;
 
+    public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception;
 }

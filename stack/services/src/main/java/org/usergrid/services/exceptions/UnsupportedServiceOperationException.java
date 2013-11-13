@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,23 +15,28 @@
  ******************************************************************************/
 package org.usergrid.services.exceptions;
 
+
 import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceRequest;
 
-public class UnsupportedServiceOperationException extends
-		ServiceInvocationException {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+public class UnsupportedServiceOperationException extends ServiceInvocationException
+{
 
-	public UnsupportedServiceOperationException(ServiceContext context) {
-		super(context, "Service operation not supported");
-	}
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	public UnsupportedServiceOperationException(ServiceRequest request) {
-		super(request, "Service operation not supported");
-	}
 
+    public UnsupportedServiceOperationException( ServiceContext context )
+    {
+        super( context, "Service operation not supported" );
+    }
+
+
+    public UnsupportedServiceOperationException( ServiceRequest request )
+    {
+        super( request, "Service operation not supported" );
+    }
 }

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,48 +15,64 @@
  ******************************************************************************/
 package org.usergrid.security.shiro.principals;
 
+
 import java.util.UUID;
 
 import org.usergrid.management.UserInfo;
 
-public abstract class UserPrincipal extends PrincipalIdentifier {
 
-	final UserInfo user;
-	final UUID applicationId;
+public abstract class UserPrincipal extends PrincipalIdentifier
+{
 
-	public UserPrincipal(UUID applicationId, UserInfo user) {
-		this.applicationId = applicationId;
-		this.user = user;
-	}
+    final UserInfo user;
+    final UUID applicationId;
 
-	public UUID getApplicationId() {
-		return applicationId;
-	}
 
-	@Override
-	public UserInfo getUser() {
-		return user;
-	}
+    public UserPrincipal( UUID applicationId, UserInfo user )
+    {
+        this.applicationId = applicationId;
+        this.user = user;
+    }
 
-	@Override
-	public boolean isDisabled() {
-		if (user != null) {
-			return user.isDisabled();
-		}
-		return false;
-	}
 
-	@Override
-	public boolean isActivated() {
-		if (user != null) {
-			return user.isActivated();
-		}
-		return true;
-	}
+    public UUID getApplicationId()
+    {
+        return applicationId;
+    }
 
-	@Override
-	public String toString() {
-		return user.toString();
-	}
 
+    @Override
+    public UserInfo getUser()
+    {
+        return user;
+    }
+
+
+    @Override
+    public boolean isDisabled()
+    {
+        if ( user != null )
+        {
+            return user.isDisabled();
+        }
+        return false;
+    }
+
+
+    @Override
+    public boolean isActivated()
+    {
+        if ( user != null )
+        {
+            return user.isActivated();
+        }
+        return true;
+    }
+
+
+    @Override
+    public String toString()
+    {
+        return user.toString();
+    }
 }

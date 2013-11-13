@@ -1,8 +1,9 @@
 package org.usergrid.management;
 
 
-public enum ActivationState {
+public enum ActivationState
+{
 
-	UNKNOWN, UNCONFIRMED, CONFIRMED_AWAITING_ACTIVATION, ACTIVATED;
+    UNKNOWN, UNCONFIRMED, CONFIRMED_AWAITING_ACTIVATION, ACTIVATED;
 
 }
