@@ -1,28 +1,29 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.usergrid.batch.job;
 
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Ignore;
-import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.JobStat;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,15 +33,9 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Class to test job runtimes
- *
- * @author tnine
  */
-@Concurrent()
-@Ignore("TODO: Todd fix. Does not reliably pass on our build server.")
+@Concurrent
 public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
-    private static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
-
-
     /**
      * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
      * the retry time
@@ -63,7 +58,7 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
-        boolean waited = job.waitForCount( customRetry * numberOfRuns * 2, TimeUnit.MILLISECONDS );
+        boolean waited = getJobListener().blockTilDone( 1, customRetry * numberOfRuns * 2 + 5000L );
 
         assertTrue( "Job ran twice", waited );
 
@@ -87,13 +82,13 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
 
         //now wait again to see if the job fires one more time, it shouldn't
-        waited = job.waitForCount( customRetry * numberOfRuns * 2, TimeUnit.MILLISECONDS );
+        waited = getJobListener().blockTilDone( 2, customRetry * numberOfRuns * 2 );
 
         assertFalse( "Job ran twice", waited );
 
         stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 
-        // we should have only marked this as run once since we delayed furthur execution
+        // we should have only marked this as run once since we delayed further execution
         // we should have only marked this as run once
         assertEquals( numberOfRuns, stat.getTotalAttempts() );
         assertEquals( numberOfRuns, stat.getRunCount() );
