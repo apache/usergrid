@@ -1,24 +1,28 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.usergrid.batch.service;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.batch.Job;
-import org.usergrid.batch.JobExecution;
-import org.usergrid.batch.JobExecution.Status;
-import org.usergrid.batch.JobExecutionImpl;
-import org.usergrid.batch.JobFactory;
-import org.usergrid.batch.JobNotFoundException;
-import org.usergrid.batch.repository.JobAccessor;
-import org.usergrid.batch.repository.JobDescriptor;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.FutureCallback;
@@ -29,21 +33,26 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.yammer.metrics.annotation.ExceptionMetered;
 import com.yammer.metrics.annotation.Timed;
 
+import org.usergrid.batch.Job;
+import org.usergrid.batch.JobExecution;
+import org.usergrid.batch.JobExecution.Status;
+import org.usergrid.batch.JobExecutionImpl;
+import org.usergrid.batch.JobFactory;
+import org.usergrid.batch.JobNotFoundException;
+import org.usergrid.batch.repository.JobAccessor;
+import org.usergrid.batch.repository.JobDescriptor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Service that schedules itself, then schedules jobs in the same pool
- *
- * @author zznate
- * @author tnine
  */
 public class JobSchedulerService extends AbstractScheduledService {
-
     protected static final long DEFAULT_DELAY = 1000;
-    protected static final long ERROR_DELAY = 10000;
-    protected static final List<JobDescriptor> EMPTY =
-            Collections.unmodifiableList( new ArrayList<JobDescriptor>( 0 ) );
 
-    private static final Logger logger = LoggerFactory.getLogger( JobSchedulerService.class );
+    private static final Logger LOG = LoggerFactory.getLogger( JobSchedulerService.class );
 
     private long interval = DEFAULT_DELAY;
     private int workerSize = 1;
@@ -55,10 +64,9 @@ public class JobSchedulerService extends AbstractScheduledService {
     private Semaphore capacitySemaphore;
 
     private ListeningScheduledExecutorService service;
+    private JobListener jobListener;
 
-
-    public JobSchedulerService() {
-    }
+    public JobSchedulerService() { }
 
 
     @Timed(name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS,
@@ -67,16 +75,16 @@ public class JobSchedulerService extends AbstractScheduledService {
     protected void runOneIteration() throws Exception {
 
         try {
-            logger.info( "running iteration..." );
-            List<JobDescriptor> activeJobs = null;
+            LOG.info( "running iteration..." );
+            List<JobDescriptor> activeJobs;
 
             // run until there are no more active jobs
             while ( true ) {
 
                 // get the semaphore if we can. This means we have space for at least 1
                 // job
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits() );
+                if ( LOG.isDebugEnabled() ) {
+                    LOG.debug( "About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits() );
                 }
 
                 capacitySemaphore.acquire();
@@ -86,25 +94,25 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 int capacity = capacitySemaphore.availablePermits();
 
-                logger.debug( "Capacity is {}", capacity );
+                LOG.debug( "Capacity is {}", capacity );
 
                 activeJobs = jobAccessor.getJobs( capacity );
 
                 // nothing to do, we don't have any jobs to run
                 if ( activeJobs.size() == 0 ) {
-                    logger.debug( "No jobs returned. Exiting run loop" );
+                    LOG.debug( "No jobs returned. Exiting run loop" );
                     return;
                 }
 
                 for ( JobDescriptor jd : activeJobs ) {
-                    logger.info( "Submitting work for {}", jd );
+                    LOG.info( "Submitting work for {}", jd );
                     submitWork( jd );
-                    logger.info( "Work submitted for {}", jd );
+                    LOG.info( "Work submitted for {}", jd );
                 }
             }
         }
         catch ( Throwable t ) {
-            logger.error( "Something really bad happened!  Scheduler run failed", t );
+            LOG.error( "Something really bad happened!  Scheduler run failed", t );
         }
     }
 
@@ -129,7 +137,7 @@ public class JobSchedulerService extends AbstractScheduledService {
             jobs = jobFactory.jobsFrom( jobDescriptor );
         }
         catch ( JobNotFoundException e ) {
-            logger.error( "Could not create jobs", e );
+            LOG.error( "Could not create jobs", e );
             return;
         }
 
@@ -139,6 +147,10 @@ public class JobSchedulerService extends AbstractScheduledService {
             // This way regardless of any error we can
             // mark a job as failed if required
             final JobExecution execution = new JobExecutionImpl( jobDescriptor );
+
+            // We don't care if this is atomic (not worth using a lock object)
+            // we just need to prevent NPEs from ever occurring
+            final JobListener currentListener = this.jobListener;
 
             ListenableFuture<Void> future = service.submit( new Callable<Void>() {
                 @Override
@@ -158,6 +170,10 @@ public class JobSchedulerService extends AbstractScheduledService {
                     // needs jobId
                     job.execute( execution );
 
+                    if ( currentListener != null ) {
+                        currentListener.onSubmit( execution );
+                    }
+
                     return null;
                 }
             } );
@@ -167,18 +183,22 @@ public class JobSchedulerService extends AbstractScheduledService {
                 public void onSuccess( Void param ) {
 
                     if ( execution.getStatus() == Status.IN_PROGRESS ) {
-                        logger.info( "Successful completion of bulkJob {}", execution );
+                        LOG.info( "Successful completion of bulkJob {}", execution );
                         execution.completed();
                     }
 
                     jobAccessor.save( execution );
                     capacitySemaphore.release();
+
+                    if ( currentListener != null ) {
+                        currentListener.onSuccess( execution );
+                    }
                 }
 
 
                 @Override
                 public void onFailure( Throwable throwable ) {
-                    logger.error( "Failed execution for bulkJob", throwable );
+                    LOG.error( "Failed execution for bulkJob", throwable );
                     // mark it as failed
                     if ( execution.getStatus() == Status.IN_PROGRESS ) {
                         execution.failed();
@@ -186,6 +206,10 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                     jobAccessor.save( execution );
                     capacitySemaphore.release();
+
+                    if ( currentListener != null ) {
+                        currentListener.onFailure( execution );
+                    }
                 }
             } );
         }
@@ -244,5 +268,28 @@ public class JobSchedulerService extends AbstractScheduledService {
     protected void shutDown() throws Exception {
         service.shutdown();
         super.shutDown();
+    }
+
+
+    /**
+     * Sets the JobListener notified of Job events on this SchedulerService.
+     *
+     * @param jobListener the listener to receive Job events
+     * @return the previous listener if set, or null if none was set
+     */
+    public JobListener setJobListener( JobListener jobListener ) {
+        JobListener old = this.jobListener;
+        this.jobListener = jobListener;
+        return old;
+    }
+
+
+    /**
+     * Gets the current JobListener to be notified of Job events on this SchedulerService.
+     *
+     * @return the current JobListener or null if none was set
+     */
+    public JobListener getJobListener() {
+        return jobListener;
     }
 }

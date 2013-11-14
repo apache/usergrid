@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.usergrid.batch.service;
 
 
@@ -22,10 +23,6 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.JobRuntime;
@@ -47,14 +44,17 @@ import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.JobStat;
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
+
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /**
  * Should be referenced by services as a SchedulerService instance. Only the internal job runtime should refer to this
  * as a JobAccessor
- *
- * @author tnine
  */
 public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobRuntimeService {
 
@@ -73,7 +73,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      */
     private static final String JOB_NAME = "jobName";
 
-    private static final Logger logger = LoggerFactory.getLogger( SchedulerServiceImpl.class );
+    private static final Logger LOG = LoggerFactory.getLogger( SchedulerServiceImpl.class );
 
     private static final String DEFAULT_QUEUE_NAME = "/jobs";
 
@@ -153,7 +153,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
          * as discarded
          */
         try {
-            logger.debug( "deleteJob {}", jobId );
+            LOG.debug( "deleteJob {}", jobId );
             em.delete( new SimpleEntityRef( "jobData", jobId ) );
         }
         catch ( Exception e ) {
@@ -193,7 +193,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                  * still fire. Ignore this job
                  */
                 if ( data == null || stats == null ) {
-                    logger.info( "Received job with data id '{}' from the queue, but no data was found.  Dropping job",
+                    LOG.info( "Received job with data id '{}' from the queue, but no data was found.  Dropping job",
                             jobUuid );
                     qm.deleteTransaction( jobQueueName, job.getTransaction(), null );
 
@@ -214,7 +214,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 // log and skip. This is a catastrophic runtime error if we see an
                 // exception here. We don't want to cause job loss, so leave the job in
                 // the Q.
-                logger.error(
+                LOG.error(
                         "Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job "
                                 + "loss", new Object[] { jobName, jobUuid, statsUuid, e } );
             }
@@ -226,18 +226,19 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     @Override
     public void heartbeat( JobRuntime execution, long delay ) {
-        logger.debug( "renew transaction {}", execution.getTransactionId() );
+        LOG.debug( "renew transaction {}", execution.getTransactionId() );
         try {
+            // @TODO - what's the point to this sychronized block on an argument?
             synchronized ( execution ) {
                 UUID newId = qm.renewTransaction( jobQueueName, execution.getTransactionId(),
                         new QueueQuery().withTimeout( delay ) );
 
                 execution.setTransactionId( newId );
-                logger.debug( "renewed transaction {}", newId );
+                LOG.debug( "renewed transaction {}", newId );
             }
         }
         catch ( TransactionNotFoundException e ) {
-            logger.error( "Could not renew transaction", e );
+            LOG.error( "Could not renew transaction", e );
             throw new JobRuntimeException( "Could not renew transaction during heartbeat", e );
         }
     }
@@ -283,16 +284,16 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
             // we're done. Mark the transaction as complete and delete the job info
             if ( jobStatus == Status.COMPLETED ) {
-                logger.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
+                LOG.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
                 qm.deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
-                logger.debug( "delete job data {}", data.getUuid() );
+                LOG.debug( "delete job data {}", data.getUuid() );
                 em.delete( data );
             }
 
             // the job failed too many times. Delete the transaction to prevent it
             // running again and save it for querying later
             else if ( jobStatus == Status.DEAD ) {
-                logger.warn( "Job {} is dead.  Removing", data.getJobName() );
+                LOG.warn( "Job {} is dead.  Removing", data.getJobName() );
                 qm.deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
                 em.update( data );
             }
@@ -302,7 +303,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 em.update( data );
             }
 
-            logger.info( "Updating stats for job {}", data.getJobName() );
+            LOG.info( "Updating stats for job {}", data.getJobName() );
 
             em.update( stat );
         }

@@ -14,36 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usergrid.batch.service;
 
-
-import org.usergrid.batch.JobRuntime;
-
-
-/**
- * Methods to allow job executions to interact with the distributed runtime.
- */
-public interface JobRuntimeService {
-
-    /**
-     * Perform any heartbeat operations required.  Update jobExecution with the appropriate data
-     *
-     * @param execution The job execution to update
-     * @param delay The delay
-     */
-    void heartbeat( JobRuntime execution, long delay );
-
-    /**
-     * Heartbeat with the system defaults.  Update jobExecution with the appropriate data
-     *
-     * @param execution The execution
-     */
-    void heartbeat( JobRuntime execution );
-
-    /**
-     * Delay this execution.
-     *
-     * @param execution the execution to delay
-     */
-    void delay( JobRuntime execution );
-}
+package org.usergrid.batch.repository;

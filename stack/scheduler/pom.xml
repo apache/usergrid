@@ -82,7 +82,6 @@
               <excludes>
                 <exclude>**/ConcurrentSchedulerITSuite.java</exclude>
                 <exclude>**/ConcurrentSchedulerTestSuite.java</exclude>
-                <exclude>**/SchedulerRuntime*IT.java</exclude>
                 <exclude>**/AppArgsTest.java</exclude>
                 <exclude>**/UsergridJobFactoryTest.java</exclude>
                 <exclude>**/BulkJobExecutionUnitTest.java</exclude>

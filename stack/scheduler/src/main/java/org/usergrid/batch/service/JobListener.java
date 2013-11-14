@@ -14,36 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.usergrid.batch.service;
 
 
-import org.usergrid.batch.JobRuntime;
+import org.usergrid.batch.JobExecution;
 
 
 /**
- * Methods to allow job executions to interact with the distributed runtime.
+ * Job callbacks in the @{link #SchedularService} are propagated to
+ * registered implementations of this JobListener.
  */
-public interface JobRuntimeService {
+public interface JobListener {
 
     /**
-     * Perform any heartbeat operations required.  Update jobExecution with the appropriate data
+     * Submission of job execution notified onSubmit.
      *
-     * @param execution The job execution to update
-     * @param delay The delay
+     * @param execution the submitted JobExecution
      */
-    void heartbeat( JobRuntime execution, long delay );
+    void onSubmit( JobExecution execution );
 
     /**
-     * Heartbeat with the system defaults.  Update jobExecution with the appropriate data
+     * Successful executions of a Job notify onSuccess.
      *
-     * @param execution The execution
+     * @param execution the JobExection associated with the Job
      */
-    void heartbeat( JobRuntime execution );
+    void onSuccess( JobExecution execution );
 
     /**
-     * Delay this execution.
+     * Execution failures of a Job notify onFailure.
      *
-     * @param execution the execution to delay
+     * @param execution the JobExection associated with the Job
      */
-    void delay( JobRuntime execution );
+    void onFailure( JobExecution execution );
 }
