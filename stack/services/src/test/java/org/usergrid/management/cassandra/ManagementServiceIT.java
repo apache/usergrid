@@ -32,7 +32,7 @@ import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-import com.usergrid.count.SimpleBatcher;
+import org.usergrid.count.SimpleBatcher;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.junit.Assert.assertEquals;

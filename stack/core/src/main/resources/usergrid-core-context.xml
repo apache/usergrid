@@ -104,16 +104,16 @@
         <constructor-arg ref="lockManager"/>
     </bean>
 
-    <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
+    <bean id="simpleBatcher" class="org.usergrid.count.SimpleBatcher">
         <property name="batchSubmitter" ref="batchSubmitter"/>
         <property name="batchSize" value="${usergrid.counter.batch.size}"/>
     </bean>
 
-    <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
+    <bean id="batchSubmitter" class="org.usergrid.count.CassandraSubmitter">
         <constructor-arg ref="cassandraCounterStore"/>
     </bean>
 
-    <bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
+    <bean id="cassandraCounterStore" class="org.usergrid.count.CassandraCounterStore">
         <constructor-arg>
             <bean id="keyspace"
                   factory-bean="cassandraService"

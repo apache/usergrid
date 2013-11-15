@@ -33,7 +33,7 @@ import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 
-import com.usergrid.count.SimpleBatcher;
+import org.usergrid.count.SimpleBatcher;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
