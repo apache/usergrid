@@ -17,8 +17,6 @@
 package org.usergrid.batch.job;
 
 
-import java.util.concurrent.TimeUnit;
-
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.JobStat;

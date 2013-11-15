@@ -1,4 +1,4 @@
-package org.usergrid.batch;
+package org.usergrid.batch.service;
 
 
 import org.slf4j.Logger;
@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
-import org.usergrid.batch.service.JobSchedulerService;
 
 import com.google.common.base.CharMatcher;
 
@@ -26,11 +25,11 @@ public class App {
     private static Logger logger = LoggerFactory.getLogger( App.class );
 
     private ApplicationContext appContext;
-    private final AppArgs appArgs;
+    private final org.usergrid.batch.AppArgs appArgs;
 
 
     public static void main( String[] args ) {
-        AppArgs appArgs = AppArgs.parseArgs( args );
+        org.usergrid.batch.AppArgs appArgs = org.usergrid.batch.AppArgs.parseArgs( args );
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Invoked App with appArgs: {}", appArgs.toString() );
         }
@@ -44,7 +43,7 @@ public class App {
     }
 
 
-    App( AppArgs appArgs ) {
+    App( org.usergrid.batch.AppArgs appArgs ) {
         this.appArgs = appArgs;
     }
 

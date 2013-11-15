@@ -21,7 +21,7 @@ import java.util.Properties;
 
 import com.google.common.util.concurrent.Service.State;
 
-import org.usergrid.SchedulerITSuite;
+import org.usergrid.batch.SchedulerITSuite;
 import org.usergrid.batch.service.JobSchedulerService;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.cassandra.CassandraResource;
