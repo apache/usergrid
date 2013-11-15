@@ -26,6 +26,7 @@
 	</bean>
 
 	<import resource="classpath:/usergrid-core-context.xml"/>
+	<import resource="classpath:/usergrid-scheduler-context.xml"/>
 
   <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
     <constructor-arg ref="entityManagerFactory"/>
