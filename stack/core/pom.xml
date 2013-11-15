@@ -271,14 +271,6 @@
 
   <dependencies>
 
-    <!-- Usergrid Dependencies -->
-
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-batcher</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
     <!-- Apache Dependencies -->
 
     <dependency>
@@ -291,6 +283,11 @@
           <groupId>org.xerial.snappy</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>cassandra-thrift</artifactId>
     </dependency>
 
     <!-- Include the slighly newer and less problematic snappy -->
@@ -313,6 +310,11 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
     </dependency>
 
     <dependency>
@@ -370,6 +372,21 @@
     <dependency>
       <groupId>com.netflix.curator</groupId>
       <artifactId>curator-recipes</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-annotation</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
 
     <!-- Codehaus, Spring and Other Org Dependencies -->
