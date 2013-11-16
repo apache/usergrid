@@ -33,8 +33,8 @@ import org.usergrid.persistence.entities.Event;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.usergrid.count.Batcher;
-import com.usergrid.count.common.Count;
+import org.usergrid.count.Batcher;
+import org.usergrid.count.common.Count;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;

@@ -20,6 +20,7 @@
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
 				<value>classpath:/usergrid-test.properties</value>
+				<value>classpath:/usergrid-scheduler-test.properties</value>
 				<value>${usergrid-custom-spring-test-properties}</value>
 			</list>
 		</property>

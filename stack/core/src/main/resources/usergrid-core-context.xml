@@ -104,16 +104,16 @@
         <constructor-arg ref="lockManager"/>
     </bean>
 
-    <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
+    <bean id="simpleBatcher" class="org.usergrid.count.SimpleBatcher">
         <property name="batchSubmitter" ref="batchSubmitter"/>
         <property name="batchSize" value="${usergrid.counter.batch.size}"/>
     </bean>
 
-    <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
+    <bean id="batchSubmitter" class="org.usergrid.count.CassandraSubmitter">
         <constructor-arg ref="cassandraCounterStore"/>
     </bean>
 
-    <bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
+    <bean id="cassandraCounterStore" class="org.usergrid.count.CassandraCounterStore">
         <constructor-arg>
             <bean id="keyspace"
                   factory-bean="cassandraService"
@@ -156,5 +156,28 @@
            method="applyTrace"/>
       </aop:aspect>
     </aop:config>
+   
+    <!-- ============================================================== -->
+    <!-- Scheduler Settings from removed Scheduler Module's app context -->
+    <!-- ============================================================== -->
+
+    <bean id="jobSchedulerBackgroundService" class="org.usergrid.batch.service.JobSchedulerService">
+      <property name="jobFactory" ref="jobFactory" />
+      <property name="jobAccessor" ref="schedulerService" />
+      <property name="workerSize" value="${usergrid.scheduler.job.workers}" />
+      <property name="interval" value="${usergrid.scheduler.job.interval}" />
+      <property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
+    </bean>
+
+    <bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">
+      <property name="jobTimeout" value="${usergrid.scheduler.job.timeout}" />
+      <property name="jobQueueName" value="${usergrid.scheduler.job.queueName}" />
+    </bean>
+
+    <bean id="jobFactory" class="org.usergrid.batch.UsergridJobFactory" />
+
+    <!-- scan all job classes -->
+    <context:component-scan base-package="org.usergrid.batch.job" />
+    <context:annotation-config />
 
 </beans>

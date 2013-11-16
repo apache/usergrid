@@ -300,12 +300,6 @@
       </exclusions>
     </dependency>
 
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-scheduler</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
     <!-- Apache Dependencies -->
 
     <dependency>

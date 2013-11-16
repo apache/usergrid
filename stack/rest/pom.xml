@@ -374,12 +374,6 @@
 
     <dependency>
       <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-count-batcher</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
       <version>${project.version}</version>
       <exclusions>
