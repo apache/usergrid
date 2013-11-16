@@ -530,14 +530,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
-
-    <dependency>
       <groupId>org.jvnet.mock-javamail</groupId>
       <artifactId>mock-javamail</artifactId>
       <scope>test</scope>
