@@ -156,5 +156,28 @@
            method="applyTrace"/>
       </aop:aspect>
     </aop:config>
+   
+    <!-- ============================================================== -->
+    <!-- Scheduler Settings from removed Scheduler Module's app context -->
+    <!-- ============================================================== -->
+
+    <bean id="jobSchedulerBackgroundService" class="org.usergrid.batch.service.JobSchedulerService">
+      <property name="jobFactory" ref="jobFactory" />
+      <property name="jobAccessor" ref="schedulerService" />
+      <property name="workerSize" value="${usergrid.scheduler.job.workers}" />
+      <property name="interval" value="${usergrid.scheduler.job.interval}" />
+      <property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
+    </bean>
+
+    <bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">
+      <property name="jobTimeout" value="${usergrid.scheduler.job.timeout}" />
+      <property name="jobQueueName" value="${usergrid.scheduler.job.queueName}" />
+    </bean>
+
+    <bean id="jobFactory" class="org.usergrid.batch.UsergridJobFactory" />
+
+    <!-- scan all job classes -->
+    <context:component-scan base-package="org.usergrid.batch.job" />
+    <context:annotation-config />
 
 </beans>

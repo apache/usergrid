@@ -20,13 +20,13 @@
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
 				<value>classpath:/usergrid-test.properties</value>
+				<value>classpath:/usergrid-scheduler-test.properties</value>
 				<value>${usergrid-custom-spring-test-properties}</value>
 			</list>
 		</property>
 	</bean>
 
 	<import resource="classpath:/usergrid-core-context.xml"/>
-	<import resource="classpath:/usergrid-scheduler-context.xml"/>
 
   <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
     <constructor-arg ref="entityManagerFactory"/>
