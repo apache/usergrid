@@ -1,103 +1,55 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package org.usergrid.standalone;
+ */
+package org.usergrid.launcher;
 
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
-
-import javax.servlet.Servlet;
-import javax.servlet.jsp.JspFactory;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
-import org.glassfish.grizzly.http.server.util.ClassLoaderUtil;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
-import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
-import org.glassfish.grizzly.servlet.ServletHandler;
-import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.web.context.ContextLoaderListener;
-import org.springframework.web.context.request.RequestContextListener;
-import org.springframework.web.context.support.XmlWebApplicationContext;
-import org.springframework.web.filter.DelegatingFilterProxy;
-import org.usergrid.management.ManagementService;
-import org.usergrid.management.UserInfo;
-import org.usergrid.mq.QueueManagerFactory;
-import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.rest.SwaggerServlet;
-import org.usergrid.rest.filters.ContentTypeFilter;
-import org.usergrid.services.ServiceManagerFactory;
-import org.usergrid.standalone.cassandra.EmbeddedServerHelper;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.jasper.runtime.JspFactoryImpl;
-
-import com.sun.jersey.api.core.PackagesResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
-import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
 
 
-public class Server implements ApplicationContextAware {
+public class Server implements org.springframework.context.ApplicationContextAware {
 
     public static final boolean INSTALL_JSP_SERVLETS = true;
 
-    private static final Logger logger = LoggerFactory.getLogger( Server.class );
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger( Server.class );
 
     public static Server instance = null;
 
-    CommandLine line = null;
+    org.apache.commons.cli.CommandLine line = null;
 
     boolean initializeDatabaseOnStart = false;
     boolean startDatabaseWithServer = false;
 
-    HttpServer httpServer;
-    ServletHandler handler;
+    org.glassfish.grizzly.http.server.HttpServer httpServer;
+    org.glassfish.grizzly.servlet.ServletHandler handler;
     EmbeddedServerHelper embeddedCassandra = null;
 
-    protected EntityManagerFactory emf;
+    protected org.usergrid.persistence.EntityManagerFactory emf;
 
-    protected ServiceManagerFactory smf;
+    protected org.usergrid.services.ServiceManagerFactory smf;
 
-    protected ManagementService management;
+    protected org.usergrid.management.ManagementService management;
 
-    protected Properties properties;
+    protected java.util.Properties properties;
 
-    protected QueueManagerFactory qmf;
+    protected org.usergrid.mq.QueueManagerFactory qmf;
 
-    int port = NetworkListener.DEFAULT_NETWORK_PORT;
+    int port = org.glassfish.grizzly.http.server.NetworkListener.DEFAULT_NETWORK_PORT;
 
     boolean daemon = true;
 
@@ -119,12 +71,12 @@ public class Server implements ApplicationContextAware {
 
 
     public void startServerFromCommandLine( String[] args ) {
-        CommandLineParser parser = new GnuParser();
+        org.apache.commons.cli.CommandLineParser parser = new org.apache.commons.cli.GnuParser();
         line = null;
         try {
             line = parser.parse( createOptions(), args );
         }
-        catch ( ParseException exp ) {
+        catch ( org.apache.commons.cli.ParseException exp ) {
             printCliHelp( "Parsing failed.  Reason: " + exp.getMessage() );
         }
 
@@ -139,7 +91,7 @@ public class Server implements ApplicationContextAware {
             try {
                 port = ( ( Number ) line.getParsedOptionValue( "port" ) ).intValue();
             }
-            catch ( ParseException exp ) {
+            catch ( org.apache.commons.cli.ParseException exp ) {
                 printCliHelp( "Parsing failed.  Reason: " + exp.getMessage() );
                 return;
             }
@@ -154,48 +106,48 @@ public class Server implements ApplicationContextAware {
             startCassandra();
         }
 
-        httpServer = HttpServer.createSimpleServer( ".", port );
+        httpServer = org.glassfish.grizzly.http.server.HttpServer.createSimpleServer( ".", port );
 
-        handler = new ServletHandler();
+        handler = new org.glassfish.grizzly.servlet.ServletHandler();
 
-        handler.addContextParameter( SpringServlet.CONTEXT_CONFIG_LOCATION,
+        handler.addContextParameter( com.sun.jersey.spi.spring.container.servlet.SpringServlet.CONTEXT_CONFIG_LOCATION,
                 "classpath:/usergrid-standalone-context.xml" );
 
-        handler.addServletListener( ContextLoaderListener.class.getName() );
-        handler.addServletListener( RequestContextListener.class.getName() );
+        handler.addServletListener( org.springframework.web.context.ContextLoaderListener.class.getName() );
+        handler.addServletListener( org.springframework.web.context.request.RequestContextListener.class.getName() );
 
         com.sun.jersey.api.json.JSONConfiguration.badgerFish();
 
-        handler.addInitParameter( PackagesResourceConfig.PROPERTY_PACKAGES, "org.usergrid" );
-        handler.addInitParameter( JSONConfiguration.FEATURE_POJO_MAPPING, "true" );
-        handler.addInitParameter( ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS,
+        handler.addInitParameter( com.sun.jersey.api.core.PackagesResourceConfig.PROPERTY_PACKAGES, "org.usergrid" );
+        handler.addInitParameter( com.sun.jersey.api.json.JSONConfiguration.FEATURE_POJO_MAPPING, "true" );
+        handler.addInitParameter( com.sun.jersey.api.core.ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS,
                 "org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.filters.JSONPCallbackFilter," +
                         "org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter," +
                         "org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter," +
                         "org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter" );
-        handler.addInitParameter( ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS,
+        handler.addInitParameter( com.sun.jersey.api.core.ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS,
                 "org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter" );
-        handler.addInitParameter( ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES,
+        handler.addInitParameter( com.sun.jersey.api.core.ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES,
                 "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter"
                         + ".RolesAllowedResourceFilterFactory" );
-        handler.addInitParameter( ResourceConfig.FEATURE_DISABLE_WADL, "true" );
-        handler.addInitParameter( ServletContainer.JSP_TEMPLATES_BASE_PATH, "/WEB-INF/jsp" );
-        handler.addInitParameter( ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX,
+        handler.addInitParameter( com.sun.jersey.api.core.ResourceConfig.FEATURE_DISABLE_WADL, "true" );
+        handler.addInitParameter( com.sun.jersey.spi.container.servlet.ServletContainer.JSP_TEMPLATES_BASE_PATH, "/WEB-INF/jsp" );
+        handler.addInitParameter( com.sun.jersey.spi.container.servlet.ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX,
                 "/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))" );
 
-        handler.setServletInstance( new SpringServlet() );
+        handler.setServletInstance( new com.sun.jersey.spi.spring.container.servlet.SpringServlet() );
         // handler.setServletPath("/ROOT");
         // handler.setContextPath("/ROOT");
 
         handler.setProperty( "load-on-startup", 1 );
 
-        Map<String, String> initParameters = new HashMap<String, String>();
+        java.util.Map<String, String> initParameters = new java.util.HashMap<String, String>();
         initParameters.put( "targetFilterLifecycle", "true" );
-        handler.addFilter( new ContentTypeFilter(), "contentTypeFilter", Collections.EMPTY_MAP );
+        handler.addFilter( new org.usergrid.rest.filters.ContentTypeFilter(), "contentTypeFilter", java.util.Collections.EMPTY_MAP );
 
-        handler.addFilter( new DelegatingFilterProxy(), "shiroFilter", initParameters );
+        handler.addFilter( new org.springframework.web.filter.DelegatingFilterProxy(), "shiroFilter", initParameters );
 
-        handler.addFilter( new SwaggerServlet(), "swagger", null );
+        handler.addFilter( new org.usergrid.rest.SwaggerServlet(), "swagger", null );
 
         // handler.addFilter(new SpringServlet(), "spring", null);
 
@@ -213,7 +165,7 @@ public class Server implements ApplicationContextAware {
         try {
             httpServer.start();
         }
-        catch ( IOException e ) {
+        catch ( java.io.IOException e ) {
             e.printStackTrace();
         }
 
@@ -262,14 +214,15 @@ public class Server implements ApplicationContextAware {
 
         int threadSize = getThreadSizeFromSystemProperties();
 
-        Collection<NetworkListener> listeners = httpServer.getListeners();
-        for ( NetworkListener listener : listeners ) {
+        java.util.Collection<org.glassfish.grizzly.http.server.NetworkListener> listeners = httpServer.getListeners();
+        for ( org.glassfish.grizzly.http.server.NetworkListener listener : listeners ) {
             listener.getTransport().getKernelThreadPoolConfig();
-            TCPNIOTransportBuilder builder = TCPNIOTransportBuilder.newInstance();
-            ThreadPoolConfig config = builder.getWorkerThreadPoolConfig();
+            org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder builder = org.glassfish.grizzly.nio.transport
+                    .TCPNIOTransportBuilder.newInstance();
+            org.glassfish.grizzly.threadpool.ThreadPoolConfig config = builder.getWorkerThreadPoolConfig();
             config.setCorePoolSize( threadSize );
             config.setMaxPoolSize( threadSize );
-            TCPNIOTransport transport = builder.build();
+            org.glassfish.grizzly.nio.transport.TCPNIOTransport transport = builder.build();
             listener.setTransport( transport );
         }
 
@@ -282,8 +235,8 @@ public class Server implements ApplicationContextAware {
             return;
         }
 
-        JspFactoryImpl factory = new JspFactoryImpl();
-        JspFactory.setDefaultFactory( factory );
+        org.apache.jasper.runtime.JspFactoryImpl factory = new org.apache.jasper.runtime.JspFactoryImpl();
+        javax.servlet.jsp.JspFactory.setDefaultFactory( factory );
 
         mapServlet( "jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp",
                 "/WEB-INF/jsp/org/usergrid/rest/TestResource/error.jsp" );
@@ -388,9 +341,10 @@ public class Server implements ApplicationContextAware {
     private void mapServlet( String cls, String mapping ) {
 
         try {
-            Servlet servlet = ( Servlet ) ClassLoaderUtil.load( cls );
+            javax.servlet.Servlet servlet = ( javax.servlet.Servlet ) org.glassfish.grizzly.http.server.util
+                    .ClassLoaderUtil.load( cls );
             if ( servlet != null ) {
-                ServletHandler handler = new ServletHandler( servlet );
+                org.glassfish.grizzly.servlet.ServletHandler handler = new org.glassfish.grizzly.servlet.ServletHandler( servlet );
                 handler.setServletPath( mapping );
                 httpServer.getServerConfiguration().addHttpHandler( handler, mapping );
             }
@@ -399,17 +353,17 @@ public class Server implements ApplicationContextAware {
             logger.error( "Unable to add JSP page: " + mapping );
         }
 
-        logger.info( "jsp: " + JspFactory.getDefaultFactory() );
+        logger.info( "jsp: " + javax.servlet.jsp.JspFactory.getDefaultFactory() );
     }
 
 
     public synchronized void stopServer() {
-        Collection<NetworkListener> listeners = httpServer.getListeners();
-        for ( NetworkListener listener : listeners ) {
+        java.util.Collection<org.glassfish.grizzly.http.server.NetworkListener> listeners = httpServer.getListeners();
+        for ( org.glassfish.grizzly.http.server.NetworkListener listener : listeners ) {
             try {
                 listener.stop();
             }
-            catch ( IOException e ) {
+            catch ( java.io.IOException e ) {
                 e.printStackTrace();
             }
         }
@@ -424,8 +378,8 @@ public class Server implements ApplicationContextAware {
             embeddedCassandra = null;
         }
 
-        if ( ctx instanceof XmlWebApplicationContext ) {
-            ( ( XmlWebApplicationContext ) ctx ).close();
+        if ( ctx instanceof org.springframework.web.context.support.XmlWebApplicationContext ) {
+            ( ( org.springframework.web.context.support.XmlWebApplicationContext ) ctx ).close();
         }
     }
 
@@ -440,24 +394,30 @@ public class Server implements ApplicationContextAware {
     }
 
 
-    public void printCliHelp( String message ) {
+    static void printCliHelp( String message ) {
         System.out.println( message );
-        HelpFormatter formatter = new HelpFormatter();
+        org.apache.commons.cli.HelpFormatter formatter = new org.apache.commons.cli.HelpFormatter();
         formatter.printHelp( "java -jar usergrid-standalone-0.0.1-SNAPSHOT.jar ", createOptions() );
         System.exit( -1 );
     }
 
 
-    public Options createOptions() {
-
+    static Options createOptions() {
+        // the nogui option will be required due to combining the graphical
+        // launcher with this standalone CLI based server
         Options options = new Options();
+        OptionBuilder.withDescription( "Start launcher without UI" );
+        OptionBuilder.isRequired( true );
+        Option noguiOption = OptionBuilder.create( "nogui" );
+
+        OptionBuilder.isRequired( false );
         OptionBuilder.withDescription( "Initialize database" );
         Option initOption = OptionBuilder.create( "init" );
 
         OptionBuilder.withDescription( "Start database" );
         Option dbOption = OptionBuilder.create( "db" );
 
-        OptionBuilder.withDescription( "Http port" );
+        OptionBuilder.withDescription( "Http port (without UI)" );
         OptionBuilder.hasArg();
         OptionBuilder.withArgName( "PORT" );
         OptionBuilder.withLongOpt( "port" );
@@ -467,6 +427,7 @@ public class Server implements ApplicationContextAware {
         options.addOption( initOption );
         options.addOption( dbOption );
         options.addOption( portOption );
+        options.addOption( noguiOption );
 
         return options;
     }
@@ -504,57 +465,57 @@ public class Server implements ApplicationContextAware {
     }
 
 
-    public EntityManagerFactory getEntityManagerFactory() {
+    public org.usergrid.persistence.EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
 
-    @Autowired
-    public void setEntityManagerFactory( EntityManagerFactory emf ) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setEntityManagerFactory( org.usergrid.persistence.EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
 
-    public ServiceManagerFactory getServiceManagerFactory() {
+    public org.usergrid.services.ServiceManagerFactory getServiceManagerFactory() {
         return smf;
     }
 
 
-    @Autowired
-    public void setServiceManagerFactory( ServiceManagerFactory smf ) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setServiceManagerFactory( org.usergrid.services.ServiceManagerFactory smf ) {
         this.smf = smf;
     }
 
 
-    public ManagementService getManagementService() {
+    public org.usergrid.management.ManagementService getManagementService() {
         return management;
     }
 
 
-    @Autowired
-    public void setManagementService( ManagementService management ) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setManagementService( org.usergrid.management.ManagementService management ) {
         this.management = management;
     }
 
 
-    public Properties getProperties() {
+    public java.util.Properties getProperties() {
         return properties;
     }
 
 
-    @Autowired
-    public void setProperties( Properties properties ) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setProperties( java.util.Properties properties ) {
         this.properties = properties;
     }
 
 
-    public QueueManagerFactory getQueueManagerFactory() {
+    public org.usergrid.mq.QueueManagerFactory getQueueManagerFactory() {
         return qmf;
     }
 
 
-    @Autowired
-    public void setQueueManagerFactory( QueueManagerFactory qmf ) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setQueueManagerFactory( org.usergrid.mq.QueueManagerFactory qmf ) {
         this.qmf = qmf;
     }
 
@@ -597,7 +558,7 @@ public class Server implements ApplicationContextAware {
             databaseInitializationPerformed = true;
 
             logger.info( "Initializing Cassandra database" );
-            Map<String, String> properties = emf.getServiceProperties();
+            java.util.Map<String, String> properties = emf.getServiceProperties();
             if ( properties != null ) {
                 logger.error( "System properties are initialized, database is set up already." );
                 return;
@@ -623,18 +584,18 @@ public class Server implements ApplicationContextAware {
     }
 
 
-    ApplicationContext ctx;
+    org.springframework.context.ApplicationContext ctx;
 
 
     @Override
-    public void setApplicationContext( ApplicationContext ctx ) throws BeansException {
+    public void setApplicationContext( org.springframework.context.ApplicationContext ctx ) throws org.springframework.beans.BeansException {
         this.ctx = ctx;
     }
 
 
     public String getAccessTokenForAdminUser( String email ) {
         try {
-            UserInfo user = management.getAdminUserByEmail( email );
+            org.usergrid.management.UserInfo user = management.getAdminUserByEmail( email );
             return management.getAccessTokenForAdminUser( user.getUuid(), 0 );
         }
         catch ( Exception e ) {
@@ -644,9 +605,9 @@ public class Server implements ApplicationContextAware {
     }
 
 
-    public UUID getAdminUUID( String email ) {
+    public java.util.UUID getAdminUUID( String email ) {
         try {
-            UserInfo user = management.getAdminUserByEmail( email );
+            org.usergrid.management.UserInfo user = management.getAdminUserByEmail( email );
             return user.getUuid();
         }
         catch ( Exception e ) {

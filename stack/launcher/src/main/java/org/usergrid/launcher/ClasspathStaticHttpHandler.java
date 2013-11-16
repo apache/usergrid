@@ -1,19 +1,20 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package org.usergrid.standalone;
+ */
+package org.usergrid.launcher;
 
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -60,37 +61,20 @@ package org.usergrid.standalone;
  * and open the template in the editor.
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.grizzly.Grizzly;
-import org.glassfish.grizzly.http.server.HttpHandler;
-import org.glassfish.grizzly.http.server.Request;
-import org.glassfish.grizzly.http.server.Response;
-import org.glassfish.grizzly.http.server.io.OutputBuffer;
-import org.glassfish.grizzly.http.server.util.MimeType;
-import org.glassfish.grizzly.http.util.HttpStatus;
-import org.glassfish.grizzly.utils.ArraySet;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-
 
 /**
  * Modified version of the StaticHttpHandler to serve resources from the classpath.
  * <p/>
- * {@link HttpHandler}, which processes requests to a static resources.
+ * {@link org.glassfish.grizzly.http.server.HttpHandler}, which processes requests to a static resources.
  *
  * @author Jeanfrancois Arcand
  * @author Alexey Stashok
  */
-public class ClasspathStaticHttpHandler extends HttpHandler {
-    private static final Logger LOGGER = Grizzly.logger( ClasspathStaticHttpHandler.class );
+public class ClasspathStaticHttpHandler extends org.glassfish.grizzly.http.server.HttpHandler {
+    private static final java.util.logging.Logger LOGGER = org.glassfish.grizzly
+            .Grizzly.logger( ClasspathStaticHttpHandler.class );
 
-    protected final ArraySet<Resource> docRoots = new ArraySet<Resource>( Resource.class );
+    protected final org.glassfish.grizzly.utils.ArraySet<org.springframework.core.io.Resource> docRoots = new org.glassfish.grizzly.utils.ArraySet<org.springframework.core.io.Resource>( org.springframework.core.io.Resource.class );
 
 
     /**
@@ -125,7 +109,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      * @param docRoots the folders where the static resource are located. If the <tt>docRoot</tt> is empty - static
      * pages won't be served by this <tt>HttpHandler</tt>
      */
-    public ClasspathStaticHttpHandler( Set<String> docRoots ) {
+    public ClasspathStaticHttpHandler( java.util.Set<String> docRoots ) {
         if ( docRoots != null ) {
             for ( String docRoot : docRoots ) {
                 addDocRoot( docRoot );
@@ -139,8 +123,8 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      *
      * @return the default directory from where file will be serviced.
      */
-    public Resource getDefaultDocRoot() {
-        final Resource[] array = docRoots.getArray();
+    public org.springframework.core.io.Resource getDefaultDocRoot() {
+        final org.springframework.core.io.Resource[] array = docRoots.getArray();
         return ( ( array != null ) && ( array.length > 0 ) ) ? array[0] : null;
     }
 
@@ -150,7 +134,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      *
      * @return the list of directories where files will be serviced from.
      */
-    public ArraySet<Resource> getDocRoots() {
+    public org.glassfish.grizzly.utils.ArraySet<org.springframework.core.io.Resource> getDocRoots() {
         return docRoots;
     }
 
@@ -160,14 +144,14 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      *
      * @param docRoot the directory to be added to the list of directories where files will be serviced from.
      *
-     * @return return the {@link File} representation of the passed <code>docRoot</code>.
+     * @return return the {@link java.io.File} representation of the passed <code>docRoot</code>.
      */
-    public final Resource addDocRoot( String docRoot ) {
+    public final org.springframework.core.io.Resource addDocRoot( String docRoot ) {
         if ( docRoot == null ) {
             throw new NullPointerException( "docRoot can't be null" );
         }
 
-        final Resource file = new ClassPathResource( docRoot );
+        final org.springframework.core.io.Resource file = new org.springframework.core.io.ClassPathResource( docRoot );
         addDocRoot( file );
 
         return file;
@@ -179,7 +163,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      *
      * @param docRoot the directory to be added to the list of directories where files will be serviced from.
      */
-    public final void addDocRoot( Resource docRoot ) {
+    public final void addDocRoot( org.springframework.core.io.Resource docRoot ) {
         docRoots.add( docRoot );
     }
 
@@ -189,20 +173,20 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      *
      * @param docRoot the directory to remove.
      */
-    public void removeDocRoot( File docRoot ) {
+    public void removeDocRoot( java.io.File docRoot ) {
         docRoots.remove( docRoot );
     }
 
 
     /**
-     * Based on the {@link Request} URI, try to map the file from the {@link #getDocRoots()}, and send it back to a
+     * Based on the {@link org.glassfish.grizzly.http.server.Request} URI, try to map the file from the {@link #getDocRoots()}, and send it back to a
      * client.
      *
-     * @param request the {@link Request}
-     * @param response the {@link Response}
+     * @param request the {@link org.glassfish.grizzly.http.server.Request}
+     * @param response the {@link org.glassfish.grizzly.http.server.Response}
      */
     @Override
-    public void service( final Request request, final Response response ) throws Exception {
+    public void service( final org.glassfish.grizzly.http.server.Request request, final org.glassfish.grizzly.http.server.Response response ) throws Exception {
         final String uri = getRelativeURI( request );
 
         if ( ( uri == null ) || !handle( uri, request, response ) ) {
@@ -211,7 +195,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
     }
 
 
-    protected String getRelativeURI( final Request request ) {
+    protected String getRelativeURI( final org.glassfish.grizzly.http.server.Request request ) {
         String uri = request.getRequestURI();
         if ( uri.indexOf( ".." ) >= 0 ) {
             return null;
@@ -231,15 +215,15 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
 
 
     /**
-     * The method will be called, if the static resource requested by the {@link Request} wasn't found, so {@link
+     * The method will be called, if the static resource requested by the {@link org.glassfish.grizzly.http.server.Request} wasn't found, so {@link
      * StaticHttpHandler} implementation may try to workaround this situation. The default implementation - sends a 404
-     * response page by calling {@link #customizedErrorPage(Request, Response)}.
+     * response page by calling {@link #customizedErrorPage(org.glassfish.grizzly.http.server.Request, org.glassfish.grizzly.http.server.Response)}.
      *
-     * @param request the {@link Request}
-     * @param response the {@link Response}
+     * @param request the {@link org.glassfish.grizzly.http.server.Request}
+     * @param response the {@link org.glassfish.grizzly.http.server.Response}
      */
-    protected void onMissingResource( final Request request, final Response response ) throws Exception {
-        response.setStatus( HttpStatus.NOT_FOUND_404 );
+    protected void onMissingResource( final org.glassfish.grizzly.http.server.Request request, final org.glassfish.grizzly.http.server.Response response ) throws Exception {
+        response.setStatus( org.glassfish.grizzly.http.util.HttpStatus.NOT_FOUND_404 );
         customizedErrorPage( request, response );
     }
 
@@ -248,22 +232,22 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
      * Lookup a resource based on the request URI, and send it using send file.
      *
      * @param uri The request URI
-     * @param req the {@link Request}
-     * @param res the {@link Response}
+     * @param req the {@link org.glassfish.grizzly.http.server.Request}
+     * @param res the {@link org.glassfish.grizzly.http.server.Response}
      */
-    protected boolean handle( final String uri, final Request req, final Response res ) throws Exception {
+    protected boolean handle( final String uri, final org.glassfish.grizzly.http.server.Request req, final org.glassfish.grizzly.http.server.Response res ) throws Exception {
 
         boolean found = false;
 
-        final Resource[] fileFolders = docRoots.getArray();
+        final org.springframework.core.io.Resource[] fileFolders = docRoots.getArray();
         if ( fileFolders == null ) {
             return false;
         }
 
-        Resource resource = null;
+        org.springframework.core.io.Resource resource = null;
 
         for ( int i = 0; i < fileFolders.length; i++ ) {
-            final Resource webDir = fileFolders[i];
+            final org.springframework.core.io.Resource webDir = fileFolders[i];
             // local file
             resource = webDir.createRelative( uri );
             final boolean exists = resource.exists();
@@ -275,8 +259,8 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
         }
 
         if ( !found ) {
-            if ( LOGGER.isLoggable( Level.FINE ) ) {
-                LOGGER.log( Level.FINE, "File not found  {0}", resource );
+            if ( LOGGER.isLoggable( java.util.logging.Level.FINE ) ) {
+                LOGGER.log( java.util.logging.Level.FINE, "File not found  {0}", resource );
             }
             return true;
         }
@@ -287,12 +271,12 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
     }
 
 
-    public static void sendFile( final Response response, final Resource file ) throws IOException {
+    public static void sendFile( final org.glassfish.grizzly.http.server.Response response, final org.springframework.core.io.Resource file ) throws java.io.IOException {
         final String path = file.getFilename();
-        final InputStream fis = file.getInputStream();
+        final java.io.InputStream fis = file.getInputStream();
 
         try {
-            response.setStatus( HttpStatus.OK_200 );
+            response.setStatus( org.glassfish.grizzly.http.util.HttpStatus.OK_200 );
             String substr;
             int dot = path.lastIndexOf( '.' );
             if ( dot < 0 ) {
@@ -304,19 +288,19 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
             }
             if ( dot > 0 ) {
                 String ext = substr.substring( dot + 1 );
-                String ct = MimeType.get( ext );
+                String ct = org.glassfish.grizzly.http.server.util.MimeType.get( ext );
                 if ( ct != null ) {
                     response.setContentType( ct );
                 }
             }
             else {
-                response.setContentType( MimeType.get( "html" ) );
+                response.setContentType( org.glassfish.grizzly.http.server.util.MimeType.get( "html" ) );
             }
 
             final long length = file.contentLength();
             response.setContentLengthLong( length );
 
-            final OutputBuffer outputBuffer = response.getOutputBuffer();
+            final org.glassfish.grizzly.http.server.io.OutputBuffer outputBuffer = response.getOutputBuffer();
 
             byte b[] = new byte[8192];
             int rd;
@@ -329,7 +313,7 @@ public class ClasspathStaticHttpHandler extends HttpHandler {
             try {
                 fis.close();
             }
-            catch ( IOException ignore ) {
+            catch ( java.io.IOException ignore ) {
             }
         }
     }

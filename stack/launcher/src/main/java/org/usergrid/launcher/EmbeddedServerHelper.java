@@ -1,51 +1,30 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package org.usergrid.standalone.cassandra;
-
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.cassandra.config.DatabaseDescriptor;
-import org.apache.cassandra.db.commitlog.CommitLog;
-import org.apache.cassandra.io.util.FileUtils;
-import org.apache.cassandra.service.CassandraDaemon;
-import org.apache.cassandra.service.StorageService;
-import org.apache.thrift.transport.TTransportException;
-
-import me.prettyprint.hector.testutils.EmbeddedSchemaLoader;
+ */
+package org.usergrid.launcher;
 
 
 /** @author Ran Tavory (rantav@gmail.com) */
 public class EmbeddedServerHelper {
-    private static Logger log = LoggerFactory.getLogger( EmbeddedServerHelper.class );
+    private static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger( EmbeddedServerHelper.class );
 
     private static final String TMP = "tmp";
 
     private final String yamlFile;
-    static CassandraDaemon cassandraDaemon;
+    static org.apache.cassandra.service.CassandraDaemon cassandraDaemon;
 
 
     public EmbeddedServerHelper() {
@@ -58,11 +37,11 @@ public class EmbeddedServerHelper {
     }
 
 
-    static ExecutorService executor;
+    static java.util.concurrent.ExecutorService executor;
 
 
     /** Set embedded cassandra up and spawn it in a new thread. */
-    public void setup() throws TTransportException, IOException, InterruptedException {
+    public void setup() throws org.apache.thrift.transport.TTransportException, java.io.IOException, InterruptedException {
 
         // delete tmp dir first
         rmdir( TMP );
@@ -80,9 +59,9 @@ public class EmbeddedServerHelper {
     }
 
 
-    public void start() throws TTransportException, IOException, InterruptedException {
+    public void start() throws org.apache.thrift.transport.TTransportException, java.io.IOException, InterruptedException {
         if ( executor == null ) {
-            executor = Executors.newSingleThreadExecutor();
+            executor = java.util.concurrent.Executors.newSingleThreadExecutor();
             System.setProperty( "cassandra.config", "file:" + TMP + yamlFile );
             System.setProperty( "log4j.configuration", "file:" + TMP + "/log4j.properties" );
             System.setProperty( "cassandra-foreground", "true" );
@@ -98,7 +77,7 @@ public class EmbeddedServerHelper {
 
 
         try {
-            TimeUnit.SECONDS.sleep( 3 );
+            java.util.concurrent.TimeUnit.SECONDS.sleep( 3 );
             log.info( "Done sleeping" );
         }
         catch ( InterruptedException e ) {
@@ -110,7 +89,7 @@ public class EmbeddedServerHelper {
     public static void teardown() {
         if ( cassandraDaemon != null ) {
             cassandraDaemon.deactivate();
-            StorageService.instance.stopClient();
+            org.apache.cassandra.service.StorageService.instance.stopClient();
         }
         executor.shutdown();
         executor.shutdownNow();
@@ -123,21 +102,21 @@ public class EmbeddedServerHelper {
     }
 
 
-    private static void rmdir( String dir ) throws IOException {
-        File dirFile = new File( dir );
+    private static void rmdir( String dir ) throws java.io.IOException {
+        java.io.File dirFile = new java.io.File( dir );
         if ( dirFile.exists() ) {
-            FileUtils.deleteRecursive( new File( dir ) );
+            org.apache.cassandra.io.util.FileUtils.deleteRecursive( new java.io.File( dir ) );
         }
     }
 
 
     /** Copies a resource from within the jar to a directory. */
-    private static void copy( String resource, String directory ) throws IOException {
+    private static void copy( String resource, String directory ) throws java.io.IOException {
         mkdir( directory );
-        InputStream is = EmbeddedServerHelper.class.getResourceAsStream( resource );
+        java.io.InputStream is = EmbeddedServerHelper.class.getResourceAsStream( resource );
         String fileName = resource.substring( resource.lastIndexOf( "/" ) + 1 );
-        File file = new File( directory + System.getProperty( "file.separator" ) + fileName );
-        OutputStream out = new FileOutputStream( file );
+        java.io.File file = new java.io.File( directory + System.getProperty( "file.separator" ) + fileName );
+        java.io.OutputStream out = new java.io.FileOutputStream( file );
         byte buf[] = new byte[1024];
         int len;
         while ( ( len = is.read( buf ) ) > 0 ) {
@@ -149,51 +128,51 @@ public class EmbeddedServerHelper {
 
 
     /** Creates a directory */
-    private static void mkdir( String dir ) throws IOException {
-        FileUtils.createDirectory( dir );
+    private static void mkdir( String dir ) throws java.io.IOException {
+        org.apache.cassandra.io.util.FileUtils.createDirectory( dir );
     }
 
 
-    public static void cleanupAndLeaveDirs() throws IOException {
+    public static void cleanupAndLeaveDirs() throws java.io.IOException {
         mkdirs();
         cleanup();
         mkdirs();
-        CommitLog.instance.resetUnsafe(); // cleanup screws w/ CommitLog, this
+        org.apache.cassandra.db.commitlog.CommitLog.instance.resetUnsafe(); // cleanup screws w/ CommitLog, this
         // brings it back to safe state
     }
 
 
-    public static void cleanup() throws IOException {
+    public static void cleanup() throws java.io.IOException {
         // clean up commitlog
-        String[] directoryNames = { DatabaseDescriptor.getCommitLogLocation(), };
+        String[] directoryNames = { org.apache.cassandra.config.DatabaseDescriptor.getCommitLogLocation(), };
         for ( String dirName : directoryNames ) {
-            File dir = new File( dirName );
+            java.io.File dir = new java.io.File( dirName );
             if ( !dir.exists() ) {
                 throw new RuntimeException( "No such directory: " + dir.getAbsolutePath() );
             }
-            FileUtils.deleteRecursive( dir );
+            org.apache.cassandra.io.util.FileUtils.deleteRecursive( dir );
         }
 
         // clean up data directory which are stored as data directory/table/data
         // files
-        for ( String dirName : DatabaseDescriptor.getAllDataFileLocations() ) {
-            File dir = new File( dirName );
+        for ( String dirName : org.apache.cassandra.config.DatabaseDescriptor.getAllDataFileLocations() ) {
+            java.io.File dir = new java.io.File( dirName );
             if ( !dir.exists() ) {
                 throw new RuntimeException( "No such directory: " + dir.getAbsolutePath() );
             }
-            FileUtils.deleteRecursive( dir );
+            org.apache.cassandra.io.util.FileUtils.deleteRecursive( dir );
         }
     }
 
 
     public static void mkdirs() {
-        DatabaseDescriptor.createAllDirectories();
+        org.apache.cassandra.config.DatabaseDescriptor.createAllDirectories();
     }
 
 
     public static void loadSchemaFromYaml() {
         try {
-            EmbeddedSchemaLoader.loadSchema();
+            me.prettyprint.hector.testutils.EmbeddedSchemaLoader.loadSchema();
         }
         catch ( RuntimeException e ) {
 
@@ -206,7 +185,7 @@ public class EmbeddedServerHelper {
         @Override
         public void run() {
 
-            cassandraDaemon = new CassandraDaemon();
+            cassandraDaemon = new org.apache.cassandra.service.CassandraDaemon();
 
             cassandraDaemon.activate();
         }

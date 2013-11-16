@@ -159,11 +159,9 @@
     <module>mongo-emulator</module>
     <module>websocket</module>
     <module>rest</module>
-    <module>standalone</module>
     <module>launcher</module>
     <module>test-utils</module>
     <module>build-tools</module>
-    <!--Temporarily removed. This breaks master build <module>query-validator</module> -->
   </modules>
 
   <dependencyManagement>

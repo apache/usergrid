@@ -35,7 +35,6 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.standalone.Server;
 
 
 public class App {
