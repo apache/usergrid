@@ -1,0 +1,79 @@
+#!/usr/bin/env ruby
+
+require 'gli'
+require 'yaml'
+require 'usergrid_iron'
+require 'highline/import'
+require 'command_line_reporter'
+include CommandLineReporter
+require 'ugc'
+include GLI::App
+
+program_desc 'Usergrid Command Line'
+version Ugc::VERSION
+
+desc 'verbose'
+switch [:v,:verbose], negatable: false
+
+desc 'management'
+switch [:m,:management], negatable: false
+
+desc 'show curl equivalent (does not execute)'
+switch [:c,:curl], negatable: false
+
+desc 'draw table border'
+default_value true
+switch [:border]
+
+desc 'settings directory'
+arg_name 'settings directory'
+default_value File.join(ENV['HOME'], '.ugc')
+flag [:s,:settings]
+
+# load helpers && commands
+commands_from '../lib/ugc/helpers'
+commands_from '../lib/ugc/commands'
+
+pre do |global_options,command,options,args|
+  if global_options[:verbose]
+    RestClient.log=Logger.new(STDOUT)
+  else
+    Usergrid::LOG.level = Logger::WARN
+  end
+
+  $settings = Ugc::Settings.new global_options
+  if not $settings.configured?
+    raise "not configured" unless command.name == :profile or command.parent.name == :target
+    true
+  elsif command.name == :login
+    true
+  else
+    $application = Ugc::Application.new
+    $management = Ugc::Management.new
+    $context = global_options[:management] ? $management : $application
+    true
+  end
+end
+
+post do |global_options,command,options,args|
+  # post-run logic here
+end
+
+on_error do |e|
+  # return false to skip default error handling
+  if e.is_a? RestClient::Exception
+    begin
+      puts "#{e.http_code} error: #{e.response.data['error_description']}"
+      if e.http_code == 401 and not $settings.logged_in?
+        puts "(Hint: You may need to log in.)"
+      end
+    rescue MultiJson::DecodeError
+      puts e.response
+    end
+    false
+  else
+    true
+  end
+end
+
+exit run(ARGV)

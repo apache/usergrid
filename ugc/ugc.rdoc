@@ -1,0 +1,5 @@
+= ugc
+
+Generate this with
+    ugc rdoc
+After you have described your command line interface
