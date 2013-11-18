@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
+		<bundle.namespace>org.usergrid</bundle.namespace>
+	</properties>
+
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+	
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.usergrid</groupId>
+	<artifactId>usergrid-android-client</artifactId>
+	<version>0.0.7-SNAPSHOT</version>
+	
+	<packaging>jar</packaging>
+	<description>A simple java client for usergrid</description>
+	<url>https://github.com/apigee/usergrid-stack-internal</url>
+	
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>eanuff</id>
+			<name>Ed Anuff</name>
+		</developer>
+		<developer>
+			<id>tnine</id>
+			<name>Todd Nine</name>
+		</developer>
+		<developer>
+			<id>sganyo</id>
+			<name>Scott Ganyo</name>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:apigee/usergrid-android-sdk.git</connection>
+		<developerConnection>scm:git:git@github.com:apigee/usergrid-android-sdk.git</developerConnection>
+		<url>git@github.com:apigee/usergrid-android-sdk.git</url>
+	</scm>
+	
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>usergrid-java-client</artifactId>
+			<version>0.0.6</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.android</groupId>
+			<artifactId>android</artifactId>
+			<version>2.2.1</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+</project>
