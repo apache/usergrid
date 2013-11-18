@@ -1,0 +1,12 @@
+:api_url: http://localhost:8080
+:management:
+  :username: test
+  :password: test
+:organization:
+  :name: test-organization
+  :username: test
+  :password: test
+:application:
+  :name: test-app
+  :username: test-app-user
+  :password: test
