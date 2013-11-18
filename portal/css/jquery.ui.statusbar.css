@@ -1,0 +1,25 @@
+.ui-statusbar {
+    background-color: white;
+    position: fixed;
+    bottom: 0em;
+    left: 0.5em;
+    right: 0.5em;
+    width: auto;
+    height: auto;
+    padding: 0.5em;
+    /*opacity: .80;
+    filter: alpha(opacity="80");*/
+    z-index: 999;
+    overflow: auto;
+}
+
+.ui-statusbar ul {
+    list-style: none;
+    margin-left: 0em;
+    padding-left: 0.5em;
+}
+
+.ui-statusbar ul li {
+    margin-top: 0.2em;
+    padding: 0.2em;
+}
