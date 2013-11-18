@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Geocoder</id>
+    <version>0.1.0.0</version>
+    <title>Geocoder</title>
+    <authors>Brandon Montgomery</authors>
+    <owners>Brandon Montgomery</owners>
+    <projectUrl>http://github.com/bmontgomery/Geocoder</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A simple .NET library which utilizes Google's Geocoding API to geocode street addresses.</description>
+    <releaseNotes />
+    <copyright>Copyright 2013</copyright>
+    <tags>Geocoding .NET</tags>
+  </metadata>
+</package>
