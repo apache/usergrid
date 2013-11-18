@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Dogs Example App for Apigee App Services (Usergrid)</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <link rel="stylesheet" href="../resources/css/bootstrap-combined.min.css" />
+      <link rel="stylesheet" href="../resources/css/styles.css" />
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>
+      <script src="../../usergrid.js" type="text/javascript"></script>
+      <script src="../../extensions/usergrid.validation.js" type="text/javascript"></script>
+      <script src="app.js" type="text/javascript"></script>
+   </head>
+   <body>
+      <div class="header">
+         <img src="../resources/images/apigee.png"> App Services (Usergrid) Javascript SDK
+      </div>
+      <div class="breadcrumb">
+        <a href="../../index.html">&lt;&lt; examples</a>
+      </div>
+      <div id="dogs-list" style="width: 600px; min-height: 450px; margin: auto; display: block; background-color: #fff; padding: 30px;">
+         <h2>Dogs</h2>
+         <div style="padding: 10px;">
+            Dogs is a simple application that shows how to create entities and collecitons, how to iterate through results, and how to
+            display larger result sets in a paged format.
+         </div>
+         <div style="height: 30px;">
+           <div style="float: left; padding-left: 10px; font-weight: 600;" id="message"> </div>
+           <button id="new-dog-button" style="float:right; width: 90px;" class="btn btn-primary" >New Dog</button>
+         </div>
+         <div style="height:300px;">
+            <ul id="mydoglist"><li>No dogs yet!</li></ul>
+         </div>
+         <button id="previous-button" style="float:left; display: none; width: 90px;" class="btn btn-primary" >Previous</button>
+         <button id="next-button" style="float:right; display: none; width: 90px;" class="btn btn-primary" >Next</button>
+         <div style="height: 30px;">&nbsp;</div>
+      </div>
+
+      <div id="new-dog" style="width: 600px; min-height: 450px; margin: auto; display: block; background-color: #fff; padding: 30px; display: none;">
+         <h2>Dogs</h2>
+         <div style="padding: 10px;">
+            Use this form to create a new dog.
+         </div>
+         <form name="new-dog-form" id="new-dog-form">
+            <div id="name-control" class="control-group">
+               <label class="control-label" for="name">Dog Name</label>
+               <div class="controls">
+                  <input type="text" name="name" id="name" class="span4" />
+                  <span id="name-help" class="help-inline" style="display: none">Please correct the error</span>
+               </div>
+            </div>
+         </form>
+         <button class="btn btn-primary" id="create-dog" style="width: 90px;">Create dog</button>
+         <button class="btn btn-primary" id="cancel-create-dog" style="width: 90px;">Cancel</button>
+      </div>
+
+    </body>
+</html>
