@@ -1,0 +1,2 @@
+org.jclouds.s3.S3ApiMetadata
+org.jclouds.blobstore.TransientApiMetadata
