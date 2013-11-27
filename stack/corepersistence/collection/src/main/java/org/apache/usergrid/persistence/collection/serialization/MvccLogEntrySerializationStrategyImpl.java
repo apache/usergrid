@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.collection.serialization;
 
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,11 +27,12 @@ import com.google.inject.name.Named;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.model.ColumnList;
+import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
@@ -43,13 +46,10 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     public static final String TIMEOUT_PROP = "collection.stage.transient.timeout";
 
+    private static final StageSerializer SER = new StageSerializer();
+
     private static final ColumnFamily<UUID, UUID> CF_ENTITY_LOG =
             new ColumnFamily<UUID, UUID>( "Entity_Log", UUIDSerializer.get(), UUIDSerializer.get() );
-
-    /**
-     * Used for caching the byte => stage mapping
-     */
-    private static final StageCache CACHE = new StageCache();
 
 
     protected final Keyspace keyspace;
@@ -71,7 +71,6 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final Stage stage = entry.getStage();
         final UUID colName = entry.getVersion();
-        final byte colValue = stage.getId();
 
         return doWrite( entry.getContext(), entry.getEntityId(), new RowOp() {
             @Override
@@ -79,12 +78,12 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
                 //Write the stage with a timeout, it's set as transient
                 if ( stage.isTransient() ) {
-                    colMutation.putColumn( colName, colValue, timeout );
+                    colMutation.putColumn( colName, stage, SER, timeout );
                     return;
                 }
 
                 //otherwise it's persistent, write it with no expiration
-                colMutation.putColumn( colName, colValue );
+                colMutation.putColumn( colName, stage, SER, null );
             }
         } );
     }
@@ -98,28 +97,18 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        Column<UUID> result = null;
+        Column<UUID> result;
 
         try {
-            OperationResult<Column<UUID>>
-                    foo = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( entityId ).getColumn( version ).execute();
-
-            result = foo.getResult();
+            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( entityId ).getColumn( version ).execute()
+                             .getResult();
         }
         catch ( NotFoundException nfe ) {
             return null;
         }
 
-        if ( result == null ) {
-            return null;
-        }
 
-        final byte stored = result.getByteValue();
-
-
-        final Stage stage = CACHE.getStage( stored );
-
-        Preconditions.checkNotNull( "No stage was found for byte value " + stored + ".  This is a migration data bug" );
+        final Stage stage = result.getValue( SER );
 
         return new MvccLogEntryImpl( context, entityId, version, stage );
     }
@@ -127,8 +116,27 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     @Override
     public List<MvccLogEntry> load( final CollectionContext context, final UUID entityId, final UUID version,
-                                    final int maxSize ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                    final int maxSize ) throws ConnectionException {
+        Preconditions.checkNotNull( context, "context is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
+
+
+        ColumnList<UUID> columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( entityId )
+                                           .withColumnRange( version, null, false, maxSize ).execute().getResult();
+
+
+        List<MvccLogEntry> results = new ArrayList<MvccLogEntry>( columns.size() );
+
+        for ( Column<UUID> col : columns ) {
+            final UUID storedVersion = col.getName();
+            final Stage stage = col.getValue( SER );
+
+            results.add( new MvccLogEntryImpl( context, entityId, storedVersion, stage ) );
+        }
+
+        return results;
     }
 
 
@@ -160,14 +168,10 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
     }
 
 
-    /**
-     * Simple callback to perform puts and deletes with a common row setup code
-     */
+    /** Simple callback to perform puts and deletes with a common row setup code */
     private static interface RowOp {
 
-        /**
-         * The operation to perform on the row
-         */
+        /** The operation to perform on the row */
         void doOp( ColumnListMutation<UUID> colMutation );
     }
 
@@ -187,9 +191,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
     }
 
 
-    /**
-     * Internal stage cache
-     */
+    /** Internal stage cache */
     private static class StageCache {
         private Map<Byte, Stage> values = new HashMap<Byte, Stage>( Stage.values().length );
 
@@ -199,21 +201,38 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
                 final byte stageValue = stage.getId();
 
-                if ( values.containsKey( stageValue ) ) {
-                    throw new RuntimeException(
-                            "There are two Stages assigned to the byte " + stageValue + ".  This is a bug" );
-                }
-
                 values.put( stageValue, stage );
             }
         }
 
 
-        /**
-         * Get the stage with the byte value
-         */
+        /** Get the stage with the byte value */
         private Stage getStage( final byte value ) {
             return values.get( value );
+        }
+    }
+
+
+    public static class StageSerializer extends AbstractSerializer<Stage> {
+
+        /** Used for caching the byte => stage mapping */
+        private static final StageCache CACHE = new StageCache();
+
+
+        @Override
+        public ByteBuffer toByteBuffer( final Stage obj ) {
+            ByteBuffer buff = ByteBuffer.allocate( 1 );
+            buff.put( obj.getId() );
+            buff.rewind();
+            return buff;
+        }
+
+
+        @Override
+        public Stage fromByteBuffer( final ByteBuffer byteBuffer ) {
+            final byte value  = byteBuffer.get();
+
+            return CACHE.getStage(value);
         }
     }
 }

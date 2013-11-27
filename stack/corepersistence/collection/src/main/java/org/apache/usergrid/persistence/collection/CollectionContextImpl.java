@@ -79,4 +79,14 @@ public class CollectionContextImpl implements CollectionContext {
         result = 31 * result + name.hashCode();
         return result;
     }
+
+
+    @Override
+    public String toString() {
+        return "CollectionContextImpl{" +
+                "applicationId=" + applicationId +
+                ", ownerId=" + ownerId +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

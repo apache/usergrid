@@ -29,9 +29,9 @@ public interface MvccLogEntrySerializationStrategy
      *
      * @param context The context to persist the entity into
      * @param entityId The entity id to load
-     * @param version The version to load.  This will return the version <= the given version
+     * @param version The version to load.  This will return the version == the given version
      *
-     * @return The deserialized version of the entity.  Null if no version <= the current version exists, or the entity does not exist
+     * @return The deserialized version of the log entry.  Null if no version == the current version exists
      */
     public MvccLogEntry load( final CollectionContext context, final UUID entityId, final UUID version )
             throws ConnectionException;
@@ -46,7 +46,8 @@ public interface MvccLogEntrySerializationStrategy
      *
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID)
      */
-    public List<MvccLogEntry> load( CollectionContext context, UUID entityId, UUID version, int maxSize );
+    public List<MvccLogEntry> load( CollectionContext context, UUID entityId, UUID version, int maxSize )
+            throws ConnectionException;
 
     /**
      * Delete the stage from the context with the given entityId and version

@@ -340,4 +340,91 @@ public class MvccEntitySerializationStrategyImplTest {
 
         assertEquals( 0, entities.size() );
     }
+
+
+    @Test(expected = NullPointerException.class)
+    public void writeParams() throws ConnectionException {
+       serializationStrategy.write( null );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void deleteParamContext() throws ConnectionException {
+       serializationStrategy.delete( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void deleteParamEntityId() throws ConnectionException {
+
+        serializationStrategy
+                .delete( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        null, UUIDGenerator.newTimeUUID() );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void deleteParamVersion() throws ConnectionException {
+
+        serializationStrategy
+                .delete( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        UUIDGenerator.newTimeUUID(), null );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadParamContext() throws ConnectionException {
+       serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadParamEntityId() throws ConnectionException {
+
+        serializationStrategy
+                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        null, UUIDGenerator.newTimeUUID() );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadParamVersion() throws ConnectionException {
+
+        serializationStrategy
+                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        UUIDGenerator.newTimeUUID(), null );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadListParamContext() throws ConnectionException {
+       serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 1 );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadListParamEntityId() throws ConnectionException {
+
+        serializationStrategy
+                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        null, UUIDGenerator.newTimeUUID(), 1 );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadListParamVersion() throws ConnectionException {
+
+        serializationStrategy
+                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        UUIDGenerator.newTimeUUID(), null, 1 );
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void loadListParamSize() throws ConnectionException {
+
+        serializationStrategy
+                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 0 );
+    }
 }

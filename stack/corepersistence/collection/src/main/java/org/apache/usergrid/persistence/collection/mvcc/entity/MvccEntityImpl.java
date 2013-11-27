@@ -92,4 +92,15 @@ public class MvccEntityImpl implements MvccEntity {
         result = 31 * result + getVersion().hashCode();
         return result;
     }
+
+
+    @Override
+    public String toString() {
+        return "MvccEntityImpl{" +
+                "context=" + context +
+                ", entityId=" + entityId +
+                ", version=" + version +
+                ", entity=" + entity +
+                '}';
+    }
 }

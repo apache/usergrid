@@ -8,6 +8,7 @@ import org.apache.usergrid.persistence.collection.CollectionContext;
 
 /**
  * The simple implementation of a log entry
+ *
  * @author tnine
  */
 public class MvccLogEntryImpl implements MvccLogEntry {
@@ -18,7 +19,7 @@ public class MvccLogEntryImpl implements MvccLogEntry {
     private final Stage stage;
 
 
-    public MvccLogEntryImpl(final CollectionContext context, final UUID entityId, final UUID version,
+    public MvccLogEntryImpl( final CollectionContext context, final UUID entityId, final UUID version,
                              final Stage stage ) {
         this.context = context;
         this.entityId = entityId;
@@ -68,12 +69,14 @@ public class MvccLogEntryImpl implements MvccLogEntry {
         if ( !entityId.equals( that.entityId ) ) {
             return false;
         }
-        if ( stage != that.stage ) {
-            return false;
-        }
         if ( !version.equals( that.version ) ) {
             return false;
         }
+
+        if ( stage != that.stage ) {
+            return false;
+        }
+
 
         return true;
     }
@@ -86,5 +89,16 @@ public class MvccLogEntryImpl implements MvccLogEntry {
         result = 31 * result + version.hashCode();
         result = 31 * result + stage.hashCode();
         return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "MvccLogEntryImpl{" +
+                "context=" + context +
+                ", entityId=" + entityId +
+                ", version=" + version +
+                ", stage=" + stage +
+                '}';
     }
 }

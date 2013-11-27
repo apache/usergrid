@@ -30,15 +30,12 @@ import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ColumnList;
-import com.netflix.astyanax.model.ColumnSlice;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.ObjectSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
-/**
- * @author tnine
- */
+/** @author tnine */
 @Singleton
 public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
 
@@ -85,14 +82,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        final UUID start = null;
-        final UUID end = null;
-
         Column<UUID> column;
 
         try {
-            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
-                              .getColumn( version ).execute().getResult();
+            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId ).getColumn( version ).execute()
+                             .getResult();
         }
 
         catch ( NotFoundException e ) {
@@ -100,19 +94,14 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             return null;
         }
 
-        if ( column == null ) {
-            return null;
-        }
 
-
-        return new MvccEntityImpl( context, entityId, version, column.getValue(SER) );
-
+        return new MvccEntityImpl( context, entityId, version, column.getValue( SER ) );
     }
 
 
     @Override
     public List<MvccEntity> load( final CollectionContext context, final UUID entityId, final UUID version,
-                                  final int maxSize ) {
+                                  final int maxSize ) throws ConnectionException {
 
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -120,22 +109,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
 
 
-        ColumnList<UUID> columns;
+        ColumnList<UUID> columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
+                                           .withColumnRange( version, null, false, maxSize ).execute().getResult();
 
-        try {
-
-
-            columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
-                              .withColumnRange( version, null, false, maxSize ).execute().getResult();
-        }
-
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to load column data", e );
-        }
-
-        if ( columns == null ) {
-            return Collections.EMPTY_LIST;
-        }
 
         List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
 
@@ -166,6 +142,10 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     @Override
     public MutationBatch delete( final CollectionContext context, final UUID entityId, final UUID version ) {
+        Preconditions.checkNotNull( context, "context is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+
 
         return doWrite( entityId, new RowOp() {
             @Override
@@ -189,9 +169,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    /**
-     * Do the write on the correct row for the entity id with the operation
-     */
+    /** Do the write on the correct row for the entity id with the operation */
     private MutationBatch doWrite( UUID entityId, RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
@@ -201,21 +179,18 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    /**
-     * Simple callback to perform puts and deletes with a common row setup code
-     */
+    /** Simple callback to perform puts and deletes with a common row setup code */
     private static interface RowOp {
 
-        /**
-         * The operation to perform on the row
-         */
+        /** The operation to perform on the row */
         void doOp( ColumnListMutation<UUID> colMutation );
     }
 
 
     /**
      * TODO: Serializer for the entity. This just uses object serialization, change this to use SMILE before production!
-     * We want to retain the Optional wrapper.  It helps us easily mark something as cleaned without removing the data
+     * We want to retain the Optional wrapper.  It helps us easily mark something as cleaned without removing the column
+     * and makes it obvious that the entity could be missing in the api
      */
     private static class EntitySerializer extends AbstractSerializer<Optional<Entity>> {
 

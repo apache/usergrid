@@ -48,7 +48,8 @@ public interface MvccEntitySerializationStrategy
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null safe
      * and return an empty list when there are no matches
      */
-    public List<MvccEntity> load( CollectionContext context, UUID entityId, UUID version, int maxSize );
+    public List<MvccEntity> load( CollectionContext context, UUID entityId, UUID version, int maxSize )
+            throws ConnectionException;
 
 
     /**

@@ -17,12 +17,10 @@ import com.fasterxml.uuid.impl.TimeBasedGenerator;
  * @author: tnine
  *
  */
-public class UUIDGenerator
-{
+public class UUIDGenerator {
 
 
-    private static final TimestampSynchronizer synchronizer = new TimestampSynchronizer()
-    {
+    private static final TimestampSynchronizer synchronizer = new TimestampSynchronizer() {
 
         /**
          * Pointer to the last value we returned
@@ -38,8 +36,7 @@ public class UUIDGenerator
 
 
         @Override
-        protected long initialize() throws IOException
-        {
+        protected long initialize() throws IOException {
 
             last = System.currentTimeMillis();
             return last;
@@ -47,29 +44,24 @@ public class UUIDGenerator
 
 
         @Override
-        protected void deactivate() throws IOException
-        {
+        protected void deactivate() throws IOException {
             //no op
         }
 
 
         @Override
-        protected long update( long now ) throws IOException
-        {
+        protected long update( long now ) throws IOException {
             /**
-             * It's greater
+             * Our timestamp is greater just use that
              */
-            if ( now > last )
-            {
+            if ( now > last ) {
                 last = now;
                 ticks.set( 0 );
                 return last;
             }
 
             //we have the same value (since now should always be increasing) increment a tick
-            last = now + ticks.incrementAndGet();
-
-            return last;
+            return last + ticks.incrementAndGet();
         }
     };
 
@@ -81,14 +73,11 @@ public class UUIDGenerator
     /**
      * Lame, but required
      */
-    static
-    {
-        try
-        {
+    static {
+        try {
             timer = new UUIDTimer( random, synchronizer );
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             throw new RuntimeException( "Couldn't intialize timer", e );
         }
     }
@@ -99,8 +88,7 @@ public class UUIDGenerator
 
 
     /** Create a new time uuid */
-    public static UUID newTimeUUID()
-    {
+    public static UUID newTimeUUID() {
         return generator.generate();
     }
 }
