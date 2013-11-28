@@ -20,7 +20,7 @@ import com.fasterxml.uuid.impl.TimeBasedGenerator;
 public class UUIDGenerator {
 
 
-    private static final TimestampSynchronizer synchronizer = new TimestampSynchronizer() {
+    private static final TimestampSynchronizer synchronize = new TimestampSynchronizer() {
 
         /**
          * Pointer to the last value we returned
@@ -75,7 +75,7 @@ public class UUIDGenerator {
      */
     static {
         try {
-            timer = new UUIDTimer( random, synchronizer );
+            timer = new UUIDTimer( random, synchronize );
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Couldn't intialize timer", e );
@@ -83,8 +83,7 @@ public class UUIDGenerator {
     }
 
 
-    private static final TimeBasedGenerator generator =
-            new TimeBasedGenerator( EthernetAddress.fromInterface(), timer );
+    private static final TimeBasedGenerator generator = new TimeBasedGenerator( EthernetAddress.fromInterface(), timer );
 
 
     /** Create a new time uuid */
