@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 
+import com.google.common.base.Preconditions;
+
 
 /**
  * The simple implementation of a log entry
@@ -21,6 +23,13 @@ public class MvccLogEntryImpl implements MvccLogEntry {
 
     public MvccLogEntryImpl( final CollectionContext context, final UUID entityId, final UUID version,
                              final Stage stage ) {
+
+        Preconditions.checkNotNull( context, "context is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version id is required" );
+        Preconditions.checkNotNull( stage, "entity  is required" );
+
+
         this.context = context;
         this.entityId = entityId;
         this.version = version;

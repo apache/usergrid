@@ -10,15 +10,19 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 
-/**
- * @author tnine
- */
+/** @author tnine */
 public class MvccEntityImpl implements MvccEntity {
 
     private final CollectionContext context;
     private final UUID entityId;
     private final UUID version;
     private final Optional<Entity> entity;
+
+
+    public MvccEntityImpl( final CollectionContext context, final UUID entityId, final UUID version,
+                           final Entity entity ) {
+        this( context, entityId, version, Optional.of( entity ) );
+    }
 
 
     public MvccEntityImpl( final CollectionContext context, final UUID entityId, final UUID version,

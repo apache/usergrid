@@ -21,6 +21,7 @@ public class CollectionContextImpl implements CollectionContext {
         Preconditions.checkNotNull( applicationId , "applicationId is required");
         Preconditions.checkNotNull( ownerId , "ownerId is required");
         Preconditions.checkNotNull( name , "name is required");
+        Preconditions.checkArgument( name.length() > 0, "name must have a length" );
 
 
         this.applicationId = applicationId;

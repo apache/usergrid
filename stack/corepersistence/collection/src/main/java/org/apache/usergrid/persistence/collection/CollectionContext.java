@@ -8,8 +8,7 @@ import java.util.UUID;
  * A context to use when creating the collection manager.  Typically, this would be something like an application, or an
  * organization.  Some context that "owns" the collection
  */
-public interface CollectionContext
-{
+public interface CollectionContext {
 
     /** @return The application that will contain this collection */
     public UUID getApplication();
@@ -20,6 +19,9 @@ public interface CollectionContext
      */
     public UUID getOwner();
 
-    /** @return The name of the collection. This should be singular, NO PLURALIZATION!!!!!! */
+    /** @return The name of the collection. If you use pluralization for you names vs types,
+     * you must keep the consistent or you will be unable to load data
+     * @return
+     */
     public String getName();
 }
