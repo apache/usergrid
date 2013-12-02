@@ -19,14 +19,14 @@
  */
 package org.apache.usergrid.perftest;
 
-import org.apache.usergrid.perftest.logging.Log;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A performance test that does nothing.
  */
 public class NoopPerftest implements Perftest {
-    @Log Logger log;
+    private static final Logger LOG = LoggerFactory.getLogger( NoopPerftest.class );
 
 
     @Override
@@ -49,6 +49,6 @@ public class NoopPerftest implements Perftest {
 
     @Override
     public void call() {
-        log.info( "This performance test tests nothing" );
+        LOG.info( "This performance test tests nothing" );
     }
 }
