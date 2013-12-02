@@ -17,14 +17,15 @@
  *  under the License. 
  *  
  */
-package org.apache.usergrid.perfteststats;
+package org.apache.usergrid.perftest;
 
 
-import org.apache.usergrid.perftest.Perftest;
-import org.apache.usergrid.perftest.logging.Log;
+import com.google.inject.Inject;
 import org.apache.usergrid.perftest.rest.CallStatsSnapshot;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,16 +34,29 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Atomically stores and updates call statistics on tests.
  */
 public class CallStats {
-    @Log Logger log;
+    private static final Logger LOG = LoggerFactory.getLogger( CallStats.class );
 
     private final AtomicInteger callCount = new AtomicInteger();
     private final Object lock = new Object();
     private final TimeUnit units = TimeUnit.NANOSECONDS;
+    private ResultsLog log;
 
     private long maxTime = Long.MIN_VALUE;
     private long minTime = Long.MAX_VALUE;
     private long meanTime = 0;
     private long totalTime = 0;
+
+
+    @Inject
+    public void setResultsLog( ResultsLog log ) {
+        this.log = log;
+        try {
+            log.open();
+        }
+        catch ( IOException e ) {
+            LOG.error( "Failed to open the results log.", e );
+        }
+    }
 
 
     public int getCallCount() {
@@ -62,10 +76,8 @@ public class CallStats {
 
     public int callOccurred( Perftest test, long startTime, long endTime, TimeUnit units )
     {
-        synchronized ( lock )
-        {
-            if ( callCount.get() >  test.getCallCount() - 1 )
-            {
+        synchronized ( lock ) {
+            if ( callCount.get() >  test.getCallCount() - 1 ) {
                 return callCount.get();
             }
 
@@ -78,13 +90,28 @@ public class CallStats {
                 int numCalls = callCount.incrementAndGet();
                 StringBuilder sb = new StringBuilder();
                 sb.append( numCalls ).append( " " ).append( startTime ).append( " " ).append( endTime );
-                log.debug(sb.toString());
+                log.write(sb.toString());
                 meanTime = totalTime / numCalls;
                 return numCalls;
             }
             else {
                 throw new RuntimeException( "Time unit corrections have not been implemented." );
             }
+        }
+    }
+
+
+    public void stop() {
+        log.close();
+    }
+
+
+    public void reset() {
+        try {
+            log.truncate();
+        }
+        catch ( IOException e ) {
+            LOG.error( "Failed to truncate the results file.", e );
         }
     }
 }
