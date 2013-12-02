@@ -17,28 +17,23 @@
  *  under the License. 
  *  
  */
-package org.apache.usergrid.perftest.logging;
+package org.apache.usergrid.perftest.amazon;
 
-import com.google.inject.TypeLiteral;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
-import org.slf4j.Logger;
 
-import java.lang.reflect.Field;
+import org.junit.Ignore;
+import org.junit.Test;
+
 
 /**
- * ...
- *
- * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
- * @version $Rev$
+ * Tests AmazonS3Service.
  */
-public class Slf4jTypeListener implements TypeListener {
-    public <T> void hear(TypeLiteral<T> typeLiteral, TypeEncounter<T> typeEncounter) {
-        for (Field field : typeLiteral.getRawType().getDeclaredFields()) {
-            if (field.getType() == Logger.class
-                    && field.isAnnotationPresent(Log.class)) {
-                typeEncounter.register(new Slf4jMembersInjector<T>(field));
-            }
-        }
+public class AmazonS3ServiceTest {
+
+    @Test @Ignore
+    public void testSetup() {
+        AmazonS3Service service = new AmazonS3ServiceImpl();
+        service.start();
+        service.isStarted();
+        service.stop();
     }
 }
