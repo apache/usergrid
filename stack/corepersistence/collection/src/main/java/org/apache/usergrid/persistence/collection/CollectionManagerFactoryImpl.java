@@ -10,6 +10,7 @@ public class CollectionManagerFactoryImpl implements CollectionManagerFactory {
 
     @Override
     public CollectionManager createCollectionManager( final CollectionContext context ) {
-        return new CollectionManagerImpl( context );
+//        return new CollectionManagerImpl( context );
+        return null;
     }
 }

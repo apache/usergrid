@@ -53,6 +53,9 @@ public class TestCollectionModule extends AbstractModule {
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_HOSTS, "localhost" );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CONNECTIONS, "10" );
+
+        //time out after 5 seconds
+        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_TIMEOUT, "5000" );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CLUSTER_NAME, "Usergrid" );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_VERSION, "1.2" );
         configProperties.put( AstynaxKeyspaceProvider.COLLECTIONS_KEYSPACE_NAME, "Usergrid_Collections" );

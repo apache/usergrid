@@ -43,6 +43,13 @@
       <version>${astynax.version}</version>
     </dependency>
 
+    <!-- bean utils for setting uuids etc -->
+    <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils-core</artifactId>
+        <version>1.8.3</version>
+    </dependency>
+
     <!-- Serialization libraries -->
 
     <dependency>

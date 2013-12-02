@@ -3,6 +3,10 @@ package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.OperationResult;
+
 
 /**
  * This phase should execute the serialization to the data store.
@@ -17,9 +21,9 @@ public class Write implements WriteStage {
 
 
     @Override
-    public MvccEntity performStage( final MvccEntity entity) {
+    public MutationBatch performStage( final MvccEntity entity ) {
 
 
-        return entity;
+        return null;
     }
 }

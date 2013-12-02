@@ -173,7 +173,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private MutationBatch doWrite( UUID entityId, RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, entityId ) );
+            op.doOp( batch.withRow( CF_ENTITY_DATA, entityId ) );
 
         return batch;
     }
