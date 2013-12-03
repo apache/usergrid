@@ -18,7 +18,7 @@ public interface WriteContext {
      * Perform the write in the context with the specified entity
      * @param entity
      */
-    void performWrite(MvccEntity entity);
+    void nextStage(MvccEntity entity);
 
 
 

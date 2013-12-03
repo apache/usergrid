@@ -12,6 +12,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,8 +58,8 @@ public class Start implements WriteStage {
           throw new RuntimeException( "Failed to execute write asynchronously ", e );
         }
 
-        //todo next stage invocation
-        //Futures.addCallback();
+        //set the next stage to invoke on return
+        Futures.addCallback(future, new WriteContextCallback(context, entity));
 
     }
 

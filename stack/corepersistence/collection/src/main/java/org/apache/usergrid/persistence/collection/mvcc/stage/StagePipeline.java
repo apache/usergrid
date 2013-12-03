@@ -15,6 +15,7 @@ public interface StagePipeline {
      */
     public WriteStage next();
 
+
     /**
      * Insert a new stage directly after the current stage.  This can be used
      * to add additional validation during write phases depending on the mvcc entity

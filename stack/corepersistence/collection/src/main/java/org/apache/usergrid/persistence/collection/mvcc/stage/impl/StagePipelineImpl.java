@@ -1,13 +1,9 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
 
