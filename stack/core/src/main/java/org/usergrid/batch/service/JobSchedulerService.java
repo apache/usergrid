@@ -32,6 +32,8 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.yammer.metrics.annotation.ExceptionMetered;
 import com.yammer.metrics.annotation.Timed;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
@@ -53,6 +55,9 @@ public class JobSchedulerService extends AbstractScheduledService {
     protected static final long DEFAULT_DELAY = 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger( JobSchedulerService.class );
+
+    // keep track of exceptions thrown in scheduler so we can reduce noise in logs
+    private Map<String, Integer> schedulerRunFailures = new HashMap<String, Integer>();
 
     private long interval = DEFAULT_DELAY;
     private int workerSize = 1;
@@ -112,7 +117,22 @@ public class JobSchedulerService extends AbstractScheduledService {
             }
         }
         catch ( Throwable t ) {
-            LOG.error( "Something really bad happened!  Scheduler run failed", t );
+
+            // errors here happen a lot on shutdown, don't fill the logs with them
+            String error = t.getClass().getCanonicalName();
+            if (schedulerRunFailures.get( error ) == null) {
+                LOG.error( "Scheduler run failed, first instance of this exception", t );
+                schedulerRunFailures.put( error, 1);
+
+            } else {
+                int count = schedulerRunFailures.get(error) + 1; 
+                schedulerRunFailures.put(error, count);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug( error + " caused scheduler run failure, count =  " + count, t );
+                } else {
+                    LOG.error( error + " caused scheduler run failure, count =  " + count );
+                }
+            }
         }
     }
 
