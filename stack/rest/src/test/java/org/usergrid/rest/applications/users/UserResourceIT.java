@@ -878,7 +878,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         boolean fail = false;
         try {
-            client.changePassword( "edanuff", "foo", "bar" );
+            ApiResponse changeResponse = client.changePassword( "edanuff", "foo", "bar" );
+            fail = changeResponse.getError() != null;
         }
         catch ( Exception e ) {
             fail = true;
