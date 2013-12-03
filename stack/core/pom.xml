@@ -12,10 +12,6 @@
     <!-- Up to 30x parallelism can be used -->
     <core.it.forkCount>2</core.it.forkCount>
     <core.it.suite.concurrency>5</core.it.suite.concurrency>
-
-    <!-- This seems to be a safe figure -->
-    <core.it.heapmax>1024m</core.it.heapmax>
-    <core.it.heapmin>1024m</core.it.heapmin>
   </properties>
 
   <artifactId>usergrid-core</artifactId>
@@ -55,7 +51,7 @@
               <forkCount>${core.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
 
-              <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
               </argLine>
 
               <includes>
@@ -139,7 +135,7 @@
               <forkCount>${core.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
 
-              <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
               </argLine>
 
               <includes>
@@ -241,7 +237,7 @@
             <target.directory>${project.build.directory}</target.directory>
           </systemPropertyVariables>
           <forkMode>once</forkMode>
-          <argLine>-Xmx3G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
           <includes>
             <include>**/*ConcurrentCoreITSuite.java</include>
