@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.serialization;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.util.HashMap;
@@ -10,11 +10,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.CollectionContextImpl;
+import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.test.CassandraRule;
 
@@ -28,6 +29,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
@@ -62,8 +64,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-            MvccLogEntry saved = new MvccLogEntryImpl( context, uuid, version, stage );
-            logEntryStrategy.write( saved ).execute();
+            MvccLogEntry saved = new MvccLogEntryImpl(  uuid, version, stage );
+            logEntryStrategy.write( context, saved ).execute();
 
             //Read it back
 
@@ -118,8 +120,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
         for ( int i = 0; i < count; i++ ) {
             versions[i] = UUIDGenerator.newTimeUUID();
 
-            entries[i] = new MvccLogEntryImpl( context, uuid, versions[i], COMPLETE );
-            logEntryStrategy.write( entries[i] ).execute();
+            entries[i] = new MvccLogEntryImpl( uuid, versions[i], COMPLETE );
+            logEntryStrategy.write( context,  entries[i] ).execute();
 
             //Read it back
 
@@ -169,8 +171,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
         for ( Stage stage : Stage.values() ) {
 
-            MvccLogEntry saved = new MvccLogEntryImpl( context, uuid, version, stage );
-            logEntryStrategy.write( saved ).execute();
+            MvccLogEntry saved = new MvccLogEntryImpl( uuid, version, stage );
+            logEntryStrategy.write(context,  saved ).execute();
 
             //Read it back after the timeout
 
@@ -193,8 +195,14 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
 
     @Test(expected = NullPointerException.class)
+    public void writeParamsNoContext() throws ConnectionException {
+        logEntryStrategy.write( null, mock(MvccLogEntry.class) );
+    }
+
+
+    @Test(expected = NullPointerException.class)
     public void writeParams() throws ConnectionException {
-        logEntryStrategy.write( null );
+        logEntryStrategy.write( mock(CollectionContext.class), null );
     }
 
 

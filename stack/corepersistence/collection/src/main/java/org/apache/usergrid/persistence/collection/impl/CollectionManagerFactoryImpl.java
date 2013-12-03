@@ -1,4 +1,9 @@
-package org.apache.usergrid.persistence.collection;
+package org.apache.usergrid.persistence.collection.impl;
+
+
+import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.CollectionManager;
+import org.apache.usergrid.persistence.collection.CollectionManagerFactory;
 
 
 /**

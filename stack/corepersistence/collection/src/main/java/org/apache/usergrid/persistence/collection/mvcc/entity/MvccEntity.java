@@ -31,8 +31,4 @@ public interface MvccEntity {
      */
     UUID getUuid();
 
-    /**
-     * Get the collection context this entity belongs i
-     */
-    CollectionContext getContext();
 }

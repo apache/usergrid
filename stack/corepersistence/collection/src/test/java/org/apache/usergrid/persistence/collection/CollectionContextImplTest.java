@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.TestCase.assertEquals;

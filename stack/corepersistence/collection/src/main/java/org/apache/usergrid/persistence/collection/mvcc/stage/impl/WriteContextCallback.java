@@ -1,34 +1,62 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
 
 import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.netflix.astyanax.connectionpool.OperationResult;
 
 
-/** @author tnine */
+/**
+ * Helper class to cause the async execution to continue
+ * @author tnine */
 public class WriteContextCallback implements FutureCallback<OperationResult<Void>> {
 
     private final WriteContext context;
-    private final MvccEntity entity;
 
 
-    public WriteContextCallback( final WriteContext context, final MvccEntity entity ) {
+    /**
+     * Create a new callback.  The data will be passed to the next stage
+     * @param context
+     */
+    private WriteContextCallback( final WriteContext context ) {
         this.context = context;
-        this.entity = entity;
     }
 
 
     public void onSuccess( final OperationResult<Void> result ) {
-        //proceed to the next stage
-        context.nextStage( entity );
+
+        /**
+         * Proceed to the next stage
+         */
+        context.proceed();
     }
 
 
     @Override
     public void onFailure( final Throwable t ) {
-        throw new RuntimeException( "Failed to execute write", t );
+        context.stop();
+        throw new CollectionRuntimeException( "Failed to execute write", t );
+    }
+
+
+    /**
+     * This encapsulated type of Void in the listenable future is intentional.  If you're not returning
+     * void in your future, you shouldn't be using this callback, you should be using a callback
+     * that will set the Response value into the next stage and invoke it
+     *
+     * @param future The listenable future returned by the Astyanax async op
+     * @param context The context to signal to continue in the callback
+     */
+    public static void createCallback( final ListenableFuture<OperationResult<Void>> future,
+                                       final WriteContext context ) {
+
+        Futures.addCallback(future, new WriteContextCallback( context ));
+
     }
 }

@@ -20,14 +20,14 @@ public interface CollectionManager
      *
      * @param entity The entity to update
      */
-    public void create( Entity entity );
+    public Entity create( Entity entity );
 
     /**
      * Update the entity with the given fields.
      *
      * @param entity The entity properties to update
      */
-    public void update( Entity entity );
+    public Entity update( Entity entity );
 
     /** Delete the entity and remove it's indexes with the given entity id */
     public void delete( UUID entityId );

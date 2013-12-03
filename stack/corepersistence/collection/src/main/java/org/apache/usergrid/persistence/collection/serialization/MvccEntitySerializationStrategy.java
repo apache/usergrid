@@ -21,7 +21,7 @@ public interface MvccEntitySerializationStrategy
      * @param entity The entity to persist
      * @return The MutationBatch operations for this update
      */
-    public MutationBatch write( MvccEntity entity );
+    public MutationBatch write(CollectionContext context, MvccEntity entity );
 
 
     /**
@@ -35,7 +35,7 @@ public interface MvccEntitySerializationStrategy
      * If the entity version has been cleared, the MvccEntity will be returned, but the optional entity
      * will not be set
      */
-    public MvccEntity load( CollectionContext context, UUID entityId, UUID version ) throws ConnectionException;
+    public MvccEntity load( CollectionContext context, UUID entityId, UUID version );
 
     /**
      * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
@@ -48,8 +48,7 @@ public interface MvccEntitySerializationStrategy
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null safe
      * and return an empty list when there are no matches
      */
-    public List<MvccEntity> load( CollectionContext context, UUID entityId, UUID version, int maxSize )
-            throws ConnectionException;
+    public List<MvccEntity> load( CollectionContext context, UUID entityId, UUID version, int maxSize );
 
 
     /**

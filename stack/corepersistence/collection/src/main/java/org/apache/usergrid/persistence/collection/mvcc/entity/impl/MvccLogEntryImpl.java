@@ -1,9 +1,11 @@
-package org.apache.usergrid.persistence.collection.mvcc.entity;
+package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 
 import com.google.common.base.Preconditions;
 
@@ -15,22 +17,18 @@ import com.google.common.base.Preconditions;
  */
 public class MvccLogEntryImpl implements MvccLogEntry {
 
-    private final CollectionContext context;
     private final UUID entityId;
     private final UUID version;
     private final Stage stage;
 
 
-    public MvccLogEntryImpl( final CollectionContext context, final UUID entityId, final UUID version,
+    public MvccLogEntryImpl( final UUID entityId, final UUID version,
                              final Stage stage ) {
-
-        Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
         Preconditions.checkNotNull( stage, "entity  is required" );
 
 
-        this.context = context;
         this.entityId = entityId;
         this.version = version;
         this.stage = stage;
@@ -56,12 +54,6 @@ public class MvccLogEntryImpl implements MvccLogEntry {
 
 
     @Override
-    public CollectionContext getContext() {
-        return context;
-    }
-
-
-    @Override
     public boolean equals( final Object o ) {
         if ( this == o ) {
             return true;
@@ -72,9 +64,6 @@ public class MvccLogEntryImpl implements MvccLogEntry {
 
         final MvccLogEntryImpl that = ( MvccLogEntryImpl ) o;
 
-        if ( !context.equals( that.context ) ) {
-            return false;
-        }
         if ( !entityId.equals( that.entityId ) ) {
             return false;
         }
@@ -93,8 +82,7 @@ public class MvccLogEntryImpl implements MvccLogEntry {
 
     @Override
     public int hashCode() {
-        int result = context.hashCode();
-        result = 31 * result + entityId.hashCode();
+        int result = 31 * entityId.hashCode();
         result = 31 * result + version.hashCode();
         result = 31 * result + stage.hashCode();
         return result;
@@ -104,7 +92,6 @@ public class MvccLogEntryImpl implements MvccLogEntry {
     @Override
     public String toString() {
         return "MvccLogEntryImpl{" +
-                "context=" + context +
                 ", entityId=" + entityId +
                 ", version=" + version +
                 ", stage=" + stage +

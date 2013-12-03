@@ -1,7 +1,9 @@
-package org.apache.usergrid.persistence.collection;
+package org.apache.usergrid.persistence.collection.impl;
 
 
 import java.util.UUID;
+
+import org.apache.usergrid.persistence.collection.CollectionContext;
 
 import com.google.common.base.Preconditions;
 

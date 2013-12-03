@@ -9,17 +9,18 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 /**
  * The possible stages in our write flow.
  */
-public interface WriteStage {
+public interface WriteStage{
 
     /**
      * Run this stage.  This will return the MvccEntity that should be returned or passed to the next stage
      *
      *
      * @param context The context of the current write operation
-     * @param entity The entity to use in this stage
      *
      * @return The asynchronous listener to signal success
      *
      */
-    public void performStage( WriteContext context, MvccEntity entity ) throws ConnectionException;
+    public void performStage( WriteContext context);
+
+
 }

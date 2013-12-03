@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.serialization;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.util.HashSet;
@@ -12,10 +12,11 @@ import org.junit.Test;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntityImpl;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
@@ -32,18 +33,16 @@ import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.serializers.UUIDSerializer;
-import com.netflix.astyanax.util.TimeUUIDUtils;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 
-/**
- * @author tnine
- */
+/** @author tnine */
 public class MvccEntitySerializationStrategyImplTest {
 
     @Rule
@@ -93,11 +92,11 @@ public class MvccEntitySerializationStrategyImplTest {
         entity.setField( uuidField );
 
 
-        MvccEntity saved = new MvccEntityImpl( context, entityId, version, Optional.of( entity ) );
+        MvccEntity saved = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
 
 
         //persist the entity
-        serializationStrategy.write( saved ).execute();
+        serializationStrategy.write( context, saved ).execute();
 
         //now read it back
 
@@ -188,11 +187,11 @@ public class MvccEntitySerializationStrategyImplTest {
         entity.setUpdated( updated );
 
 
-        MvccEntity saved = new MvccEntityImpl( context, entityId, version, Optional.of( entity ) );
+        MvccEntity saved = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
 
 
         //persist the entity
-        serializationStrategy.write( saved ).execute();
+        serializationStrategy.write( context, saved ).execute();
 
         //now read it back
 
@@ -213,7 +212,6 @@ public class MvccEntitySerializationStrategyImplTest {
 
         returned = serializationStrategy.load( context, entityId, version );
 
-        assertEquals( context, returned.getContext() );
         assertEquals( entityId, returned.getUuid() );
         assertEquals( version, returned.getVersion() );
         assertFalse( returned.getEntity().isPresent() );
@@ -247,11 +245,11 @@ public class MvccEntitySerializationStrategyImplTest {
         entityv1.setVersion( version1 );
 
 
-        MvccEntity saved = new MvccEntityImpl( context, entityId, version1, Optional.of( entityv1 ) );
+        MvccEntity saved = new MvccEntityImpl( entityId, version1, Optional.of( entityv1 ) );
 
 
         //persist the entity
-        serializationStrategy.write( saved ).execute();
+        serializationStrategy.write( context, saved ).execute();
 
         //now read it back
 
@@ -275,17 +273,19 @@ public class MvccEntitySerializationStrategyImplTest {
 
         UUIDType comparator = UUIDType.instance;
 
-        int value = comparator.compare( UUIDSerializer.get().toByteBuffer( version1 ), UUIDSerializer.get().toByteBuffer( version2 ) );
+        int value = comparator.compare( UUIDSerializer.get().toByteBuffer( version1 ),
+                UUIDSerializer.get().toByteBuffer( version2 ) );
 
-        assertTrue(value < 0);
+        assertTrue( value < 0 );
 
-        value = comparator.compare( UUIDSerializer.get().toByteBuffer( version2 ), UUIDSerializer.get().toByteBuffer( version2 ) );
+        value = comparator.compare( UUIDSerializer.get().toByteBuffer( version2 ),
+                UUIDSerializer.get().toByteBuffer( version2 ) );
 
-        assertEquals(0, value);
+        assertEquals( 0, value );
 
-        MvccEntity savedV2 = new MvccEntityImpl( context, entityId, version2, Optional.of( entityv2 ) );
+        MvccEntity savedV2 = new MvccEntityImpl( entityId, version2, Optional.of( entityv2 ) );
 
-        serializationStrategy.write( savedV2 ).execute();
+        serializationStrategy.write( context, savedV2 ).execute();
 
         MvccEntity returnedV2 = serializationStrategy.load( context, entityId, version2 );
 
@@ -301,11 +301,11 @@ public class MvccEntitySerializationStrategyImplTest {
 
         final Optional<Entity> empty = Optional.absent();
 
-        MvccEntity clearedV3 = new MvccEntityImpl( context, entityId, version3, empty );
+        MvccEntity clearedV3 = new MvccEntityImpl( entityId, version3, empty );
 
         MvccEntity returnedV3 = serializationStrategy.load( context, entityId, version3 );
 
-        assertEquals("entities are the same", clearedV3, returnedV3);
+        assertEquals( "entities are the same", clearedV3, returnedV3 );
 
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
@@ -342,19 +342,27 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
-    public void writeParams() throws ConnectionException {
-       serializationStrategy.write( null );
+    @Test( expected = NullPointerException.class )
+    public void writeParamsContext() throws ConnectionException {
+        serializationStrategy.write( null, mock( MvccEntity.class ) );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
+    public void writeParamsEntity() throws ConnectionException {
+        serializationStrategy
+                .write( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                        null );
+    }
+
+
+    @Test( expected = NullPointerException.class )
     public void deleteParamContext() throws ConnectionException {
-       serializationStrategy.delete( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+        serializationStrategy.delete( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void deleteParamEntityId() throws ConnectionException {
 
         serializationStrategy
@@ -363,7 +371,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void deleteParamVersion() throws ConnectionException {
 
         serializationStrategy
@@ -372,13 +380,13 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadParamContext() throws ConnectionException {
-       serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+        serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadParamEntityId() throws ConnectionException {
 
         serializationStrategy
@@ -387,7 +395,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadParamVersion() throws ConnectionException {
 
         serializationStrategy
@@ -396,13 +404,13 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadListParamContext() throws ConnectionException {
-       serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 1 );
+        serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadListParamEntityId() throws ConnectionException {
 
         serializationStrategy
@@ -411,7 +419,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void loadListParamVersion() throws ConnectionException {
 
         serializationStrategy
@@ -420,7 +428,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test( expected = IllegalArgumentException.class )
     public void loadListParamSize() throws ConnectionException {
 
         serializationStrategy

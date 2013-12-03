@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.serialization;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.nio.ByteBuffer;
@@ -12,10 +12,12 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.migration.CollectionColumnFamily;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntityImpl;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Optional;
@@ -40,6 +42,7 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
 
 
+
     private static final EntitySerializer SER = new EntitySerializer();
 
 
@@ -57,7 +60,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch write( final MvccEntity entity ) {
+    public MutationBatch write(final CollectionContext context, final MvccEntity entity ) {
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final UUID colName = entity.getVersion();
@@ -75,8 +78,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MvccEntity load( final CollectionContext context, final UUID entityId, final UUID version )
-            throws ConnectionException {
+    public MvccEntity load( final CollectionContext context, final UUID entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -93,15 +95,18 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             //swallow, there's just no column
             return null;
         }
+        catch ( ConnectionException e ) {
+            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+        }
 
 
-        return new MvccEntityImpl( context, entityId, version, column.getValue( SER ) );
+        return new MvccEntityImpl( entityId, version, column.getValue( SER ) );
     }
 
 
     @Override
     public List<MvccEntity> load( final CollectionContext context, final UUID entityId, final UUID version,
-                                  final int maxSize ) throws ConnectionException {
+                                  final int maxSize ) {
 
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -109,14 +114,20 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
 
 
-        ColumnList<UUID> columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
-                                           .withColumnRange( version, null, false, maxSize ).execute().getResult();
+        ColumnList<UUID> columns = null;
+        try {
+            columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
+                                               .withColumnRange( version, null, false, maxSize ).execute().getResult();
+        }
+        catch ( ConnectionException e ) {
+            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+        }
 
 
         List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
 
         for ( Column<UUID> col : columns ) {
-            results.add( new MvccEntityImpl( context, entityId, col.getName(), col.getValue( SER ) ) );
+            results.add( new MvccEntityImpl( entityId, col.getName(), col.getValue( SER ) ) );
         }
 
         return results;

@@ -21,7 +21,7 @@ public interface MvccLogEntrySerializationStrategy
      * @param entry the entry to write
      * @return The mutation batch with the mutation operations for this write.
      */
-    public MutationBatch write( MvccLogEntry entry );
+    public MutationBatch write( final CollectionContext context, MvccLogEntry entry );
 
     /**
      * Load and return the stage with the given id and a version that is <= the version provided

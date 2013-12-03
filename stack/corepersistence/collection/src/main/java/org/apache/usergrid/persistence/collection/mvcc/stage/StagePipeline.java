@@ -11,9 +11,9 @@ public interface StagePipeline {
 
 
     /**
-     * Get the next stage in this pipeline.  Will return null if there are no more stages to execute
+     * Get the first stage in this pipeline.  Will return null if there are no more stages to execute
      */
-    public WriteStage next();
+    WriteStage first();
 
 
     /**
@@ -22,15 +22,34 @@ public interface StagePipeline {
      *
      * @param stage
      */
-    public void insert(WriteStage stage);
+    void insert(WriteStage stage);
 
 
     /**
      * Add a new stage to the end of the pipline
      * @param stage
      */
-    public void addLast(WriteStage stage);
+    void addLast(WriteStage stage);
 
+
+    /**
+     * get the next stage after this one
+     * @param stage
+     */
+    WriteStage nextStage(WriteStage stage);
+
+
+    /**
+     * Get the last stage in this pipeline
+     * @return
+     */
+    WriteStage last();
+
+    /**
+     * Get the current stage in the pipeline
+     * @return
+     */
+    WriteStage current();
 
 
 }

@@ -1,7 +1,9 @@
-package org.apache.usergrid.persistence.collection.mvcc.entity;
+package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

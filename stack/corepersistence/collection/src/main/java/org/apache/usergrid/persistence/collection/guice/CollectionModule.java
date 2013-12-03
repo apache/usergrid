@@ -1,24 +1,15 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+import java.util.Properties;
+
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
-import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.collection.migration.MigrationManager;
-import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CreatePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.DeletePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.UpdatePipeline;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategyImpl;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CollectionPipelineModule;
+import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
+import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-import com.netflix.astyanax.Keyspace;
 
 
 /**
@@ -35,56 +26,33 @@ public class CollectionModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        /**
+         * Load our properties for the entire colleciton module
+         *
+         */
 
         //bind our cassandra properties
-        Names.bindProperties( binder(), PropertyUtils.loadFromClassPath( CASS_PROPS ) );
+
+        Properties props = PropertyUtils.loadFromClassPath( CASS_PROPS );
+
+        Names.bindProperties( binder(), props );
 
         //Load the cassandra url if set on the system properties
         Names.bindProperties( binder(),
                 PropertyUtils.loadSystemProperties( AstynaxKeyspaceProvider.getRuntimeOptions() ) );
 
-        //bind our keyspace to the AstynaxKeyspaceProvider
-        bind( Keyspace.class ).toProvider( AstynaxKeyspaceProvider.class );
 
-        //bind our migration manager
-        bind( MigrationManager.class ).to( MigrationManagerImpl.class );
+        //TODO allow override of all properties in the file by the system
 
 
-        //bind the serialization strategies
+        /**
+         * Install the write pipeline configuration
+         */
+        install( new CollectionPipelineModule() );
 
-        bind( MvccEntitySerializationStrategy.class ).to( MvccEntitySerializationStrategyImpl.class );
+        //Install serialization modules
+        install( new SerializationModule());
 
-
-        bind( MvccLogEntrySerializationStrategy.class ).to( MvccLogEntrySerializationStrategyImpl.class );
-
-
-        //do multibindings for migrations
-        Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
-
-        uriBinder.addBinding().to( MvccEntitySerializationStrategyImpl.class );
-        uriBinder.addBinding().to( MvccLogEntrySerializationStrategyImpl.class );
-    }
-
-
-    /** Wire the pipeline of operations for create.  This should create a new
-     * instance every time, since StagePipeline objects are mutable */
-    @Provides
-    @CreatePipeline
-    public StagePipeline createWritePipeline() {
-        return null;  //To change body of created methods use File | Settings | File Templates.
-    }
-
-
-    @Provides
-    @DeletePipeline
-    public StagePipeline deletePipeline() {
-        return null;  //To change body of created methods use File | Settings | File Templates.
-    }
-
-
-    @Provides
-    @UpdatePipeline
-    public StagePipeline updatePipeline() {
-        return null;  //To change body of created methods use File | Settings | File Templates.
+        install (new ServiceModule());
     }
 }

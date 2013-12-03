@@ -29,10 +29,5 @@ public interface MvccLogEntry {
      */
     UUID getVersion();
 
-    /**
-     * Get the context of the entity
-     * @return
-     */
-    CollectionContext getContext();
 
 }

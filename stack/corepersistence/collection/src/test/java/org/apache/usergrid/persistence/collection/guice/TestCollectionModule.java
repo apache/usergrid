@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.cassandra.locator.SimpleStrategy;
 
@@ -11,7 +10,7 @@ import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvide
 import org.apache.usergrid.persistence.collection.migration.MigrationException;
 import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 import org.apache.usergrid.persistence.test.CassandraRule;
 
 import com.google.guiceberry.GuiceBerryEnvMain;

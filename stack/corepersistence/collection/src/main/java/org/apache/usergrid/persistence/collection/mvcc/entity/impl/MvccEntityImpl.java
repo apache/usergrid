@@ -1,9 +1,10 @@
-package org.apache.usergrid.persistence.collection.mvcc.entity;
+package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Optional;
@@ -13,26 +14,23 @@ import com.google.common.base.Preconditions;
 /** @author tnine */
 public class MvccEntityImpl implements MvccEntity {
 
-    private final CollectionContext context;
     private final UUID entityId;
     private final UUID version;
     private final Optional<Entity> entity;
 
 
-    public MvccEntityImpl( final CollectionContext context, final UUID entityId, final UUID version,
+    public MvccEntityImpl( final UUID entityId, final UUID version,
                            final Entity entity ) {
-        this( context, entityId, version, Optional.of( entity ) );
+        this(  entityId, version, Optional.of( entity ) );
     }
 
 
-    public MvccEntityImpl( final CollectionContext context, final UUID entityId, final UUID version,
+    public MvccEntityImpl( final UUID entityId, final UUID version,
                            final Optional<Entity> entity ) {
-        Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
         Preconditions.checkNotNull( entity, "entity  is required" );
 
-        this.context = context;
         this.entityId = entityId;
         this.version = version;
         this.entity = entity;
@@ -57,11 +55,6 @@ public class MvccEntityImpl implements MvccEntity {
     }
 
 
-    @Override
-    public CollectionContext getContext() {
-        return context;
-    }
-
 
     @Override
     public boolean equals( final Object o ) {
@@ -74,9 +67,6 @@ public class MvccEntityImpl implements MvccEntity {
 
         final MvccEntityImpl that = ( MvccEntityImpl ) o;
 
-        if ( !context.equals( that.context ) ) {
-            return false;
-        }
         if ( !getUuid().equals( that.getUuid() ) ) {
             return false;
         }
@@ -91,8 +81,7 @@ public class MvccEntityImpl implements MvccEntity {
 
     @Override
     public int hashCode() {
-        int result = context.hashCode();
-        result = 31 * result + getUuid().hashCode();
+        int result = 31 *  getUuid().hashCode();
         result = 31 * result + getVersion().hashCode();
         return result;
     }
@@ -101,7 +90,6 @@ public class MvccEntityImpl implements MvccEntity {
     @Override
     public String toString() {
         return "MvccEntityImpl{" +
-                "context=" + context +
                 ", entityId=" + entityId +
                 ", version=" + version +
                 ", entity=" + entity +

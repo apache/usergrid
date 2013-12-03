@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.serialization;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.nio.ByteBuffer;
@@ -17,8 +17,9 @@ import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.migration.CollectionColumnFamily;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -64,7 +65,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MutationBatch write( final MvccLogEntry entry ) {
+    public MutationBatch write( final CollectionContext context, final MvccLogEntry entry ) {
 
         Preconditions.checkNotNull( entry, "entry is required" );
 
@@ -72,7 +73,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         final Stage stage = entry.getStage();
         final UUID colName = entry.getVersion();
 
-        return doWrite( entry.getContext(), entry.getEntityId(), new RowOp() {
+        return doWrite( context, entry.getEntityId(), new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
 
@@ -110,7 +111,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final Stage stage = result.getValue( SER );
 
-        return new MvccLogEntryImpl( context, entityId, version, stage );
+        return new MvccLogEntryImpl( entityId, version, stage );
     }
 
 
@@ -133,7 +134,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
             final UUID storedVersion = col.getName();
             final Stage stage = col.getValue( SER );
 
-            results.add( new MvccLogEntryImpl( context, entityId, storedVersion, stage ) );
+            results.add( new MvccLogEntryImpl( entityId, storedVersion, stage ) );
         }
 
         return results;

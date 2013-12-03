@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection;
+package org.apache.usergrid.persistence.collection.service;
 
 
 /** @author tnine */
