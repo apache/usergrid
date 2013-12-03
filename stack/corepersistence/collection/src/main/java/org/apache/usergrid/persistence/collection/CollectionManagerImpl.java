@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -10,14 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.beanutils.BeanUtils;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntityImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Commit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Start;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Write;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.google.inject.Inject;
-import com.netflix.astyanax.MutationBatch;
 
 
 /**
@@ -30,19 +23,12 @@ public class CollectionManagerImpl implements CollectionManager {
 
     private final CollectionContext context;
     private final TimeService timeService;
-    private final Start startStage;
-    private final Write writeStage;
-    private final Commit commitStage;
 
 
-    @Inject
-    public CollectionManagerImpl( final CollectionContext context, final TimeService timeService, final Start startStage, final Write writeStage,
-                                  final Commit commitStage ) {
+
+    public CollectionManagerImpl( final CollectionContext context, final TimeService timeService ) {
         this.context = context;
         this.timeService = timeService;
-        this.startStage = startStage;
-        this.writeStage = writeStage;
-        this.commitStage = commitStage;
     }
 
 
@@ -69,9 +55,7 @@ public class CollectionManagerImpl implements CollectionManager {
         MvccEntityImpl mvccEntity = new MvccEntityImpl(context, entityId, version, entity   );
 
 
-        MutationBatch mutation = startStage.performStage(  mvccEntity );
-        writeStage.performStage( mvccEntity );
-        commitStage.performStage( mvccEntity );
+
     }
 
 
@@ -91,4 +75,7 @@ public class CollectionManagerImpl implements CollectionManager {
     public Entity load( final UUID entityId ) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+
+
 }

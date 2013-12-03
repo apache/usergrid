@@ -5,9 +5,9 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntityImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.Start;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;

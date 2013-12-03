@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.index.stage;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -8,10 +8,14 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
-/** This state should signal an index update has started */
-public class Start implements WriteStage
-{
+/**
+ * This phase should invoke any finalization, and mark the entity as committed in the data store before returning
+ */
+public class Commit implements WriteStage {
 
+    public Commit(){
+
+    }
 
     @Override
     public void performStage( final WriteContext context, final MvccEntity entity ) throws ConnectionException {
