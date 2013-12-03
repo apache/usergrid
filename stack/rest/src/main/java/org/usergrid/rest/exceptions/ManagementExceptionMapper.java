@@ -33,6 +33,6 @@ public class ManagementExceptionMapper extends AbstractExceptionMapper<Managemen
         if ( msg == null ) {
             msg = e.getClass().getName();
         }
-        return toResponse( BAD_REQUEST, msg );
+        return toResponse( BAD_REQUEST, e );
     }
 }

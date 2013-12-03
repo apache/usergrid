@@ -27,6 +27,6 @@ public class IllegalArgumentExceptionMapper extends AbstractExceptionMapper<Ille
 
     @Override
     public Response toResponse( IllegalArgumentException e ) {
-        return toResponse( BAD_REQUEST, e.getMessage() );
+        return toResponse( BAD_REQUEST, e );
     }
 }

@@ -27,6 +27,6 @@ public class NoOpExceptionMapper extends AbstractExceptionMapper<NoOpException> 
 
     @Override
     public Response toResponse( NoOpException e ) {
-        return toResponse( OK, e.getJsonResponse() );
+        return toResponse( OK, e );
     }
 }

@@ -27,6 +27,8 @@ import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
@@ -34,9 +36,8 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_E
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
-/** @author zznate */
 public class OrganizationsResourceIT extends AbstractRestIT {
-
+    private static final Logger LOG = LoggerFactory.getLogger( OrganizationsResourceIT.class );
 
     @Test
     public void createOrgAndOwner() throws Exception {
@@ -139,6 +140,66 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         logNode( node );
     }
 
+    @Test
+    public void testCreateDuplicateOrgEmail() throws Exception {
+
+        Map<String, String> payload =
+            hashMap( "email", "duplicate-email@mockserver.com" )
+                .map( "password", "password" )
+                .map( "organization", "very-nice-org" );
+
+        JsonNode node = resource().path( "/management/organizations" )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .post( JsonNode.class, payload );
+
+        logNode( node );
+        assertNotNull( node );
+
+        payload = hashMap( "email", "duplicate-email@mockserver.com" )
+            .map( "username", "anotheruser" )
+            .map( "password", "password" )
+            .map( "organization", "not-so-nice-org" );
+
+        boolean failed = false;
+        try {
+            node = resource().path( "/management/organizations" )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException ex ) {
+            Assert.assertEquals( 400, ex.getResponse().getStatus() );
+            JsonNode errorJson = ex.getResponse().getEntity( JsonNode.class );
+            Assert.assertEquals( "duplicate_unique_property_exists", errorJson.get("error").asText());
+            failed = true;
+        }
+        Assert.assertTrue(failed);
+
+        payload = hashMap( "grant_type", "password" )
+            .map( "username", "create-dupe-orgname2" )
+            .map( "password", "password" );
+        try {
+            node = resource().path( "/management/token" )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, payload );
+            fail( "Should not have created user" );
+        }
+        catch ( Exception ex ) {
+        }
+
+        logNode( node );
+
+        payload = hashMap( "username", "duplicate-email@mockserver.com" )
+                .map( "grant_type", "password" )
+                .map( "password", "password" );
+        node = resource().path( "/management/token" )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, payload );
+        logNode( node );
+    }
 
     @Test
     public void testOrgPOSTParams() {
@@ -170,7 +231,6 @@ public class OrganizationsResourceIT extends AbstractRestIT {
 
         assertEquals( "ok", node.get( "status" ).asText() );
     }
-
 
     @Test
     public void noOrgDelete() {

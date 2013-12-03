@@ -30,6 +30,6 @@ public class RequiredPropertyNotFoundExceptionMapper
 
     @Override
     public Response toResponse( RequiredPropertyNotFoundException e ) {
-        return toResponse( BAD_REQUEST, e.getMessage() );
+        return toResponse( BAD_REQUEST, e );
     }
 }
