@@ -1,10 +1,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
-import java.util.Collection;
-
 import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessListener;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
@@ -16,7 +13,6 @@ import com.google.inject.Inject;
 /** @author tnine */
 public class WriteContextImpl implements WriteContext {
 
-    private final Collection<PostProcessListener> listeners;
     private final StagePipeline pipeline;
     private final CollectionContext context;
 
@@ -25,17 +21,13 @@ public class WriteContextImpl implements WriteContext {
 
 
     @Inject
-    public WriteContextImpl( final Collection<PostProcessListener> listeners, final StagePipeline pipeline,
+    public WriteContextImpl( final StagePipeline pipeline,
                              final CollectionContext context ) {
-        this.listeners = listeners;
+        Preconditions.checkNotNull( pipeline, "pipeline cannot be null" );
+        Preconditions.checkNotNull( context, "context cannot be null" );
+
         this.pipeline = pipeline;
         this.context = context;
-    }
-
-
-    @Override
-    public StagePipeline getStagePipeline() {
-        return this.pipeline;
     }
 
 
@@ -43,6 +35,8 @@ public class WriteContextImpl implements WriteContext {
     public void performWrite( Object input ) {
 
         current = this.pipeline.first();
+
+        setMessage( input );
 
         current.performStage( this );
     }
@@ -90,18 +84,6 @@ public class WriteContextImpl implements WriteContext {
         current.performStage( this );
     }
 
-
-    @Override
-    public void stop() {
-        //No op ATM
-        current = null;
-    }
-
-
-    @Override
-    public Collection<PostProcessListener> getPostProcessors() {
-        return listeners;
-    }
 
 
     @Override

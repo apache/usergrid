@@ -3,12 +3,16 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.util.Properties;
 
+import org.apache.usergrid.persistence.collection.CollectionManager;
+import org.apache.usergrid.persistence.collection.CollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
+import org.apache.usergrid.persistence.collection.impl.CollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CollectionPipelineModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 
 
@@ -54,5 +58,13 @@ public class CollectionModule extends AbstractModule {
         install( new SerializationModule());
 
         install (new ServiceModule());
+
+        //install the core services
+
+        //create a guice factor for getting our collection manager
+        install(new FactoryModuleBuilder()
+             .implement( CollectionManager.class, CollectionManagerImpl.class )
+             .build( CollectionManagerFactory.class ));
+
     }
 }

@@ -10,11 +10,11 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.test.CassandraRule;
@@ -22,6 +22,7 @@ import org.apache.usergrid.persistence.test.CassandraRule;
 import com.google.guiceberry.GuiceBerryEnvSelector;
 import com.google.guiceberry.TestDescription;
 import com.google.guiceberry.junit4.GuiceBerryRule;
+import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -64,7 +65,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-            MvccLogEntry saved = new MvccLogEntryImpl(  uuid, version, stage );
+            MvccLogEntry saved = new MvccLogEntryImpl( uuid, version, stage );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back
@@ -121,7 +122,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
             versions[i] = UUIDGenerator.newTimeUUID();
 
             entries[i] = new MvccLogEntryImpl( uuid, versions[i], COMPLETE );
-            logEntryStrategy.write( context,  entries[i] ).execute();
+            logEntryStrategy.write( context, entries[i] ).execute();
 
             //Read it back
 
@@ -172,7 +173,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         for ( Stage stage : Stage.values() ) {
 
             MvccLogEntry saved = new MvccLogEntryImpl( uuid, version, stage );
-            logEntryStrategy.write(context,  saved ).execute();
+            logEntryStrategy.write( context, saved ).execute();
 
             //Read it back after the timeout
 
@@ -196,13 +197,13 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void writeParamsNoContext() throws ConnectionException {
-        logEntryStrategy.write( null, mock(MvccLogEntry.class) );
+        logEntryStrategy.write( null, mock( MvccLogEntry.class ) );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void writeParams() throws ConnectionException {
-        logEntryStrategy.write( mock(CollectionContext.class), null );
+        logEntryStrategy.write( mock( CollectionContext.class ), null );
     }
 
 
@@ -301,18 +302,22 @@ public class MvccLogEntrySerializationStrategyImplTest {
             }
 
             //by default, we wnat to run the TestCollectionModule
-            return TestCollectionModule.class;
+            return CassandraTestCollectionModule.class;
         }
     }
 
 
-    public static class TimeoutEnv extends TestCollectionModule {
+    public static class TimeoutEnv extends AbstractModule {
 
         @Override
-        public Map<String, String> getOverrides() {
+        protected void configure() {
+
+            //override the timeout property
             Map<String, String> timeout = new HashMap<String, String>();
             timeout.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, TIMEOUT + "" );
-            return timeout;
+
+            //use the default module with cass
+            install( new CassandraTestCollectionModule( timeout ) );
         }
     }
 }

@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
@@ -46,7 +46,7 @@ import static org.mockito.Mockito.mock;
 public class MvccEntitySerializationStrategyImplTest {
 
     @Rule
-    public final GuiceBerryRule guiceBerry = new GuiceBerryRule( TestCollectionModule.class );
+    public final GuiceBerryRule guiceBerry = new GuiceBerryRule( CassandraTestCollectionModule.class );
 
     @Rule
     public final CassandraRule rule = new CassandraRule();

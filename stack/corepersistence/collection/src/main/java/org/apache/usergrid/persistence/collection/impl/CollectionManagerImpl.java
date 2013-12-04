@@ -8,9 +8,12 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.CollectionManager;
-import org.apache.usergrid.persistence.collection.service.TimeService;
+import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContextFactory;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CreatePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.DeletePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.UpdatePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.WriteContextImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
@@ -27,46 +30,53 @@ public class CollectionManagerImpl implements CollectionManager {
     private static final Logger logger = LoggerFactory.getLogger( CollectionManagerImpl.class );
 
     private final CollectionContext context;
-    private final TimeService timeService;
-    private final WriteContextFactory factory;
+    private final StagePipeline createPipeline;
+    private final StagePipeline updatePipeline;
+    private final StagePipeline deletePipeline;
 
 
     @Inject
-    public CollectionManagerImpl( final TimeService timeService, final WriteContextFactory factory,
-                                  @Assisted final CollectionContext context ) {
+    public CollectionManagerImpl( @CreatePipeline final StagePipeline createPipeline,
+                                  @UpdatePipeline final StagePipeline updatePipeline,
+                                  @DeletePipeline final StagePipeline deletePipeline,
+                                  @Assisted final CollectionContext context) {
         this.context = context;
-        this.timeService = timeService;
-        this.factory = factory;
+        this.createPipeline = createPipeline;
+        this.updatePipeline = updatePipeline;
+        this.deletePipeline = deletePipeline;
     }
 
 
     @Override
     public Entity create( final Entity entity ) {
         // Create a new context for the write
-        WriteContext writeContext = factory.newCreateContext( context );
+        WriteContext writeContext = new WriteContextImpl( createPipeline, context );
 
         //perform the write
         writeContext.performWrite( entity );
 
-        //TODO this shouldn't block, give a callback
         return writeContext.getMessage( Entity.class );
-
     }
 
 
     @Override
     public Entity update( final Entity entity ) {
-       return null;
+        // Create a new context for the write
+        WriteContext writeContext = new WriteContextImpl( updatePipeline, context );
+
+        //perform the write
+        writeContext.performWrite( entity );
+
+        return writeContext.getMessage( Entity.class );
     }
 
 
     @Override
     public void delete( final UUID entityId ) {
-        WriteContext deleteContext = factory.newDeleteContext(context);
+        WriteContext deleteContext =  new WriteContextImpl( deletePipeline, context );
 
         deleteContext.performWrite( entityId );
 
-        deleteContext.getMessage(Void.class);
     }
 
 

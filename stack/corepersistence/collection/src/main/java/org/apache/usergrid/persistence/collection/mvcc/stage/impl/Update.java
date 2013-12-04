@@ -1,0 +1,66 @@
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+
+
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
+import org.apache.usergrid.persistence.collection.service.TimeService;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.model.entity.Entity;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+
+/**
+ * This stage performs the initial commit log and write of an entity.  It assumes the entity id and created has already
+ * been set correctly
+ */
+@Singleton
+public class Update implements WriteStage {
+
+    private static final Logger LOG = LoggerFactory.getLogger( Update.class );
+
+    private final TimeService timeService;
+    private final UUIDService uuidService;
+
+
+    @Inject
+    public Update( final TimeService timeService, final UUIDService uuidService ) {
+        Preconditions.checkNotNull( timeService, "timeService is required" );
+        Preconditions.checkNotNull( uuidService, "uuidService is required" );
+
+        this.timeService = timeService;
+        this.uuidService = uuidService;
+    }
+
+
+    /**
+     * Create the entity Id  and inject it, as well as set the timestamp versions
+     *
+     * @param writeContext The context of the current write operation
+     */
+    @Override
+    public void performStage( final WriteContext writeContext ) {
+
+        final Entity entity = writeContext.getMessage( Entity.class );
+
+        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+
+
+        final UUID version = uuidService.newTimeUUID();
+        final long updated = timeService.getTime();
+
+
+        entity.setVersion( version );
+        entity.setUpdated( updated );
+
+        writeContext.setMessage( entity );
+        writeContext.proceed();
+    }
+}

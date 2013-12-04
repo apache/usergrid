@@ -12,13 +12,6 @@ import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessListener
 /** @author tnine */
 public interface WriteContext {
 
-
-    /**
-     * Get the stage pipeline for this write context
-     * @return
-     */
-    StagePipeline getStagePipeline();
-
     /**
      * Perform the write in the context with the specified entity
      * @param inputData The data to use to being the write
@@ -44,17 +37,7 @@ public interface WriteContext {
      */
     void proceed();
 
-    /**
-     * Signal we should stop processing
-     */
-    void stop();
 
-
-    /**
-     * Add a post process listener to this write context
-     * @return  A list of all post proces
-     */
-    Collection<PostProcessListener> getPostProcessors();
 
     /**
      * Return the current collection context

@@ -1,19 +1,13 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
-import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyImpl;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 
@@ -25,22 +19,37 @@ import com.google.inject.multibindings.Multibinder;
 public class CollectionPipelineModule extends AbstractModule {
 
 
-    /** Wire the pipeline of operations for create.  This should create a new
-     * instance every time, since StagePipeline objects are mutable */
+    /**
+     * Wire the pipeline of operations for create.  This should create a new instance every time, since StagePipeline
+     * objects are mutable
+     */
     @Provides
     @CreatePipeline
     @Inject
-    public StagePipeline createWritePipeline(MvccEntityNew start, MvccEntityWrite write, MvccEntityCommit commit) {
-        return StagePipelineImpl.fromStages(start, write, commit  );
+    @Singleton
+    public StagePipeline createPipeline( final Create create, final Start start, final Verify write,
+                                         final Commit commit ) {
+        return StagePipelineImpl.fromStages( create, start, write, commit );
+    }
+
+
+    @Provides
+    @UpdatePipeline
+    @Inject
+    @Singleton
+    public StagePipeline updatePipeline( final Update update, final Start start, final Verify write,
+                                         final Commit commit ) {
+        return StagePipelineImpl.fromStages( update, start, write, commit );
     }
 
 
     @Provides
     @DeletePipeline
-    public StagePipeline deletePipeline() {
-        return StagePipelineImpl.fromStages(  );
+    @Inject
+    @Singleton
+    public StagePipeline deletePipeline( final Update update, final Start start, final Clear delete ) {
+        return StagePipelineImpl.fromStages( update, start, delete );
     }
-
 
 
     @Override
@@ -51,9 +60,13 @@ public class CollectionPipelineModule extends AbstractModule {
          */
         Multibinder<WriteStage> stageBinder = Multibinder.newSetBinder( binder(), WriteStage.class );
 
-        stageBinder.addBinding().to( MvccEntityNew.class );
-        stageBinder.addBinding().to( MvccEntityWrite.class );
-        stageBinder.addBinding().to( MvccEntityCommit.class );
+
+        stageBinder.addBinding().to( Create.class );
+        stageBinder.addBinding().to( Update.class );
+        stageBinder.addBinding().to( Start.class );
+        stageBinder.addBinding().to( Verify.class );
+        stageBinder.addBinding().to( Commit.class );
+        stageBinder.addBinding().to( Clear.class );
 
 
     }

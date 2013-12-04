@@ -14,7 +14,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Marks the create pipeline
- * @author tnine */
+ *
+ * @author tnine
+ */
 @BindingAnnotation
-@Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
+@Target({ FIELD, PARAMETER, METHOD })
+@Retention(RUNTIME)
 public @interface CreatePipeline {}

@@ -7,28 +7,34 @@ import java.util.Map;
 import org.apache.cassandra.locator.SimpleStrategy;
 
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
-import org.apache.usergrid.persistence.collection.migration.MigrationException;
-import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 import org.apache.usergrid.persistence.test.CassandraRule;
 
-import com.google.guiceberry.GuiceBerryEnvMain;
 import com.google.guiceberry.GuiceBerryModule;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.name.Names;
 
 
 /**
- * Simple module for wiring our collection api
+ * Module for testing our guice wiring environment is correct. Does not actually set the main execution env. Callers are
+ * responsible for that via decoration
  *
  * @author tnine
  */
 public class TestCollectionModule extends AbstractModule {
 
 
+    private final Map<String, String> override;
+
+
+    public TestCollectionModule( Map<String, String> override ) {
+        this.override = override;
+    }
+
+
     public TestCollectionModule() {
+        override = null;
     }
 
 
@@ -38,9 +44,6 @@ public class TestCollectionModule extends AbstractModule {
 
         //import the guice berry module
         install( new GuiceBerryModule() );
-
-        //now configure our db
-        bind( GuiceBerryEnvMain.class ).to( CassAppMain.class );
 
         //import the runtime module
         install( new CollectionModule() );
@@ -65,41 +68,14 @@ public class TestCollectionModule extends AbstractModule {
         /**
          * Set the timeout to 60 seconds, no test should take that long for load+delete without a failure
          */
-        configProperties.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, 60+"" );
+        configProperties.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, 60 + "" );
 
-        Map<String, String> props = getOverrides();
 
-        if(props != null){
-            configProperties.putAll( props );
+        if(override != null){
+            configProperties.putAll( override );
         }
 
         //bind to the props
         Names.bindProperties( binder(), configProperties );
-    }
-
-
-    /**
-     * Get any overrides we need for system properties
-     */
-    public Map<String, String> getOverrides() {
-        return null;
-    }
-
-
-    static class CassAppMain implements GuiceBerryEnvMain {
-
-        @Inject
-        protected MigrationManager migrationManager;
-
-
-        public void run() {
-            try {
-                //run the injected migration manager to set up cassandra
-                migrationManager.migrate();
-            }
-            catch ( MigrationException e ) {
-                throw new RuntimeException( e );
-            }
-        }
     }
 }
