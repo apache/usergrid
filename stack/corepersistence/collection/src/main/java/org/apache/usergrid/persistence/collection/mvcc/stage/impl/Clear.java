@@ -10,10 +10,9 @@ import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 
@@ -24,7 +23,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
-public class Clear implements WriteStage {
+public class Clear implements Stage {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Clear.class );
@@ -47,8 +46,8 @@ public class Clear implements WriteStage {
 
 
     @Override
-    public void performStage( final WriteContext writeContext ) {
-        final MvccEntity entity = writeContext.getMessage( MvccEntity.class );
+    public void performStage( final ExecutionContext executionContext ) {
+        final MvccEntity entity = executionContext.getMessage( MvccEntity.class );
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
@@ -59,10 +58,11 @@ public class Clear implements WriteStage {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final CollectionContext collectionContext = writeContext.getCollectionContext();
+        final CollectionContext collectionContext = executionContext.getCollectionContext();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, org.apache.usergrid.persistence
+                .collection.mvcc.entity.Stage.COMMITTED );
 
         MutationBatch logMutation = logEntrySerializationStrategy.write( collectionContext, startEntry );
 
@@ -84,7 +84,7 @@ public class Clear implements WriteStage {
         /**
          * We're done executing.
          */
-        writeContext.proceed();
+        executionContext.proceed();
 
         //TODO connect to post processors via listener
     }

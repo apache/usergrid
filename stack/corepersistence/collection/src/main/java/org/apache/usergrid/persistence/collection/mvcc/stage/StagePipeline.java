@@ -11,23 +11,18 @@ public interface StagePipeline {
 
 
     /**
-     * Get the first stage in this pipeline.  Will return null if there are no more stages to execute
+     * Get the first stage in this pipeline.
      */
-    WriteStage first();
+    Stage first();
 
 
     /**
-     * get the next stage after this one
-     * @param stage
+     * get the next stage after the stage specified
+     * @param stage The stage to seek in our pipeline
      */
-    WriteStage nextStage(WriteStage stage);
+    Stage nextStage(Stage stage);
 
 
-    /**
-     * Get the current stage in the pipeline
-     * @return
-     */
-    WriteStage current();
 
 
 }

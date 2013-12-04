@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.WriteContextImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.ExecutionContextImpl;
 
 import static junit.framework.TestCase.assertSame;
 import static org.junit.Assert.assertNull;
@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class WriteContextTest {
+public class ExecutionContextTest {
 
     @Test
     public void performWrite() {
@@ -24,24 +24,24 @@ public class WriteContextTest {
 
         StagePipeline pipeline = mock( StagePipeline.class );
 
-        WriteStage stage = mock( WriteStage.class );
+        Stage stage = mock( Stage.class );
 
         when( pipeline.first() ).thenReturn( stage );
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
         Object test = new Object();
 
-        writeContext.performWrite( test );
+        executionContext.execute( test );
 
         //verify we called first in the pipeline to get the first value
         verify( pipeline ).first();
 
         //verify the first stage was invoked
-        verify( stage ).performStage( same( writeContext ) );
+        verify( stage ).performStage( same( executionContext ) );
 
         //verify the bean value was set
-        assertSame( test, writeContext.getMessage( Object.class ) );
+        assertSame( test, executionContext.getMessage( Object.class ) );
     }
 
 
@@ -54,11 +54,11 @@ public class WriteContextTest {
         StagePipeline pipeline = mock( StagePipeline.class );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
-        writeContext.setMessage( test );
+        executionContext.setMessage( test );
 
-        assertSame( "Same value returned", test, writeContext.getMessage( Object.class ) );
+        assertSame( "Same value returned", test, executionContext.getMessage( Object.class ) );
     }
 
 
@@ -71,14 +71,14 @@ public class WriteContextTest {
         StagePipeline pipeline = mock( StagePipeline.class );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
-        writeContext.setMessage( test );
+        executionContext.setMessage( test );
 
         //works because Test is an instance of object
-        assertSame( "Test instance of object", test, writeContext.getMessage( Object.class ) );
+        assertSame( "Test instance of object", test, executionContext.getMessage( Object.class ) );
 
-        assertSame( "Test instance of object", test, writeContext.getMessage( TestBean.class ) );
+        assertSame( "Test instance of object", test, executionContext.getMessage( TestBean.class ) );
     }
 
 
@@ -91,15 +91,15 @@ public class WriteContextTest {
         StagePipeline pipeline = mock( StagePipeline.class );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
-        writeContext.setMessage( test );
+        executionContext.setMessage( test );
 
         //works because Test is an instance of object
-        assertSame( "Test instance of object", test, writeContext.getMessage( Object.class ) );
+        assertSame( "Test instance of object", test, executionContext.getMessage( Object.class ) );
 
         //should blow up, not type save.  The object test is not an instance of TestBean
-        writeContext.getMessage( TestBean.class );
+        executionContext.getMessage( TestBean.class );
     }
 
 
@@ -111,12 +111,12 @@ public class WriteContextTest {
         StagePipeline pipeline = mock( StagePipeline.class );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
-        writeContext.setMessage( null );
+        executionContext.setMessage( null );
 
         //works because Test is an instance of object
-        assertNull( "Null message returned", writeContext.getMessage( Object.class ) );
+        assertNull( "Null message returned", executionContext.getMessage( Object.class ) );
     }
 
 
@@ -127,9 +127,9 @@ public class WriteContextTest {
 
         StagePipeline pipeline = mock( StagePipeline.class );
 
-        WriteStage firstStage = mock( WriteStage.class );
+        Stage firstStage = mock( Stage.class );
 
-        WriteStage secondStage = mock( WriteStage.class );
+        Stage secondStage = mock( Stage.class );
 
 
         when( pipeline.first() ).thenReturn( firstStage );
@@ -137,16 +137,16 @@ public class WriteContextTest {
         when( pipeline.nextStage( same( firstStage ) ) ).thenReturn( secondStage );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
         Object test = new Object();
 
-        writeContext.performWrite( test );
+        executionContext.execute( test );
 
         //now proceed and validate we were called
-        writeContext.proceed();
+        executionContext.proceed();
 
-        verify( secondStage ).performStage( same( writeContext ) );
+        verify( secondStage ).performStage( same( executionContext ) );
     }
 
 
@@ -157,21 +157,21 @@ public class WriteContextTest {
 
         StagePipeline pipeline = mock( StagePipeline.class );
 
-        WriteStage firstStage = mock( WriteStage.class );
+        Stage firstStage = mock( Stage.class );
 
         when( pipeline.first() ).thenReturn( firstStage );
 
         when( pipeline.nextStage( same( firstStage ) ) ).thenReturn( null );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
         Object test = new Object();
 
-        writeContext.performWrite( test );
+        executionContext.execute( test );
 
         //now proceed and validate we were called
-        writeContext.proceed();
+        executionContext.proceed();
     }
 
 
@@ -183,9 +183,9 @@ public class WriteContextTest {
         StagePipeline pipeline = mock( StagePipeline.class );
 
 
-        WriteContext writeContext = new WriteContextImpl( pipeline, collectionContext );
+        ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
-        assertSame( "Collection context pointer correct", collectionContext, writeContext.getCollectionContext() );
+        assertSame( "Collection context pointer correct", collectionContext, executionContext.getCollectionContext() );
     }
 
 
@@ -197,7 +197,7 @@ public class WriteContextTest {
         CollectionContext collectionContext = mock( CollectionContext.class );
 
 
-        new WriteContextImpl( null, collectionContext );
+        new ExecutionContextImpl( null, collectionContext );
     }
 
 
@@ -207,7 +207,7 @@ public class WriteContextTest {
         CollectionContext collectionContext = mock( CollectionContext.class );
 
 
-        new WriteContextImpl( null, collectionContext );
+        new ExecutionContextImpl( null, collectionContext );
     }
 
 

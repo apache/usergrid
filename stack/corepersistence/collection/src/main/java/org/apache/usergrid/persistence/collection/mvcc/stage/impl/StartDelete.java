@@ -9,14 +9,16 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,47 +31,50 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class Start implements WriteStage {
+public class StartDelete implements Stage {
 
-    private static final Logger LOG = LoggerFactory.getLogger( Start.class );
+    private static final Logger LOG = LoggerFactory.getLogger( StartDelete.class );
 
     private final MvccLogEntrySerializationStrategy logStrategy;
+    private final UUIDService uuidService;
 
 
     /** Create a new stage with the current context */
     @Inject
-    public Start( final MvccLogEntrySerializationStrategy logStrategy ) {
+    public StartDelete( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
+
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
+        Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
 
         this.logStrategy = logStrategy;
+        this.uuidService = uuidService;
     }
 
 
     /**
      * Create the entity Id  and inject it, as well as set the timestamp versions
      *
-     * @param writeContext The context of the current write operation
+     * @param executionContext The context of the current write operation
      */
     @Override
-    public void performStage( final WriteContext writeContext ) {
+    public void performStage( final ExecutionContext executionContext ) {
 
-        final Entity entity = writeContext.getMessage( Entity.class );
+        final UUID entityId = executionContext.getMessage( UUID.class );
 
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
-        final UUID entityId = entity.getUuid();
-        final UUID version = entity.getVersion();
+        final UUID version = uuidService.newTimeUUID();
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
 
-        final CollectionContext collectionContext = writeContext.getCollectionContext();
+        final CollectionContext collectionContext = executionContext.getCollectionContext();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, org.apache.usergrid.persistence
+                .collection.mvcc.entity.Stage.ACTIVE );
 
         MutationBatch write = logStrategy.write( collectionContext, startEntry );
 
@@ -84,9 +89,9 @@ public class Start implements WriteStage {
 
 
         //create the mvcc entity for the next stage
-        final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
+        final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
-        writeContext.setMessage( nextStage );
-        writeContext.proceed();
+        executionContext.setMessage( nextStage );
+        executionContext.proceed();
     }
 }

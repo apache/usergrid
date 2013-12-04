@@ -2,27 +2,26 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 
 /** @author tnine */
-public class WriteContextImpl implements WriteContext {
+public class ExecutionContextImpl implements ExecutionContext {
 
     private final StagePipeline pipeline;
     private final CollectionContext context;
 
     private Object message;
-    private WriteStage current;
+    private Stage current;
 
 
     @Inject
-    public WriteContextImpl( final StagePipeline pipeline,
-                             final CollectionContext context ) {
+    public ExecutionContextImpl( final StagePipeline pipeline, final CollectionContext context ) {
         Preconditions.checkNotNull( pipeline, "pipeline cannot be null" );
         Preconditions.checkNotNull( context, "context cannot be null" );
 
@@ -32,7 +31,7 @@ public class WriteContextImpl implements WriteContext {
 
 
     @Override
-    public void performWrite( Object input ) {
+    public void execute( Object input ) {
 
         current = this.pipeline.first();
 
@@ -73,7 +72,7 @@ public class WriteContextImpl implements WriteContext {
 
     @Override
     public void proceed() {
-        WriteStage next = this.pipeline.nextStage( current );
+        Stage next = this.pipeline.nextStage( current );
 
         //Nothing to do
         if ( next == null ) {

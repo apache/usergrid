@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.service.TimeService;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.Verify;
@@ -26,7 +26,7 @@ import com.google.inject.Singleton;
  * present, and this should set the entityId, version, created, and updated dates
  */
 @Singleton
-public class Create implements WriteStage {
+public class Create implements Stage {
 
     private static final Logger LOG = LoggerFactory.getLogger( Create.class );
 
@@ -49,12 +49,12 @@ public class Create implements WriteStage {
     /**
      * Create the entity Id  and inject it, as well as set the timestamp versions
      *
-     * @param writeContext The context of the current write operation
+     * @param executionContext The context of the current write operation
      */
     @Override
-    public void performStage( final WriteContext writeContext ) {
+    public void performStage( final ExecutionContext executionContext ) {
 
-        final Entity entity = writeContext.getMessage( Entity.class );
+        final Entity entity = executionContext.getMessage( Entity.class );
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
@@ -79,7 +79,7 @@ public class Create implements WriteStage {
         entity.setUpdated( created );
 
         //set the updated entity for the next stage
-        writeContext.setMessage( entity );
-        writeContext.proceed();
+        executionContext.setMessage( entity );
+        executionContext.proceed();
     }
 }

@@ -12,7 +12,7 @@ import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -28,26 +28,26 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class StartTest {
+public class StartWriteTest {
 
     /** Standard flow */
     @Test
     public void testStartStage() throws Exception {
 
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
         final CollectionContext context = mock( CollectionContext.class );
 
 
         //mock returning the context
-        when( writeContext.getCollectionContext() ).thenReturn( context );
+        when( executionContext.getCollectionContext() ).thenReturn( context );
 
 
         //set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();
 
         //mock returning the entity from the write context
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( entity );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( entity );
 
 
         //mock returning a mock mutation when we do a log entry write
@@ -61,9 +61,9 @@ public class StartTest {
 
 
         //run the stage
-        Start newStage = new Start( logStrategy );
+        StartWrite newStage = new StartWrite( logStrategy );
 
-        newStage.performStage( writeContext );
+        newStage.performStage( executionContext );
 
 
         //now verify our output was correct
@@ -79,7 +79,7 @@ public class StartTest {
 
 
         //now verify we set the message into the write context
-        verify( writeContext ).setMessage( mvccEntity.capture() );
+        verify( executionContext ).setMessage( mvccEntity.capture() );
 
         MvccEntity created = mvccEntity.getValue();
 
@@ -90,7 +90,7 @@ public class StartTest {
 
 
         //now verify the proceed was called
-        verify( writeContext ).proceed();
+        verify( executionContext ).proceed();
     }
 
 
@@ -99,20 +99,20 @@ public class StartTest {
     public void testNoEntity() throws Exception {
 
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
         //mock returning the entity from the write context
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( null );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( null );
 
 
         //mock returning a mock mutation when we do a log entry write
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
 
         //run the stage
-        Start newStage = new Start( logStrategy );
+        StartWrite newStage = new StartWrite( logStrategy );
 
-        newStage.performStage( writeContext );
+        newStage.performStage( executionContext );
     }
 
 
@@ -121,7 +121,7 @@ public class StartTest {
     public void testNoEntityId() throws Exception {
 
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
         final Entity entity = new Entity();
@@ -130,16 +130,16 @@ public class StartTest {
         entity.setVersion( version );
 
         //mock returning the entity from the write context
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( entity );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( entity );
 
 
         //mock returning a mock mutation when we do a log entry write
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
 
         //run the stage
-        Start newStage = new Start( logStrategy );
+        StartWrite newStage = new StartWrite( logStrategy );
 
-        newStage.performStage( writeContext );
+        newStage.performStage( executionContext );
     }
 
 
@@ -148,7 +148,7 @@ public class StartTest {
     public void testNoEntityVersion() throws Exception {
 
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
         final Entity entity = new Entity();
@@ -159,16 +159,16 @@ public class StartTest {
 
 
         //mock returning the entity from the write context
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( entity );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( entity );
 
 
         //mock returning a mock mutation when we do a log entry write
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
 
         //run the stage
-        Start newStage = new Start( logStrategy );
+        StartWrite newStage = new StartWrite( logStrategy );
 
-        newStage.performStage( writeContext );
+        newStage.performStage( executionContext );
     }
 
 

@@ -10,13 +10,13 @@ import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessListener
 
 
 /** @author tnine */
-public interface WriteContext {
+public interface ExecutionContext {
 
     /**
      * Perform the write in the context with the specified entity
      * @param inputData The data to use to being the write
      */
-    void performWrite(Object inputData);
+    void execute( Object inputData );
 
 
     /**

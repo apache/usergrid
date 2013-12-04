@@ -4,24 +4,28 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteStage;
+
+import com.google.common.base.Preconditions;
 
 
 /** @author tnine */
 public class StagePipelineImpl implements StagePipeline {
 
-    private final List<WriteStage> stages;
-    private WriteStage current;
+    private final List<Stage> stages;
 
 
-    protected StagePipelineImpl( WriteStage[] stages ) {
-        this.stages = Arrays.asList( stages );
+    protected StagePipelineImpl( List<Stage> stages ) {
+        Preconditions.checkNotNull(stages, "stages is required");
+        Preconditions.checkArgument(  stages.size() > 0, "stages must have more than 1 element" );
+
+        this.stages = stages;
     }
 
 
     @Override
-    public WriteStage first() {
+    public Stage first() {
 
         if ( stages.size() == 0 ) {
             return null;
@@ -31,29 +35,27 @@ public class StagePipelineImpl implements StagePipeline {
     }
 
 
-    @Override
-    public WriteStage current() {
-        return current;
-    }
+
 
 
     @Override
-    public WriteStage nextStage( final WriteStage stage ) {
+    public Stage nextStage( final Stage stage ) {
+
+        Preconditions.checkNotNull( stage, "Stage cannot be null" );
+
         int index = stages.indexOf( stage );
 
         //we're done, do nothing
-        if ( index == stages.size() ) {
+        if ( index == stages.size() -1  ) {
             return null;
         }
 
-        current = stages.get( index + 1 );
-
-        return current;
+        return  stages.get( index + 1 );
     }
 
 
     /** Factory to create a new instance. */
-    public static StagePipelineImpl fromStages( WriteStage... stages ) {
-        return new StagePipelineImpl( stages );
+    public static StagePipelineImpl fromStages( Stage... stages ) {
+        return new StagePipelineImpl(Arrays.asList(  stages ));
     }
 }

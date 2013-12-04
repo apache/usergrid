@@ -2,7 +2,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -18,11 +18,11 @@ import com.netflix.astyanax.connectionpool.OperationResult;
  */
 public class WriteContextCallback implements FutureCallback<OperationResult<Void>> {
 
-    private final WriteContext context;
+    private final ExecutionContext context;
 
 
     /** Create a new callback.  The data will be passed to the next stage */
-    private WriteContextCallback( final WriteContext context ) {
+    private WriteContextCallback( final ExecutionContext context ) {
         this.context = context;
     }
 
@@ -52,7 +52,7 @@ public class WriteContextCallback implements FutureCallback<OperationResult<Void
      * @param context The context to signal to continue in the callback
      */
     public static void createCallback( final ListenableFuture<OperationResult<Void>> future,
-                                       final WriteContext context ) {
+                                       final ExecutionContext context ) {
 
         Futures.addCallback( future, new WriteContextCallback( context ) );
     }

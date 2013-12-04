@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.WriteContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.service.TimeService;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -28,13 +28,13 @@ public class CreateTest {
     @Test
     public void testValidInput() throws ConnectionException, ExecutionException, InterruptedException {
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
         //set up the mock to return the entity from the start phase
         final Entity entity = new Entity();
 
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( entity );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( entity );
 
 
         //mock returning the time
@@ -59,14 +59,14 @@ public class CreateTest {
         //perform the stage
         final Create create = new Create( timeService, uuidService );
 
-        create.performStage( writeContext );
+        create.performStage( executionContext );
 
 
         //now verify our output was correct
         ArgumentCaptor<Entity> mvccEntity = ArgumentCaptor.forClass( Entity.class );
 
 
-        verify( writeContext ).setMessage( mvccEntity.capture() );
+        verify( executionContext ).setMessage( mvccEntity.capture() );
 
         Entity created = mvccEntity.getValue();
 
@@ -81,7 +81,7 @@ public class CreateTest {
 
 
         //now verify the proceed was called
-        verify( writeContext ).proceed();
+        verify( executionContext ).proceed();
     }
 
 
@@ -89,10 +89,10 @@ public class CreateTest {
     @Test(expected = NullPointerException.class)
     public void testInvalidInput() throws ConnectionException, ExecutionException, InterruptedException {
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( null );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( null );
 
 
         //mock returning the time
@@ -107,7 +107,7 @@ public class CreateTest {
         final Create create = new Create( timeService, uuidService );
 
         //should throw an NPE
-        create.performStage( writeContext );
+        create.performStage( executionContext );
 
 
     }
@@ -117,10 +117,10 @@ public class CreateTest {
     @Test(expected = NullPointerException.class)
     public void testNoTimeService() throws ConnectionException, ExecutionException, InterruptedException {
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( null );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( null );
 
 
         //mock the uuid service
@@ -136,10 +136,10 @@ public class CreateTest {
     @Test(expected = NullPointerException.class)
     public void testNoUUIDService() throws ConnectionException, ExecutionException, InterruptedException {
 
-        final WriteContext writeContext = mock( WriteContext.class );
+        final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
-        when( writeContext.getMessage( Entity.class ) ).thenReturn( null );
+        when( executionContext.getMessage( Entity.class ) ).thenReturn( null );
 
 
         //mock returning the time
