@@ -23,6 +23,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.netflix.blitz4j.LoggingConfiguration;
+import org.apache.usergrid.perftest.amazon.AmazonS3Module;
+import org.apache.usergrid.perftest.amazon.AmazonS3Service;
 
 import javax.servlet.ServletContextEvent;
 
@@ -30,21 +32,39 @@ import javax.servlet.ServletContextEvent;
  * ...
  */
 public class PerftestServletConfig extends GuiceServletContextListener {
+    private Injector injector;
+    private AmazonS3Service s3Service;
+
+
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector( new PerftestModule() );
+        if ( injector != null )
+        {
+            return injector;
+        }
+
+        injector = Guice.createInjector( new PerftestModule(), new AmazonS3Module() );
+        return injector;
     }
 
 
     @Override
     public void contextInitialized( ServletContextEvent servletContextEvent ) {
-        LoggingConfiguration.getInstance().configure();
         super.contextInitialized( servletContextEvent );
+        LoggingConfiguration.getInstance().configure();
+        s3Service = getInjector().getInstance( AmazonS3Service.class );
+        s3Service.setServletContext( servletContextEvent.getServletContext() );
+        s3Service.start();
     }
 
     @Override
     public void contextDestroyed( ServletContextEvent servletContextEvent ) {
         LoggingConfiguration.getInstance().stop();
+
+        if ( s3Service != null )
+        {
+            s3Service.stop();
+        }
         super.contextDestroyed( servletContextEvent );
     }
 }

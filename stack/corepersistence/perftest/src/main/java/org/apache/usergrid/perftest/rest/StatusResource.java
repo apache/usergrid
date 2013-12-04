@@ -23,7 +23,7 @@ import org.apache.usergrid.perftest.PerftestRunner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -33,32 +33,30 @@ import javax.ws.rs.core.MediaType;
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
-@Path( "/perftest/start" )
-public class PerftestStartResource {
+@Path( "/status" )
+public class StatusResource {
     private final PerftestRunner runner;
 
 
     @Inject
-    public PerftestStartResource( PerftestRunner runner )
-    {
+    public StatusResource(PerftestRunner runner) {
         this.runner = runner;
     }
 
 
-    @POST
-    public String start()
+    @GET
+    public String status()
     {
         if ( runner.isRunning() )
         {
-            return "{ \"result\":\"already running\" }";
+            return "{ \"status\":\"running\" }\n";
         }
 
         if ( runner.needsReset() )
         {
-            return "{ \"result\":\"reset needed - but save the last run data first!\" }";
+            return "{ \"status\":\"needs reset\" }\n";
         }
 
-        runner.start();
-        return "{ \"result\":\"successfully started\" }";
+        return "{ \"status\":\"not running\" }\n";
     }
 }

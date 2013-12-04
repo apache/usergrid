@@ -19,35 +19,35 @@
  */
 package org.apache.usergrid.perftest.rest;
 
-import org.apache.usergrid.perftest.PerftestRunner;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.perftest.amazon.AmazonS3Service;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.Set;
+
 
 /**
  * ...
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
-@Path( "/perftest/perfteststats" )
-public class PerftestStatsResource {
-    private final PerftestRunner runner;
-
+@Path( "/tests" )
+public class TestsResource {
+    private final AmazonS3Service service;
 
     @Inject
-    public PerftestStatsResource( PerftestRunner runner )
-    {
-        this.runner = runner;
+    public TestsResource(AmazonS3Service service) {
+        this.service = service;
     }
 
 
     @GET
-    public CallStatsSnapshot getCallStatsSnapshot()
-    {
-        return runner.getCallStatsSnapshot();
+    public Set<String> listTests() {
+        return service.listTests();
     }
 }

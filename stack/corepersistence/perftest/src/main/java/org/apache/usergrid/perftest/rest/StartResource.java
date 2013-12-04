@@ -22,10 +22,12 @@ package org.apache.usergrid.perftest.rest;
 import org.apache.usergrid.perftest.PerftestRunner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.perftest.amazon.AmazonS3Service;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -33,32 +35,38 @@ import javax.ws.rs.core.MediaType;
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
-@Path( "/perftest/reset" )
-public class PerftestResetResource {
+@Path( "/start" )
+public class StartResource extends PropagatingResource {
     private final PerftestRunner runner;
 
 
     @Inject
-    public PerftestResetResource( PerftestRunner runner )
-    {
+    public StartResource( PerftestRunner runner, AmazonS3Service service ) {
+        super( "/start", service );
         this.runner = runner;
     }
 
 
     @POST
-    public String reset()
+    public Result start( @QueryParam( "propagate" ) Boolean propagate )
     {
         if ( runner.isRunning() )
         {
-            return "{ \"result\":\"still running stop before resetting\" }";
+            return new BaseResult( getEndpointUrl(), false, "already running" );
         }
 
         if ( runner.needsReset() )
         {
-            runner.setup();
-            return "{ \"result\":\"reset complete\" }";
+            return new BaseResult( getEndpointUrl(), false, "reset needed - but save the last run data first!" );
         }
 
-        return "{ \"result\":\"reset not required\" }";
+        runner.start();
+
+        if ( propagate == Boolean.FALSE )
+        {
+            return new BaseResult( getEndpointUrl(), true, "successfully started" );
+        }
+
+        return propagate( true, "successfully started" );
     }
 }

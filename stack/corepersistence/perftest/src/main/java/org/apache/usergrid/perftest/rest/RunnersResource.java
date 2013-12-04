@@ -19,44 +19,39 @@
  */
 package org.apache.usergrid.perftest.rest;
 
-import org.apache.usergrid.perftest.PerftestRunner;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.perftest.amazon.AmazonS3Service;
+import org.apache.usergrid.perftest.amazon.Ec2Metadata;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+
 
 /**
  * ...
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
-@Path( "/perftest/status" )
-public class PerftestStatusResource {
-    private final PerftestRunner runner;
+@Path( "/runners" )
+public class RunnersResource {
+    private final AmazonS3Service service;
 
 
     @Inject
-    public PerftestStatusResource( PerftestRunner runner ) {
-        this.runner = runner;
+    public RunnersResource( AmazonS3Service service ) {
+        this.service = service;
     }
 
 
     @GET
-    public String status()
-    {
-        if ( runner.isRunning() )
-        {
-            return "{ \"status\":\"running\" }";
-        }
-
-        if ( runner.needsReset() )
-        {
-            return "{ \"status\":\"needs reset\" }";
-        }
-
-        return "{ \"status\":\"not running\" }";
+    public Map<String,Ec2Metadata> getRunners() throws IOException {
+        return service.getRunners();
     }
 }

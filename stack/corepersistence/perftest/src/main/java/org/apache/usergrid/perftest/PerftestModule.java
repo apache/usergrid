@@ -31,11 +31,11 @@ public class PerftestModule extends ServletModule {
         bind( CallStats.class );
         bind( PerftestRunner.class );
         bind( TestModuleLoader.class );
-        bind( PerftestResetResource.class ).asEagerSingleton();
-        bind( PerftestStopResource.class ).asEagerSingleton();
-        bind( PerftestStartResource.class ).asEagerSingleton();
-        bind( PerftestStatsResource.class ).asEagerSingleton();
-        bind( PerftestStatusResource.class ).asEagerSingleton();
+        bind( ResetResource.class ).asEagerSingleton();
+        bind( StopResource.class ).asEagerSingleton();
+        bind( StartResource.class ).asEagerSingleton();
+        bind( StatsResource.class ).asEagerSingleton();
+        bind( StatusResource.class ).asEagerSingleton();
 
         Map<String, String> params = new HashMap<String, String>();
         params.put( PACKAGES_KEY, getClass().getPackage().toString() );
