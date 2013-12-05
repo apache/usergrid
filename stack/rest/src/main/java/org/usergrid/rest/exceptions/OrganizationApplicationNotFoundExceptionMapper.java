@@ -11,6 +11,6 @@ public class OrganizationApplicationNotFoundExceptionMapper
         extends AbstractExceptionMapper<OrganizationApplicationNotFoundException> {
     @Override
     public Response toResponse( OrganizationApplicationNotFoundException e ) {
-        return super.toResponse( Response.Status.BAD_REQUEST, e.getJsonResponse() );
+        return super.toResponse( Response.Status.BAD_REQUEST, e );
     }
 }

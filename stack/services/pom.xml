@@ -11,8 +11,6 @@
   <!-- Override these properties in your settings.xml in an active profile -->
   <properties>
     <services.it.forkCount>2</services.it.forkCount>
-    <services.it.heapmax>384m</services.it.heapmax>
-    <services.it.heapmin>384m</services.it.heapmin>
   </properties>
 
   <artifactId>usergrid-services</artifactId>
@@ -51,7 +49,7 @@
               </systemPropertyVariables>
               <forkMode>once</forkMode>
               <!-- TODO: make this into a small configuration but based on settings.xml -->
-              <argLine>-Xmx1G -Xms256m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
               <includes>
                 <include>**/ServiceTestSuite.java</include>
@@ -90,7 +88,7 @@
               <forkCount>${services.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
 
-              <argLine>-Xmx${services.it.heapmax} -Xms${services.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                 -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
@@ -146,7 +144,7 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
               <forkMode>once</forkMode>
-              <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                 -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
@@ -187,7 +185,7 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
               <forkMode>once</forkMode>
-              <argLine>-Xmx2G -Xms2G -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                 -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
               </argLine>
@@ -252,7 +250,7 @@
           <forkCount>${services.it.forkCount}</forkCount>
           <reuseForks>false</reuseForks>
 
-          <argLine>-Xmx1G -Xms512m -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
           <argLine>
             -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar
           </argLine>

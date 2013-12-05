@@ -1,7 +1,7 @@
 Apache Usergrid
 ===============
 
-**Usergrid is a multi-tenant Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs. It is [currently incubating at the Apache Software Foundation](http://usergrid.incubator.apache.org/).**
+**Apache Usergrid is a multi-tenant Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs. It is [currently incubating at the Apache Software Foundation](http://usergrid.incubator.apache.org/).**
 
 This repository contains all the code for Apache Usergrid, including the server stack, portal, client and SDKs. Each of them have their own, much more detailed README in the corresponding subdirectories.
 

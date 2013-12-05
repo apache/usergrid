@@ -30,6 +30,6 @@ public class DuplicateUniquePropertyExistsExceptionMapper
 
     @Override
     public Response toResponse( DuplicateUniquePropertyExistsException e ) {
-        return toResponse( BAD_REQUEST, e.getMessage() );
+        return toResponse( BAD_REQUEST, e );
     }
 }
