@@ -7,9 +7,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -176,5 +174,30 @@ public class S3Operations {
         while ( listing.isTruncated() );
 
         return runners;
+    }
+
+
+    public File download( File tempDir, String perftest ) throws IOException, InterruptedException {
+        File tempFile = File.createTempFile( "perftest", "war", tempDir );
+        LOG.debug( "Created temporary file {} for new war download.", tempFile.getAbsolutePath() );
+
+        S3Object s3Object = client.getObject( PropSettings.getBucket(), perftest );
+        LOG.debug( "Got S3Object:\n{}", s3Object.toString() );
+
+        // Download war file contents into temporary file
+        S3ObjectInputStream in = s3Object.getObjectContent();
+        FileOutputStream out = new FileOutputStream( tempFile );
+        byte[] buffer = new byte[1024];
+        int readAmount;
+
+        while ( ( readAmount = in.read( buffer ) ) != -1 ) {
+            out.write( buffer, 0, readAmount );
+        }
+
+        out.flush();
+        out.close();
+        in.close();
+        LOG.info( "Successfully downloaded {} from S3 to {}.", perftest, tempFile.getAbsoluteFile() );
+        return tempFile;
     }
 }

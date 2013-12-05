@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
+import java.io.File;
 import java.util.*;
 
 
@@ -117,12 +118,25 @@ public class AmazonS3ServiceAwsImpl implements AmazonS3Service, Runnable, Props 
         metadata.setProperty( CONTEXT_PATH, context.getContextPath() );
         metadata.setProperty( SERVER_INFO_KEY, context.getServerInfo() );
         metadata.setProperty( SERVER_PORT_KEY, Integer.toString( PropSettings.getServerPort() ) );
+        metadata.setProperty( CONTEXT_TEMPDIR_KEY, ( ( File ) context.getAttribute( CONTEXT_TEMPDIR_KEY ) ).getAbsolutePath() );
     }
 
 
     @Override
     public Ec2Metadata getMyMetadata() {
         return metadata;
+    }
+
+
+    @Override
+    public File download( File tempDir, String perftest ) throws Exception {
+        try {
+            return operations.download( tempDir, perftest );
+        }
+        catch ( Exception e ) {
+            LOG.error( "Failed to execute load operation for {}", perftest, e );
+            throw e;
+        }
     }
 
 

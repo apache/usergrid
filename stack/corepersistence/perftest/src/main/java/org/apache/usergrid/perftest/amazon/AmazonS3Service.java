@@ -2,6 +2,7 @@ package org.apache.usergrid.perftest.amazon;
 
 
 import javax.servlet.ServletContext;
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,4 +33,5 @@ public interface AmazonS3Service {
 
     Ec2Metadata getMyMetadata();
 
+    File download( File tempDir, String perftest ) throws Exception;
 }

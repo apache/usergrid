@@ -18,21 +18,25 @@ public class BaseResult implements Result {
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public BaseResult() {
         status = true;
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public void setEndpoint( String endpoint ) {
         this.endpoint = endpoint;
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public void setStatus( boolean status ) {
         this.status = status;
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public void setMessage( String message ) {
         this.message = message;
     }
