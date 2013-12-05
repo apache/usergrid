@@ -25,6 +25,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.perftest.settings.PropSettings;
 import org.apache.usergrid.perftest.settings.Props;
+import org.apache.usergrid.perftest.settings.RunInfo;
+import org.apache.usergrid.perftest.settings.TestInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,6 +141,12 @@ public class AmazonS3ServiceAwsImpl implements AmazonS3Service, Runnable, Props 
             LOG.error( "Failed to execute load operation for {}", perftest, e );
             throw e;
         }
+    }
+
+
+    @Override
+    public void uploadResults( final TestInfo testInfo, final RunInfo runInfo, final File resultsFile ) {
+        operations.uploadResults( metadata, testInfo, runInfo, resultsFile );
     }
 
 

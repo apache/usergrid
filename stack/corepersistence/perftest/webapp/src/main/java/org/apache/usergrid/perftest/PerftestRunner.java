@@ -1,6 +1,7 @@
 package org.apache.usergrid.perftest;
 
 
+import org.apache.usergrid.perftest.amazon.AmazonS3Service;
 import org.apache.usergrid.perftest.amazon.S3Operations;
 import org.apache.usergrid.perftest.rest.CallStatsSnapshot;
 import com.google.inject.Inject;
@@ -27,7 +28,7 @@ public class PerftestRunner implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger( PerftestRunner.class );
 
 
-    private final S3Operations operations;
+    private final AmazonS3Service service;
     private final Injector injector;
     private final Object lock = new Object();
     private DynamicLongProperty sleepToStop =
@@ -46,13 +47,15 @@ public class PerftestRunner implements Runnable {
 
 
     @Inject
-    public PerftestRunner( Injector injector, TestModuleLoader loader, S3Operations operations )
+    public PerftestRunner( Injector injector, TestModuleLoader loader, AmazonS3Service service )
     {
         this.injector = injector;
-        this.operations = operations;
+        this.service = service;
         test = loader.getChildInjector().getInstance( Perftest.class );
         testInfo = new TestInfo( test, loader.getTestModule() );
         testInfo.setLoadTime( new Date().toString() );
+
+        setup();
     }
 
 
@@ -68,7 +71,7 @@ public class PerftestRunner implements Runnable {
                 stats.reset();
             }
 
-            stats = injector.getInstance(CallStats.class);
+            stats = injector.getInstance( CallStats.class );
             executorService = Executors.newFixedThreadPool( test.getThreadCount() );
             needsReset = false;
 
@@ -148,7 +151,7 @@ public class PerftestRunner implements Runnable {
                 PerftestRunner.this.needsReset = true;
                 stopTime = System.nanoTime();
 
-                operations.uploadResults( testInfo, runInfo, stats.getResultsFile() );
+                service.uploadResults( testInfo, runInfo, stats.getResultsFile() );
                 testInfo.addRunInfo( runInfo );
             }
         } ).start();

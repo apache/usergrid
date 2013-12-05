@@ -3,6 +3,8 @@ package org.apache.usergrid.perftest;
 import com.google.inject.Guice;
 import org.junit.Test;
 
+import org.apache.usergrid.perftest.amazon.AmazonS3Module;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -12,7 +14,8 @@ import static org.junit.Assert.assertTrue;
 public class PerftestRunnerTest {
     @Test
     public void testPerftestRunner() throws InterruptedException {
-        PerftestRunner runner = Guice.createInjector( new PerftestModule() ).getInstance( PerftestRunner.class );
+        PerftestRunner runner = Guice.createInjector( new PerftestModule(),
+                new AmazonS3Module() ).getInstance( PerftestRunner.class );
         assertFalse( runner.isRunning() );
 
         runner.start();

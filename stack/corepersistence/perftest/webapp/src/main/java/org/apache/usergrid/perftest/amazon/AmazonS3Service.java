@@ -6,6 +6,9 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.usergrid.perftest.settings.RunInfo;
+import org.apache.usergrid.perftest.settings.TestInfo;
+
 
 /**
  * The S3 Service is used to register the node so other nodes in the same
@@ -34,4 +37,6 @@ public interface AmazonS3Service {
     Ec2Metadata getMyMetadata();
 
     File download( File tempDir, String perftest ) throws Exception;
+
+    void uploadResults( TestInfo testInfo, RunInfo runInfo, File resultsFile );
 }
