@@ -6,8 +6,10 @@ import org.mockito.ArgumentCaptor;
 
 import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.impl.CollectionManagerImpl;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -26,7 +28,7 @@ public class CollectionManagerTest {
     @Test
     public void create(){
 
-        Stage mockStage = mock(Stage.class);
+        ExecutionStage mockExecutionStage = mock(ExecutionStage.class);
 
         StagePipeline createPipeline = mock(StagePipeline.class);
         StagePipeline updatePipeline = mock(StagePipeline.class);
@@ -36,7 +38,7 @@ public class CollectionManagerTest {
 
 
         //mock up returning the first stage
-        when(createPipeline.first()).thenReturn(mockStage);
+        when(createPipeline.first()).thenReturn( mockExecutionStage );
 
 
         CollectionContext context = new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
@@ -44,6 +46,9 @@ public class CollectionManagerTest {
         CollectionManager collectionManager = new CollectionManagerImpl(createPipeline, updatePipeline, deletePipeline, loadPipeline, context);
 
         Entity create = new Entity();
+
+        MvccEntity mvccEntity = mock(MvccEntity.class);
+
 
         Entity returned = collectionManager.create( create );
 
@@ -53,7 +58,7 @@ public class CollectionManagerTest {
         ArgumentCaptor<ExecutionContext> contextArg = ArgumentCaptor.forClass(ExecutionContext.class);
 
         //verify the first perform stage was invoked
-        verify(mockStage).performStage( contextArg.capture() );
+        verify( mockExecutionStage ).performStage( contextArg.capture() );
 
         //verify we set the passed entity into the ExecutionContext
         assertEquals("Entity should be present in the write context", create, contextArg.getValue().getMessage( Entity.class ));

@@ -2,7 +2,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
 /** The possible stages in our write flow. */
-public interface Stage {
+public interface ExecutionStage {
 
     /**
      * Run this stage.  This will return the MvccEntity that should be returned or passed to the next stage

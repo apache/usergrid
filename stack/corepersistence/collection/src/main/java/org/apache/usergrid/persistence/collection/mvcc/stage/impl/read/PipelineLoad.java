@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.read;
 
 
 import java.lang.annotation.Retention;
@@ -20,4 +20,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @BindingAnnotation
 @Target({ FIELD, PARAMETER, METHOD })
 @Retention(RUNTIME)
-public @interface DeletePipeline {}
+public @interface PipelineLoad {}

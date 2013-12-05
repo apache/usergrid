@@ -13,14 +13,14 @@ public interface StagePipeline {
     /**
      * Get the first stage in this pipeline.
      */
-    Stage first();
+    ExecutionStage first();
 
 
     /**
-     * get the next stage after the stage specified
-     * @param stage The stage to seek in our pipeline
+     * get the next executionStage after the executionStage specified
+     * @param executionStage The executionStage to seek in our pipeline
      */
-    Stage nextStage(Stage stage);
+    ExecutionStage nextStage(ExecutionStage executionStage );
 
 
 

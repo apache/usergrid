@@ -52,7 +52,7 @@ public interface MvccEntitySerializationStrategy
 
 
     /**
-     * Clear this version from the persistence store, but keep the version to mark that is has been cleared
+     * Delete this version from the persistence store, but keep the version to mark that is has been cleared
      * This can be used in a mark+sweep system.  The entity with the given version will exist in the context,
      * but no data will be stored
      *

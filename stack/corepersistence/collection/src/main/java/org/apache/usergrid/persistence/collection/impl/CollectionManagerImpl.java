@@ -11,11 +11,11 @@ import org.apache.usergrid.persistence.collection.CollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CreatePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.DeletePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.read.PipelineLoad;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.PipelineCreate;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.DeletePipeline;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.ExecutionContextImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.LoadPipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.UpdatePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.PipelineUpdate;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
@@ -39,10 +39,10 @@ public class CollectionManagerImpl implements CollectionManager {
 
 
     @Inject
-    public CollectionManagerImpl( @CreatePipeline final StagePipeline createPipeline,
-                                  @UpdatePipeline final StagePipeline updatePipeline,
+    public CollectionManagerImpl( @PipelineCreate final StagePipeline createPipeline,
+                                  @PipelineUpdate final StagePipeline updatePipeline,
                                   @DeletePipeline final StagePipeline deletePipeline,
-                                  @LoadPipeline final StagePipeline loadPipeline,
+                                  @PipelineLoad final StagePipeline loadPipeline,
                                   @Assisted final CollectionContext context ) {
 
         this.createPipeline = createPipeline;

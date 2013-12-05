@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;

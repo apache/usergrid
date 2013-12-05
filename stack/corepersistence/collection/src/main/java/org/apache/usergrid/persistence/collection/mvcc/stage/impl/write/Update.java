@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.util.UUID;
@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.service.TimeService;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -22,7 +22,7 @@ import com.google.inject.Singleton;
  * been set correctly
  */
 @Singleton
-public class Update implements Stage {
+public class Update implements ExecutionStage {
 
     private static final Logger LOG = LoggerFactory.getLogger( Update.class );
 
@@ -51,6 +51,10 @@ public class Update implements Stage {
         final Entity entity = executionContext.getMessage( Entity.class );
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+
+        final UUID entityId = entity.getUuid();
+
+        Preconditions.checkNotNull( entityId, "The entity id is required to be set for an update operation" );
 
 
         final UUID version = uuidService.newTimeUUID();

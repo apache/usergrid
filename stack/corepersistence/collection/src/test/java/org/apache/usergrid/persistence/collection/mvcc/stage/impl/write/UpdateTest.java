@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.util.UUID;
@@ -6,6 +6,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.service.TimeService;
@@ -22,17 +24,24 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class CreateTest {
+public class UpdateTest {
+
 
     /** Test the start stage for happy path */
     @Test
-    public void testValidInput() throws ConnectionException, ExecutionException, InterruptedException {
+    public void testValidInput() throws Exception {
 
         final ExecutionContext executionContext = mock( ExecutionContext.class );
 
 
         //set up the mock to return the entity from the start phase
         final Entity entity = new Entity();
+        final UUID existingEntityId = UUIDGenerator.newTimeUUID();
+        final long createdTime = 100;
+
+        FieldUtils.writeDeclaredField( entity, "uuid", existingEntityId, true );
+        entity.setCreated( createdTime );
+
 
         when( executionContext.getMessage( Entity.class ) ).thenReturn( entity );
 
@@ -40,24 +49,25 @@ public class CreateTest {
         //mock returning the time
         final TimeService timeService = mock( TimeService.class );
 
-        final long time = System.currentTimeMillis();
+        final long updateTime = System.currentTimeMillis();
 
-        when( timeService.getTime() ).thenReturn( time );
+        when( timeService.getTime() ).thenReturn( updateTime );
 
 
         //mock the uuid service
         final UUIDService uuidService = mock( UUIDService.class );
 
-        final UUID newEntityId = UUIDGenerator.newTimeUUID();
-        final UUID newVersion = newEntityId;
+
+        final UUID newVersion = UUIDGenerator.newTimeUUID();
 
 
         //mock the uuid service
-        when( uuidService.newTimeUUID() ).thenReturn( newEntityId );
+        when( uuidService.newTimeUUID() ).thenReturn( newVersion );
 
 
         //perform the stage
-        final Create create = new Create( timeService, uuidService );
+        final Update create = new Update( timeService, uuidService );
+
 
         create.performStage( executionContext );
 
@@ -72,12 +82,12 @@ public class CreateTest {
 
         //verify uuid and version in both the MvccEntity and the entity itself
         assertEquals( "Entity re-set into context", entity, created );
-        assertEquals( "entity id did not match generator", newEntityId, created.getUuid() );
+        assertEquals( "entity id did not match generator", existingEntityId, created.getUuid() );
         assertEquals( "version did not not match entityId", newVersion, created.getVersion() );
 
         //check the time
-        assertEquals( "created time matches generator", time, created.getCreated() );
-        assertEquals( "updated time matches generator", time, created.getUpdated() );
+        assertEquals( "created time matches generator", createdTime, created.getCreated() );
+        assertEquals( "updated time matches generator", updateTime, created.getUpdated() );
 
 
         //now verify the proceed was called
@@ -104,13 +114,39 @@ public class CreateTest {
 
 
         //perform the stage
-        final Create create = new Create( timeService, uuidService );
+        final Update create = new Update( timeService, uuidService );
 
         //should throw an NPE
         create.performStage( executionContext );
 
 
     }
+
+    @Test(expected = NullPointerException.class)
+     public void testInvalidInputNoId() throws ConnectionException, ExecutionException, InterruptedException {
+
+         final ExecutionContext executionContext = mock( ExecutionContext.class );
+
+
+         when( executionContext.getMessage( Entity.class ) ).thenReturn( new Entity(  ) );
+
+
+         //mock returning the time
+         final TimeService timeService = mock( TimeService.class );
+
+
+         //mock the uuid service
+         final UUIDService uuidService = mock( UUIDService.class );
+
+
+         //perform the stage
+         final Update create = new Update( timeService, uuidService );
+
+         //should throw an NPE
+         create.performStage( executionContext );
+
+
+     }
 
 
     /** Test no time service */
@@ -128,7 +164,7 @@ public class CreateTest {
 
 
         //perform the stage
-        new Create( null, uuidService );
+        new Update( null, uuidService );
     }
 
 
@@ -147,6 +183,7 @@ public class CreateTest {
 
 
         //throw NPE
-        new Create( timeService, null );
+        new Update( timeService, null );
     }
+
 }

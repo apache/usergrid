@@ -1,7 +1,7 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 
 import com.google.inject.Singleton;
@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 /** This phase should execute any verification on the MvccEntity */
 @Singleton
-public class Verify implements Stage {
+public class Verify implements ExecutionStage {
 
 
     public Verify() {

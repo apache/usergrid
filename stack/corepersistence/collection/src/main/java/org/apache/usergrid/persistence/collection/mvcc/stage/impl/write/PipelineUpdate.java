@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.lang.annotation.Retention;
@@ -18,6 +18,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author tnine
  */
 @BindingAnnotation
-@Target({ FIELD, PARAMETER, METHOD })
-@Retention(RUNTIME)
-public @interface CreatePipeline {}
+@Target( { FIELD, PARAMETER, METHOD } )
+@Retention( RUNTIME )
+public @interface PipelineUpdate {}

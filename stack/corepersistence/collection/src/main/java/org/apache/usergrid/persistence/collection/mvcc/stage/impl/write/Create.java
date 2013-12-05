@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.util.UUID;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.service.TimeService;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
@@ -26,7 +26,7 @@ import com.google.inject.Singleton;
  * present, and this should set the entityId, version, created, and updated dates
  */
 @Singleton
-public class Create implements Stage {
+public class Create implements ExecutionStage {
 
     private static final Logger LOG = LoggerFactory.getLogger( Create.class );
 

@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.read;
 
 
 import java.util.List;
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 /**
  * This stage is a load stage to load a single entity
  */
-public class Load implements Stage {
+public class Load implements ExecutionStage {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Load.class );

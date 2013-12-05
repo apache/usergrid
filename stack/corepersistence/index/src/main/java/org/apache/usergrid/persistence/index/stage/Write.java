@@ -1,12 +1,12 @@
 package org.apache.usergrid.persistence.index.stage;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 
 
 /** This state should perform an update of the index. */
-public class Write implements Stage
+public class Write implements ExecutionStage
 {
 
 

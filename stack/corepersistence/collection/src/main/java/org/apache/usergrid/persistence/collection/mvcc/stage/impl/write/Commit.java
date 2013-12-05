@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.util.UUID;
@@ -11,7 +11,7 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
@@ -23,21 +23,20 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
-public class Clear implements Stage {
+public class Commit implements ExecutionStage {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( Clear.class );
+    private static final Logger LOG = LoggerFactory.getLogger( Commit.class );
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
 
 
     @Inject
-    public Clear( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                  final MvccEntitySerializationStrategy entitySerializationStrategy ) {
-
+    public Commit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                   final MvccEntitySerializationStrategy entitySerializationStrategy ) {
         Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
-              Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
+                      Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
 
 
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
@@ -66,8 +65,8 @@ public class Clear implements Stage {
 
         MutationBatch logMutation = logEntrySerializationStrategy.write( collectionContext, startEntry );
 
-        //insert a "cleared" value into the versions.  Post processing should actually delete
-        MutationBatch entityMutation = entitySerializationStrategy.clear( collectionContext, entityId, version );
+        //now get our actual insert into the entity data
+        MutationBatch entityMutation = entitySerializationStrategy.write( collectionContext, entity );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );

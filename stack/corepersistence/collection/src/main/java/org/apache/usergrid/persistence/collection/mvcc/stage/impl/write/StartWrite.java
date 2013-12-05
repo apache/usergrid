@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.util.UUID;
@@ -12,7 +12,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
@@ -28,7 +28,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class StartWrite implements Stage {
+public class StartWrite implements ExecutionStage {
 
     private static final Logger LOG = LoggerFactory.getLogger( StartWrite.class );
 

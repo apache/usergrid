@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 
 import com.google.common.base.Preconditions;
@@ -17,7 +17,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     private final CollectionContext context;
 
     private Object message;
-    private Stage current;
+    private ExecutionStage current;
 
 
     @Inject
@@ -72,7 +72,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     @Override
     public void proceed() {
-        Stage next = this.pipeline.nextStage( current );
+        ExecutionStage next = this.pipeline.nextStage( current );
 
         //Nothing to do
         if ( next == null ) {

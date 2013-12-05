@@ -2,7 +2,7 @@ package org.apache.usergrid.persistence.index.stage;
 
 
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 
 
 /**
@@ -10,7 +10,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
  * @author: tnine
  *
  */
-public class Complete implements Stage
+public class Complete implements ExecutionStage
 {
 
     @Override

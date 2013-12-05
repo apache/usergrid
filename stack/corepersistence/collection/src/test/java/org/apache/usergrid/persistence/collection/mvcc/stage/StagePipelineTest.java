@@ -15,13 +15,13 @@ public class StagePipelineTest {
 
     @Test
     public void oneStage() {
-        Stage first = mock( Stage.class );
+        ExecutionStage first = mock( ExecutionStage.class );
 
         StagePipeline pipeline = StagePipelineImpl.fromStages( first );
 
         assertSame( "Correct stage returned", first, pipeline.first() );
 
-        Stage next = pipeline.nextStage( first );
+        ExecutionStage next = pipeline.nextStage( first );
 
         assertNull( "No next stage", next );
     }
@@ -29,15 +29,15 @@ public class StagePipelineTest {
 
     @Test
     public void threeStages() {
-        Stage first = mock( Stage.class );
-        Stage second = mock( Stage.class );
-        Stage third = mock( Stage.class );
+        ExecutionStage first = mock( ExecutionStage.class );
+        ExecutionStage second = mock( ExecutionStage.class );
+        ExecutionStage third = mock( ExecutionStage.class );
 
         StagePipeline pipeline = StagePipelineImpl.fromStages( first, second, third );
 
         assertSame( "Correct stage returned", first, pipeline.first() );
 
-        Stage next = pipeline.nextStage( first );
+        ExecutionStage next = pipeline.nextStage( first );
 
         assertSame( "Correct stage returned", second, next );
 
@@ -56,14 +56,14 @@ public class StagePipelineTest {
      */
     @Test
     public void stageSeek() {
-        Stage first = mock( Stage.class );
-        Stage second = mock( Stage.class );
-        Stage third = mock( Stage.class );
+        ExecutionStage first = mock( ExecutionStage.class );
+        ExecutionStage second = mock( ExecutionStage.class );
+        ExecutionStage third = mock( ExecutionStage.class );
 
         StagePipeline pipeline = StagePipelineImpl.fromStages( first, second, third );
 
 
-        Stage next = pipeline.nextStage( second );
+        ExecutionStage next = pipeline.nextStage( second );
 
         assertSame( "Correct stage returned", third, next );
 
@@ -75,7 +75,7 @@ public class StagePipelineTest {
 
     @Test( expected = NullPointerException.class )
     public void invalidStageInput() {
-        Stage first = mock( Stage.class );
+        ExecutionStage first = mock( ExecutionStage.class );
 
         StagePipeline pipeline = StagePipelineImpl.fromStages( first );
         pipeline.nextStage( null );

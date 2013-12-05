@@ -1,8 +1,20 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.Delete;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.DeletePipeline;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.StartDelete;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.read.Load;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.read.PipelineLoad;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Commit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Create;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.PipelineCreate;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.PipelineUpdate;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.StartWrite;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Update;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Verify;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -24,7 +36,7 @@ public class CollectionPipelineModule extends AbstractModule {
      * objects are mutable
      */
     @Provides
-    @CreatePipeline
+    @PipelineCreate
     @Inject
     @Singleton
     public StagePipeline createPipeline( final Create create, final StartWrite startWrite, final Verify write,
@@ -34,7 +46,7 @@ public class CollectionPipelineModule extends AbstractModule {
 
 
     @Provides
-    @UpdatePipeline
+    @PipelineUpdate
     @Inject
     @Singleton
     public StagePipeline updatePipeline( final Update update, final StartWrite startWrite, final Verify write,
@@ -47,13 +59,13 @@ public class CollectionPipelineModule extends AbstractModule {
     @DeletePipeline
     @Inject
     @Singleton
-    public StagePipeline deletePipeline(final StartDelete startDelete,  final Clear delete ) {
+    public StagePipeline deletePipeline(final StartDelete startDelete,  final Delete delete ) {
         return StagePipelineImpl.fromStages(startDelete, delete );
     }
 
 
     @Provides
-    @LoadPipeline
+    @PipelineLoad
     @Inject
     @Singleton
     public StagePipeline deletePipeline( final Load load ) {
@@ -67,17 +79,20 @@ public class CollectionPipelineModule extends AbstractModule {
         /**
          * Configure all stages here
          */
-        Multibinder<Stage> stageBinder = Multibinder.newSetBinder( binder(), Stage.class );
+        Multibinder<ExecutionStage> stageBinder = Multibinder.newSetBinder( binder(), ExecutionStage.class );
 
 
 
         //creation stages
-        stageBinder.addBinding().to( Create.class );
-        stageBinder.addBinding().to( Update.class );
-        stageBinder.addBinding().to( StartWrite.class );
-        stageBinder.addBinding().to( Verify.class );
         stageBinder.addBinding().to( Commit.class );
-        stageBinder.addBinding().to( Clear.class );
+        stageBinder.addBinding().to( Create.class );
+        stageBinder.addBinding().to( StartWrite.class );
+        stageBinder.addBinding().to( Update.class );
+        stageBinder.addBinding().to( Verify.class );
+
+        //delete stages
+        stageBinder.addBinding().to( Delete.class );
+        stageBinder.addBinding().to( StartDelete.class );
 
         //loading stages
         stageBinder.addBinding().to(Load.class);

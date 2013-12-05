@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
 
 import com.google.common.base.Preconditions;
@@ -13,25 +13,25 @@ import com.google.common.base.Preconditions;
 /** @author tnine */
 public class StagePipelineImpl implements StagePipeline {
 
-    private final List<Stage> stages;
+    private final List<ExecutionStage> executionStages;
 
 
-    protected StagePipelineImpl( List<Stage> stages ) {
-        Preconditions.checkNotNull(stages, "stages is required");
-        Preconditions.checkArgument(  stages.size() > 0, "stages must have more than 1 element" );
+    protected StagePipelineImpl( List<ExecutionStage> executionStages ) {
+        Preconditions.checkNotNull( executionStages, "executionStages is required");
+        Preconditions.checkArgument(  executionStages.size() > 0, "executionStages must have more than 1 element" );
 
-        this.stages = stages;
+        this.executionStages = executionStages;
     }
 
 
     @Override
-    public Stage first() {
+    public ExecutionStage first() {
 
-        if ( stages.size() == 0 ) {
+        if ( executionStages.size() == 0 ) {
             return null;
         }
 
-        return stages.get( 0 );
+        return executionStages.get( 0 );
     }
 
 
@@ -39,23 +39,23 @@ public class StagePipelineImpl implements StagePipeline {
 
 
     @Override
-    public Stage nextStage( final Stage stage ) {
+    public ExecutionStage nextStage( final ExecutionStage executionStage ) {
 
-        Preconditions.checkNotNull( stage, "Stage cannot be null" );
+        Preconditions.checkNotNull( executionStage, "ExecutionStage cannot be null" );
 
-        int index = stages.indexOf( stage );
+        int index = executionStages.indexOf( executionStage );
 
         //we're done, do nothing
-        if ( index == stages.size() -1  ) {
+        if ( index == executionStages.size() -1  ) {
             return null;
         }
 
-        return  stages.get( index + 1 );
+        return  executionStages.get( index + 1 );
     }
 
 
     /** Factory to create a new instance. */
-    public static StagePipelineImpl fromStages( Stage... stages ) {
-        return new StagePipelineImpl(Arrays.asList(  stages ));
+    public static StagePipelineImpl fromStages( ExecutionStage... executionStages ) {
+        return new StagePipelineImpl(Arrays.asList( executionStages ));
     }
 }

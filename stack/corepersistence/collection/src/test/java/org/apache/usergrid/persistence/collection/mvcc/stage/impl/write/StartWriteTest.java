@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
 import java.util.UUID;
@@ -13,6 +13,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.StartWrite;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -75,7 +76,7 @@ public class StartWriteTest {
 
         assertEquals( "entity id did not match ", entity.getUuid(), entry.getEntityId() );
         assertEquals( "version did not not match entityId", entity.getVersion(), entry.getVersion() );
-        assertEquals( "Stage is correct", Stage.ACTIVE, entry.getStage() );
+        assertEquals( "ExecutionStage is correct", Stage.ACTIVE, entry.getStage() );
 
 
         //now verify we set the message into the write context

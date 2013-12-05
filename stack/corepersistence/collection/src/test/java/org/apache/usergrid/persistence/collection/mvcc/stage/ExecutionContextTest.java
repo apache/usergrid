@@ -24,9 +24,9 @@ public class ExecutionContextTest {
 
         StagePipeline pipeline = mock( StagePipeline.class );
 
-        Stage stage = mock( Stage.class );
+        ExecutionStage executionStage = mock( ExecutionStage.class );
 
-        when( pipeline.first() ).thenReturn( stage );
+        when( pipeline.first() ).thenReturn( executionStage );
 
         ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
 
@@ -37,8 +37,8 @@ public class ExecutionContextTest {
         //verify we called first in the pipeline to get the first value
         verify( pipeline ).first();
 
-        //verify the first stage was invoked
-        verify( stage ).performStage( same( executionContext ) );
+        //verify the first executionStage was invoked
+        verify( executionStage ).performStage( same( executionContext ) );
 
         //verify the bean value was set
         assertSame( test, executionContext.getMessage( Object.class ) );
@@ -127,14 +127,14 @@ public class ExecutionContextTest {
 
         StagePipeline pipeline = mock( StagePipeline.class );
 
-        Stage firstStage = mock( Stage.class );
+        ExecutionStage firstExecutionStage = mock( ExecutionStage.class );
 
-        Stage secondStage = mock( Stage.class );
+        ExecutionStage secondExecutionStage = mock( ExecutionStage.class );
 
 
-        when( pipeline.first() ).thenReturn( firstStage );
+        when( pipeline.first() ).thenReturn( firstExecutionStage );
 
-        when( pipeline.nextStage( same( firstStage ) ) ).thenReturn( secondStage );
+        when( pipeline.nextStage( same( firstExecutionStage ) ) ).thenReturn( secondExecutionStage );
 
 
         ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
@@ -146,7 +146,7 @@ public class ExecutionContextTest {
         //now proceed and validate we were called
         executionContext.proceed();
 
-        verify( secondStage ).performStage( same( executionContext ) );
+        verify( secondExecutionStage ).performStage( same( executionContext ) );
     }
 
 
@@ -157,11 +157,11 @@ public class ExecutionContextTest {
 
         StagePipeline pipeline = mock( StagePipeline.class );
 
-        Stage firstStage = mock( Stage.class );
+        ExecutionStage firstExecutionStage = mock( ExecutionStage.class );
 
-        when( pipeline.first() ).thenReturn( firstStage );
+        when( pipeline.first() ).thenReturn( firstExecutionStage );
 
-        when( pipeline.nextStage( same( firstStage ) ) ).thenReturn( null );
+        when( pipeline.nextStage( same( firstExecutionStage ) ) ).thenReturn( null );
 
 
         ExecutionContext executionContext = new ExecutionContextImpl( pipeline, collectionContext );
