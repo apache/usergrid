@@ -7,11 +7,10 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Create;
 import org.apache.usergrid.persistence.collection.service.TimeService;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -51,7 +50,7 @@ public class CreateTest {
         //mock the uuid service
         when( uuidService.newTimeUUID() ).thenReturn( newEntityId );
 
-        final CollectionEventBus eventBus = mock(CollectionEventBus.class);
+        final CollectionEventBus eventBus = mock( CollectionEventBus.class );
 
         Result result = new Result();
 
@@ -65,7 +64,7 @@ public class CreateTest {
         final Entity entity = new Entity();
 
 
-        final CollectionContext context = mock(CollectionContext.class);
+        final EntityCollection context = mock(EntityCollection.class);
 
         EventCreate createEvent = new EventCreate(context,  entity, result );
         create.performStage( createEvent );

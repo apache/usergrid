@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +10,7 @@ import java.util.UUID;
 import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.migration.CollectionColumnFamily;
 import org.apache.usergrid.persistence.collection.migration.Migration;
@@ -60,7 +59,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch write(final CollectionContext context, final MvccEntity entity ) {
+    public MutationBatch write(final EntityCollection context, final MvccEntity entity ) {
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final UUID colName = entity.getVersion();
@@ -78,7 +77,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MvccEntity load( final CollectionContext context, final UUID entityId, final UUID version ) {
+    public MvccEntity load( final EntityCollection context, final UUID entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -105,7 +104,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public List<MvccEntity> load( final CollectionContext context, final UUID entityId, final UUID version,
+    public List<MvccEntity> load( final EntityCollection context, final UUID entityId, final UUID version,
                                   final int maxSize ) {
 
         Preconditions.checkNotNull( context, "context is required" );
@@ -135,7 +134,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch clear( final CollectionContext context, final UUID entityId, final UUID version ) {
+    public MutationBatch clear( final EntityCollection context, final UUID entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -152,7 +151,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch delete( final CollectionContext context, final UUID entityId, final UUID version ) {
+    public MutationBatch delete( final EntityCollection context, final UUID entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -168,7 +167,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public Collection<CollectionColumnFamily> getColumnFamilies() {
+    public java.util.Collection getColumnFamilies() {
 
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks

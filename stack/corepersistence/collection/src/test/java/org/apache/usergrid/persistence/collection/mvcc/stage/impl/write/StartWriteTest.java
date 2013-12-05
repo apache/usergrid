@@ -8,7 +8,7 @@ import org.mockito.ArgumentCaptor;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -36,7 +36,7 @@ public class StartWriteTest {
     public void testStartStage() throws Exception {
 
 
-        final CollectionContext context = mock( CollectionContext.class );
+        final EntityCollection context = mock( EntityCollection.class );
 
         final CollectionEventBus bus = mock( CollectionEventBus.class );
 
@@ -100,7 +100,7 @@ public class StartWriteTest {
         entity.setVersion( version );
 
 
-        final CollectionContext context = mock( CollectionContext.class );
+        final EntityCollection context = mock( EntityCollection.class );
         final CollectionEventBus eventBus = mock( CollectionEventBus.class );
 
         //mock returning a mock mutation when we do a log entry write
@@ -125,7 +125,7 @@ public class StartWriteTest {
         FieldUtils.writeDeclaredField( entity, "uuid", entityId, true );
 
 
-        final CollectionContext context = mock( CollectionContext.class );
+        final EntityCollection context = mock( EntityCollection.class );
         final CollectionEventBus eventBus = mock( CollectionEventBus.class );
 
 

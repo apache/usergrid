@@ -8,10 +8,7 @@ import java.util.UUID;
  * A context to use when creating the collection manager.  Typically, this would be something like an application, or an
  * organization.  Some context that "owns" the collection
  */
-public interface CollectionContext {
-
-    /** @return The application that will contain this collection */
-    public UUID getApplication();
+public interface EntityCollection {
 
     /**
      * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred).  Usually an application

@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 
 import com.google.common.base.Preconditions;
 
@@ -12,29 +12,20 @@ import com.google.common.base.Preconditions;
  * Simple impl of hte collection context
  * @author tnine
  */
-public class CollectionContextImpl implements CollectionContext {
+public class EntityCollectionImpl implements EntityCollection {
 
-    private final UUID applicationId;
     private final UUID ownerId;
     private final String name;
 
 
-    public CollectionContextImpl( final UUID applicationId, final UUID ownerId, final String name ) {
-        Preconditions.checkNotNull( applicationId , "applicationId is required");
+    public EntityCollectionImpl( final UUID ownerId, final String name ) {
         Preconditions.checkNotNull( ownerId , "ownerId is required");
         Preconditions.checkNotNull( name , "name is required");
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
 
 
-        this.applicationId = applicationId;
         this.ownerId = ownerId;
         this.name = name;
-    }
-
-
-    @Override
-    public UUID getApplication() {
-        return applicationId;
     }
 
 
@@ -59,11 +50,8 @@ public class CollectionContextImpl implements CollectionContext {
             return false;
         }
 
-        final CollectionContextImpl that = ( CollectionContextImpl ) o;
+        final EntityCollectionImpl that = ( EntityCollectionImpl ) o;
 
-        if ( !applicationId.equals( that.applicationId ) ) {
-            return false;
-        }
         if ( !name.equals( that.name ) ) {
             return false;
         }
@@ -77,8 +65,7 @@ public class CollectionContextImpl implements CollectionContext {
 
     @Override
     public int hashCode() {
-        int result = applicationId.hashCode();
-        result = 31 * result + ownerId.hashCode();
+        int result = 31 * ownerId.hashCode();
         result = 31 * result + name.hashCode();
         return result;
     }
@@ -86,9 +73,8 @@ public class CollectionContextImpl implements CollectionContext {
 
     @Override
     public String toString() {
-        return "CollectionContextImpl{" +
-                "applicationId=" + applicationId +
-                ", ownerId=" + ownerId +
+        return "EntityCollectionImpl{" +
+                " ownerId=" + ownerId +
                 ", name='" + name + '\'' +
                 '}';
     }

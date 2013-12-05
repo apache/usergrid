@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 
 
 /** @author tnine */
@@ -38,7 +38,7 @@ public interface ExecutionContext {
      * Return the current collection context
      * @return
      */
-    CollectionContext getCollectionContext();
+    EntityCollection getCollectionContext();
 
 
 

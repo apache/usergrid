@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
@@ -51,12 +51,12 @@ public class Load implements EventStage<EventLoad> {
         Preconditions.checkNotNull( entityId, "Entity id required in the read stage" );
 
 
-        final CollectionContext collectionContext = event.getCollectionContext();
+        final EntityCollection entityCollection = event.getCollectionContext();
 
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();
 
-        List<MvccEntity> results = entitySerializationStrategy.load( collectionContext, entityId, versionMax, 1 );
+        List<MvccEntity> results = entitySerializationStrategy.load( entityCollection, entityId, versionMax, 1 );
 
         //nothing to do, we didn't get a result back
         if ( results.size() != 1 ) {

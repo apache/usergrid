@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -60,16 +60,16 @@ public class Commit implements EventStage<EventCommit> {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final CollectionContext collectionContext = event.getCollectionContext();
+        final EntityCollection entityCollection = event.getCollectionContext();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( collectionContext, startEntry );
+        MutationBatch logMutation = logEntrySerializationStrategy.write( entityCollection, startEntry );
 
         //now get our actual insert into the entity data
-        MutationBatch entityMutation = entitySerializationStrategy.write( collectionContext, entity );
+        MutationBatch entityMutation = entitySerializationStrategy.write( entityCollection, entity );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );

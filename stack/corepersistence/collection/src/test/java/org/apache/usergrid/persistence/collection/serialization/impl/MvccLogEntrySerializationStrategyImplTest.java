@@ -9,9 +9,9 @@ import java.util.UUID;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
@@ -58,7 +58,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        CollectionContext context = new CollectionContextImpl( applicationId, applicationId, name );
+        EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
         final UUID uuid = UUIDGenerator.newTimeUUID();
@@ -86,7 +86,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        CollectionContext context = new CollectionContextImpl( applicationId, applicationId, name );
+        EntityCollection context = new EntityCollectionImpl(  applicationId, name );
 
 
         final UUID uuid = UUIDGenerator.newTimeUUID();
@@ -106,7 +106,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        CollectionContext context = new CollectionContextImpl( applicationId, applicationId, name );
+        EntityCollection context = new EntityCollectionImpl(  applicationId, name );
 
 
         final UUID uuid = UUIDGenerator.newTimeUUID();
@@ -164,7 +164,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        CollectionContext context = new CollectionContextImpl( applicationId, applicationId, name );
+        EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
         final UUID uuid = UUIDGenerator.newTimeUUID();
@@ -203,7 +203,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     @Test( expected = NullPointerException.class )
     public void writeParams() throws ConnectionException {
-        logEntryStrategy.write( mock( CollectionContext.class ), null );
+        logEntryStrategy.write( mock( EntityCollection.class ), null );
     }
 
 
@@ -217,7 +217,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .delete( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
                         null, UUIDGenerator.newTimeUUID() );
     }
 
@@ -226,7 +226,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .delete( new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" ),
                         UUIDGenerator.newTimeUUID(), null );
     }
 
@@ -241,7 +241,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
                         null, UUIDGenerator.newTimeUUID() );
     }
 
@@ -250,7 +250,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
                         UUIDGenerator.newTimeUUID(), null );
     }
 
@@ -265,7 +265,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
                         null, UUIDGenerator.newTimeUUID(), 1 );
     }
 
@@ -274,7 +274,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
                         UUIDGenerator.newTimeUUID(), null, 1 );
     }
 
@@ -283,7 +283,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamSize() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" ),
                         UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 0 );
     }
 

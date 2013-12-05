@@ -12,7 +12,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
  * @author: tnine
  *
  */
-public interface CollectionManager
+public interface EntityCollectionManager
 {
 
     /**

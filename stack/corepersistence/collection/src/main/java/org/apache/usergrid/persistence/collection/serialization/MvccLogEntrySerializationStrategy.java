@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.serialization;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 
 import com.netflix.astyanax.MutationBatch;
@@ -21,7 +21,7 @@ public interface MvccLogEntrySerializationStrategy
      * @param entry the entry to write
      * @return The mutation batch with the mutation operations for this write.
      */
-    public MutationBatch write( final CollectionContext context, MvccLogEntry entry );
+    public MutationBatch write( final EntityCollection context, MvccLogEntry entry );
 
     /**
      * Load and return the stage with the given id and a version that is <= the version provided
@@ -33,7 +33,7 @@ public interface MvccLogEntrySerializationStrategy
      *
      * @return The deserialized version of the log entry.  Null if no version == the current version exists
      */
-    public MvccLogEntry load( final CollectionContext context, final UUID entityId, final UUID version )
+    public MvccLogEntry load( final EntityCollection context, final UUID entityId, final UUID version )
             throws ConnectionException;
 
     /**
@@ -46,7 +46,7 @@ public interface MvccLogEntrySerializationStrategy
      *
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID)
      */
-    public List<MvccLogEntry> load( CollectionContext context, UUID entityId, UUID version, int maxSize )
+    public List<MvccLogEntry> load( EntityCollection context, UUID entityId, UUID version, int maxSize )
             throws ConnectionException;
 
     /**
@@ -56,5 +56,5 @@ public interface MvccLogEntrySerializationStrategy
      * @param entityId The entity id to delete
      * @param version The version to delete
      */
-    public MutationBatch delete( CollectionContext context, UUID entityId, UUID version );
+    public MutationBatch delete( EntityCollection context, UUID entityId, UUID version );
 }

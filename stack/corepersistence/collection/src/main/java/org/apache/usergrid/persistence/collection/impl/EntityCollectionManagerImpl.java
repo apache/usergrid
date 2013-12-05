@@ -6,8 +6,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.CollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
@@ -18,7 +18,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.EventUpd
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -28,17 +27,16 @@ import com.google.inject.assistedinject.Assisted;
  *
  * @author tnine
  */
-public class CollectionManagerImpl implements CollectionManager {
+public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
-    private static final Logger logger = LoggerFactory.getLogger( CollectionManagerImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
 
-    private final CollectionContext context;
+    private final EntityCollection context;
     private final CollectionEventBus eventBus;
 
 
     @Inject
-    public CollectionManagerImpl(  final CollectionEventBus eventBus,
-                                  @Assisted final CollectionContext context ) {
+    public EntityCollectionManagerImpl( final CollectionEventBus eventBus, @Assisted final EntityCollection context ) {
 
         Preconditions.checkNotNull( eventBus, "eventBus must be defined" );
         Preconditions.checkNotNull( context, "context must be defined" );

@@ -3,10 +3,10 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.util.Properties;
 
-import org.apache.usergrid.persistence.collection.CollectionManager;
-import org.apache.usergrid.persistence.collection.CollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
-import org.apache.usergrid.persistence.collection.impl.CollectionManagerImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CollectionPipelineModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
@@ -63,8 +63,8 @@ public class CollectionModule extends AbstractModule {
 
         //create a guice factor for getting our collection manager
         install(new FactoryModuleBuilder()
-             .implement( CollectionManager.class, CollectionManagerImpl.class )
-             .build( CollectionManagerFactory.class ));
+             .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+             .build( EntityCollectionManagerFactory.class ));
 
     }
 }

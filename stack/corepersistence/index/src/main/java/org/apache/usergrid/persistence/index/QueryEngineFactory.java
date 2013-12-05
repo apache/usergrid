@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.index;
 
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 
 
 /**
@@ -17,5 +17,5 @@ public interface QueryEngineFactory
      *
      * @param context The context to use when creating the index manager
      */
-    public QueryEngineFactory createIndexManager( CollectionContext context );
+    public QueryEngineFactory createIndexManager( EntityCollection context );
 }

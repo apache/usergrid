@@ -5,7 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.guiceberry.junit4.GuiceBerryRule;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author tnine
  */
-public class CollectionManagerFactoryTest {
+public class EntityCollectionManagerFactoryTest {
 
 
     @Rule
@@ -28,7 +28,7 @@ public class CollectionManagerFactoryTest {
 
 
     @Inject
-    private CollectionManagerFactory collectionManagerFactory;
+    private EntityCollectionManagerFactory entityCollectionManagerFactory;
 
 
 
@@ -36,17 +36,17 @@ public class CollectionManagerFactoryTest {
     @Test
     public void validInput() {
 
-        CollectionContextImpl context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
+        EntityCollectionImpl context =
+                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
 
-        CollectionManager collectionManager = collectionManagerFactory.createCollectionManager( context );
+        EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager( context );
 
-        assertNotNull( "A collection manager must be returned", collectionManager );
+        assertNotNull( "A collection manager must be returned", entityCollectionManager );
     }
 
 
     @Test( expected = ProvisionException.class )
     public void nullInput() {
-           CollectionManager collectionManager = collectionManagerFactory.createCollectionManager( null );
+           EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager( null );
     }
 }

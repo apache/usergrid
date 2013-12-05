@@ -9,7 +9,7 @@ import org.mockito.ArgumentCaptor;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
 import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
@@ -44,7 +44,7 @@ public class UpdateTest {
         entity.setCreated( createdTime );
 
         final CollectionEventBus eventBus = mock( CollectionEventBus.class );
-        final CollectionContext context = mock( CollectionContext.class );
+        final EntityCollection context = mock( EntityCollection.class );
 
         //mock returning the time
         final TimeService timeService = mock( TimeService.class );
@@ -131,7 +131,7 @@ public class UpdateTest {
 
         final CollectionEventBus eventBus = mock( CollectionEventBus.class );
 
-        final CollectionContext context = mock( CollectionContext.class );
+        final EntityCollection context = mock( EntityCollection.class );
 
 
         //perform the stage

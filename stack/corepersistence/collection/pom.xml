@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <description>The module for handling all collection I/O</description>
+  <description>The module for handling all entityCollection I/O</description>
   <properties>
     <guice.version>3.0</guice.version>
   </properties>

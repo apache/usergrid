@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -70,13 +70,13 @@ public class StartDelete implements EventStage<DeleteStart> {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final CollectionContext collectionContext = event.getCollectionContext();
+        final EntityCollection entityCollection = event.getCollectionContext();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
 
-        MutationBatch write = logStrategy.write( collectionContext, startEntry );
+        MutationBatch write = logStrategy.write( entityCollection, startEntry );
 
 
         try {
@@ -91,6 +91,6 @@ public class StartDelete implements EventStage<DeleteStart> {
         //create the mvcc entity for the next stage
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
-        eventBus.post( new DeleteCommit( collectionContext, nextStage, event.getResult() ) );
+        eventBus.post( new DeleteCommit( entityCollection, nextStage, event.getResult() ) );
     }
 }

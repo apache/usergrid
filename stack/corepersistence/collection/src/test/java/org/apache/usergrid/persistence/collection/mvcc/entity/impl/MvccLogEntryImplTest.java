@@ -5,11 +5,8 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
-import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
@@ -21,27 +18,18 @@ public class MvccLogEntryImplTest {
 
     @Test( expected = NullPointerException.class )
     public void entityIdRequired() {
-        final CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
-
         new MvccLogEntryImpl( null, UUIDGenerator.newTimeUUID(), Stage.ACTIVE );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void versionRequired() {
-        final CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
-
         new MvccLogEntryImpl( UUIDGenerator.newTimeUUID(), null, Stage.ACTIVE );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void stageRequired() {
-        final CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
-
         new MvccLogEntryImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), null );
     }
 

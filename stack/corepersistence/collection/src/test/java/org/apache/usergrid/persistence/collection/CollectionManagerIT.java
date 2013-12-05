@@ -5,8 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.EventCreate;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -34,7 +33,7 @@ public class CollectionManagerIT {
 
 
     @Inject
-    private CollectionManagerFactory factory;
+    private EntityCollectionManagerFactory factory;
 
     @Inject
     private EventBus eventBus;
@@ -43,11 +42,11 @@ public class CollectionManagerIT {
     @Test
     public void create() {
 
-        CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
+        EntityCollection context =
+                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
         Entity newEntity = new Entity( "test" );
 
-        CollectionManager manager = factory.createCollectionManager( context );
+        EntityCollectionManager manager = factory.createCollectionManager( context );
 
         Entity returned = manager.create( newEntity );
 
@@ -62,11 +61,11 @@ public class CollectionManagerIT {
     @Test
     public void createAndLoad() {
 
-        CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
+        EntityCollection context =
+                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
         Entity newEntity = new Entity( "test" );
 
-        CollectionManager manager = factory.createCollectionManager( context );
+        EntityCollectionManager manager = factory.createCollectionManager( context );
 
         Entity createReturned = manager.create( newEntity );
 
@@ -82,11 +81,11 @@ public class CollectionManagerIT {
     @Test
     public void createLoadDelete() {
 
-        CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
+        EntityCollection context =
+                new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" );
         Entity newEntity = new Entity( "test" );
 
-        CollectionManager manager = factory.createCollectionManager( context );
+        EntityCollectionManager manager = factory.createCollectionManager( context );
 
         Entity createReturned = manager.create( newEntity );
 
@@ -108,13 +107,13 @@ public class CollectionManagerIT {
     @Test
     public void createLoadUpdateLoad() {
 
-        CollectionContext context =
-                new CollectionContextImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), "test" );
+        EntityCollection context =
+                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
 
         Entity newEntity = new Entity( "test" );
         newEntity.setField( new IntegerField( "counter", 1 ) );
 
-        CollectionManager manager = factory.createCollectionManager( context );
+        EntityCollectionManager manager = factory.createCollectionManager( context );
 
         Entity createReturned = manager.create( newEntity );
 

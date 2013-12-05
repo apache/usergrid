@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -63,16 +63,16 @@ public class Delete implements EventStage<DeleteCommit> {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final CollectionContext collectionContext = event.getCollectionContext();
+        final EntityCollection entityCollection = event.getCollectionContext();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( collectionContext, startEntry );
+        MutationBatch logMutation = logEntrySerializationStrategy.write( entityCollection, startEntry );
 
         //insert a "cleared" value into the versions.  Post processing should actually delete
-        MutationBatch entityMutation = entitySerializationStrategy.clear( collectionContext, entityId, version );
+        MutationBatch entityMutation = entitySerializationStrategy.clear( entityCollection, entityId, version );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
