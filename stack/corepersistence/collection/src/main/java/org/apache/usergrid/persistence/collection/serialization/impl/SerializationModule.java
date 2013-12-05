@@ -2,7 +2,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
-import org.apache.usergrid.persistence.collection.guice.PropertyUtils;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
@@ -11,7 +10,6 @@ import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySeri
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 import com.netflix.astyanax.Keyspace;
 
 

@@ -8,15 +8,16 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
@@ -28,32 +29,32 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class StartWrite implements ExecutionStage {
+public class StartWrite implements EventStage<EventStart> {
 
     private static final Logger LOG = LoggerFactory.getLogger( StartWrite.class );
 
+    private final CollectionEventBus eventBus;
     private final MvccLogEntrySerializationStrategy logStrategy;
 
 
     /** Create a new stage with the current context */
     @Inject
-    public StartWrite( final MvccLogEntrySerializationStrategy logStrategy ) {
+    public StartWrite( final CollectionEventBus eventBus,
+                       final MvccLogEntrySerializationStrategy logStrategy ) {
+        Preconditions.checkNotNull( eventBus, "eventBus is required" );
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
 
-
+        this.eventBus = eventBus;
         this.logStrategy = logStrategy;
+
+        this.eventBus.register( this );
     }
 
 
-    /**
-     * Create the entity Id  and inject it, as well as set the timestamp versions
-     *
-     * @param executionContext The context of the current write operation
-     */
     @Override
-    public void performStage( final ExecutionContext executionContext ) {
-
-        final Entity entity = executionContext.getMessage( Entity.class );
+    @Subscribe
+    public void performStage( final EventStart event ) {
+        final Entity entity = event.getData();
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
@@ -64,12 +65,11 @@ public class StartWrite implements ExecutionStage {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
+        final CollectionContext collectionContext = event.getCollectionContext();
 
-        final CollectionContext collectionContext = executionContext.getCollectionContext();
 
-
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, org.apache.usergrid.persistence
-                .collection.mvcc.entity.Stage.ACTIVE );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
+                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
 
         MutationBatch write = logStrategy.write( collectionContext, startEntry );
 
@@ -86,7 +86,9 @@ public class StartWrite implements ExecutionStage {
         //create the mvcc entity for the next stage
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
 
-        executionContext.setMessage( nextStage );
-        executionContext.proceed();
+        eventBus.post( new EventVerify( collectionContext, nextStage, event.getResult() ) );
     }
+
+
+
 }

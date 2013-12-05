@@ -8,7 +8,6 @@ import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /** The interface that allows us to serialize an entity to disk */

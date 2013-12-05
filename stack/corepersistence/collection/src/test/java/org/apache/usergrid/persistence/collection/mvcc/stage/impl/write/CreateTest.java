@@ -7,7 +7,10 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import org.apache.usergrid.persistence.collection.CollectionContext;
+import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Create;
 import org.apache.usergrid.persistence.collection.service.TimeService;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
@@ -29,14 +32,6 @@ public class CreateTest {
     @Test
     public void testValidInput() throws ConnectionException, ExecutionException, InterruptedException {
 
-        final ExecutionContext executionContext = mock( ExecutionContext.class );
-
-
-        //set up the mock to return the entity from the start phase
-        final Entity entity = new Entity();
-
-        when( executionContext.getMessage( Entity.class ) ).thenReturn( entity );
-
 
         //mock returning the time
         final TimeService timeService = mock( TimeService.class );
@@ -56,20 +51,34 @@ public class CreateTest {
         //mock the uuid service
         when( uuidService.newTimeUUID() ).thenReturn( newEntityId );
 
+        final CollectionEventBus eventBus = mock(CollectionEventBus.class);
+
+        Result result = new Result();
+
 
         //perform the stage
-        final Create create = new Create( timeService, uuidService );
+        final Create create = new Create(eventBus,  timeService, uuidService );
 
-        create.performStage( executionContext );
+
+
+        //set up the mock to return the entity from the start phase
+        final Entity entity = new Entity();
+
+
+        final CollectionContext context = mock(CollectionContext.class);
+
+        EventCreate createEvent = new EventCreate(context,  entity, result );
+        create.performStage( createEvent );
+
 
 
         //now verify our output was correct
-        ArgumentCaptor<Entity> mvccEntity = ArgumentCaptor.forClass( Entity.class );
+        ArgumentCaptor<EventStart> event = ArgumentCaptor.forClass( EventStart.class );
 
 
-        verify( executionContext ).setMessage( mvccEntity.capture() );
+        verify( eventBus ).post( event.capture() );
 
-        Entity created = mvccEntity.getValue();
+        Entity created = event.getValue().getData();
 
         //verify uuid and version in both the MvccEntity and the entity itself
         assertEquals( "Entity re-set into context", entity, created );
@@ -81,8 +90,6 @@ public class CreateTest {
         assertEquals( "updated time matches generator", time, created.getUpdated() );
 
 
-        //now verify the proceed was called
-        verify( executionContext ).proceed();
     }
 
 
@@ -103,12 +110,15 @@ public class CreateTest {
         //mock the uuid service
         final UUIDService uuidService = mock( UUIDService.class );
 
+        final CollectionEventBus eventBus = mock(CollectionEventBus.class);
+
+
 
         //perform the stage
-        final Create create = new Create( timeService, uuidService );
+        final Create create = new Create( eventBus, timeService, uuidService );
 
         //should throw an NPE
-        create.performStage( executionContext );
+        create.performStage( null );
 
 
     }
@@ -116,20 +126,38 @@ public class CreateTest {
 
     /** Test no time service */
     @Test(expected = NullPointerException.class)
-    public void testNoTimeService() throws ConnectionException, ExecutionException, InterruptedException {
-
-        final ExecutionContext executionContext = mock( ExecutionContext.class );
+    public void testNoEventBus() throws ConnectionException, ExecutionException, InterruptedException {
 
 
-        when( executionContext.getMessage( Entity.class ) ).thenReturn( null );
 
 
         //mock the uuid service
         final UUIDService uuidService = mock( UUIDService.class );
 
+        final TimeService timeService = mock(TimeService.class);
+
+
 
         //perform the stage
-        new Create( null, uuidService );
+        new Create( null, timeService, uuidService );
+    }
+
+
+
+    /** Test no time service */
+    @Test(expected = NullPointerException.class)
+    public void testNoTimeService() throws ConnectionException, ExecutionException, InterruptedException {
+
+
+        final CollectionEventBus eventBus = mock(CollectionEventBus.class);
+
+        //mock the uuid service
+        final UUIDService uuidService = mock( UUIDService.class );
+
+
+
+        //perform the stage
+        new Create( eventBus, null, uuidService );
     }
 
 
@@ -137,10 +165,7 @@ public class CreateTest {
     @Test(expected = NullPointerException.class)
     public void testNoUUIDService() throws ConnectionException, ExecutionException, InterruptedException {
 
-        final ExecutionContext executionContext = mock( ExecutionContext.class );
-
-
-        when( executionContext.getMessage( Entity.class ) ).thenReturn( null );
+        final CollectionEventBus eventBus = mock(CollectionEventBus.class);
 
 
         //mock returning the time
@@ -148,6 +173,6 @@ public class CreateTest {
 
 
         //throw NPE
-        new Create( timeService, null );
+        new Create(eventBus,  timeService, null );
     }
 }

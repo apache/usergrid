@@ -1,15 +1,18 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
+import com.google.common.eventbus.Subscribe;
+
+
 /** The possible stages in our write flow. */
-public interface ExecutionStage {
+public interface EventStage<T extends CollectionEvent> {
 
     /**
      * Run this stage.  This will return the MvccEntity that should be returned or passed to the next stage
      *
-     * @param context The context of the current write operation
+     * @param event The event to receive
      *
-     * @return The asynchronous listener to signal success
      */
-    public void performStage( ExecutionContext context );
+    @Subscribe
+    public void performStage(T event );
 }

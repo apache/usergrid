@@ -6,11 +6,13 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionContextImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.EventCreate;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.test.CassandraRule;
 
+import com.google.common.eventbus.EventBus;
 import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 
@@ -18,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
@@ -32,6 +35,9 @@ public class CollectionManagerIT {
 
     @Inject
     private CollectionManagerFactory factory;
+
+    @Inject
+    private EventBus eventBus;
 
 
     @Test
@@ -135,4 +141,6 @@ public class CollectionManagerIT {
 
         assertEquals("Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ));
     }
+
+
 }

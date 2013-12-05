@@ -1,9 +1,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.event;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-
-
 /**
  *
  * @author: tnine

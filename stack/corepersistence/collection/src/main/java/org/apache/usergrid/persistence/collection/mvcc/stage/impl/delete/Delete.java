@@ -8,22 +8,23 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
+import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
-public class Delete implements ExecutionStage {
+public class Delete implements EventStage<DeleteCommit> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Delete.class );
@@ -34,20 +35,24 @@ public class Delete implements ExecutionStage {
 
     @Inject
     public Delete( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                   final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+                   final MvccEntitySerializationStrategy entitySerializationStrategy,
+                   final CollectionEventBus eventBus ) {
 
         Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
-              Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
+        Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
 
 
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        eventBus.register( this );
     }
 
 
     @Override
-    public void performStage( final ExecutionContext executionContext ) {
-        final MvccEntity entity = executionContext.getMessage( MvccEntity.class );
+    @Subscribe
+    public void performStage( final DeleteCommit event ) {
+
+        final MvccEntity entity = event.getData();
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
@@ -58,11 +63,11 @@ public class Delete implements ExecutionStage {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final CollectionContext collectionContext = executionContext.getCollectionContext();
+        final CollectionContext collectionContext = event.getCollectionContext();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, org.apache.usergrid.persistence
-                .collection.mvcc.entity.Stage.COMMITTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
+                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
         MutationBatch logMutation = logEntrySerializationStrategy.write( collectionContext, startEntry );
 
@@ -84,8 +89,6 @@ public class Delete implements ExecutionStage {
         /**
          * We're done executing.
          */
-        executionContext.proceed();
 
-        //TODO connect to post processors via listener
     }
 }

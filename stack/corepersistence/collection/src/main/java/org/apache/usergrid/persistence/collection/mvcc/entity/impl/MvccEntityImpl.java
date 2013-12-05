@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 

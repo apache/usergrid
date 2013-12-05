@@ -8,17 +8,18 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
@@ -30,36 +31,37 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class StartDelete implements ExecutionStage {
+public class StartDelete implements EventStage<DeleteStart> {
 
     private static final Logger LOG = LoggerFactory.getLogger( StartDelete.class );
 
+    private final CollectionEventBus eventBus;
     private final MvccLogEntrySerializationStrategy logStrategy;
     private final UUIDService uuidService;
 
 
     /** Create a new stage with the current context */
     @Inject
-    public StartDelete( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
-
+    public StartDelete( final CollectionEventBus eventBus, final MvccLogEntrySerializationStrategy logStrategy,
+                        final UUIDService uuidService ) {
+        Preconditions.checkNotNull( eventBus, "eventBus is required" );
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
 
+        this.eventBus = eventBus;
         this.logStrategy = logStrategy;
         this.uuidService = uuidService;
+
+        this.eventBus.register( this );
     }
 
 
-    /**
-     * Create the entity Id  and inject it, as well as set the timestamp versions
-     *
-     * @param executionContext The context of the current write operation
-     */
     @Override
-    public void performStage( final ExecutionContext executionContext ) {
+    @Subscribe
+    public void performStage( final DeleteStart event ) {
 
-        final UUID entityId = executionContext.getMessage( UUID.class );
+        final UUID entityId = event.getData();
 
 
         final UUID version = uuidService.newTimeUUID();
@@ -68,12 +70,11 @@ public class StartDelete implements ExecutionStage {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
+        final CollectionContext collectionContext = event.getCollectionContext();
 
-        final CollectionContext collectionContext = executionContext.getCollectionContext();
 
-
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, org.apache.usergrid.persistence
-                .collection.mvcc.entity.Stage.ACTIVE );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
+                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
 
         MutationBatch write = logStrategy.write( collectionContext, startEntry );
 
@@ -90,7 +91,6 @@ public class StartDelete implements ExecutionStage {
         //create the mvcc entity for the next stage
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
-        executionContext.setMessage( nextStage );
-        executionContext.proceed();
+        eventBus.post( new DeleteCommit( collectionContext, nextStage, event.getResult() ) );
     }
 }

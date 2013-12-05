@@ -8,16 +8,17 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionContext;
 import org.apache.usergrid.persistence.collection.CollectionManager;
+import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.ExecutionContext;
-import org.apache.usergrid.persistence.collection.mvcc.stage.StagePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.read.PipelineLoad;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.PipelineCreate;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.DeletePipeline;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.ExecutionContextImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.PipelineUpdate;
+import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.DeleteStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.read.EventLoad;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.EventCreate;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.EventUpdate;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
+import com.google.common.base.Preconditions;
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -32,23 +33,16 @@ public class CollectionManagerImpl implements CollectionManager {
     private static final Logger logger = LoggerFactory.getLogger( CollectionManagerImpl.class );
 
     private final CollectionContext context;
-    private final StagePipeline createPipeline;
-    private final StagePipeline updatePipeline;
-    private final StagePipeline deletePipeline;
-    private final StagePipeline loadPipeline;
+    private final CollectionEventBus eventBus;
 
 
     @Inject
-    public CollectionManagerImpl( @PipelineCreate final StagePipeline createPipeline,
-                                  @PipelineUpdate final StagePipeline updatePipeline,
-                                  @DeletePipeline final StagePipeline deletePipeline,
-                                  @PipelineLoad final StagePipeline loadPipeline,
+    public CollectionManagerImpl(  final CollectionEventBus eventBus,
                                   @Assisted final CollectionContext context ) {
 
-        this.createPipeline = createPipeline;
-        this.updatePipeline = updatePipeline;
-        this.deletePipeline = deletePipeline;
-        this.loadPipeline = loadPipeline;
+        Preconditions.checkNotNull( eventBus, "eventBus must be defined" );
+        Preconditions.checkNotNull( context, "context must be defined" );
+        this.eventBus = eventBus;
         this.context = context;
     }
 
@@ -56,46 +50,43 @@ public class CollectionManagerImpl implements CollectionManager {
     @Override
     public Entity create( final Entity entity ) {
         // Create a new context for the write
-        ExecutionContext executionContext = new ExecutionContextImpl( createPipeline, context );
+        Result result = new Result();
 
-        //perform the write
-        executionContext.execute( entity );
+        eventBus.post( new EventCreate( context, entity, result ) );
 
-        MvccEntity result = executionContext.getMessage( MvccEntity.class );
+        MvccEntity completed = result.getLast( MvccEntity.class );
 
-        return result.getEntity().get();
+        return completed.getEntity().get();
     }
 
 
     @Override
     public Entity update( final Entity entity ) {
         // Create a new context for the write
-        ExecutionContext executionContext = new ExecutionContextImpl( updatePipeline, context );
+        Result result = new Result();
 
-        //perform the write
-        executionContext.execute( entity );
+        eventBus.post( new EventUpdate( context, entity, result ) );
 
-        MvccEntity result = executionContext.getMessage( MvccEntity.class );
+        MvccEntity completed = result.getLast( MvccEntity.class );
 
-         return result.getEntity().get();
+        return completed.getEntity().get();
     }
 
 
     @Override
     public void delete( final UUID entityId ) {
-        ExecutionContext deleteContext = new ExecutionContextImpl( deletePipeline, context );
-
-        deleteContext.execute( entityId );
+        eventBus.post( new DeleteStart( context, entityId, null ) );
     }
 
 
     @Override
     public Entity load( final UUID entityId ) {
-        ExecutionContext loadContext = new ExecutionContextImpl( loadPipeline, context );
+        Result result = new Result();
 
-        loadContext.execute( entityId );
+        eventBus.post( new EventLoad( context, entityId, result ) );
 
-        return loadContext.getMessage( Entity.class );
+        MvccEntity completed = result.getLast( MvccEntity.class );
 
+        return completed.getEntity().get();
     }
 }
