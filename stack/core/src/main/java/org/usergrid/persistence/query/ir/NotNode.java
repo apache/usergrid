@@ -26,6 +26,7 @@ public class NotNode extends QueryNode {
     public NotNode( QueryNode subtractNode, QueryNode keepNode ) {
         this.subtractNode = subtractNode;
         this.keepNode = keepNode;
+//        throw new RuntimeException( "I'm a not node" );
     }
 
 

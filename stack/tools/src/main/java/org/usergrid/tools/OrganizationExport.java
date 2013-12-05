@@ -4,6 +4,7 @@ package org.usergrid.tools;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
 
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
@@ -56,7 +57,7 @@ public class OrganizationExport extends ExportingToolBase {
 
         CSVWriter writer = new CSVWriter( new FileWriter( outputDir.getAbsolutePath() + "/admins.csv" ), ',' );
 
-        writer.writeNext( new String[] { "Organization Name", "Admin Name", "Admin Email", "Admin Created Date" } );
+        writer.writeNext( new String[] { "Org uuid", "Org Name", "Admin uuid", "Admin Name", "Admin Email", "Admin Created Date" } );
 
         Results organizations = null;
 
@@ -65,9 +66,10 @@ public class OrganizationExport extends ExportingToolBase {
             organizations = getOrganizations( query );
 
             for ( Entity organization : organizations.getEntities() ) {
-                String orgName = organization.getProperty( "path" ).toString();
+                final String orgName = organization.getProperty( "path" ).toString();
+                final UUID orgId = organization.getUuid();
 
-                logger.info( "Org Name: {} key: {}", orgName, organization.getUuid() );
+                logger.info( "Org Name: {} key: {}", orgName, orgId );
 
                 for ( UserInfo user : managementService.getAdminUsersForOrganization( organization.getUuid() ) ) {
 
@@ -75,8 +77,8 @@ public class OrganizationExport extends ExportingToolBase {
 
                     Long createdDate = ( Long ) admin.getProperties().get( "created" );
 
-                    writer.writeNext( new String[] {
-                            orgName, user.getName(), user.getEmail(),
+                    writer.writeNext( new String[] { orgId.toString(),
+                            orgName, user.getUuid().toString(), user.getName(), user.getEmail(),
                             createdDate == null ? "Unknown" : sdf.format( new Date( createdDate ) )
                     } );
                 }

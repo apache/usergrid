@@ -43,6 +43,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
     private CassandraService cass;
     private CounterUtils counterUtils;
     private LockManager lockManager;
+    private int lockTimeout;
 
     public static final StringSerializer se = new StringSerializer();
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -58,10 +59,11 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
      * @param cass the cassandra client pool
      * @param counterUtils the CounterUtils
      */
-    public QueueManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, LockManager lockManager ) {
+    public QueueManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, LockManager lockManager, int lockTimeout ) {
         this.cass = cass;
         this.counterUtils = counterUtils;
         this.lockManager = lockManager;
+        this.lockTimeout = lockTimeout;
     }
 
 
@@ -74,7 +76,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
     @Override
     public QueueManager getQueueManager( UUID applicationId ) {
         QueueManagerImpl qm = new QueueManagerImpl();
-        qm.init( cass, counterUtils, lockManager, applicationId );
+        qm.init( cass, counterUtils, lockManager, applicationId, lockTimeout );
         return qm;
         //return applicationContext.getAutowireCapableBeanFactory()
         //		.createBean(QueueManagerImpl.class)

@@ -150,6 +150,7 @@ public class QueueManagerImpl implements QueueManager {
     private CassandraService cass;
     private CounterUtils counterUtils;
     private LockManager lockManager;
+    private int lockTimeout;
 
     public static final StringSerializer se = new StringSerializer();
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -164,11 +165,12 @@ public class QueueManagerImpl implements QueueManager {
 
 
     public QueueManagerImpl init( CassandraService cass, CounterUtils counterUtils, LockManager lockManager,
-                                  UUID applicationId ) {
+                                  UUID applicationId, int lockTimeout ) {
         this.cass = cass;
         this.counterUtils = counterUtils;
         this.applicationId = applicationId;
         this.lockManager = lockManager;
+        this.lockTimeout = lockTimeout;
         return this;
     }
 
@@ -392,7 +394,7 @@ public class QueueManagerImpl implements QueueManager {
 
         else if ( query.getPosition() == LAST || query.getPosition() == CONSUMER ) {
             if ( query.getTimeout() > 0 ) {
-                search = new ConsumerTransaction( applicationId, ko, lockManager, cass );
+                search = new ConsumerTransaction( applicationId, ko, lockManager, cass, lockTimeout );
             }
             else {
                 search = new NoTransactionSearch( ko );
@@ -1307,7 +1309,7 @@ public class QueueManagerImpl implements QueueManager {
     public UUID renewTransaction( String queuePath, UUID transactionId, QueueQuery query )
             throws TransactionNotFoundException {
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        return new ConsumerTransaction( applicationId, ko, lockManager, cass )
+        return new ConsumerTransaction( applicationId, ko, lockManager, cass, lockTimeout )
                 .renewTransaction( queuePath, transactionId, query );
     }
 
@@ -1327,7 +1329,7 @@ public class QueueManagerImpl implements QueueManager {
     @Override
     public void commitTransaction( String queuePath, UUID transactionId, QueueQuery query ) {
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        new ConsumerTransaction( applicationId, ko, lockManager, cass )
+        new ConsumerTransaction( applicationId, ko, lockManager, cass, lockTimeout )
                 .deleteTransaction( queuePath, transactionId, query );
     }
 
@@ -1343,7 +1345,7 @@ public class QueueManagerImpl implements QueueManager {
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
 
-        return new ConsumerTransaction( applicationId, ko, lockManager, cass )
+        return new ConsumerTransaction( applicationId, ko, lockManager, cass , lockTimeout)
                 .hasOutstandingTransactions( queueId, consumerId );
     }
 

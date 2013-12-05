@@ -40,6 +40,9 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestIT;
 import org.usergrid.rest.TestContextSetup;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
+import org.usergrid.rest.test.resource.mgmt.Organization;
+import org.usergrid.rest.test.security.TestAdminUser;
+import org.usergrid.rest.test.security.TestUser;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.utils.UUIDUtils;
@@ -79,7 +82,7 @@ public class MUUserResourceIT extends AbstractRestIT {
      * From USERGRID-2075
      */
     @Test
-    @Ignore( "aok - check this please" )
+//    @Ignore( "aok - check this please" )
     public void testCaseSensitivityAdminUser() throws Exception {
         LOG.info( "Starting testCaseSensitivityAdminUser()" );
         UserInfo mixcaseUser = setup.getMgmtSvc()
@@ -320,13 +323,26 @@ public class MUUserResourceIT extends AbstractRestIT {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-        JsonNode node = resource().path( "/management/organizations/test-organization" )
-                .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
 
-        // ensure the organization property is included
-        node = resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", adminAccessToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+        /**
+         * Get the original org admin before we overwrite the property as a super user
+         */
+        final TestUser orgAdmin = context.getActiveUser();
+        final String orgName = context.getOrgName();
+        final String superAdminToken = superAdminToken();
+
+        TestAdminUser superAdmin = new TestAdminUser( "super", "super", "superuser@usergrid.com" );
+        superAdmin.setToken( superAdminToken );
+
+        Organization org = context.withUser( superAdmin ).management().orgs().organization( orgName );
+
+        org.put( payload );
+
+
+        //now get the org
+        JsonNode node = context.withUser( orgAdmin ).management().users().user( orgAdmin.getUser() ).get();
+
         logNode( node );
 
         JsonNode applications = node.findValue( "applications" );
@@ -343,19 +359,33 @@ public class MUUserResourceIT extends AbstractRestIT {
     @Test
     public void getUserShallow() throws Exception {
 
+
         // set an organization property
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-        JsonNode node = resource().path( "/management/organizations/test-organization" )
-                .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
 
-        // ensure the organization property is included
-        node = resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", adminAccessToken )
-                .queryParam( "shallow", "true" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+        /**
+         * Get the original org admin before we overwrite the property as a super user
+         */
+        final TestUser orgAdmin = context.getActiveUser();
+        final String orgName = context.getOrgName();
+        final String superAdminToken  = superAdminToken();
+
+        TestAdminUser superAdmin = new TestAdminUser( "super", "super", "superuser@usergrid.com" );
+        superAdmin.setToken( superAdminToken );
+
+        Organization org = context.withUser( superAdmin ).management().orgs().organization( orgName );
+
+        org.put( payload );
+
+
+        //now get the org
+        JsonNode node = context.withUser( orgAdmin ).management().users().user( orgAdmin.getUser() ).withParam(
+                "shallow", "true" ).get();
+
         logNode( node );
 
         JsonNode applications = node.findValue( "applications" );
@@ -405,10 +435,12 @@ public class MUUserResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore( "because of that jstl classloader error thing" )
+//    @Ignore( "because of that jstl classloader error thing" )
     public void checkPasswordReset() throws Exception {
 
-        String email = "test@usergrid.com";
+        TestUser user = context.getActiveUser();
+
+        String email = user.getEmail();
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
         String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
 
@@ -510,10 +542,11 @@ public class MUUserResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore( "because of that jstl classloader error thing" )
+//    @Ignore( "because of that jstl classloader error thing" )
     public void checkPasswordChangeTime() throws Exception {
 
-        String email = "test@usergrid.com";
+        final TestUser user = context.getActiveUser();
+        String email = user.getEmail();
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
         String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
 

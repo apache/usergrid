@@ -306,6 +306,10 @@ public class CassandraService {
         //add the cf
 
         if ( !cfExists( keyspace, cfDef.getName() ) ) {
+
+            //default read repair chance to 0.1
+            cfDef.setReadRepairChance( 0.1d );
+
             cluster.addColumnFamily( cfDef, true );
             logger.info( "Created column family {} in keyspace {}", cfDef.getName(), keyspace );
         }

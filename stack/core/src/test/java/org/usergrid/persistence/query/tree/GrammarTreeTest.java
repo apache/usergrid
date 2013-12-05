@@ -27,9 +27,12 @@ import org.junit.Test;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.exceptions.QueryParseException;
 
+import antlr.NoViableAltException;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 /** @author tnine */
@@ -529,4 +532,26 @@ public class GrammarTreeTest {
         assertEquals( "The query cannot be parsed. The token '<EOF>' " + "at column 13 on line 1 cannot be parsed",
                 error );
     }
+
+    @Test
+       public void badOperand() throws QueryParseException {
+           // from isn't allowed
+           String s = "select * where name != 'bob'";
+
+           String error = null;
+
+           try {
+               Query.fromQL( s );
+               fail("should throw an exception");
+           }
+           catch ( RuntimeException qpe ) {
+               error = qpe.getMessage();
+           }
+
+           assertEquals( "NoViableAltException('!'@[1:1: Tokens : ( T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | LT | LTE | EQ | GT | GTE | BOOLEAN | AND | OR | NOT | ASC | DESC | CONTAINS | WITHIN | OF | UUID | ID | LONG | FLOAT | STRING | WS );])",
+                   error );
+       }
+
+
+
 }

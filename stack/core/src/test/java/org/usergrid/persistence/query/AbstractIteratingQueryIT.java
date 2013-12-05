@@ -1132,6 +1132,69 @@ public abstract class AbstractIteratingQueryIT {
 
 
     /**
+     * Tests that when an empty query is issued, we page through all entities correctly
+     *
+     * @param io the io helper
+     */
+    public void notOrderBy( IoHelper io ) throws Exception {
+
+        io.doSetup();
+
+        /**
+         * Leave this as a large size.  We have to write over 1k to reproduce this issue
+         */
+        int size = 3000;
+
+        long start = System.currentTimeMillis();
+
+        LOG.info( "Writing {} entities.", size );
+
+        for ( int i = 0; i < size; i++ ) {
+            Map<String, Object> entity = new HashMap<String, Object>();
+            entity.put( "name", String.valueOf( i ) );
+            entity.put( "boolean", !(i % 100 == 0));
+            entity.put( "index", i);
+
+            io.writeEntity( entity );
+        }
+
+        long stop = System.currentTimeMillis();
+
+        LOG.info( "Writes took {} ms", stop - start );
+
+        Query query = Query.fromQL("select * where NOT boolean = false order by index asc");
+        query.setLimit( 20 );
+
+        int index = 0;
+        int count = 0;
+
+        Results results;
+
+        start = System.currentTimeMillis();
+
+        do {
+
+            // now do simple ordering, should be returned in order
+            results = io.getResults( query );
+
+            for ( int i = 0; i < results.size(); i++ ) {
+//                assertEquals( String.valueOf( index ), results.getEntities().get( i ).getName() );
+//                index +=2;
+                count++;
+            }
+
+            query.setCursor( results.getCursor() );
+        }
+        while ( results.getCursor() != null );
+
+        stop = System.currentTimeMillis();
+        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+
+        assertEquals( size/2, count );
+    }
+
+
+    /**
      * Interface to abstract actually doing I/O targets. The same test logic can be applied to both collections and
      * connections
      *

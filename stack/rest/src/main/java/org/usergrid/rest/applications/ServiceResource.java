@@ -280,6 +280,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
     @RequireApplicationAccess
     public JSONWithPadding executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )

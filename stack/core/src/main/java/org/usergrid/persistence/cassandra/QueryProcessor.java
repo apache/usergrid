@@ -650,6 +650,15 @@ public class QueryProcessor {
 
     /** @return the pageSizeHint */
     public int getPageSizeHint( QueryNode node ) {
+        /*****
+         * DO NOT REMOVE THIS PIECE OF CODE!!!!!!!!!!!
+         * It is crucial that the root iterator only needs the result set size per page
+         * otherwise our cursor logic will fail when passing cursor data to the leaf nodes
+         *******/
+        if(node == rootNode){
+            return size;
+        }
+
         return pageSizeHint;
     }
 

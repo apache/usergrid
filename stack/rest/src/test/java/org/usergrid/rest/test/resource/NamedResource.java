@@ -28,12 +28,16 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public abstract class NamedResource {
 
     protected static final String SLASH = "/";
 
     protected NamedResource parent;
+
+    protected String accept;
 
 
     /**
@@ -44,7 +48,9 @@ public abstract class NamedResource {
     }
 
 
-    /** Get the url to this resource */
+    /**
+     * Get the url to this resource
+     */
     public String url() {
         StringBuilder buff = new StringBuilder();
         addToUrl( buff );
@@ -52,21 +58,36 @@ public abstract class NamedResource {
     }
 
 
-    /** Get the resource for calling the url.  Will have the token pre-loaded if the token is set */
+    /**
+     * Get the resource for calling the url.  Will have the token pre-loaded if the token is set
+     */
     protected WebResource resource() {
         return parent.resource();
     }
 
 
-    /** Get the token for this request */
+    /**
+     * Get the token for this request
+     */
     protected String token() {
         return parent.token();
     }
 
 
-    /** Set the media type on the webResource */
+    /**
+     * Set the media type on the webResource
+     */
     protected Builder jsonMedia( WebResource resource ) {
-        return resource.accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE );
+
+        Builder builder = resource.type( MediaType.APPLICATION_JSON_TYPE );
+
+        if(accept == null){
+            builder = builder.accept( MediaType.APPLICATION_JSON );
+        } else{
+            builder = builder.accept( accept );
+        }
+
+        return builder;
     }
 
 
@@ -83,37 +104,55 @@ public abstract class NamedResource {
     }
 
 
-    /** Method to add params to the generated url.  Subclasses can override it */
+    public <T extends ValueResource> T withAccept( String accept ) {
+        this.accept = accept;
+        return ( T ) this;
+    }
+
+
+    /**
+     * Method to add params to the generated url.  Subclasses can override it
+     */
     protected WebResource withParams( WebResource resource ) {
         return resource;
     }
 
 
-    /** Get the entity from the entity array in the response */
+    /**
+     * Get the entity from the entity array in the response
+     */
     protected JsonNode getEntity( JsonNode response, int index ) {
         return response.get( "entities" ).get( index );
     }
 
 
-    /** Get the entity from the entity array in the response */
+    /**
+     * Get the entity from the entity array in the response
+     */
     protected JsonNode getEntity( JsonNode response, String name ) {
         return response.get( "entities" ).get( name );
     }
 
 
-    /** Get the uuid from the entity at the specified index */
+    /**
+     * Get the uuid from the entity at the specified index
+     */
     protected UUID getEntityId( JsonNode response, int index ) {
         return UUID.fromString( getEntity( response, index ).get( "uuid" ).asText() );
     }
 
 
-    /** Parse the root response and return each entity as a json node in a list */
+    /**
+     * Parse the root response and return each entity as a json node in a list
+     */
     protected List<JsonNode> getEntries( JsonNode response ) {
         return getNodesAsList( "path", response );
     }
 
 
-    /** Get nodes as a list */
+    /**
+     * Get nodes as a list
+     */
     protected List<JsonNode> getNodesAsList( String path, JsonNode response ) {
         JsonNode entities = response.path( path );
 
@@ -131,12 +170,16 @@ public abstract class NamedResource {
     }
 
 
-    /** Get the error response */
+    /**
+     * Get the error response
+     */
     protected JsonNode getError( JsonNode response ) {
         return response.get( "error" );
     }
 
 
-    /** Add itself to the end of the URL. Should not append a final "/"  Shouldn't ever be used by the client! */
+    /**
+     * Add itself to the end of the URL. Should not append a final "/"  Shouldn't ever be used by the client!
+     */
     public abstract void addToUrl( StringBuilder buffer );
 }
