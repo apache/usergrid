@@ -160,7 +160,7 @@ public class PropagatingResource {
             return metadata;
         }
 
-        @SuppressWarnings("UnusedDeclaration")
+        @SuppressWarnings( "UnusedDeclaration" )
         Map<String,String> getParams() {
             return params;
         }
@@ -181,7 +181,7 @@ public class PropagatingResource {
                 resource = resource.queryParam( paramKey, params.get( paramKey ) );
             }
 
-            Result remoteResult = null;
+            Result remoteResult;
 
             try {
                 remoteResult = resource.accept( MediaType.APPLICATION_JSON_TYPE ).post( BaseResult.class );

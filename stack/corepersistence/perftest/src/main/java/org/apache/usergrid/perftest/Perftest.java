@@ -1,11 +1,19 @@
 package org.apache.usergrid.perftest;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * A performance test that will be run.
  */
 public interface Perftest {
-    int getCallCount();
+    @JsonProperty
+    long getCallCount();
+
+    @JsonProperty
     int getThreadCount();
-    int getDelayBetweenCalls();
+
+    @JsonProperty
+    long getDelayBetweenCalls();
+
     void call();
 }

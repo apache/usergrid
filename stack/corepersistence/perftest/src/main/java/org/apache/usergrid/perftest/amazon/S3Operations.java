@@ -3,15 +3,17 @@ package org.apache.usergrid.perftest.amazon;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import org.apache.usergrid.perftest.settings.PropSettings;
+import org.apache.usergrid.perftest.settings.RunInfo;
+import org.apache.usergrid.perftest.settings.TestInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -65,7 +67,7 @@ public class S3Operations {
             LOG.error( "Failed to create input stream for object.", e );
         }
 
-        LOG.info( "Successfully registered {}", blobName);
+        LOG.info( "Successfully registered {}", blobName );
     }
 
 
@@ -199,5 +201,119 @@ public class S3Operations {
         in.close();
         LOG.info( "Successfully downloaded {} from S3 to {}.", perftest, tempFile.getAbsoluteFile() );
         return tempFile;
+    }
+
+
+    public void uploadRunInfo( Ec2Metadata metadata, TestInfo testInfo, RunInfo runInfo ) {
+        String loadKey = testInfo.getLoadKey();
+        loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
+
+        StringBuilder sb = new StringBuilder();
+        sb.append( loadKey ).append( '/' )
+                .append( "results/" )
+                .append( runInfo.getRunNumber() )
+                .append( "/run-info.json" );
+
+        String blobName = sb.toString();
+        ObjectMapper mapper = new ObjectMapper();
+        ByteArrayInputStream in = null;
+
+        try {
+            byte[] json = mapper.writeValueAsBytes(testInfo);
+            in = new ByteArrayInputStream( json );
+        }
+        catch ( JsonProcessingException e ) {
+            LOG.error("Failed to serialize to JSON TestInfo object {}", testInfo, e);
+        }
+
+        PutObjectRequest putRequest = new PutObjectRequest( PropSettings.getBucket(),
+                blobName, in, new ObjectMetadata() );
+        client.putObject( putRequest );
+
+        LOG.info( "Successfully registered {}", blobName );
+    }
+
+
+    public void uploadResults( Ec2Metadata metadata, TestInfo testInfo, RunInfo runInfo, File results ) {
+        String loadKey = testInfo.getLoadKey();
+        loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
+
+        StringBuilder sb = new StringBuilder();
+        sb.append( loadKey ).append( '/' )
+                .append( "results/" )
+                .append( runInfo.getRunNumber() )
+                .append( '/' )
+                .append( metadata.getPublicHostname() )
+                .append( "-results.log" );
+
+        String blobName = sb.toString();
+        ObjectMapper mapper = new ObjectMapper();
+        ByteArrayInputStream in = null;
+
+        try {
+            byte[] json = mapper.writeValueAsBytes(testInfo);
+            in = new ByteArrayInputStream( json );
+        }
+        catch ( JsonProcessingException e ) {
+            LOG.error("Failed to serialize to JSON TestInfo object {}", testInfo, e);
+        }
+
+        PutObjectRequest putRequest = new PutObjectRequest( PropSettings.getBucket(),
+                blobName, in, new ObjectMetadata() );
+        client.putObject( putRequest );
+
+        LOG.info( "Successfully registered {}", blobName );
+    }
+
+
+    private boolean hasKey( String key ) {
+        ObjectListing listing = client.listObjects( PropSettings.getBucket(), key.toString() );
+
+        do {
+            for ( S3ObjectSummary summary : listing.getObjectSummaries() ) {
+                LOG.debug( "Got key {} while scanning for key {}", summary.getKey() );
+                return true;
+            }
+
+            listing = client.listNextBatchOfObjects( listing );
+        }
+        while ( listing.isTruncated() );
+
+        return false;
+    }
+
+
+    public void uploadTestInfo( TestInfo testInfo ) {
+
+        String loadKey = testInfo.getLoadKey();
+        loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
+
+        StringBuilder sb = new StringBuilder();
+        sb.append( loadKey ).append('/')
+                .append( "results/" )
+                .append( "test-info.json" );
+
+        if ( hasKey( sb.toString() ) ) {
+            LOG.warn( "The key {} already exists for TestInfo - not updating!", sb.toString() );
+            return;
+        }
+
+        String blobName = sb.toString();
+        ObjectMapper mapper = new ObjectMapper();
+        ByteArrayInputStream in = null;
+
+        try {
+            byte[] json = mapper.writeValueAsBytes(testInfo);
+            in = new ByteArrayInputStream( json );
+        }
+        catch ( JsonProcessingException e ) {
+            LOG.error("Failed to serialize to JSON TestInfo object {}", testInfo, e);
+        }
+
+        PutObjectRequest putRequest = new PutObjectRequest( PropSettings.getBucket(),
+                blobName, in, new ObjectMetadata() );
+        client.putObject( putRequest );
+
+        LOG.info( "Successfully saved TestInfo with key {}", blobName );
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.usergrid.perftest.settings.Props;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

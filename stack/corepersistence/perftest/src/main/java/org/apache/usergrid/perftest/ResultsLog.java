@@ -1,5 +1,6 @@
 package org.apache.usergrid.perftest;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -47,5 +48,10 @@ public interface ResultsLog {
     long getResultCount();
 
 
+    /**
+     * Gets the path to the results log file.
+     *
+     * @return the local system path to the results log file
+     */
     String getPath();
 }

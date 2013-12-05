@@ -20,19 +20,21 @@
 package org.apache.usergrid.perftest.rest;
 
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import org.apache.usergrid.perftest.amazon.AmazonS3Service;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Set;
+
+import org.apache.usergrid.perftest.amazon.AmazonS3Service;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 
 /**
- * ...
+ * Lists all the tests that have been uploaded to S3 which can be loaded.
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
@@ -40,8 +42,9 @@ import java.util.Set;
 public class TestsResource {
     private final AmazonS3Service service;
 
+
     @Inject
-    public TestsResource(AmazonS3Service service) {
+    public TestsResource( AmazonS3Service service ) {
         this.service = service;
     }
 

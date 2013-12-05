@@ -27,15 +27,32 @@ class LockableInputStream extends FileInputStream {
     private final Object lock = new Object();
     private long readCount = 0;
 
+
+    /**
+     * Creates a FileInputStream that blocks near the specified byte count limit only
+     * to be unblocked after a call to deactivateLimit().
+     *
+     * @param file the file to read
+     * @param limit the limit in bytes to block at
+     * @throws FileNotFoundException
+     */
     public LockableInputStream( File file, long limit ) throws FileNotFoundException {
         super( file );
         this.limit = limit;
     }
 
-    private void block( int nextAdvance ) {
-        boolean atLimit = readCount >= ( limit - nextAdvance );
 
-        if ( atLimit ) {
+    /**
+     * Used internally to block (trap) all read method calls.
+     *
+     * @param nextAdvance the amount of bytes the read call was about to advance before
+     *                    getting trapped by this block call
+     */
+    private void block( int nextAdvance ) {
+        boolean nearLimit = readCount >= ( limit - nextAdvance );
+        boolean overtLimit = readCount > limit;
+
+        if ( nearLimit && ! overtLimit ) {
             synchronized ( lock ) {
                 blocked.compareAndSet( false, true );
                 lock.notify();
@@ -48,8 +65,7 @@ class LockableInputStream extends FileInputStream {
             return;
         }
 
-        while ( atLimit && limitActive.get() )
-        {
+        while ( nearLimit && limitActive.get() ) {
             synchronized ( lock ) {
                 try {
                     lock.wait( 100 );
@@ -66,7 +82,9 @@ class LockableInputStream extends FileInputStream {
 
 
     /**
-     * Calling Thread will block until this stream reads to the limit where it blocks.
+     * Any calling Thread will block on this method until this LockableInputStream reads
+     * to the limit where it must block. This is useful for having another thread join
+     * this point.
      *
      * @throws InterruptedException
      */
@@ -80,9 +98,17 @@ class LockableInputStream extends FileInputStream {
         }
     }
 
+
+    /**
+     * Checks to see if this stream is currently blocked at it's limit which is still
+     * active.
+     *
+     * @return true if blocked, false otherwise
+     */
     public boolean isBlockedAtLimit() {
         return blocked.get();
     }
+
 
     public void deactivateLimit() {
         synchronized ( lock ) {
@@ -92,10 +118,19 @@ class LockableInputStream extends FileInputStream {
         }
     }
 
+
+    /**
+     * Gets the current read count, meaning the number of bytes this stream has read
+     * since it was opened.
+     *
+     * @return the number of bytes currently read
+     */
     public long getReadCount() {
         return readCount;
     }
 
+
+    @Override
     public int read() throws IOException {
         block( 1 );
         int ii = super.read();
@@ -103,6 +138,8 @@ class LockableInputStream extends FileInputStream {
         return ii;
     }
 
+
+    @Override
     public int read( byte[] b ) throws IOException {
         if ( b != null ) {
             block( b.length );
@@ -113,6 +150,8 @@ class LockableInputStream extends FileInputStream {
         return ii;
     }
 
+
+    @Override
     public int read( byte[] b, int off, int length ) throws IOException {
         block( length );
 

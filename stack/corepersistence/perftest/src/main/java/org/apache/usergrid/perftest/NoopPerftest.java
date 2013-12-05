@@ -30,7 +30,7 @@ public class NoopPerftest implements Perftest {
 
 
     @Override
-    public int getCallCount() {
+    public long getCallCount() {
         return 1000;
     }
 
@@ -42,7 +42,7 @@ public class NoopPerftest implements Perftest {
 
 
     @Override
-    public int getDelayBetweenCalls() {
+    public long getDelayBetweenCalls() {
         return 0;
     }
 

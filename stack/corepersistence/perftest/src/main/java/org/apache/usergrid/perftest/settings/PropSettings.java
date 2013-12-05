@@ -1,6 +1,10 @@
-package org.apache.usergrid.perftest.amazon;
+package org.apache.usergrid.perftest.settings;
 
 import com.netflix.config.DynamicPropertyFactory;
+import org.apache.usergrid.perftest.NoopPerftestModule;
+import org.apache.usergrid.perftest.settings.Props;
+
+import java.util.Date;
 
 /**
  * Easy access to dynamic properties. Make sure we do not cache values
@@ -114,5 +118,41 @@ public class PropSettings implements Props {
 
     public static long getRecoveryRetryDelay() {
         return DynamicPropertyFactory.getInstance().getLongProperty( DELAY_RETRY_KEY, DEFAULT_DELAY_RETRY ).get();
+    }
+
+
+    public static String getPerftestVersion() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( PERFTEST_VERSION_KEY, "1.0" ).get();
+    }
+
+
+    public static String getCreateTimestamp() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( CREATE_TIMESTAMP_KEY,  "none" ).get();
+    }
+
+
+    public static String getGitUuid() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( GIT_UUID_KEY, "none" ).get();
+    }
+
+
+    public static String getGitUrl() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( GIT_URL_KEY, "none" ).get();
+    }
+
+
+    public static String getGroupId() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( GROUP_ID_KEY, "none" ).get();
+    }
+
+
+    public static String getArtifactId() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( ARTIFACT_ID_KEY, "none" ).get();
+    }
+
+
+    public static String getTestModuleFqcn() {
+        return DynamicPropertyFactory.getInstance().getStringProperty( TEST_MODULE_FQCN_KEY,
+                NoopPerftestModule.class.getCanonicalName() ).get();
     }
 }

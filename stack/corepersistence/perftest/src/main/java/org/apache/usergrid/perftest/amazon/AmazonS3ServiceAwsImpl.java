@@ -23,6 +23,8 @@ package org.apache.usergrid.perftest.amazon;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.perftest.settings.PropSettings;
+import org.apache.usergrid.perftest.settings.Props;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,6 @@ public class AmazonS3ServiceAwsImpl implements AmazonS3Service, Runnable, Props 
     private S3Operations operations;
     private Ec2Metadata metadata;
     private Map<String, Ec2Metadata> runners = new HashMap<String, Ec2Metadata>();
-    private Set<String> tests = new HashSet<String>();
     private final Object lock = new Object();
     private final AmazonS3Client client;
 
@@ -143,7 +144,7 @@ public class AmazonS3ServiceAwsImpl implements AmazonS3Service, Runnable, Props 
     @Override
     public Set<String> listTests()
     {
-        return tests;
+        return operations.getTests();
     }
 
 
@@ -157,13 +158,6 @@ public class AmazonS3ServiceAwsImpl implements AmazonS3Service, Runnable, Props 
                     for ( String runner : runners.keySet() )
                     {
                         LOG.info( "Found runner: {}", runner );
-                    }
-
-                    tests = operations.getTests();
-                    LOG.info( "Tests updated" );
-                    for ( String test : tests )
-                    {
-                        LOG.info( "Found test: {}", test );
                     }
 
                     lock.wait( PropSettings.getScanPeriod() );

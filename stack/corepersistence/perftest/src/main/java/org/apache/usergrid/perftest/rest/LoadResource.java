@@ -28,8 +28,8 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.usergrid.perftest.PerftestRunner;
 import org.apache.usergrid.perftest.amazon.AmazonS3Service;
-import org.apache.usergrid.perftest.amazon.PropSettings;
-import org.apache.usergrid.perftest.amazon.Props;
+import org.apache.usergrid.perftest.settings.PropSettings;
+import org.apache.usergrid.perftest.settings.Props;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +108,7 @@ public class LoadResource extends PropagatingResource {
         }
 
         try {
-            deploy( perftest );
+            deploy(perftest);
             return new BaseResult( getEndpointUrl(), true, "reload started" );
         }
         catch ( Exception e ) {

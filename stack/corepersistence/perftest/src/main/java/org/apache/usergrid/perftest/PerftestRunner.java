@@ -1,15 +1,19 @@
 package org.apache.usergrid.perftest;
 
 
+import org.apache.usergrid.perftest.amazon.S3Operations;
 import org.apache.usergrid.perftest.rest.CallStatsSnapshot;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import org.apache.usergrid.perftest.settings.RunInfo;
+import org.apache.usergrid.perftest.settings.TestInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +27,7 @@ public class PerftestRunner implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger( PerftestRunner.class );
 
 
-    private final TestModuleLoader loader;
+    private final S3Operations operations;
     private final Injector injector;
     private final Object lock = new Object();
     private DynamicLongProperty sleepToStop =
@@ -37,13 +41,18 @@ public class PerftestRunner implements Runnable {
     private long startTime;
     private long stopTime;
 
+    private final TestInfo testInfo;
+    private RunInfo runInfo;
+
 
     @Inject
-    public PerftestRunner( Injector injector, TestModuleLoader loader )
+    public PerftestRunner( Injector injector, TestModuleLoader loader, S3Operations operations )
     {
-        this.loader = loader;
         this.injector = injector;
-        setup();
+        this.operations = operations;
+        test = loader.getChildInjector().getInstance( Perftest.class );
+        testInfo = new TestInfo( test, loader.getTestModule() );
+        testInfo.setLoadTime( new Date().toString() );
     }
 
 
@@ -59,16 +68,27 @@ public class PerftestRunner implements Runnable {
                 stats.reset();
             }
 
-            stats = injector.getInstance( CallStats.class );
-            test = loader.getChildInjector().getInstance( Perftest.class );
+            stats = injector.getInstance(CallStats.class);
             executorService = Executors.newFixedThreadPool( test.getThreadCount() );
             needsReset = false;
+
+            if ( runInfo == null ) {
+                runInfo = new RunInfo( 0 );
+            }
+            else {
+                runInfo = new RunInfo( runInfo.getRunNumber() );
+            }
         }
     }
 
 
     public CallStatsSnapshot getCallStatsSnapshot() {
         return stats.getStatsSnapshot( isRunning(), getStartTime(), getStopTime() );
+    }
+
+
+    public RunInfo getRunInfo() {
+        return runInfo;
     }
 
 
@@ -127,6 +147,9 @@ public class PerftestRunner implements Runnable {
                 PerftestRunner.this.running = false;
                 PerftestRunner.this.needsReset = true;
                 stopTime = System.nanoTime();
+
+                operations.uploadResults( testInfo, runInfo, stats.getResultsFile() );
+                testInfo.addRunInfo( runInfo );
             }
         } ).start();
     }
@@ -154,7 +177,7 @@ public class PerftestRunner implements Runnable {
 
     @Override
     public void run() {
-        int delay = test.getDelayBetweenCalls();
+        long delay = test.getDelayBetweenCalls();
 
         while( ( ! stopSignal ) && ( stats.getCallCount() < test.getCallCount() ) ) {
             long startTime = System.nanoTime();

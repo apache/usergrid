@@ -5,9 +5,11 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import org.apache.usergrid.perftest.settings.PropSettings;
+import org.apache.usergrid.perftest.settings.Props;
 
 
-public class AmazonS3Module extends AbstractModule implements Props{
+public class AmazonS3Module extends AbstractModule implements Props {
     private AmazonS3Client client;
 
 

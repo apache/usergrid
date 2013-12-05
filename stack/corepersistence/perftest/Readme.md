@@ -9,7 +9,7 @@ API that operates against a clustered data storage layer like Cassandra.
 
 The framework simply executes a number of calls which you specify using a 
 Perftest implementation class. This class specifies all the parameters as 
-methods and is construct by the framework using a TestModule (a guice module)
+methods and is construct by the framework using a TestModule (a guice userModule)
 which you also provide.
 
 The framework simply loads your TestModule and uses its Guice Injector to 

@@ -25,6 +25,7 @@ import org.apache.usergrid.perftest.rest.CallStatsSnapshot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -100,6 +101,10 @@ public class CallStats {
         }
     }
 
+
+    public File getResultsFile() {
+        return new File( log.getPath() );
+    }
 
     public void stop() {
         log.close();

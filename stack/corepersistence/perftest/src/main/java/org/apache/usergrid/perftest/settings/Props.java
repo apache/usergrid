@@ -1,4 +1,4 @@
-package org.apache.usergrid.perftest.amazon;
+package org.apache.usergrid.perftest.settings;
 
 /**
  *
@@ -45,4 +45,20 @@ public interface Props {
     String DELAY_RETRY_KEY = "recovery.retry.delay";
     /** default for the time to wait in milliseconds between retry recovery operations */
     long DEFAULT_DELAY_RETRY = 10000;
+
+
+    String PERFTEST_VERSION_KEY = "perftest.version";
+
+    String CREATE_TIMESTAMP_KEY = "create.timestamp";
+
+    String GIT_UUID_KEY = "git.uuid";
+
+    String GIT_URL_KEY = "git.url";
+
+    String GROUP_ID_KEY = "group.id";
+
+    String ARTIFACT_ID_KEY = "artifact.id";
+
+    String TEST_MODULE_FQCN_KEY = "test.module.fqcn";
+
 }

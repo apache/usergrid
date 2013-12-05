@@ -60,12 +60,21 @@ public class StartResource extends PropagatingResource {
             return new BaseResult( getEndpointUrl(), false, "reset needed - but save the last run data first!" );
         }
 
-        runner.start();
-
         if ( propagate == Boolean.FALSE )
         {
+            runner.start();
             return new BaseResult( getEndpointUrl(), true, "successfully started" );
         }
+
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep( 500L );
+                } catch (InterruptedException e) { }
+                runner.start();
+            }
+        }).start();
 
         return propagate( true, "successfully started" );
     }

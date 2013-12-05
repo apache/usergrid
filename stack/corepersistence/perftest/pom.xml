@@ -153,8 +153,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-guice</artifactId>
+      <groupId>com.fasterxml.jackson.userModule</groupId>
+      <artifactId>jackson-userModule-guice</artifactId>
       <version>${fastxml.version}</version>
     </dependency>
 
