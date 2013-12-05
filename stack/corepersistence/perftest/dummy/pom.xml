@@ -12,7 +12,17 @@
   <packaging>jar</packaging>
   <name>Dummy Test</name>
 
+  <properties>
+    <guice.version>3.0</guice.version>
+  </properties>
+
   <dependencies>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -26,29 +36,18 @@
       <plugin>
         <groupId>org.apache.usergrid.perftest</groupId>
         <artifactId>perftest-maven-plugin</artifactId>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
         <configuration>
-          <accessKey>${accessKey}</accessKey>
-          <secretKey>${secretKey}</secretKey>
-          <bucketName>perftest-uploadplugin-test</bucketName>
-          <gitConfigDirectory>${project.parent.basedir}/.git</gitConfigDirectory>
-          <perftestFormation>perftestform</perftestFormation>
-          <managerAppUsername>managerusername</managerAppUsername>
-          <managerAppPassword>managerpass</managerAppPassword>
-          <testModuleFQCN>testmodfqcn</testModuleFQCN>
+          <accessKey>${aws.s3.key}</accessKey>
+          <secretKey>${aws.s3.secret}</secretKey>
+          <bucketName>perftest-bucket</bucketName>
+          <gitConfigDirectory>${project.parent.basedir}../../../../.git</gitConfigDirectory>
+          <perftestFormation>${perftest.formation}</perftestFormation>
+          <managerAppUsername>admin</managerAppUsername>
+          <managerAppPassword>${manager.app.password}</managerAppPassword>
+          <testModuleFQCN>org.apache.usergrid.perftest.DummyModule</testModuleFQCN>
           <failIfCommitNecessary>false</failIfCommitNecessary>
         </configuration>
-        <!-- We run the execution goal manually after build, since this project is under the same root pom
-            as the plugin's. You can uncomment the following execution block to run plugin goal automatically -->
-        <!-- <executions>
-          <execution>
-            <id>UploadWarToS3</id>
-            <phase>test</phase>
-            <goals>
-              <goal>perftest-war</goal>
-            </goals>
-          </execution>
-        </executions>-->
       </plugin>
     </plugins>
   </build>
