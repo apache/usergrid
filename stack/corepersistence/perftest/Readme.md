@@ -21,7 +21,7 @@ Perftest instance.
 
 The following endpoints are used to control the framework:
 
- * /perftest/startWrite
+ * /perftest/writeStart
  * /perftest/stop
  * /perftest/reset
  * /perftest/stats
@@ -29,7 +29,7 @@ The following endpoints are used to control the framework:
 The following ascii text shows the states of the framework which one can 
 go through while issuing POSTs to the end points above:
 
-            startWrite           stop
+            writeStart           stop
     +-----+       +-------+     +-------+
  ---+ready+-------+running+-----+stopped|
     +--+--+       +-------+     +---+---+

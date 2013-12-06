@@ -14,12 +14,12 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.netflix.astyanax.MutationBatch;
 
 import rx.Observable;
+import rx.util.functions.Func1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class WriteStartTest {
+public class WriteStartTest extends AbstractEntityStageTest {
 
     /** Standard flow */
     @Test
@@ -78,116 +78,20 @@ public class WriteStartTest {
     }
 
 
-    /** Test no entity id on the entity */
-    @Test( expected = NullPointerException.class )
-    public void testNoEntityId() throws Exception {
+    protected Entity generateEntity() throws IllegalAccessException {
+            final Entity entity = new Entity( "test" );
+            final UUID version = UUIDGenerator.newTimeUUID();
+
+            EntityUtils.setVersion( entity, version );
+
+            return entity;
+        }
 
 
-        final Id entityId = mock( Id.class );
-
-        when( entityId.getUuid() ).thenReturn( null );
-        when( entityId.getType() ).thenReturn( "test" );
-
-        final Entity entity = new Entity( entityId );
-
-
-        final EntityCollection context = mock( EntityCollection.class );
-
-
-        //mock returning a mock mutation when we do a log entry write
+    @Override
+    protected Func1<IoEvent<Entity>, ?> getInstance() {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
-
-        //run the stage
-        WriteStart newStage = new WriteStart( logStrategy );
-
-        newStage.call( new IoEvent<Entity>( context, entity ) );
-    }
-
-
-    /** Test no entity id on the entity */
-    @Test( expected = IllegalArgumentException.class )
-    public void testWrongEntityType() throws Exception {
-
-
-        final Id entityId = mock( Id.class );
-
-        //set this to a non time uuid
-        when( entityId.getUuid() ).thenReturn( UUID.randomUUID() );
-        when( entityId.getType() ).thenReturn( "test" );
-
-        final Entity entity = new Entity( entityId );
-
-
-        final EntityCollection context = mock( EntityCollection.class );
-
-
-        //mock returning a mock mutation when we do a log entry write
-        final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
-
-        //run the stage
-        WriteStart newStage = new WriteStart( logStrategy );
-
-        newStage.call( new IoEvent<Entity>( context, entity ) );
-    }
-
-
-    /** Test no entity id on the entity */
-    @Test( expected = NullPointerException.class )
-    public void testNoEntityType() throws Exception {
-
-        final Id entityId = mock( Id.class );
-
-        when( entityId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-        when( entityId.getType() ).thenReturn( null );
-
-        final Entity entity = new Entity( entityId );
-
-
-        final EntityCollection context = mock( EntityCollection.class );
-
-
-        //mock returning a mock mutation when we do a log entry write
-        final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
-
-        //run the stage
-        WriteStart newStage = new WriteStart( logStrategy );
-
-        newStage.call( new IoEvent<Entity>( context, entity ) );
-    }
-
-
-    /** Test no entity id on the entity */
-    @Test( expected = NullPointerException.class )
-    public void testNoVersionEntityType() throws Exception {
-
-        final Id entityId = mock( Id.class );
-
-        when( entityId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-        when( entityId.getType() ).thenReturn( "test" );
-
-        final Entity entity = new Entity( entityId );
-
-
-        final EntityCollection context = mock( EntityCollection.class );
-
-
-        //mock returning a mock mutation when we do a log entry write
-        final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
-
-        //run the stage
-        WriteStart newStage = new WriteStart( logStrategy );
-
-        newStage.call( new IoEvent<Entity>( context, entity ) );
-    }
-
-
-    private Entity generateEntity() throws IllegalAccessException {
-        final Entity entity = new Entity( "test" );
-        final UUID version = UUIDGenerator.newTimeUUID();
-
-        EntityUtils.setVersion( entity, version );
-
-        return entity;
+        return new WriteStart( logStrategy );
     }
 }
 
