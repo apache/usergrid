@@ -1,8 +1,6 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.model.entity.Id;
 
 

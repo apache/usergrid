@@ -131,7 +131,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
 
         for ( Column<UUID> col : columns ) {
-            results.add( new MvccEntityImpl( entityId, col.getName(), getEntity( col , entityId ) ) );
+            results.add( new MvccEntityImpl( entityId, col.getName(), getEntity( col, entityId ) ) );
         }
 
         return results;
@@ -195,12 +195,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    /**
-     * Set the id into the entity if it exists and return it.
-     * @param column
-     * @param entityId
-     * @return
-     */
+    /** Set the id into the entity if it exists and return it. */
     private Optional<Entity> getEntity( final Column<UUID> column, final Id entityId ) {
         final Optional<Entity> deSerialized = column.getValue( SER );
 

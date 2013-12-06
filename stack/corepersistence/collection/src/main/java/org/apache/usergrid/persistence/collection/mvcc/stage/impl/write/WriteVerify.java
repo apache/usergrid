@@ -13,10 +13,10 @@ import rx.util.functions.Func1;
 
 /** This phase should execute any verification on the MvccEntity */
 @Singleton
-public class Verify implements Func1<IoEvent<MvccEntity>, Observable<IoEvent<MvccEntity>>> {
+public class WriteVerify implements Func1<IoEvent<MvccEntity>, Observable<IoEvent<MvccEntity>>> {
 
-   @Inject
-    public Verify( ) {
+    @Inject
+    public WriteVerify() {
     }
 
 

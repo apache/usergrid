@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
@@ -32,22 +31,21 @@ public class EntityCollectionManagerFactoryTest {
     private EntityCollectionManagerFactory entityCollectionManagerFactory;
 
 
-
-
     @Test
     public void validInput() {
 
-        EntityCollectionImpl context =
-                new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        EntityCollectionImpl context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
 
-        EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager( context );
+        EntityCollectionManager entityCollectionManager =
+                entityCollectionManagerFactory.createCollectionManager( context );
 
         assertNotNull( "A collection manager must be returned", entityCollectionManager );
     }
 
 
-    @Test( expected = ProvisionException.class )
+    @Test(expected = ProvisionException.class)
     public void nullInput() {
-           EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager( null );
+        EntityCollectionManager entityCollectionManager =
+                entityCollectionManagerFactory.createCollectionManager( null );
     }
 }

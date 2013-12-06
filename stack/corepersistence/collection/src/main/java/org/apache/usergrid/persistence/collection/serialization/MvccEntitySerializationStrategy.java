@@ -12,16 +12,16 @@ import com.netflix.astyanax.MutationBatch;
 
 
 /** The interface that allows us to serialize an entity to disk */
-public interface MvccEntitySerializationStrategy
-{
+public interface MvccEntitySerializationStrategy {
 
     /**
      * Serialize the entity to the data store with the given collection context
      *
      * @param entity The entity to persist
+     *
      * @return The MutationBatch operations for this update
      */
-    public MutationBatch write(EntityCollection context, MvccEntity entity );
+    public MutationBatch write( EntityCollection context, MvccEntity entity );
 
 
     /**
@@ -31,9 +31,8 @@ public interface MvccEntitySerializationStrategy
      * @param entityId The entity id to load
      * @param version The version to load.  This will return the version <= the given version
      *
-     * @return The deserialized version of the entity.  Null if no version == to version exists.
-     * If the entity version has been cleared, the MvccEntity will be returned, but the optional entity
-     * will not be set
+     * @return The deserialized version of the entity.  Null if no version == to version exists. If the entity version
+     *         has been cleared, the MvccEntity will be returned, but the optional entity will not be set
      */
     public MvccEntity load( EntityCollection context, Id entityId, UUID version );
 
@@ -45,23 +44,18 @@ public interface MvccEntitySerializationStrategy
      * @param version The max version to seek from.  I.E a stored version <= this argument
      * @param maxSize The maximum size to return.  If you receive this size, there may be more versions to load.
      *
-     * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null safe
-     * and return an empty list when there are no matches
+     * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null
+     *         safe and return an empty list when there are no matches
      */
     public List<MvccEntity> load( EntityCollection context, Id entityId, UUID version, int maxSize );
 
 
     /**
-     * Delete this version from the persistence store, but keep the version to mark that is has been cleared
-     * This can be used in a mark+sweep system.  The entity with the given version will exist in the context,
-     * but no data will be stored
-     *
-     * @param context
-     * @param entityId
-     * @param version
-     * @return
+     * Delete this version from the persistence store, but keep the version to mark that is has been cleared This can be
+     * used in a mark+sweep system.  The entity with the given version will exist in the context, but no data will be
+     * stored
      */
-    public MutationBatch clear(EntityCollection context, Id entityId, UUID version);
+    public MutationBatch clear( EntityCollection context, Id entityId, UUID version );
 
 
     /**
@@ -72,6 +66,4 @@ public interface MvccEntitySerializationStrategy
      * @param version The version to delete
      */
     public MutationBatch delete( EntityCollection context, Id entityId, UUID version );
-
-
 }

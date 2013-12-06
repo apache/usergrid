@@ -6,11 +6,10 @@ import org.apache.usergrid.persistence.model.field.Field;
 
 
 /** Interface to define how unique updates should be performed */
-public interface UniqueUpdate
-{
+public interface UniqueUpdate {
 
     /**
-     * Verify the entity we're trying to write in our current context has the correct most current version
+     * WriteVerify the entity we're trying to write in our current context has the correct most current version
      *
      * @param context The mvcc context
      * @param uniqueField The field to check for uniqueness

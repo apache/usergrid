@@ -56,7 +56,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void createAndDelete() throws ConnectionException {
 
-       final Id applicationId = new SimpleId("application");
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
@@ -84,11 +84,11 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void loadNoData() throws ConnectionException {
 
-       final Id applicationId = new SimpleId("application");
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        EntityCollection context = new EntityCollectionImpl(  applicationId, name );
+        EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -104,11 +104,11 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void getMultipleEntries() throws ConnectionException {
 
-       final Id applicationId = new SimpleId("application");
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        EntityCollection context = new EntityCollectionImpl(  applicationId, name );
+        EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -162,7 +162,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void transientTimeout() throws ConnectionException, InterruptedException {
 
-       final Id applicationId = new SimpleId("application");
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
@@ -203,7 +203,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void writeParams() throws ConnectionException {
         logEntryStrategy.write( mock( EntityCollection.class ), null );
     }
@@ -218,9 +218,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
-        logEntryStrategy
-                .delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
-                        null, UUIDGenerator.newTimeUUID() );
+        logEntryStrategy.delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null,
+                UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -228,8 +227,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new EntityCollectionImpl(  new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), null );
+                .delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -243,8 +241,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl(new SimpleId( "test" ), "test" ),
-                        null, UUIDGenerator.newTimeUUID() );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -252,8 +249,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), null );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -267,8 +263,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
-                        null, UUIDGenerator.newTimeUUID(), 1 );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
+                        1 );
     }
 
 
@@ -276,17 +272,15 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), null, 1 );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
-        logEntryStrategy
-                .load( new EntityCollectionImpl(  new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 0 );
+        logEntryStrategy.load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
+                UUIDGenerator.newTimeUUID(), 0 );
     }
 
 

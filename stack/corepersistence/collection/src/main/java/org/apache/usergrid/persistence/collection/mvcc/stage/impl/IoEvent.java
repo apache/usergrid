@@ -18,7 +18,7 @@ public class IoEvent<T> {
     }
 
 
-    public EntityCollection getContext() {
+    public EntityCollection getEntityCollection() {
         return context;
     }
 

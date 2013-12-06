@@ -194,7 +194,7 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( entityId, returned.getId() );
 
         //check the target entity has the right id
-        assertEquals(entityId, returned.getEntity().get().getId());
+        assertEquals( entityId, returned.getEntity().get().getId() );
 
 
         //now clear it
@@ -298,10 +298,8 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( id, entities.get( 0 ).getId() );
 
 
-
         assertEquals( returnedV2, entities.get( 1 ) );
         assertEquals( id, entities.get( 1 ).getId() );
-
 
 
         assertEquals( returnedV1, entities.get( 2 ) );
@@ -329,25 +327,25 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void writeParamsContext() throws ConnectionException {
         serializationStrategy.write( null, mock( MvccEntity.class ) );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void writeParamsEntity() throws ConnectionException {
         serializationStrategy.write( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void deleteParamContext() throws ConnectionException {
         serializationStrategy.delete( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
         serializationStrategy.delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null,
@@ -355,7 +353,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void deleteParamVersion() throws ConnectionException {
 
         serializationStrategy
@@ -363,13 +361,13 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void loadParamContext() throws ConnectionException {
         serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void loadParamEntityId() throws ConnectionException {
 
         serializationStrategy
@@ -377,7 +375,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void loadParamVersion() throws ConnectionException {
 
         serializationStrategy
@@ -385,13 +383,13 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void loadListParamContext() throws ConnectionException {
         serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void loadListParamEntityId() throws ConnectionException {
 
         serializationStrategy
@@ -400,7 +398,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void loadListParamVersion() throws ConnectionException {
 
         serializationStrategy
@@ -408,7 +406,7 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @Test( expected = IllegalArgumentException.class )
+    @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
         serializationStrategy.load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),

@@ -49,16 +49,15 @@ public class CollectionModule extends AbstractModule {
 
 
         //Install serialization modules
-        install( new SerializationModule());
+        install( new SerializationModule() );
 
-        install (new ServiceModule());
+        install( new ServiceModule() );
 
         //install the core services
 
         //create a guice factor for getting our collection manager
-        install(new FactoryModuleBuilder()
-             .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
-             .build( EntityCollectionManagerFactory.class ));
-
+        install(
+                new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+                                          .build( EntityCollectionManagerFactory.class ) );
     }
 }

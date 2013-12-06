@@ -14,6 +14,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -32,21 +33,19 @@ import rx.util.functions.Func1;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class StartWrite implements Func1<IoEvent<Entity>, Observable<IoEvent<MvccEntity>>> {
+public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<MvccEntity>>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( StartWrite.class );
+    private static final Logger LOG = LoggerFactory.getLogger( WriteStart.class );
 
     private final MvccLogEntrySerializationStrategy logStrategy;
 
 
     /** Create a new stage with the current context */
     @Inject
-    public StartWrite( final MvccLogEntrySerializationStrategy logStrategy ) {
+    public WriteStart( final MvccLogEntrySerializationStrategy logStrategy ) {
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
 
         this.logStrategy = logStrategy;
-
-
     }
 
 
@@ -54,16 +53,13 @@ public class StartWrite implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
     public Observable<IoEvent<MvccEntity>> call( final IoEvent<Entity> ioEvent ) {
         {
             final Entity entity = ioEvent.getEvent();
-            final EntityCollection entityCollection = ioEvent.getContext();
+            final EntityCollection entityCollection = ioEvent.getEntityCollection();
 
-            Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+
+            EntityUtils.verifyEntityWrite( entity );
 
             final Id entityId = entity.getId();
             final UUID version = entity.getVersion();
-
-            Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
-            Preconditions.checkNotNull( version, "Entity version is required in this stage" );
-
 
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                     org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
@@ -83,8 +79,7 @@ public class StartWrite implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
             //create the mvcc entity for the next stage
             final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
 
-            return Observable.from( new IoEvent<MvccEntity>(entityCollection, nextStage ));
+            return Observable.from( new IoEvent<MvccEntity>( entityCollection, nextStage ) );
         }
     }
-
 }

@@ -7,11 +7,10 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
 
 /** Interface to define how optimistic updates should be performed */
-public interface OptimisticUpdate
-{
+public interface OptimisticUpdate {
 
     /**
-     * Verify the entity we're trying to write in our current context has the correct most current version
+     * WriteVerify the entity we're trying to write in our current context has the correct most current version
      *
      * @param context The mvcc context
      * @param optimisticVersion The optimistic version the caller provider as the most up to date

@@ -49,8 +49,8 @@ public class MigrationManagerImpl implements MigrationManager {
 
     @Inject
     public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations, final Properties props,
-                                 @Named( STRATEGY_CLASS ) final String strategyClass,
-                                 @Named( REPLICATION_FACTOR ) final String replicationFactor ) {
+                                 @Named(STRATEGY_CLASS) final String strategyClass,
+                                 @Named(REPLICATION_FACTOR) final String replicationFactor ) {
         this.keyspace = keyspace;
         this.migrations = migrations;
         this.props = props;
@@ -72,12 +72,15 @@ public class MigrationManagerImpl implements MigrationManager {
                 final Collection<CollectionColumnFamily> columnFamilies = migration.getColumnFamilies();
 
 
-                if(columnFamilies == null){
-                    logger.warn( "Class {} implements {} but returns null column families for migration.  Either implement this method or remove the interface from the class", migration.getClass(), Migration.class );
+                if ( columnFamilies == null ) {
+                    logger.warn(
+                            "Class {} implements {} but returns null column families for migration.  Either implement"
+                                    + " this method or remove the interface from the class", migration.getClass(),
+                            Migration.class );
                     continue;
                 }
 
-                for ( CollectionColumnFamily cf :  columnFamilies) {
+                for ( CollectionColumnFamily cf : columnFamilies ) {
                     testAndCreateColumnFamilyDef( cf );
                 }
             }
@@ -89,9 +92,7 @@ public class MigrationManagerImpl implements MigrationManager {
     }
 
 
-    /**
-     * Check if the column family exists.  If it dosn't create it
-     */
+    /** Check if the column family exists.  If it dosn't create it */
     private void testAndCreateColumnFamilyDef( CollectionColumnFamily columnFamily ) throws ConnectionException {
         final KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
 
@@ -108,9 +109,7 @@ public class MigrationManagerImpl implements MigrationManager {
     }
 
 
-    /**
-     * Check if they keyspace exists.  If it doesn't create it
-     */
+    /** Check if they keyspace exists.  If it doesn't create it */
     private void testAndCreateKeyspace() throws ConnectionException {
 
 
@@ -154,9 +153,7 @@ public class MigrationManagerImpl implements MigrationManager {
     }
 
 
-    /**
-     * Get keyspace properties
-     */
+    /** Get keyspace properties */
     private Map<String, String> getKeySpaceProps() {
         Map<String, String> keyspaceProps = new HashMap<String, String>();
 

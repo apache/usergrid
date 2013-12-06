@@ -52,7 +52,7 @@ public class EntityCollectionManagerIT {
         Observable<Entity> observable = manager.write( newEntity );
 
 
-        Entity returned = observable.toBlockingObservable().lastOrDefault(null);
+        Entity returned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertNotNull( "Version exists" );
@@ -69,7 +69,7 @@ public class EntityCollectionManagerIT {
 
         Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlockingObservable().lastOrDefault(null);
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
@@ -78,7 +78,7 @@ public class EntityCollectionManagerIT {
 
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
-        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
     }
@@ -94,14 +94,14 @@ public class EntityCollectionManagerIT {
 
         Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlockingObservable().lastOrDefault(null);
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
-        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
@@ -110,7 +110,7 @@ public class EntityCollectionManagerIT {
         loadObservable = manager.load( createReturned.getId() );
 
         //load may return null, use last or default
-        loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
+        loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
         assertNull( "Entity was deleted", loadReturned );
     }
@@ -128,14 +128,14 @@ public class EntityCollectionManagerIT {
 
         Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlockingObservable().lastOrDefault(null);
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
-        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
@@ -147,12 +147,12 @@ public class EntityCollectionManagerIT {
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
         //wait for the write to complete
-        manager.write( createReturned ).toBlockingObservable().lastOrDefault(null);
+        manager.write( createReturned ).toBlockingObservable().lastOrDefault( null );
 
 
         loadObservable = manager.load( createReturned.getId() );
 
-        loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
+        loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 

@@ -1,8 +1,6 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -11,6 +9,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * Simple impl of hte collection context
+ *
  * @author tnine
  */
 public class EntityCollectionImpl implements EntityCollection {
@@ -20,8 +19,8 @@ public class EntityCollectionImpl implements EntityCollection {
 
 
     public EntityCollectionImpl( final Id ownerId, final String name ) {
-        Preconditions.checkNotNull( ownerId , "ownerId is required");
-        Preconditions.checkNotNull( name , "name is required");
+        Preconditions.checkNotNull( ownerId, "ownerId is required" );
+        Preconditions.checkNotNull( name, "name is required" );
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
 
 

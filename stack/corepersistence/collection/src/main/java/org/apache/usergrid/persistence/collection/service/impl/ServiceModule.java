@@ -8,7 +8,7 @@ import com.google.inject.AbstractModule;
 
 
 /** @author tnine */
-public class ServiceModule extends AbstractModule{
+public class ServiceModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -18,7 +18,5 @@ public class ServiceModule extends AbstractModule{
 
         //bind our migration manager
         bind( UUIDService.class ).to( UUIDServiceImpl.class );
-
-
     }
 }

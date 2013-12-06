@@ -71,7 +71,7 @@ public class TestCollectionModule extends AbstractModule {
         configProperties.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, 60 + "" );
 
 
-        if(override != null){
+        if ( override != null ) {
             configProperties.putAll( override );
         }
 

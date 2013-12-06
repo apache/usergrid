@@ -14,9 +14,7 @@ import java.util.Properties;
 public class PropertyUtils {
 
 
-    /**
-     * Load the properties file from the classpath.  Throws IOException if they cannot be loaded
-     */
+    /** Load the properties file from the classpath.  Throws IOException if they cannot be loaded */
     public static Properties loadFromClassPath( String propsFile ) {
         InputStream in = PropertyUtils.class.getClassLoader().getResourceAsStream( propsFile );
 

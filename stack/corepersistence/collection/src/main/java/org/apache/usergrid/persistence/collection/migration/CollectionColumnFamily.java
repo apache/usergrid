@@ -21,8 +21,6 @@ public class CollectionColumnFamily {
     public static final String VALUE_VALIDATION = "default_validation_class";
 
 
-
-
     private final ColumnFamily columnFamily;
     private final String comparator;
     private final String keyValidationType;
@@ -44,7 +42,7 @@ public class CollectionColumnFamily {
     }
 
 
-    public Map<String, Object> getOptions(){
+    public Map<String, Object> getOptions() {
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put( COMPARATOR_TYPE, comparator );

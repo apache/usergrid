@@ -15,14 +15,12 @@ import rx.subscriptions.Subscriptions;
 
 /** @author tnine */
 public class Astyanax {
-    public static <R> Observable<OperationResult<R>> executeAsync(
-                final Execution<R> execution) {
-            return Observable.create(new Observable.OnSubscribeFunc<OperationResult<R>>() {
+    public static <R> Observable<OperationResult<R>> executeAsync( final Execution<R> execution ) {
+        return Observable.create( new Observable.OnSubscribeFunc<OperationResult<R>>() {
 
-                @Override
-                public Subscription onSubscribe(
-                        final Observer<? super OperationResult<R>> observer) {
-                    try {
+            @Override
+            public Subscription onSubscribe( final Observer<? super OperationResult<R>> observer ) {
+                try {
                     Futures.addCallback( execution.executeAsync(), new FutureCallback<OperationResult<R>>() {
 
                         @Override
@@ -37,18 +35,16 @@ public class Astyanax {
                             observer.onError( t );
                         }
                     } );
-                    }
-                    catch(ConnectionException e) {
-                        observer.onError(e);
-                    }
-                    catch(Throwable e) {
-                        // If other Throwable can be thrown from execution.executeAsync
-                        observer.onError(e);
-                    }
-                    return Subscriptions.empty();
                 }
-            });
-        }
-
-
+                catch ( ConnectionException e ) {
+                    observer.onError( e );
+                }
+                catch ( Throwable e ) {
+                    // If other Throwable can be thrown from execution.executeAsync
+                    observer.onError( e );
+                }
+                return Subscriptions.empty();
+            }
+        } );
+    }
 }

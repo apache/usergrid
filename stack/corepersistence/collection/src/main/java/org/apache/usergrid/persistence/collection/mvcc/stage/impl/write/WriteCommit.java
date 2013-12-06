@@ -14,11 +14,13 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryI
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -27,18 +29,19 @@ import rx.util.functions.Func1;
 
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
-public class Commit implements Func1<IoEvent<MvccEntity>, Observable<Entity>> {
+@Singleton
+public class WriteCommit implements Func1<IoEvent<MvccEntity>, Observable<Entity>> {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( Commit.class );
+    private static final Logger LOG = LoggerFactory.getLogger( WriteCommit.class );
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
 
 
     @Inject
-    public Commit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                   final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+    public WriteCommit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                        final MvccEntitySerializationStrategy entitySerializationStrategy ) {
         Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
 
@@ -48,25 +51,18 @@ public class Commit implements Func1<IoEvent<MvccEntity>, Observable<Entity>> {
     }
 
 
-
-
     @Override
     public Observable<Entity> call( final IoEvent<MvccEntity> ioEvent ) {
 
         final MvccEntity entity = ioEvent.getEvent();
 
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+
+        EntityUtils.verifyMvccEntityWithEntity( entity );
 
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
-        Preconditions.checkNotNull( entityId.getUuid(), "UUID in the Id is required" );
-        Preconditions.checkNotNull( entityId.getType(), "Type in the Id is required" );
-        Preconditions.checkNotNull( version, "Entity version is required in this stage" );
-
-
-        final EntityCollection entityCollection = ioEvent.getContext();
+        final EntityCollection entityCollection = ioEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
@@ -90,8 +86,6 @@ public class Commit implements Func1<IoEvent<MvccEntity>, Observable<Entity>> {
             throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
         }
 
-        return Observable.from(entity.getEntity().get() );
-
-
+        return Observable.from( entity.getEntity().get() );
     }
 }

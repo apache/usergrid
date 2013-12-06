@@ -35,9 +35,9 @@ import rx.util.functions.Func1;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class StartDelete implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEntity>>> {
+public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEntity>>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( StartDelete.class );
+    private static final Logger LOG = LoggerFactory.getLogger( DeleteStart.class );
 
 
     private final MvccLogEntrySerializationStrategy logStrategy;
@@ -46,7 +46,7 @@ public class StartDelete implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
 
     /** Create a new stage with the current context */
     @Inject
-    public StartDelete( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
+    public DeleteStart( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
@@ -63,7 +63,7 @@ public class StartDelete implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
         final UUID version = uuidService.newTimeUUID();
 
 
-        final EntityCollection entityCollection = entityIoEvent.getContext();
+        final EntityCollection entityCollection = entityIoEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE );

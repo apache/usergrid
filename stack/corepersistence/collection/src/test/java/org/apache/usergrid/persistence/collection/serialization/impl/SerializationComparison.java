@@ -39,8 +39,9 @@ import com.esotericsoftware.kryo.io.Output;
 
 
 /**
- * TODO We need to get both of these serialization methods working, and benchmark them for comparison
- * Neither works out of the box for us without custom work.
+ * TODO We need to get both of these serialization methods working, and benchmark them for comparison Neither works out
+ * of the box for us without custom work.
+ *
  * @author tnine
  */
 public class SerializationComparison {
@@ -120,7 +121,7 @@ public class SerializationComparison {
             long writeStart = System.nanoTime();
 
             ByteBuffer data = ByteBuffer.allocate( 1024 );
-            ByteBufferOutputStream byteBuffOutputStream = new ByteBufferOutputStream(data);
+            ByteBufferOutputStream byteBuffOutputStream = new ByteBufferOutputStream( data );
             Output output = new Output( byteBuffOutputStream );
 
             Entity entity = createEntity();
@@ -151,9 +152,9 @@ public class SerializationComparison {
 
         final UUID version = UUIDGenerator.newTimeUUID();
 
-        Entity entity = new Entity(new SimpleId( "test" ) );
+        Entity entity = new Entity( new SimpleId( "test" ) );
 
-        EntityUtils.setVersion(entity, version );
+        EntityUtils.setVersion( entity, version );
 
 
         BooleanField boolField = new BooleanField( "boolean", false );
@@ -172,8 +173,6 @@ public class SerializationComparison {
 
         return entity;
     }
-
-
 }
 
 

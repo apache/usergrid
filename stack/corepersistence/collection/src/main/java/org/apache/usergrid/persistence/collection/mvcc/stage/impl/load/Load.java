@@ -12,18 +12,21 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import rx.Observable;
 import rx.util.functions.Func1;
 
 
 /** This stage is a load stage to load a single entity */
+@Singleton
 public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
 
 
@@ -48,10 +51,10 @@ public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
     public Observable<Entity> call( final IoEvent<Id> idIoEvent ) {
         final Id entityId = idIoEvent.getEvent();
 
-        Preconditions.checkNotNull( entityId, "Entity id required in the load stage" );
+        EntityUtils.verifyIdentity( entityId );
 
 
-        final EntityCollection entityCollection = idIoEvent.getContext();
+        final EntityCollection entityCollection = idIoEvent.getEntityCollection();
 
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();

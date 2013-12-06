@@ -49,7 +49,7 @@ public class AstynaxKeyspaceProvider implements Provider<Keyspace> {
                                     @Named(CASSANDRA_CLUSTER_NAME) final String clusterName,
                                     @Named(CASSANDRA_VERSION) final String cassandraVersion,
                                     @Named(COLLECTIONS_KEYSPACE_NAME) final String keyspaceName,
-                                    @Named( CASSANDRA_TIMEOUT ) final int cassandraTimeout ) {
+                                    @Named(CASSANDRA_TIMEOUT) final int cassandraTimeout ) {
         this.cassandraHosts = cassandraHosts;
         this.cassandraPort = cassandraPort;
         this.cassandraConnections = cassandraConnections;

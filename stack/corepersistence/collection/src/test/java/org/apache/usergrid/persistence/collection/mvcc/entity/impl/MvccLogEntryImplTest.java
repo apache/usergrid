@@ -17,28 +17,28 @@ import static org.junit.Assert.assertEquals;
 public class MvccLogEntryImplTest {
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void entityIdRequired() {
         new MvccLogEntryImpl( null, UUIDGenerator.newTimeUUID(), Stage.ACTIVE );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void versionRequired() {
-        new MvccLogEntryImpl( new SimpleId("test"), null, Stage.ACTIVE );
+        new MvccLogEntryImpl( new SimpleId( "test" ), null, Stage.ACTIVE );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void stageRequired() {
-        new MvccLogEntryImpl( new SimpleId("test"), UUIDGenerator.newTimeUUID(), null );
+        new MvccLogEntryImpl( new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), null );
     }
 
 
     @Test
     public void correctValue() {
 
-        final SimpleId entityId = new SimpleId("test");
+        final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
 
@@ -54,7 +54,7 @@ public class MvccLogEntryImplTest {
     @Test
     public void equals() {
 
-        final SimpleId entityId = new SimpleId("test");
+        final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
 
@@ -70,7 +70,7 @@ public class MvccLogEntryImplTest {
     @Test
     public void testHashCode() {
 
-        final SimpleId entityId = new SimpleId("test");
+        final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
 
