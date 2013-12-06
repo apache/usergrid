@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 
 
 /** @author tnine */
-public class CollectionManagerIT {
+public class EntityCollectionManagerIT {
     @Rule
     public final GuiceBerryRule guiceBerry = new GuiceBerryRule( CassandraTestCollectionModule.class );
 
