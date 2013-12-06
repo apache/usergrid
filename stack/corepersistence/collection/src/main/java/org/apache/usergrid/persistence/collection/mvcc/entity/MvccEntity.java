@@ -4,12 +4,13 @@ package org.apache.usergrid.persistence.collection.mvcc.entity;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 
 
 /**
- * A Marker interface for an in flight update to allow context information to be passed between states
+ * An entity with internal information for versioning
  */
 public interface MvccEntity {
 
@@ -28,6 +29,6 @@ public interface MvccEntity {
     /**
      * Get the UUID of the entity
      */
-    UUID getUuid();
+    Id getId();
 
 }

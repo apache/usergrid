@@ -12,7 +12,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.ByteBufferField;
@@ -147,14 +149,11 @@ public class SerializationComparison {
 
     private Entity createEntity() {
 
-        final UUID entityId = UUIDGenerator.newTimeUUID();
-
         final UUID version = UUIDGenerator.newTimeUUID();
 
-        Entity entity = new Entity( entityId, "test" );
-        entity.setCreated( 1l );
-        entity.setUpdated( 2l );
-        entity.setVersion( version );
+        Entity entity = new Entity(new SimpleId( "test" ) );
+
+        EntityUtils.setVersion(entity, version );
 
 
         BooleanField boolField = new BooleanField( "boolean", false );

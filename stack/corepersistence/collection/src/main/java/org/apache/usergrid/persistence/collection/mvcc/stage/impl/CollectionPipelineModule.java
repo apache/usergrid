@@ -6,11 +6,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.CollectionEve
 import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.Delete;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.StartDelete;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.read.Load;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Commit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Create;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.StartWrite;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Update;
 import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Verify;
 
 import com.google.inject.AbstractModule;
@@ -51,11 +49,10 @@ public class CollectionPipelineModule extends AbstractModule {
          */
 
         //creation stages
-        stageBinder.addBinding().to( Commit.class ).asEagerSingleton();
-        stageBinder.addBinding().to( Create.class ).asEagerSingleton();;
+
         stageBinder.addBinding().to( StartWrite.class ).asEagerSingleton();;
-        stageBinder.addBinding().to( Update.class ).asEagerSingleton();;
         stageBinder.addBinding().to( Verify.class ).asEagerSingleton();;
+        stageBinder.addBinding().to( Commit.class ).asEagerSingleton();
 
         //delete stages
         stageBinder.addBinding().to( Delete.class ).asEagerSingleton();;

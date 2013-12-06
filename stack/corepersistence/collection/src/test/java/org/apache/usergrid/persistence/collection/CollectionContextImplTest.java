@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.TestCase.assertEquals;
@@ -23,19 +24,19 @@ public class CollectionContextImplTest {
 
     @Test( expected = NullPointerException.class )
     public void collectionRequired() {
-        new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), null );
+        new EntityCollectionImpl(new SimpleId( "test" ), null );
     }
 
 
     @Test( expected = IllegalArgumentException.class )
     public void collectionRequiredLength() {
-        new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "" );
+        new EntityCollectionImpl(new SimpleId( "test" ), "" );
     }
 
 
     @Test
     public void correctValues() {
-        final UUID ownerId = UUIDGenerator.newTimeUUID();
+        final SimpleId ownerId = new SimpleId( "test" );
 
         final String collection = "tests";
 

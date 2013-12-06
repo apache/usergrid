@@ -4,6 +4,7 @@ package org.apache.usergrid.persistence.collection.impl;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 
@@ -14,11 +15,11 @@ import com.google.common.base.Preconditions;
  */
 public class EntityCollectionImpl implements EntityCollection {
 
-    private final UUID ownerId;
+    private final Id ownerId;
     private final String name;
 
 
-    public EntityCollectionImpl( final UUID ownerId, final String name ) {
+    public EntityCollectionImpl( final Id ownerId, final String name ) {
         Preconditions.checkNotNull( ownerId , "ownerId is required");
         Preconditions.checkNotNull( name , "name is required");
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
@@ -30,7 +31,7 @@ public class EntityCollectionImpl implements EntityCollection {
 
 
     @Override
-    public UUID getOwner() {
+    public Id getOwner() {
         return ownerId;
     }
 

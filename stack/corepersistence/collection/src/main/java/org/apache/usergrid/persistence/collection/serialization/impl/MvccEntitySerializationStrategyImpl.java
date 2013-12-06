@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
+import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
@@ -17,7 +19,9 @@ import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -41,12 +45,13 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
 
 
-
     private static final EntitySerializer SER = new EntitySerializer();
 
+    private static final IdRowSerializer ID_SER = IdRowSerializer.get();
 
-    private static final ColumnFamily<UUID, UUID> CF_ENTITY_DATA =
-            new ColumnFamily<UUID, UUID>( "Entity_Version_Data", UUIDSerializer.get(), UUIDSerializer.get() );
+
+    private static final ColumnFamily<Id, UUID> CF_ENTITY_DATA =
+            new ColumnFamily<Id, UUID>( "Entity_Version_Data", ID_SER.get(), UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -59,11 +64,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch write(final EntityCollection context, final MvccEntity entity ) {
+    public MutationBatch write( final EntityCollection context, final MvccEntity entity ) {
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final UUID colName = entity.getVersion();
-        final UUID entityId = entity.getUuid();
+        final Id entityId = entity.getId();
 
         final Optional<Entity> colValue = entity.getEntity();
 
@@ -77,7 +82,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MvccEntity load( final EntityCollection context, final UUID entityId, final UUID version ) {
+    public MvccEntity load( final EntityCollection context, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -98,13 +103,20 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
         }
 
+        final Optional<Entity> deSerialized = column.getValue( SER );
 
-        return new MvccEntityImpl( entityId, version, column.getValue( SER ) );
+        //Inject the id into it.
+        if ( deSerialized.isPresent() ) {
+            EntityUtils.setId( deSerialized.get(), entityId );
+        }
+
+
+        return new MvccEntityImpl( entityId, version, deSerialized );
     }
 
 
     @Override
-    public List<MvccEntity> load( final EntityCollection context, final UUID entityId, final UUID version,
+    public List<MvccEntity> load( final EntityCollection context, final Id entityId, final UUID version,
                                   final int maxSize ) {
 
         Preconditions.checkNotNull( context, "context is required" );
@@ -116,7 +128,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         ColumnList<UUID> columns = null;
         try {
             columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
-                                               .withColumnRange( version, null, false, maxSize ).execute().getResult();
+                              .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
             throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
@@ -134,7 +146,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch clear( final EntityCollection context, final UUID entityId, final UUID version ) {
+    public MutationBatch clear( final EntityCollection context, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -151,7 +163,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch delete( final EntityCollection context, final UUID entityId, final UUID version ) {
+    public MutationBatch delete( final EntityCollection context, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -172,7 +184,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         CollectionColumnFamily cf = new CollectionColumnFamily( CF_ENTITY_DATA,
-                ReversedType.class.getName() + "(" + UUIDType.class.getName() + ")", true );
+                ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
+                UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName() );
 
 
         return Collections.singleton( cf );
@@ -180,10 +193,10 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     /** Do the write on the correct row for the entity id with the operation */
-    private MutationBatch doWrite( UUID entityId, RowOp op ) {
+    private MutationBatch doWrite( Id entityId, RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-            op.doOp( batch.withRow( CF_ENTITY_DATA, entityId ) );
+        op.doOp( batch.withRow( CF_ENTITY_DATA, entityId ) );
 
         return batch;
     }

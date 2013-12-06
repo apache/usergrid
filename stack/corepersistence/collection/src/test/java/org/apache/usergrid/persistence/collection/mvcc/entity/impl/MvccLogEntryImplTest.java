@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
@@ -24,20 +25,20 @@ public class MvccLogEntryImplTest {
 
     @Test( expected = NullPointerException.class )
     public void versionRequired() {
-        new MvccLogEntryImpl( UUIDGenerator.newTimeUUID(), null, Stage.ACTIVE );
+        new MvccLogEntryImpl( new SimpleId("test"), null, Stage.ACTIVE );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void stageRequired() {
-        new MvccLogEntryImpl( UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), null );
+        new MvccLogEntryImpl( new SimpleId("test"), UUIDGenerator.newTimeUUID(), null );
     }
 
 
     @Test
     public void correctValue() {
 
-        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final SimpleId entityId = new SimpleId("test");
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
 
@@ -53,7 +54,7 @@ public class MvccLogEntryImplTest {
     @Test
     public void equals() {
 
-        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final SimpleId entityId = new SimpleId("test");
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
 
@@ -69,7 +70,7 @@ public class MvccLogEntryImplTest {
     @Test
     public void testHashCode() {
 
-        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final SimpleId entityId = new SimpleId("test");
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
 

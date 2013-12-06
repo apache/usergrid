@@ -4,6 +4,7 @@ package org.apache.usergrid.persistence.collection;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -16,26 +17,20 @@ public interface EntityCollectionManager
 {
 
     /**
-     * Create the entity in the collection.  Only use for entities your are sure are new.
+     * Write the entity in the entity collection.
      *
      * @param entity The entity to update
      */
-    public Entity create( Entity entity );
+    public Entity write( Entity entity );
 
-    /**
-     * Update the entity with the given fields.
-     *
-     * @param entity The entity properties to update
-     */
-    public Entity update( Entity entity );
 
     /** Delete the entity and remove it's indexes with the given entity id */
-    public void delete( UUID entityId );
+    public void delete( Id entityId );
 
     /**
      * Load the entity with the given entity Id
      * @param entityId
      * @return
      */
-    public Entity load(UUID entityId);
+    public Entity load(Id entityId);
 }

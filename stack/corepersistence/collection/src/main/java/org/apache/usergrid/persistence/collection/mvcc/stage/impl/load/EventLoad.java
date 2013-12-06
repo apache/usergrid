@@ -1,16 +1,15 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.read;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.load;
 
-
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /** @author tnine */
-public class EventLoad extends CollectionEvent<UUID> {
-    public EventLoad( final EntityCollection context, final UUID data, final Result result ) {
+public class EventLoad extends CollectionEvent<Id> {
+    public EventLoad( final EntityCollection context, final Id data, final Result result ) {
 
         super( context, data, result );
     }

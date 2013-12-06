@@ -52,7 +52,7 @@ public class UUIDGenerator {
         @Override
         protected long update( long now ) throws IOException {
             /**
-             * Our timestamp is greater just use that
+             * Our timestamp is greater just use that and reset last
              */
             if ( now > last ) {
                 last = now;

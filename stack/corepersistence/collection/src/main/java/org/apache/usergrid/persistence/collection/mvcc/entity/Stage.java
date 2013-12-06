@@ -19,33 +19,33 @@ public enum Stage {
     /**
      * The entity has started writing but is not yet committed
      */
-    ACTIVE(true, (byte)0),
+    ACTIVE(true, 0),
 
     /**
      * The entity has started writing but not yet committed.
      */
-    ROLLBACK(true, (byte)1),
+    ROLLBACK(true, 1),
     /**
      * We have applied enough writes to be able to recover via writeahead logging.  The system can recover from a
      * crash without data loss at this point
      */
-    COMMITTED(false, (byte)2),
+    COMMITTED(false, 2),
     /**
      * The entity is going through post processing
      */
-    POSTPROCESS(false, (byte)6),
+    POSTPROCESS(false, 6),
 
     /**
      * The entity has completed all post processing
      */
-    COMPLETE(false, (byte)14);
+    COMPLETE(false, 14);
 
 
     private final boolean transientStage;
-    private final byte id;
+    private final int id;
 
 
-    private Stage(final boolean transientStage, final byte id){
+    private Stage(final boolean transientStage, final int id){
         this.transientStage = transientStage;
         this.id = id;
     }
@@ -60,7 +60,7 @@ public enum Stage {
         return transientStage;
     }
 
-    public byte getId(){
+    public int getId(){
         return this.id;
     }
 

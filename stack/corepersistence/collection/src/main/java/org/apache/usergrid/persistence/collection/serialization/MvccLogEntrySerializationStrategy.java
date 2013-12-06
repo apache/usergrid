@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -33,7 +34,7 @@ public interface MvccLogEntrySerializationStrategy
      *
      * @return The deserialized version of the log entry.  Null if no version == the current version exists
      */
-    public MvccLogEntry load( final EntityCollection context, final UUID entityId, final UUID version )
+    public MvccLogEntry load( final EntityCollection context, final Id entityId, final UUID version )
             throws ConnectionException;
 
     /**
@@ -46,7 +47,7 @@ public interface MvccLogEntrySerializationStrategy
      *
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID)
      */
-    public List<MvccLogEntry> load( EntityCollection context, UUID entityId, UUID version, int maxSize )
+    public List<MvccLogEntry> load( EntityCollection context, Id entityId, UUID version, int maxSize )
             throws ConnectionException;
 
     /**
@@ -56,5 +57,5 @@ public interface MvccLogEntrySerializationStrategy
      * @param entityId The entity id to delete
      * @param version The version to delete
      */
-    public MutationBatch delete( EntityCollection context, UUID entityId, UUID version );
+    public MutationBatch delete( EntityCollection context, Id entityId, UUID version );
 }

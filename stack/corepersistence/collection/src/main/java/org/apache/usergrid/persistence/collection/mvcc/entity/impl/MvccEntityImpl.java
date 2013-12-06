@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -13,18 +14,18 @@ import com.google.common.base.Preconditions;
 /** @author tnine */
 public class MvccEntityImpl implements MvccEntity {
 
-    private final UUID entityId;
+    private final Id entityId;
     private final UUID version;
     private final Optional<Entity> entity;
 
 
-    public MvccEntityImpl( final UUID entityId, final UUID version,
+    public MvccEntityImpl( final Id entityId, final UUID version,
                            final Entity entity ) {
         this(  entityId, version, Optional.of( entity ) );
     }
 
 
-    public MvccEntityImpl( final UUID entityId, final UUID version,
+    public MvccEntityImpl( final Id entityId, final UUID version,
                            final Optional<Entity> entity ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
@@ -49,7 +50,7 @@ public class MvccEntityImpl implements MvccEntity {
 
 
     @Override
-    public UUID getUuid() {
+    public Id getId() {
         return entityId;
     }
 
@@ -66,7 +67,7 @@ public class MvccEntityImpl implements MvccEntity {
 
         final MvccEntityImpl that = ( MvccEntityImpl ) o;
 
-        if ( !getUuid().equals( that.getUuid() ) ) {
+        if ( !getId().equals( that.getId() ) ) {
             return false;
         }
 
@@ -80,7 +81,7 @@ public class MvccEntityImpl implements MvccEntity {
 
     @Override
     public int hashCode() {
-        int result = 31 *  getUuid().hashCode();
+        int result = 31 *  getId().hashCode();
         result = 31 * result + getVersion().hashCode();
         return result;
     }

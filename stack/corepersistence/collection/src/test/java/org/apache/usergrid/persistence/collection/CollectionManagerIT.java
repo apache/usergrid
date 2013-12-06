@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.test.CassandraRule;
@@ -40,87 +41,88 @@ public class CollectionManagerIT {
 
 
     @Test
-    public void create() {
+    public void write() {
 
         EntityCollection context =
-                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
-        Entity newEntity = new Entity( "test" );
+                new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+
+
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity returned = manager.create( newEntity );
+        Entity returned = manager.write( newEntity );
 
-        assertNotNull( "Returned has a uuid", returned.getUuid() );
-        assertEquals( "Version matches uuid for create", returned.getUuid(), returned.getVersion() );
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( "Version matches uuid for create", returned.getVersion(), returned.getVersion() );
 
-        assertTrue( "Created time was set", returned.getCreated() > 0 );
-        assertEquals( "Created and updated time match on create", returned.getCreated(), returned.getUpdated() );
+
     }
 
 
     @Test
-    public void createAndLoad() {
+    public void writeAndLoad() {
 
         EntityCollection context =
-                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
-        Entity newEntity = new Entity( "test" );
+                new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Entity newEntity = new Entity( new SimpleId( "test") );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity createReturned = manager.create( newEntity );
+        Entity createReturned = manager.write( newEntity );
 
 
-        assertNotNull( "Id was assigned", createReturned.getUuid() );
+        assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Entity loadReturned = manager.load( createReturned.getUuid() );
+        Entity loadReturned = manager.load( createReturned.getId() );
 
         assertEquals( "Same value", createReturned, loadReturned );
     }
 
 
     @Test
-    public void createLoadDelete() {
+    public void writeLoadDelete() {
 
         EntityCollection context =
-                new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" );
-        Entity newEntity = new Entity( "test" );
+                new EntityCollectionImpl(  new SimpleId( "test" ), "test" );
+        Entity newEntity = new Entity( new SimpleId("test") );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity createReturned = manager.create( newEntity );
+        Entity createReturned = manager.write( newEntity );
 
 
-        assertNotNull( "Id was assigned", createReturned.getUuid() );
+        assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Entity loadReturned = manager.load( createReturned.getUuid() );
+        Entity loadReturned = manager.load( createReturned.getId() );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
-        manager.delete( createReturned.getUuid() );
+        manager.delete( createReturned.getId() );
 
-        loadReturned = manager.load( createReturned.getUuid() );
+        loadReturned = manager.load( createReturned.getId() );
 
         assertNull( "Entity was deleted", loadReturned );
     }
 
 
     @Test
-    public void createLoadUpdateLoad() {
+    public void writeLoadUpdateLoad() {
 
         EntityCollection context =
-                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
+                new EntityCollectionImpl(new SimpleId( "test" ), "test" );
 
-        Entity newEntity = new Entity( "test" );
+        Entity newEntity = new Entity( new SimpleId( "test") );
         newEntity.setField( new IntegerField( "counter", 1 ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity createReturned = manager.create( newEntity );
+        Entity createReturned = manager.write( newEntity );
 
 
-        assertNotNull( "Id was assigned", createReturned.getUuid() );
+        assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Entity loadReturned = manager.load( createReturned.getUuid() );
+        Entity loadReturned = manager.load( createReturned.getId() );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
@@ -131,9 +133,9 @@ public class CollectionManagerIT {
         //update the field to 2
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
-        manager.update( createReturned );
+        manager.write( createReturned );
 
-        loadReturned = manager.load( createReturned.getUuid() );
+        loadReturned = manager.load( createReturned.getId() );
 
         assertEquals( "Same value", createReturned, loadReturned );
 

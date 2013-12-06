@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
 
@@ -34,7 +35,7 @@ public interface MvccEntitySerializationStrategy
      * If the entity version has been cleared, the MvccEntity will be returned, but the optional entity
      * will not be set
      */
-    public MvccEntity load( EntityCollection context, UUID entityId, UUID version );
+    public MvccEntity load( EntityCollection context, Id entityId, UUID version );
 
     /**
      * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
@@ -47,7 +48,7 @@ public interface MvccEntitySerializationStrategy
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null safe
      * and return an empty list when there are no matches
      */
-    public List<MvccEntity> load( EntityCollection context, UUID entityId, UUID version, int maxSize );
+    public List<MvccEntity> load( EntityCollection context, Id entityId, UUID version, int maxSize );
 
 
     /**
@@ -60,7 +61,7 @@ public interface MvccEntitySerializationStrategy
      * @param version
      * @return
      */
-    public MutationBatch clear(EntityCollection context, UUID entityId, UUID version);
+    public MutationBatch clear(EntityCollection context, Id entityId, UUID version);
 
 
     /**
@@ -70,7 +71,7 @@ public interface MvccEntitySerializationStrategy
      * @param entityId The entity id to delete
      * @param version The version to delete
      */
-    public MutationBatch delete( EntityCollection context, UUID entityId, UUID version );
+    public MutationBatch delete( EntityCollection context, Id entityId, UUID version );
 
 
 }

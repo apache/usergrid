@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 
@@ -16,12 +17,12 @@ import com.google.common.base.Preconditions;
  */
 public class MvccLogEntryImpl implements MvccLogEntry {
 
-    private final UUID entityId;
+    private final Id entityId;
     private final UUID version;
     private final Stage stage;
 
 
-    public MvccLogEntryImpl( final UUID entityId, final UUID version,
+    public MvccLogEntryImpl( final Id entityId, final UUID version,
                              final Stage stage ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
@@ -41,7 +42,7 @@ public class MvccLogEntryImpl implements MvccLogEntry {
 
 
     @Override
-    public UUID getEntityId() {
+    public Id getEntityId() {
         return entityId;
     }
 

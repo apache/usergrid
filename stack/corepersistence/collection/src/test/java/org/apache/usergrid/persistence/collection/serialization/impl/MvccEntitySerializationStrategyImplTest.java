@@ -9,15 +9,16 @@ import java.util.UUID;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.cassandra.db.marshal.UUIDType;
-
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -32,7 +33,6 @@ import com.google.common.base.Optional;
 import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.serializers.UUIDSerializer;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertSame;
@@ -58,7 +58,7 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test
     public void writeLoadDelete() throws ConnectionException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
         EntityCollection context = new EntityCollectionImpl( applicationId, name );
@@ -67,14 +67,12 @@ public class MvccEntitySerializationStrategyImplTest {
         final UUID entityId = UUIDGenerator.newTimeUUID();
         final UUID version = UUIDGenerator.newTimeUUID();
         final String type = "test";
-        final long created = 1l;
-        final long updated = 2l;
 
-        Entity entity = new Entity( entityId, type );
+        final Id id = new SimpleId( entityId, type );
 
-        entity.setVersion( version );
-        entity.setCreated( created );
-        entity.setUpdated( updated );
+        Entity entity = new Entity( id );
+
+        EntityUtils.setVersion( entity, version );
 
 
         BooleanField boolField = new BooleanField( "boolean", false );
@@ -92,23 +90,20 @@ public class MvccEntitySerializationStrategyImplTest {
         entity.setField( uuidField );
 
 
-        MvccEntity saved = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
+        MvccEntity saved = new MvccEntityImpl( id, version, Optional.of( entity ) );
 
 
         //persist the entity
         serializationStrategy.write( context, saved ).execute();
 
-        //now read it back
+        //now load it back
 
-        MvccEntity returned = serializationStrategy.load( context, entityId, version );
+        MvccEntity returned = serializationStrategy.load( context, id, version );
 
         assertEquals( "Mvcc entities are the same", saved, returned );
 
 
-        assertEquals( entityId, entity.getUuid() );
-        assertEquals( type, entity.getType() );
-        assertEquals( created, entity.getCreated() );
-        assertEquals( updated, entity.getUpdated() );
+        assertEquals( id, entity.getId() );
 
 
         Field<Boolean> boolFieldReturned = entity.getField( boolField.getName() );
@@ -150,16 +145,16 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( 6, results.size() );
 
 
-        assertEquals( entityId, entity.getUuid() );
+        assertEquals( id, entity.getId() );
         assertEquals( version, entity.getVersion() );
 
 
         //now delete it
-        serializationStrategy.delete( context, entityId, version ).execute();
+        serializationStrategy.delete( context, id, version ).execute();
 
         //now get it, should be gone
 
-        returned = serializationStrategy.load( context, entityId, version );
+        returned = serializationStrategy.load( context, id, version );
 
         assertNull( returned );
     }
@@ -168,23 +163,19 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test
     public void writeLoadClearDelete() throws ConnectionException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
         EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
-        final UUID entityId = UUIDGenerator.newTimeUUID();
         final UUID version = UUIDGenerator.newTimeUUID();
-        final String type = "test";
-        final long created = 1l;
-        final long updated = 2l;
 
-        Entity entity = new Entity( entityId, type );
+        final Id entityId = new SimpleId( "test" );
 
-        entity.setVersion( version );
-        entity.setCreated( created );
-        entity.setUpdated( updated );
+        Entity entity = new Entity( entityId );
+
+        EntityUtils.setVersion( entity, version );
 
 
         MvccEntity saved = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
@@ -193,17 +184,17 @@ public class MvccEntitySerializationStrategyImplTest {
         //persist the entity
         serializationStrategy.write( context, saved ).execute();
 
-        //now read it back
+        //now load it back
 
         MvccEntity returned = serializationStrategy.load( context, entityId, version );
 
         assertEquals( "Mvcc entities are the same", saved, returned );
 
 
-        assertEquals( entityId, entity.getUuid() );
-        assertEquals( type, entity.getType() );
-        assertEquals( created, entity.getCreated() );
-        assertEquals( updated, entity.getUpdated() );
+        assertEquals( entityId, returned.getId() );
+
+        //check the target entity has the right id
+        assertEquals(entityId, returned.getEntity().get().getId());
 
 
         //now clear it
@@ -212,7 +203,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         returned = serializationStrategy.load( context, entityId, version );
 
-        assertEquals( entityId, returned.getUuid() );
+        assertEquals( entityId, returned.getId() );
         assertEquals( version, returned.getVersion() );
         assertFalse( returned.getEntity().isPresent() );
 
@@ -230,7 +221,7 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test
     public void writeX2ClearDelete() throws ConnectionException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+        final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
         EntityCollection context = new EntityCollectionImpl( applicationId, name );
@@ -240,54 +231,42 @@ public class MvccEntitySerializationStrategyImplTest {
         final UUID version1 = UUIDGenerator.newTimeUUID();
         final String type = "test";
 
-        Entity entityv1 = new Entity( entityId, type );
+        final Id id = new SimpleId( entityId, type );
 
-        entityv1.setVersion( version1 );
+        Entity entityv1 = new Entity( id );
+
+        EntityUtils.setVersion( entityv1, version1 );
 
 
-        MvccEntity saved = new MvccEntityImpl( entityId, version1, Optional.of( entityv1 ) );
+        MvccEntity saved = new MvccEntityImpl( id, version1, Optional.of( entityv1 ) );
 
 
         //persist the entity
         serializationStrategy.write( context, saved ).execute();
 
-        //now read it back
+        //now load it back
 
-        MvccEntity returnedV1 = serializationStrategy.load( context, entityId, version1 );
+        MvccEntity returnedV1 = serializationStrategy.load( context, id, version1 );
 
         assertEquals( "Mvcc entities are the same", saved, returnedV1 );
-
-
-        assertEquals( entityId, entityv1.getUuid() );
-        assertEquals( type, entityv1.getType() );
 
 
         //now write a new version of it
 
 
-        Entity entityv2 = new Entity( entityId, type );
+        Entity entityv2 = new Entity( id );
 
         UUID version2 = UUIDGenerator.newTimeUUID();
-        entityv2.setVersion( version2 );
 
 
-        UUIDType comparator = UUIDType.instance;
+        EntityUtils.setVersion( entityv1, version2 );
 
-        int value = comparator.compare( UUIDSerializer.get().toByteBuffer( version1 ),
-                UUIDSerializer.get().toByteBuffer( version2 ) );
 
-        assertTrue( value < 0 );
-
-        value = comparator.compare( UUIDSerializer.get().toByteBuffer( version2 ),
-                UUIDSerializer.get().toByteBuffer( version2 ) );
-
-        assertEquals( 0, value );
-
-        MvccEntity savedV2 = new MvccEntityImpl( entityId, version2, Optional.of( entityv2 ) );
+        MvccEntity savedV2 = new MvccEntityImpl( id, version2, Optional.of( entityv2 ) );
 
         serializationStrategy.write( context, savedV2 ).execute();
 
-        MvccEntity returnedV2 = serializationStrategy.load( context, entityId, version2 );
+        MvccEntity returnedV2 = serializationStrategy.load( context, id, version2 );
 
         assertEquals( "Mvcc entities are the same", savedV2, returnedV2 );
 
@@ -296,21 +275,21 @@ public class MvccEntitySerializationStrategyImplTest {
 
         UUID version3 = UUIDGenerator.newTimeUUID();
 
-        serializationStrategy.clear( context, entityId, version3 ).execute();
+        serializationStrategy.clear( context, id, version3 ).execute();
 
 
         final Optional<Entity> empty = Optional.absent();
 
-        MvccEntity clearedV3 = new MvccEntityImpl( entityId, version3, empty );
+        MvccEntity clearedV3 = new MvccEntityImpl( id, version3, empty );
 
-        MvccEntity returnedV3 = serializationStrategy.load( context, entityId, version3 );
+        MvccEntity returnedV3 = serializationStrategy.load( context, id, version3 );
 
         assertEquals( "entities are the same", clearedV3, returnedV3 );
 
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
 
-        List<MvccEntity> entities = serializationStrategy.load( context, entityId, current, 3 );
+        List<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
 
         assertEquals( 3, entities.size() );
 
@@ -322,10 +301,10 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
         //now delete v2 and v1, we should still get v3
-        serializationStrategy.delete( context, entityId, version1 ).execute();
-        serializationStrategy.delete( context, entityId, version2 ).execute();
+        serializationStrategy.delete( context, id, version1 ).execute();
+        serializationStrategy.delete( context, id, version2 ).execute();
 
-        entities = serializationStrategy.load( context, entityId, current, 3 );
+        entities = serializationStrategy.load( context, id, current, 3 );
 
         assertEquals( 1, entities.size() );
 
@@ -333,10 +312,10 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
         //now get it, should be gone
-        serializationStrategy.delete( context, entityId, version3 ).execute();
+        serializationStrategy.delete( context, id, version3 ).execute();
 
 
-        entities = serializationStrategy.load( context, entityId, current, 3 );
+        entities = serializationStrategy.load( context, id, current, 3 );
 
         assertEquals( 0, entities.size() );
     }
@@ -350,24 +329,21 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Test( expected = NullPointerException.class )
     public void writeParamsEntity() throws ConnectionException {
-        serializationStrategy
-                .write( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        null );
+        serializationStrategy.write( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void deleteParamContext() throws ConnectionException {
-        serializationStrategy.delete( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+        serializationStrategy.delete( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void deleteParamEntityId() throws ConnectionException {
 
-        serializationStrategy
-                .delete( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        null, UUIDGenerator.newTimeUUID() );
+        serializationStrategy.delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null,
+                UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -375,14 +351,13 @@ public class MvccEntitySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .delete( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), null );
+                .delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void loadParamContext() throws ConnectionException {
-        serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+        serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -390,8 +365,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" ),
-                        null, UUIDGenerator.newTimeUUID() );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -399,14 +373,13 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), null );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
     @Test( expected = NullPointerException.class )
     public void loadListParamContext() throws ConnectionException {
-        serializationStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 1 );
+        serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
@@ -414,8 +387,8 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        null, UUIDGenerator.newTimeUUID(), 1 );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
+                        1 );
     }
 
 
@@ -423,16 +396,14 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), null, 1 );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test( expected = IllegalArgumentException.class )
     public void loadListParamSize() throws ConnectionException {
 
-        serializationStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 0 );
+        serializationStrategy.load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
+                UUIDGenerator.newTimeUUID(), 0 );
     }
 }

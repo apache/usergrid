@@ -16,6 +16,8 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.test.CassandraRule;
 
@@ -54,23 +56,23 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void createAndDelete() throws ConnectionException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+       final Id applicationId = new SimpleId("application");
         final String name = "test";
 
 
         EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
-        final UUID uuid = UUIDGenerator.newTimeUUID();
+        final SimpleId id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-            MvccLogEntry saved = new MvccLogEntryImpl( uuid, version, stage );
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back
 
-            MvccLogEntry returned = logEntryStrategy.load( context, uuid, version );
+            MvccLogEntry returned = logEntryStrategy.load( context, id, version );
 
             assertNotNull( "Returned value should not be null", returned );
 
@@ -82,18 +84,18 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void loadNoData() throws ConnectionException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+       final Id applicationId = new SimpleId("application");
         final String name = "test";
 
 
         EntityCollection context = new EntityCollectionImpl(  applicationId, name );
 
 
-        final UUID uuid = UUIDGenerator.newTimeUUID();
+        final SimpleId id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
 
-        MvccLogEntry returned = logEntryStrategy.load( context, uuid, version );
+        MvccLogEntry returned = logEntryStrategy.load( context, id, version );
 
         assertNull( "Returned value should not exist", returned );
     }
@@ -102,14 +104,14 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void getMultipleEntries() throws ConnectionException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+       final Id applicationId = new SimpleId("application");
         final String name = "test";
 
 
         EntityCollection context = new EntityCollectionImpl(  applicationId, name );
 
 
-        final UUID uuid = UUIDGenerator.newTimeUUID();
+        final SimpleId id = new SimpleId( "test" );
 
         int count = 10;
 
@@ -121,12 +123,12 @@ public class MvccLogEntrySerializationStrategyImplTest {
         for ( int i = 0; i < count; i++ ) {
             versions[i] = UUIDGenerator.newTimeUUID();
 
-            entries[i] = new MvccLogEntryImpl( uuid, versions[i], COMPLETE );
+            entries[i] = new MvccLogEntryImpl( id, versions[i], COMPLETE );
             logEntryStrategy.write( context, entries[i] ).execute();
 
             //Read it back
 
-            MvccLogEntry returned = logEntryStrategy.load( context, uuid, versions[i] );
+            MvccLogEntry returned = logEntryStrategy.load( context, id, versions[i] );
 
             assertNotNull( "Returned value should not be null", returned );
 
@@ -135,7 +137,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
         //now do a range scan from the end
 
-        List<MvccLogEntry> results = logEntryStrategy.load( context, uuid, versions[count - 1], count );
+        List<MvccLogEntry> results = logEntryStrategy.load( context, id, versions[count - 1], count );
 
         assertEquals( count, results.size() );
 
@@ -148,10 +150,10 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
         //now delete them all and ensure we get no results back
         for ( int i = 0; i < count; i++ ) {
-            logEntryStrategy.delete( context, uuid, versions[i] ).execute();
+            logEntryStrategy.delete( context, id, versions[i] ).execute();
         }
 
-        results = logEntryStrategy.load( context, uuid, versions[versions.length - 1], versions.length );
+        results = logEntryStrategy.load( context, id, versions[versions.length - 1], versions.length );
 
         assertEquals( "All log entries were deleted", 0, results.size() );
     }
@@ -160,26 +162,26 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void transientTimeout() throws ConnectionException, InterruptedException {
 
-        final UUID applicationId = UUIDGenerator.newTimeUUID();
+       final Id applicationId = new SimpleId("application");
         final String name = "test";
 
 
         EntityCollection context = new EntityCollectionImpl( applicationId, name );
 
 
-        final UUID uuid = UUIDGenerator.newTimeUUID();
+        final SimpleId id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
 
-            MvccLogEntry saved = new MvccLogEntryImpl( uuid, version, stage );
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back after the timeout
 
             Thread.sleep( TIMEOUT * 1000 );
 
-            MvccLogEntry returned = logEntryStrategy.load( context, uuid, version );
+            MvccLogEntry returned = logEntryStrategy.load( context, id, version );
 
 
             if ( stage.isTransient() ) {
@@ -209,7 +211,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void deleteParamContext() throws ConnectionException {
-        logEntryStrategy.delete( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+        logEntryStrategy.delete( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -217,7 +219,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
+                .delete( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
                         null, UUIDGenerator.newTimeUUID() );
     }
 
@@ -226,14 +228,14 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), null );
+                .delete( new EntityCollectionImpl(  new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null );
     }
 
 
     @Test(expected = NullPointerException.class)
     public void loadParamContext() throws ConnectionException {
-        logEntryStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID() );
+        logEntryStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -241,7 +243,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl(new SimpleId( "test" ), "test" ),
                         null, UUIDGenerator.newTimeUUID() );
     }
 
@@ -250,14 +252,14 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), null );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null );
     }
 
 
     @Test(expected = NullPointerException.class)
     public void loadListParamContext() throws ConnectionException {
-        logEntryStrategy.load( null, UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 1 );
+        logEntryStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
@@ -265,7 +267,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
                         null, UUIDGenerator.newTimeUUID(), 1 );
     }
 
@@ -274,8 +276,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), null, 1 );
+                .load( new EntityCollectionImpl( new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null, 1 );
     }
 
 
@@ -283,8 +285,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamSize() throws ConnectionException {
 
         logEntryStrategy
-                .load( new EntityCollectionImpl(  UUIDGenerator.newTimeUUID(), "test" ),
-                        UUIDGenerator.newTimeUUID(), UUIDGenerator.newTimeUUID(), 0 );
+                .load( new EntityCollectionImpl(  new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 0 );
     }
 
 

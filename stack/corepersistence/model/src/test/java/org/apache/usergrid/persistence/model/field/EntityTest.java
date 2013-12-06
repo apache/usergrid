@@ -7,7 +7,11 @@ import java.util.UUID;
 
 import org.junit.Test;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.Assert.assertEquals;
@@ -20,26 +24,21 @@ public class EntityTest
 {
 
     @Test
-    public void testPutAndGet()
-    {
+    public void testPutAndGet() throws IllegalAccessException {
 
 
         final UUID uuid = UUIDGenerator.newTimeUUID();
         final UUID version = UUIDGenerator.newTimeUUID();
         final String type = "test";
-        final long created = 1l;
-        final long updated = 2l;
+        final Id simpleId = new SimpleId( uuid, type );
 
-        Entity entity = new Entity( uuid, type );
 
-        entity.setVersion( version );
-        entity.setCreated( created );
-        entity.setUpdated( updated );
+        Entity entity = new Entity(simpleId );
 
-        assertEquals( uuid, entity.getUuid() );
-        assertEquals( type, entity.getType() );
-        assertEquals( created, entity.getCreated() );
-        assertEquals( updated, entity.getUpdated() );
+        FieldUtils.writeDeclaredField( entity, "version", version, true );
+        assertEquals( uuid, entity.getId().getUuid() );
+        assertEquals( type, entity.getId().getType() );
+        assertEquals( version, entity.getVersion());
 
 
         BooleanField boolField = new BooleanField( "boolean", false );
@@ -95,23 +94,22 @@ public class EntityTest
         assertEquals( 6, results.size() );
 
 
-        assertEquals( uuid, entity.getUuid() );
+        assertEquals( simpleId, entity.getId() );
         assertEquals( version, entity.getVersion() );
     }
 
 
     @Test( expected = NullPointerException.class )
-    public void uuidRequired()
+    public void idRequired()
     {
-        new Entity( null, "test" );
+        new Entity( (Id)null);
     }
-
 
     @Test( expected = NullPointerException.class )
-    public void versionRequired()
-    {
-        final UUID uuid = UUIDGenerator.newTimeUUID();
+        public void typeRequired()
+        {
+            new Entity( (String)null);
+        }
 
-        new Entity( uuid, null );
-    }
+
 }

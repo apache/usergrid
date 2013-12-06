@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.cassandra.db.marshal.IntegerType;
 import org.apache.cassandra.db.marshal.ReversedType;
+import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
@@ -19,6 +21,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -33,6 +36,7 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.IntegerSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
@@ -48,8 +52,10 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     private static final StageSerializer SER = new StageSerializer();
 
-    private static final ColumnFamily<UUID, UUID> CF_ENTITY_LOG =
-            new ColumnFamily<UUID, UUID>( "Entity_Log", UUIDSerializer.get(), UUIDSerializer.get() );
+    private static final IdRowSerializer ID_SER = IdRowSerializer.get();
+
+    private static final ColumnFamily<Id, UUID> CF_ENTITY_LOG =
+            new ColumnFamily<Id, UUID>( "Entity_Log", ID_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -90,7 +96,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MvccLogEntry load( final EntityCollection context, final UUID entityId, final UUID version )
+    public MvccLogEntry load( final EntityCollection context, final Id entityId, final UUID version )
             throws ConnectionException {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -115,7 +121,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public List<MvccLogEntry> load( final EntityCollection context, final UUID entityId, final UUID version,
+    public List<MvccLogEntry> load( final EntityCollection context, final Id entityId, final UUID version,
                                     final int maxSize ) throws ConnectionException {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -141,7 +147,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MutationBatch delete( final EntityCollection context, final UUID entityId, final UUID version ) {
+    public MutationBatch delete( final EntityCollection context, final Id entityId, final UUID version ) {
 
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entityId is required" );
@@ -161,7 +167,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         CollectionColumnFamily cf = new CollectionColumnFamily( CF_ENTITY_LOG,
-                ReversedType.class.getName() + "(" + UUIDType.class.getName() + ")", true );
+                ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")", UTF8Type.class.getSimpleName(), IntegerType.class.getSimpleName() );
 
 
         return Collections.singleton( cf );
@@ -181,7 +187,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
      *
      * @param context We need to use this when getting the keyspace
      */
-    private MutationBatch doWrite( EntityCollection context, UUID entityId, RowOp op ) {
+    private MutationBatch doWrite( EntityCollection context, Id entityId, RowOp op ) {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
@@ -193,13 +199,13 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     /** Internal stage cache */
     private static class StageCache {
-        private Map<Byte, Stage> values = new HashMap<Byte, Stage>( Stage.values().length );
+        private Map<Integer, Stage> values = new HashMap<Integer, Stage>( Stage.values().length );
 
 
         private StageCache() {
             for ( Stage stage : Stage.values() ) {
 
-                final byte stageValue = stage.getId();
+                final int stageValue = stage.getId();
 
                 values.put( stageValue, stage );
             }
@@ -207,7 +213,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
         /** Get the stage with the byte value */
-        private Stage getStage( final byte value ) {
+        private Stage getStage( final int value ) {
             return values.get( value );
         }
     }
@@ -217,20 +223,18 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         /** Used for caching the byte => stage mapping */
         private static final StageCache CACHE = new StageCache();
+        private static final IntegerSerializer INT_SER = IntegerSerializer.get();
 
 
         @Override
         public ByteBuffer toByteBuffer( final Stage obj ) {
-            ByteBuffer buff = ByteBuffer.allocate( 1 );
-            buff.put( obj.getId() );
-            buff.rewind();
-            return buff;
+            return INT_SER.toByteBuffer( obj.getId() );
         }
 
 
         @Override
         public Stage fromByteBuffer( final ByteBuffer byteBuffer ) {
-            final byte value  = byteBuffer.get();
+            final int value  = INT_SER.fromByteBuffer( byteBuffer );
 
             return CACHE.getStage(value);
         }

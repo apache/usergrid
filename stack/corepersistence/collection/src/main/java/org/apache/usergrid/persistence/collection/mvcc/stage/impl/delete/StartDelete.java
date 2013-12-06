@@ -10,12 +10,14 @@ import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -61,20 +63,16 @@ public class StartDelete implements EventStage<DeleteStart> {
     @Subscribe
     public void performStage( final DeleteStart event ) {
 
-        final UUID entityId = event.getData();
+        final Id entityId = event.getData();
 
 
         final UUID version = uuidService.newTimeUUID();
-
-        Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
-        Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
         final EntityCollection entityCollection = event.getCollectionContext();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE );
 
         MutationBatch write = logStrategy.write( entityCollection, startEntry );
 

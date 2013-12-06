@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.read;
+package org.apache.usergrid.persistence.collection.mvcc.stage.impl.load;
 
 
 import java.util.List;
@@ -14,6 +14,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -46,9 +47,9 @@ public class Load implements EventStage<EventLoad> {
     @Override
     @Subscribe
     public void performStage( final EventLoad event ) {
-        final UUID entityId = event.getData();
+        final Id entityId = event.getData();
 
-        Preconditions.checkNotNull( entityId, "Entity id required in the read stage" );
+        Preconditions.checkNotNull( entityId, "Entity id required in the load stage" );
 
 
         final EntityCollection entityCollection = event.getCollectionContext();

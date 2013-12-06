@@ -9,59 +9,42 @@ import com.google.common.base.Preconditions;
 
 
 /**
- * Simple entity that is used for persistence.  It has 4 required properties. <p/> uuid: The uuid of the entity type:
- * The entity name (user, car, restaurant etc) created: The time the entity was created in millis since epoch updated:
- * The time the entity was updated in millis since epoch;
+ * Simple entity that is used for persistence.  It has 1 required property, the Id.
  */
 public class Entity extends EntityObject {
 
-
     /**
-     * The entity type. This must be set
+     * The id.  We should never serialize this
      */
-    private String type;
+    private transient Id id;
 
     /**
-     * The generated uuid.  This should never be set by a user
-     */
-    private UUID uuid;
-
-    /**
-     * The version of this entity.  Options, since it can be used for optimistic locking
+     * The version of this entity.
+     *
+     * Do not remove this, set by the collection manager
      */
     private UUID version;
 
-    /**
-     * The time in milliseconds since epoch the entity was created
-     */
-    private long created;
-
-    /**
-     * The time in milliseconds since epoch the entity was updated
-     */
-    private long updated;
 
 
     /**
-     * Create an entity with no uuid.  This should be used for creating new entities
+     * Create an entity with the given type and id.  Should be used for all update operations to an existing entity
      */
-    public Entity( String type ) {
-        Preconditions.checkNotNull( type, "Type must not be null" );
-        Preconditions.checkArgument( type.length() > 0, "Type must have a length" );
-        this.type = type;
+    public Entity( Id id ) {
+       Preconditions.checkNotNull( id, "id must not be null" );
+
+        this.id = id;
     }
 
 
     /**
-     * Create an entity with the given type and uuid.  Should be used for all update operations to an existing entity
+     * Generate a new entity with the given type and a new id
+     * @param type
      */
-    public Entity( UUID uuid, String type ) {
-        this( type );
-
-        Preconditions.checkNotNull( uuid, "uuid must not be null" );
-
-        this.uuid = uuid;
+    public Entity(String type){
+        this(new SimpleId( type ));
     }
+
 
 
     /**
@@ -72,13 +55,8 @@ public class Entity extends EntityObject {
     }
 
 
-    public UUID getUuid() {
-        return uuid;
-    }
-
-
-    public String getType() {
-        return type;
+    public Id getId() {
+        return id;
     }
 
 
@@ -87,52 +65,22 @@ public class Entity extends EntityObject {
     }
 
 
-    public void setVersion( final UUID version ) {
-        this.version = version;
-    }
-
-
-    /**
-     * Should only be invoked by the persistence framework
-     */
-    public void setCreated( long created ) {
-        this.created = created;
-    }
-
-
-    /**
-     * Should only be invoked by the persistence framework
-     */
-    public void setUpdated( long updated ) {
-        this.updated = updated;
-    }
-
-
-    public long getCreated() {
-        return created;
-    }
-
-
-    public long getUpdated() {
-        return updated;
-    }
-
 
     @Override
-    public boolean equals( Object o ) {
+    public boolean equals( final Object o ) {
         if ( this == o ) {
             return true;
         }
-        if ( o == null || getClass() != o.getClass() ) {
+        if ( !( o instanceof Entity ) ) {
             return false;
         }
 
-        Entity entity = ( Entity ) o;
+        final Entity entity = ( Entity ) o;
 
-        if ( type != null ? !type.equals( entity.type ) : entity.type != null ) {
+        if ( id != null ? !id.equals( entity.id ) : entity.id != null ) {
             return false;
         }
-        if ( uuid != null ? !uuid.equals( entity.uuid ) : entity.uuid != null ) {
+        if ( version != null ? !version.equals( entity.version ) : entity.version != null ) {
             return false;
         }
 
@@ -142,8 +90,8 @@ public class Entity extends EntityObject {
 
     @Override
     public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
-        result = 31 * result + ( uuid != null ? uuid.hashCode() : 0 );
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + ( version != null ? version.hashCode() : 0 );
         return result;
     }
 }

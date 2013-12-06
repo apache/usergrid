@@ -15,6 +15,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryI
 import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
@@ -58,7 +59,7 @@ public class StartWrite implements EventStage<EventStart> {
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
-        final UUID entityId = entity.getUuid();
+        final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );

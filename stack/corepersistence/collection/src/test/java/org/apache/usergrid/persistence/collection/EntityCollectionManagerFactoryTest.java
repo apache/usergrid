@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.guiceberry.junit4.GuiceBerryRule;
@@ -37,7 +38,7 @@ public class EntityCollectionManagerFactoryTest {
     public void validInput() {
 
         EntityCollectionImpl context =
-                new EntityCollectionImpl( UUIDGenerator.newTimeUUID(), "test" );
+                new EntityCollectionImpl( new SimpleId( "test" ), "test" );
 
         EntityCollectionManager entityCollectionManager = entityCollectionManagerFactory.createCollectionManager( context );
 
