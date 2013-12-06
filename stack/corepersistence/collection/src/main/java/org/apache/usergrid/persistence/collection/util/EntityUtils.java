@@ -9,9 +9,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.sun.javafx.geom.transform.Identity;
-
-
 /** @author tnine */
 public class EntityUtils {
 
