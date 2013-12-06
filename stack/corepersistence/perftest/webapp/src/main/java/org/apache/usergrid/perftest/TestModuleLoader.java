@@ -20,31 +20,31 @@
 package org.apache.usergrid.perftest;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.perftest.settings.PropSettings;
+
 import com.google.inject.*;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
 
 
 /**
  * Dynamically loads the Guice Module responsible for creating the Perftest.
  */
 @Singleton
-public class TestModuleLoader implements Runnable {
-    public static final String MOCK_TEST_MODULE = "org.apache.usergrid.perftest.NoopPerftestModule";
-
-    private final Injector injector;
+public class TestModuleLoader {
+    private static final Logger LOG = LoggerFactory.getLogger( TestModuleLoader.class );
     private Injector childInjector;
-    private DynamicStringProperty testModuleFqcn;
+    private String testModuleFqcn;
     private Module testModule;
 
 
     @Inject
-    public TestModuleLoader( Injector injector )
+    public TestModuleLoader( Injector injector ) throws Exception
     {
-        this.injector = injector;
-        testModuleFqcn = DynamicPropertyFactory.getInstance().getStringProperty( "test.module.fqcn", MOCK_TEST_MODULE );
+        testModuleFqcn = PropSettings.getTestModuleFqcn();
 
-        if ( testModuleFqcn.get().equals( MOCK_TEST_MODULE ) ) {
+        if ( testModuleFqcn.equals( NoopPerftestModule.class.getCanonicalName() ) ) {
             testModule = new NoopPerftestModule();
         }
         else {
@@ -52,26 +52,32 @@ public class TestModuleLoader implements Runnable {
         }
 
         childInjector = injector.createChildInjector( testModule );
-        testModuleFqcn.addCallback( this );
+
+        // testModuleFqcn.addCallback( this ); ==> this was for dynamically changing the test
+        // maybe we can use this later but for now we turned this off
     }
 
 
-    public Module loadTestModule() {
+    public Module loadTestModule() throws Exception {
         // This is a crappy mechanism now - we need to use OSGi for this
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
         try {
-            Class clazz = cl.loadClass( testModuleFqcn.get() );
+            Class clazz = cl.loadClass( testModuleFqcn );
             return ( Module ) clazz.newInstance();
-        } catch ( ClassNotFoundException e ) {
-            e.printStackTrace();
-        } catch ( InstantiationException e ) {
-            e.printStackTrace();
-        } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
         }
-
-        return null;
+        catch ( ClassNotFoundException e ) {
+            LOG.error( "Could not find class {}", testModuleFqcn, e );
+            throw e;
+        }
+        catch ( InstantiationException e ) {
+            LOG.error( "Could not instantiate class {}", testModuleFqcn, e );
+            throw e;
+        }
+        catch ( IllegalAccessException e ) {
+            LOG.error( "Access during instantiation of class {}", testModuleFqcn, e );
+            throw e;
+        }
     }
 
 
@@ -84,12 +90,5 @@ public class TestModuleLoader implements Runnable {
     public Injector getChildInjector()
     {
         return childInjector;
-    }
-
-
-    @Override
-    public void run() {
-        testModule = loadTestModule();
-        childInjector = injector.createChildInjector( testModule );
     }
 }

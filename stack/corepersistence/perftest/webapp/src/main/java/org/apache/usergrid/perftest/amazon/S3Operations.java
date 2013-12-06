@@ -241,7 +241,7 @@ public class S3Operations {
         loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
 
         StringBuilder sb = new StringBuilder();
-        sb.append( loadKey ).append( '/' )
+        sb.append( loadKey )
                 .append( "results/" )
                 .append( runInfo.getRunNumber() )
                 .append( '/' )

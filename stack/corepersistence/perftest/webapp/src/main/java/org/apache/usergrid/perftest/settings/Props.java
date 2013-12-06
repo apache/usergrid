@@ -61,4 +61,5 @@ public interface Props {
 
     String TEST_MODULE_FQCN_KEY = "test.module.fqcn";
 
+    String DEFAULT_TEST_MODULE = "org.apache.usergrid.perftest.NoopPerftestModule";
 }

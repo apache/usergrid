@@ -12,6 +12,7 @@ import java.util.Date;
  */
 public class PropSettings implements Props {
 
+
     /**
      * Gets the dynamic property for the AWS S3 key.
      *
@@ -153,6 +154,6 @@ public class PropSettings implements Props {
 
     public static String getTestModuleFqcn() {
         return DynamicPropertyFactory.getInstance().getStringProperty( TEST_MODULE_FQCN_KEY,
-                NoopPerftestModule.class.getCanonicalName() ).get();
+                DEFAULT_TEST_MODULE ).get();
     }
 }

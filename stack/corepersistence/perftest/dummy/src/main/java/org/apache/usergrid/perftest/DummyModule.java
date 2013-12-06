@@ -12,6 +12,6 @@ import com.google.inject.AbstractModule;
 
 public class DummyModule extends AbstractModule {
     protected void configure() {
-        //add configuration logic here
+        bind( Perftest.class ).to( DummyPerftest.class );
     }
 }

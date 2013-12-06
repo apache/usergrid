@@ -83,8 +83,6 @@ class LockableInputStream extends FileInputStream {
             }
             LOG.info( "The limit has been deactivated. Reads are allowed to continue." );
         }
-
-
     }
 
 

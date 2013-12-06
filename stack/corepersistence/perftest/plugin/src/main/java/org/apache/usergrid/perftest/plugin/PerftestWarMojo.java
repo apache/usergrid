@@ -7,13 +7,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.factory.DefaultArtifactFactory;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
@@ -267,6 +263,7 @@ public class PerftestWarMojo extends PerftestMojo {
      * @param targetFolder The folder which the dependency jars will be copied to
      */
     protected void copyArtifactsTo( String targetFolder, boolean skipTestScope ) throws MojoExecutionException {
+        File targetFolderFile = new File( targetFolder );
         for ( Iterator it = project.getArtifacts().iterator(); it.hasNext(); ) {
             Artifact artifact = ( Artifact ) it.next();
             if ( skipTestScope && artifact.getScope() == "test" ) {
@@ -279,7 +276,28 @@ public class PerftestWarMojo extends PerftestMojo {
                 throw new MojoExecutionException( "Cannot locate artifact file of " + artifact.getArtifactId() );
             }
 
+            // Check already existing artifacts and replace them if they are of a lower version
             try {
+
+                List<String> existing = FileUtils.getFileNames(targetFolderFile, artifact.getArtifactId() + "-*.jar",
+                        null, false);
+
+                if ( existing.size() != 0 ) {
+                    String version = existing.get(0).split("(" + artifact.getArtifactId() + "-)")[1]
+                            .split("(.jar)") [0];
+                    DefaultArtifactVersion existingVersion = new DefaultArtifactVersion( version );
+                    DefaultArtifactVersion artifactVersion = new DefaultArtifactVersion( artifact.getVersion() );
+
+                    if ( existingVersion.compareTo( artifactVersion ) < 0 ) { // Remove existing version
+                        FileUtils.forceDelete( targetFolder + existing.get(0) );
+                    }
+                    else {
+                        System.out.println("Artifact " + artifact.getArtifactId() + " with the same or higher " +
+                                "version already exists in lib folder, skipping copy");
+                        continue;
+                    }
+                }
+
                 System.out.println( "Copying " + f.getName() + " to " + targetFolder );
                 FileUtils.copyFileToDirectory( f.getAbsolutePath(), targetFolder );
             }
