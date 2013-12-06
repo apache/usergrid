@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
 import java.lang.annotation.Retention;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 
 /**
- * Generates a list of invalid entities for input verification.  To be used with parameterized testing.
+ * Generates a list of invalid entities for input verification.  To be used with Theory testing.
  *
  * @author tnine
  */
@@ -29,14 +29,14 @@ public class InvalidEntityGenerator {
 
 
     @Retention( RetentionPolicy.RUNTIME )
-    @ParametersSuppliedBy( NullEntityFieldsSupplier.class )
-    public @interface NullEntityFields {
+    @ParametersSuppliedBy( NullFieldsSupplier.class )
+    public @interface NullFields {
 
     }
 
 
     /** Supplies all possible combination of null fields on entities */
-    public static class NullEntityFieldsSupplier extends ParameterSupplier {
+    public static class NullFieldsSupplier extends ParameterSupplier {
 
 
         @Override
@@ -78,14 +78,14 @@ public class InvalidEntityGenerator {
 
 
     @Retention( RetentionPolicy.RUNTIME )
-    @ParametersSuppliedBy( IllegalEntityFieldsSupplier.class )
-    public @interface IllegalEntityFields {
+    @ParametersSuppliedBy( IllegalFieldsSupplier.class )
+    public @interface IllegalFields {
 
     }
 
 
     /** Supplies all possible combination of null fields on entities */
-    public static class IllegalEntityFieldsSupplier extends ParameterSupplier {
+    public static class IllegalFieldsSupplier extends ParameterSupplier {
 
 
         @Override

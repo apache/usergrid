@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
 import org.junit.Test;
@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Optional;
@@ -30,7 +29,7 @@ public abstract class AbstractMvccEntityStageTest {
      */
     @Test( expected = NullPointerException.class )
     @Theory
-    public void testNonNullable( final MvccEntity mvccEntity, final Entity nullValidationFailEntity ) throws Exception {
+    public void testNonNullable(@InvalidMvccEntityGenerator.NullFields final MvccEntity mvccEntity, @InvalidEntityGenerator.NullFields final Entity nullValidationFailEntity ) throws Exception {
         testStage( mvccEntity, nullValidationFailEntity );
     }
 
@@ -41,7 +40,7 @@ public abstract class AbstractMvccEntityStageTest {
      */
     @Test( expected = IllegalArgumentException.class )
     @Theory
-    public void testInvalidValue( final MvccEntity mvccEntity, final Entity invalidValueEntity ) throws Exception {
+    public void testInvalidValue(@InvalidMvccEntityGenerator.IllegalFields  final MvccEntity mvccEntity,  @InvalidEntityGenerator.IllegalFields  final Entity invalidValueEntity ) throws Exception {
 
         testStage( mvccEntity, invalidValueEntity );
     }

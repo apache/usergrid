@@ -1,8 +1,8 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

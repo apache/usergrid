@@ -1,38 +1,27 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage;
 
-
-import java.util.UUID;
 
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import rx.Observable;
 import rx.util.functions.Func1;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
 @RunWith(Theories.class)
 public abstract class AbstractEntityStageTest {
 
-    @Parameterized.Parameter
-    public Entity entity;
-
     /** Test every input with NonNull validation */
     @Test( expected = NullPointerException.class )
     @Theory
-    public void testNoEntityId(@InvalidEntityGenerator.NullEntityFields final Entity entity) throws Exception {
+    public void testNoEntityId(@InvalidEntityGenerator.NullFields final Entity entity) throws Exception {
         testStage( entity );
     }
 
@@ -40,7 +29,7 @@ public abstract class AbstractEntityStageTest {
     /** Test every Entity with */
     @Test( expected = IllegalArgumentException.class )
     @Theory
-    public void testWrongEntityType(@InvalidEntityGenerator.IllegalEntityFields final Entity entity) throws Exception {
+    public void testWrongEntityType(@InvalidEntityGenerator.IllegalFields final Entity entity) throws Exception {
          testStage(entity);
 
     }
