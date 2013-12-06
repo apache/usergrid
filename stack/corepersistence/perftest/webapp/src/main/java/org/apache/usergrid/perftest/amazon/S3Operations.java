@@ -204,7 +204,7 @@ public class S3Operations {
     }
 
 
-    public void uploadRunInfo( Ec2Metadata metadata, TestInfo testInfo, RunInfo runInfo ) {
+    public void uploadRunInfo( TestInfo testInfo, RunInfo runInfo ) {
         String loadKey = testInfo.getLoadKey();
         loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
 
@@ -235,6 +235,8 @@ public class S3Operations {
 
 
     public void uploadResults( Ec2Metadata metadata, TestInfo testInfo, RunInfo runInfo, File results ) {
+        uploadRunInfo( testInfo, runInfo );
+
         String loadKey = testInfo.getLoadKey();
         loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
 
@@ -247,19 +249,15 @@ public class S3Operations {
                 .append( "-results.log" );
 
         String blobName = sb.toString();
-        ObjectMapper mapper = new ObjectMapper();
-        ByteArrayInputStream in = null;
 
+        PutObjectRequest putRequest = null;
         try {
-            byte[] json = mapper.writeValueAsBytes(testInfo);
-            in = new ByteArrayInputStream( json );
+            putRequest = new PutObjectRequest( PropSettings.getBucket(),
+                    blobName, new FileInputStream( results ), new ObjectMetadata() );
         }
-        catch ( JsonProcessingException e ) {
-            LOG.error("Failed to serialize to JSON TestInfo object {}", testInfo, e);
+        catch ( FileNotFoundException e ) {
+            LOG.error( "Failed to upload the results {} file", results, e );
         }
-
-        PutObjectRequest putRequest = new PutObjectRequest( PropSettings.getBucket(),
-                blobName, in, new ObjectMetadata() );
         client.putObject( putRequest );
 
         LOG.info( "Successfully registered {}", blobName );
@@ -267,24 +265,19 @@ public class S3Operations {
 
 
     private boolean hasKey( String key ) {
-        ObjectListing listing = client.listObjects( PropSettings.getBucket(), key.toString() );
+        ObjectListing listing = client.listObjects( PropSettings.getBucket(), key );
 
-        do {
-            for ( S3ObjectSummary summary : listing.getObjectSummaries() ) {
-                LOG.debug( "Got key {} while scanning for key {}", summary.getKey() );
-                return true;
-            }
-
-            listing = client.listNextBatchOfObjects( listing );
+        if ( listing.getObjectSummaries().isEmpty() ) {
+            return false;
         }
-        while ( listing.isTruncated() );
 
-        return false;
+        S3ObjectSummary summary = listing.getObjectSummaries().get( 0 );
+        LOG.debug( "Got key {} while scanning for key {}", summary.getKey() );
+        return true;
     }
 
 
     public void uploadTestInfo( TestInfo testInfo ) {
-
         String loadKey = testInfo.getLoadKey();
         loadKey = loadKey.substring( 0, loadKey.length() - "perftest.war".length() );
 

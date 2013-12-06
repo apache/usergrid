@@ -39,4 +39,6 @@ public interface AmazonS3Service {
     File download( File tempDir, String perftest ) throws Exception;
 
     void uploadResults( TestInfo testInfo, RunInfo runInfo, File resultsFile );
+
+    void uploadTestInfo( TestInfo testInfo );
 }

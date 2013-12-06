@@ -49,10 +49,15 @@ class LockableInputStream extends FileInputStream {
      *                    getting trapped by this block call
      */
     private void block( int nextAdvance ) {
-        boolean nearLimit = readCount >= ( limit - nextAdvance );
-        boolean overtLimit = readCount > limit;
+        boolean nextAdvanceHitsLimit = ( readCount + nextAdvance ) >= limit;
+        boolean overLimit = readCount > limit;
 
-        if ( nearLimit && ! overtLimit ) {
+        if ( overLimit && ( ! limitActive.get() ) ) {
+            return;
+        }
+
+        // not blocks or over the limit yet but next advance will do so (toggle blocked here)
+        if ( nextAdvanceHitsLimit && ( ! overLimit ) && ( ! blocked.get() ) ) {
             synchronized ( lock ) {
                 blocked.compareAndSet( false, true );
                 lock.notify();
@@ -61,23 +66,25 @@ class LockableInputStream extends FileInputStream {
             LOG.info( "{} bytes have been read. About to hit the {} byte limit. " +
                     "The stream will now block until unlocked.", readCount, limit );
         }
-        else {
-            return;
-        }
 
-        while ( nearLimit && limitActive.get() ) {
-            synchronized ( lock ) {
-                try {
-                    lock.wait( 100 );
-                    lock.notify();
-                }
-                catch ( InterruptedException e ) {
-                    LOG.error( "Interrupted while waiting in the read() method." );
+        if ( nextAdvanceHitsLimit && ( ! overLimit ) && blocked.get() ) {
+            LOG.info( "Next advance will reach the limit: blocking the thread {}", Thread.currentThread() );
+
+            while ( limitActive.get() ) {
+                synchronized ( lock ) {
+                    try {
+                        lock.wait( 100 );
+                        lock.notify();
+                    }
+                    catch ( InterruptedException e ) {
+                        LOG.error( "Interrupted while waiting in the read() method." );
+                    }
                 }
             }
+            LOG.info( "The limit has been deactivated. Reads are allowed to continue." );
         }
 
-        LOG.info( "It seems the limit has been deactivated. Reads will now continue." );
+
     }
 
 

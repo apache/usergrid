@@ -1,10 +1,10 @@
 package org.apache.usergrid.perftest.amazon;
 
+
 import com.google.inject.Guice;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Map;
 
 /**
  */
@@ -14,7 +14,7 @@ public class S3OperationTest {
 
     @Test @Ignore
     public void testRunnersListing() {
-        Map<String,Ec2Metadata> runners  = operations.getRunners();
+        operations.getRunners();
     }
 
 

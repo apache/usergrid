@@ -54,6 +54,7 @@ public class PerftestRunner implements Runnable {
         test = loader.getChildInjector().getInstance( Perftest.class );
         testInfo = new TestInfo( test, loader.getTestModule() );
         testInfo.setLoadTime( new Date().toString() );
+        service.uploadTestInfo( testInfo );
 
         setup();
     }

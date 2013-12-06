@@ -151,6 +151,12 @@ public class AmazonS3ServiceAwsImpl implements AmazonS3Service, Runnable, Props 
 
 
     @Override
+    public void uploadTestInfo( final TestInfo testInfo ) {
+        operations.uploadTestInfo( testInfo );
+    }
+
+
+    @Override
     public Set<String> listTests()
     {
         return operations.getTests();

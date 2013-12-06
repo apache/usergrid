@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.factory.DefaultArtifactFactory;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
@@ -34,18 +36,12 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 
-@Mojo( name = "perftest-war", requiresDependencyResolution = ResolutionScope.TEST,
+@Mojo( name = "war", requiresDependencyResolution = ResolutionScope.TEST,
         requiresDependencyCollection = ResolutionScope.TEST )
 public class PerftestWarMojo extends PerftestMojo {
     /**
-     * Git configuration folder which is associated with the target file you are going to upload For example, if your
-     * war file is built by WarProject and local git repository is configured for that project, this value is
-     * /root/to/WarProject/.git
      *
-     * defaultValue assumes the module which calls this plugin builds the war to be deployed and .git folder is under
-     * the same folder as pom.xml
      */
-    @Parameter( property = "perftest.gitConfigDirectory", defaultValue = "${pom.basedir}/.git" )
     protected String gitConfigDirectory;
 
     /**
@@ -102,9 +98,35 @@ public class PerftestWarMojo extends PerftestMojo {
     @Parameter( defaultValue = "${project}", readonly = true )
     private MavenProject project;
 
+    @Parameter( defaultValue = "${settings.localRepository}" )
+    private String localRepository;
 
     @Override
     public void execute() throws MojoExecutionException {
+
+        // Ugly solution to retrieve war file
+        String webappWarPath = localRepository +
+                "/org/apache/usergrid/perftest/perftest-webapp/1.0-SNAPSHOT/perftest-webapp-1.0-SNAPSHOT.war";
+
+        String projectBaseDirectory = project.getBasedir().getAbsolutePath();
+        if( projectBaseDirectory.charAt( projectBaseDirectory.length() - 1 ) == '/' )
+        {
+            projectBaseDirectory = projectBaseDirectory.substring( 0, projectBaseDirectory.length() - 1 );
+        }
+
+        // Setup gitConfigDirectory
+        gitConfigDirectory = projectBaseDirectory;
+        while ( ! FileUtils.fileExists( gitConfigDirectory + "/.git" ) )
+        {
+            int lastSlashIndex = gitConfigDirectory.lastIndexOf( "/" );
+            if ( lastSlashIndex < 1 )
+            {
+                throw new MojoExecutionException( "There are no local git repository associated with this project") ;
+            }
+            gitConfigDirectory = gitConfigDirectory.substring( 0, lastSlashIndex );
+        }
+        gitConfigDirectory += "/.git";
+
         String commitId = getLastCommitUuid( gitConfigDirectory );
 
         if ( failIfCommitNecessary && isCommitNecessary( gitConfigDirectory ) ) {
@@ -121,8 +143,8 @@ public class PerftestWarMojo extends PerftestMojo {
             String timeStamp = dateFormat.format( new Date() );
 
             // Extract the war file
-            File warFile = new File( sourceFile );
-            String extractedWarRoot = warFile.getParent() + "/extracted/";
+            File warFile = new File( webappWarPath );
+            String extractedWarRoot = projectBaseDirectory + "/target/perftest/";
             if ( FileUtils.fileExists( extractedWarRoot ) ) {
                 FileUtils.cleanDirectory( extractedWarRoot );
             }
@@ -131,18 +153,38 @@ public class PerftestWarMojo extends PerftestMojo {
             }
             extractWar( warFile, extractedWarRoot );
 
-            // Copy dependency jars to WEB-INF/lib folder
-            copyArtifactsTo( extractedWarRoot + "WEB-INF/lib" );
+            // Copy caller project jar and its dependency jars to WEB-INF/lib folder
+            String libPath = extractedWarRoot + "WEB-INF/lib/";
+            FileUtils.copyFileToDirectory( sourceFile, libPath );
+            copyArtifactsTo( libPath, true );
 
             // Create config.properties file
+            InputStream inputStream;
             Properties prop = new Properties();
             String configPropertiesFilePath = extractedWarRoot + "WEB-INF/classes/config.properties";
             if ( FileUtils.fileExists( configPropertiesFilePath ) ) {
-                InputStream inputStream = new FileInputStream( configPropertiesFilePath );
+                // Existing config.properties of webapp-perftest
+                inputStream = new FileInputStream( configPropertiesFilePath );
                 prop.load( inputStream );
                 inputStream.close();
             }
 
+            // If exists, properties in this file can overwrite the ones from webapp-perftest
+            if ( getClass().getResource( "config.properties" ) != null ) {
+                inputStream = getClass().getResourceAsStream( "config.properties" );
+                Properties propCurrent = new Properties();
+                propCurrent.load( inputStream );
+                inputStream.close();
+
+                String key;
+                while ( propCurrent.propertyNames().hasMoreElements() ) {
+                    key = propCurrent.propertyNames().nextElement().toString();
+                    prop.setProperty( key, propCurrent.getProperty( key ) );
+
+                }
+            }
+
+            // Insert or overwrite all properties acquired in runtime
             prop.setProperty( "git.uuid", commitId );
             prop.setProperty( "git.url", getGitRemoteUrl( gitConfigDirectory ) );
             prop.setProperty( "create.timestamp", timeStamp );
@@ -156,11 +198,13 @@ public class PerftestWarMojo extends PerftestMojo {
             prop.setProperty( "manager.app.username", managerAppUsername );
             prop.setProperty( "manager.app.password", managerAppPassword );
 
+            // Save the newly formed properties file under WEB-INF/classes/config.properties
+            FileUtils.mkdir( configPropertiesFilePath.substring( 0, configPropertiesFilePath.lastIndexOf('/') ) );
             FileWriter writer = new FileWriter( configPropertiesFilePath );
             prop.store( writer, null );
 
             // Create the final WAR
-            String finalWarPath = warFile.getParent() + "/testWAR/perftest.war";
+            String finalWarPath = projectBaseDirectory + "/target/perftest.war";
             File finalWarFile = new File( finalWarPath );
             archiveWar( finalWarFile, extractedWarRoot );
 
@@ -222,9 +266,13 @@ public class PerftestWarMojo extends PerftestMojo {
      *
      * @param targetFolder The folder which the dependency jars will be copied to
      */
-    protected void copyArtifactsTo( String targetFolder ) throws MojoExecutionException {
+    protected void copyArtifactsTo( String targetFolder, boolean skipTestScope ) throws MojoExecutionException {
         for ( Iterator it = project.getArtifacts().iterator(); it.hasNext(); ) {
             Artifact artifact = ( Artifact ) it.next();
+            if ( skipTestScope && artifact.getScope() == "test" ) {
+                continue;
+            }
+
             File f = artifact.getFile();
 
             if ( f == null ) {
