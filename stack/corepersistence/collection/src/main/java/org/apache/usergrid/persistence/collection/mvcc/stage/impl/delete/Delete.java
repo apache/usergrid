@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -23,9 +23,11 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import rx.util.functions.Action1;
+
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
-public class Delete implements EventStage<DeleteCommit> {
+public class Delete implements Action1<IoEvent<MvccEntity>> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Delete.class );
@@ -36,8 +38,7 @@ public class Delete implements EventStage<DeleteCommit> {
 
     @Inject
     public Delete( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                   final MvccEntitySerializationStrategy entitySerializationStrategy,
-                   final CollectionEventBus eventBus ) {
+                   final MvccEntitySerializationStrategy entitySerializationStrategy) {
 
         Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
@@ -45,15 +46,14 @@ public class Delete implements EventStage<DeleteCommit> {
 
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
-        eventBus.register( this );
     }
 
 
-    @Override
-    @Subscribe
-    public void performStage( final DeleteCommit event ) {
 
-        final MvccEntity entity = event.getData();
+    @Override
+    public void call( final IoEvent<MvccEntity> idIoEvent ) {
+
+        final MvccEntity entity = idIoEvent.getEvent();
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
@@ -64,7 +64,7 @@ public class Delete implements EventStage<DeleteCommit> {
         Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final EntityCollection entityCollection = event.getCollectionContext();
+        final EntityCollection entityCollection = idIoEvent.getContext();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,

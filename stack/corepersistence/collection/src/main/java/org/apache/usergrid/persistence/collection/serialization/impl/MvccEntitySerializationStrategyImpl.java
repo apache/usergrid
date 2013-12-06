@@ -103,15 +103,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
         }
 
-        final Optional<Entity> deSerialized = column.getValue( SER );
 
-        //Inject the id into it.
-        if ( deSerialized.isPresent() ) {
-            EntityUtils.setId( deSerialized.get(), entityId );
-        }
-
-
-        return new MvccEntityImpl( entityId, version, deSerialized );
+        return new MvccEntityImpl( entityId, version, getEntity( column, entityId ) );
     }
 
 
@@ -138,7 +131,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
 
         for ( Column<UUID> col : columns ) {
-            results.add( new MvccEntityImpl( entityId, col.getName(), col.getValue( SER ) ) );
+            results.add( new MvccEntityImpl( entityId, col.getName(), getEntity( col , entityId ) ) );
         }
 
         return results;
@@ -199,6 +192,24 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         op.doOp( batch.withRow( CF_ENTITY_DATA, entityId ) );
 
         return batch;
+    }
+
+
+    /**
+     * Set the id into the entity if it exists and return it.
+     * @param column
+     * @param entityId
+     * @return
+     */
+    private Optional<Entity> getEntity( final Column<UUID> column, final Id entityId ) {
+        final Optional<Entity> deSerialized = column.getValue( SER );
+
+        //Inject the id into it.
+        if ( deSerialized.isPresent() ) {
+            EntityUtils.setId( deSerialized.get(), entityId );
+        }
+
+        return deSerialized;
     }
 
 

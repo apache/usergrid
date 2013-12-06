@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * Simple entity that is used for persistence.  It has 1 required property, the Id.
+ * Equality is based both on id an on version.
  */
 public class Entity extends EntityObject {
 
@@ -65,7 +66,12 @@ public class Entity extends EntityObject {
     }
 
 
-
+    /**
+     * Equality is based both on id and version.  If an entity
+     * has the same id but different versions, they are not equals
+     * @param o
+     * @return
+     */
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) {
@@ -93,5 +99,14 @@ public class Entity extends EntityObject {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + ( version != null ? version.hashCode() : 0 );
         return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Entity{" +
+                "id=" + id +
+                ", version=" + version +
+                '}';
     }
 }

@@ -295,9 +295,17 @@ public class MvccEntitySerializationStrategyImplTest {
 
         assertEquals( clearedV3, entities.get( 0 ) );
 
+        assertEquals( id, entities.get( 0 ).getId() );
+
+
+
         assertEquals( returnedV2, entities.get( 1 ) );
+        assertEquals( id, entities.get( 1 ).getId() );
+
+
 
         assertEquals( returnedV1, entities.get( 2 ) );
+        assertEquals( id, entities.get( 2 ).getId() );
 
 
         //now delete v2 and v1, we should still get v3

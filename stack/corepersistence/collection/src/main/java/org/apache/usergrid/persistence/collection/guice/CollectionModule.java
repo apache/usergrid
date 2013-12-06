@@ -7,7 +7,6 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.CollectionPipelineModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
@@ -48,11 +47,6 @@ public class CollectionModule extends AbstractModule {
 
         //TODO allow override of all properties in the file by the system
 
-
-        /**
-         * Install the write pipeline configuration
-         */
-        install( new CollectionPipelineModule() );
 
         //Install serialization modules
         install( new SerializationModule());

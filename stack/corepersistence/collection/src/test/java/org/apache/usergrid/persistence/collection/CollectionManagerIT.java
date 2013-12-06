@@ -9,18 +9,17 @@ import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.test.CassandraRule;
 
 import com.google.common.eventbus.EventBus;
 import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 
+import rx.Observable;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
@@ -43,38 +42,43 @@ public class CollectionManagerIT {
     @Test
     public void write() {
 
-        EntityCollection context =
-                new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity returned = manager.write( newEntity );
+        Observable<Entity> observable = manager.write( newEntity );
+
+
+        Entity returned = observable.toBlockingObservable().lastOrDefault(null);
 
         assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( "Version matches uuid for create", returned.getVersion(), returned.getVersion() );
-
-
+        assertNotNull( "Version exists" );
     }
 
 
     @Test
     public void writeAndLoad() {
 
-        EntityCollection context =
-                new EntityCollectionImpl( new SimpleId( "test" ), "test" );
-        Entity newEntity = new Entity( new SimpleId( "test") );
+        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity createReturned = manager.write( newEntity );
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault(null);
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-        Entity loadReturned = manager.load( createReturned.getId() );
+
+        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
+
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
 
         assertEquals( "Same value", createReturned, loadReturned );
     }
@@ -83,24 +87,30 @@ public class CollectionManagerIT {
     @Test
     public void writeLoadDelete() {
 
-        EntityCollection context =
-                new EntityCollectionImpl(  new SimpleId( "test" ), "test" );
-        Entity newEntity = new Entity( new SimpleId("test") );
+        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity createReturned = manager.write( newEntity );
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault(null);
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Entity loadReturned = manager.load( createReturned.getId() );
+        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
+
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
 
         assertEquals( "Same value", createReturned, loadReturned );
 
         manager.delete( createReturned.getId() );
 
-        loadReturned = manager.load( createReturned.getId() );
+        loadObservable = manager.load( createReturned.getId() );
+
+        //load may return null, use last or default
+        loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
 
         assertNull( "Entity was deleted", loadReturned );
     }
@@ -109,39 +119,44 @@ public class CollectionManagerIT {
     @Test
     public void writeLoadUpdateLoad() {
 
-        EntityCollection context =
-                new EntityCollectionImpl(new SimpleId( "test" ), "test" );
+        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
 
-        Entity newEntity = new Entity( new SimpleId( "test") );
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity createReturned = manager.write( newEntity );
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault(null);
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Entity loadReturned = manager.load( createReturned.getId() );
+        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
+
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
 
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals("Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ));
+        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
 
 
         //update the field to 2
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
-        manager.write( createReturned );
+        //wait for the write to complete
+        manager.write( createReturned ).toBlockingObservable().lastOrDefault(null);
 
-        loadReturned = manager.load( createReturned.getId() );
+
+        loadObservable = manager.load( createReturned.getId() );
+
+        loadReturned = loadObservable.toBlockingObservable().lastOrDefault(null);
 
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals("Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ));
+        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
     }
-
-
 }

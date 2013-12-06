@@ -8,21 +8,23 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import rx.Observable;
+import rx.util.functions.Func1;
 
 
 /**
@@ -30,66 +32,59 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class StartWrite implements EventStage<EventStart> {
+public class StartWrite implements Func1<IoEvent<Entity>, Observable<IoEvent<MvccEntity>>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( StartWrite.class );
 
-    private final CollectionEventBus eventBus;
     private final MvccLogEntrySerializationStrategy logStrategy;
 
 
     /** Create a new stage with the current context */
     @Inject
-    public StartWrite( final CollectionEventBus eventBus,
-                       final MvccLogEntrySerializationStrategy logStrategy ) {
-        Preconditions.checkNotNull( eventBus, "eventBus is required" );
+    public StartWrite( final MvccLogEntrySerializationStrategy logStrategy ) {
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
 
-        this.eventBus = eventBus;
         this.logStrategy = logStrategy;
 
-        this.eventBus.register( this );
+
     }
 
 
     @Override
-    @Subscribe
-    public void performStage( final EventStart event ) {
-        final Entity entity = event.getData();
+    public Observable<IoEvent<MvccEntity>> call( final IoEvent<Entity> ioEvent ) {
+        {
+            final Entity entity = ioEvent.getEvent();
+            final EntityCollection entityCollection = ioEvent.getContext();
 
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+            Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
-        final Id entityId = entity.getId();
-        final UUID version = entity.getVersion();
+            final Id entityId = entity.getId();
+            final UUID version = entity.getVersion();
 
-        Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
-        Preconditions.checkNotNull( version, "Entity version is required in this stage" );
-
-
-        final EntityCollection entityCollection = event.getCollectionContext();
+            Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
+            Preconditions.checkNotNull( version, "Entity version is required in this stage" );
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
+            final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
+                    org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
 
-        MutationBatch write = logStrategy.write( entityCollection, startEntry );
+            MutationBatch write = logStrategy.write( entityCollection, startEntry );
 
 
-        try {
-            write.execute();
+            try {
+                write.execute();
+            }
+            catch ( ConnectionException e ) {
+                LOG.error( "Failed to execute write asynchronously ", e );
+                throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
+            }
+
+
+            //create the mvcc entity for the next stage
+            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
+
+            return Observable.from( new IoEvent<MvccEntity>(entityCollection, nextStage ));
         }
-        catch ( ConnectionException e ) {
-            LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
-        }
-
-
-        //create the mvcc entity for the next stage
-        final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
-
-        eventBus.post( new EventVerify( entityCollection, nextStage, event.getResult() ) );
     }
-
-
 
 }

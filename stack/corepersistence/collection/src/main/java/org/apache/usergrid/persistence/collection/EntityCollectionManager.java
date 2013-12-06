@@ -6,6 +6,9 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import rx.Observable;
+import rx.Subscription;
+
 
 /**
  *
@@ -21,16 +24,17 @@ public interface EntityCollectionManager
      *
      * @param entity The entity to update
      */
-    public Entity write( Entity entity );
+    public Observable<Entity> write( Entity entity );
 
 
     /** Delete the entity and remove it's indexes with the given entity id */
-    public void delete( Id entityId );
+    public Subscription delete( Id entityId );
 
     /**
      * Load the entity with the given entity Id
+     *
      * @param entityId
      * @return
      */
-    public Entity load(Id entityId);
+    public Observable<Entity> load( Id entityId );
 }

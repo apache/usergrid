@@ -1,31 +1,28 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.impl.write;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
-import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import rx.Observable;
+import rx.util.functions.Func1;
+
 
 /** This phase should execute any verification on the MvccEntity */
 @Singleton
-public class Verify implements EventStage<EventVerify> {
+public class Verify implements Func1<IoEvent<MvccEntity>, Observable<IoEvent<MvccEntity>>> {
 
-    private final CollectionEventBus eventBus;
-
-    @Inject
-    public Verify( final CollectionEventBus eventBus ) {
-        this.eventBus = eventBus;
-        this.eventBus.register( this );
+   @Inject
+    public Verify( ) {
     }
 
 
-
     @Override
-    public void performStage( final EventVerify event ) {
-        //no op, verification needs to happen here
-
-        eventBus.post( new EventCommit(event.getCollectionContext(), event.getData(), event.getResult()) );
+    public Observable<IoEvent<MvccEntity>> call( final IoEvent<MvccEntity> mvccEntityIoEvent ) {
+        //no op, just emit the new obsevable
+        return Observable.from( mvccEntityIoEvent );
     }
 }

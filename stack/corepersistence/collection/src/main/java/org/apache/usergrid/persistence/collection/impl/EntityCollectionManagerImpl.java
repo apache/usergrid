@@ -8,12 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.Result;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.DeleteStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.load.EventLoad;
-import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.EventStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.Delete;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.delete.StartDelete;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.load.Load;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Commit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.StartWrite;
+import org.apache.usergrid.persistence.collection.mvcc.stage.impl.write.Verify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -22,6 +23,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+
+import rx.Observable;
+import rx.Subscription;
 
 
 /**
@@ -34,26 +38,47 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
 
     private final EntityCollection context;
-    private final CollectionEventBus eventBus;
     private final UUIDService uuidService;
+
+    //start stages
+    private final StartWrite startWrite;
+    private final Verify verifyWrite;
+    private final Commit commit;
+
+    //load stages
+    private final Load load;
+
+
+    //delete stages
+    private final StartDelete deleteStart;
+    private final Delete deleteCommit;
 
 
     @Inject
-    public EntityCollectionManagerImpl( final CollectionEventBus eventBus, final UUIDService uuidService,
+    public EntityCollectionManagerImpl( final UUIDService uuidService, final StartWrite startWrite,
+                                        final Verify verifyWrite, final Commit commit,
+
+
+                                        final Load load, final StartDelete deleteStart, final Delete deleteCommit,
                                         @Assisted final EntityCollection context ) {
 
-
-        Preconditions.checkNotNull( eventBus, "eventBus must be defined" );
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
         Preconditions.checkNotNull( context, "context must be defined" );
-        this.eventBus = eventBus;
+        this.startWrite = startWrite;
+        this.verifyWrite = verifyWrite;
+        this.commit = commit;
+        this.load = load;
+        this.deleteStart = deleteStart;
+        this.deleteCommit = deleteCommit;
+
+
         this.uuidService = uuidService;
         this.context = context;
     }
 
 
     @Override
-    public Entity write( final Entity entity ) {
+    public Observable<Entity> write( final Entity entity ) {
         //do our input validation
 
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
@@ -73,22 +98,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         EntityUtils.setVersion( entity, version );
 
-
-        // Create a new context for the write
-        Result result = new Result();
-
-        //fire the start event
-        eventBus.post( new EventStart( context, entity, result ) );
-
-
-        MvccEntity completed = result.getLast( MvccEntity.class );
-
-        return completed.getEntity().get();
+        //fire the stages
+        //TODO use our own executor here
+        return startWrite.call( new IoEvent<Entity>( context, entity ) ).mapMany( verifyWrite ).mapMany( commit );
     }
 
 
     @Override
-    public void delete( final Id entityId ) {
+    public Subscription delete( final Id entityId ) {
 
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
@@ -96,21 +113,21 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        eventBus.post( new DeleteStart( context, entityId, null ) );
+
+       return deleteStart.call( new IoEvent<Id>( context, entityId ) ).subscribe( deleteCommit );
+
+        //        eventBus.post( new DeleteStart( context, entityId, null ) );
     }
 
 
     @Override
-    public Entity load( final Id entityId ) {
+    public Observable<Entity> load( final Id entityId ) {
 
         Preconditions.checkNotNull( entityId, "Entity id required in the load stage" );
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        Result result = new Result();
 
-        eventBus.post( new EventLoad( context, entityId, result ) );
-
-        return result.getLast( Entity.class );
+        return load.call( new IoEvent<Id>( context, entityId ) );
     }
 }
