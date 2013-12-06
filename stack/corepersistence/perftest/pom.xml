@@ -18,6 +18,7 @@
   <modules>
     <module>webapp</module>
     <module>plugin</module>
+    <module>api</module>
     <module>dummy</module>
   </modules>
 
