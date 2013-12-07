@@ -12,6 +12,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -51,8 +52,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
 
 
         //set up the mock to return the entity from the start phase
-        final Entity entity = generateEntity();
-
+        final Entity entity = TestEntityGenerator.generateEntity();
 
         //run the stage
         WriteStart newStage = new WriteStart( logStrategy );
@@ -79,14 +79,6 @@ public class WriteStartTest extends AbstractEntityStageTest {
     }
 
 
-    protected Entity generateEntity() throws IllegalAccessException {
-            final Entity entity = new Entity( "test" );
-            final UUID version = UUIDGenerator.newTimeUUID();
-
-            EntityUtils.setVersion( entity, version );
-
-            return entity;
-        }
 
 
     @Override

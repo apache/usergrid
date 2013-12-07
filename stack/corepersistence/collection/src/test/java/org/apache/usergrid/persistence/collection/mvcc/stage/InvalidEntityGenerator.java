@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Generates a list of invalid entities for input verification.  To be used with Theory testing.
+ * In this case, we just inject all invalid types of Ids from the Id generator into the Entity
  *
  * @author tnine
  */
@@ -41,39 +42,25 @@ public class InvalidEntityGenerator {
 
         @Override
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
+
+
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
 
+            for ( PotentialAssignment assignment : new InvalidIdGenerator.NullFieldsSupplier()
+                    .getValueSources( sig ) ) {
 
-            result.add( PotentialAssignment.forValue( "nullEntityId", nullEntityId() ) );
-            result.add( PotentialAssignment.forValue( "nullEntityType", nullEntityType() ) );
 
+                try {
+                    result.add( PotentialAssignment.forValue( assignment.getDescription(), new Entity((Id)assignment.getValue()) ) );
+                }
+                catch ( PotentialAssignment.CouldNotGenerateValueException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
             return result;
         }
 
 
-        /** Missing fields */
-        private static Entity nullEntityId() {
-
-
-            final Id entityId = mock( Id.class );
-
-            when( entityId.getUuid() ).thenReturn( null );
-            when( entityId.getType() ).thenReturn( "test" );
-
-            return new Entity( entityId );
-        }
-
-
-        /** Null entity type */
-        private static Entity nullEntityType() {
-
-            final Id entityId = mock( Id.class );
-
-            when( entityId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-            when( entityId.getType() ).thenReturn( null );
-
-            return new Entity( entityId );
-        }
     }
 
 
@@ -92,40 +79,20 @@ public class InvalidEntityGenerator {
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
 
+                      for ( PotentialAssignment assignment : new InvalidIdGenerator.IllegalFieldsSupplier()
+                              .getValueSources( sig ) ) {
 
-            result.add( PotentialAssignment.forValue( "wrongEntityUuidType", wrongEntityUuidType() ) );
-            result.add( PotentialAssignment.forValue( "wrongEntityTypeLength", wrongEntityTypeLength() ) );
 
-            return result;
+                          try {
+                              result.add( PotentialAssignment.forValue( assignment.getDescription(), new Entity((Id)assignment.getValue()) ) );
+                          }
+                          catch ( PotentialAssignment.CouldNotGenerateValueException e ) {
+                              throw new RuntimeException( e );
+                          }
+                      }
+                      return result;
         }
 
 
-        /** Incorrect fields */
-
-
-        private static Entity wrongEntityUuidType() {
-
-
-            final Id entityId = mock( Id.class );
-
-            //set this to a non time uuid
-            when( entityId.getUuid() ).thenReturn( UUID.randomUUID() );
-            when( entityId.getType() ).thenReturn( "test" );
-
-            return new Entity( entityId );
-        }
-
-
-        private static Entity wrongEntityTypeLength() {
-
-
-            final Id entityId = mock( Id.class );
-
-            //set this to a non time uuid
-            when( entityId.getUuid() ).thenReturn( UUID.randomUUID() );
-            when( entityId.getType() ).thenReturn( "" );
-
-            return new Entity( entityId );
-        }
     }
 }

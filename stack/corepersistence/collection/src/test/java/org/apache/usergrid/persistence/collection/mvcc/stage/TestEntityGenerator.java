@@ -14,7 +14,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-/** @author tnine */
+/** Helper class for generating MvccEntities and Entities
+ * @author tnine */
 public class TestEntityGenerator {
 
 
