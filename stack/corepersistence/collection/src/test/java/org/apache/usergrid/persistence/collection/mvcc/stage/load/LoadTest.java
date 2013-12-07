@@ -1,0 +1,121 @@
+package org.apache.usergrid.persistence.collection.mvcc.stage.load;
+
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.Test;
+
+import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
+import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import com.google.common.collect.Lists;
+
+import rx.Observable;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+
+
+/** @author tnine */
+public class LoadTest  extends AbstractIdStageTest {
+
+
+    @Test
+    public void testLoadWithData(){
+        final EntityCollection collection = mock(EntityCollection.class);
+        final UUIDService uuidService = mock(UUIDService.class);
+        final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+
+
+        final UUID loadVersion = UUIDGenerator.newTimeUUID();
+
+        //mock up the time uuid
+        when(uuidService.newTimeUUID()).thenReturn(loadVersion);
+
+        final Id entityId = TestEntityGenerator.generateId();
+
+        final IoEvent<Id> entityIoEvent = new IoEvent<Id>(collection,  entityId );
+
+
+        final Entity entity = TestEntityGenerator.generateEntity(entityId, loadVersion);
+
+        final MvccEntity mvccEntity = TestEntityGenerator.fromEntity( entity );
+
+        final List<MvccEntity> results = Lists.newArrayList( mvccEntity );
+
+        //mock up returning a list of MvccEntities
+        when(serializationStrategy.load( collection, entityId, loadVersion, 1 )).thenReturn( results);
+
+
+
+        Load load = new Load( uuidService, serializationStrategy );
+        Observable<Entity> response = load.call( entityIoEvent );
+
+        Entity loaded = response.toBlockingObservable().single();
+
+        assertSame("Same entity was loaded", entity, loaded);
+
+
+
+    }
+
+
+    @Test
+    public void testLoadCleared(){
+        final EntityCollection collection = mock(EntityCollection.class);
+        final UUIDService uuidService = mock(UUIDService.class);
+        final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+
+
+        final UUID loadVersion = UUIDGenerator.newTimeUUID();
+
+        //mock up the time uuid
+        when(uuidService.newTimeUUID()).thenReturn(loadVersion);
+
+        final Id entityId = TestEntityGenerator.generateId();
+
+        final IoEvent<Id> entityIoEvent = new IoEvent<Id>(collection,  entityId );
+
+
+
+
+        final List<MvccEntity> results = Collections.EMPTY_LIST;
+
+        //mock up returning a list of MvccEntities
+        when(serializationStrategy.load( collection, entityId, loadVersion, 1 )).thenReturn( results);
+
+
+
+        Load load = new Load( uuidService, serializationStrategy );
+        Observable<Entity> response = load.call( entityIoEvent );
+
+        Entity loaded = response.toBlockingObservable().lastOrDefault(null);
+
+        assertNull( "No entity was loaded", loaded );
+    }
+
+
+
+
+
+    @Override
+    protected void validateStage( final IoEvent<Id> event ) {
+        final UUIDService uuidService = mock(UUIDService.class);
+        final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+
+        new Load(uuidService, serializationStrategy).call( event );
+    }
+}

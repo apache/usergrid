@@ -58,19 +58,21 @@ public class WriteVerifyTest extends AbstractMvccEntityStageTest {
         //verify the log entry is correct
         MvccEntity entry = result.getEvent();
 
-        assertEquals( "version did not not match entityId", mvccEntity.getVersion(), entry.getVersion() );
-        assertEquals( "Entity is correct", entity, entry.getEntity().orNull() );
-
+         //verify uuid and version in both the MvccEntity and the entity itself
+        //assertSame is used on purpose.  We want to make sure the same instance is used, not a copy.
+        //this way the caller's runtime type is retained.
+        assertSame( "id correct", entity.getId(), entry.getId() );
+        assertSame( "version did not not match entityId", entity.getVersion(), entry.getVersion() );
+        assertSame( "Entity correct", entity, entry.getEntity().get() );
 
     }
-
-
 
 
     @Override
-    protected Func1<IoEvent<MvccEntity>, ?> getInstance() {
-        return new WriteVerify( );
+    protected void validateStage( final IoEvent<MvccEntity> event ) {
+        new WriteVerify( ).call( event );
     }
+
 }
 
 

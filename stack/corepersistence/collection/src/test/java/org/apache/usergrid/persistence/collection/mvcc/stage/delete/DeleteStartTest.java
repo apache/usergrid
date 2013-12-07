@@ -1,5 +1,7 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
+
+import java.util.UUID;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -8,30 +10,34 @@ import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
-import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractEntityStageTest;
+import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.netflix.astyanax.MutationBatch;
 
 import rx.Observable;
+import rx.util.functions.Func1;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.same;
 import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class WriteStartTest extends AbstractEntityStageTest {
+public class DeleteStartTest extends AbstractIdStageTest{
 
-    /** Standard flow */
     @Test
-    public void testStartStage() throws Exception {
-
+    public void testWrite(){
 
         final EntityCollection context = mock( EntityCollection.class );
 
@@ -46,14 +52,23 @@ public class WriteStartTest extends AbstractEntityStageTest {
         when( logStrategy.write( same( context ), logEntry.capture() ) ).thenReturn( mutation );
 
 
-        //set up the mock to return the entity from the start phase
-        final Entity entity = TestEntityGenerator.generateEntity();
+
+        //mock up the version
+        final UUIDService uuidService = mock(UUIDService.class);
+
+        final UUID version = UUIDGenerator.newTimeUUID();
+
+        when(uuidService.newTimeUUID()).thenReturn( version );
+
 
         //run the stage
-        WriteStart newStage = new WriteStart( logStrategy );
+        DeleteStart newStage = new DeleteStart( logStrategy, uuidService );
+
+        final Id id = TestEntityGenerator.generateId();
 
 
-        Observable<IoEvent<MvccEntity>> observable = newStage.call( new IoEvent<Entity>( context, entity ) );
+
+        Observable<IoEvent<MvccEntity>> observable = newStage.call( new IoEvent<Id>( context, id ) );
 
         //verify the observable is correct
         IoEvent<MvccEntity> result = observable.toBlockingObservable().single();
@@ -62,27 +77,31 @@ public class WriteStartTest extends AbstractEntityStageTest {
         //verify the log entry is correct
         MvccLogEntry entry = logEntry.getValue();
 
-        assertEquals( "id correct", entity.getId(), entry.getEntityId() );
-        assertEquals( "version did not not match entityId", entity.getVersion(), entry.getVersion() );
+        assertEquals( "id correct", id, entry.getEntityId()) ;
+        assertEquals( "version correct", version, entry.getVersion() );
         assertEquals( "EventStage is correct", Stage.ACTIVE, entry.getStage() );
 
 
         MvccEntity created = result.getEvent();
 
         //verify uuid and version in both the MvccEntity and the entity itself
+       //verify uuid and version in both the MvccEntity and the entity itself
         //assertSame is used on purpose.  We want to make sure the same instance is used, not a copy.
         //this way the caller's runtime type is retained.
-        assertSame( "id correct", entity.getId(), created.getId() );
-        assertSame( "version did not not match entityId", entity.getVersion(), created.getVersion() );
-        assertSame( "Entity correct", entity, created.getEntity().get() );
+        assertSame( "id correct", id, created.getId() );
+        assertSame( "version did not not match entityId", version, created.getVersion() );
+        assertFalse( "Entity correct", created.getEntity().isPresent() );
     }
 
 
     @Override
-    protected void validateStage( final IoEvent<Entity> event ) {
-        final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
-        new WriteStart( logStrategy ).call( event );
+    protected void validateStage( final IoEvent<Id> event ) {
+
+        MvccLogEntrySerializationStrategy logStrategy = mock(MvccLogEntrySerializationStrategy.class);
+
+        UUIDService uuidService = mock(UUIDService.class);
+
+        new DeleteStart( logStrategy, uuidService ).call( event );
     }
+
 }
-
-

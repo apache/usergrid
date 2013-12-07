@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.Delete;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
@@ -53,7 +53,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     //delete stages
     private final DeleteStart deleteStart;
-    private final Delete deleteCommit;
+    private final DeleteCommit deleteCommit;
 
 
     @Inject
@@ -61,7 +61,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final WriteVerify writeVerifyWrite, final WriteCommit writeCommit,
 
 
-                                        final Load load, final DeleteStart deleteStart, final Delete deleteCommit,
+                                        final Load load, final DeleteStart deleteStart, final DeleteCommit deleteCommit,
                                         @Assisted final EntityCollection context ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );

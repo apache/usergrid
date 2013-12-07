@@ -57,12 +57,10 @@ public abstract class AbstractIdStageTest {
 
 
            //run the stage
-           Func1<IoEvent<Id>, ?> newStage = getInstance();
-
-           newStage.call( new IoEvent<Id>( context, id ) );
+           validateStage( new IoEvent<Id>( context, id ) );
        }
 
 
     /** Get an instance of the Func1 That takes an IoEvent with an entity type for validation testing */
-    protected abstract Func1<IoEvent<Id>, ?> getInstance();
+    protected abstract void validateStage(IoEvent<Id> event);
 }

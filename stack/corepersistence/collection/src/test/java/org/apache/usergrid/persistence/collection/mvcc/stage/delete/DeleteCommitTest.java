@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
 import org.junit.Test;
@@ -11,6 +11,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -28,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class WriteCommitTest extends AbstractMvccEntityStageTest {
+public class DeleteCommitTest extends AbstractMvccEntityStageTest {
 
     /** Standard flow */
     @Test
@@ -79,7 +80,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         //verify the log entry is correct
         MvccLogEntry entry = logEntry.getValue();
 
-        assertEquals( "id correct", entity.getId(), entry.getEntityId() );
+        assertEquals( "id correct", entity.getId(), entry.getEntityId()) ;
         assertEquals( "version was not correct", entity.getVersion(), entry.getVersion() );
         assertEquals( "EventStage is correct", Stage.COMMITTED, entry.getStage() );
 
@@ -115,8 +116,9 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         when( mvccEntityStrategy.write( any( EntityCollection.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
-        new WriteCommit( logStrategy, mvccEntityStrategy ).call( event );
+        new DeleteCommit( logStrategy, mvccEntityStrategy ).call( event );
     }
+
 }
 
 

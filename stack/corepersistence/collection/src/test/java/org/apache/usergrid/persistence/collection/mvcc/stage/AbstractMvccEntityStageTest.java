@@ -52,14 +52,10 @@ public abstract class AbstractMvccEntityStageTest {
 
            when( mvccEntity.getEntity() ).thenReturn( Optional.of( invalidValueEntity ) );
 
-
-           //run the stage
-           Func1<IoEvent<MvccEntity>, ?> newStage = getInstance();
-
-           newStage.call( new IoEvent<MvccEntity>( context, mvccEntity ) );
+            validateStage( new IoEvent<MvccEntity>( context, mvccEntity ) );
        }
 
 
     /** Get an instance of the Func1 That takes an IoEvent with an entity type for validation testing */
-    protected abstract Func1<IoEvent<MvccEntity>, ?> getInstance();
+    protected abstract void validateStage(IoEvent<MvccEntity> event);
 }

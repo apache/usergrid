@@ -16,6 +16,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryI
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -59,6 +60,7 @@ public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
     public Observable<IoEvent<MvccEntity>> call( final IoEvent<Id> entityIoEvent ) {
         final Id entityId = entityIoEvent.getEvent();
 
+        EntityUtils.verifyIdentity( entityId );
 
         final UUID version = uuidService.newTimeUUID();
 

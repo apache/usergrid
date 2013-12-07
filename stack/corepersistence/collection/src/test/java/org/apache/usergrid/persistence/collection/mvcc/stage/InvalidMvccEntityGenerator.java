@@ -13,6 +13,7 @@ import org.junit.experimental.theories.ParametersSuppliedBy;
 import org.junit.experimental.theories.PotentialAssignment;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -47,6 +48,21 @@ public class InvalidMvccEntityGenerator {
             result.add( PotentialAssignment.forValue( "nullEntityId", nullEntityId() ) );
             result.add( PotentialAssignment.forValue( "nullEntityType", nullEntityType() ) );
 
+            //copy null Id info
+            for ( PotentialAssignment assignment : new InvalidIdGenerator.NullFieldsSupplier()
+                    .getValueSources( sig ) ) {
+
+
+                try {
+                    result.add( PotentialAssignment
+                            .forValue( assignment.getDescription(), invalidEntityId( ( Id ) assignment.getValue() ) ) );
+                }
+                catch ( PotentialAssignment.CouldNotGenerateValueException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+
+
             return result;
         }
 
@@ -79,6 +95,18 @@ public class InvalidMvccEntityGenerator {
 
             return entity;
         }
+
+
+        /** Generate and MVccEntity that is correct with the id (which can be invalid) */
+        private static MvccEntity invalidEntityId( Id id ) {
+
+            final MvccEntity entity = mock( MvccEntity.class );
+
+            when( entity.getId() ).thenReturn( id );
+            when( entity.getVersion() ).thenReturn( UUIDGenerator.newTimeUUID() );
+
+            return entity;
+        }
     }
 
 
@@ -99,6 +127,21 @@ public class InvalidMvccEntityGenerator {
 
 
             result.add( PotentialAssignment.forValue( "wrongUuidType", wrongUuidType() ) );
+
+            //copy invalid id info
+            for ( PotentialAssignment assignment : new InvalidIdGenerator.IllegalFieldsSupplier()
+                    .getValueSources( sig ) ) {
+
+
+                try {
+                    result.add( PotentialAssignment
+                            .forValue( assignment.getDescription(), new Entity( ( Id ) assignment.getValue() ) ) );
+                }
+                catch ( PotentialAssignment.CouldNotGenerateValueException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+
 
             return result;
         }
@@ -121,6 +164,5 @@ public class InvalidMvccEntityGenerator {
 
             return entity;
         }
-
     }
 }

@@ -28,18 +28,18 @@ import rx.util.functions.Action1;
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
 @Singleton
-public class Delete implements Action1<IoEvent<MvccEntity>> {
+public class DeleteCommit implements Action1<IoEvent<MvccEntity>> {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( Delete.class );
+    private static final Logger LOG = LoggerFactory.getLogger( DeleteCommit.class );
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
 
 
     @Inject
-    public Delete( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                   final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+    public DeleteCommit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                         final MvccEntitySerializationStrategy entitySerializationStrategy ) {
 
         Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );

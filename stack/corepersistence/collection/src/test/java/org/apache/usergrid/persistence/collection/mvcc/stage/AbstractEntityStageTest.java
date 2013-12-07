@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.util.functions.Func1;
 
@@ -46,12 +47,11 @@ public abstract class AbstractEntityStageTest {
 
 
         //run the stage
-        Func1<IoEvent<Entity>, ?> newStage = getInstance();
-
-        newStage.call( new IoEvent<Entity>( context, entity ) );
+        validateStage( new IoEvent<Entity>( context, entity ) );
     }
 
 
     /** Get an instance of the Func1 That takes an IoEvent with an entity type for validation testing */
-    protected abstract Func1<IoEvent<Entity>, ?> getInstance();
+    protected abstract void validateStage(IoEvent<Entity> event);
+
 }

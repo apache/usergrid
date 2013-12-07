@@ -24,7 +24,7 @@ public interface EntityCollectionManager {
     public Observable<Entity> write( Entity entity );
 
 
-    /** Delete the entity and remove it's indexes with the given entity id */
+    /** DeleteCommit the entity and remove it's indexes with the given entity id */
     public Subscription delete( Id entityId );
 
     /** Load the entity with the given entity Id */

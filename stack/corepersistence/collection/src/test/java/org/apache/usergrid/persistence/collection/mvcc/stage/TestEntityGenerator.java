@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
@@ -38,14 +40,35 @@ public class TestEntityGenerator {
     /**
      * Generate a valid entity
      * @return
-     * @throws IllegalAccessException
      */
-    public static Entity generateEntity() throws IllegalAccessException {
-            final Entity entity = new Entity( "test" );
+    public static Entity generateEntity()  {
+            final Entity entity = new Entity( generateId());
             final UUID version = UUIDGenerator.newTimeUUID();
 
             EntityUtils.setVersion( entity, version );
 
             return entity;
         }
+
+    /**
+         * Generate a valid entity
+         * @return
+         */
+        public static Entity generateEntity(final Id id, final UUID version)  {
+                final Entity entity = new Entity(id);
+
+                EntityUtils.setVersion( entity, version );
+
+                return entity;
+            }
+
+
+
+    /**
+     * Generate an id with type "test" and a new time uuid
+     * @return
+     */
+    public static Id generateId(){
+        return new SimpleId(UUIDGenerator.newTimeUUID(), "test");
+    }
 }

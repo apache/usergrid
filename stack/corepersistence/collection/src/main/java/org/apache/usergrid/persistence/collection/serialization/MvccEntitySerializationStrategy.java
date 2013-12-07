@@ -51,7 +51,7 @@ public interface MvccEntitySerializationStrategy {
 
 
     /**
-     * Delete this version from the persistence store, but keep the version to mark that is has been cleared This can be
+     * DeleteCommit this version from the persistence store, but keep the version to mark that is has been cleared This can be
      * used in a mark+sweep system.  The entity with the given version will exist in the context, but no data will be
      * stored
      */
@@ -59,7 +59,7 @@ public interface MvccEntitySerializationStrategy {
 
 
     /**
-     * Delete the entity from the context with the given entityId and version
+     * DeleteCommit the entity from the context with the given entityId and version
      *
      * @param context The context that contains the entity
      * @param entityId The entity id to delete

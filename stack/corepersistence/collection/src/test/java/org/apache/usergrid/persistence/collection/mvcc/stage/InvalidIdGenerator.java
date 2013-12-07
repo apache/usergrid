@@ -4,6 +4,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +34,6 @@ public class InvalidIdGenerator {
     public @interface NullFields {
 
     }
-
 
     /** Supplies all possible combination of null fields on ids */
     public static class NullFieldsSupplier extends ParameterSupplier {
