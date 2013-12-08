@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage;
+package org.apache.usergrid.persistence.collection.util;
 
 
 import java.lang.annotation.Retention;
@@ -44,6 +44,7 @@ public class InvalidIdGenerator {
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
 
 
+            result.add( PotentialAssignment.forValue( "nullId", null ) );
             result.add( PotentialAssignment.forValue( "nullEntityId", nullEntityId() ) );
             result.add( PotentialAssignment.forValue( "nullEntityType", nullEntityType() ) );
 

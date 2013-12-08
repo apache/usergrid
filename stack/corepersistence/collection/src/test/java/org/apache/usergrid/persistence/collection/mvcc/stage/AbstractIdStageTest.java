@@ -7,16 +7,10 @@ import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.collection.util.InvalidIdGenerator;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.common.base.Optional;
-
-import rx.util.functions.Func1;
-
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 
 /** @author tnine */

@@ -62,21 +62,24 @@ public class EntityUtils {
     public static void verifyMvccEntityWithEntity( MvccEntity entity ) {
 
 
-        verifyMvccEntityNoEntity( entity );
+        Preconditions.checkNotNull( entity.getEntity().isPresent(), "Entity is required" );
+        verifyMvccEntityOptionalEntity( entity );
 
-        verifyEntityWrite( entity.getEntity().orNull() );
+
     }
 
 
-    /** Verify the version is correct.  Does not verify the contained entity */
-    public static void verifyMvccEntityNoEntity( MvccEntity entity ) {
+    /** Verify the version is correct.  Does not verify the contained entity of it is null */
+    public static void verifyMvccEntityOptionalEntity( MvccEntity entity ) {
 
 
         verifyIdentity( entity.getId() );
 
         verifyVersion( entity.getVersion() );
 
-        verifyEntityWrite( entity.getEntity().orNull() );
+        if(entity.getEntity().isPresent()){
+            verifyEntityWrite( entity.getEntity().orNull() );
+        }
     }
 
 

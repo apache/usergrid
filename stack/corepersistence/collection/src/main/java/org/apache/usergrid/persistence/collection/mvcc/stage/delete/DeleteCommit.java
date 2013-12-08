@@ -55,7 +55,7 @@ public class DeleteCommit implements Action1<IoEvent<MvccEntity>> {
 
         final MvccEntity entity = idIoEvent.getEvent();
 
-        EntityUtils.verifyMvccEntityNoEntity( entity );
+        EntityUtils.verifyMvccEntityOptionalEntity( entity );
 
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();

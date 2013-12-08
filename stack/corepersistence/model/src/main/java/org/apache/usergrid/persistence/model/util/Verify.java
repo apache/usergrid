@@ -25,7 +25,11 @@ public class Verify {
      * @param message
      */
     public static void stringExists(String string, String message){
-        if(string == null || string.length() == 0){
+        if(string == null){
+           throw new NullPointerException( message );
+        }
+
+        if(string.length() == 0){
             throw new IllegalArgumentException( message );
         }
     }
