@@ -14,7 +14,7 @@ import rx.util.functions.Func1;
 
 /** This phase should execute any verification on the MvccEntity */
 @Singleton
-public class WriteVerify implements Func1<IoEvent<MvccEntity>, Observable<IoEvent<MvccEntity>>> {
+public class WriteVerify implements Func1<IoEvent<MvccEntity>, IoEvent<MvccEntity>> {
 
     @Inject
     public WriteVerify() {
@@ -22,10 +22,10 @@ public class WriteVerify implements Func1<IoEvent<MvccEntity>, Observable<IoEven
 
 
     @Override
-    public Observable<IoEvent<MvccEntity>> call( final IoEvent<MvccEntity> mvccEntityIoEvent ) {
+    public IoEvent<MvccEntity> call( final IoEvent<MvccEntity> mvccEntityIoEvent ) {
         EntityUtils.verifyMvccEntityWithEntity(mvccEntityIoEvent.getEvent());
 
-        //no op, just emit the new obsevable
-        return Observable.from( mvccEntityIoEvent );
+        //no op, just emit the value
+        return mvccEntityIoEvent;
     }
 }

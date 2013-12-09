@@ -24,11 +24,12 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.util.functions.Action1;
+import rx.util.functions.Func1;
 
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
 @Singleton
-public class DeleteCommit implements Action1<IoEvent<MvccEntity>> {
+public class DeleteCommit implements Func1<IoEvent<MvccEntity>, Void> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( DeleteCommit.class );
@@ -51,7 +52,7 @@ public class DeleteCommit implements Action1<IoEvent<MvccEntity>> {
 
 
     @Override
-    public void call( final IoEvent<MvccEntity> idIoEvent ) {
+    public Void call( final IoEvent<MvccEntity> idIoEvent ) {
 
         final MvccEntity entity = idIoEvent.getEvent();
 
@@ -88,5 +89,6 @@ public class DeleteCommit implements Action1<IoEvent<MvccEntity>> {
          * We're done executing.
          */
 
+        return null;
     }
 }

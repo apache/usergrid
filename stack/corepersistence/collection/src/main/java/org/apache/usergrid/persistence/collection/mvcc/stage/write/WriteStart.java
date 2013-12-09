@@ -33,7 +33,7 @@ import rx.util.functions.Func1;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<MvccEntity>>> {
+public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteStart.class );
 
@@ -50,7 +50,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
 
 
     @Override
-    public Observable<IoEvent<MvccEntity>> call( final IoEvent<Entity> ioEvent ) {
+    public IoEvent<MvccEntity> call( final IoEvent<Entity> ioEvent ) {
         {
             final Entity entity = ioEvent.getEvent();
             final Scope scope = ioEvent.getEntityCollection();
@@ -79,7 +79,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
             //create the mvcc entity for the next stage
             final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
 
-            return Observable.from( new IoEvent<MvccEntity>( scope, nextStage ) );
+            return new IoEvent<MvccEntity>( scope, nextStage );
         }
     }
 }

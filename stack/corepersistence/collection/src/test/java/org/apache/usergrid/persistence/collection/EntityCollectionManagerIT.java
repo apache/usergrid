@@ -105,7 +105,7 @@ public class EntityCollectionManagerIT {
 
         assertEquals( "Same value", createReturned, loadReturned );
 
-        manager.delete( createReturned.getId() );
+        manager.delete( createReturned.getId() ).toBlockingObservable().next();
 
         loadObservable = manager.load( createReturned.getId() );
 

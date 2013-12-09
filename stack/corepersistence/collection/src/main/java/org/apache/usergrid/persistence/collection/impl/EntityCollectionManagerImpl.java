@@ -25,7 +25,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
-import rx.Subscription;
 
 
 /**
@@ -103,13 +102,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         //fire the stages
         //TODO use our own scheduler to help with multitennancy here
-        return writeStart.call( new IoEvent<Entity>( context, entity ) ).mapMany( writeVerifyWrite )
-                         .mapMany( writeCommit );
+
+        return Observable.just( new IoEvent<Entity>(context, entity) ).map(writeStart).map( writeVerifyWrite ).map(
+                writeCommit );
     }
 
 
     @Override
-    public Subscription delete( final Id entityId ) {
+    public Observable<Void> delete( final Id entityId ) {
 
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
@@ -118,7 +118,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //TODO use our own scheduler to help with multitennancy here
-        return deleteStart.call( new IoEvent<Id>( context, entityId ) ).subscribe( deleteCommit );
+        return Observable.just( new IoEvent<Id>( context, entityId ) ).map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -130,6 +130,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
         //TODO use our own scheduler to help with multitennancy here
-        return load.call( new IoEvent<Id>( context, entityId ) );
+        return Observable.just( new IoEvent<Id>( context, entityId )  ).map( load );
     }
 }

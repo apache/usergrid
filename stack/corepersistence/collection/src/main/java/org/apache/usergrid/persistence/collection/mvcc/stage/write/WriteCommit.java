@@ -30,7 +30,7 @@ import rx.util.functions.Func1;
 
 /** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
 @Singleton
-public class WriteCommit implements Func1<IoEvent<MvccEntity>, Observable<Entity>> {
+public class WriteCommit implements Func1<IoEvent<MvccEntity>, Entity> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteCommit.class );
@@ -52,7 +52,7 @@ public class WriteCommit implements Func1<IoEvent<MvccEntity>, Observable<Entity
 
 
     @Override
-    public Observable<Entity> call( final IoEvent<MvccEntity> ioEvent ) {
+    public Entity call( final IoEvent<MvccEntity> ioEvent ) {
 
         final MvccEntity entity = ioEvent.getEvent();
 
@@ -86,6 +86,6 @@ public class WriteCommit implements Func1<IoEvent<MvccEntity>, Observable<Entity
             throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
         }
 
-        return Observable.from( entity.getEntity().get() );
+        return entity.getEntity().get();
     }
 }

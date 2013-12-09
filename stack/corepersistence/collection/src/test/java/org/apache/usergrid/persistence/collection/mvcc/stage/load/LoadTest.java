@@ -60,9 +60,8 @@ public class LoadTest  extends AbstractIdStageTest {
 
 
         Load load = new Load( uuidService, serializationStrategy );
-        Observable<Entity> response = load.call( entityIoEvent );
+        Entity loaded = load.call( entityIoEvent );
 
-        Entity loaded = response.toBlockingObservable().single();
 
         assertSame("Same entity was loaded", entity, loaded);
 
@@ -98,9 +97,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
 
         Load load = new Load( uuidService, serializationStrategy );
-        Observable<Entity> response = load.call( entityIoEvent );
-
-        Entity loaded = response.toBlockingObservable().lastOrDefault(null);
+        Entity loaded = load.call( entityIoEvent );
 
         assertNull( "No entity was loaded", loaded );
     }

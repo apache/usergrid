@@ -36,7 +36,7 @@ import rx.util.functions.Func1;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEntity>>> {
+public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( DeleteStart.class );
 
@@ -57,7 +57,7 @@ public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
 
 
     @Override
-    public Observable<IoEvent<MvccEntity>> call( final IoEvent<Id> entityIoEvent ) {
+    public IoEvent<MvccEntity> call( final IoEvent<Id> entityIoEvent ) {
         final Id entityId = entityIoEvent.getEvent();
 
         EntityUtils.verifyIdentity( entityId );
@@ -86,6 +86,6 @@ public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
 
-        return Observable.from( new IoEvent<MvccEntity>( scope, nextStage ) );
+        return new IoEvent<MvccEntity>( scope, nextStage );
     }
 }

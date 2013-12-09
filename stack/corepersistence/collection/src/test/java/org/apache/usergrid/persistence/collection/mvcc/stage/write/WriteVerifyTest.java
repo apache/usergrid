@@ -44,10 +44,8 @@ public class WriteVerifyTest extends AbstractMvccEntityStageTest {
         WriteVerify newStage = new WriteVerify(  );
 
 
-        Observable<IoEvent<MvccEntity>> observable = newStage.call( new IoEvent<MvccEntity>( scope, mvccEntity ) );
+        IoEvent<MvccEntity> result = newStage.call( new IoEvent<MvccEntity>( scope, mvccEntity ) );
 
-        //verify the observable is correct
-        IoEvent<MvccEntity> result = observable.toBlockingObservable().single();
 
 
 

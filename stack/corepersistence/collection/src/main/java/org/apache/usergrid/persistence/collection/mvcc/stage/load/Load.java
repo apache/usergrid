@@ -27,7 +27,7 @@ import rx.util.functions.Func1;
 
 /** This stage is a load stage to load a single entity */
 @Singleton
-public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
+public class Load implements Func1<IoEvent<Id>, Entity> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Load.class );
@@ -48,7 +48,7 @@ public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
 
 
     @Override
-    public Observable<Entity> call( final IoEvent<Id> idIoEvent ) {
+    public Entity call( final IoEvent<Id> idIoEvent ) {
         final Id entityId = idIoEvent.getEvent();
 
         EntityUtils.verifyIdentity( entityId );
@@ -63,7 +63,7 @@ public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
 
         //nothing to do, we didn't get a result back
         if ( results.size() != 1 ) {
-            return Observable.empty();
+            return null;
         }
 
         final Optional<Entity> targetVersion = results.get( 0 ).getEntity();
@@ -73,10 +73,10 @@ public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
 
             //TODO, a lazy async repair/cleanup here?
 
-            return Observable.empty();
+            return null;
         }
 
 
-        return Observable.from( targetVersion.get() );
+        return  targetVersion.get();
     }
 }

@@ -20,8 +20,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.netflix.astyanax.MutationBatch;
 
-import rx.Observable;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -31,10 +29,10 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class DeleteStartTest extends AbstractIdStageTest{
+public class DeleteStartTest extends AbstractIdStageTest {
 
     @Test
-    public void testWrite(){
+    public void testWrite() {
 
         final Scope context = mock( Scope.class );
 
@@ -49,13 +47,12 @@ public class DeleteStartTest extends AbstractIdStageTest{
         when( logStrategy.write( same( context ), logEntry.capture() ) ).thenReturn( mutation );
 
 
-
         //mock up the version
-        final UUIDService uuidService = mock(UUIDService.class);
+        final UUIDService uuidService = mock( UUIDService.class );
 
         final UUID version = UUIDGenerator.newTimeUUID();
 
-        when(uuidService.newTimeUUID()).thenReturn( version );
+        when( uuidService.newTimeUUID() ).thenReturn( version );
 
 
         //run the stage
@@ -64,17 +61,14 @@ public class DeleteStartTest extends AbstractIdStageTest{
         final Id id = TestEntityGenerator.generateId();
 
 
-
-        Observable<IoEvent<MvccEntity>> observable = newStage.call( new IoEvent<Id>( context, id ) );
-
         //verify the observable is correct
-        IoEvent<MvccEntity> result = observable.toBlockingObservable().single();
+        IoEvent<MvccEntity> result = newStage.call( new IoEvent<Id>( context, id ) );
 
 
         //verify the log entry is correct
         MvccLogEntry entry = logEntry.getValue();
 
-        assertEquals( "id correct", id, entry.getEntityId()) ;
+        assertEquals( "id correct", id, entry.getEntityId() );
         assertEquals( "version correct", version, entry.getVersion() );
         assertEquals( "EventStage is correct", Stage.ACTIVE, entry.getStage() );
 
@@ -82,7 +76,7 @@ public class DeleteStartTest extends AbstractIdStageTest{
         MvccEntity created = result.getEvent();
 
         //verify uuid and version in both the MvccEntity and the entity itself
-       //verify uuid and version in both the MvccEntity and the entity itself
+        //verify uuid and version in both the MvccEntity and the entity itself
         //assertSame is used on purpose.  We want to make sure the same instance is used, not a copy.
         //this way the caller's runtime type is retained.
         assertSame( "id correct", id, created.getId() );
@@ -94,11 +88,10 @@ public class DeleteStartTest extends AbstractIdStageTest{
     @Override
     protected void validateStage( final IoEvent<Id> event ) {
 
-        MvccLogEntrySerializationStrategy logStrategy = mock(MvccLogEntrySerializationStrategy.class);
+        MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
 
-        UUIDService uuidService = mock(UUIDService.class);
+        UUIDService uuidService = mock( UUIDService.class );
 
         new DeleteStart( logStrategy, uuidService ).call( event );
     }
-
 }

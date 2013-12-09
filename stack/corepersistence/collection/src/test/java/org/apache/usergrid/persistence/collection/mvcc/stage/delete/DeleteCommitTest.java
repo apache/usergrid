@@ -71,10 +71,10 @@ public class DeleteCommitTest extends AbstractMvccEntityStageTest {
         WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy );
 
 
-        Observable<Entity> observable = newStage.call( new IoEvent<MvccEntity>( context, mvccEntityInput ) );
-
         //verify the observable is correct
-        Entity result = observable.toBlockingObservable().single();
+        Entity result  = newStage.call( new IoEvent<MvccEntity>( context, mvccEntityInput ) );
+
+
 
 
         //verify the log entry is correct
