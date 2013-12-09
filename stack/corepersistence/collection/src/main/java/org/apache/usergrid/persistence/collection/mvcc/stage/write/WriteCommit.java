@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -62,16 +62,16 @@ public class WriteCommit implements Func1<IoEvent<MvccEntity>, Observable<Entity
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        final EntityCollection entityCollection = ioEvent.getEntityCollection();
+        final Scope scope = ioEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( entityCollection, startEntry );
+        MutationBatch logMutation = logEntrySerializationStrategy.write( scope, startEntry );
 
         //now get our actual insert into the entity data
-        MutationBatch entityMutation = entitySerializationStrategy.write( entityCollection, entity );
+        MutationBatch entityMutation = entitySerializationStrategy.write( scope, entity );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );

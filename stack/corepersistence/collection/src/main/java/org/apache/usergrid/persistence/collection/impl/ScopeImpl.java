@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -12,13 +12,13 @@ import com.google.common.base.Preconditions;
  *
  * @author tnine
  */
-public class EntityCollectionImpl implements EntityCollection {
+public class ScopeImpl implements Scope {
 
     private final Id ownerId;
     private final String name;
 
 
-    public EntityCollectionImpl( final Id ownerId, final String name ) {
+    public ScopeImpl( final Id ownerId, final String name ) {
         Preconditions.checkNotNull( ownerId, "ownerId is required" );
         Preconditions.checkNotNull( name, "name is required" );
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
@@ -50,7 +50,7 @@ public class EntityCollectionImpl implements EntityCollection {
             return false;
         }
 
-        final EntityCollectionImpl that = ( EntityCollectionImpl ) o;
+        final ScopeImpl that = ( ScopeImpl ) o;
 
         if ( !name.equals( that.name ) ) {
             return false;
@@ -73,7 +73,7 @@ public class EntityCollectionImpl implements EntityCollection {
 
     @Override
     public String toString() {
-        return "EntityCollectionImpl{" +
+        return "ScopeImpl{" +
                 " ownerId=" + ownerId +
                 ", name='" + name + '\'' +
                 '}';

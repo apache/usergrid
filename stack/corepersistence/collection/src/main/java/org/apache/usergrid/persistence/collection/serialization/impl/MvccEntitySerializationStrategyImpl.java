@@ -12,7 +12,7 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.db.marshal.UUIDType;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.migration.CollectionColumnFamily;
 import org.apache.usergrid.persistence.collection.migration.Migration;
@@ -64,7 +64,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch write( final EntityCollection context, final MvccEntity entity ) {
+    public MutationBatch write( final Scope context, final MvccEntity entity ) {
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final UUID colName = entity.getVersion();
@@ -82,7 +82,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MvccEntity load( final EntityCollection context, final Id entityId, final UUID version ) {
+    public MvccEntity load( final Scope context, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -109,7 +109,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public List<MvccEntity> load( final EntityCollection context, final Id entityId, final UUID version,
+    public List<MvccEntity> load( final Scope context, final Id entityId, final UUID version,
                                   final int maxSize ) {
 
         Preconditions.checkNotNull( context, "context is required" );
@@ -139,7 +139,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch clear( final EntityCollection context, final Id entityId, final UUID version ) {
+    public MutationBatch clear( final Scope context, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -156,7 +156,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch delete( final EntityCollection context, final Id entityId, final UUID version ) {
+    public MutationBatch delete( final Scope context, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );

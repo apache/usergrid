@@ -23,7 +23,7 @@ public class EntityCollectionManagerTest {
     //
     //        final CollectionEventBus eventBus = mock( CollectionEventBus.class );
     //
-    //        final EntityCollection collection = mock( EntityCollection.class );
+    //        final Scope collection = mock( Scope.class );
     //
     //        final Result result = new Result();
     //
@@ -78,7 +78,7 @@ public class EntityCollectionManagerTest {
     //
     //        final CollectionEventBus eventBus = mock( CollectionEventBus.class );
     //
-    //        final EntityCollection collection = mock( EntityCollection.class );
+    //        final Scope collection = mock( Scope.class );
     //
     //
     //        EntityCollectionManagerImpl collectionManager =
@@ -105,7 +105,7 @@ public class EntityCollectionManagerTest {
     //
     //        final CollectionEventBus eventBus = mock( CollectionEventBus.class );
     //
-    //        final EntityCollection collection = mock( EntityCollection.class );
+    //        final Scope collection = mock( Scope.class );
     //
     //
     //        EntityCollectionManagerImpl collectionManager =
@@ -136,7 +136,7 @@ public class EntityCollectionManagerTest {
     //
     //        final CollectionEventBus eventBus = mock( CollectionEventBus.class );
     //
-    //        final EntityCollection collection = mock( EntityCollection.class );
+    //        final Scope collection = mock( Scope.class );
     //
     //
     //        EntityCollectionManagerImpl collectionManager =

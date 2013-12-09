@@ -17,8 +17,8 @@
 
   <modules>
     <module>model</module>
+    <module>graph</module>
     <module>collection</module>
-    <module>index</module>
     <module>testutils</module>
     <!-- Removed perfest until the jackson/guice is sorted
     <module>perftest</module> -->

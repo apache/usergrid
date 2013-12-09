@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -53,7 +53,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
     public Observable<IoEvent<MvccEntity>> call( final IoEvent<Entity> ioEvent ) {
         {
             final Entity entity = ioEvent.getEvent();
-            final EntityCollection entityCollection = ioEvent.getEntityCollection();
+            final Scope scope = ioEvent.getEntityCollection();
 
 
             EntityUtils.verifyEntityWrite( entity );
@@ -64,7 +64,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                     org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
 
-            MutationBatch write = logStrategy.write( entityCollection, startEntry );
+            MutationBatch write = logStrategy.write( scope, startEntry );
 
 
             try {
@@ -79,7 +79,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, Observable<IoEvent<Mvc
             //create the mvcc entity for the next stage
             final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
 
-            return Observable.from( new IoEvent<MvccEntity>( entityCollection, nextStage ) );
+            return Observable.from( new IoEvent<MvccEntity>( scope, nextStage ) );
         }
     }
 }

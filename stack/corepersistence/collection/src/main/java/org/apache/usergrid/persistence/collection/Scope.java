@@ -5,10 +5,11 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * A context to use when creating the collection manager.  Typically, this would be something like an application, or an
- * organization.  Some context that "owns" the collection
+ * A scope to use when creating the collection manager.  Typically, this would be something like an application, or an
+ * organization.  Data encapsulated within instances of a scope are mutually exclusive from instances with other ids and
+ * names.
  */
-public interface EntityCollection {
+public interface Scope {
 
     /**
      * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred).  Usually an application

@@ -1,24 +1,24 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 
 
 /** @author tnine */
 public class IoEvent<T> {
 
-    private EntityCollection context;
+    private Scope context;
 
     private T event;
 
 
-    public IoEvent( final EntityCollection context, final T event ) {
+    public IoEvent( final Scope context, final T event ) {
         this.context = context;
         this.event = event;
     }
 
 
-    public EntityCollection getEntityCollection() {
+    public Scope getEntityCollection() {
         return context;
     }
 

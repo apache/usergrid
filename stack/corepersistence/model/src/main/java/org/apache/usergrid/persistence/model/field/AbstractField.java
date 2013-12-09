@@ -16,7 +16,6 @@ public abstract class AbstractField<T> implements Field<T>
     protected String name;
     protected T value;
 
-
     /**
      * Name and value must always be present.
      *

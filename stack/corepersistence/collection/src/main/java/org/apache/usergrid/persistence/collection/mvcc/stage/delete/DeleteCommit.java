@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -61,16 +61,16 @@ public class DeleteCommit implements Action1<IoEvent<MvccEntity>> {
         final UUID version = entity.getVersion();
 
 
-        final EntityCollection entityCollection = idIoEvent.getEntityCollection();
+        final Scope scope = idIoEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( entityCollection, startEntry );
+        MutationBatch logMutation = logEntrySerializationStrategy.write( scope, startEntry );
 
         //insert a "cleared" value into the versions.  Post processing should actually delete
-        MutationBatch entityMutation = entitySerializationStrategy.clear( entityCollection, entityId, version );
+        MutationBatch entityMutation = entitySerializationStrategy.clear( scope, entityId, version );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );

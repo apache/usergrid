@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -36,7 +36,7 @@ public class DeleteCommitTest extends AbstractMvccEntityStageTest {
     public void testStartStage() throws Exception {
 
 
-        final EntityCollection context = mock( EntityCollection.class );
+        final Scope context = mock( Scope.class );
 
 
         //mock returning a mock mutation when we do a log entry write
@@ -106,14 +106,14 @@ public class DeleteCommitTest extends AbstractMvccEntityStageTest {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
 
-        when( logStrategy.write( any( EntityCollection.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
+        when( logStrategy.write( any( Scope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
 
 
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
 
         final MutationBatch entityMutation = mock( MutationBatch.class );
 
-        when( mvccEntityStrategy.write( any( EntityCollection.class ), any( MvccEntity.class ) ) )
+        when( mvccEntityStrategy.write( any( Scope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
         new DeleteCommit( logStrategy, mvccEntityStrategy ).call( event );

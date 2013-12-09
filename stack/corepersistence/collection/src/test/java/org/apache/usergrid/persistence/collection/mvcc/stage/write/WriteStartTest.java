@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -33,7 +33,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
     public void testStartStage() throws Exception {
 
 
-        final EntityCollection context = mock( EntityCollection.class );
+        final Scope context = mock( Scope.class );
 
 
         //mock returning a mock mutation when we do a log entry write

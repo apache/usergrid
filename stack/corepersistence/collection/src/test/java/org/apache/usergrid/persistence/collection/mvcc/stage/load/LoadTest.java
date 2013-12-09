@@ -1,14 +1,13 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
@@ -25,7 +24,6 @@ import rx.Observable;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 
@@ -35,7 +33,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
     @Test
     public void testLoadWithData(){
-        final EntityCollection collection = mock(EntityCollection.class);
+        final Scope collection = mock(Scope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 
@@ -75,7 +73,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
     @Test
     public void testLoadCleared(){
-        final EntityCollection collection = mock(EntityCollection.class);
+        final Scope collection = mock(Scope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 

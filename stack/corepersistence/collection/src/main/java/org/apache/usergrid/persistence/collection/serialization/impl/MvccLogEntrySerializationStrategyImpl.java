@@ -14,7 +14,7 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.db.marshal.UUIDType;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.migration.CollectionColumnFamily;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -70,7 +70,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MutationBatch write( final EntityCollection context, final MvccLogEntry entry ) {
+    public MutationBatch write( final Scope context, final MvccLogEntry entry ) {
 
         Preconditions.checkNotNull( entry, "entry is required" );
 
@@ -96,7 +96,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MvccLogEntry load( final EntityCollection context, final Id entityId, final UUID version )
+    public MvccLogEntry load( final Scope context, final Id entityId, final UUID version )
             throws ConnectionException {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -121,7 +121,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public List<MvccLogEntry> load( final EntityCollection context, final Id entityId, final UUID version,
+    public List<MvccLogEntry> load( final Scope context, final Id entityId, final UUID version,
                                     final int maxSize ) throws ConnectionException {
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -147,7 +147,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MutationBatch delete( final EntityCollection context, final Id entityId, final UUID version ) {
+    public MutationBatch delete( final Scope context, final Id entityId, final UUID version ) {
 
         Preconditions.checkNotNull( context, "context is required" );
         Preconditions.checkNotNull( entityId, "entityId is required" );
@@ -188,7 +188,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
      *
      * @param context We need to use this when getting the keyspace
      */
-    private MutationBatch doWrite( EntityCollection context, Id entityId, RowOp op ) {
+    private MutationBatch doWrite( Scope context, Id entityId, RowOp op ) {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 

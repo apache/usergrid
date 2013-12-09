@@ -6,7 +6,7 @@ import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.util.InvalidIdGenerator;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -47,7 +47,7 @@ public abstract class AbstractIdStageTest {
      */
     public void testStage( final Id id ) throws Exception {
 
-           final EntityCollection context = mock( EntityCollection.class );
+           final Scope context = mock( Scope.class );
 
 
            //run the stage

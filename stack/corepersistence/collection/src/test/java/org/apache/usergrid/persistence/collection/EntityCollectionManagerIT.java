@@ -5,7 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.EntityCollectionImpl;
+import org.apache.usergrid.persistence.collection.impl.ScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
@@ -42,7 +42,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void write() {
 
-        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
@@ -62,7 +62,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndLoad() {
 
-        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -87,7 +87,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadDelete() {
 
-        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -119,7 +119,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadUpdateLoad() {
 
-        EntityCollection context = new EntityCollectionImpl( new SimpleId( "test" ), "test" );
+        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );

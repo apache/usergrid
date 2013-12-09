@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.EntityCollection;
+import org.apache.usergrid.persistence.collection.Scope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -65,12 +65,12 @@ public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
         final UUID version = uuidService.newTimeUUID();
 
 
-        final EntityCollection entityCollection = entityIoEvent.getEntityCollection();
+        final Scope scope = entityIoEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE );
 
-        MutationBatch write = logStrategy.write( entityCollection, startEntry );
+        MutationBatch write = logStrategy.write( scope, startEntry );
 
 
         try {
@@ -86,6 +86,6 @@ public class DeleteStart implements Func1<IoEvent<Id>, Observable<IoEvent<MvccEn
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
 
-        return Observable.from( new IoEvent<MvccEntity>( entityCollection, nextStage ) );
+        return Observable.from( new IoEvent<MvccEntity>( scope, nextStage ) );
     }
 }
