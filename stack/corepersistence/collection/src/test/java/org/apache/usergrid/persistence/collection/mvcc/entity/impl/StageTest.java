@@ -18,7 +18,7 @@ public class StageTest {
 
         assertTrue( Stage.ACTIVE.isTransient() );
 
-        assertEquals( ( byte ) 0, Stage.ACTIVE.getId() );
+        assertEquals(  0, Stage.ACTIVE.getId() );
 
         testUnique( Stage.ACTIVE );
     }
@@ -29,7 +29,7 @@ public class StageTest {
 
         assertTrue( Stage.ROLLBACK.isTransient() );
 
-        assertEquals( ( byte ) 1, Stage.ROLLBACK.getId() );
+        assertEquals( 1, Stage.ROLLBACK.getId() );
 
         testUnique( Stage.ROLLBACK );
     }
@@ -40,7 +40,7 @@ public class StageTest {
 
         assertFalse( Stage.COMMITTED.isTransient() );
 
-        assertEquals( ( byte ) 2, Stage.COMMITTED.getId() );
+        assertEquals( 2, Stage.COMMITTED.getId() );
 
         testUnique( Stage.COMMITTED );
     }
@@ -51,7 +51,7 @@ public class StageTest {
 
         assertFalse( Stage.POSTPROCESS.isTransient() );
 
-        assertEquals( ( byte ) 6, Stage.POSTPROCESS.getId() );
+        assertEquals( 6, Stage.POSTPROCESS.getId() );
 
         testUnique( Stage.POSTPROCESS );
     }
@@ -62,7 +62,7 @@ public class StageTest {
 
         assertFalse( Stage.COMPLETE.isTransient() );
 
-        assertEquals( ( byte ) 14, Stage.COMPLETE.getId() );
+        assertEquals( 14, Stage.COMPLETE.getId() );
 
         testUnique( Stage.COMPLETE );
     }
