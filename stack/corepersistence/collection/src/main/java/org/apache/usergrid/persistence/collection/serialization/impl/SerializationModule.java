@@ -14,7 +14,7 @@ import com.netflix.astyanax.Keyspace;
 
 
 /** @author tnine */
-public class SerializationModule extends AbstractModule{
+public class SerializationModule extends AbstractModule {
 
     @Override
     protected void configure() {

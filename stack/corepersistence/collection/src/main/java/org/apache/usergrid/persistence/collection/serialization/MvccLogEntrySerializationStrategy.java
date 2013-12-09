@@ -13,20 +13,19 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /** The interface that allows us to serialize a log entry to disk */
-public interface MvccLogEntrySerializationStrategy
-{
+public interface MvccLogEntrySerializationStrategy {
 
     /**
      * Serialize the entity to the data store with the given collection context
      *
      * @param entry the entry to write
+     *
      * @return The mutation batch with the mutation operations for this write.
      */
     public MutationBatch write( final EntityCollection context, MvccLogEntry entry );
 
     /**
      * Load and return the stage with the given id and a version that is <= the version provided
-     *
      *
      * @param context The context to persist the entity into
      * @param entityId The entity id to load
@@ -51,7 +50,7 @@ public interface MvccLogEntrySerializationStrategy
             throws ConnectionException;
 
     /**
-     * Delete the stage from the context with the given entityId and version
+     * DeleteCommit the stage from the context with the given entityId and version
      *
      * @param context The context that contains the entity
      * @param entityId The entity id to delete

@@ -13,7 +13,9 @@ import com.netflix.astyanax.serializers.StringSerializer;
 
 /**
  * Serializer for serializing ids into rows
- * @author tnine */
+ *
+ * @author tnine
+ */
 public class IdRowSerializer extends AbstractSerializer<Id> {
 
 
@@ -24,11 +26,14 @@ public class IdRowSerializer extends AbstractSerializer<Id> {
     //Number of characters in the UUID String
     private static final int UUID_STR_LENGTH = 36;
 
-    private IdRowSerializer(){}
+
+    private IdRowSerializer() {}
+
 
     @Override
     public ByteBuffer toByteBuffer( final Id obj ) {
-        String value = new StringBuilder().append( obj.getUuid().toString() ).append(":").append( obj.getType() ).toString();
+        String value =
+                new StringBuilder().append( obj.getUuid().toString() ).append( ":" ).append( obj.getType() ).toString();
 
         return SER.toByteBuffer( value );
     }
@@ -40,18 +45,14 @@ public class IdRowSerializer extends AbstractSerializer<Id> {
         final String totalString = SER.fromByteBuffer( byteBuffer );
 
         final String uuid = totalString.substring( 0, UUID_STR_LENGTH );
-        final String type = totalString.substring( UUID_STR_LENGTH+1 );
+        final String type = totalString.substring( UUID_STR_LENGTH + 1 );
 
         return new SimpleId( UUID.fromString( uuid ), type );
     }
 
 
-
-    /**
-     * Get the singleton serializer
-     * @return
-     */
-    public static IdRowSerializer get(){
+    /** Get the singleton serializer */
+    public static IdRowSerializer get() {
         return INSTANCE;
     }
 }

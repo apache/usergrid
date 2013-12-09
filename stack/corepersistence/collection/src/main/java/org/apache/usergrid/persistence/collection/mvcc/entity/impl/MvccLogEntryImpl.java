@@ -22,8 +22,7 @@ public class MvccLogEntryImpl implements MvccLogEntry {
     private final Stage stage;
 
 
-    public MvccLogEntryImpl( final Id entityId, final UUID version,
-                             final Stage stage ) {
+    public MvccLogEntryImpl( final Id entityId, final UUID version, final Stage stage ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
         Preconditions.checkNotNull( stage, "entity  is required" );

@@ -18,31 +18,31 @@ import static org.junit.Assert.assertEquals;
 public class MvccEntityImplTest {
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void entityIdRequired() {
 
         new MvccEntityImpl( null, UUIDGenerator.newTimeUUID(), Optional.of( new Entity() ) );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void versionRequired() {
 
-        new MvccEntityImpl(new SimpleId("test"), null, Optional.of( new Entity() ) );
+        new MvccEntityImpl( new SimpleId( "test" ), null, Optional.of( new Entity() ) );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void entityRequired() {
 
-        new MvccEntityImpl( new SimpleId("test"), UUIDGenerator.newTimeUUID(), ( Entity ) null );
+        new MvccEntityImpl( new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), ( Entity ) null );
     }
 
 
-    @Test( expected = NullPointerException.class )
+    @Test(expected = NullPointerException.class)
     public void optionalRequired() {
 
-        new MvccEntityImpl(new SimpleId("test"), UUIDGenerator.newTimeUUID(), ( Optional ) null );
+        new MvccEntityImpl( new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), ( Optional ) null );
     }
 
 
@@ -66,7 +66,7 @@ public class MvccEntityImplTest {
 
         final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
-        final Entity entity = new Entity(entityId );
+        final Entity entity = new Entity( entityId );
 
         MvccEntityImpl logEntry = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
 
@@ -81,7 +81,7 @@ public class MvccEntityImplTest {
 
         final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
-        final Entity entity = new Entity(entityId );
+        final Entity entity = new Entity( entityId );
 
         MvccEntityImpl first = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
 
@@ -96,7 +96,7 @@ public class MvccEntityImplTest {
 
         final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
-        final Entity entity = new Entity(entityId );
+        final Entity entity = new Entity( entityId );
 
         MvccEntityImpl first = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
 

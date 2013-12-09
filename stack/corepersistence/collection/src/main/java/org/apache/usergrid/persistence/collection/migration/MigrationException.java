@@ -3,6 +3,7 @@ package org.apache.usergrid.persistence.collection.migration;
 
 /**
  * Thrown when a migration cannot be performed
+ *
  * @author tnine
  */
 public class MigrationException extends Exception {

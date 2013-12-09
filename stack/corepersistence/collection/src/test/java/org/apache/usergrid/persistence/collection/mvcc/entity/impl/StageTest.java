@@ -10,9 +10,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-/**
- * @author tnine
- */
+/** @author tnine */
 public class StageTest {
 
     @Test
@@ -48,8 +46,6 @@ public class StageTest {
     }
 
 
-
-
     @Test
     public void postProcess() {
 
@@ -72,10 +68,7 @@ public class StageTest {
     }
 
 
-    /**
-     * Test we don't have dups in the byte value
-     * @param test
-     */
+    /** Test we don't have dups in the byte value */
     private void testUnique( Stage test ) {
 
         for ( Stage stage : Stage.values() ) {
@@ -88,6 +81,4 @@ public class StageTest {
             assertFalse( stage.getId() == test.getId() );
         }
     }
-
-
 }

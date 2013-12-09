@@ -19,14 +19,12 @@ public class MvccEntityImpl implements MvccEntity {
     private final Optional<Entity> entity;
 
 
-    public MvccEntityImpl( final Id entityId, final UUID version,
-                           final Entity entity ) {
-        this(  entityId, version, Optional.of( entity ) );
+    public MvccEntityImpl( final Id entityId, final UUID version, final Entity entity ) {
+        this( entityId, version, Optional.of( entity ) );
     }
 
 
-    public MvccEntityImpl( final Id entityId, final UUID version,
-                           final Optional<Entity> entity ) {
+    public MvccEntityImpl( final Id entityId, final UUID version, final Optional<Entity> entity ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
         Preconditions.checkNotNull( entity, "entity  is required" );
@@ -55,7 +53,6 @@ public class MvccEntityImpl implements MvccEntity {
     }
 
 
-
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) {
@@ -81,7 +78,7 @@ public class MvccEntityImpl implements MvccEntity {
 
     @Override
     public int hashCode() {
-        int result = 31 *  getId().hashCode();
+        int result = 31 * getId().hashCode();
         result = 31 * result + getVersion().hashCode();
         return result;
     }

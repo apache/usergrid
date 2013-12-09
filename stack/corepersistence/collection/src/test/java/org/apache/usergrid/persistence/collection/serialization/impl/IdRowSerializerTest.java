@@ -15,9 +15,9 @@ import static org.junit.Assert.assertEquals;
 public class IdRowSerializerTest {
 
     @Test
-    public void testSerialization(){
+    public void testSerialization() {
 
-        Id testId = new SimpleId("test");
+        Id testId = new SimpleId( "test" );
 
         IdRowSerializer rowSerializer = IdRowSerializer.get();
 
@@ -27,7 +27,6 @@ public class IdRowSerializerTest {
 
         Id deserialized = rowSerializer.fromByteBuffer( serialized );
 
-        assertEquals("Serialization works correctly", testId, deserialized);
-
+        assertEquals( "Serialization works correctly", testId, deserialized );
     }
 }

@@ -9,7 +9,8 @@ package org.apache.usergrid.persistence.collection.migration;
 public interface MigrationManager {
 
     /**
-     * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do not exist
+     * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do
+     * not exist
      */
     public void migrate() throws MigrationException;
 }

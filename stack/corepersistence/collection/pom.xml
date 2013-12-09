@@ -84,6 +84,13 @@
       <version>1.2.3</version>
     </dependency> -->
 
+    <!-- RX java -->
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-core</artifactId>
+      <version>0.15.1</version>
+    </dependency>
+
     <dependency>
       <groupId>com.google.inject.extensions</groupId>
       <artifactId>guice-multibindings</artifactId>

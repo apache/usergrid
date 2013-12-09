@@ -63,7 +63,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Inject
-    public MvccLogEntrySerializationStrategyImpl( final Keyspace keyspace, @Named( TIMEOUT_PROP ) final int timeout ) {
+    public MvccLogEntrySerializationStrategyImpl( final Keyspace keyspace, @Named(TIMEOUT_PROP) final int timeout ) {
         this.keyspace = keyspace;
         this.timeout = timeout;
     }
@@ -167,7 +167,8 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         CollectionColumnFamily cf = new CollectionColumnFamily( CF_ENTITY_LOG,
-                ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")", UTF8Type.class.getSimpleName(), IntegerType.class.getSimpleName() );
+                ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
+                UTF8Type.class.getSimpleName(), IntegerType.class.getSimpleName() );
 
 
         return Collections.singleton( cf );
@@ -234,9 +235,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         @Override
         public Stage fromByteBuffer( final ByteBuffer byteBuffer ) {
-            final int value  = INT_SER.fromByteBuffer( byteBuffer );
+            final int value = INT_SER.fromByteBuffer( byteBuffer );
 
-            return CACHE.getStage(value);
+            return CACHE.getStage( value );
         }
     }
 }

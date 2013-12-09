@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.stage.impl.load;
+package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
 import java.util.List;
@@ -8,22 +8,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.EntityCollection;
-import org.apache.usergrid.persistence.collection.mvcc.entity.CollectionEventBus;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.EventStage;
+import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import rx.Observable;
+import rx.util.functions.Func1;
 
 
 /** This stage is a load stage to load a single entity */
-public class Load implements EventStage<EventLoad> {
+@Singleton
+public class Load implements Func1<IoEvent<Id>, Observable<Entity>> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Load.class );
@@ -33,26 +37,24 @@ public class Load implements EventStage<EventLoad> {
 
 
     @Inject
-    public Load(final CollectionEventBus eventBus, final UUIDService uuidService, final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+    public Load( final UUIDService uuidService, final MvccEntitySerializationStrategy entitySerializationStrategy ) {
         Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
 
         this.uuidService = uuidService;
         this.entitySerializationStrategy = entitySerializationStrategy;
-        eventBus.register( this );
     }
 
 
     @Override
-    @Subscribe
-    public void performStage( final EventLoad event ) {
-        final Id entityId = event.getData();
+    public Observable<Entity> call( final IoEvent<Id> idIoEvent ) {
+        final Id entityId = idIoEvent.getEvent();
 
-        Preconditions.checkNotNull( entityId, "Entity id required in the load stage" );
+        EntityUtils.verifyIdentity( entityId );
 
 
-        final EntityCollection entityCollection = event.getCollectionContext();
+        final EntityCollection entityCollection = idIoEvent.getEntityCollection();
 
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();
@@ -61,7 +63,7 @@ public class Load implements EventStage<EventLoad> {
 
         //nothing to do, we didn't get a result back
         if ( results.size() != 1 ) {
-            return;
+            return Observable.empty();
         }
 
         final Optional<Entity> targetVersion = results.get( 0 ).getEntity();
@@ -71,10 +73,10 @@ public class Load implements EventStage<EventLoad> {
 
             //TODO, a lazy async repair/cleanup here?
 
-            return;
+            return Observable.empty();
         }
 
-        //this feels like a hack.  Not sure I like this
-        event.getResult().addResult( targetVersion.get() );
+
+        return Observable.from( targetVersion.get() );
     }
 }

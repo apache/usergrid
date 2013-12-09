@@ -77,4 +77,13 @@ public class SimpleId implements Id, Serializable {
         result = 31 * result + type.hashCode();
         return result;
     }
+
+
+    @Override
+    public String toString() {
+        return "SimpleId{" +
+                "uuid=" + uuid +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }
