@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.migration;
+package org.apache.usergrid.persistence.collection.astynax;
 
 
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import com.netflix.astyanax.model.ColumnFamily;
  *
  * @author tnine
  */
-public class CollectionColumnFamily {
+public class MultiTennantColumnFamilyDefinition {
 
     public static final String COMPARATOR_TYPE = "comparator_type";
     public static final String READ_REPAIR_CHANCE = "read_repair_chance";
@@ -27,8 +27,8 @@ public class CollectionColumnFamily {
     private final String valueValidationType;
 
 
-    public CollectionColumnFamily( final ColumnFamily columnFamily, final String comparator,
-                                   final String keyValidationType, final String valueValidationType ) {
+    public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String comparator,
+                                               final String keyValidationType, final String valueValidationType ) {
 
         Preconditions.checkNotNull( columnFamily, "columnFamily is required" );
         Preconditions.checkNotNull( comparator, "comparator is required" );

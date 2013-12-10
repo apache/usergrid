@@ -3,6 +3,9 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.nio.ByteBuffer;
 
+import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeBuilder;
 import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeParser;
 import org.apache.usergrid.persistence.collection.astynax.fixes.Composites;

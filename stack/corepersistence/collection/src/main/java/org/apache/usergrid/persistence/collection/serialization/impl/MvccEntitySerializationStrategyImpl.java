@@ -9,12 +9,14 @@ import java.util.UUID;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
-import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.migration.CollectionColumnFamily;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
@@ -33,7 +35,6 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.ObjectSerializer;
@@ -53,8 +54,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
 
-    private static final ColumnFamily<ScopedRowKey<Id>, UUID> CF_ENTITY_DATA =
-            new ColumnFamily<ScopedRowKey<Id>, UUID>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
+    private static final MultiTennantColumnFamily<Id, UUID> CF_ENTITY_DATA =
+            new MultiTennantColumnFamily<Id, UUID>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -180,9 +181,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
-        CollectionColumnFamily cf = new CollectionColumnFamily( CF_ENTITY_DATA,
+        MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( CF_ENTITY_DATA,
                 ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName() );
+                BytesType.class.getSimpleName(), BytesType.class.getSimpleName() );
 
 
         return Collections.singleton( cf );

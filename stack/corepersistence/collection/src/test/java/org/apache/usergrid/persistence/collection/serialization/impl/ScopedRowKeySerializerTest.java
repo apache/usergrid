@@ -6,13 +6,11 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.impl.ScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.Composites;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,7 +29,8 @@ public class ScopedRowKeySerializerTest {
         final ScopedRowKey<Id> rowKey = new ScopedRowKey<Id>( scope, testKey );
 
 
-        ScopedRowKeySerializer<Id> scopedRowKeySerializer = new ScopedRowKeySerializer<Id>( IdRowCompositeSerializer.get() );
+        ScopedRowKeySerializer<Id> scopedRowKeySerializer = new ScopedRowKeySerializer<Id>( IdRowCompositeSerializer
+                .get() );
 
 
         ByteBuffer buff = scopedRowKeySerializer.toByteBuffer( rowKey );
@@ -39,7 +38,7 @@ public class ScopedRowKeySerializerTest {
 
         ScopedRowKey<Id> parsedRowKey = scopedRowKeySerializer.fromByteBuffer( buff );
 
-        assertEquals("Row key serialized correctly", parsedRowKey);
+        assertEquals("Row key serialized correctly", rowKey, parsedRowKey);
 
     }
 }

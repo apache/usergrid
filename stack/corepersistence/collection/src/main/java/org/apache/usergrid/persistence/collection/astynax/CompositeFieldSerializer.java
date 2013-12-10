@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.serialization.impl;
+package org.apache.usergrid.persistence.collection.astynax;
 
 
 import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeBuilder;

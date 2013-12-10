@@ -11,6 +11,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamilyDefinition;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -69,7 +71,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
             for ( Migration migration : migrations ) {
 
-                final Collection<CollectionColumnFamily> columnFamilies = migration.getColumnFamilies();
+                final Collection<MultiTennantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
 
                 if ( columnFamilies == null ) {
@@ -80,7 +82,7 @@ public class MigrationManagerImpl implements MigrationManager {
                     continue;
                 }
 
-                for ( CollectionColumnFamily cf : columnFamilies ) {
+                for ( MultiTennantColumnFamilyDefinition cf : columnFamilies ) {
                     testAndCreateColumnFamilyDef( cf );
                 }
             }
@@ -93,7 +95,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
     /** Check if the column family exists.  If it dosn't create it */
-    private void testAndCreateColumnFamilyDef( CollectionColumnFamily columnFamily ) throws ConnectionException {
+    private void testAndCreateColumnFamilyDef( MultiTennantColumnFamilyDefinition columnFamily ) throws ConnectionException {
         final KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
 
         final ColumnFamilyDefinition existing =

@@ -159,4 +159,41 @@ public class EntityCollectionManagerIT {
 
         assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
     }
+
+
+    @Test
+    public void writeAndLoadScopeClosure() {
+
+        Scope scope1 = new ScopeImpl( new SimpleId( "test1" ), "test1" );
+
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
+
+        EntityCollectionManager manager = factory.createCollectionManager( scope1 );
+
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlockingObservable().lastOrDefault( null );
+
+
+        assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
+
+
+        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
+
+        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
+
+        assertEquals( "Same value", createReturned, loadReturned );
+
+
+        //now make sure we can't load it from another scope
+        Scope scope2 = new ScopeImpl( new SimpleId("test2"), "test2" );
+
+        EntityCollectionManager manager2 = factory.createCollectionManager( scope2 );
+
+        Entity loaded = manager2.load( createReturned.getId() ).toBlockingObservable().lastOrDefault( null );
+
+        assertNull("Scope works correctly", loaded);
+    }
+
 }
