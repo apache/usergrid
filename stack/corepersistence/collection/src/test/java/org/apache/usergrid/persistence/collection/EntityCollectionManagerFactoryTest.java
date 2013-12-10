@@ -5,7 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.ScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.guiceberry.junit4.GuiceBerryRule;
@@ -34,7 +34,7 @@ public class EntityCollectionManagerFactoryTest {
     @Test
     public void validInput() {
 
-        ScopeImpl context = new ScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScopeImpl context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
 
         EntityCollectionManager entityCollectionManager =
                 entityCollectionManagerFactory.createCollectionManager( context );

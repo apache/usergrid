@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteCommit;
@@ -38,7 +38,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
 
-    private final Scope context;
+    private final CollectionScope context;
     private final UUIDService uuidService;
 
     //start stages
@@ -61,7 +61,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
                                         final Load load, final DeleteStart deleteStart, final DeleteCommit deleteCommit,
-                                        @Assisted final Scope context ) {
+                                        @Assisted final CollectionScope context ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
         Preconditions.checkNotNull( context, "context must be defined" );

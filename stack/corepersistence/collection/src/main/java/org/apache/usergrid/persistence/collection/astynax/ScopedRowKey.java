@@ -1,37 +1,38 @@
 package org.apache.usergrid.persistence.collection.astynax;
 
 
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.Scope;
 
 import com.google.common.base.Preconditions;
 
 
 /**
- * A row key that is within a scope.  Every I/O operation should be using this class.  No keys should be allowed that
- * aren't within a ScopedRowKey
+ * A row key that is within a Scope.  Every I/O operation should be using this class.  No keys should be allowed that
+ * aren't within a Scope
  * @author tnine */
-public class ScopedRowKey<K> {
+public class ScopedRowKey<S extends Scope, K> {
 
-    private final Scope scope;
+    private final S collectionScope;
 
     private final K key;
 
 
-    public ScopedRowKey( final Scope scope, final K key ) {
-        Preconditions.checkNotNull( scope, "Scope is required" );
+    public ScopedRowKey( final S collectionScope, final K key ) {
+        Preconditions.checkNotNull( collectionScope, "CollectionScope is required" );
         Preconditions.checkNotNull( key, "Key is required" );
 
-        this.scope = scope;
+        this.collectionScope = collectionScope;
         this.key = key;
     }
 
 
     /**
-     * Get the stored scope
+     * Get the stored collectionScope
      * @return
      */
-    public Scope getScope() {
-        return scope;
+    public S getScope() {
+        return collectionScope;
     }
 
 
@@ -58,7 +59,7 @@ public class ScopedRowKey<K> {
         if ( !key.equals( that.key ) ) {
             return false;
         }
-        if ( !scope.equals( that.scope ) ) {
+        if ( !collectionScope.equals( that.collectionScope ) ) {
             return false;
         }
 
@@ -68,7 +69,7 @@ public class ScopedRowKey<K> {
 
     @Override
     public int hashCode() {
-        int result = scope.hashCode();
+        int result = collectionScope.hashCode();
         result = 31 * result + key.hashCode();
         return result;
     }
@@ -77,20 +78,20 @@ public class ScopedRowKey<K> {
     @Override
     public String toString() {
         return "ScopedRowKey{" +
-                "scope=" + scope +
+                "collectionScope=" + collectionScope +
                 ", key=" + key +
                 '}';
     }
 
 
     /**
-     * Utility function to generate a new key from the scope
+     * Utility function to generate a new key from the collectionScope
      * @param scope
      * @param key
      * @param <K>
      * @return
      */
-    public static <K> ScopedRowKey<K> fromKey(final Scope scope, K key){
-        return new ScopedRowKey<K>( scope, key );
+    public static <S extends Scope, K> ScopedRowKey<S, K> fromKey(final S scope, K key){
+        return new ScopedRowKey<S, K>( scope, key );
     }
 }

@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -24,7 +24,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
 import rx.util.functions.Func1;
 
 
@@ -62,16 +61,16 @@ public class WriteCommit implements Func1<IoEvent<MvccEntity>, Entity> {
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        final Scope scope = ioEvent.getEntityCollection();
+        final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( scope, startEntry );
+        MutationBatch logMutation = logEntrySerializationStrategy.write( collectionScope, startEntry );
 
         //now get our actual insert into the entity data
-        MutationBatch entityMutation = entitySerializationStrategy.write( scope, entity );
+        MutationBatch entityMutation = entitySerializationStrategy.write( collectionScope, entity );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );

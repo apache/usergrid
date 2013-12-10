@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import rx.Observable;
 import rx.util.functions.Func1;
 
 
@@ -54,12 +53,12 @@ public class Load implements Func1<IoEvent<Id>, Entity> {
         EntityUtils.verifyIdentity( entityId );
 
 
-        final Scope scope = idIoEvent.getEntityCollection();
+        final CollectionScope collectionScope = idIoEvent.getEntityCollection();
 
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();
 
-        List<MvccEntity> results = entitySerializationStrategy.load( scope, entityId, versionMax, 1 );
+        List<MvccEntity> results = entitySerializationStrategy.load( collectionScope, entityId, versionMax, 1 );
 
         //nothing to do, we didn't get a result back
         if ( results.size() != 1 ) {

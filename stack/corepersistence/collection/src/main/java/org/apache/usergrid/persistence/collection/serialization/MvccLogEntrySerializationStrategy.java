@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.serialization;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -22,7 +22,7 @@ public interface MvccLogEntrySerializationStrategy {
      *
      * @return The mutation batch with the mutation operations for this write.
      */
-    public MutationBatch write( final Scope context, MvccLogEntry entry );
+    public MutationBatch write( final CollectionScope context, MvccLogEntry entry );
 
     /**
      * Load and return the stage with the given id and a version that is <= the version provided
@@ -33,7 +33,7 @@ public interface MvccLogEntrySerializationStrategy {
      *
      * @return The deserialized version of the log entry.  Null if no version == the current version exists
      */
-    public MvccLogEntry load( final Scope context, final Id entityId, final UUID version )
+    public MvccLogEntry load( final CollectionScope context, final Id entityId, final UUID version )
             throws ConnectionException;
 
     /**
@@ -46,7 +46,7 @@ public interface MvccLogEntrySerializationStrategy {
      *
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID)
      */
-    public List<MvccLogEntry> load( Scope context, Id entityId, UUID version, int maxSize )
+    public List<MvccLogEntry> load( CollectionScope context, Id entityId, UUID version, int maxSize )
             throws ConnectionException;
 
     /**
@@ -56,5 +56,5 @@ public interface MvccLogEntrySerializationStrategy {
      * @param entityId The entity id to delete
      * @param version The version to delete
      */
-    public MutationBatch delete( Scope context, Id entityId, UUID version );
+    public MutationBatch delete( CollectionScope context, Id entityId, UUID version );
 }

@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -34,7 +34,7 @@ public class DeleteStartTest extends AbstractIdStageTest {
     @Test
     public void testWrite() {
 
-        final Scope context = mock( Scope.class );
+        final CollectionScope context = mock( CollectionScope.class );
 
 
         //mock returning a mock mutation when we do a log entry write

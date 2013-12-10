@@ -3,13 +3,11 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
-
-import rx.Observable;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
@@ -27,7 +25,7 @@ public class WriteVerifyTest extends AbstractMvccEntityStageTest {
     public void testStartStage() throws Exception {
 
 
-        final Scope scope = mock( Scope.class );
+        final CollectionScope collectionScope = mock( CollectionScope.class );
 
 
 
@@ -44,12 +42,12 @@ public class WriteVerifyTest extends AbstractMvccEntityStageTest {
         WriteVerify newStage = new WriteVerify(  );
 
 
-        IoEvent<MvccEntity> result = newStage.call( new IoEvent<MvccEntity>( scope, mvccEntity ) );
+        IoEvent<MvccEntity> result = newStage.call( new IoEvent<MvccEntity>( collectionScope, mvccEntity ) );
 
 
 
 
-        assertSame("Context was correct", scope, result.getEntityCollection()) ;
+        assertSame("Context was correct", collectionScope, result.getEntityCollection()) ;
 
         //verify the log entry is correct
         MvccEntity entry = result.getEvent();

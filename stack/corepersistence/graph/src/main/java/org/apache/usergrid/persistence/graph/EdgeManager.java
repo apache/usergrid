@@ -32,7 +32,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits Edges.  Note that all target types in this edge type will be returned
      */
-    Observable<Edge> loadEdges( Id source, String edgeType );
+    Observable<Edge> loadEdges( Id source, String edgeType);
 
     /**
      * Return an observable that emits edges with the given source node and the given edge type, and target type
@@ -42,6 +42,7 @@ public interface EdgeManager {
      * @param targetType The type of the target on the edge to return
      *
      * @return An observable that emits Edges.  Note that only the target type in this edge type will be returned
+     * It is up to the caller to end the subscription to this observable when the desired size is reached
      */
-    Observable<Edge> loadEdges( Id source, String edgeType, String targetType );
+    Observable<Edge> loadEdges( Id source, String edgeType, String targetType);
 }

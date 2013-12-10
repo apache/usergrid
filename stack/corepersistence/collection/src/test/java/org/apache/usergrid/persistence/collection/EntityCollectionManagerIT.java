@@ -5,7 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.ScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
@@ -42,7 +42,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void write() {
 
-        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
@@ -62,7 +62,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndLoad() {
 
-        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -87,7 +87,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadDelete() {
 
-        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -119,7 +119,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadUpdateLoad() {
 
-        Scope context = new ScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );
@@ -164,11 +164,11 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndLoadScopeClosure() {
 
-        Scope scope1 = new ScopeImpl( new SimpleId( "test1" ), "test1" );
+        CollectionScope collectionScope1 = new CollectionScopeImpl( new SimpleId( "test1" ), "test1" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
-        EntityCollectionManager manager = factory.createCollectionManager( scope1 );
+        EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
 
         Observable<Entity> observable = manager.write( newEntity );
 
@@ -187,13 +187,13 @@ public class EntityCollectionManagerIT {
 
 
         //now make sure we can't load it from another scope
-        Scope scope2 = new ScopeImpl( new SimpleId("test2"), "test2" );
+        CollectionScope collectionScope2 = new CollectionScopeImpl( new SimpleId("test2"), "test2" );
 
-        EntityCollectionManager manager2 = factory.createCollectionManager( scope2 );
+        EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 
         Entity loaded = manager2.load( createReturned.getId() ).toBlockingObservable().lastOrDefault( null );
 
-        assertNull("Scope works correctly", loaded);
+        assertNull("CollectionScope works correctly", loaded);
     }
 
 }

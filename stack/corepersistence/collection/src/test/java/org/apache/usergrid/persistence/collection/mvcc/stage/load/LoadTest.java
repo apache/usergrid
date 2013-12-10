@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
@@ -20,8 +20,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.collect.Lists;
 
-import rx.Observable;
-
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
@@ -33,7 +31,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
     @Test
     public void testLoadWithData(){
-        final Scope collection = mock(Scope.class);
+        final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 
@@ -72,7 +70,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
     @Test
     public void testLoadCleared(){
-        final Scope collection = mock(Scope.class);
+        final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 

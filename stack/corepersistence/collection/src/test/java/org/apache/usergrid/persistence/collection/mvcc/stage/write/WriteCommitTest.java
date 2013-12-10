@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -16,8 +16,6 @@ import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySeri
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
-
-import rx.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -35,7 +33,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
     public void testStartStage() throws Exception {
 
 
-        final Scope context = mock( Scope.class );
+        final CollectionScope context = mock( CollectionScope.class );
 
 
         //mock returning a mock mutation when we do a log entry write
@@ -102,14 +100,14 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
 
-        when( logStrategy.write( any( Scope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
+        when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
 
 
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
 
         final MutationBatch entityMutation = mock( MutationBatch.class );
 
-        when( mvccEntityStrategy.write( any( Scope.class ), any( MvccEntity.class ) ) )
+        when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
         new WriteCommit( logStrategy, mvccEntityStrategy ).call( event );

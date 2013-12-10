@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -27,7 +27,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
 import rx.util.functions.Func1;
 
 
@@ -65,12 +64,12 @@ public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
         final UUID version = uuidService.newTimeUUID();
 
 
-        final Scope scope = entityIoEvent.getEntityCollection();
+        final CollectionScope collectionScope = entityIoEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE );
 
-        MutationBatch write = logStrategy.write( scope, startEntry );
+        MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
 
         try {
@@ -86,6 +85,6 @@ public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
 
-        return new IoEvent<MvccEntity>( scope, nextStage );
+        return new IoEvent<MvccEntity>( collectionScope, nextStage );
     }
 }

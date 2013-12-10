@@ -9,9 +9,9 @@ import java.util.UUID;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.ScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
@@ -60,7 +60,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        Scope context = new ScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -88,7 +88,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        Scope context = new ScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -108,7 +108,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        Scope context = new ScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -166,7 +166,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final String name = "test";
 
 
-        Scope context = new ScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -205,7 +205,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void writeParams() throws ConnectionException {
-        logEntryStrategy.write( mock( Scope.class ), null );
+        logEntryStrategy.write( mock( CollectionScope.class ), null );
     }
 
 
@@ -218,7 +218,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
-        logEntryStrategy.delete( new ScopeImpl( new SimpleId( "test" ), "test" ), null,
+        logEntryStrategy.delete( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null,
                 UUIDGenerator.newTimeUUID() );
     }
 
@@ -227,7 +227,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new ScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .delete( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -241,7 +241,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new ScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
+                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -249,7 +249,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new ScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -263,7 +263,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new ScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
+                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
                         1 );
     }
 
@@ -272,14 +272,14 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new ScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
+                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
-        logEntryStrategy.load( new ScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
+        logEntryStrategy.load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
     }
 

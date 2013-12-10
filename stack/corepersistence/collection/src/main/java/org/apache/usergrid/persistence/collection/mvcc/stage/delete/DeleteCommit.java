@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -23,7 +23,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.util.functions.Action1;
 import rx.util.functions.Func1;
 
 
@@ -62,16 +61,16 @@ public class DeleteCommit implements Func1<IoEvent<MvccEntity>, Void> {
         final UUID version = entity.getVersion();
 
 
-        final Scope scope = idIoEvent.getEntityCollection();
+        final CollectionScope collectionScope = idIoEvent.getEntityCollection();
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( scope, startEntry );
+        MutationBatch logMutation = logEntrySerializationStrategy.write( collectionScope, startEntry );
 
         //insert a "cleared" value into the versions.  Post processing should actually delete
-        MutationBatch entityMutation = entitySerializationStrategy.clear( scope, entityId, version );
+        MutationBatch entityMutation = entitySerializationStrategy.clear( collectionScope, entityId, version );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );

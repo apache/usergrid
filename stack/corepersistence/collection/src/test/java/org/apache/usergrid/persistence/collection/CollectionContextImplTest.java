@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.collection;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.impl.ScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import static junit.framework.TestCase.assertEquals;
@@ -15,19 +15,19 @@ public class CollectionContextImplTest {
 
     @Test(expected = NullPointerException.class)
     public void ownerIdRequired() {
-        new ScopeImpl( null, "test" );
+        new CollectionScopeImpl( null, "test" );
     }
 
 
     @Test(expected = NullPointerException.class)
     public void collectionRequired() {
-        new ScopeImpl( new SimpleId( "test" ), null );
+        new CollectionScopeImpl( new SimpleId( "test" ), null );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void collectionRequiredLength() {
-        new ScopeImpl( new SimpleId( "test" ), "" );
+        new CollectionScopeImpl( new SimpleId( "test" ), "" );
     }
 
 
@@ -37,7 +37,7 @@ public class CollectionContextImplTest {
 
         final String collection = "tests";
 
-        ScopeImpl context = new ScopeImpl( ownerId, collection );
+        CollectionScopeImpl context = new CollectionScopeImpl( ownerId, collection );
 
         assertEquals( ownerId, context.getOwner() );
         assertEquals( collection, context.getName() );

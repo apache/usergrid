@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -24,7 +24,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
 import rx.util.functions.Func1;
 
 
@@ -53,7 +52,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
     public IoEvent<MvccEntity> call( final IoEvent<Entity> ioEvent ) {
         {
             final Entity entity = ioEvent.getEvent();
-            final Scope scope = ioEvent.getEntityCollection();
+            final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
 
             EntityUtils.verifyEntityWrite( entity );
@@ -64,7 +63,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                     org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
 
-            MutationBatch write = logStrategy.write( scope, startEntry );
+            MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
 
             try {
@@ -79,7 +78,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
             //create the mvcc entity for the next stage
             final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
 
-            return new IoEvent<MvccEntity>( scope, nextStage );
+            return new IoEvent<MvccEntity>( collectionScope, nextStage );
         }
     }
 }
