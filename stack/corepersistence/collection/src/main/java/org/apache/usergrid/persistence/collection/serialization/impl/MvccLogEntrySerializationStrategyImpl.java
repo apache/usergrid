@@ -52,10 +52,12 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     private static final StageSerializer SER = new StageSerializer();
 
-    private static final IdRowSerializer ID_SER = IdRowSerializer.get();
+    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final ColumnFamily<Id, UUID> CF_ENTITY_LOG =
-            new ColumnFamily<Id, UUID>( "Entity_Log", ID_SER, UUIDSerializer.get() );
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER  );
+
+    private static final ColumnFamily<ScopedRowKey<Id>, UUID> CF_ENTITY_LOG =
+            new ColumnFamily<ScopedRowKey<Id>, UUID>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -70,15 +72,16 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MutationBatch write( final Scope context, final MvccLogEntry entry ) {
+    public MutationBatch write( final Scope scope, final MvccLogEntry entry ) {
 
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entry, "entry is required" );
 
 
         final Stage stage = entry.getStage();
         final UUID colName = entry.getVersion();
 
-        return doWrite( context, entry.getEntityId(), new RowOp() {
+        return doWrite( scope, entry.getEntityId(), new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
 
@@ -96,9 +99,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public MvccLogEntry load( final Scope context, final Id entityId, final UUID version )
+    public MvccLogEntry load( final Scope scope, final Id entityId, final UUID version )
             throws ConnectionException {
-        Preconditions.checkNotNull( context, "context is required" );
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
@@ -106,7 +109,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Column<UUID> result;
 
         try {
-            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( entityId ).getColumn( version ).execute()
+            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( scope, entityId ) ).getColumn( version ).execute()
                              .getResult();
         }
         catch ( NotFoundException nfe ) {
@@ -121,15 +124,15 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Override
-    public List<MvccLogEntry> load( final Scope context, final Id entityId, final UUID version,
+    public List<MvccLogEntry> load( final Scope scope, final Id entityId, final UUID version,
                                     final int maxSize ) throws ConnectionException {
-        Preconditions.checkNotNull( context, "context is required" );
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
 
 
-        ColumnList<UUID> columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( entityId )
+        ColumnList<UUID> columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( scope, entityId ) )
                                            .withColumnRange( version, null, false, maxSize ).execute().getResult();
 
 
@@ -192,7 +195,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_LOG, entityId ) );
+        op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ) );
 
         return batch;
     }

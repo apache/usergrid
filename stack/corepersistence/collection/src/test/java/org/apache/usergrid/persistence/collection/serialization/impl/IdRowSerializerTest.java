@@ -5,8 +5,12 @@ import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeBuilder;
+import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeParser;
+import org.apache.usergrid.persistence.collection.astynax.fixes.Composites;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,14 +23,29 @@ public class IdRowSerializerTest {
 
         Id testId = new SimpleId( "test" );
 
-        IdRowSerializer rowSerializer = IdRowSerializer.get();
+        IdRowCompositeSerializer rowSerializer = IdRowCompositeSerializer.get();
 
-        ByteBuffer serialized = rowSerializer.toByteBuffer( testId );
+
+        final CompositeBuilder builder = Composites.newCompositeBuilder();
+
+        rowSerializer.toComposite( builder, testId );
+
+
+        final CompositeParser parser = Composites.newCompositeParser( builder.build() );
 
         //now convert it back
 
-        Id deserialized = rowSerializer.fromByteBuffer( serialized );
+        Id deserialized = rowSerializer.fromComposite( parser );
 
         assertEquals( "Serialization works correctly", testId, deserialized );
+    }
+
+    @Test
+    public void compositeSerializer(){
+        final CompositeBuilder builder = Composites.newCompositeBuilder();
+        builder.addUUID( UUIDGenerator.newTimeUUID() );
+        builder.addString( "test" );
+
+        final CompositeParser parser = Composites.newCompositeParser( builder.build() );
     }
 }

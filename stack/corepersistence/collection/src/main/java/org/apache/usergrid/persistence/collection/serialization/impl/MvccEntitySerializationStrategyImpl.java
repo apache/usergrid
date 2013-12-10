@@ -47,11 +47,14 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     private static final EntitySerializer SER = new EntitySerializer();
 
-    private static final IdRowSerializer ID_SER = IdRowSerializer.get();
+    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER  );
 
 
-    private static final ColumnFamily<Id, UUID> CF_ENTITY_DATA =
-            new ColumnFamily<Id, UUID>( "Entity_Version_Data", ID_SER.get(), UUIDSerializer.get() );
+
+    private static final ColumnFamily<ScopedRowKey<Id>, UUID> CF_ENTITY_DATA =
+            new ColumnFamily<ScopedRowKey<Id>, UUID>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -64,7 +67,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch write( final Scope context, final MvccEntity entity ) {
+    public MutationBatch write( final Scope scope, final MvccEntity entity ) {
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final UUID colName = entity.getVersion();
@@ -72,7 +76,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         final Optional<Entity> colValue = entity.getEntity();
 
-        return doWrite( entityId, new RowOp() {
+        return doWrite( scope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.putColumn( colName, SER.toByteBuffer( colValue ) );
@@ -82,8 +86,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MvccEntity load( final Scope context, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( context, "context is required" );
+    public MvccEntity load( final Scope scope, final Id entityId, final UUID version ) {
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
@@ -91,7 +95,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Column<UUID> column;
 
         try {
-            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId ).getColumn( version ).execute()
+            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( scope, entityId ) ).getColumn( version ).execute()
                              .getResult();
         }
 
@@ -109,10 +113,10 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public List<MvccEntity> load( final Scope context, final Id entityId, final UUID version,
+    public List<MvccEntity> load( final Scope scope, final Id entityId, final UUID version,
                                   final int maxSize ) {
 
-        Preconditions.checkNotNull( context, "context is required" );
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
@@ -120,7 +124,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         ColumnList<UUID> columns = null;
         try {
-            columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( entityId )
+            columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( scope, entityId ) )
                               .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
@@ -139,14 +143,14 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch clear( final Scope context, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( context, "context is required" );
+    public MutationBatch clear( final Scope scope, final Id entityId, final UUID version ) {
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
         final Optional<Entity> value = Optional.absent();
 
-        return doWrite( entityId, new RowOp() {
+        return doWrite( scope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.putColumn( version, SER.toByteBuffer( value ) );
@@ -156,13 +160,13 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch delete( final Scope context, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( context, "context is required" );
+    public MutationBatch delete( final Scope scope, final Id entityId, final UUID version ) {
+        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( entityId, new RowOp() {
+        return doWrite(scope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.deleteColumn( version );
@@ -186,10 +190,10 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     /** Do the write on the correct row for the entity id with the operation */
-    private MutationBatch doWrite( Id entityId, RowOp op ) {
+    private MutationBatch doWrite(final Scope scope, final Id entityId, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, entityId ) );
+        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( scope, entityId ) ) );
 
         return batch;
     }
