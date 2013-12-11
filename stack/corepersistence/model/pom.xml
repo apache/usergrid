@@ -14,6 +14,12 @@
   <!-- Runtime Dependencies -->
   <dependencies>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>m2repo</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>15.0</version>

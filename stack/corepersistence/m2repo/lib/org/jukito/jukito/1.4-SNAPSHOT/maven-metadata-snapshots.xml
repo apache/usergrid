@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<metadata>
+  <groupId>org.jukito</groupId>
+  <artifactId>jukito</artifactId>
+  <version>1.4-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <buildNumber>3</buildNumber>
+      <timestamp>20131128.164851</timestamp>
+    </snapshot>
+    <lastUpdated>20131128164851</lastUpdated>
+  </versioning>
+</metadata>
