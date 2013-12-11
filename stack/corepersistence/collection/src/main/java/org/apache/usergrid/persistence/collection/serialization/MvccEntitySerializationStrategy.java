@@ -11,7 +11,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.netflix.astyanax.MutationBatch;
 
 
-/** The interface that allows us to serialize an entity to disk */
+/**
+ * The interface that allows us to serialize an entity to disk
+ */
 public interface MvccEntitySerializationStrategy {
 
     /**
@@ -51,9 +53,9 @@ public interface MvccEntitySerializationStrategy {
 
 
     /**
-     * DeleteCommit this version from the persistence store, but keep the version to mark that is has been cleared This can be
-     * used in a mark+sweep system.  The entity with the given version will exist in the context, but no data will be
-     * stored
+     * DeleteCommit this version from the persistence store, but keep the version to mark that is has been cleared This
+     * can be used in a mark+sweep system.  The entity with the given version will exist in the context, but no data
+     * will be stored
      */
     public MutationBatch clear( CollectionScope context, Id entityId, UUID version );
 

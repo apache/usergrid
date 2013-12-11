@@ -94,8 +94,11 @@ public class MigrationManagerImpl implements MigrationManager {
     }
 
 
-    /** Check if the column family exists.  If it dosn't create it */
-    private void testAndCreateColumnFamilyDef( MultiTennantColumnFamilyDefinition columnFamily ) throws ConnectionException {
+    /**
+     * Check if the column family exists.  If it dosn't create it
+     */
+    private void testAndCreateColumnFamilyDef( MultiTennantColumnFamilyDefinition columnFamily )
+            throws ConnectionException {
         final KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
 
         final ColumnFamilyDefinition existing =
@@ -111,7 +114,9 @@ public class MigrationManagerImpl implements MigrationManager {
     }
 
 
-    /** Check if they keyspace exists.  If it doesn't create it */
+    /**
+     * Check if they keyspace exists.  If it doesn't create it
+     */
     private void testAndCreateKeyspace() throws ConnectionException {
 
 
@@ -155,7 +160,9 @@ public class MigrationManagerImpl implements MigrationManager {
     }
 
 
-    /** Get keyspace properties */
+    /**
+     * Get keyspace properties
+     */
     private Map<String, String> getKeySpaceProps() {
         Map<String, String> keyspaceProps = new HashMap<String, String>();
 

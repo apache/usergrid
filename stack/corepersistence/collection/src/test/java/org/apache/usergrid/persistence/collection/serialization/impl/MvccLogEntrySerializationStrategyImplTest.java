@@ -56,11 +56,12 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void createAndDelete() throws ConnectionException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -84,11 +85,12 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void loadNoData() throws ConnectionException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -104,11 +106,12 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void getMultipleEntries() throws ConnectionException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -162,11 +165,12 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test
     public void transientTimeout() throws ConnectionException, InterruptedException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -218,7 +222,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
-        logEntryStrategy.delete( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null,
+        logEntryStrategy.delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
                 UUIDGenerator.newTimeUUID() );
     }
 
@@ -227,7 +231,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -241,7 +245,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -249,7 +253,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -263,7 +267,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
                         1 );
     }
 
@@ -272,14 +276,14 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
-        logEntryStrategy.load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
+        logEntryStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
     }
 

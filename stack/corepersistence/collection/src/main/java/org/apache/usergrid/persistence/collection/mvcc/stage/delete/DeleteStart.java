@@ -16,7 +16,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryI
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.collection.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -44,7 +44,9 @@ public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
     private final UUIDService uuidService;
 
 
-    /** Create a new stage with the current context */
+    /**
+     * Create a new stage with the current context
+     */
     @Inject
     public DeleteStart( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
@@ -59,7 +61,7 @@ public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
     public IoEvent<MvccEntity> call( final IoEvent<Id> entityIoEvent ) {
         final Id entityId = entityIoEvent.getEvent();
 
-        EntityUtils.verifyIdentity( entityId );
+        ValidationUtils.verifyIdentity( entityId );
 
         final UUID version = uuidService.newTimeUUID();
 

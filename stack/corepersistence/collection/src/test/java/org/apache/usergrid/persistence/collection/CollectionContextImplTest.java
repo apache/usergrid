@@ -14,20 +14,27 @@ public class CollectionContextImplTest {
 
 
     @Test(expected = NullPointerException.class)
+    public void orgIdrequired() {
+        new CollectionScopeImpl(null, new SimpleId( "test" ), "test" );
+    }
+
+
+
+    @Test(expected = NullPointerException.class)
     public void ownerIdRequired() {
-        new CollectionScopeImpl( null, "test" );
+        new CollectionScopeImpl(new SimpleId( "organization" ), null, "test" );
     }
 
 
     @Test(expected = NullPointerException.class)
     public void collectionRequired() {
-        new CollectionScopeImpl( new SimpleId( "test" ), null );
+        new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), null );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void collectionRequiredLength() {
-        new CollectionScopeImpl( new SimpleId( "test" ), "" );
+        new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "" );
     }
 
 
@@ -37,7 +44,7 @@ public class CollectionContextImplTest {
 
         final String collection = "tests";
 
-        CollectionScopeImpl context = new CollectionScopeImpl( ownerId, collection );
+        CollectionScopeImpl context = new CollectionScopeImpl(new SimpleId( "organization" ), ownerId, collection );
 
         assertEquals( ownerId, context.getOwner() );
         assertEquals( collection, context.getName() );

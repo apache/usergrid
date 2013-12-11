@@ -13,7 +13,9 @@ import rx.Subscription;
 import rx.subscriptions.Subscriptions;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class Astyanax {
     public static <R> Observable<OperationResult<R>> executeAsync( final Execution<R> execution ) {
         return Observable.create( new Observable.OnSubscribeFunc<OperationResult<R>>() {

@@ -28,9 +28,4 @@ public interface Edge {
      */
     Id getTargetNode();
 
-// TODO.  Think through field indexing metadata on entities and how that relates to graph semantics
-//    boolean indexOutgoing();
-//
-//    boolean indexIncoming();
-
 }

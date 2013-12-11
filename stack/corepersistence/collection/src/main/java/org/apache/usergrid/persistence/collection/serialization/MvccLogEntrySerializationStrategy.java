@@ -12,7 +12,9 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
-/** The interface that allows us to serialize a log entry to disk */
+/**
+ * The interface that allows us to serialize a log entry to disk
+ */
 public interface MvccLogEntrySerializationStrategy {
 
     /**

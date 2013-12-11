@@ -14,7 +14,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryI
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.collection.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -27,7 +27,9 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import rx.util.functions.Func1;
 
 
-/** This phase should invoke any finalization, and mark the entity as committed in the data store before returning */
+/**
+ * This phase should invoke any finalization, and mark the entity as committed in the data store before returning
+ */
 @Singleton
 public class WriteCommit implements Func1<IoEvent<MvccEntity>, Entity> {
 
@@ -56,7 +58,7 @@ public class WriteCommit implements Func1<IoEvent<MvccEntity>, Entity> {
         final MvccEntity entity = ioEvent.getEvent();
 
 
-        EntityUtils.verifyMvccEntityWithEntity( entity );
+        ValidationUtils.verifyMvccEntityWithEntity( entity );
 
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();

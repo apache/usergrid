@@ -1,8 +1,7 @@
 package org.apache.usergrid.persistence.collection.astynax;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 
 import com.google.common.base.Preconditions;
 
@@ -10,8 +9,10 @@ import com.google.common.base.Preconditions;
 /**
  * A row key that is within a Scope.  Every I/O operation should be using this class.  No keys should be allowed that
  * aren't within a Scope
- * @author tnine */
-public class ScopedRowKey<S extends Scope, K> {
+ *
+ * @author tnine
+ */
+public class ScopedRowKey<S extends OrganizationScope, K> {
 
     private final S collectionScope;
 
@@ -29,7 +30,6 @@ public class ScopedRowKey<S extends Scope, K> {
 
     /**
      * Get the stored collectionScope
-     * @return
      */
     public S getScope() {
         return collectionScope;
@@ -38,7 +38,6 @@ public class ScopedRowKey<S extends Scope, K> {
 
     /**
      * Get the suffix key
-     * @return
      */
     public K getKey() {
         return key;
@@ -86,12 +85,8 @@ public class ScopedRowKey<S extends Scope, K> {
 
     /**
      * Utility function to generate a new key from the collectionScope
-     * @param scope
-     * @param key
-     * @param <K>
-     * @return
      */
-    public static <S extends Scope, K> ScopedRowKey<S, K> fromKey(final S scope, K key){
+    public static <S extends OrganizationScope, K> ScopedRowKey<S, K> fromKey( final S scope, K key ) {
         return new ScopedRowKey<S, K>( scope, key );
     }
 }

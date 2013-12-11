@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteVerify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.collection.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -38,7 +39,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
 
-    private final CollectionScope context;
+    private final CollectionScope collectionScope;
     private final UUIDService uuidService;
 
     //start stages
@@ -58,13 +59,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
                                         final WriteVerify writeVerifyWrite, final WriteCommit writeCommit,
-
-
                                         final Load load, final DeleteStart deleteStart, final DeleteCommit deleteCommit,
-                                        @Assisted final CollectionScope context ) {
+                                        @Assisted final CollectionScope collectionScope ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
-        Preconditions.checkNotNull( context, "context must be defined" );
+        ValidationUtils.validateCollectionScope( collectionScope );
+
+
         this.writeStart = writeStart;
         this.writeVerifyWrite = writeVerifyWrite;
         this.writeCommit = writeCommit;
@@ -74,7 +75,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         this.uuidService = uuidService;
-        this.context = context;
+        this.collectionScope = collectionScope;
     }
 
 
@@ -103,8 +104,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //fire the stages
         //TODO use our own scheduler to help with multitennancy here
 
-        return Observable.just( new IoEvent<Entity>(context, entity) ).map(writeStart).map( writeVerifyWrite ).map(
-                writeCommit );
+        return Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).map( writeStart )
+                         .map( writeVerifyWrite ).map( writeCommit );
     }
 
 
@@ -118,7 +119,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //TODO use our own scheduler to help with multitennancy here
-        return Observable.just( new IoEvent<Id>( context, entityId ) ).map( deleteStart ).map( deleteCommit );
+        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -130,6 +131,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
         //TODO use our own scheduler to help with multitennancy here
-        return Observable.just( new IoEvent<Id>( context, entityId )  ).map( load );
+        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( load );
     }
 }

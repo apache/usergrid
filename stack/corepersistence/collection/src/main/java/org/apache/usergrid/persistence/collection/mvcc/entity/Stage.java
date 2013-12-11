@@ -1,7 +1,9 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity;
 
 
-/** The different stages that can exist in the commit log */
+/**
+ * The different stages that can exist in the commit log
+ */
 public enum Stage {
 
     /**
@@ -14,20 +16,28 @@ public enum Stage {
      * ACTIVE => 1111
      */
 
-    /** The entity has started writing but is not yet committed */
+    /**
+     * The entity has started writing but is not yet committed
+     */
     ACTIVE( true, 0 ),
 
-    /** The entity has started writing but not yet committed. */
+    /**
+     * The entity has started writing but not yet committed.
+     */
     ROLLBACK( true, 1 ),
     /**
      * We have applied enough writes to be able to recover via writeahead logging.  The system can recover from a crash
      * without data loss at this point
      */
     COMMITTED( false, 2 ),
-    /** The entity is going through post processing */
+    /**
+     * The entity is going through post processing
+     */
     POSTPROCESS( false, 6 ),
 
-    /** The entity has completed all post processing */
+    /**
+     * The entity has completed all post processing
+     */
     COMPLETE( false, 14 );
 
 

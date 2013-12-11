@@ -6,7 +6,9 @@ import org.apache.usergrid.persistence.collection.service.UUIDService;
 import com.google.inject.AbstractModule;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class ServiceModule extends AbstractModule {
 
     @Override

@@ -2,9 +2,8 @@ package org.apache.usergrid.persistence.collection.impl;
 
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.google.common.base.Preconditions;
 
 
 /**
@@ -14,24 +13,30 @@ import com.google.common.base.Preconditions;
  */
 public class CollectionScopeImpl implements CollectionScope {
 
+    private final Id organizationId;
+
     private final Id ownerId;
     private final String name;
 
 
-    public CollectionScopeImpl( final Id ownerId, final String name ) {
-        Preconditions.checkNotNull( ownerId, "ownerId is required" );
-        Preconditions.checkNotNull( name, "name is required" );
-        Preconditions.checkArgument( name.length() > 0, "name must have a length" );
-
-
+    public CollectionScopeImpl( final Id organizationId, final Id ownerId, final String name ) {
+        this.organizationId = organizationId;
         this.ownerId = ownerId;
         this.name = name;
+
+        ValidationUtils.validateCollectionScope( this );
     }
 
 
     @Override
     public Id getOwner() {
         return ownerId;
+    }
+
+
+    @Override
+    public Id getOrganization() {
+        return organizationId;
     }
 
 

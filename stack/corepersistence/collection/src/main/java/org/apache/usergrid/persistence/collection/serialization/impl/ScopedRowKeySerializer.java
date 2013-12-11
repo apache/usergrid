@@ -27,7 +27,9 @@ public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<C
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
 
-    /** The delegate serializer for the key */
+    /**
+     * The delegate serializer for the key
+     */
     private final CompositeFieldSerializer<K> keySerializer;
 
 
@@ -41,7 +43,10 @@ public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<C
 
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
-        //add the scope's id to the composite
+        //add the organization's id
+        ID_SER.toComposite( builder, scopedRowKey.getScope().getOrganization() );
+
+        //add the scope's owner id to the composite
         ID_SER.toComposite( builder, scopedRowKey.getScope().getOwner() );
 
         //add the scope's name
@@ -59,11 +64,12 @@ public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<C
         final CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
         //read back the id
+        final Id orgId = ID_SER.fromComposite( parser );
         final Id scopeId = ID_SER.fromComposite( parser );
         final String scopeName = parser.readString();
         final K value = keySerializer.fromComposite( parser );
 
-        return new ScopedRowKey<CollectionScope, K>( new CollectionScopeImpl( scopeId, scopeName ), value );
+        return new ScopedRowKey<CollectionScope, K>( new CollectionScopeImpl( orgId, scopeId, scopeName ), value );
     }
 }
 

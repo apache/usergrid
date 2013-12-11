@@ -1,39 +1,44 @@
 package org.apache.usergrid.persistence.collection.astynax.fixes;
 
+
 import java.nio.ByteBuffer;
 import java.util.List;
-
 
 
 public class Composite extends AbstractComposite {
 
     public Composite() {
-        super(false);
+        super( false );
     }
 
-    public Composite(Object... o) {
-        super(false, o);
+
+    public Composite( Object... o ) {
+        super( false, o );
     }
 
-    public Composite(List<?> l) {
-        super(false, l);
+
+    public Composite( List<?> l ) {
+        super( false, l );
     }
 
-    public static Composite fromByteBuffer(ByteBuffer byteBuffer) {
+
+    public static Composite fromByteBuffer( ByteBuffer byteBuffer ) {
 
         Composite composite = new Composite();
-        composite.deserialize(byteBuffer);
+        composite.deserialize( byteBuffer );
 
         return composite;
     }
 
-    public static ByteBuffer toByteBuffer(Object... o) {
-        Composite composite = new Composite(o);
+
+    public static ByteBuffer toByteBuffer( Object... o ) {
+        Composite composite = new Composite( o );
         return composite.serialize();
     }
 
-    public static ByteBuffer toByteBuffer(List<?> l) {
-        Composite composite = new Composite(l);
+
+    public static ByteBuffer toByteBuffer( List<?> l ) {
+        Composite composite = new Composite( l );
         return composite.serialize();
     }
 }

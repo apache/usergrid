@@ -5,7 +5,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.field.Field;
 
 
-/** Interface to define how unique updates should be performed */
+/**
+ * Interface to define how unique updates should be performed
+ */
 public interface UniqueUpdate {
 
     /**

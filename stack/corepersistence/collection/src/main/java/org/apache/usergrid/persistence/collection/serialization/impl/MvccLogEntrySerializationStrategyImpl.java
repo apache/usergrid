@@ -56,7 +56,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER  );
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER );
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_LOG =
             new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
@@ -67,7 +67,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     @Inject
-    public MvccLogEntrySerializationStrategyImpl( final Keyspace keyspace, @Named(TIMEOUT_PROP) final int timeout ) {
+    public MvccLogEntrySerializationStrategyImpl( final Keyspace keyspace, @Named( TIMEOUT_PROP ) final int timeout ) {
         this.keyspace = keyspace;
         this.timeout = timeout;
     }
@@ -111,8 +111,8 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Column<UUID> result;
 
         try {
-            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) ).getColumn( version ).execute()
-                             .getResult();
+            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+                             .getColumn( version ).execute().getResult();
         }
         catch ( NotFoundException nfe ) {
             return null;
@@ -134,8 +134,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
 
 
-        ColumnList<UUID> columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
-                                           .withColumnRange( version, null, false, maxSize ).execute().getResult();
+        ColumnList<UUID> columns =
+                keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+                        .withColumnRange( version, null, false, maxSize ).execute().getResult();
 
 
         List<MvccLogEntry> results = new ArrayList<MvccLogEntry>( columns.size() );
@@ -180,10 +181,14 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
     }
 
 
-    /** Simple callback to perform puts and deletes with a common row setup code */
+    /**
+     * Simple callback to perform puts and deletes with a common row setup code
+     */
     private static interface RowOp {
 
-        /** The operation to perform on the row */
+        /**
+         * The operation to perform on the row
+         */
         void doOp( ColumnListMutation<UUID> colMutation );
     }
 
@@ -203,7 +208,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
     }
 
 
-    /** Internal stage cache */
+    /**
+     * Internal stage cache
+     */
     private static class StageCache {
         private Map<Integer, Stage> values = new HashMap<Integer, Stage>( Stage.values().length );
 
@@ -218,7 +225,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         }
 
 
-        /** Get the stage with the byte value */
+        /**
+         * Get the stage with the byte value
+         */
         private Stage getStage( final int value ) {
             return values.get( value );
         }
@@ -227,7 +236,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     public static class StageSerializer extends AbstractSerializer<Stage> {
 
-        /** Used for caching the byte => stage mapping */
+        /**
+         * Used for caching the byte => stage mapping
+         */
         private static final StageCache CACHE = new StageCache();
         private static final IntegerSerializer INT_SER = IntegerSerializer.get();
 

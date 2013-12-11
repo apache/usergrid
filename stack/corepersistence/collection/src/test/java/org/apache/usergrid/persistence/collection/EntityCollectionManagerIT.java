@@ -42,7 +42,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void write() {
 
-        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
@@ -62,7 +62,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndLoad() {
 
-        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -87,7 +87,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadDelete() {
 
-        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -119,7 +119,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadUpdateLoad() {
 
-        CollectionScope context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );
@@ -164,7 +164,8 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndLoadScopeClosure() {
 
-        CollectionScope collectionScope1 = new CollectionScopeImpl( new SimpleId( "test1" ), "test1" );
+
+        CollectionScope collectionScope1 = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test1" ), "test1" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -186,14 +187,18 @@ public class EntityCollectionManagerIT {
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        //now make sure we can't load it from another scope
-        CollectionScope collectionScope2 = new CollectionScopeImpl( new SimpleId("test2"), "test2" );
+        //now make sure we can't load it from another scope, using the same org
+        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getOrganization(),  new SimpleId("test2"), collectionScope1.getName());
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 
         Entity loaded = manager2.load( createReturned.getId() ).toBlockingObservable().lastOrDefault( null );
 
         assertNull("CollectionScope works correctly", loaded);
+
+        //now try to load it from another org, with the same scope
+
+        CollectionScope collectionScope3 = new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
     }
 
 }

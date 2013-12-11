@@ -13,7 +13,9 @@ import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class SerializationModule extends AbstractModule {
 
     @Override

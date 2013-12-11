@@ -1,8 +1,7 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.Scope;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 
 
 /**
@@ -18,5 +17,5 @@ public interface EdgeManagerFactory
      *
      * @param collectionScope The context to use when creating the graph manager
      */
-    public EdgeManager createIndexManager( Scope collectionScope );
+    public EdgeManager createEdgeManager( OrganizationScope collectionScope );
 }

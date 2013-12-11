@@ -4,7 +4,9 @@ package org.apache.usergrid.persistence.collection.mvcc.stage;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class IoEvent<T> {
 
     private CollectionScope context;

@@ -22,7 +22,9 @@ import com.google.inject.name.Names;
  */
 public class CollectionModule extends AbstractModule {
 
-    /** The location of the properties file */
+    /**
+     * The location of the properties file
+     */
     private static final String CASS_PROPS = "cassandra.properties";
 
 

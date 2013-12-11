@@ -23,7 +23,9 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
  */
 public class AstynaxKeyspaceProvider implements Provider<Keyspace> {
 
-    /** The cassandra URL property */
+    /**
+     * The cassandra URL property
+     */
     public static final String CASSANDRA_HOSTS = "cassandra.hosts";
     public static final String CASSANDRA_PORT = "cassandra.port";
     public static final String CASSANDRA_CONNECTIONS = "cassandra.connections";

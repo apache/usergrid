@@ -14,7 +14,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.collection.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -39,7 +39,9 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
     private final MvccLogEntrySerializationStrategy logStrategy;
 
 
-    /** Create a new stage with the current context */
+    /**
+     * Create a new stage with the current context
+     */
     @Inject
     public WriteStart( final MvccLogEntrySerializationStrategy logStrategy ) {
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
@@ -55,7 +57,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
             final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
 
-            EntityUtils.verifyEntityWrite( entity );
+            ValidationUtils.verifyEntityWrite( entity );
 
             final Id entityId = entity.getId();
             final UUID version = entity.getVersion();

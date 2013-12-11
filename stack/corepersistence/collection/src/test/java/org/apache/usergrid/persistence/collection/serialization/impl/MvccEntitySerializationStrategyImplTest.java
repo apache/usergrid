@@ -58,10 +58,11 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test
     public void writeLoadDelete() throws ConnectionException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId,  applicationId, name );
 
 
         final UUID entityId = UUIDGenerator.newTimeUUID();
@@ -163,10 +164,11 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test
     public void writeLoadClearDelete() throws ConnectionException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId,  applicationId, name );
 
 
         final UUID version = UUIDGenerator.newTimeUUID();
@@ -221,10 +223,11 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test
     public void writeX2ClearDelete() throws ConnectionException {
 
+        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl( applicationId, name );
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
         final UUID entityId = UUIDGenerator.newTimeUUID();
@@ -335,7 +338,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void writeParamsEntity() throws ConnectionException {
-        serializationStrategy.write( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null );
+        serializationStrategy.write( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null );
     }
 
 
@@ -348,7 +351,7 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
-        serializationStrategy.delete( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null,
+        serializationStrategy.delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
                 UUIDGenerator.newTimeUUID() );
     }
 
@@ -357,7 +360,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .delete( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -371,7 +374,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -379,7 +382,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
     }
 
 
@@ -393,7 +396,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
                         1 );
     }
 
@@ -402,14 +405,14 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
-        serializationStrategy.load( new CollectionScopeImpl( new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
+        serializationStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
     }
 }

@@ -15,7 +15,7 @@ public interface EdgeManager {
 
 
     /**
-     * Create an edge.  Note that the implementation should also create incoming (reversed) edges for this edge
+     * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this edge
      * automatically
      */
     void writeEdge( Edge e );
@@ -45,4 +45,15 @@ public interface EdgeManager {
      * It is up to the caller to end the subscription to this observable when the desired size is reached
      */
     Observable<Edge> loadEdges( Id source, String edgeType, String targetType);
+
+    /**
+     * Search the edges from the source node, with the edge type and targetType specified.
+     * @param source The id of the source node in the graph
+     * @param edgeType The type of edge to execute the query on
+     * @param targetType The target type to execute the query on
+     * @param query The query containing tree expression to execute
+     *
+     * @return An observable that emits a matching edge.
+     */
+    Observable<Edge> searchEdges(Id source, String edgeType, String targetType, Query query);
 }

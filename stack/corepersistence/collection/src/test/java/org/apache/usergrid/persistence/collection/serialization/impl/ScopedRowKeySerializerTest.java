@@ -25,7 +25,7 @@ public class ScopedRowKeySerializerTest {
         final String name = "scopeName";
         final Id testKey = new SimpleId( "testKey" );
 
-        final CollectionScope collectionScope = new CollectionScopeImpl( testId, name );
+        final CollectionScope collectionScope = new CollectionScopeImpl(new SimpleId( "organization" ), testId, name );
         final ScopedRowKey<CollectionScope, Id> rowKey = new ScopedRowKey<CollectionScope, Id>( collectionScope, testKey );
 
 

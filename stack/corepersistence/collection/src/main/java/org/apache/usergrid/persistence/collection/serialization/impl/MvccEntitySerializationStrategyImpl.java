@@ -41,7 +41,9 @@ import com.netflix.astyanax.serializers.ObjectSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 @Singleton
 public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
 
@@ -50,12 +52,12 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER  );
-
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER );
 
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_DATA =
-            new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
+            new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Version_Data", ROW_KEY_SER,
+                    UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -96,8 +98,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Column<UUID> column;
 
         try {
-            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) ).getColumn( version ).execute()
-                             .getResult();
+            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+                             .getColumn( version ).execute().getResult();
         }
 
         catch ( NotFoundException e ) {
@@ -125,8 +127,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         ColumnList<UUID> columns = null;
         try {
-            columns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
-                              .withColumnRange( version, null, false, maxSize ).execute().getResult();
+            columns =
+                    keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+                            .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
             throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
@@ -190,8 +193,10 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    /** Do the write on the correct row for the entity id with the operation */
-    private MutationBatch doWrite(final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
+    /**
+     * Do the write on the correct row for the entity id with the operation
+     */
+    private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ) );
@@ -200,7 +205,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    /** Set the id into the entity if it exists and return it. */
+    /**
+     * Set the id into the entity if it exists and return it.
+     */
     private Optional<Entity> getEntity( final Column<UUID> column, final Id entityId ) {
         final Optional<Entity> deSerialized = column.getValue( SER );
 
@@ -213,10 +220,14 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    /** Simple callback to perform puts and deletes with a common row setup code */
+    /**
+     * Simple callback to perform puts and deletes with a common row setup code
+     */
     private static interface RowOp {
 
-        /** The operation to perform on the row */
+        /**
+         * The operation to perform on the row
+         */
         void doOp( ColumnListMutation<UUID> colMutation );
     }
 

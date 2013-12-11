@@ -1,7 +1,9 @@
 package org.apache.usergrid.persistence.collection.exception;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class CollectionRuntimeException extends RuntimeException {
     public CollectionRuntimeException() {
     }

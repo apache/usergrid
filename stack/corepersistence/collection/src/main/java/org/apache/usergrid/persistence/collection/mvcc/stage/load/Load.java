@@ -12,7 +12,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.collection.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -24,7 +24,9 @@ import com.google.inject.Singleton;
 import rx.util.functions.Func1;
 
 
-/** This stage is a load stage to load a single entity */
+/**
+ * This stage is a load stage to load a single entity
+ */
 @Singleton
 public class Load implements Func1<IoEvent<Id>, Entity> {
 
@@ -50,7 +52,7 @@ public class Load implements Func1<IoEvent<Id>, Entity> {
     public Entity call( final IoEvent<Id> idIoEvent ) {
         final Id entityId = idIoEvent.getEvent();
 
-        EntityUtils.verifyIdentity( entityId );
+        ValidationUtils.verifyIdentity( entityId );
 
 
         final CollectionScope collectionScope = idIoEvent.getEntityCollection();
@@ -76,6 +78,6 @@ public class Load implements Func1<IoEvent<Id>, Entity> {
         }
 
 
-        return  targetVersion.get();
+        return targetVersion.get();
     }
 }

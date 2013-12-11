@@ -11,7 +11,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class MvccEntityImpl implements MvccEntity {
 
     private final Id entityId;

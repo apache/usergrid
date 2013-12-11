@@ -6,7 +6,9 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
 
-/** Interface to define how optimistic updates should be performed */
+/**
+ * Interface to define how optimistic updates should be performed
+ */
 public interface OptimisticUpdate {
 
     /**

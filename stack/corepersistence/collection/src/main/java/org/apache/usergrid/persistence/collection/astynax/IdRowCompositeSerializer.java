@@ -19,6 +19,7 @@ public class IdRowCompositeSerializer implements CompositeFieldSerializer<Id> {
 
     private static final IdRowCompositeSerializer INSTANCE = new IdRowCompositeSerializer();
 
+
     private IdRowCompositeSerializer() {}
 
 
@@ -38,7 +39,9 @@ public class IdRowCompositeSerializer implements CompositeFieldSerializer<Id> {
     }
 
 
-    /** Get the singleton serializer */
+    /**
+     * Get the singleton serializer
+     */
     public static IdRowCompositeSerializer get() {
         return INSTANCE;
     }

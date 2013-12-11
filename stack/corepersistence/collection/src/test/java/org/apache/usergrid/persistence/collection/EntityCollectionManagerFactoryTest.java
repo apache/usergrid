@@ -34,7 +34,7 @@ public class EntityCollectionManagerFactoryTest {
     @Test
     public void validInput() {
 
-        CollectionScopeImpl context = new CollectionScopeImpl( new SimpleId( "test" ), "test" );
+        CollectionScopeImpl context = new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
         EntityCollectionManager entityCollectionManager =
                 entityCollectionManagerFactory.createCollectionManager( context );

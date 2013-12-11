@@ -9,11 +9,18 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * organization.  Data encapsulated within instances of a scope are mutually exclusive from instances with other ids and
  * names.
  */
-public interface CollectionScope extends Scope {
+public interface CollectionScope extends OrganizationScope {
 
     /** @return The name of the collection. If you use pluralization for you names vs types,
      * you must keep the consistent or you will be unable to load data
      * @return
      */
     public String getName();
+
+
+    /**
+     * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred).  Usually an application
+     *         Id, but could be an entity Id that is the parent of another collection
+     */
+    public Id getOwner();
 }
