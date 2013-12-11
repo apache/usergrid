@@ -56,4 +56,35 @@ public interface EdgeManager {
      * @return An observable that emits a matching edge.
      */
     Observable<Edge> searchEdges(Id source, String edgeType, String targetType, Query query);
+
+    /**
+     * Get all edge types from this source
+     * @param source
+     * @return An observable that emits strings for edge types
+     */
+    Observable<String> getEdgeTypes(Id source);
+
+    /**
+     * Get all target types for this edge type
+     * @param source
+     * @param edgeType
+     * @return
+     */
+    Observable<String> getTargetTypes(Id source, String edgeType);
+
+    /**
+     * Get all incoming edge types for this destination
+     * @param destination
+     * @return
+     */
+    Observable<String> getSourceEdgeTypes(Id destination);
+
+
+    /**
+     * Get the source types of incoming edges for the given destination type and edge type
+     * @param destination
+     * @param edgeType
+     * @return
+     */
+    Observable<String> getSourceTypes(Id destination, String edgeType);
 }
