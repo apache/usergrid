@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 
-public class WriteVerifyTest extends AbstractMvccEntityStageTest {
+public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
     /** Standard flow */
     @Test
@@ -38,7 +38,7 @@ public class WriteVerifyTest extends AbstractMvccEntityStageTest {
 
 
         //run the stage
-        WriteVerify newStage = new WriteVerify(  );
+        WriteUniqueVerify newStage = new WriteUniqueVerify(  );
 
 
         IoEvent<MvccEntity> result = newStage.call( new IoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -63,7 +63,7 @@ public class WriteVerifyTest extends AbstractMvccEntityStageTest {
 
     @Override
     protected void validateStage( final IoEvent<MvccEntity> event ) {
-        new WriteVerify( ).call( event );
+        new WriteUniqueVerify( ).call( event );
     }
 
 }

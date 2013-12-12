@@ -13,8 +13,9 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteCommit
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteVerify;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.collection.util.ValidationUtils;
@@ -44,7 +45,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     //start stages
     private final WriteStart writeStart;
-    private final WriteVerify writeVerifyWrite;
+    private final WriteUniqueVerify writeVerifyUnique;
+    private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
 
     //load stages
@@ -58,8 +60,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
-                                        final WriteVerify writeVerifyWrite, final WriteCommit writeCommit,
-                                        final Load load, final DeleteStart deleteStart, final DeleteCommit deleteCommit,
+                                        final WriteUniqueVerify writeVerifyUnique,
+                                        final WriteOptimisticVerify writeOptimisticVerify,
+                                        final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
+                                        final DeleteCommit deleteCommit,
                                         @Assisted final CollectionScope collectionScope ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
@@ -67,7 +71,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         this.writeStart = writeStart;
-        this.writeVerifyWrite = writeVerifyWrite;
+        this.writeVerifyUnique = writeVerifyUnique;
+        this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
         this.load = load;
         this.deleteStart = deleteStart;
@@ -101,11 +106,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         EntityUtils.setVersion( entity, version );
 
 
-        //fire the stages
-        //TODO use our own scheduler to help with multitennancy here
+        /**
+         *fire the stages
+         * TODO use our own scheduler to help with multitenancy here.
+         * TODO writeOptimisticVerify and writeVerifyUnique should happen concurrently to reduce user wait time
+         */
 
         return Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).map( writeStart )
-                         .map( writeVerifyWrite ).map( writeCommit );
+                         .map( writeOptimisticVerify ).map( writeVerifyUnique ).map( writeCommit );
     }
 
 
@@ -118,7 +126,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        //TODO use our own scheduler to help with multitennancy here
+        //TODO use our own scheduler to help with multitenancy here
         return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
     }
 
@@ -130,7 +138,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        //TODO use our own scheduler to help with multitennancy here
+        //TODO use our own scheduler to help with multitenancy here
         return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( load );
     }
 }

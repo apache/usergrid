@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.verify;
+package org.apache.usergrid.persistence.collection.serialization;
 
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -11,7 +11,7 @@ import org.apache.usergrid.persistence.model.field.Field;
 public interface UniqueUpdate {
 
     /**
-     * WriteVerify the entity we're trying to write in our current context has the correct most current version
+     * WriteUniqueVerify the entity we're trying to write in our current context has the correct most current version
      *
      * @param context The mvcc context
      * @param uniqueField The field to check for uniqueness

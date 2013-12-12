@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.mvcc.verify;
+package org.apache.usergrid.persistence.collection.serialization;
 
 
 import java.util.UUID;
@@ -12,7 +12,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 public interface OptimisticUpdate {
 
     /**
-     * WriteVerify the entity we're trying to write in our current context has the correct most current version
+     * WriteUniqueVerify the entity we're trying to write in our current context has the correct most current version
      *
      * @param context The mvcc context
      * @param optimisticVersion The optimistic version the caller provider as the most up to date
