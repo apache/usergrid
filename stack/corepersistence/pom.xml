@@ -13,7 +13,7 @@
 
   <properties>
     <astyanax.version>1.56.46-UG</astyanax.version>
-    <jukito.version>1.4-SNAPSHOT</jukito.version>
+    <jukito.version>1.4-ug</jukito.version>
   </properties>
 
   <modules>
