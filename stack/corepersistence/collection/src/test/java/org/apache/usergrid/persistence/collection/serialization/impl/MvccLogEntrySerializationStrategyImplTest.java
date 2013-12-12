@@ -290,6 +290,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     /** Mapper that will change which module we implement based on the test case */
     public static class TimeoutModMapper implements GuiceBerryEnvSelector {
+        // @TODO do this without guice
 
         @Override
         public Class<? extends Module> guiceBerryEnvToUse( final TestDescription testDescription ) {
