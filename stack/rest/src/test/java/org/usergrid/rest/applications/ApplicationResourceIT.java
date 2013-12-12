@@ -63,7 +63,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertNotNull( node.get( "entities" ) );
     }
 
-
     @Test
     public void applicationWithAppCredentials() throws Exception {
 
@@ -79,6 +78,46 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertNotNull( node.get( "entities" ) );
     }
 
+    /**
+     * Verifies that we return JSON even when no accept header is specified.
+     * (for backwards compatibility)
+     */
+    @Test
+    public void jsonForNoAccepts() throws Exception {
+
+        ApplicationInfo app = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+        String clientId = setup.getMgmtSvc().getClientIdForApplication( app.getId() );
+        String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( app.getId() );
+
+        JsonNode node = resource()
+                .path( "/test-organization/test-app" )
+                .queryParam( "client_id", clientId )
+                .queryParam( "client_secret", clientSecret )
+                .get( JsonNode.class );
+
+        assertNotNull( node.get( "entities" ) );
+    }
+
+    /**
+     * Verifies that we return JSON even when text/html is requested. 
+     * (for backwards compatibility)
+     */
+    @Test
+    public void jsonForAcceptsTextHtml() throws Exception {
+
+        ApplicationInfo app = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
+        String clientId = setup.getMgmtSvc().getClientIdForApplication( app.getId() );
+        String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( app.getId() );
+
+        JsonNode node = resource()
+                .path( "/test-organization/test-app" )
+                .queryParam( "client_id", clientId )
+                .queryParam( "client_secret", clientSecret )
+                .accept( MediaType.TEXT_HTML )
+                .get( JsonNode.class );
+
+        assertNotNull( node.get( "entities" ) );
+    }
 
     @Test
     public void applicationWithJsonCreds() throws Exception {
@@ -295,7 +334,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore("We need to fix JSPs in our test harness")
     public void authorizationCodeWithWrongCredentials() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
@@ -316,7 +354,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore("Our JSPs in the test runtime are borked. TODO zznate")
     @Test
     public void authorizeWithInvalidClientIdRaisesError() throws Exception {
         String result =

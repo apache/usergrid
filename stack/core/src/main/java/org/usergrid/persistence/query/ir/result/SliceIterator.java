@@ -23,8 +23,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.exceptions.QueryIterationException;
 import org.usergrid.persistence.query.ir.QuerySlice;
 
 import me.prettyprint.hector.api.beans.HColumn;
@@ -36,6 +39,8 @@ import me.prettyprint.hector.api.beans.HColumn;
  * @author tnine
  */
 public class SliceIterator implements ResultIterator {
+
+    private static final Logger logger = LoggerFactory.getLogger( SliceIterator.class );
 
     private final LinkedHashMap<UUID, ScanColumn> cols;
     private final QuerySlice slice;
@@ -188,9 +193,16 @@ public class SliceIterator implements ResultIterator {
      */
     @Override
     public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
-        int sliceHash = slice.hashCode();
+        final int sliceHash = slice.hashCode();
 
-        ByteBuffer bytes = cols.get( lastLoaded ).getCursorValue();
+        final ScanColumn col = cols.get( lastLoaded );
+
+        if(col == null){
+            logger.error( "An iterator attempted to access a slice that was not iterated over.  This will result in the cursor construction failing" );
+            throw new QueryIterationException( "An iterator attempted to access a slice that was not iterated over.  This will result in the cursor construction failing" );
+        }
+
+        final ByteBuffer bytes = col.getCursorValue();
 
         if ( bytes == null ) {
             return;

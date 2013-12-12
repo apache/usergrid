@@ -68,6 +68,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         try {
             ApiResponse groupActivity = client.postGroupActivity( GROUP, null );
             fail = (groupActivity.getError() != null);
+            
         }
         catch ( Exception e ) {
             fail = true;

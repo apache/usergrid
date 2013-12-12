@@ -86,8 +86,7 @@
     <hector-test-version>1.1-4</hector-test-version>
     <jackson-version>1.9.9</jackson-version>
     <jclouds.version>1.6.2-incubating</jclouds.version>
-    <jersey-version>1.17</jersey-version>
-    <jetty.version>8.1.8.v20121106</jetty.version>
+    <jersey-version>1.18</jersey-version>
     <junit-version>4.11</junit-version>
     <log4j-version>1.2.16</log4j-version>
     <metrics-version>2.1.2</metrics-version>
@@ -95,7 +94,7 @@
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
     <snakeyaml-version>1.8</snakeyaml-version>
-    <tomcat-version>6.0.33</tomcat-version>
+    <tomcat-version>7.0.42</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
 
@@ -400,6 +399,11 @@
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
           </exclusion>
+
+          <exclusion>
+                   <artifactId>snappy-java</artifactId>
+                   <groupId>org.xerial.snappy</groupId>
+            </exclusion>
         </exclusions>
       </dependency>
 
@@ -423,6 +427,18 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
           </exclusion>
+
+
+          <exclusion>
+            <artifactId>servlet-api</artifactId>
+            <groupId>javax.servlet</groupId>
+          </exclusion>
+
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+
         </exclusions>
       </dependency>
 
@@ -666,9 +682,9 @@
       </dependency>
 
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>servlet-api</artifactId>
-        <version>2.5</version>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+          <version>3.0.1</version>
       </dependency>
 
       <dependency>
@@ -999,17 +1015,7 @@
         <version>0.9.94</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.eclipse.jetty.aggregate</groupId>
-        <artifactId>jetty-server</artifactId>
-        <version>${jetty.version}</version>
-      </dependency>
 
-      <dependency>
-        <groupId>org.eclipse.jetty.aggregate</groupId>
-        <artifactId>jetty-webapp</artifactId>
-        <version>${jetty.version}</version>
-      </dependency>
 
       <dependency>
          <groupId>org.apache.tika</groupId>
@@ -1017,8 +1023,55 @@
           <version>${tika.version}</version>
       </dependency>
 
+      <!-- Mock, Testing and Logging Dependencies -->
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
 
-        <!-- Mock, Testing and Logging Dependencies -->
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-logging-juli</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-jasper</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-jasper</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-jasper-el</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-jsp-api</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-servlet-api</artifactId>
+        <version>${tomcat-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-jsp-api</artifactId>
+        <scope>test</scope>
+        <version>${tomcat-version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.jvnet.mock-javamail</groupId>
@@ -1220,28 +1273,9 @@
         <version>1.27</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>jasper</artifactId>
-        <version>${tomcat-version}</version>
-        <exclusions>
-          <exclusion>
-            <artifactId>servlet-api</artifactId>
-            <groupId>org.apache.tomcat</groupId>
-          </exclusion>
 
-          <exclusion>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>juli</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
-      <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.0.1</version>
-      </dependency>
+
 
       <dependency>
         <groupId>com.apple</groupId>

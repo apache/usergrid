@@ -6,15 +6,15 @@ import java.util.Properties;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
-import org.apache.usergrid.persistence.collection.archaius.NamedDynamicProperties;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.name.Names;
 
 
 /**
@@ -61,6 +61,8 @@ public class CollectionModule extends AbstractModule {
         //create a guice factor for getting our collection manager
         install(
                 new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+                        .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                                           .build( EntityCollectionManagerFactory.class ) );
+
     }
 }

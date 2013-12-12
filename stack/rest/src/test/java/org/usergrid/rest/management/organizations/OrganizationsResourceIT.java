@@ -36,6 +36,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_E
 import static org.usergrid.utils.MapUtils.hashMap;
 
 
+/** @author zznate */
 public class OrganizationsResourceIT extends AbstractRestIT {
     private static final Logger LOG = LoggerFactory.getLogger( OrganizationsResourceIT.class );
 
