@@ -13,8 +13,6 @@ import org.junit.experimental.theories.ParametersSuppliedBy;
 import org.junit.experimental.theories.PotentialAssignment;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.util.InvalidIdGenerator;
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 

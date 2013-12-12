@@ -19,7 +19,8 @@
   <!-- =================================================================== -->
 
   <properties>
-    <astyanax.version>1.56.44</astyanax.version>
+    <astyanax.version>1.56.46-SNAPSHOT</astyanax.version>
+    <rx.version>0.15.2-SNAPSHOT</rx.version>
     <jukito.version>1.4-SNAPSHOT</jukito.version>
   </properties>
 
@@ -64,5 +65,11 @@
       <artifactId>astyanax-cassandra</artifactId>
       <version>${astyanax.version}</version>
     </dependency>
+
+    <dependency>
+         <groupId>com.netflix.rxjava</groupId>
+         <artifactId>rxjava-core</artifactId>
+         <version>${rx.version}</version>
+       </dependency>
   </dependencies>
 </project>

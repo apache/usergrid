@@ -97,11 +97,19 @@
     </dependency> -->
 
     <!-- RX java -->
+
+
+    <!-- temporarily commented out using m2repo in-project repository
+             until a release with our fixes arrives
+
+        https://github.com/Netflix/RxJava/issues/601
+
+
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-core</artifactId>
       <version>0.15.1</version>
-    </dependency>
+    </dependency>         -->
 
     <dependency>
       <groupId>com.google.inject.extensions</groupId>

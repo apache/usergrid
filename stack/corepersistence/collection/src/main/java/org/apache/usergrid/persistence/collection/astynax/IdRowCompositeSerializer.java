@@ -3,10 +3,11 @@ package org.apache.usergrid.persistence.collection.astynax;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeBuilder;
-import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeParser;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+
+import com.netflix.astyanax.model.CompositeBuilder;
+import com.netflix.astyanax.model.CompositeParser;
 
 
 /**

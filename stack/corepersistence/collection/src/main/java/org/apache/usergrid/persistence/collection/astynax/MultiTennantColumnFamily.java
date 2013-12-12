@@ -13,6 +13,7 @@ import com.netflix.astyanax.model.ColumnFamily;
  * @author tnine
  */
 public class MultiTennantColumnFamily<S extends OrganizationScope, K, V> extends ColumnFamily<ScopedRowKey<S, K>, V> {
+
     public MultiTennantColumnFamily( final String columnFamilyName, final Serializer<ScopedRowKey<S, K>> keySerializer,
                                      final Serializer<V> columnSerializer ) {
         super( columnFamilyName, keySerializer, columnSerializer );

@@ -22,7 +22,8 @@ import com.google.common.collect.Lists;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 /** @author tnine */

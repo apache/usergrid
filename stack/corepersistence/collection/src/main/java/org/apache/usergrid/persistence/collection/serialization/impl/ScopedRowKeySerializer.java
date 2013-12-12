@@ -7,12 +7,12 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
-import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeBuilder;
-import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeParser;
-import org.apache.usergrid.persistence.collection.astynax.fixes.Composites;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.netflix.astyanax.model.CompositeBuilder;
+import com.netflix.astyanax.model.CompositeParser;
+import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 
 

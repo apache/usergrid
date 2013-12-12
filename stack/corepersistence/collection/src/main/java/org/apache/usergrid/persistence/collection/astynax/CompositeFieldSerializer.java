@@ -1,8 +1,8 @@
 package org.apache.usergrid.persistence.collection.astynax;
 
 
-import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeBuilder;
-import org.apache.usergrid.persistence.collection.astynax.fixes.CompositeParser;
+import com.netflix.astyanax.model.CompositeBuilder;
+import com.netflix.astyanax.model.CompositeParser;
 
 
 /**

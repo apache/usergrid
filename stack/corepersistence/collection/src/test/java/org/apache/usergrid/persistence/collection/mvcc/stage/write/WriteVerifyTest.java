@@ -11,7 +11,6 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 

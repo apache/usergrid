@@ -12,9 +12,7 @@ import org.junit.experimental.theories.ParameterSupplier;
 import org.junit.experimental.theories.ParametersSuppliedBy;
 import org.junit.experimental.theories.PotentialAssignment;
 
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
