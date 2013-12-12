@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import org.apache.usergrid.persistence.collection.util.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
 

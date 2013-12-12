@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.model.entity;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.model.value.EntityObject;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.google.common.base.Preconditions;
 
