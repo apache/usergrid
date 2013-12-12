@@ -21,7 +21,10 @@ body {
     margin-top: -20em; /*set to a negative number 1/2 of your height*/
     margin-left: -15em; /*set to a negative number 1/2 of your width*/
 }
-
+.dialog-area.password-reset-form {
+    width:600px;
+    height:350px;
+}
 .dialog-form {
     margin-left: 8px;
     padding: 16px 16px 16px 16px;

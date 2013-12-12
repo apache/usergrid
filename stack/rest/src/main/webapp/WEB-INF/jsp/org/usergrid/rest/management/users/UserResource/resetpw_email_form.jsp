@@ -9,7 +9,7 @@
 <link rel="stylesheet" type="text/css" href="/css/styles.css" />
 </head>
 <body>
-	<div class="dialog-area">
+	<div class="dialog-area password-reset-form">
 		<c:if test="${!empty it.errorMsg}">
 			<div class="dialog-form-message">${it.errorMsg}</div>
 		</c:if>

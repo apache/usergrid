@@ -395,16 +395,18 @@
 
     <!-- SUN, Javax Package, and Other Com Dependencies -->
 
+
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <scope>provided</scope>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
     </dependency>
+
 
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
@@ -510,8 +512,32 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-logging-juli</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-jasper</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>jasper</artifactId>
+      <artifactId>tomcat-jasper-el</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-jsp-api</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -534,17 +560,7 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-server</artifactId>
-      <scope>test</scope>
-    </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-webapp</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.usergrid</groupId>

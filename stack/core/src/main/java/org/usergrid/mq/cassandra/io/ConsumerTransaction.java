@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,26 +52,32 @@ import static org.usergrid.mq.cassandra.QueuesCF.CONSUMER_QUEUE_TIMEOUTS;
 
 /**
  * Reads from the queue and starts a transaction
+ *
+ * @author tnine
  */
 public class ConsumerTransaction extends NoTransactionSearch
 {
 
     private static final Logger logger = LoggerFactory.getLogger( ConsumerTransaction.class );
     private static final int MAX_READ = 10000;
-    private LockManager lockManager;
-    private UUID applicationId;
-    protected CassandraService cass;
+    private final LockManager lockManager;
+    private final UUID applicationId;
+    protected final CassandraService cass;
+
+    //timeout on reading lock
+    private final int lockTimeout;
 
 
     /**
      * @param ko
      */
-    public ConsumerTransaction( UUID applicationId, Keyspace ko, LockManager lockManager, CassandraService cass )
+    public ConsumerTransaction( UUID applicationId, Keyspace ko, LockManager lockManager, CassandraService cass, int lockTimeout )
     {
         super( ko );
         this.applicationId = applicationId;
         this.lockManager = lockManager;
         this.cass = cass;
+        this.lockTimeout = lockTimeout;
     }
 
 
@@ -191,7 +198,10 @@ public class ConsumerTransaction extends NoTransactionSearch
         try
         {
 
-            lock.lock();
+            //only try to get a lock with a timeout, if we can't bail
+            if(!lock.tryLock(lockTimeout, TimeUnit.SECONDS)){
+                throw new QueueException( "Unable to obtain a lock on queue '" + queuePath + "' after '" + lockTimeout + "'seconds" );
+            }
 
             long startTime = System.currentTimeMillis();
 
@@ -299,8 +309,10 @@ public class ConsumerTransaction extends NoTransactionSearch
     /**
      * Get all pending transactions that have timed out
      *
-     * @param startId The time to start seeking from
-     * @param lastId The
+     * @param queueId The queue id
+     * @param consumerId The consumer id
+     * @param params The server params
+     * @param startTimeUUID The start time
      */
     protected List<TransactionPointer> getConsumerIds( UUID queueId, UUID consumerId, SearchParam params,
                                                        UUID startTimeUUID )

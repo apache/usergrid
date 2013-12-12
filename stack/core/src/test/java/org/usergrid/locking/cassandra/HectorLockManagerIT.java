@@ -24,6 +24,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
+import me.prettyprint.hector.api.ConsistencyLevelPolicy;
+import me.prettyprint.hector.api.HConsistencyLevel;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,6 +60,10 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         hlockManager.setLockTtl( 2000 );
         hlockManager.setNumberOfLockObserverThreads( 1 );
         hlockManager.setReplicationFactor( 1 );
+        ConsistencyLevelPolicy consistencyLevel = new ConfigurableConsistencyLevel();
+        ((ConfigurableConsistencyLevel) consistencyLevel).setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
+        ((ConfigurableConsistencyLevel) consistencyLevel).setDefaultWriteConsistencyLevel(HConsistencyLevel.ONE);
+        hlockManager.setConsistencyLevelPolicy(consistencyLevel);
         hlockManager.init();
 
         manager = hlockManager;

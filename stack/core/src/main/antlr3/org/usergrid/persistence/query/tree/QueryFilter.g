@@ -8,6 +8,7 @@ options {
 
 @rulecatch { }
 
+
 @header {
 package org.usergrid.persistence.query.tree;
 
@@ -18,13 +19,6 @@ import org.usergrid.persistence.Query.SortPredicate;
 
 }
 
-@lexer::header {
-package org.usergrid.persistence.query.tree;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-}
 
 @members {
 	Query query = new Query();
@@ -37,16 +31,40 @@ import org.slf4j.LoggerFactory;
 		logger.info(msg);
 	}
 }
-  
+
+
+@lexer::header {
+package org.usergrid.persistence.query.tree;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.exceptions.QueryTokenException;
+
+}
+
 @lexer::members {
+
+
 
   private static final Logger logger = LoggerFactory
       .getLogger(QueryFilterLexer.class);
+
+
+
 
 	@Override
 	public void emitErrorMessage(String msg) {
 		logger.info(msg);
 	}
+
+	@Override
+    public void recover(RecognitionException e) {
+         //We don't want to recover, we want to re-throw to the user since they passed us invalid input
+         throw new QueryTokenException(e);
+    }
+
+
 }
 
 //these must come before ID. Otherwise lt, lte, eq, etc will be returned as id tokens

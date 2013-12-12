@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 @Provider
 @Component
 @Scope("singleton")
-@Produces({ MediaType.APPLICATION_JSON })
+@Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_HTML })
 public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper> {
 
     private static final Logger logger = LoggerFactory.getLogger( JacksonCustomMapperProvider.class );

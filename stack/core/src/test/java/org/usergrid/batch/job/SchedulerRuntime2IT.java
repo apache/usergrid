@@ -42,7 +42,7 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
         }
 
         // now wait until everything fires
-        boolean waited = getJobListener().blockTilDone( getCount(), 5000L );
+        boolean waited = getJobListener().blockTilDone( getCount(), 15000L );
 
         assertTrue( "Jobs ran", waited );
         assertTrue( getCount() + " successful jobs ran", getCount() == getJobListener().getSuccessCount() );
@@ -57,7 +57,7 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
         }
 
         // now wait until everything fires
-        waited = getJobListener().blockTilDone( 2 * getCount(), 5000L );
+        waited = getJobListener().blockTilDone( 2 * getCount(), 15000L );
         assertTrue( "Jobs ran", waited );
         assertTrue( 2 * getCount() + " successful jobs ran",
                 ( 2 * getCount() ) == getJobListener().getSuccessCount() );

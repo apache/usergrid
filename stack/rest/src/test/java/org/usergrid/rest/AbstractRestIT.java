@@ -152,7 +152,7 @@ public abstract class AbstractRestIT extends JerseyTest {
         setUserPassword( "ed@anuff.com", "sesame" );
 
         client = new Client( "test-organization", "test-app" ).withApiUrl(
-                UriBuilder.fromUri( "http://localhost/" ).port( setup.getJettyPort() ).build().toString() );
+                UriBuilder.fromUri( "http://localhost/" ).port( setup.getTomcatPort() ).build().toString() );
 
         org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser( "ed@anuff.com", "sesame" );
 

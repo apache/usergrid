@@ -20,15 +20,16 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
+import me.prettyprint.cassandra.locking.HLockManagerImpl;
+import me.prettyprint.hector.api.Cluster;
+import me.prettyprint.hector.api.ConsistencyLevelPolicy;
+import me.prettyprint.hector.api.locking.HLockManager;
+import me.prettyprint.hector.api.locking.HLockManagerConfigurator;
+
 import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
-
-import me.prettyprint.cassandra.locking.HLockManagerImpl;
-import me.prettyprint.hector.api.Cluster;
-import me.prettyprint.hector.api.locking.HLockManager;
-import me.prettyprint.hector.api.locking.HLockManagerConfigurator;
 
 
 /**
@@ -43,6 +44,7 @@ public class HectorLockManagerImpl implements LockManager {
     private String keyspaceName;
     private Cluster cluster;
     private HLockManager lm;
+    private ConsistencyLevelPolicy consistencyLevelPolicy;
 
 
     /**
@@ -60,6 +62,10 @@ public class HectorLockManagerImpl implements LockManager {
         hlc.setNumberOfLockObserverThreads( numberOfLockObserverThreads );
         hlc.setLocksTTLInMillis( lockTtl );
         lm = new HLockManagerImpl( cluster, hlc );
+        if ( consistencyLevelPolicy != null ) {
+        	lm.getKeyspace().setConsistencyLevelPolicy(consistencyLevelPolicy);
+        }
+        // if consistencyLevelPolicy == null, use hector's default, which is QuorumAll, no need to explicitly set
         lm.init();
     }
 
@@ -124,4 +130,12 @@ public class HectorLockManagerImpl implements LockManager {
     public void setCluster( Cluster cluster ) {
         this.cluster = cluster;
     }
+
+
+	/**
+	 * @param consistencyLevelPolicy the consistencyLevelPolicy to set
+	 */
+	public void setConsistencyLevelPolicy(ConsistencyLevelPolicy consistencyLevelPolicy) {
+		this.consistencyLevelPolicy = consistencyLevelPolicy;
+	}
 }

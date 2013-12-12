@@ -55,6 +55,14 @@ public abstract class TestUser {
     }
 
 
+    /**
+     * Manually set our token for this user.
+     * @param token
+     */
+    public void setToken(String token){
+        this.token = token;
+    }
+
     /** Log out */
     public void logout() {
         token = null;

@@ -20,12 +20,9 @@ import java.util.Properties;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.AvailablePortFinder;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ManagementService;
@@ -34,15 +31,15 @@ import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
-import org.apache.commons.lang.math.RandomUtils;
-
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ITSetup extends ExternalResource {
 
-    private static final int DEFAULT_JETTY_PORT = 9998;
+
+
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
     private final CassandraResource cassandraResource;
+    private final TomcatResource tomcatResource;
 
     private ServiceManagerFactory smf;
     private ManagementService managementService;
@@ -51,12 +48,13 @@ public class ITSetup extends ExternalResource {
     private TokenService tokenService;
     private SignInProviderFactory providerFactory;
     private Properties properties;
-    private Server jetty;
-    private int jettyPort = DEFAULT_JETTY_PORT;
 
 
     public ITSetup( CassandraResource cassandraResource ) {
         this.cassandraResource = cassandraResource;
+        tomcatResource = TomcatResource.instance;
+
+
     }
 
 
@@ -84,12 +82,10 @@ public class ITSetup extends ExternalResource {
             properties = cassandraResource.getBean( "properties", Properties.class );
             smf = cassandraResource.getBean( ServiceManagerFactory.class );
 
-            while ( jetty == null ) {
-                startJetty();
-            }
+            tomcatResource.before();
 
             // Initialize Jersey Client
-            uri = UriBuilder.fromUri( "http://localhost/" ).port( jettyPort ).build();
+            uri = UriBuilder.fromUri( "http://localhost/" ).port( tomcatResource.getPort() ).build();
 
             ready = true;
             LOG.info( "Test setup complete..." );
@@ -97,20 +93,7 @@ public class ITSetup extends ExternalResource {
     }
 
 
-    private void startJetty() {
-        LOG.info( "Starting the Jetty Server on port {}", jettyPort );
-        jettyPort = AvailablePortFinder.getNextAvailable( DEFAULT_JETTY_PORT + RandomUtils.nextInt( 1000 ) );
 
-        jetty = new Server( jettyPort );
-        jetty.setHandler( new WebAppContext( "src/main/webapp", "/" ) );
-
-        try {
-            jetty.start();
-        }
-        catch ( Exception e ) {
-            jetty = null;
-        }
-    }
 
 
     public void protect() {
@@ -128,9 +111,9 @@ public class ITSetup extends ExternalResource {
     }
 
 
-    public int getJettyPort() {
+    public int getTomcatPort() {
         protect();
-        return jettyPort;
+        return tomcatResource.getPort();
     }
 
 
