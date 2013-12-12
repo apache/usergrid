@@ -13,28 +13,27 @@ import static junit.framework.TestCase.assertEquals;
 public class CollectionContextImplTest {
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void orgIdrequired() {
-        new CollectionScopeImpl(null, new SimpleId( "test" ), "test" );
+        new CollectionScopeImpl( null, new SimpleId( "test" ), "test" );
     }
 
 
-
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void ownerIdRequired() {
-        new CollectionScopeImpl(new SimpleId( "organization" ), null, "test" );
+        new CollectionScopeImpl( new SimpleId( "organization" ), null, "test" );
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void collectionRequired() {
-        new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), null );
+        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), null );
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test( expected = IllegalArgumentException.class )
     public void collectionRequiredLength() {
-        new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "" );
+        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "" );
     }
 
 
@@ -44,7 +43,7 @@ public class CollectionContextImplTest {
 
         final String collection = "tests";
 
-        CollectionScopeImpl context = new CollectionScopeImpl(new SimpleId( "organization" ), ownerId, collection );
+        CollectionScopeImpl context = new CollectionScopeImpl( new SimpleId( "organization" ), ownerId, collection );
 
         assertEquals( ownerId, context.getOwner() );
         assertEquals( collection, context.getName() );

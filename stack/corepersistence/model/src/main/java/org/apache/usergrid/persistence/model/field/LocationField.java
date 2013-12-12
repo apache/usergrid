@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.model.field;
 
 
-import org.apache.usergrid.persistence.model.value.Location;
+import org.apache.usergrid.persistence.model.field.value.Location;
 
 
 /** Basic field for storing location data */

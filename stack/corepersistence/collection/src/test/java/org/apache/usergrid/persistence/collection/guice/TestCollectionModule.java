@@ -17,14 +17,15 @@ import com.google.inject.name.Names;
 
 
 /**
- * Module for testing our guice wiring environment is correct. Does not actually set the main execution env. Callers are
- * responsible for that via decoration
+ * This module manually constructs Properties specific to the unit testing environment and then it overlays
+ * overrides (if not null). These properties are used to build Named bindings to inject configuration parameters
+ * into classes like the {@link AstynaxKeyspaceProvider}.
+ *
+ * It also installs the GuiceBerryModule, and the CollectionModule.
  *
  * @author tnine
  */
 public class TestCollectionModule extends AbstractModule {
-
-
     private final Map<String, String> override;
 
 
@@ -40,8 +41,6 @@ public class TestCollectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-
         //import the guice berry module
         install( new GuiceBerryModule() );
 
@@ -68,7 +67,7 @@ public class TestCollectionModule extends AbstractModule {
         /**
          * Set the timeout to 60 seconds, no test should take that long for load+delete without a failure
          */
-        configProperties.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, 60 + "" );
+        configProperties.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, "60" );
 
 
         if ( override != null ) {

@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.model.field;
 
 
-import org.apache.usergrid.persistence.model.value.EntityObject;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 
 /** An object field */

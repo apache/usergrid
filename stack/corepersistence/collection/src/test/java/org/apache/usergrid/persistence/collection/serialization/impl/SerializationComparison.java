@@ -28,8 +28,8 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.model.value.EntityObject;
-import org.apache.usergrid.persistence.model.value.Location;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.apache.usergrid.persistence.model.field.value.Location;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.ByteBufferInputStream;

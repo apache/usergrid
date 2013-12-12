@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
@@ -21,19 +20,17 @@ import com.netflix.astyanax.test.EmbeddedCassandra;
  * @author tnine
  */
 public class CassandraRule extends ExternalResource {
-
-    private static final Logger logger = LoggerFactory.getLogger( CassandraRule.class );
+    private static final Logger LOG = LoggerFactory.getLogger( CassandraRule.class );
 
     public static final int THRIFT_PORT = AvailablePortFinder.getNextAvailable();
-
     public static final int GOSSIP_PORT = AvailablePortFinder.getNextAvailable();
-
 
     private static final Object mutex = new Object();
 
     private static EmbeddedCassandra cass;
 
     private static boolean started = false;
+
 
     @Override
     protected void before() throws Throwable {
@@ -56,17 +53,17 @@ public class CassandraRule extends ExternalResource {
 
 
             //cleanup before we run, shouldn't be necessary, but had the directory exist during JVM kill
-            if(dataDir.exists()){
-                FileUtils.deleteRecursive(dataDir);
+            if( dataDir.exists() ) {
+                FileUtils.deleteRecursive( dataDir );
             }
 
             try {
-                logger.info( "Starting cassandra" );
+                LOG.info( "Starting cassandra" );
 
                 cass = new EmbeddedCassandra( dataDir, "Usergrid", THRIFT_PORT, GOSSIP_PORT );
                 cass.start();
 
-                logger.info( "Cassandra started" );
+                LOG.info( "Cassandra started" );
 
                 started = true;
             }
