@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>org.jukito</groupId>
+  <artifactId>jukito</artifactId>
+  <version>1.4-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <lastUpdated>20131211021342</lastUpdated>
+    <snapshotVersions>
+      <snapshotVersion>
+        <classifier>sources</classifier>
+        <extension>jar</extension>
+        <value>1.4-SNAPSHOT</value>
+        <updated>20131211021342</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>jar</extension>
+        <value>1.4-SNAPSHOT</value>
+        <updated>20131211021342</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>1.4-SNAPSHOT</value>
+        <updated>20131211021342</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>

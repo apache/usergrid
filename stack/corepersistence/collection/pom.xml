@@ -21,27 +21,39 @@
     <dependency>
       <groupId>${project.parent.groupId}</groupId>
       <artifactId>model</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- include our cassandra client -->
+    <!-- temporarily commented out using m2repo in-project repository
+         until a release with our fixes arrives
+
     <dependency>
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-core</artifactId>
-      <version>${astynax.version}</version>
+      <version>${astyanax.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-thrift</artifactId>
-      <version>${astynax.version}</version>
+      <version>${astyanax.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-cassandra</artifactId>
-      <version>${astynax.version}</version>
+      <version>${astyanax.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.jukito</groupId>
+      <artifactId>jukito</artifactId>
+      <version>${jukito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    -->
 
     <!-- lang utils for setting uuids etc -->
     <dependency>
@@ -115,7 +127,7 @@
     <dependency>
       <groupId>${project.parent.groupId}</groupId>
       <artifactId>testutils</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
 

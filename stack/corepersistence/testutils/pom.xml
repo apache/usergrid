@@ -13,6 +13,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>m2repo</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
@@ -32,12 +38,20 @@
         <version>1.2.11</version>
     </dependency>
 
+    <!-- temporarily removed to use in-project repo until fixes are released
 
     <dependency>
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-cassandra</artifactId>
       <version>${astynax.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.jukito</groupId>
+      <artifactId>jukito</artifactId>
+      <version>${jukito.version}</version>
+    </dependency>
+    -->
   </dependencies>
 
 </project>
