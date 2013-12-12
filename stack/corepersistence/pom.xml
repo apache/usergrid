@@ -12,7 +12,8 @@
   <description>Prorotype for refactoring persistence of usergrid</description>
 
   <properties>
-    <astynax.version>1.56.44</astynax.version>
+    <astyanax.version>1.56.44</astyanax.version>
+    <jukito.version>1.4-SNAPSHOT</jukito.version>
   </properties>
 
   <modules>
@@ -20,7 +21,6 @@
     <module>graph</module>
     <module>collection</module>
     <module>testutils</module>
-    <module>m2repo</module>
   </modules>
 
   <build>
@@ -34,5 +34,13 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <repositories>
+      <repository>
+          <id>local-dependencies</id>
+          <name>local-depedendencies</name>
+          <url>file://${project.basedir}/../m2/repository</url>
+      </repository>
+  </repositories>
 
 </project>

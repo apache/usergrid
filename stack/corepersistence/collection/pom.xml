@@ -24,10 +24,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <!-- include our cassandra client -->
-    <!-- temporarily commented out using m2repo in-project repository
-         until a release with our fixes arrives
-
     <dependency>
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-core</artifactId>
@@ -52,8 +48,6 @@
       <version>${jukito.version}</version>
       <scope>test</scope>
     </dependency>
-
-    -->
 
     <!-- lang utils for setting uuids etc -->
     <dependency>
@@ -102,57 +96,57 @@
     <!-- temporarily commented out using m2repo in-project repository
              until a release with our fixes arrives
 
-        https://github.com/Netflix/RxJava/issues/601
+        https://github.com/Netflix/RxJava/issues/601 -->
 
 
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <version>0.15.1</version>
-    </dependency>         -->
+        <dependency>
+          <groupId>com.netflix.rxjava</groupId>
+          <artifactId>rxjava-core</artifactId>
+          <version>0.15.1</version>
+        </dependency>   
 
-    <dependency>
-      <groupId>com.google.inject.extensions</groupId>
-      <artifactId>guice-multibindings</artifactId>
-      <version>${guice.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>com.google.inject.extensions</groupId>
-      <artifactId>guice-assistedinject</artifactId>
-      <version>${guice.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-assistedinject</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
 
-    <!-- Google Guice Integration Test Injectors -->
+        <!-- Google Guice Integration Test Injectors -->
 
-    <dependency>
-      <groupId>com.google.guiceberry</groupId>
-      <artifactId>guiceberry</artifactId>
-      <version>3.3.1</version>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>com.google.guiceberry</groupId>
+            <artifactId>guiceberry</artifactId>
+            <version>3.3.1</version>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>${project.parent.groupId}</groupId>
-      <artifactId>testutils</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>testutils</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.9.5</version>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
 
-    <!-- upgraded version of snappy that resolves bugs on OS X-->
-    <dependency>
-      <groupId>org.xerial.snappy</groupId>
-      <artifactId>snappy-java</artifactId>
-      <version>1.0.5</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+        <!-- upgraded version of snappy that resolves bugs on OS X-->
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.0.5</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>
