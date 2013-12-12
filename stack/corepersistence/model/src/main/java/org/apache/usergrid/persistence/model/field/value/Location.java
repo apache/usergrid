@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.model.value;
+package org.apache.usergrid.persistence.model.field.value;
 
 
 import java.io.Serializable;

@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.serialization;
+package org.apache.usergrid.persistence.collection.mvcc;
 
 
 import java.util.List;

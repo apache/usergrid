@@ -3,8 +3,6 @@ package org.apache.usergrid.persistence.model.field;
 
 import java.io.Serializable;
 
-import org.apache.usergrid.persistence.model.value.EntityObject;
-
 
 /**
  * Interface for fields.  All fields must implement this method The T is the type of field (in the java runtime) The V

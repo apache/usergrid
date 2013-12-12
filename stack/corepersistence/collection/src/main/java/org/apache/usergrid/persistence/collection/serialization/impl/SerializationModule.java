@@ -5,8 +5,8 @@ import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvide
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;

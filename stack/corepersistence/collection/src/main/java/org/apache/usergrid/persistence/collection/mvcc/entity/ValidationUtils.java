@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.util;
+package org.apache.usergrid.persistence.collection.mvcc.entity;
 
 
 import java.util.UUID;
