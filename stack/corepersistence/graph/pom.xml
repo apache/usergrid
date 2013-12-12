@@ -19,6 +19,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+          <groupId>com.netflix.rxjava</groupId>
+          <artifactId>rxjava-core</artifactId>
+          <version>0.15.1</version>
+        </dependency>   
+
     </dependencies>
 
 </project>
