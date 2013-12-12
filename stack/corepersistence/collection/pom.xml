@@ -30,7 +30,7 @@
       <version>${astyanax.version}</version>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-thrift</artifactId>
       <version>${astyanax.version}</version>
