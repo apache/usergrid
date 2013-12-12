@@ -9,7 +9,7 @@
 
     <groupId>org.jukito</groupId>
     <artifactId>jukito-parent</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4-UG</version>
     <packaging>pom</packaging>
     <name>Jukito</name>
     <inceptionYear>2010</inceptionYear>
