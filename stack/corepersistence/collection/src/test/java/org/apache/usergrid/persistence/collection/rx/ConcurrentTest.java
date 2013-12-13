@@ -2,6 +2,8 @@ package org.apache.usergrid.persistence.collection.rx;
 
 
 
+import java.util.concurrent.ExecutorService;
+
 import org.antlr.misc.MultiMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,6 +13,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 import rx.Observable;
+import rx.schedulers.Schedulers;
 import rx.util.functions.Func1;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +38,7 @@ public class ConcurrentTest {
         TestConcurrent instance2 = new TestConcurrent();
         TestConcurrent instance3 = new TestConcurrent();
 
-        Observable<String> result = Concurrent.concurrent( observable, instance1, instance2, instance3 );
+        Observable<String> result = Concurrent.concurrent( Schedulers.threadPoolForIO(), observable, instance1, instance2, instance3 );
 
         assertEquals("No invocation yet", 0, set.size());
 

@@ -1,6 +1,10 @@
 package org.apache.usergrid.persistence.collection.rx;
 
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,7 +27,11 @@ import rx.schedulers.Schedulers;
 public class CassandraThreadScheduler implements Provider<Scheduler> {
 
 
+    /**
+     * Max number of threads a pool can allocate.  Can be dynamically changed after starting
+     */
     public static final String RX_IO_THREADS = "rx.cassandra.io.threads";
+
 
 
     private final DynamicIntProperty maxThreadCount;
@@ -75,6 +83,9 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
             }
         } );
 
+
+
         return Schedulers.executor( pool );
     }
+
 }

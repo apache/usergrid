@@ -132,7 +132,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //execute all validation stages concurrently
-        observable = Concurrent.concurrent(observable, writeVerifyUnique, writeOptimisticVerify);
+        observable = Concurrent.concurrent(scheduler, observable, writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
         return observable.map( writeCommit );
