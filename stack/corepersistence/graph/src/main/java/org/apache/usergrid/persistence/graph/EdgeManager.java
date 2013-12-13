@@ -15,76 +15,92 @@ public interface EdgeManager {
 
 
     /**
-     * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this edge
-     * automatically
+     * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this
+     * edge automatically
      */
     void writeEdge( Edge e );
 
 
-    /** Delete the edge. Implementation should also delete the reversed edge */
+    /**
+     * Delete the edge. Implementation should also delete the reversed edge
+     */
     void deleteEdge( Edge e );
 
     /**
-     * Return an observable that emits edges with the given source node and the given edge type
+     * Load all edges where the specified node is the source.  The edges will match the search criteria
      *
-     * @param source The id of the source node in the graph
-     * @param edgeType The type of the edge to return.
+     * @param search The search parameters
      *
-     * @return An observable that emits Edges.  Note that all target types in this edge type will be returned
+     * @return An observable that emits Edges.  The node specified in the search will be on the source end of the edge.
+     * The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdges( Id source, String edgeType);
+    Observable<Edge> loadSourceEdges( SearchByEdgeType search );
 
     /**
-     * Return an observable that emits edges with the given source node and the given edge type, and target type
+     * Load all edges where the node specified is the target node
+     * @param search  The search criteria
      *
-     * @param source The id of the source node in the graph
-     * @param edgeType The type of the edge to return.
-     * @param targetType The type of the target on the edge to return
-     *
-     * @return An observable that emits Edges.  Note that only the target type in this edge type will be returned
-     * It is up to the caller to end the subscription to this observable when the desired size is reached
+     * @return An observable that emits Edges.  The node specified in search will be on the target end of the edge
+     * The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdges( Id source, String edgeType, String targetType);
+    Observable<Edge> loadTargetEdges( SearchByEdgeType search );
+
 
     /**
-     * Search the edges from the source node, with the edge type and targetType specified.
-     * @param source The id of the source node in the graph
-     * @param edgeType The type of edge to execute the query on
-     * @param targetType The target type to execute the query on
-     * @param query The query containing tree expression to execute
+     * Return an observable that emits edges where the passed search node is the source node
      *
-     * @return An observable that emits a matching edge.
+     * @param search The search parameters
+     *
+     * @return An observable that emits Edges.  Note that only the target type in this edge type will be returned It is
+     *         up to the caller to end the subscription to this observable when the desired size is reached
      */
-    Observable<Edge> searchEdges(Id source, String edgeType, String targetType, Query query);
+    Observable<Edge> loadSourceEdges( SearchByIdType search );
+
 
     /**
-     * Get all edge types from this source
-     * @param source
+     * Return an observable that emits edges where the passed search node is the target node
+     *
+     * @param search The search parameters
+     *
+     * @return An observable that emits Edges.  Note that only the target type in this edge type will be returned It
+     *         is up to the caller to end the subscription to this observable when the desired size is reached
+     */
+    Observable<Edge> loadTargetEdges( SearchByIdType search );
+
+    /**
+     * Get all edge types to this node.  The node provided by search is the target type
+     *
+     * @param search The search
+     *
      * @return An observable that emits strings for edge types
      */
-    Observable<String> getEdgeTypes(Id source);
-
-    /**
-     * Get all target types for this edge type
-     * @param source
-     * @param edgeType
-     * @return
-     */
-    Observable<String> getTargetTypes(Id source, String edgeType);
-
-    /**
-     * Get all incoming edge types for this destination
-     * @param destination
-     * @return
-     */
-    Observable<String> getSourceEdgeTypes(Id destination);
+    Observable<String> getSourceEdgeTypes(SearchEdgeTypes search );
 
 
     /**
-     * Get the source types of incoming edges for the given destination type and edge type
-     * @param destination
-     * @param edgeType
-     * @return
+     * Get all the types of all sources with the specified edge type into this node.  The node in the search
+     * is the target node
+     *
+     * @param search The search criteria
+     * @return   An observable of all source id types
      */
-    Observable<String> getSourceTypes(Id destination, String edgeType);
+    Observable<String> getSourceEdgeIdTypes(SearchEdgeIdTypes search);
+
+
+    /**
+     * Get all edges where the search criteria is the source node
+     *
+     * @param search The search parameters
+     * @return  An observable of all edges types the source node
+     */
+    Observable<String> getTargetEdgeTypes(SearchEdgeTypes search );
+
+
+    /**
+     * Get the types of all targets where the search criteria is the source node
+     *
+     * @param search
+     * @return An observable of all target id types
+     */
+    Observable<String> getTargetEdgeIdTypes( SearchEdgeIdTypes search);
 }

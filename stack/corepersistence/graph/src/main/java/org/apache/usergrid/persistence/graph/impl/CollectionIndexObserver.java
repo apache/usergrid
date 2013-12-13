@@ -43,7 +43,7 @@ public class CollectionIndexObserver implements PostProcessObserver {
          *
          * We're essentially mapping a tree structure in to a graph edge
          */
-        Edge edge = new SimpleEdge(scope.getOwner(), scope.getName(), entity.getId());
+        Edge edge = new SimpleEdge(scope.getOwner(), scope.getName(), entity.getId(), entity.getVersion() );
 
         //entity exists, write the edge
         if(entity.getEntity().isPresent()){

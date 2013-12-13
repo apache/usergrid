@@ -30,7 +30,7 @@ public class ValidationUtils {
 
         verifyIdentity( entity.getId() );
 
-        verifyVersion( entity.getVersion() );
+        verifyTimeUuid( entity.getVersion(), "version" );
     }
 
 
@@ -53,7 +53,7 @@ public class ValidationUtils {
 
         verifyIdentity( entity.getId() );
 
-        verifyVersion( entity.getVersion() );
+        verifyTimeUuid( entity.getVersion(), "version" );
 
         if ( entity.getEntity().isPresent() ) {
             verifyEntityWrite( entity.getEntity().orNull() );
@@ -64,12 +64,12 @@ public class ValidationUtils {
     /**
      * Verify the version is not null and is a type 1 version
      */
-    public static void verifyVersion( final UUID entityVersion ) {
+    public static void verifyTimeUuid( final UUID uuid, final String fieldName ) {
 
-        Preconditions.checkNotNull( entityVersion, "The version is required to be set for an update operation" );
+        Preconditions.checkNotNull( uuid, "%s is required to be set for an update operation", fieldName );
 
 
-        Preconditions.checkArgument( entityVersion.version() == UUID_VERSION, "The uuid must be version 1" );
+        Preconditions.checkArgument( uuid.version() == UUID_VERSION, "%s uuid must be version 1", fieldName );
     }
 
 
@@ -93,6 +93,7 @@ public class ValidationUtils {
 
         Preconditions.checkArgument( type.length() > 0, "The id type must have a length greater than 0" );
     }
+
 
 
     /**

@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.graph;
 
 
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -27,5 +29,11 @@ public interface Edge {
      * @return
      */
     Id getTargetNode();
+
+    /**
+     * Get the version (as a type 1 time uuid) of this edge
+     * @return
+     */
+    UUID getVersion();
 
 }
