@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteStart;
@@ -16,6 +17,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
+import org.apache.usergrid.persistence.collection.rx.Concurrent;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
@@ -27,6 +29,10 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.Scheduler;
+import rx.schedulers.Schedulers;
+import rx.util.functions.Func1;
+import rx.util.functions.Func2;
 
 
 /**
@@ -42,6 +48,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
+    private final Scheduler scheduler;
+
 
     //start stages
     private final WriteStart writeStart;
@@ -59,15 +67,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
+    public EntityCollectionManagerImpl( final UUIDService uuidService,  final Scheduler scheduler, final WriteStart writeStart,
                                         final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
                                         final DeleteCommit deleteCommit,
                                         @Assisted final CollectionScope collectionScope ) {
 
+
+        Preconditions.checkNotNull( scheduler, "scheduler is required" );
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
         ValidationUtils.validateCollectionScope( collectionScope );
+
+        this.scheduler = scheduler;
 
 
         this.writeStart = writeStart;
@@ -112,8 +124,18 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
          * TODO writeOptimisticVerify and writeVerifyUnique should happen concurrently to reduce user wait time
          */
 
-        return Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).map( writeStart )
-                         .map( writeOptimisticVerify ).map( writeVerifyUnique ).map( writeCommit );
+        //these 3 lines could be done in a single line, but they are on multiple lines for clarity
+
+        //create our observable and start the write
+        Observable<IoEvent<MvccEntity>> observable =  Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).subscribeOn(
+                scheduler ).map( writeStart );
+
+
+        //execute all validation stages concurrently
+        observable = Concurrent.concurrent(scheduler, observable, writeVerifyUnique, writeOptimisticVerify);
+
+        //return the commit result.
+        return observable.map( writeCommit );
     }
 
 
@@ -127,7 +149,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
+        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
+                scheduler) .map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -139,6 +162,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
         //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( load );
+        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
+                scheduler ).map( load );
     }
 }

@@ -9,6 +9,7 @@ import org.apache.cassandra.locator.SimpleStrategy;
 import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
+import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 
 import com.google.inject.AbstractModule;
@@ -56,6 +57,7 @@ public class TestCollectionModule extends AbstractModule {
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CLUSTER_NAME, "Usergrid" );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_VERSION + ".String", "1.2" );
         configProperties.put( AstynaxKeyspaceProvider.COLLECTIONS_KEYSPACE_NAME, "Usergrid_Collections" );
+        configProperties.put( CassandraThreadScheduler.RX_IO_THREADS, "20" );
 
         if ( override != null ) {
             configProperties.putAll( override );

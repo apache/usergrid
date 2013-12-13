@@ -10,11 +10,14 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
+import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+
+import rx.Scheduler;
 
 
 /**
@@ -63,5 +66,8 @@ public class CollectionModule extends AbstractModule {
                         .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                                           .build( EntityCollectionManagerFactory.class ) );
 
+
+        //bind our RX scheduler
+        bind( Scheduler.class).toProvider(CassandraThreadScheduler.class);
     }
 }
