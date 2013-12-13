@@ -13,6 +13,8 @@ import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.astyanax.connectionpool.impl.Slf4jConnectionPoolMonitorImpl;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicStringProperty;
 
 
 /**
@@ -33,23 +35,23 @@ public class AstynaxKeyspaceProvider implements Provider<Keyspace> {
     public static final String COLLECTIONS_KEYSPACE_NAME = "collections.keyspace";
 
 
-    protected final String cassandraHosts;
-    protected final int cassandraPort;
-    protected final int cassandraConnections;
-    protected final int cassandraTimeout;
-    protected final String clusterName;
-    protected final String keyspaceName;
-    protected final String cassandraVersion;
+    private final DynamicStringProperty cassandraHosts;
+    private final DynamicIntProperty cassandraPort;
+    private final DynamicIntProperty cassandraConnections;
+    private final DynamicIntProperty cassandraTimeout;
+    private final DynamicStringProperty clusterName;
+    private final DynamicStringProperty keyspaceName;
+    private final DynamicStringProperty cassandraVersion;
 
 
     @Inject
-    public AstynaxKeyspaceProvider( @Named(CASSANDRA_HOSTS) final String cassandraHosts,
-                                    @Named(CASSANDRA_PORT) final int cassandraPort,
-                                    @Named(CASSANDRA_CONNECTIONS) final int cassandraConnections,
-                                    @Named(CASSANDRA_CLUSTER_NAME) final String clusterName,
-                                    @Named(CASSANDRA_VERSION) final String cassandraVersion,
-                                    @Named(COLLECTIONS_KEYSPACE_NAME) final String keyspaceName,
-                                    @Named(CASSANDRA_TIMEOUT) final int cassandraTimeout ) {
+    public AstynaxKeyspaceProvider( @Named(CASSANDRA_HOSTS) DynamicStringProperty cassandraHosts,
+                                    @Named(CASSANDRA_PORT) DynamicIntProperty cassandraPort,
+                                    @Named(CASSANDRA_CONNECTIONS) DynamicIntProperty cassandraConnections,
+                                    @Named(CASSANDRA_CLUSTER_NAME) DynamicStringProperty clusterName,
+                                    @Named(CASSANDRA_VERSION) DynamicStringProperty cassandraVersion,
+                                    @Named(COLLECTIONS_KEYSPACE_NAME) DynamicStringProperty keyspaceName,
+                                    @Named(CASSANDRA_TIMEOUT) DynamicIntProperty cassandraTimeout ) {
         this.cassandraHosts = cassandraHosts;
         this.cassandraPort = cassandraPort;
         this.cassandraConnections = cassandraConnections;
@@ -62,18 +64,19 @@ public class AstynaxKeyspaceProvider implements Provider<Keyspace> {
 
     @Override
     public Keyspace get() {
-        AstyanaxConfiguration config = new AstyanaxConfigurationImpl().setDiscoveryType( NodeDiscoveryType.TOKEN_AWARE )
-                                                                      .setTargetCassandraVersion( cassandraVersion );
+        AstyanaxConfiguration config = new AstyanaxConfigurationImpl()
+                .setDiscoveryType( NodeDiscoveryType.TOKEN_AWARE )
+                .setTargetCassandraVersion( cassandraVersion.get() );
 
         ConnectionPoolConfiguration connectionPoolConfiguration =
-                new ConnectionPoolConfigurationImpl( "UsergridConnectionPool" ).setPort( cassandraPort )
-                                                                               .setMaxConnsPerHost(
-                                                                                       cassandraConnections )
-                                                                               .setSeeds( cassandraHosts )
-                                                                               .setSocketTimeout( cassandraTimeout );
+                new ConnectionPoolConfigurationImpl( "UsergridConnectionPool" )
+                        .setPort( cassandraPort.get() )
+                        .setMaxConnsPerHost( cassandraConnections.get() )
+                        .setSeeds( cassandraHosts.get() )
+                        .setSocketTimeout( cassandraTimeout.get() );
 
         AstyanaxContext<Keyspace> context =
-                new AstyanaxContext.Builder().forCluster( clusterName ).forKeyspace( keyspaceName )
+                new AstyanaxContext.Builder().forCluster( clusterName.get() ).forKeyspace( keyspaceName.get() )
                         /**
                          *TODO tnine Filter this by adding a host supplier.  We will get token discovery from cassandra
                          * but only connect
