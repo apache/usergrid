@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 import rx.Observable;
 import rx.operators.OperationZip;
+import rx.schedulers.Schedulers;
 import rx.util.functions.Func1;
 import rx.util.functions.Func2;
 import rx.util.functions.FuncN;
@@ -41,7 +42,8 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
 
         //put all our observables together for concurrency
         for( Func1<T, R> funct: concurrent){
-            final Observable<R> observable = Observable.just( funct.call( input ) );
+            final Observable<R> observable = Observable.from(input).subscribeOn(
+                    Schedulers.threadPoolForIO()).map( funct );
 
             observables.add( observable );
         }
