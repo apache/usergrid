@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.schedulers.Schedulers;
 import rx.util.functions.Func1;
 import rx.util.functions.Func2;
 
@@ -119,7 +120,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         //create our observable and start the write
-        Observable<IoEvent<MvccEntity>> observable =  Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
+        Observable<IoEvent<MvccEntity>> observable =  Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).subscribeOn(
+                Schedulers.threadPoolForIO() ).map( writeStart );
 
 
         //execute all validation stages concurrently
@@ -140,7 +142,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
+        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
+                        Schedulers.threadPoolForIO()) .map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -152,6 +155,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
         //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).map( load );
+        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
+                        Schedulers.threadPoolForIO()).map( load );
     }
 }

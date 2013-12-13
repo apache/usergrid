@@ -42,7 +42,7 @@ public class EntityCollectionManagerSyncImpl implements EntityCollectionManagerS
 
     @Override
     public void delete( final Id entityId ) {
-        em.delete( entityId ).toBlockingObservable().lastOrDefault( null );
+        em.delete( entityId ).toBlockingObservable().last();
     }
 
 
