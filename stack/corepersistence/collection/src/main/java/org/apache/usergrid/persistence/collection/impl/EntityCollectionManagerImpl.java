@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.Scheduler;
 import rx.schedulers.Schedulers;
 import rx.util.functions.Func1;
 import rx.util.functions.Func2;
@@ -47,6 +48,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
+    private final Scheduler scheduler;
+
 
     //start stages
     private final WriteStart writeStart;
@@ -64,15 +67,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
+    public EntityCollectionManagerImpl( final UUIDService uuidService,  final Scheduler scheduler, final WriteStart writeStart,
                                         final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
                                         final DeleteCommit deleteCommit,
                                         @Assisted final CollectionScope collectionScope ) {
 
+
+        Preconditions.checkNotNull( scheduler, "scheduler is required" );
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
         ValidationUtils.validateCollectionScope( collectionScope );
+
+        this.scheduler = scheduler;
 
 
         this.writeStart = writeStart;
@@ -121,7 +128,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         //create our observable and start the write
         Observable<IoEvent<MvccEntity>> observable =  Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).subscribeOn(
-                Schedulers.threadPoolForIO() ).map( writeStart );
+                scheduler ).map( writeStart );
 
 
         //execute all validation stages concurrently
@@ -143,7 +150,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         //TODO use our own scheduler to help with multitenancy here
         return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
-                        Schedulers.threadPoolForIO()) .map( deleteStart ).map( deleteCommit );
+                scheduler) .map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -156,6 +163,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         //TODO use our own scheduler to help with multitenancy here
         return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
-                        Schedulers.threadPoolForIO()).map( load );
+                scheduler ).map( load );
     }
 }
