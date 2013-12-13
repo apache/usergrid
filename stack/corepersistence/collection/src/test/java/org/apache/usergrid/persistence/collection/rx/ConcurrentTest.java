@@ -51,7 +51,7 @@ public class ConcurrentTest {
 
         //print them out just for giggles
         for(Multiset.Entry<String> entry: set.entrySet()){
-            System.out.print( entry.getElement() );
+            System.out.println( entry.getElement() );
             assertEquals("1 Thread per invocation", 1, entry.getCount());
         }
 
