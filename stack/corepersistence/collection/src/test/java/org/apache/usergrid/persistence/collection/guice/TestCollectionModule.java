@@ -44,13 +44,11 @@ public class TestCollectionModule extends AbstractModule {
         //import the runtime module
         install( new CollectionModule() );
 
-        bind( MigrationManagerRule.class );
-
         //configure our integration test properties. This should remain the same across all tests
 
         Properties configProperties = new Properties();
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_HOSTS, "localhost" );
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_PORT, "" + MigrationManagerRule.THRIFT_PORT );
+        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CONNECTIONS, "10" );
 
         //time out after 5 seconds

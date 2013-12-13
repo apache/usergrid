@@ -14,9 +14,8 @@ import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.test.AvailablePortFinder;
 
 import com.google.common.io.Files;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.test.EmbeddedCassandra;
 
 
@@ -24,8 +23,9 @@ import com.netflix.astyanax.test.EmbeddedCassandra;
  * @TODO - I wanted this in the test module but unfortunately that will create a circular dep
  *         due to the inclusion of the MigrationManager
  */
-public class MigrationManagerRule extends ExternalResource {
-    private static final Logger LOG = LoggerFactory.getLogger( MigrationManagerRule.class );
+@Singleton
+public class CassandraRule extends ExternalResource {
+    private static final Logger LOG = LoggerFactory.getLogger( CassandraRule.class );
 
     public static final int THRIFT_PORT = AvailablePortFinder.getNextAvailable();
     public static final int GOSSIP_PORT = AvailablePortFinder.getNextAvailable();
@@ -38,18 +38,16 @@ public class MigrationManagerRule extends ExternalResource {
 
     private MigrationManager migrationManager;
 
+    private Injector injector;
+
+
+    public CassandraRule( Injector injector ) {
+        this.injector = injector;
+    }
+
 
     @Override
     protected void before() throws Throwable {
-
-        Injector injector = Guice.createInjector( new TestCollectionModule() );
-        migrationManager = injector.getInstance( MigrationManager.class );
-
-        if ( migrationManager == null ) {
-            LOG.error( "The migrationManager is NULL: blowing chunks" );
-            throw new NullPointerException( "The migration manager was not injected." );
-        }
-
         if ( started ) {
             return;
         }
@@ -79,6 +77,8 @@ public class MigrationManagerRule extends ExternalResource {
                 cass.start();
 
                 LOG.info( "Cassandra started" );
+
+                migrationManager = injector.getInstance( MigrationManager.class );
                 migrationManager.migrate();
 
                 started = true;

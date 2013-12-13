@@ -34,7 +34,7 @@ public class CollectionModule extends AbstractModule {
     protected void configure() {
 
         /**
-         * Load our properties for the entire colleciton module
+         * Load our properties for the entire collection module
          *
          */
 

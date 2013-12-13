@@ -8,12 +8,11 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.guice.CassandraModule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -31,7 +30,6 @@ import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -47,12 +45,8 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class } )
+@UseModules( { TestCollectionModule.class, CassandraModule.class } )
 public class MvccEntitySerializationStrategyImplTest {
-
-    @ClassRule
-    public static final MigrationManagerRule rule = new MigrationManagerRule();
-
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
 

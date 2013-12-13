@@ -8,12 +8,11 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.guice.CassandraModule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -23,7 +22,6 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -37,16 +35,13 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class } )
+@UseModules( { TestCollectionModule.class, CassandraModule.class } )
 public class MvccLogEntrySerializationStrategyImplTest {
 
 
-    /** Set our timeout to 1 seconds.  If it works for 1 seconds, we'll be good a any value */
+    /** Set our timeout to 1 second.  If it works for 1 seconds, we'll be good a any value */
     private static final int TIMEOUT = 1;
 
-
-    @ClassRule
-    public static final MigrationManagerRule rule = new MigrationManagerRule();
 
     @Inject
     private MvccLogEntrySerializationStrategy logEntryStrategy;
@@ -162,7 +157,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
 
     @Test
-    @UseModules( TimeoutEnv.class )
+    @UseModules( { TimeoutEnv.class } )
     public void transientTimeout() throws ConnectionException, InterruptedException {
 
         final Id organizationId = new SimpleId( "organization" );
@@ -177,24 +172,22 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-
             MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back after the timeout
 
+            //noinspection PointlessArithmeticExpression
             Thread.sleep( TIMEOUT * 1000 );
 
             MvccLogEntry returned = logEntryStrategy.load( context, id, version );
 
 
             if ( stage.isTransient() ) {
-
                 assertNull( "Active is transient and should time out", returned );
             }
             else {
                 assertNotNull( "Committed is not transient and should be returned", returned );
-
                 assertEquals( "Returned should equal the saved", saved, returned );
             }
         }
@@ -289,16 +282,15 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
 
     public static class TimeoutEnv extends AbstractModule {
-
         @Override
         protected void configure() {
 
             //override the timeout property
-            Map<String, String> timeout = new HashMap<String, String>();
-            timeout.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, String.valueOf( TIMEOUT ) );
+            Map<String, String> overrides = new HashMap<String, String>();
+            overrides.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, String.valueOf( TIMEOUT ) );
 
             //use the default module with cass
-            install( new TestCollectionModule( timeout ) );
+            install( new CassandraModule( overrides ) );
         }
     }
 }
