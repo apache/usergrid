@@ -44,8 +44,8 @@ public class CollectionModule extends AbstractModule {
         DynamicPropertyNames.bindProperties( binder(), props );
 
         //Load the cassandra url if set on the system properties
-        DynamicPropertyNames.bindProperties( binder(),
-                PropertyUtils.loadSystemProperties( AstynaxKeyspaceProvider.getRuntimeOptions() ) );
+        DynamicPropertyNames.bindProperties( binder(), PropertyUtils
+                .loadSystemProperties( AstynaxKeyspaceProvider.getRuntimeOptions() ) );
 
 
         //TODO allow override of all properties in the file by the system
@@ -59,8 +59,7 @@ public class CollectionModule extends AbstractModule {
         //install the core services
 
         //create a guice factor for getting our collection manager
-        install(
-                new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+        install( new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
                         .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                                           .build( EntityCollectionManagerFactory.class ) );
 

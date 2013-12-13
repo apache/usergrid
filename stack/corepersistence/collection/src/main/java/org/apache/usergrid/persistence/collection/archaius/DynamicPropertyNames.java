@@ -149,7 +149,8 @@ public class DynamicPropertyNames {
             binder.bind( Key.get( DynamicLongProperty.class,
                     new NamedDynamicProperties( name ) ) ).toInstance( dynamicProperty );
         }
-        else if ( isDouble( value ) ) {
+        // we don't want versions to be evaluated as doubles
+        else if ( isDouble( value ) && ! name.endsWith( "version" ) ) {
             DynamicDoubleProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                     .getDoubleProperty( name, Double.valueOf( value ) );
             binder.bind( Key.get( DynamicDoubleProperty.class,

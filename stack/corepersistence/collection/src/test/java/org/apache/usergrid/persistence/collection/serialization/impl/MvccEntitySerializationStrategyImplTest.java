@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
@@ -27,10 +30,9 @@ import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.test.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 
 import com.google.common.base.Optional;
-import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -43,13 +45,12 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
+@RunWith( JukitoRunner.class )
+@UseModules( { TestCollectionModule.class } )
 public class MvccEntitySerializationStrategyImplTest {
 
     @Rule
-    public final GuiceBerryRule guiceBerry = new GuiceBerryRule( CassandraTestCollectionModule.class );
-
-    @Rule
-    public final CassandraRule rule = new CassandraRule();
+    public final MigrationManagerRule rule = new MigrationManagerRule();
 
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;

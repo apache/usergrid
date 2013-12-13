@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -19,14 +22,10 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.test.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 
-import com.google.guiceberry.GuiceBerryEnvSelector;
-import com.google.guiceberry.TestDescription;
-import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Module;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static junit.framework.Assert.assertNotNull;
@@ -36,6 +35,8 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
+@RunWith( JukitoRunner.class )
+@UseModules( { TestCollectionModule.class } )
 public class MvccLogEntrySerializationStrategyImplTest {
 
 
@@ -44,10 +45,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
 
     @Rule
-    public final GuiceBerryRule guiceBerry = new GuiceBerryRule( new TimeoutModMapper() );
-
-    @Rule
-    public final CassandraRule rule = new CassandraRule();
+    public final MigrationManagerRule rule = new MigrationManagerRule();
 
     @Inject
     private MvccLogEntrySerializationStrategy logEntryStrategy;
@@ -163,6 +161,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
 
     @Test
+    @UseModules( TimeoutEnv.class )
     public void transientTimeout() throws ConnectionException, InterruptedException {
 
         final Id organizationId = new SimpleId( "organization" );
@@ -288,26 +287,6 @@ public class MvccLogEntrySerializationStrategyImplTest {
     }
 
 
-    /** Mapper that will change which module we implement based on the test case */
-    public static class TimeoutModMapper implements GuiceBerryEnvSelector {
-        // @TODO do this without guice
-
-        @Override
-        public Class<? extends Module> guiceBerryEnvToUse( final TestDescription testDescription ) {
-
-            //in this edge case, we want to truncate the timeout to 1 second for this test, override the env to use
-            //this module setup
-            if ( ( MvccLogEntrySerializationStrategyImplTest.class.getName() + ".transientTimeout" )
-                    .equals( testDescription.getName() ) ) {
-                return TimeoutEnv.class;
-            }
-
-            //by default, we wnat to run the TestCollectionModule
-            return CassandraTestCollectionModule.class;
-        }
-    }
-
-
     public static class TimeoutEnv extends AbstractModule {
 
         @Override
@@ -315,10 +294,10 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
             //override the timeout property
             Map<String, String> timeout = new HashMap<String, String>();
-            timeout.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, TIMEOUT + "" );
+            timeout.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, String.valueOf( TIMEOUT ) );
 
             //use the default module with cass
-            install( new CassandraTestCollectionModule( timeout ) );
+            install( new TestCollectionModule( timeout ) );
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.test;
+package org.apache.usergrid.persistence.collection.guice;
 
 
 import java.io.File;
@@ -10,30 +10,45 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.io.util.FileUtils;
 
+import org.apache.usergrid.persistence.collection.migration.MigrationManager;
+import org.apache.usergrid.persistence.test.AvailablePortFinder;
+
 import com.google.common.io.Files;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.netflix.astyanax.test.EmbeddedCassandra;
 
 
 /**
- * TODO, not sure if this is a hack,
- *
- * @author tnine
+ * @TODO - I wanted this in the test module but unfortunately that will create a circular dep
+ *         due to the inclusion of the MigrationManager
  */
-public class CassandraRule extends ExternalResource {
-    private static final Logger LOG = LoggerFactory.getLogger( CassandraRule.class );
+public class MigrationManagerRule extends ExternalResource {
+    private static final Logger LOG = LoggerFactory.getLogger( MigrationManagerRule.class );
 
     public static final int THRIFT_PORT = AvailablePortFinder.getNextAvailable();
     public static final int GOSSIP_PORT = AvailablePortFinder.getNextAvailable();
 
-    private static final Object mutex = new Object();
+    private final Object mutex = new Object();
 
-    private static EmbeddedCassandra cass;
+    private EmbeddedCassandra cass;
 
-    private static boolean started = false;
+    private boolean started = false;
+
+    private MigrationManager migrationManager;
 
 
     @Override
     protected void before() throws Throwable {
+
+        Injector injector = Guice.createInjector( new TestCollectionModule() );
+        migrationManager = injector.getInstance( MigrationManager.class );
+
+        if ( migrationManager == null ) {
+            LOG.error( "The migrationManager is NULL: blowing chunks" );
+            throw new NullPointerException( "The migration manager was not injected." );
+        }
 
         if ( started ) {
             return;
@@ -64,6 +79,7 @@ public class CassandraRule extends ExternalResource {
                 cass.start();
 
                 LOG.info( "Cassandra started" );
+                migrationManager.migrate();
 
                 started = true;
             }

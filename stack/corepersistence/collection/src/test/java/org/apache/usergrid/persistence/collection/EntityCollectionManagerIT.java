@@ -1,18 +1,20 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.test.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 
 import com.google.common.eventbus.EventBus;
-import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -23,13 +25,11 @@ import static org.junit.Assert.assertNull;
 
 
 /** @author tnine */
+@RunWith( JukitoRunner.class )
+@UseModules( { TestCollectionModule.class } )
 public class EntityCollectionManagerIT {
     @Rule
-    public final GuiceBerryRule guiceBerry = new GuiceBerryRule( CassandraTestCollectionModule.class );
-
-
-    @Rule
-    public final CassandraRule rule = new CassandraRule();
+    public final MigrationManagerRule rule = new MigrationManagerRule();
 
 
     @Inject
@@ -199,6 +199,7 @@ public class EntityCollectionManagerIT {
         //now try to load it from another org, with the same scope
 
         CollectionScope collectionScope3 = new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
+        assertNotNull( collectionScope3 );
     }
 
 }

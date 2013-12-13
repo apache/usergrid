@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -11,9 +10,7 @@ import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
-import org.apache.usergrid.persistence.test.CassandraRule;
 
-import com.google.guiceberry.GuiceBerryModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
@@ -36,6 +33,7 @@ public class TestCollectionModule extends AbstractModule {
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public TestCollectionModule() {
         override = null;
     }
@@ -43,18 +41,16 @@ public class TestCollectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        //import the guice berry module
-        install( new GuiceBerryModule() );
-
         //import the runtime module
         install( new CollectionModule() );
 
+        bind( MigrationManagerRule.class );
 
         //configure our integration test properties. This should remain the same across all tests
 
         Properties configProperties = new Properties();
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_HOSTS, "localhost" );
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
+        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_PORT, "" + MigrationManagerRule.THRIFT_PORT );
         configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CONNECTIONS, "10" );
 
         //time out after 5 seconds
