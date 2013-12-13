@@ -28,6 +28,12 @@ public class CassandraThreadSchedulerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( CassandraThreadSchedulerTest.class );
 
+    /**
+     * We use this instead of the actual runtime property.  The runtime property is a singleton for the life of the JVM
+     * If we use the one in the class we run the risk of creating side effects in other tests.
+     */
+    private static final String PROP_NAME = "test.threads";
+
 
     @Test
     public void testMaxLimit() throws InterruptedException {
@@ -36,10 +42,10 @@ public class CassandraThreadSchedulerTest {
 
         //kind of a hack, but necessary with the way properties are singletons.  Otherwise you get side effects from
         // other tests
-        ConfigurationManager.getConfigInstance().setProperty( CassandraThreadScheduler.RX_IO_THREADS, "" + maxCount );
+        ConfigurationManager.getConfigInstance().setProperty( PROP_NAME, "" + maxCount );
 
         final DynamicIntProperty maxThreads =
-                new DynamicIntProperty( CassandraThreadScheduler.RX_IO_THREADS, maxCount );
+                new DynamicIntProperty( PROP_NAME, maxCount );
 
         final CassandraThreadScheduler cassSchedulerSetup = new CassandraThreadScheduler( maxThreads );
 
@@ -99,10 +105,10 @@ public class CassandraThreadSchedulerTest {
 
         //kind of a hack, but necessary with the way properties are singletons.  Otherwise you get side effects from
         // other tests
-        ConfigurationManager.getConfigInstance().setProperty( CassandraThreadScheduler.RX_IO_THREADS, "" + maxCount );
+        ConfigurationManager.getConfigInstance().setProperty( PROP_NAME, "" + maxCount );
 
         final DynamicIntProperty maxThreads =
-                new DynamicIntProperty( CassandraThreadScheduler.RX_IO_THREADS, maxCount );
+                new DynamicIntProperty( PROP_NAME, maxCount );
 
         final CassandraThreadScheduler cassSchedulerSetup = new CassandraThreadScheduler( maxThreads );
 
@@ -136,7 +142,7 @@ public class CassandraThreadSchedulerTest {
 
 
         //update the property to shrink the size
-        ConfigurationManager.getConfigInstance().setProperty( CassandraThreadScheduler.RX_IO_THREADS, "" + half );
+        ConfigurationManager.getConfigInstance().setProperty( PROP_NAME, "" + half );
 
         //now release the first half of executors
         semaphore.release( half );
@@ -193,11 +199,11 @@ public class CassandraThreadSchedulerTest {
 
         //kind of a hack, but necessary with the way properties are singletons.  Otherwise you get side effects from
         // other tests
-        ConfigurationManager.getConfigInstance().setProperty( CassandraThreadScheduler.RX_IO_THREADS, "" + startCount );
+        ConfigurationManager.getConfigInstance().setProperty( PROP_NAME, "" + startCount );
 
 
         final DynamicIntProperty maxThreads =
-                new DynamicIntProperty( CassandraThreadScheduler.RX_IO_THREADS, startCount );
+                new DynamicIntProperty( PROP_NAME, startCount );
 
         final CassandraThreadScheduler cassSchedulerSetup = new CassandraThreadScheduler( maxThreads );
 
@@ -232,7 +238,7 @@ public class CassandraThreadSchedulerTest {
 
         //update the property to shrink the size
         ConfigurationManager.getConfigInstance()
-                            .setProperty( CassandraThreadScheduler.RX_IO_THREADS, "" + doubleMaxCount );
+                            .setProperty( PROP_NAME, "" + doubleMaxCount );
 
 
         //now schedule 10 more
