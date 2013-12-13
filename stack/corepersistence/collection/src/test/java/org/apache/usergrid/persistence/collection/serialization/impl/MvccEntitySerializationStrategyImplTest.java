@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,8 +50,8 @@ import static org.mockito.Mockito.mock;
 @UseModules( { TestCollectionModule.class } )
 public class MvccEntitySerializationStrategyImplTest {
 
-    @Rule
-    public final MigrationManagerRule rule = new MigrationManagerRule();
+    @ClassRule
+    public static final MigrationManagerRule rule = new MigrationManagerRule();
 
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;

@@ -3,6 +3,7 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,8 +34,8 @@ import static org.junit.Assert.assertNull;
 @RunWith( JukitoRunner.class )
 @UseModules( { TestCollectionModule.class } )
 public class EntityCollectionManagerSyncIT {
-    @Rule
-    public final MigrationManagerRule rule = new MigrationManagerRule();
+    @ClassRule
+    public static final MigrationManagerRule rule = new MigrationManagerRule();
 
 
     @Inject

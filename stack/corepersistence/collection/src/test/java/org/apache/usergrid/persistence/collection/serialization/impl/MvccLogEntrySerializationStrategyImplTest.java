@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,8 +45,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     private static final int TIMEOUT = 1;
 
 
-    @Rule
-    public final MigrationManagerRule rule = new MigrationManagerRule();
+    @ClassRule
+    public static final MigrationManagerRule rule = new MigrationManagerRule();
 
     @Inject
     private MvccLogEntrySerializationStrategy logEntryStrategy;
