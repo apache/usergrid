@@ -5,14 +5,19 @@ import java.util.Properties;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
+import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.name.Names;
+
+import rx.Scheduler;
 
 
 /**
@@ -39,11 +44,10 @@ public class CollectionModule extends AbstractModule {
         //bind our cassandra properties
 
         Properties props = PropertyUtils.loadFromClassPath( CASS_PROPS );
-
-        Names.bindProperties( binder(), props );
+        DynamicPropertyNames.bindProperties( binder(), props );
 
         //Load the cassandra url if set on the system properties
-        Names.bindProperties( binder(),
+        DynamicPropertyNames.bindProperties( binder(),
                 PropertyUtils.loadSystemProperties( AstynaxKeyspaceProvider.getRuntimeOptions() ) );
 
 
@@ -60,6 +64,11 @@ public class CollectionModule extends AbstractModule {
         //create a guice factor for getting our collection manager
         install(
                 new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+                        .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                                           .build( EntityCollectionManagerFactory.class ) );
+
+
+        //bind our RX scheduler
+        bind( Scheduler.class).toProvider(CassandraThreadScheduler.class);
     }
 }

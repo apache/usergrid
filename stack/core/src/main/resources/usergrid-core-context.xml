@@ -102,6 +102,7 @@
         <constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
         <constructor-arg ref="lockManager"/>
+        <constructor-arg value="${usergrid.queue.lock.timeout}"/>
     </bean>
 
     <bean id="simpleBatcher" class="org.usergrid.count.SimpleBatcher">

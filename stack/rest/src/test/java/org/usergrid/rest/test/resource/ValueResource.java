@@ -112,6 +112,7 @@ public abstract class ValueResource extends NamedResource {
     }
 
 
+
     @SuppressWarnings("unchecked")
     public <T extends ValueResource> T withCursor( String cursor ) {
         this.cursor = cursor;
@@ -154,11 +155,28 @@ public abstract class ValueResource extends NamedResource {
     }
 
 
+    @Override
+    protected WebResource withParams( final WebResource resource ) {
+        WebResource withParams = super.withParams( resource );
+
+        if(customParams == null){
+            return withParams;
+        }
+
+        for(Entry<String, String> param : customParams.entrySet()){
+            withParams = withParams.queryParam( param.getKey(), param.getValue());
+        }
+
+        return withParams;
+    }
+
+
     /** Get entities in this collection. Cursor is optional */
     protected JsonNode getInternal() {
 
 
         WebResource resource = withParams( withToken( resource() ) );
+
 
         if ( query != null ) {
             resource = resource.queryParam( "ql", query );

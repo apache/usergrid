@@ -36,6 +36,8 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 /**
  * Encapsulate counter writes to Cassandra
+ *
+ * @author zznate
  */
 public class CassandraCounterStore implements CounterStore {
     private Logger log = LoggerFactory.getLogger( CassandraCounterStore.class );
