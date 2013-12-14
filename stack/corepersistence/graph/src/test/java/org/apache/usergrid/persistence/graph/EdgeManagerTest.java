@@ -137,6 +137,62 @@ public class EdgeManagerTest {
     }
 
 
+    @Test
+    public void testWriteReadEdgeDelete() {
+
+        EdgeManager em = emf.createEdgeManager( scope );
+
+
+        Edge edge = createRealEdge( "source", "test", "target" );
+
+        em.writeEdge( edge );
+
+        //now test retrieving it
+
+
+        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
+
+        Observable<Edge> edges = em.loadSourceEdges( search );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        Edge returned = edges.toBlockingObservable().single();
+
+        assertEquals( "Correct edge returned", edge, returned );
+
+        SearchByIdType searchById = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
+                edge.getTargetNode().getType(), null );
+
+        edges = em.loadSourceEdges( searchById );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        returned = edges.toBlockingObservable().single();
+
+        assertEquals( "Correct edge returned", edge, returned );
+
+
+        //now delete it
+        em.deleteEdge( edge );
+
+        //now test retrieval, should be null
+        edges = em.loadSourceEdges( search );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        returned = edges.toBlockingObservable().singleOrDefault( null );
+
+        assertNull( "No edge returned", returned );
+
+
+        //no search by type, should be null as well
+
+        edges = em.loadSourceEdges( searchById );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        returned = edges.toBlockingObservable().singleOrDefault( null );
+
+        assertNull( "No edge returned", returned );
+    }
+
+
     private Edge createRealEdge( final String sourceType, final String edgeType, final String targetType ) {
 
 
