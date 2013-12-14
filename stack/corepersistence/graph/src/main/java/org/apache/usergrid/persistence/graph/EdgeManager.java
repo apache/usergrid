@@ -11,8 +11,8 @@ import rx.Observable;
  *
  * An Edge: is defined as the following
  *
- * It has 2 Identifier (Id)
- * It has a type (usually a string)
+ * It has 2 Identifiers (Id)
+ * It has a type (a string name)
  *
  * All edges are directed edges.  By definition, the direction is from Source to Target.
  *
@@ -23,9 +23,8 @@ import rx.Observable;
  *
  * Alex ----"likes"---> Beer
  *
- * Even if an edge is implicitly bi directional, reverse directions are stored only for internal clean up
- * and should not be used by application later.  Ensure that if your relationship is bi-directional ,that you explicitly
- * store BOTH directions.   Implementations many not guarantee reversed consistency.
+ * Note that edges are directed, however, implementations have an implicit inverse.
+ * This can be used to search both incoming and outgoing edges within the graph.
  *
  * @author tnine
  */
