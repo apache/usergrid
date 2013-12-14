@@ -7,7 +7,25 @@ import rx.Observable;
 
 
 /**
- * Represents operations that can be performed on edges
+ * Represents operations that can be performed on edges within our graph.  A graph should be within an OrganizationScope
+ *
+ * An Edge: is defined as the following
+ *
+ * It has 2 Identifier (Id)
+ * It has a type (usually a string)
+ *
+ * All edges are directed edges.  By definition, the direction is from Source to Target.
+ *
+ * I.E Source ---- type -----> Target
+ * Ex:
+ *
+ * Dave ----"follows"---> Alex
+ *
+ * Alex ----"likes"---> Beer
+ *
+ * Even if an edge is implicitly bi directional, reverse directions are stored only for internal clean up
+ * and should not be used by application later.  Ensure that if your relationship is bi-directional ,that you explicitly
+ * store BOTH directions.   Implementations many not guarantee reversed consistency.
  *
  * @author tnine
  */
