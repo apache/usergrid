@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.apache.usergrid.persistence.graph;
 
 
@@ -23,8 +42,10 @@ import rx.Observable;
  *
  * Alex ----"likes"---> Beer
  *
- * Note that edges are directed, however, implementations have an implicit inverse.
+ * Note that edges are directed, however, implementations always have an implicit inverse.
  * This can be used to search both incoming and outgoing edges within the graph.
+ *
+ * @see Edge
  *
  * @author tnine
  */
@@ -32,21 +53,27 @@ public interface EdgeManager {
 
 
     /**
+     * @param edge The edge to write
+     *
      * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this
      * edge automatically
      */
-    void writeEdge( Edge e );
+    void writeEdge( Edge edge );
 
 
     /**
+     * @param edge The edge to delete
+     *
+     *
      * Delete the edge. Implementation should also delete the reversed edge
      */
-    void deleteEdge( Edge e );
+    void deleteEdge( Edge edge );
 
     /**
      * Load all edges where the specified node is the source.  The edges will match the search criteria
      *
      * @param search The search parameters
+     *
      *
      * @return An observable that emits Edges.  The node specified in the search will be on the source end of the edge.
      * The observer will need to unsubscribe when it has completed consumption.

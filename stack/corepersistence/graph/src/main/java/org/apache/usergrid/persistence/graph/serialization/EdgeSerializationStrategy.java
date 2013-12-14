@@ -17,25 +17,38 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph;
+package org.apache.usergrid.persistence.graph.serialization;
 
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.Edge;
+
+import com.netflix.astyanax.MutationBatch;
 
 
 /**
- * Defines parameters for a search operation where searching from a node
- * using edge types.  Allows you to return all target types for that edge
+ * Simple interface for serializing ONLY an edge
  *
- * @author tnine */
-public interface SearchEdgeIdTypes extends SearchEdgeTypes{
+ */
+public interface EdgeSerializationStrategy {
 
 
     /**
-     * Return the edge type to use
+     * Write both the source--->Target edge and the target <----- source edge into the mutation
+     * @param edge
      * @return
      */
-    String getEdgeType();
+   MutationBatch writeEdge(Edge edge);
+
+
+    /**
+     * Write both the source -->target edge and the target<--- source edge into the mutation
+     * @param edge
+     * @return
+     */
+    MutationBatch deleteEdge(Edge edge);
+
+    //TODO add iterators for various I/O operations
+
 
 
 }
