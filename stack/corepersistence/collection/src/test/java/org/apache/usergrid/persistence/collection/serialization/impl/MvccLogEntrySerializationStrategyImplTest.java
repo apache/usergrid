@@ -168,10 +168,18 @@ public class MvccLogEntrySerializationStrategyImplTest {
     }
 
 
+    /**
+     * No need to add the @Inject annotation here, Jukito injects automatically:
+     * doing so will create a serious issue. Note we must inject this
+     * MvccLogEntrySerializationStrategy to override the one created by the
+     * class level module for the logEntryStrategy class field. The method argument
+     * version is injected by the method level module.
+     *
+     * @param logEntryStrategy automatically injected using the method's own module TimeoutEnv
+     */
     @Test
     @UseModules( { TimeoutEnv.class } )
-    public void transientTimeout() throws ConnectionException, InterruptedException {
-
+    public void transientTimeout( MvccLogEntrySerializationStrategy logEntryStrategy ) throws ConnectionException, InterruptedException {
         final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
