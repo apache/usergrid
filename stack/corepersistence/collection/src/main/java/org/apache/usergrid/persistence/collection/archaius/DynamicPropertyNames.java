@@ -51,6 +51,7 @@ public class DynamicPropertyNames {
      * @param binder the Binder to bind to
      * @param properties the properties to create the bindings on
      */
+    @SuppressWarnings( "ConstantConditions" )
     public static void bindProperties( Binder binder, Properties properties )
     {
         if ( properties == null ) {

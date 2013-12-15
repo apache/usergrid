@@ -3,10 +3,13 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.CassandraModule;
+import org.apache.usergrid.persistence.collection.guice.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -25,13 +28,22 @@ import static org.junit.Assert.assertNull;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class, CassandraModule.class } )
+@UseModules( { TestCollectionModule.class } )
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
 
     @Inject
     private EventBus eventBus;
+
+
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
 
 
     @Test

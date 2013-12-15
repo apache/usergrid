@@ -8,11 +8,14 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.guice.CassandraModule;
+import org.apache.usergrid.persistence.collection.guice.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -45,10 +48,19 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class, CassandraModule.class } )
+@UseModules( { TestCollectionModule.class } )
 public class MvccEntitySerializationStrategyImplTest {
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
+
+
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
 
 
     @Test
@@ -58,7 +70,7 @@ public class MvccEntitySerializationStrategyImplTest {
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl(organizationId,  applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( organizationId,  applicationId, name );
 
 
         final UUID entityId = UUIDGenerator.newTimeUUID();

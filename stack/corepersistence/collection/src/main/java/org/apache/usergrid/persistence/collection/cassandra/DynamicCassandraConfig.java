@@ -1,55 +1,56 @@
 package org.apache.usergrid.persistence.collection.cassandra;
 
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicStringProperty;
 
 
 /**
+ * A dynamic ICassandraConfig implementation that allows registration by
+ * listeners for configuration change events.
  */
-public class DynamicCassandraConfig implements CassandraConfig {
+@Singleton
+public class DynamicCassandraConfig implements IDynamicCassandraConfig {
+    private static final Logger LOG = LoggerFactory.getLogger( DynamicCassandraConfig.class );
+
     /** The default amount of time in milliseconds to wait before processing notification events. */
     public static final long DEFAULT_NOTIFICATION_DELAY = 1000L;
 
-    /** The cassandra URL property */
-    public static final String CASSANDRA_HOSTS = "cassandra.hosts";
-    public static final String CASSANDRA_PORT = "cassandra.port";
-    public static final String CASSANDRA_CONNECTIONS = "cassandra.connections";
-    public static final String CASSANDRA_CLUSTER_NAME = "cassandra.cluster_name";
-    public static final String CASSANDRA_VERSION = "cassandra.version";
-    public static final String CASSANDRA_TIMEOUT = "cassandra.timeout";
-    public static final String COLLECTIONS_KEYSPACE_NAME = "collections.keyspace";
-
-
-    private DynamicStringProperty cassandraHosts;
+    private DynamicStringProperty dynamicHosts;
     private String hosts;
 
-    private DynamicIntProperty cassandraPort;
+    private DynamicIntProperty dynamicPort;
     private int port;
 
-    private DynamicIntProperty cassandraConnections;
+    private DynamicIntProperty dynamicConnections;
     private int connections;
 
-    private DynamicIntProperty cassandraTimeout;
+    private DynamicIntProperty dynamicTimeout;
     private int timeout;
 
-    private DynamicStringProperty clusterName;
+    private DynamicStringProperty dynamicCluster;
     private String cluster;
 
-    private DynamicStringProperty keyspaceName;
+    private DynamicStringProperty dynamicKeyspace;
     private String keyspace;
 
-    private DynamicStringProperty cassandraVersion;
+    private DynamicStringProperty dynamicVersion;
     private String version;
 
     private Long fireTime;
-    private final Set<ChangeType> changes = new HashSet<ChangeType>( ChangeType.values().length );
+    private final Set<ConfigChangeType> changes = new HashSet<ConfigChangeType>( ConfigChangeType.values().length );
+    private final LinkedList<CassandraConfigListener> listeners = new LinkedList<CassandraConfigListener>();
 
 
     // =======================================================================
@@ -63,14 +64,14 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
 
     @Inject
-    void setCassandraHosts( @Named( CASSANDRA_HOSTS ) DynamicStringProperty cassandraHosts ) {
-        this.cassandraHosts = cassandraHosts;
+    void setDynamicHosts( @Named( CASSANDRA_HOSTS ) DynamicStringProperty cassandraHosts ) {
+        this.dynamicHosts = cassandraHosts;
         this.hosts = cassandraHosts.get();
 
         cassandraHosts.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.HOSTS );
+                queueNotifications( ConfigChangeType.HOSTS );
             }
         } );
     }
@@ -87,14 +88,14 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
 
     @Inject
-    void setCassandraPort( @Named( CASSANDRA_PORT ) DynamicIntProperty cassandraPort ) {
-        this.cassandraPort = cassandraPort;
+    void setDynamicPort( @Named( CASSANDRA_PORT ) DynamicIntProperty cassandraPort ) {
+        this.dynamicPort = cassandraPort;
         this.port = cassandraPort.get();
 
         cassandraPort.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.PORT );
+                queueNotifications( ConfigChangeType.PORT );
             }
         } );
     }
@@ -111,14 +112,14 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
 
     @Inject
-    void setCassandraConnections( @Named( CASSANDRA_CONNECTIONS ) DynamicIntProperty cassandraConnections ) {
-        this.cassandraConnections = cassandraConnections;
+    void setDynamicConnections( @Named( CASSANDRA_CONNECTIONS ) DynamicIntProperty cassandraConnections ) {
+        this.dynamicConnections = cassandraConnections;
         this.connections = cassandraConnections.get();
 
         cassandraConnections.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.CONNECTIONS );
+                queueNotifications( ConfigChangeType.CONNECTIONS );
             }
         } );
     }
@@ -135,14 +136,14 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
 
     @Inject
-    public void setCassandraTimeout( @Named( CASSANDRA_TIMEOUT ) DynamicIntProperty cassandraTimeout ) {
-        this.cassandraTimeout = cassandraTimeout;
+    public void setDynamicTimeout( @Named( CASSANDRA_TIMEOUT ) DynamicIntProperty cassandraTimeout ) {
+        this.dynamicTimeout = cassandraTimeout;
         this.timeout = cassandraTimeout.get();
 
         cassandraTimeout.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.TIMEOUT );
+                queueNotifications( ConfigChangeType.TIMEOUT );
             }
         } );
     }
@@ -160,13 +161,13 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
     @Inject
     void setClusterName( @Named( CASSANDRA_CLUSTER_NAME ) DynamicStringProperty clusterName ) {
-        this.clusterName = clusterName;
+        this.dynamicCluster = clusterName;
         this.cluster = clusterName.get();
 
         clusterName.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.CLUSTER_NAME );
+                queueNotifications( ConfigChangeType.CLUSTER_NAME );
             }
         } );
     }
@@ -184,13 +185,13 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
     @Inject
     public void setKeyspaceName( @Named( COLLECTIONS_KEYSPACE_NAME ) DynamicStringProperty keyspaceName ) {
-        this.keyspaceName = keyspaceName;
+        this.dynamicKeyspace = keyspaceName;
         this.keyspace = keyspaceName.get();
 
         keyspaceName.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.KEYSPACE_NAME );
+                queueNotifications( ConfigChangeType.KEYSPACE_NAME );
             }
         } );
     }
@@ -207,14 +208,14 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
 
     @Inject
-    public void setCassandraVersion( @Named( CASSANDRA_VERSION ) DynamicStringProperty cassandraVersion ) {
-        this.cassandraVersion = cassandraVersion;
+    public void setDynamicVersion( @Named( CASSANDRA_VERSION ) DynamicStringProperty cassandraVersion ) {
+        this.dynamicVersion = cassandraVersion;
         this.version = cassandraVersion.get();
 
         cassandraVersion.addCallback( new Runnable() {
             @Override
             public void run() {
-                notifyListeners( ChangeType.VERSION );
+                queueNotifications( ConfigChangeType.VERSION );
             }
         } );
     }
@@ -226,38 +227,126 @@ public class DynamicCassandraConfig implements CassandraConfig {
 
 
     public void register( CassandraConfigListener listener ) {
-
+        synchronized ( listeners ) {
+            listeners.addLast( listener );
+        }
     }
 
 
     public void unregister( CassandraConfigListener listener ) {
-
+        synchronized ( listeners ) {
+            listeners.remove( listener );
+        }
     }
 
 
-    void notifyListeners( final ChangeType hosts ) {
+    /**
+     * This method queues up changes in the event several changes come in at
+     * once (which may often be the case) before firing off notifications to
+     * listeners. It will keep delaying the time to fire notifications if
+     * changes continue to come in by the default delay time. Only when the
+     * last change in a train of changes has come in, and the default delay
+     * has been hit does it notify all listeners with the summary of changes.
+     *
+     * NOTE: (aok) was going to use a Timer or TimerTask for this but this
+     * happens so infrequently that it's not a big deal to create the new
+     * thread and use it on the spot - better than keeping it around IMHO.
+     *
+     * @param change the change to queue up for notification to listeners
+     */
+    private void queueNotifications( final ConfigChangeType change ) {
         synchronized ( changes ) {
             if ( fireTime == null ) {
+                assert changes.isEmpty();
+                changes.add( change );
                 fireTime = System.currentTimeMillis() + DEFAULT_NOTIFICATION_DELAY;
-                Thread t = new Thread( new Runnable() {
+                new Thread( new Runnable() {
                     @Override
                     public void run() {
-                        while ( fireTime != null ) {
+                        long timeToWait = 1;
+                        synchronized ( changes ) {
+                            while ( fireTime != null && timeToWait > 0 ) {
+                                timeToWait = fireTime - System.currentTimeMillis();
+                                if ( timeToWait <= 0 ) {
+                                    break;
+                                }
 
+                                try {
+                                    changes.wait( timeToWait );
+                                    changes.notifyAll();
+                                }
+                                catch ( InterruptedException e ) {
+                                    LOG.error( "Awe snap, someone wake me up before it was time." );
+                                }
+                            }
+
+                            // now we can really notify listeners, clean up, and die
+                            notifyListeners( Collections.unmodifiableSet( new HashSet<ConfigChangeType>( changes ) ) );
+                            applyNewValues();
+                            changes.clear();
+                            fireTime = null;
                         }
                     }
-                } );
+                } ).start();
+            }
+            else {
+                fireTime = System.currentTimeMillis() + DEFAULT_NOTIFICATION_DELAY;
+                changes.add( change );
             }
         }
     }
 
 
-    public void run() {
-
+    @SuppressWarnings( "ConstantConditions" )
+    private void applyNewValues() {
+        for ( ConfigChangeType change : changes ) {
+            switch ( change ) {
+                case HOSTS:
+                    this.hosts = dynamicHosts.get();
+                    break;
+                case CLUSTER_NAME:
+                    this.cluster = dynamicCluster.get();
+                    break;
+                case KEYSPACE_NAME:
+                    this.keyspace = dynamicKeyspace.get();
+                    break;
+                case PORT:
+                    this.port = dynamicPort.get();
+                    break;
+                case CONNECTIONS:
+                    this.connections = dynamicConnections.get();
+                    break;
+                case TIMEOUT:
+                    this.timeout = dynamicTimeout.get();
+                    break;
+                case VERSION:
+                    this.version = dynamicVersion.get();
+                    break;
+                default:
+                    throw new RuntimeException( "Should never get here!" );
+            }
+        }
     }
 
 
-    class OldConfig implements CassandraConfig {
+    private void notifyListeners( Set<ConfigChangeType> changes ) {
+        // (0) lock on listeners
+        // (1) create final new and old config objects
+        // (2) build the event with them
+        // (3) iterate through listeners and call their notification method
+
+        synchronized ( listeners ) {
+            final NewConfig newConfig = new NewConfig();
+            final OldConfig oldConfig = new OldConfig(); // new Old confusing eh? hahaha
+            final CassandraConfigEvent event = new CassandraConfigEvent( oldConfig, newConfig, changes );
+            for ( CassandraConfigListener listener : listeners ) {
+                listener.reconfigurationEvent( event );
+            }
+        }
+    }
+
+
+    class OldConfig implements ICassandraConfig {
         final String hosts = DynamicCassandraConfig.this.getHosts();
         final String version = DynamicCassandraConfig.this.getVersion();
         final String clusterName = DynamicCassandraConfig.this.getClusterName();
@@ -310,46 +399,46 @@ public class DynamicCassandraConfig implements CassandraConfig {
     }
 
 
-    class NewConfig implements CassandraConfig {
+    class NewConfig implements ICassandraConfig {
         @Override
         public String getHosts() {
-            return cassandraHosts.get();
+            return dynamicHosts.get();
         }
 
 
         @Override
         public String getVersion() {
-            return cassandraVersion.get();
+            return dynamicVersion.get();
         }
 
 
         @Override
         public String getClusterName() {
-            return clusterName.get();
+            return dynamicCluster.get();
         }
 
 
         @Override
         public String getKeyspaceName() {
-            return keyspaceName.get();
+            return dynamicKeyspace.get();
         }
 
 
         @Override
         public int getPort() {
-            return cassandraPort.get();
+            return dynamicPort.get();
         }
 
 
         @Override
         public int getConnections() {
-            return cassandraConnections.get();
+            return dynamicConnections.get();
         }
 
 
         @Override
         public int getTimeout() {
-            return cassandraTimeout.get();
+            return dynamicTimeout.get();
         }
     }
 }

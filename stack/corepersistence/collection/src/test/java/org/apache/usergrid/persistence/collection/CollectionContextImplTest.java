@@ -6,7 +6,6 @@ import org.jukito.UseModules;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.CassandraModule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -16,7 +15,7 @@ import static junit.framework.TestCase.assertEquals;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class, CassandraModule.class } )
+@UseModules( { TestCollectionModule.class } )
 public class CollectionContextImplTest {
 
 

@@ -8,11 +8,14 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.guice.CassandraModule;
+import org.apache.usergrid.persistence.collection.guice.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -35,7 +38,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class, CassandraModule.class } )
+@UseModules( { TestCollectionModule.class } )
 public class MvccLogEntrySerializationStrategyImplTest {
 
 
@@ -45,6 +48,15 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     @Inject
     private MvccLogEntrySerializationStrategy logEntryStrategy;
+
+
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
 
 
     @Test
@@ -290,7 +302,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
             overrides.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, String.valueOf( TIMEOUT ) );
 
             //use the default module with cass
-            install( new CassandraModule( overrides ) );
+            install( new TestCollectionModule( overrides ) );
         }
     }
 }
