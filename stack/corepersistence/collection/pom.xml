@@ -13,7 +13,6 @@
   <properties>
     <guice.version>3.0</guice.version>
     <archaius.version>0.5.12</archaius.version>
-    <onami.version>0.2.0-SNAPSHOT</onami.version>
   </properties>
 
   <artifactId>collection</artifactId>
@@ -71,12 +70,6 @@
       <groupId>com.netflix.archaius</groupId>
       <artifactId>archaius-core</artifactId>
       <version>${archaius.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.onami.lifecycle</groupId>
-      <artifactId>org.apache.onami.lifecycle.standard</artifactId>
-      <version>${onami.version}</version>
     </dependency>
 
     <dependency>
