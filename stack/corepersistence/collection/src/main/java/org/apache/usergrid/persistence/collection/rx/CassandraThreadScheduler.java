@@ -11,6 +11,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -32,6 +35,8 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
      */
     public static final String RX_IO_THREADS = "rx.cassandra.io.threads";
 
+    private static final Logger LOG = LoggerFactory.getLogger(CassandraThreadScheduler.class);
+
 
 
     private final DynamicIntProperty maxThreadCount;
@@ -49,12 +54,17 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
 
         //create our thread factory so we can label our threads in case we need to dump them
         final ThreadFactory factory = new ThreadFactory() {
+
+            private final AtomicLong counter = new AtomicLong();
+
             @Override
             public Thread newThread( final Runnable r ) {
 
-                final AtomicLong counter = new AtomicLong();
+               final String threadName = "RxCassandraIOThreadPool-" + counter.incrementAndGet();
 
-                Thread t = new Thread( r, "RxCassandraIOThreadPool-" + counter.incrementAndGet() );
+                LOG.info( "Allocating new IO thread with name {}", threadName );
+
+                Thread t = new Thread( r, threadName );
                 t.setDaemon( true );
                 return t;
             }
