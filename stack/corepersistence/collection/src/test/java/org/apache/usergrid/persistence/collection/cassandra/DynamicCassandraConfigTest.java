@@ -72,7 +72,7 @@ public class DynamicCassandraConfigTest {
     @AfterClass
     public static void restore() throws Exception {
         write( original );
-        finalConfig.removeConfiguration( finalConfig );
+        finalConfig.removeConfiguration( dynamicConfig );
         scheduler.stop();
     }
 
