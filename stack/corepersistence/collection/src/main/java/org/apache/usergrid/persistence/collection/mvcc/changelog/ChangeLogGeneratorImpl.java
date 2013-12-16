@@ -17,7 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

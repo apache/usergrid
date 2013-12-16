@@ -41,7 +41,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +55,8 @@ import rx.Observable;
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
-    @Rule
-    public final CassandraRule rule = new CassandraRule();
+    @ClassRule
+    public static final CassandraRule rule = new CassandraRule();
 
     @Inject
     private EntityCollectionManagerFactory factory;
