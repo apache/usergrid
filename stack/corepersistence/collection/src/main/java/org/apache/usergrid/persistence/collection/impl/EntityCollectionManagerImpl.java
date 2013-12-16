@@ -131,7 +131,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 scheduler ).map( writeStart );
 
 
-        //execute all validation stages concurrently
+        //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
         observable = Concurrent.concurrent(scheduler, observable, writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
