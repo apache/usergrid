@@ -24,6 +24,8 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
  * Defines parameters for a search operation where searching from a source node
@@ -57,6 +59,6 @@ public interface SearchByEdgeType {
      * This is useful for paging.  Simply use the last value returned in the previous call in the start parameter
      * @return
      */
-    Edge last();
+    Optional<Edge> last();
 
 }

@@ -24,6 +24,8 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
  * Defines parameters for a search operation where searching from a node.
@@ -44,7 +46,7 @@ public interface SearchEdgeTypes {
      * Return the last value returned.  All returned types will be >= this value
      * @return
      */
-    String getLast();
+    Optional<String> getLast();
 
 
 

@@ -27,6 +27,8 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
  *
@@ -37,7 +39,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     private final Id node;
     private final String type;
     private final UUID maxVersion;
-    private final Edge last;
+    private final Optional<Edge> last;
 
 
     /**
@@ -56,7 +58,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
         this.node = node;
         this.type = type;
         this.maxVersion = maxVersion;
-        this.last = last;
+        this.last = Optional.fromNullable(last);
     }
 
 
@@ -79,7 +81,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
 
 
     @Override
-    public Edge last() {
+    public Optional<Edge> last() {
         return last;
     }
 }
