@@ -26,30 +26,17 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * Defines a directed edge from the source node to the target node
+ * Search by both edge type and target type.  Only nodes
+ * with the type specified will be returned
  *
- * @author tnine
- */
-public interface Edge {
+ * @author tnine */
+public interface SearchByIdType extends SearchByEdgeType{
 
     /**
-     * Get the Id of the source node of this edge
+     * Get the target type in the search
+     * @return
      */
-    Id getSourceNode();
+    String getIdType();
 
 
-    /**
-     * Get the name of the edge
-     */
-    String getType();
-
-    /**
-     * Get the id of the target node of this edge
-     */
-    Id getTargetNode();
-
-    /**
-     * Get the version (as a type 1 time uuid) of this edge
-     */
-    UUID getVersion();
 }

@@ -24,53 +24,39 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * Simple bean to represent our edge
- * @author tnine
+ *
+ *
  */
-public class SimpleEdge implements Edge {
+public class SimpleSearchByIdType extends SimpleSearchByEdgeType implements SearchByIdType{
 
-    private final Id sourceNode;
-    private final String type;
-    private final Id targetNode;
-    private final UUID version;
+    private final String idType;
 
+    /**
+     * Create the search modules
+     *
+     * @param node The node to search from
+     * @param type The edge type
+     * @param maxVersion The maximum version to return
+     * @param idType The id type on the edge
+     * @param last The value to start seeking from.  Must be >= this value
 
-    public SimpleEdge( final Id sourceNode, final String type, final Id targetNode, final UUID version ) {
+     */
+    public SimpleSearchByIdType( final Id node, final String type, final UUID maxVersion, final String idType, final Edge last  ) {
+        super( node, type, maxVersion, last );
 
-        ValidationUtils.verifyIdentity( sourceNode );
-        ValidationUtils.verifyString( type, "type" );
-        ValidationUtils.verifyIdentity( targetNode );
-        ValidationUtils.verifyTimeUuid( version, "version" );
-        this.sourceNode = sourceNode;
-        this.type = type;
-        this.targetNode = targetNode;
-        this.version = version;
+        ValidationUtils.verifyString( idType, "idType" );
+        this.idType = idType;
     }
 
 
     @Override
-    public Id getSourceNode() {
-        return sourceNode;
-    }
-
-
-    @Override
-    public String getType() {
-        return type;
-    }
-
-
-    @Override
-    public Id getTargetNode() {
-        return targetNode;
-    }
-
-
-    public UUID getVersion() {
-        return version;
+    public String getIdType() {
+        return idType;
     }
 }

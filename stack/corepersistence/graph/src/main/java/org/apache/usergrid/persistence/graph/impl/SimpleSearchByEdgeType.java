@@ -24,37 +24,47 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
 
 
 /**
- * Simple bean to represent our edge
- * @author tnine
+ *
+ *
  */
-public class SimpleEdge implements Edge {
+public class SimpleSearchByEdgeType implements SearchByEdgeType{
 
-    private final Id sourceNode;
+    private final Id node;
     private final String type;
-    private final Id targetNode;
-    private final UUID version;
+    private final UUID maxVersion;
+    private final Optional<Edge> last;
 
 
-    public SimpleEdge( final Id sourceNode, final String type, final Id targetNode, final UUID version ) {
-
-        ValidationUtils.verifyIdentity( sourceNode );
+    /**
+     * Create the search modules
+     * @param node The node to search from
+     * @param type The edge type
+     * @param maxVersion The maximum version to return
+     * @param last The value to start seeking from.  Must be >= this value
+     */
+    public SimpleSearchByEdgeType( final Id node, final String type, final UUID maxVersion, final Edge last ) {
+        ValidationUtils.verifyIdentity(node);
         ValidationUtils.verifyString( type, "type" );
-        ValidationUtils.verifyIdentity( targetNode );
-        ValidationUtils.verifyTimeUuid( version, "version" );
-        this.sourceNode = sourceNode;
+        ValidationUtils.verifyTimeUuid( maxVersion, "maxVersion" );
+
+
+        this.node = node;
         this.type = type;
-        this.targetNode = targetNode;
-        this.version = version;
+        this.maxVersion = maxVersion;
+        this.last = Optional.fromNullable(last);
     }
 
 
     @Override
-    public Id getSourceNode() {
-        return sourceNode;
+    public Id getNode() {
+        return node;
     }
 
 
@@ -65,12 +75,13 @@ public class SimpleEdge implements Edge {
 
 
     @Override
-    public Id getTargetNode() {
-        return targetNode;
+    public UUID getMaxVersion() {
+        return maxVersion;
     }
 
 
-    public UUID getVersion() {
-        return version;
+    @Override
+    public Optional<Edge> last() {
+        return last;
     }
 }

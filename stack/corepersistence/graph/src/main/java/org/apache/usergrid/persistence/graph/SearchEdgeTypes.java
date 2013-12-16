@@ -24,32 +24,30 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
- * Defines a directed edge from the source node to the target node
+ * Defines parameters for a search operation where searching from a node.
+ * Useful for getting all types of edges relating to the node
  *
- * @author tnine
- */
-public interface Edge {
+ *
+ * @author tnine */
+public interface SearchEdgeTypes {
 
     /**
-     * Get the Id of the source node of this edge
+     * Get the Id of the node of this edge
+     * @return
      */
-    Id getSourceNode();
+    Id getNode();
 
 
     /**
-     * Get the name of the edge
+     * Return the last value returned.  All returned types will be >= this value
+     * @return
      */
-    String getType();
+    Optional<String> getLast();
 
-    /**
-     * Get the id of the target node of this edge
-     */
-    Id getTargetNode();
 
-    /**
-     * Get the version (as a type 1 time uuid) of this edge
-     */
-    UUID getVersion();
+
 }

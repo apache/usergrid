@@ -24,32 +24,41 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
- * Defines a directed edge from the source node to the target node
+ * Defines parameters for a search operation where searching from a source node
+ * using a specific type on the edge.  This will return edges with all target types
  *
- * @author tnine
- */
-public interface Edge {
+ * @author tnine */
+public interface SearchByEdgeType {
 
     /**
-     * Get the Id of the source node of this edge
+     * Get the Id of the node of this edge
+     * @return
      */
-    Id getSourceNode();
+    Id getNode();
 
 
     /**
      * Get the name of the edge
+     * @return
      */
     String getType();
 
     /**
-     * Get the id of the target node of this edge
+     * Get the Maximum Version of an edge we can return.
+     * This should always be a type 1 time uuid.
+     * @return
      */
-    Id getTargetNode();
+    UUID getMaxVersion();
 
     /**
-     * Get the version (as a type 1 time uuid) of this edge
+     * The optional start parameter.  All edges emitted with be > the specified start edge.
+     * This is useful for paging.  Simply use the last value returned in the previous call in the start parameter
+     * @return
      */
-    UUID getVersion();
+    Optional<Edge> last();
+
 }

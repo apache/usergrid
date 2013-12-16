@@ -1,90 +1,151 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.apache.usergrid.persistence.graph;
 
-
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
 
 
 /**
- * Represents operations that can be performed on edges
+ * Represents operations that can be performed on edges within our graph.  A graph should be within an
+ * OrganizationScope
+ *
+ * An Edge: is defined as the following.
+ *
+ * The edge is directed It has 2 Identifiers (Id).  1 Id is the source node, 1 Id is the target node It has an edge type
+ * (a string name)
+ *
+ * All edges are directed edges.  By definition, the direction is from Source to Target.
+ *
+ * I.E Source ---- type -----> Target Ex:
+ *
+ * Dave (user) ----"follows"---> Alex (user)
+ *
+ * Alex (user)  ----"likes"---> Guinness (beer)
+ *
+ * Todd (user) ----"worksfor"-----> Apigee (company)
+ *
+ * Note that edges are directed.  All implementations always have an implicit inverse of the directed edge. This can be
+ * used to search both incoming and outgoing edges within the graph.
  *
  * @author tnine
+ * @see Edge
  */
 public interface EdgeManager {
 
 
     /**
-     * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this edge
-     * automatically
+     * @param edge The edge to write
+     *
+     * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this
+     * edge.
      */
-    void writeEdge( Edge e );
+    void writeEdge( Edge edge );
 
-
-    /** Delete the edge. Implementation should also delete the reversed edge */
-    void deleteEdge( Edge e );
 
     /**
-     * Return an observable that emits edges with the given source node and the given edge type
+     * @param edge The edge to delete
      *
-     * @param source The id of the source node in the graph
-     * @param edgeType The type of the edge to return.
      *
-     * @return An observable that emits Edges.  Note that all target types in this edge type will be returned
+     * Delete the edge. Implementation should also delete the incoming (reversed) edge.
      */
-    Observable<Edge> loadEdges( Id source, String edgeType);
+    void deleteEdge( Edge edge );
 
     /**
-     * Return an observable that emits edges with the given source node and the given edge type, and target type
+     * Returns an observable that emits all edges where the specified node is the source node. The edges will match the
+     * search criteria of the edge type
      *
-     * @param source The id of the source node in the graph
-     * @param edgeType The type of the edge to return.
-     * @param targetType The type of the target on the edge to return
+     * @param search The search parameters
      *
-     * @return An observable that emits Edges.  Note that only the target type in this edge type will be returned
-     * It is up to the caller to end the subscription to this observable when the desired size is reached
+     * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadEdges( Id source, String edgeType, String targetType);
+    Observable<Edge> loadSourceEdges( SearchByEdgeType search );
 
     /**
-     * Search the edges from the source node, with the edge type and targetType specified.
-     * @param source The id of the source node in the graph
-     * @param edgeType The type of edge to execute the query on
-     * @param targetType The target type to execute the query on
-     * @param query The query containing tree expression to execute
+     * Returns an observable that emits all edges where the specified node is the target node. The edges will match the
+     * search criteria of the edge type
      *
-     * @return An observable that emits a matching edge.
+     * @param search The search parameters
+     *
+     * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> searchEdges(Id source, String edgeType, String targetType, Query query);
+    Observable<Edge> loadTargetEdges( SearchByEdgeType search );
+
 
     /**
-     * Get all edge types from this source
-     * @param source
+     * Returns an observable that emits all edges where the specified node is the source node. The edges will match the
+     * search criteria of the edge type and the target type
+     *
+     * @param search The search parameters
+     *
+     * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
+     */
+    Observable<Edge> loadSourceEdges( SearchByIdType search );
+
+
+    /**
+     * Returns an observable that emits all edges where the specified node is the target node. The edges will match the
+     * search criteria of the edge type and the target type
+     *
+     * @param search The search parameters
+     *
+     * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
+     */
+    Observable<Edge> loadTargetEdges( SearchByIdType search );
+
+    /**
+     * Get all edge types to this node.  The node provided by search is the target node.
+     *
+     * @param search The search
+     *
      * @return An observable that emits strings for edge types
      */
-    Observable<String> getEdgeTypes(Id source);
-
-    /**
-     * Get all target types for this edge type
-     * @param source
-     * @param edgeType
-     * @return
-     */
-    Observable<String> getTargetTypes(Id source, String edgeType);
-
-    /**
-     * Get all incoming edge types for this destination
-     * @param destination
-     * @return
-     */
-    Observable<String> getSourceEdgeTypes(Id destination);
+    Observable<String> getSourceEdgeTypes( SearchEdgeTypes search );
 
 
     /**
-     * Get the source types of incoming edges for the given destination type and edge type
-     * @param destination
-     * @param edgeType
-     * @return
+     * Get all id types to this node.  The node provided by search is the target node with the edge type to search.
+     *
+     * @param search The search criteria
+     *
+     * @return An observable of all source id types
      */
-    Observable<String> getSourceTypes(Id destination, String edgeType);
+    Observable<String> getSourceEdgeIdTypes( SearchEdgeIdTypes search );
+
+
+    /**
+     * Get all edge types from this node.  The node provided by search is the source node.
+     *
+     * @param search The search
+     *
+     * @return An observable that emits strings for edge types
+     */
+    Observable<String> getTargetEdgeTypes( SearchEdgeTypes search );
+
+
+    /**
+     * Get all id types from this node.  The node provided by search is the source node with the edge type to search.
+     *
+     * @param search The search criteria
+     *
+     * @return An observable of all source id types
+     */
+    Observable<String> getTargetEdgeIdTypes( SearchEdgeIdTypes search );
 }

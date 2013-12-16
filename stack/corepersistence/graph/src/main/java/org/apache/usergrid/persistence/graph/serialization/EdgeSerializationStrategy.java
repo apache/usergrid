@@ -17,39 +17,38 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph;
+package org.apache.usergrid.persistence.graph.serialization;
 
 
-import java.util.UUID;
+import org.apache.usergrid.persistence.graph.Edge;
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import com.netflix.astyanax.MutationBatch;
 
 
 /**
- * Defines a directed edge from the source node to the target node
+ * Simple interface for serializing ONLY an edge
  *
- * @author tnine
  */
-public interface Edge {
-
-    /**
-     * Get the Id of the source node of this edge
-     */
-    Id getSourceNode();
+public interface EdgeSerializationStrategy {
 
 
     /**
-     * Get the name of the edge
+     * Write both the source--->Target edge and the target <----- source edge into the mutation
+     * @param edge
+     * @return
      */
-    String getType();
+   MutationBatch writeEdge(Edge edge);
+
 
     /**
-     * Get the id of the target node of this edge
+     * Write both the source -->target edge and the target<--- source edge into the mutation
+     * @param edge
+     * @return
      */
-    Id getTargetNode();
+    MutationBatch deleteEdge(Edge edge);
 
-    /**
-     * Get the version (as a type 1 time uuid) of this edge
-     */
-    UUID getVersion();
+    //TODO add iterators for various I/O operations
+
+
+
 }

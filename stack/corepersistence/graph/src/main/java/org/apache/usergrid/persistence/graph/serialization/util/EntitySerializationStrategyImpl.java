@@ -17,39 +17,36 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph;
+package org.apache.usergrid.persistence.graph.serialization.util;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerializationStrategy;
+
+import com.netflix.astyanax.MutationBatch;
 
 
 /**
- * Defines a directed edge from the source node to the target node
  *
- * @author tnine
+ *
  */
-public interface Edge {
+public class EntitySerializationStrategyImpl implements EdgeSerializationStrategy {
+    @Override
+    public MutationBatch writeEdge( final Edge edge ) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    /**
-     * Get the Id of the source node of this edge
-     */
-    Id getSourceNode();
+
+    @Override
+    public MutationBatch deleteEdge( final Edge edge ) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
 
-    /**
-     * Get the name of the edge
-     */
-    String getType();
 
-    /**
-     * Get the id of the target node of this edge
-     */
-    Id getTargetNode();
 
-    /**
-     * Get the version (as a type 1 time uuid) of this edge
-     */
-    UUID getVersion();
 }
