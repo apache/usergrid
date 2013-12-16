@@ -137,6 +137,6 @@ public class ChangeLogGeneratorImplTest {
         for (ChangeLogEntry cle : result) {
             System.out.println( cle.toString() );
         }
-        assertEquals(10, result.size());
+        assertEquals(16, result.size());
     }
 }
