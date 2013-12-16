@@ -48,7 +48,7 @@ public class EdgeHasher {
     public static UUID createEdgeHash( final String edgeType, final Id idForColumn ) {
 
         final String hashString =
-                new StringBuilder( edgeType ).append( idForColumn.getType() ).toString().toLowerCase();
+                new StringBuilder( edgeType ).append( idForColumn.getType() ).toString();
 
         final byte[] hashBytes = hashString.getBytes( CHARSET );
 
@@ -63,9 +63,7 @@ public class EdgeHasher {
      */
     public static UUID createEdgeHash( final String edgeType ) {
 
-        final String hashString = edgeType.toLowerCase();
-
-        final byte[] hashBytes = hashString.getBytes( CHARSET );
+        final byte[] hashBytes = edgeType.getBytes( CHARSET );
 
         return UUID.nameUUIDFromBytes( hashBytes );
     }

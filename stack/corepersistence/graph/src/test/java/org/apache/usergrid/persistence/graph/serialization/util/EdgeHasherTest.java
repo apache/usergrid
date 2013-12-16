@@ -24,10 +24,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.antlr.misc.MultiMap;
 import org.junit.Test;
+
+import com.google.common.collect.HashMultimap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -58,7 +62,7 @@ public class EdgeHasherTest {
         final int delta = Character.MAX_CODE_POINT-Character.MIN_CODE_POINT;
         final int lengthToTest = totalCount/delta;
 
-        final Set<UUID> hashed = new HashSet<UUID>(totalCount);
+        final HashMultimap<UUID, String> hashed = HashMultimap.create(totalCount, 2);
 
 
         char[] chars;
@@ -75,19 +79,42 @@ public class EdgeHasherTest {
 
                 //we can't use these higher values, they're 2 chars
                 if(chars.length > 1){
-                    break;
+                    continue;
                 }
 
                 builder.setCharAt( index, chars[0] );
 
 
-                //now hash it
-                 uuidHash = EdgeHasher.createEdgeHash( builder.toString() );
+                final String sourceString = builder.toString();
 
-                 assertFalse( "Hash should be unique", hashed.contains( uuidHash ) );
+                //now hash it
+                uuidHash = EdgeHasher.createEdgeHash( sourceString );
+
+                hashed.put(uuidHash, sourceString);
+
+                if(hashed.get( uuidHash ).size() > 1){
+                    final UUID uuid = uuidHash;
+                    final String value = builder.toString();
+
+                    String error = String.format("Expected hash of '%s' to be unique, but uuid of '%s' already exists.  Existing values are: '", value, uuid);
+
+                    for(String input: hashed.get( uuid )){
+                       error += input + ", ";
+                    }
+
+                    error = error.substring( 0, error.length()-1 ).concat( "'" );
+
+                    fail(error);
+
+                }
+
 
             }
         }
+
+        assertEquals("Check the sizes are equal", totalCount, hashed.size());
     }
+
+
 
 }
