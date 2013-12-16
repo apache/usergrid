@@ -17,47 +17,58 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- * Records one change to an entry: a version, a change type and the changed field.
- * 
- * @author dmjohnson@apigee.com
+ * Records one change to an entry field: entry ID, version, change type and the changed field.
  */
 public class ChangeLogEntry {
 
-    private Id entryId;
+    private final Id entityId;
 
-    private UUID version;
+    private final Set<UUID> versions = new TreeSet<UUID>();
+    
+    public enum ChangeType {
+        PROPERTY_WRITE,
+        PROPERTY_DELETE
+    };
 
-    /**
-     * @return the entryId
-     */
-    public Id getEntryId() {
-        return entryId;
+    private final ChangeType changeType;
+
+    private final Field changedField;
+
+    public ChangeLogEntry(Id entryId, UUID version, ChangeType changeType, Field changedField) {
+        this.entityId = entryId;
+        if (version != null) {
+            this.versions.add(version);
+        }
+        this.changeType = changeType;
+        this.changedField = changedField;
     }
 
     /**
-     * @param entryId the entryId to set
+     * @return the entityId
      */
-    public void setEntryId( Id entryId ) {
-        this.entryId = entryId;
+    public Id getEntryId() {
+        return entityId;
     }
 
     /**
      * @return the version
      */
-    public UUID getVersion() {
-        return version;
+    public Set<UUID> getVersions() {
+        return versions;
     }
 
     /**
      * @param version the version to set
      */
-    public void setVersion( UUID version ) {
-        this.version = version;
+    public void addVersion( UUID version ) {
+        this.versions.add(version);
     }
 
     /**
@@ -68,32 +79,16 @@ public class ChangeLogEntry {
     }
 
     /**
-     * @param changeType the changeType to set
-     */
-    public void setChangeType( ChangeType changeType ) {
-        this.changeType = changeType;
-    }
-
-    /**
      * @return the changedField
      */
     public Field getChangedField() {
         return changedField;
     }
 
-    /**
-     * @param changedField the changedField to set
-     */
-    public void setChangedField( Field changedField ) {
-        this.changedField = changedField;
+    public String toString() {
+        return entityId.toString() + "|" 
+                + changeType.toString() + "|" 
+                + changedField.getName() + "=" + changedField.getValue() + "|" 
+                + versions.toString();
     }
-
-    public enum ChangeType {
-        PROPERTY_WRITE,
-        PROPERTY_DELETE
-    };
-
-    private ChangeType changeType;
-
-    private Field changedField;
 }

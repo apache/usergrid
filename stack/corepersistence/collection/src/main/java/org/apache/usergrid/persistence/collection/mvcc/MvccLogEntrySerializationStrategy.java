@@ -41,7 +41,7 @@ public interface MvccLogEntrySerializationStrategy {
     /**
      * Load a list, from highest to lowest of the stage with versions <= version up to maxSize elements
      *
-     * @param context The context to persist the entity into
+     * @param context The context to load the entity from
      * @param entityId The entity id to load
      * @param version The max version to seek from
      * @param maxSize The maximum size to return.  If you receive this size, there may be more versions to load.

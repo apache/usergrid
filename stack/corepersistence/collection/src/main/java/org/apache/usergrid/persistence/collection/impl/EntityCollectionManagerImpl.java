@@ -30,9 +30,6 @@ import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.schedulers.Schedulers;
-import rx.util.functions.Func1;
-import rx.util.functions.Func2;
 
 
 /**
