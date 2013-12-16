@@ -276,7 +276,7 @@ public class DynamicCassandraConfig implements IDynamicCassandraConfig {
                                     changes.notifyAll();
                                 }
                                 catch ( InterruptedException e ) {
-                                    LOG.error( "Awe snap, someone wake me up before it was time." );
+                                    LOG.error( "Awe snap, someone woke me up before it was time." );
                                 }
                             }
 
@@ -290,8 +290,10 @@ public class DynamicCassandraConfig implements IDynamicCassandraConfig {
                 } ).start();
             }
             else {
-                fireTime = System.currentTimeMillis() + DEFAULT_NOTIFICATION_DELAY;
-                changes.add( change );
+                synchronized ( changes ) {
+                    fireTime = System.currentTimeMillis() + DEFAULT_NOTIFICATION_DELAY;
+                    changes.add( change );
+                }
             }
         }
     }
