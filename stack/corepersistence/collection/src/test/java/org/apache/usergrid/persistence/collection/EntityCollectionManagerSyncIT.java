@@ -1,18 +1,22 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.test.CassandraRule;
 
 import com.google.common.eventbus.EventBus;
-import com.google.guiceberry.junit4.GuiceBerryRule;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -27,22 +31,24 @@ import static org.junit.Assert.assertNull;
  * TODO: Refactor this and the async test into 1 common set of assertions with seperate invocations and result
  * returns once jukito is finished
  *
- *  @author tnine
- *  */
+ */
+@RunWith( JukitoRunner.class )
+@UseModules( { TestCollectionModule.class } )
 public class EntityCollectionManagerSyncIT {
-    @Rule
-    public final GuiceBerryRule guiceBerry = new GuiceBerryRule( CassandraTestCollectionModule.class );
-
-
-    @Rule
-    public final CassandraRule rule = new CassandraRule();
-
-
     @Inject
     private EntityCollectionManagerFactory factory;
 
     @Inject
     private EventBus eventBus;
+
+
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
 
 
     @Test

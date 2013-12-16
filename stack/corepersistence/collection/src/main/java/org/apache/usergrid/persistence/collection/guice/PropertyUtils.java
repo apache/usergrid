@@ -12,8 +12,6 @@ import java.util.Properties;
  * @author tnine
  */
 public class PropertyUtils {
-
-
     /**
      * Load the properties file from the classpath.  Throws IOException if they cannot be loaded
      */
