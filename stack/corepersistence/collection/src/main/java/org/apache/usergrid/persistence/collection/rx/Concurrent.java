@@ -35,7 +35,7 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
     @Override
       public Observable<R> call( final T input ) {
 
-        List<Observable<R>> observables = new ArrayList<Observable<R>>();
+        List<Observable<R>> observables = new ArrayList<Observable<R>>(concurrent.length);
 
         //put all our observables together for concurrency
         for( Func1<T, R> funct: concurrent){
@@ -47,8 +47,8 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
 
 
 
-        Observable.OnSubscribeFunc<R> merge = OperationMerge.merge( observables );
-        Observable<R> newObservable = Observable.create( merge );
+        final Observable.OnSubscribeFunc<R> merge = OperationMerge.merge( observables );
+        final Observable<R> newObservable = Observable.create( merge );
 
 
         //wait until the last operation completes to proceed
