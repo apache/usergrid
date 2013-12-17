@@ -45,17 +45,21 @@ import org.apache.usergrid.persistence.test.CassandraRule;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.guice.CassandraTestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 
 import rx.Observable;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
+import org.junit.runner.RunWith;
 
 /**
  * Test basic operation of change log
  */
-//@RunWith( JukitoRunner.class )
-//@UseModules( { TestCollectionModule.class } )
+@RunWith( JukitoRunner.class )
+@UseModules( { TestCollectionModule.class } )
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
