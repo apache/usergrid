@@ -6,7 +6,11 @@ hostname `cat /etc/hostname`
 echo "US/Eastern" > /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
-PKGS="openjdk-7-jdk s3cmd ntp unzip groovy tomcat7"
+# really annoying part
+./install_oraclejdk.sh 
+
+# install the easy stuff
+PKGS="ntp unzip groovy tomcat7"
 apt-get update
 apt-get -y install ${PKGS}
 
