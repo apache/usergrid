@@ -131,11 +131,11 @@ public class ChangeLogGeneratorImplTest {
         Entity e3 = manager.load( e1.getId() ).toBlockingObservable().lastOrDefault( null );
         e3.setField( new StringField( "name", "name3" ) );
         e3.setField( new IntegerField( "count", 2 ) );
-        //e3.setField( new StringField( "nickname", null )); // why does this not work?
         e3.getFields().remove(new StringField( "nickname", "buddy"));
         Observable<Entity> o3 = manager.write( e3 );
         e3 = o3.toBlockingObservable().lastOrDefault( null );
 
+        LOG.info("ChangeLogTest");
         {
             List<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
@@ -149,8 +149,6 @@ public class ChangeLogGeneratorImplTest {
             assertEquals(6, result.size() );
         }
        
-        LOG.info("===================");
-
         {
             List<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
