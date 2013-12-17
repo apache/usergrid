@@ -96,7 +96,7 @@ var AUTH_NONE = 'NONE';
     if (this.authType === AUTH_CLIENT_ID) {
       qs['client_id'] = this.clientId;
       qs['client_secret'] = this.clientSecret;
-    } else if (this.authType === AUTH_APP_USER) {
+    } else if (this.authType === AUTH_APP_USER && self.getToken()) {
       qs['access_token'] = self.getToken();
     }
 
