@@ -56,7 +56,7 @@ public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
     @ClassRule
-    public static final CassandraRule rule = new CassandraRule();
+    public static CassandraRule rule = new CassandraRule();
 
     @Inject
     private EntityCollectionManagerFactory factory;

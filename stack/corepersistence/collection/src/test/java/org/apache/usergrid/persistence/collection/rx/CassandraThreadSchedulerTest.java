@@ -34,6 +34,11 @@ public class CassandraThreadSchedulerTest {
      */
     private static final String PROP_NAME = "test.threads";
 
+    /**
+     * Number of milliseconds to wait when trying to acquire the semaphore
+     */
+    private static final long TEST_TIMEOUT = 30000;
+
 
     @Test
     public void testMaxLimit() throws InterruptedException {
@@ -55,7 +60,7 @@ public class CassandraThreadSchedulerTest {
         final Semaphore semaphore = new Semaphore( 0, true );
 
         //we should not have maxCount actions running in the scheduler
-        CountDownLatch result = schedule( rxScheduler, maxThreads.get(), semaphore );
+        CountDownLatch result = schedule( rxScheduler, maxThreads.get(), semaphore, TEST_TIMEOUT );
 
         //schedule and we should fail
 
@@ -83,7 +88,7 @@ public class CassandraThreadSchedulerTest {
         assertTrue( "Completed executing actions", completed );
 
         //verify we can schedule and execute a new operation
-        result = schedule( rxScheduler, 1, semaphore );
+        result = schedule( rxScheduler, 1, semaphore, TEST_TIMEOUT );
 
         semaphore.release( 1 );
 
@@ -118,10 +123,10 @@ public class CassandraThreadSchedulerTest {
         final Semaphore semaphore = new Semaphore( 0, true );
 
         //we should not have maxCount actions running in the scheduler
-        CountDownLatch firstHalf = schedule( rxScheduler, half, semaphore );
+        CountDownLatch firstHalf = schedule( rxScheduler, half, semaphore, TEST_TIMEOUT );
 
         //schedule the second half
-        CountDownLatch secondHalf = schedule( rxScheduler, half, semaphore );
+        CountDownLatch secondHalf = schedule( rxScheduler, half, semaphore, TEST_TIMEOUT );
 
         //schedule and we should fail
 
@@ -180,7 +185,7 @@ public class CassandraThreadSchedulerTest {
         assertTrue( "Completed executing actions", completed );
 
         //verify we can schedule and execute a new operation
-        CountDownLatch newJob = schedule( rxScheduler, 1, semaphore );
+        CountDownLatch newJob = schedule( rxScheduler, 1, semaphore, TEST_TIMEOUT  );
 
         semaphore.release( 1 );
 
@@ -213,7 +218,7 @@ public class CassandraThreadSchedulerTest {
         final Semaphore semaphore = new Semaphore( 0, true );
 
         //we should not have maxCount actions running in the scheduler
-        CountDownLatch firstBatch = schedule( rxScheduler, maxThreads.get(), semaphore );
+        CountDownLatch firstBatch = schedule( rxScheduler, maxThreads.get(), semaphore, TEST_TIMEOUT  );
 
         //schedule and we should fail
 
@@ -243,7 +248,7 @@ public class CassandraThreadSchedulerTest {
 
         //now schedule 10 more
 
-        CountDownLatch secondBatch = schedule( rxScheduler, maxThreads.get() - startCount, semaphore );
+        CountDownLatch secondBatch = schedule( rxScheduler, maxThreads.get() - startCount, semaphore, TEST_TIMEOUT  );
 
         //this should fail.  We're at capacity
 
@@ -276,7 +281,7 @@ public class CassandraThreadSchedulerTest {
         assertTrue( "Completed executing actions", completed );
 
         //verify we can schedule and execute a new operation
-        CountDownLatch result = schedule( rxScheduler, 1, semaphore );
+        CountDownLatch result = schedule( rxScheduler, 1, semaphore, TEST_TIMEOUT  );
 
         semaphore.release( 1 );
 
@@ -295,7 +300,7 @@ public class CassandraThreadSchedulerTest {
      *
      * @return The latch to block on.  When all jobs have been executed this will be tripped
      */
-    private CountDownLatch schedule( Scheduler rxScheduler, final int totalCount, final Semaphore semaphore ) {
+    private CountDownLatch schedule( Scheduler rxScheduler, final int totalCount, final Semaphore semaphore, final long timeout ) {
 
         final CountDownLatch latch = new CountDownLatch( totalCount );
 
@@ -308,7 +313,7 @@ public class CassandraThreadSchedulerTest {
 
                         LOG.info( "{} trying to acquire semaphore", threadName );
                         //get and release the lock
-                        semaphore.acquire();
+                        semaphore.tryAcquire( timeout, TimeUnit.MILLISECONDS );
 
                         LOG.info( "{} has acquired sempahore", threadName );
 

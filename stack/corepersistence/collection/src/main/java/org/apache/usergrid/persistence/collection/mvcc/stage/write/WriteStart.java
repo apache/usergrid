@@ -72,8 +72,8 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
                 write.execute();
             }
             catch ( ConnectionException e ) {
-                LOG.error( "Failed to execute write asynchronously ", e );
-                throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
+                LOG.error( "Failed to execute write ", e );
+                throw new CollectionRuntimeException( "Failed to execute write ", e );
             }
 
 

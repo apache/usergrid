@@ -19,9 +19,6 @@ public class MigrationManagerRule extends ExternalResource {
 
     private MigrationManager migrationManager;
 
-    // @TODO - this is not idempotent and causing issues so we make it work once
-    private boolean migrated = false;
-
 
     @Inject
     public void setMigrationManager( MigrationManager migrationManager )  {
@@ -33,10 +30,7 @@ public class MigrationManagerRule extends ExternalResource {
     protected void before() throws MigrationException {
         LOG.info( "Starting migration" );
 
-        if ( ! migrated ) {
-            migrationManager.migrate();
-            migrated = true;
-        }
+        migrationManager.migrate();
 
         LOG.info( "Migration complete" );
     }

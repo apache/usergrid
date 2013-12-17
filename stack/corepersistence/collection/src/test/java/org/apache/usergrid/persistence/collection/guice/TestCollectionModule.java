@@ -27,8 +27,14 @@ import org.apache.usergrid.persistence.collection.serialization.impl.Serializati
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
+import com.netflix.astyanax.Keyspace;
 import com.netflix.config.ConcurrentCompositeConfiguration;
 import com.netflix.config.ConcurrentMapConfiguration;
 import com.netflix.config.ConfigurationManager;
@@ -51,6 +57,11 @@ public class TestCollectionModule extends AbstractModule {
     private final Map<String, String> override;
 
 
+    /**
+     * Our RX I/O threads and this should have the same value
+     */
+    private static final String CONNECTION_COUNT = "20";
+
     public TestCollectionModule( Map<String, String> override ) {
         this.override = override;
     }
@@ -62,13 +73,14 @@ public class TestCollectionModule extends AbstractModule {
     }
 
 
+
     @Override
     protected void configure() {
 
         Map<String,Object> propMap = new HashMap<String, Object>();
         propMap.put( ICassandraConfig.CASSANDRA_HOSTS, "localhost" );
         propMap.put( ICassandraConfig.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
-        propMap.put( ICassandraConfig.CASSANDRA_CONNECTIONS, "10" );
+        propMap.put( ICassandraConfig.CASSANDRA_CONNECTIONS, CONNECTION_COUNT );
         propMap.put( ICassandraConfig.CASSANDRA_TIMEOUT, "5000" );
         propMap.put( ICassandraConfig.CASSANDRA_CLUSTER_NAME, "Usergrid" );
         propMap.put( ICassandraConfig.CASSANDRA_VERSION + ".String", "1.2" );
@@ -91,7 +103,7 @@ public class TestCollectionModule extends AbstractModule {
         // ====================================================================
 
         propMap.clear();
-        propMap.put( CassandraThreadScheduler.RX_IO_THREADS, "20" );
+        propMap.put( CassandraThreadScheduler.RX_IO_THREADS, CONNECTION_COUNT );
 
         if ( override != null ) {
             propMap.putAll( override );
@@ -121,16 +133,29 @@ public class TestCollectionModule extends AbstractModule {
         props.putAll( propMap );
         Names.bindProperties( binder(), props );
 
-        install( new SerializationModule() );
-        install( new ServiceModule() );
+        install( new CollectionModule() );
 
-        // create a guice factor for getting our collection manager
-        install( new FactoryModuleBuilder()
-                .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
-                .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
-                .build( EntityCollectionManagerFactory.class ) );
+        //bind our listener to start cassandra
 
-        // bind our RX scheduler
-        bind( Scheduler.class).toProvider( CassandraThreadScheduler.class );
+        bindListener( Matchers.any(), new KeyspaceListener ());
     }
+
+    private static class KeyspaceListener implements TypeListener{
+
+        @Override
+        public <I> void hear( final TypeLiteral<I> type, final TypeEncounter<I> encounter ) {
+            if(type.getType() == AstynaxKeyspaceProvider.class){
+                CassandraRule cass = new CassandraRule();
+                try {
+                    cass.before();
+                }
+                catch ( Throwable t ) {
+                    throw new RuntimeException( "Something nasty happened!", t );
+                }
+            }
+        }
+    }
+
+
+
 }
