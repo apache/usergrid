@@ -4,6 +4,8 @@ package org.apache.usergrid.persistence.collection;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import rx.Observable;
+
 
 /**
  *

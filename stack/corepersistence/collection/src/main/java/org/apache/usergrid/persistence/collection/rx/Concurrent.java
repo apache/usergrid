@@ -4,9 +4,17 @@ package org.apache.usergrid.persistence.collection.rx;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+
+import com.google.common.base.Preconditions;
+
 import rx.Observable;
 import rx.Scheduler;
+import rx.operators.OperationZip;
+import rx.schedulers.Schedulers;
 import rx.util.functions.Func1;
+import rx.util.functions.Func2;
 import rx.util.functions.FuncN;
 
 

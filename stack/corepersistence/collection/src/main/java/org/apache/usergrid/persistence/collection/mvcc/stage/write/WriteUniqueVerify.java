@@ -2,8 +2,8 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
