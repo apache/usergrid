@@ -17,8 +17,10 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
+
 import java.util.List;
 import java.util.UUID;
+
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
 /**

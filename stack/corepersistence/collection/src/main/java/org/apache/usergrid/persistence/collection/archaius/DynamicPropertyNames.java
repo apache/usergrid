@@ -51,7 +51,6 @@ public class DynamicPropertyNames {
      * @param binder the Binder to bind to
      * @param properties the properties to create the bindings on
      */
-    @SuppressWarnings( "ConstantConditions" )
     public static void bindProperties( Binder binder, Properties properties )
     {
         if ( properties == null ) {
@@ -150,8 +149,7 @@ public class DynamicPropertyNames {
             binder.bind( Key.get( DynamicLongProperty.class,
                     new NamedDynamicProperties( name ) ) ).toInstance( dynamicProperty );
         }
-        // we don't want versions to be evaluated as doubles
-        else if ( isDouble( value ) && ! name.endsWith( "version" ) ) {
+        else if ( isDouble( value ) ) {
             DynamicDoubleProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                     .getDoubleProperty( name, Double.valueOf( value ) );
             binder.bind( Key.get( DynamicDoubleProperty.class,

@@ -17,28 +17,6 @@
 
   <artifactId>collection</artifactId>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </testResource>
-    </testResources>
-  </build>
-
   <dependencies>
 
     <!-- Depends on the basic models -->
@@ -146,6 +124,13 @@
     </dependency>
 
     <!-- Google Guice Integration Test Injectors -->
+
+    <dependency>
+      <groupId>com.google.guiceberry</groupId>
+      <artifactId>guiceberry</artifactId>
+      <version>3.3.1</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>${project.parent.groupId}</groupId>
