@@ -2,6 +2,8 @@ package org.apache.usergrid.persistence.collection.rx;
 
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -19,6 +21,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConcurrentTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConcurrentTest.class);
 
     @Test
     public void concurrent(){
@@ -65,7 +68,11 @@ public class ConcurrentTest {
 
         @Override
         public String call( final String s ) {
-            set.add( Thread.currentThread().getName() );
+            final String threadName = Thread.currentThread().getName();
+
+            logger.info("Function executing on thread {}", threadName);
+
+            set.add( threadName );
 
             return s;
         }
