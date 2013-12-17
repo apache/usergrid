@@ -5,7 +5,7 @@
         "ReleaseBucket": {
             "Description": "S3 Bucket where Priam-Cluster assembly is to be found.",
             "Type": "String",
-            "Default": "ug-cloudformation"
+            "Default": "ug-cloudformation-priam"
         },
         "KeyPair": {
             "Description": "EC2 key pair to be use for SSH access",
@@ -149,9 +149,9 @@
                                 "apt-get update\n",
                                 "apt-get -y install s3cmd\n",
                                 "cd /usr/share/usergrid\n",
-                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/usergrid-cloudformation-1.0-SNAPSHOT-any.tar.gz\n",
-                                "tar xvf usergrid-priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
-                                "rm -fr usergrid-priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "tar xvf priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "rm -fr priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
                                 "chmod 755 ./init_instance/*.sh\n",
                                 "cd ./init_instance\n",
 
