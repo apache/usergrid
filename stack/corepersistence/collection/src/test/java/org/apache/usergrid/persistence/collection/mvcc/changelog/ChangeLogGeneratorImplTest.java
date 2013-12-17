@@ -27,6 +27,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -58,6 +59,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith( JukitoRunner.class )
 @UseModules( { TestCollectionModule.class } )
+@Ignore
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 

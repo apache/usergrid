@@ -74,6 +74,15 @@ public class ConcurrentTest {
 
             set.add( threadName );
 
+            //we sleep to ensure we don't run so fast that a thread is reused in our test
+            try {
+                Thread.sleep(1000);
+            }
+            catch ( InterruptedException e ) {
+                logger.error( "Runner interrupted", e );
+
+            }
+
             return s;
         }
     }

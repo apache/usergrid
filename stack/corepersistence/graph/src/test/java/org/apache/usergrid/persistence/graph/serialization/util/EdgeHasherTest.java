@@ -20,17 +20,16 @@
 package org.apache.usergrid.persistence.graph.serialization.util;
 
 
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-import org.antlr.misc.MultiMap;
 import org.junit.Test;
 
 import com.google.common.collect.HashMultimap;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 
@@ -46,9 +45,9 @@ public class EdgeHasherTest {
 
         final String simpleValue = "simpleValue";
 
-        UUID hashed = EdgeHasher.createEdgeHash( simpleValue );
+        EdgeHasher.HashEdge hashed = EdgeHasher.createEdgeHash( simpleValue );
 
-        UUID otherHash = EdgeHasher.createEdgeHash( simpleValue );
+        EdgeHasher.HashEdge otherHash = EdgeHasher.createEdgeHash( simpleValue );
 
         assertEquals( "hashMatches", hashed, otherHash );
     }
@@ -59,16 +58,16 @@ public class EdgeHasherTest {
 
         //test 10 million entries
         final int totalCount = 10000000;
-        final int delta = Character.MAX_CODE_POINT-Character.MIN_CODE_POINT;
-        final int lengthToTest = totalCount/delta;
+        final int delta = Character.MAX_CODE_POINT - Character.MIN_CODE_POINT;
+        final int lengthToTest = totalCount / delta;
 
-        final HashMultimap<UUID, String> hashed = HashMultimap.create(totalCount, 2);
+        final HashMultimap< EdgeHasher.HashEdge, String> hashed = HashMultimap.create( totalCount, 2 );
 
 
         char[] chars;
-        UUID uuidHash;
+        EdgeHasher.HashEdge uuidHash;
 
-        StringBuilder builder = new StringBuilder(  );
+        StringBuilder builder = new StringBuilder();
 
         for ( int index = 0; index < lengthToTest; index++ ) {
 
@@ -78,7 +77,7 @@ public class EdgeHasherTest {
                 chars = Character.toChars( charValue );
 
                 //we can't use these higher values, they're 2 chars
-                if(chars.length > 1){
+                if ( chars.length > 1 ) {
                     continue;
                 }
 
@@ -90,31 +89,60 @@ public class EdgeHasherTest {
                 //now hash it
                 uuidHash = EdgeHasher.createEdgeHash( sourceString );
 
-                hashed.put(uuidHash, sourceString);
+                hashed.put( uuidHash, sourceString );
 
-                if(hashed.get( uuidHash ).size() > 1){
-                    final UUID uuid = uuidHash;
-                    final String value = builder.toString();
+                final Set<String> strings = hashed.get( uuidHash );
 
-                    String error = String.format("Expected hash of '%s' to be unique, but uuid of '%s' already exists.  Existing values are: '", value, uuid);
+                if ( strings.size() > 1 ) {
 
-                    for(String input: hashed.get( uuid )){
-                       error += input + ", ";
+                    //check if it's the same string.  If it is, the collision is fine
+                    if(assertSameStrings(strings)){
+                        continue;
                     }
 
-                    error = error.substring( 0, error.length()-1 ).concat( "'" );
+                    final  EdgeHasher.HashEdge uuid = uuidHash;
+                    final String value = builder.toString();
 
-                    fail(error);
+                    String error = String.format(
+                            "Expected hash of '%s' to be unique, but hash of '%s' already exists.  Existing values " +
+                                    "are: '",
+                            value, uuid );
 
+                    for ( String input : hashed.get( uuid ) ) {
+                        error += input + ", ";
+                    }
+
+                    error = error.substring( 0, error.length() - 1 ).concat( "'" );
+
+                    fail( error );
                 }
-
-
             }
         }
 
-        assertEquals("Check the sizes are equal", totalCount, hashed.size());
+        assertEquals( "Check the sizes are equal", totalCount, hashed.size() );
     }
 
 
+    private boolean assertSameStrings( Set<String> set ) {
 
+        Iterator<String> strings = set.iterator();
+
+        if ( !strings.hasNext() ) {
+            return false;
+        }
+
+        final String first = strings.next();
+
+        while ( strings.hasNext() ) {
+
+            final String next = strings.next();
+
+            if ( !first.equals( next  ) ) {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
 }

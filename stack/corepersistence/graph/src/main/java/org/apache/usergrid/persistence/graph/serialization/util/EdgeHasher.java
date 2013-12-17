@@ -20,10 +20,16 @@
 package org.apache.usergrid.persistence.graph.serialization.util;
 
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.cassandra.utils.MurmurHash;
+
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.netflix.astyanax.serializers.StringSerializer;
 
 
 /**
@@ -35,6 +41,7 @@ public class EdgeHasher {
     //just re-use the string serializer.  It already does string -> bytes
     private static final String UTF_8 = "UTF-8";
     private static final Charset CHARSET = Charset.forName( UTF_8 );
+    private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
 
     /**
@@ -45,14 +52,12 @@ public class EdgeHasher {
      *
      * @return A UUID that represents a consistent one way hash of the fields
      */
-    public static UUID createEdgeHash( final String edgeType, final Id idForColumn ) {
+    public static HashEdge createEdgeHash( final String edgeType, final Id idForColumn ) {
 
         final String hashString =
                 new StringBuilder( edgeType ).append( idForColumn.getType() ).toString();
 
-        final byte[] hashBytes = hashString.getBytes( CHARSET );
-
-        return UUID.nameUUIDFromBytes( hashBytes );
+        return createEdgeHash( hashString );
     }
 
 
@@ -61,10 +66,46 @@ public class EdgeHasher {
      *
      * @return A UUID that represents a consistent one way hash of the fields
      */
-    public static UUID createEdgeHash( final String edgeType ) {
+    public static HashEdge createEdgeHash( final String edgeType ) {
 
-        final byte[] hashBytes = edgeType.getBytes( CHARSET );
 
-        return UUID.nameUUIDFromBytes( hashBytes );
+        ByteBuffer key = STRING_SERIALIZER.toByteBuffer( edgeType );
+
+        return new HashEdge( MurmurHash.hash3_x64_128( key, key.position(), key.remaining(), 0 ));
+
+    }
+
+    public static class HashEdge{
+        private final long[] hashed;
+
+
+        public HashEdge( final long[] hashed ) {
+            this.hashed = hashed;
+        }
+
+
+        @Override
+        public boolean equals( final Object o ) {
+            if ( this == o ) {
+                return true;
+            }
+            if ( !( o instanceof HashEdge ) ) {
+                return false;
+            }
+
+            final HashEdge hashEdge = ( HashEdge ) o;
+
+            if ( !Arrays.equals( hashed, hashEdge.hashed ) ) {
+                return false;
+            }
+
+            return true;
+        }
+
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode( hashed );
+        }
     }
 }
