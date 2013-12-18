@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
-import org.apache.usergrid.persistence.collection.guice.PropertyUtils;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
@@ -22,11 +21,20 @@ import com.netflix.config.ConcurrentCompositeConfiguration;
 import com.netflix.config.ConcurrentMapConfiguration;
 import com.netflix.config.ConfigurationManager;
 
+import static org.apache.usergrid.persistence.collection.guice.PropertyUtils.filter;
+import static org.apache.usergrid.persistence.collection.guice.PropertyUtils.loadFromClassPath;
+
 
 /**
  * @author tnine
  */
 public class SerializationModule extends AbstractModule {
+    private static final String[] OPTIONS = {
+        MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP,
+        MigrationManagerImpl.STRATEGY_CLASS,
+        MigrationManagerImpl.REPLICATION_FACTOR,
+        MigrationManagerImpl.STRATEGY_OPTIONS
+    };
     private final Map<String,Object> overrides;
 
 
@@ -37,7 +45,7 @@ public class SerializationModule extends AbstractModule {
 
     public SerializationModule( Map<String,Object> overrides ) {
         this.overrides = new HashMap<String, Object>();
-        this.overrides.putAll( overrides );
+        this.overrides.putAll( filter( OPTIONS, overrides ) );
     }
 
 
@@ -46,9 +54,9 @@ public class SerializationModule extends AbstractModule {
         // NOTE : this should be replaced because the defaults do no work the same when
         // dynamic properties are used
         // Bind all the defaults for named properties
-        Properties properties = PropertyUtils.loadFromClassPath( "serialization-defaults.properties" );
+        Properties properties = loadFromClassPath( "serialization-defaults.properties" );
         properties.putAll( overrides );
-        Names.bindProperties( binder(), properties );
+        Names.bindProperties( binder(), properties );   // need to filter to prevent double bind
 
         if ( ConfigurationManager.getConfigInstance() instanceof ConcurrentCompositeConfiguration ) {
             ConcurrentCompositeConfiguration config =

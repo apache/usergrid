@@ -3,6 +3,8 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 
@@ -33,6 +35,44 @@ public class PropertyUtils {
         }
 
         return props;
+    }
+
+
+    /**
+     * Filters out key value pairs matching the propvided keys from Properties.
+     *
+     * @param keys the keys of the property key value pairs to filter out
+     * @param properties the properties to filter
+     * @return the subset of the properties that have the specified keys
+     */
+    public static Map<String,Object> filter( String[] keys, Properties properties ) {
+        Map<String,Object> filtered = new HashMap<String, Object>();
+
+        for ( String key : keys ) {
+            filtered.put( key, properties.getProperty( key ) );
+        }
+
+        return filtered;
+    }
+
+
+    /**
+     * Filters out key value pairs matching the propvided keys from Properties.
+     *
+     * @param keys the keys of the property key value pairs to filter out
+     * @param properties the properties to filter
+     * @return the subset of the properties that have the specified keys
+     */
+    public static Map<String,Object> filter( String[] keys, Map<String,Object> properties ) {
+        Map<String,Object> filtered = new HashMap<String, Object>();
+
+        for ( String key : keys ) {
+            if ( properties.get( key ) != null ) {
+                filtered.put( key, properties.get( key ) );
+            }
+        }
+
+        return filtered;
     }
 
 
