@@ -126,9 +126,6 @@ public class ChangeLogGeneratorImplTest {
         Observable<Entity> o3 = manager.write( e3 );
         e3 = o3.toBlockingObservable().lastOrDefault( null );
 
-
-
-
         {
             // test minVersion of e3
             // 
