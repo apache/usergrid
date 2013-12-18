@@ -3,26 +3,35 @@ package org.apache.usergrid.persistence.graph.serialization.impl;
 
 import java.util.Iterator;
 
+import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnParser;
+
 import com.netflix.astyanax.model.Column;
 
 
 /**
  *
- * Simple iterator that wraps columns and returns the name
+ * Simple iterator that wraps columns and returns the value from the parser
+ *
+ *  C
+ *
  *
  */
-public class ColumnNameIterator<C> implements Iterable<C>, Iterator<C> {
+public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
 
     private final Iterator<Column<C>> sourceIterator;
+    private final ColumnParser<C, T> parser;
 
 
-    public ColumnNameIterator( final Iterator<Column<C>> sourceIterator ) {
-        this.sourceIterator = sourceIterator;}
+
+    public ColumnNameIterator( final Iterator<Column<C>> sourceIterator, final ColumnParser<C, T> parser ) {
+        this.sourceIterator = sourceIterator;
+        this.parser = parser;
+    }
 
 
     @Override
-    public Iterator<C> iterator() {
+    public Iterator<T> iterator() {
         return this;
     }
 
@@ -34,8 +43,8 @@ public class ColumnNameIterator<C> implements Iterable<C>, Iterator<C> {
 
 
     @Override
-    public C next() {
-        return sourceIterator.next().getName();
+    public T next() {
+        return parser.parseColumn(sourceIterator.next());
     }
 
 

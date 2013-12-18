@@ -4,6 +4,10 @@ package org.apache.usergrid.persistence.graph.serialization.stage;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 
 
+/**
+ * Simple class for passing I/O events
+ * @param <T>
+ */
 public class GraphIoEvent<T> {
 
     private OrganizationScope scope;

@@ -83,7 +83,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         final Stage stage = entry.getStage();
         final UUID colName = entry.getVersion();
 
-        return doWrite( collectionScope, entry.getEntityId(), new RowOp() {
+        return doWrite( collectionScope, entry.getEntityId(), entry.getVersion(), new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
 
@@ -161,7 +161,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Preconditions.checkNotNull( entityId, "entityId is required" );
         Preconditions.checkNotNull( version, "version context is required" );
 
-        return doWrite( context, entityId, new RowOp() {
+        return doWrite( context, entityId, version,  new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.deleteColumn( version );
@@ -200,11 +200,11 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
      *
      * @param context We need to use this when getting the keyspace
      */
-    private MutationBatch doWrite( CollectionScope context, Id entityId, RowOp op ) {
+    private MutationBatch doWrite( CollectionScope context, Id entityId, UUID version, RowOp op ) {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ) );
+        op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ).setTimestamp( version.timestamp() ) );
 
         return batch;
     }

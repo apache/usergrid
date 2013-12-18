@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 
@@ -40,6 +41,7 @@ public class CollectionIndexObserver implements PostProcessObserver {
     private final EdgeManagerFactory edgeManagerFactory;
 
 
+    @Inject
     public CollectionIndexObserver( final EdgeManagerFactory edgeManagerFactory ) {
         Preconditions.checkNotNull( edgeManagerFactory, "edgeManagerFactory cannot be null" );
         this.edgeManagerFactory = edgeManagerFactory;

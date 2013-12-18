@@ -24,8 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
@@ -53,7 +56,9 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-public class EdgeManagerTest {
+@RunWith( JukitoRunner.class )
+@UseModules( TestCollectionModule.class )
+public class EdgeManagerIT {
 
 
     @Inject

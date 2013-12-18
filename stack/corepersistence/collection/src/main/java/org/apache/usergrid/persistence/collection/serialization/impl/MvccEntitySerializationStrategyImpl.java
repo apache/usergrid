@@ -79,7 +79,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         final Optional<Entity> colValue = entity.getEntity();
 
-        return doWrite( collectionScope, entityId, new RowOp() {
+        return doWrite( collectionScope, entityId, entity.getVersion(), new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.putColumn( colName, SER.toByteBuffer( colValue ) );
@@ -156,7 +156,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         final Optional<Entity> value = Optional.absent();
 
-        return doWrite( collectionScope, entityId, new RowOp() {
+        return doWrite( collectionScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.putColumn( version, SER.toByteBuffer( value ) );
@@ -172,7 +172,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( collectionScope, entityId, new RowOp() {
+        return doWrite( collectionScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 colMutation.deleteColumn( version );
@@ -198,10 +198,10 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     /**
      * Do the write on the correct row for the entity id with the operation
      */
-    private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
+    private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final UUID version, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ) );
+        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ).setTimestamp( version.timestamp() ) );
 
         return batch;
     }
