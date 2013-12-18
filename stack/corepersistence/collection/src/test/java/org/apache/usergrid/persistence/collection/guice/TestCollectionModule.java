@@ -76,25 +76,7 @@ public class TestCollectionModule extends AbstractModule {
 
         propMap.putAll( override );
         install( new CollectionModule( propMap ) );
-//        bindListener( Matchers.any(), new KeyspaceListener ());
     }
-
-
-//    private static class KeyspaceListener implements TypeListener{
-//
-//        @Override
-//        public <I> void hear( final TypeLiteral<I> type, final TypeEncounter<I> encounter ) {
-//            if(type.getType() == AstynaxKeyspaceProvider.class){
-//                CassandraRule cass = new CassandraRule();
-//                try {
-//                    cass.before();
-//                }
-//                catch ( Throwable t ) {
-//                    throw new RuntimeException( "Something nasty happened!", t );
-//                }
-//            }
-//        }
-//    }
 
 
 
