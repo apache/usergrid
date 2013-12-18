@@ -11,11 +11,11 @@ import com.google.common.base.Preconditions;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.operators.OperationZip;
-import rx.schedulers.Schedulers;
+import rx.operators.OperationMerge;
 import rx.util.functions.Func1;
 import rx.util.functions.Func2;
 import rx.util.functions.FuncN;
+import rx.util.functions.Functions;
 
 
 /**
@@ -40,7 +40,7 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
     @Override
       public Observable<R> call( final T input ) {
 
-        List<Observable<R>> observables = new ArrayList<Observable<R>>();
+        List<Observable<R>> observables = new ArrayList<Observable<R>>(concurrent.length);
 
         //put all our observables together for concurrency
         for( Func1<T, R> funct: concurrent){
@@ -51,19 +51,13 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
 
 
 
-        //TODO not sure why FuncN takes object instead of T can we do this with type safety?
-        return Observable.zip(observables, new FuncN<R>() {
 
-            @Override
-            public R call( final Object... objects ) {
-//                for(Object result: objects){
-//                    Preconditions.checkNotNull( result, "A concurrent operation returned null.  This is not expected" );
-//                }
+        final Observable.OnSubscribeFunc<R> merge = OperationMerge.merge( observables );
+        final Observable<R> newObservable = Observable.create( merge );
 
-                //we don't care which one, since they all should emit the same value
-                return (R)objects[0];
-            }
-        });
+
+        //wait until the last operation completes to proceed
+        return newObservable.takeLast( 1 );
 
       }
 

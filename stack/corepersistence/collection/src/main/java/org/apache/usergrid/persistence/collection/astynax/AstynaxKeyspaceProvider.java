@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection.astynax;
 
 
-import org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig;
 import org.apache.usergrid.persistence.collection.cassandra.IDynamicCassandraConfig;
 
 import com.google.inject.Inject;
@@ -67,14 +66,5 @@ public class AstynaxKeyspaceProvider implements Provider<Keyspace> {
 
 
         return context.getClient();
-    }
-
-
-    /**
-     * Get runtime options that can be overridden.  TODO: Make this an interface and somehow hook it into Guice
-     * auotmagically
-     */
-    public static String[] getRuntimeOptions() {
-        return ICassandraConfig.OPTIONS;
     }
 }

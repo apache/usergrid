@@ -2,7 +2,11 @@ package org.apache.usergrid.persistence.collection.archaius;
 
 
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,13 +50,20 @@ public class DynamicPropertyNames {
     private static final Logger LOG = LoggerFactory.getLogger( DynamicPropertyNames.class );
 
     /**
+     * Track the existing bindings so we're not double binding when Guice modules
+     * are reused.
+     */
+    private final Map<Binder, Set<String>> bindings = new HashMap<Binder, Set<String>>();
+
+
+    /**
      * Binds property keys to Named type and uses property values as defaults.
      *
      * @param binder the Binder to bind to
      * @param properties the properties to create the bindings on
      */
     @SuppressWarnings( "ConstantConditions" )
-    public static void bindProperties( Binder binder, Properties properties )
+    public void bindProperties( Binder binder, Properties properties )
     {
         if ( properties == null ) {
             throw new NullPointerException( "DynamicPropertyNames: " +
@@ -64,25 +75,39 @@ public class DynamicPropertyNames {
                     "binder argument to bindProperties() must not be null" );
         }
 
-        // use enumeration to include the default properties
-        for ( Enumeration<?> e = properties.propertyNames(); e.hasMoreElements(); )
-        {
+        for ( Enumeration<?> e = properties.propertyNames(); e.hasMoreElements(); ) {
             String propertyName = ( String ) e.nextElement();
             String propertyValue = properties.getProperty( propertyName );
 
-            LOG.debug( "setting up a dynamic property for key {} with default value {}", propertyName, propertyValue );
+            LOG.debug( "Setting up a dynamic property for key {} with default value {}", propertyName, propertyValue );
+            bindProperty( binder, propertyName, propertyValue );
+        }
+    }
 
+
+    public boolean bindProperty( Binder binder, String propertyName, String propertyValue ) {
+        synchronized ( bindings ) {
             if ( propertyName.endsWith( ".int" ) )
             {
                 String namedName = propertyName.substring( 0, propertyName.length() - 4 );
-                DynamicIntProperty intProperty = DynamicPropertyFactory.getInstance()
+
+                if ( ! isFirstTime( binder, namedName ) ) {
+                    return false;
+                }
+
+                DynamicIntProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                         .getIntProperty( propertyName, Integer.valueOf( propertyValue ) );
                 binder.bind( Key.get( DynamicIntProperty.class,
-                        new NamedDynamicProperties( namedName ) ) ).toInstance( intProperty );
+                        new NamedDynamicProperties( namedName ) ) ).toInstance( dynamicProperty );
             }
             else if ( propertyName.endsWith( ".long" ) )
             {
                 String namedName = propertyName.substring( 0, propertyName.length() - 5 );
+
+                if ( ! isFirstTime( binder, namedName ) ) {
+                    return false;
+                }
+
                 DynamicLongProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                         .getLongProperty( propertyName, Long.valueOf( propertyValue ) );
                 binder.bind( Key.get( DynamicLongProperty.class,
@@ -91,6 +116,11 @@ public class DynamicPropertyNames {
             else if ( propertyName.endsWith( ".boolean" ) )
             {
                 String namedName = propertyName.substring( 0, propertyName.length() - 8 );
+
+                if ( ! isFirstTime( binder, namedName ) ) {
+                    return false;
+                }
+
                 DynamicBooleanProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                         .getBooleanProperty( propertyName, Boolean.getBoolean( propertyValue ) );
                 binder.bind( Key.get( DynamicBooleanProperty.class,
@@ -99,6 +129,11 @@ public class DynamicPropertyNames {
             else if ( propertyName.endsWith( ".double" ) )
             {
                 String namedName = propertyName.substring( 0, propertyName.length() - 7 );
+
+                if ( ! isFirstTime( binder, namedName ) ) {
+                    return false;
+                }
+
                 DynamicDoubleProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                         .getDoubleProperty( propertyName, Double.valueOf( propertyValue ) );
                 binder.bind( Key.get( DynamicDoubleProperty.class,
@@ -107,6 +142,11 @@ public class DynamicPropertyNames {
             else if ( propertyName.endsWith( ".float" ) )
             {
                 String namedName = propertyName.substring( 0, propertyName.length() - 6 );
+
+                if ( ! isFirstTime( binder, namedName ) ) {
+                    return false;
+                }
+
                 DynamicFloatProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                         .getFloatProperty( propertyName, Float.valueOf( propertyValue ) );
                 binder.bind( Key.get( DynamicFloatProperty.class,
@@ -114,18 +154,31 @@ public class DynamicPropertyNames {
             }
             else if ( propertyName.endsWith( ".String" ) ) {
                 String namedName = propertyName.substring( 0, propertyName.length() - 7 );
+
+                if ( ! isFirstTime( binder, namedName ) ) {
+                    return false;
+                }
+
                 DynamicStringProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                         .getStringProperty( propertyName, propertyValue );
                 binder.bind( Key.get( DynamicStringProperty.class,
                         new NamedDynamicProperties( namedName ) ) ).toInstance( dynamicProperty );
             }
-
-            handleUnknownType( binder, propertyName, propertyValue );
+            else {
+                return handleUnknownType( binder, propertyName, propertyValue );
+            }
         }
+
+        return true;
     }
 
 
-    private static void handleUnknownType( Binder binder, String name, String value ) {
+    private boolean handleUnknownType( Binder binder, String name, String value ) {
+
+        if ( ! isFirstTime( binder, name ) ) {
+            return false;
+        }
+
         if ( isBoolean( value ) ) {
             DynamicBooleanProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                     .getBooleanProperty( name, Boolean.getBoolean( value ) );
@@ -158,10 +211,10 @@ public class DynamicPropertyNames {
                     new NamedDynamicProperties( name ) ) ).toInstance( dynamicProperty );
         }
         else if ( isInteger( value ) ) {
-            DynamicIntProperty intProperty = DynamicPropertyFactory.getInstance()
+            DynamicIntProperty dynamicProperty = DynamicPropertyFactory.getInstance()
                     .getIntProperty( name, Integer.valueOf( value ) );
             binder.bind( Key.get( DynamicIntProperty.class,
-                    new NamedDynamicProperties( name ) ) ).toInstance( intProperty );
+                    new NamedDynamicProperties( name ) ) ).toInstance( dynamicProperty );
         }
         else {
             DynamicStringProperty dynamicProperty = DynamicPropertyFactory.getInstance()
@@ -169,6 +222,8 @@ public class DynamicPropertyNames {
             binder.bind( Key.get( DynamicStringProperty.class,
                     new NamedDynamicProperties( name ) ) ).toInstance( dynamicProperty );
         }
+
+        return true;
     }
 
 
@@ -249,6 +304,29 @@ public class DynamicPropertyNames {
         catch ( NumberFormatException e ) {
             return false;
         }
+    }
+
+
+    private boolean isFirstTime( Binder binder, String propertyName ) {
+        boolean bindingFirstTime = false;
+        Set<String> boundProperties = bindings.get( binder );
+        if ( boundProperties == null ) {
+            bindingFirstTime = true;
+            boundProperties = new HashSet<String>();
+            bindings.put( binder, boundProperties );
+        }
+        else if ( ! boundProperties.contains( propertyName ) ){
+            bindingFirstTime = true;
+        }
+
+        if ( bindingFirstTime ) {
+            boundProperties.add( propertyName );
+            LOG.debug( "Binding property: {}", propertyName );
+            return true;
+        }
+
+        LOG.warn( "Ignoring multiple attempts to bind duplicate property: {}", propertyName );
+        return false;
     }
 }
 

@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorService;
 import org.antlr.misc.MultiMap;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConcurrentTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConcurrentTest.class);
 
     @Test
     public void concurrent(){
@@ -71,7 +74,20 @@ public class ConcurrentTest {
 
         @Override
         public String call( final String s ) {
-            set.add( Thread.currentThread().getName() );
+            final String threadName = Thread.currentThread().getName();
+
+            logger.info("Function executing on thread {}", threadName);
+
+            set.add( threadName );
+
+            //we sleep to ensure we don't run so fast that a thread is reused in our test
+            try {
+                Thread.sleep(1000);
+            }
+            catch ( InterruptedException e ) {
+                logger.error( "Runner interrupted", e );
+
+            }
 
             return s;
         }

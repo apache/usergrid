@@ -38,7 +38,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class } )
+@UseModules( TestCollectionModule.class )
 public class MvccLogEntrySerializationStrategyImplTest {
 
 
@@ -178,7 +178,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
      * @param logEntryStrategy automatically injected using the method's own module TimeoutEnv
      */
     @Test
-    @UseModules( { TimeoutEnv.class } )
+    @UseModules( TimeoutEnv.class )
     public void transientTimeout( MvccLogEntrySerializationStrategy logEntryStrategy ) throws ConnectionException, InterruptedException {
         final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );

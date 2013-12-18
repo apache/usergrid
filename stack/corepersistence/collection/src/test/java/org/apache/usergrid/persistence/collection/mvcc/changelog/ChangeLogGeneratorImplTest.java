@@ -20,6 +20,20 @@ package org.apache.usergrid.persistence.collection.mvcc.changelog;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.List;
+
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -52,6 +66,7 @@ import rx.Observable;
  */
 @RunWith( JukitoRunner.class )
 @UseModules( { TestCollectionModule.class } )
+@Ignore
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
