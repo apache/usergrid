@@ -11,10 +11,10 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -24,7 +24,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Scheduler;
 import rx.util.functions.Func1;
 
 
@@ -32,7 +31,7 @@ import rx.util.functions.Func1;
  * This phase should invoke any finalization, and mark the entity as committed in the data store before returning
  */
 @Singleton
-public class WriteCommit implements Func1<IoEvent<MvccEntity>, Entity> {
+public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteCommit.class );
@@ -54,7 +53,7 @@ public class WriteCommit implements Func1<IoEvent<MvccEntity>, Entity> {
 
 
     @Override
-    public Entity call( final IoEvent<MvccEntity> ioEvent ) {
+    public Entity call( final CollectionIoEvent<MvccEntity> ioEvent ) {
 
         final MvccEntity entity = ioEvent.getEvent();
 

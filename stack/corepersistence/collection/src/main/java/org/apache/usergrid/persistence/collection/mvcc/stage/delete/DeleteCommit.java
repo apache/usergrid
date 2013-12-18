@@ -11,10 +11,10 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -30,7 +30,7 @@ import rx.util.functions.Func1;
  * This phase should invoke any finalization, and mark the entity as committed in the data store before returning
  */
 @Singleton
-public class DeleteCommit implements Func1<IoEvent<MvccEntity>, Void> {
+public class DeleteCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( DeleteCommit.class );
@@ -53,7 +53,7 @@ public class DeleteCommit implements Func1<IoEvent<MvccEntity>, Void> {
 
 
     @Override
-    public Void call( final IoEvent<MvccEntity> idIoEvent ) {
+    public Void call( final CollectionIoEvent<MvccEntity> idIoEvent ) {
 
         final MvccEntity entity = idIoEvent.getEvent();
 

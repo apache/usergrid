@@ -6,6 +6,10 @@ hostname `cat /etc/hostname`
 echo "US/Eastern" > /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
+# Build environment for scripts
+. /etc/profile.d/aws-credentials.sh
+. /etc/profile.d/usergrid-env.sh
+
 # really annoying part
 ./install_oraclejdk.sh 
 
@@ -24,10 +28,6 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 # except for evil stax
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
-
-# Build environment for Groovy scripts
-. /etc/profile.d/aws-credentials.sh
-. /etc/profile.d/usergrid-env.sh
 
 # Register as a Cassandra node and wait for enough other servers to join
 cd /usr/share/usergrid/scripts

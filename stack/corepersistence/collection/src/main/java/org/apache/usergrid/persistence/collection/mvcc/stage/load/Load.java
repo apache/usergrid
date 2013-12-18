@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -28,7 +28,7 @@ import rx.util.functions.Func1;
  * This stage is a load stage to load a single entity
  */
 @Singleton
-public class Load implements Func1<IoEvent<Id>, Entity> {
+public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( Load.class );
@@ -49,7 +49,7 @@ public class Load implements Func1<IoEvent<Id>, Entity> {
 
 
     @Override
-    public Entity call( final IoEvent<Id> idIoEvent ) {
+    public Entity call( final CollectionIoEvent<Id> idIoEvent ) {
         final Id entityId = idIoEvent.getEvent();
 
         ValidationUtils.verifyIdentity( entityId );

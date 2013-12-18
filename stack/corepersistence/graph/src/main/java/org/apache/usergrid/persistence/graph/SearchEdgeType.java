@@ -17,35 +17,36 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization.util;
+package org.apache.usergrid.persistence.graph;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSerializationStrategy;
+import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.netflix.astyanax.MutationBatch;
+import com.google.common.base.Optional;
 
 
 /**
+ * Defines parameters for a search operation where searching from a node.
+ * Useful for getting all types of edges relating to the node
  *
  *
- */
-public class EntitySerializationStrategyImpl implements EdgeSerializationStrategy {
-    @Override
-    public MutationBatch writeEdge( final Edge edge ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+ * @author tnine */
+public interface SearchEdgeType {
+
+    /**
+     * Get the Id of the node of this edge
+     * @return
+     */
+    Id getNode();
 
 
-    @Override
-    public MutationBatch deleteEdge( final Edge edge ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
+    /**
+     * Return the last value returned.  All returned types will be >= this value
+     * @return
+     */
+    Optional<String> getLast();
 
 
 

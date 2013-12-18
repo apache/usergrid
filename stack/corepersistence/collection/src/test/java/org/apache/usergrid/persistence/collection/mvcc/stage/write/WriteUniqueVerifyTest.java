@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
@@ -41,7 +41,8 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
         WriteUniqueVerify newStage = new WriteUniqueVerify(  );
 
 
-        IoEvent<MvccEntity> result = newStage.call( new IoEvent<MvccEntity>( collectionScope, mvccEntity ) );
+        CollectionIoEvent<MvccEntity>
+                result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
 
 
 
@@ -62,7 +63,7 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
 
     @Override
-    protected void validateStage( final IoEvent<MvccEntity> event ) {
+    protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
         new WriteUniqueVerify( ).call( event );
     }
 

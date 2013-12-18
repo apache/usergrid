@@ -13,7 +13,7 @@ Below are the basic data templates this system should support
 Collections
 -----------
 
-A collectionScope storage and indexing framework.  Properties should be secondary indexed, and should be able to be queried efficiently.
+A scope storage and indexing framework.  Properties should be secondary indexed, and should be able to be queried efficiently.
 
 
 *MVCC Semantics*
@@ -34,7 +34,7 @@ Possible ability to define an operation context where a set of all writes must e
 Graphs
 -----------
 
-A system for creating relationships between collectionScope entities.  The directed edges can be named (a type) and
+A system for creating relationships between scope entities.  The directed edges can be named (a type) and
 an index query can be executed on those edges.
 
 

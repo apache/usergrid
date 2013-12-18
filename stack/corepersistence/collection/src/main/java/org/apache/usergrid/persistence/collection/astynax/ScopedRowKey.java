@@ -14,25 +14,25 @@ import com.google.common.base.Preconditions;
  */
 public class ScopedRowKey<S extends OrganizationScope, K> {
 
-    private final S collectionScope;
+    private final S scope;
 
     private final K key;
 
 
-    public ScopedRowKey( final S collectionScope, final K key ) {
-        Preconditions.checkNotNull( collectionScope, "CollectionScope is required" );
+    public ScopedRowKey( final S scope, final K key ) {
+        Preconditions.checkNotNull( scope, "CollectionScope is required" );
         Preconditions.checkNotNull( key, "Key is required" );
 
-        this.collectionScope = collectionScope;
+        this.scope = scope;
         this.key = key;
     }
 
 
     /**
-     * Get the stored collectionScope
+     * Get the stored scope
      */
     public S getScope() {
-        return collectionScope;
+        return scope;
     }
 
 
@@ -58,7 +58,7 @@ public class ScopedRowKey<S extends OrganizationScope, K> {
         if ( !key.equals( that.key ) ) {
             return false;
         }
-        if ( !collectionScope.equals( that.collectionScope ) ) {
+        if ( !scope.equals( that.scope ) ) {
             return false;
         }
 
@@ -68,7 +68,7 @@ public class ScopedRowKey<S extends OrganizationScope, K> {
 
     @Override
     public int hashCode() {
-        int result = collectionScope.hashCode();
+        int result = scope.hashCode();
         result = 31 * result + key.hashCode();
         return result;
     }
@@ -77,14 +77,14 @@ public class ScopedRowKey<S extends OrganizationScope, K> {
     @Override
     public String toString() {
         return "ScopedRowKey{" +
-                "collectionScope=" + collectionScope +
+                "scope=" + scope +
                 ", key=" + key +
                 '}';
     }
 
 
     /**
-     * Utility function to generate a new key from the collectionScope
+     * Utility function to generate a new key from the scope
      */
     public static <S extends OrganizationScope, K> ScopedRowKey<S, K> fromKey( final S scope, K key ) {
         return new ScopedRowKey<S, K>( scope, key );

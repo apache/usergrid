@@ -56,7 +56,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER );
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_LOG =
             new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
@@ -111,7 +111,8 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Column<UUID> result;
 
         try {
-            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+            result = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey
+                    .fromKey( collectionScope, entityId ) )
                              .getColumn( version ).execute().getResult();
         }
         catch ( NotFoundException nfe ) {
@@ -135,7 +136,8 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
         ColumnList<UUID> columns =
-                keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+                keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey
+                        .fromKey( collectionScope, entityId ) )
                         .withColumnRange( version, null, false, maxSize ).execute().getResult();
 
 

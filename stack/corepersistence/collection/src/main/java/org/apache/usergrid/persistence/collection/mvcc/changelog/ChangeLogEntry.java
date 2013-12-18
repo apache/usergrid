@@ -86,9 +86,9 @@ public class ChangeLogEntry {
     }
 
     public String toString() {
-        return entityId.toString() + "|" 
-                + changeType.toString() + "|" 
-                + changedField.getName() + "=" + changedField.getValue() + "|" 
-                + versions.toString();
+        return    "Type = " + changeType.toString()
+                + ", Property = " + changedField.getName() 
+                + ", Value = " + changedField.getValue()
+                + ", Versions = " + versions.toString();
     }
 }

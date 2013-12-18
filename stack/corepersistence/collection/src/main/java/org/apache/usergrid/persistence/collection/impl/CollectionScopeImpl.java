@@ -11,16 +11,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
  *
  * @author tnine
  */
-public class CollectionScopeImpl implements CollectionScope {
-
-    private final Id organizationId;
-
+public class CollectionScopeImpl extends OrganizationScopeImpl implements CollectionScope {
     private final Id ownerId;
     private final String name;
 
 
     public CollectionScopeImpl( final Id organizationId, final Id ownerId, final String name ) {
-        this.organizationId = organizationId;
+        super( organizationId );
         this.ownerId = ownerId;
         this.name = name;
 
@@ -35,12 +32,6 @@ public class CollectionScopeImpl implements CollectionScope {
 
 
     @Override
-    public Id getOrganization() {
-        return organizationId;
-    }
-
-
-    @Override
     public String getName() {
         return name;
     }
@@ -51,7 +42,10 @@ public class CollectionScopeImpl implements CollectionScope {
         if ( this == o ) {
             return true;
         }
-        if ( o == null || getClass() != o.getClass() ) {
+        if ( !( o instanceof CollectionScopeImpl ) ) {
+            return false;
+        }
+        if ( !super.equals( o ) ) {
             return false;
         }
 
@@ -70,7 +64,8 @@ public class CollectionScopeImpl implements CollectionScope {
 
     @Override
     public int hashCode() {
-        int result = 31 * ownerId.hashCode();
+        int result = super.hashCode();
+        result = 31 * result + ownerId.hashCode();
         result = 31 * result + name.hashCode();
         return result;
     }
@@ -79,7 +74,7 @@ public class CollectionScopeImpl implements CollectionScope {
     @Override
     public String toString() {
         return "CollectionScopeImpl{" +
-                " ownerId=" + ownerId +
+                "ownerId=" + ownerId +
                 ", name='" + name + '\'' +
                 '}';
     }

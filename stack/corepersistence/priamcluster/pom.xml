@@ -60,6 +60,7 @@
                     </executableDependency>
                     <mainClass>org.jets3t.apps.synchronize.Synchronize</mainClass>
                     <arguments>
+                        <argument>--nodelete</argument>
                         <argument>--properties</argument>
                         <argument>${project.basedir}/aws.properties</argument>
                         <argument>UP</argument>

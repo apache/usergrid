@@ -11,7 +11,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
@@ -62,7 +62,7 @@ public class DeleteStartTest extends AbstractIdStageTest {
 
 
         //verify the observable is correct
-        IoEvent<MvccEntity> result = newStage.call( new IoEvent<Id>( context, id ) );
+        CollectionIoEvent<MvccEntity> result = newStage.call( new CollectionIoEvent<Id>( context, id ) );
 
 
         //verify the log entry is correct
@@ -86,7 +86,7 @@ public class DeleteStartTest extends AbstractIdStageTest {
 
 
     @Override
-    protected void validateStage( final IoEvent<Id> event ) {
+    protected void validateStage( final CollectionIoEvent<Id> event ) {
 
         MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
 
