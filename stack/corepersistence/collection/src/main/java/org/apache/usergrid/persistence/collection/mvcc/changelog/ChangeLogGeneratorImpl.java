@@ -34,6 +34,7 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
     /**
      * See parent comment
      * {@link ChangeLogGenerator#getChangeLog(org.apache.usergrid.persistence.model.entity.Id, java.util.List, java.util.UUID)}
+     * @param mvccEntities
      */
     @Override
     public List<ChangeLogEntry> getChangeLog( List<MvccEntity> mvccEntities, UUID minVersion ) {

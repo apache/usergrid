@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.After;
@@ -44,11 +45,9 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
 import rx.Observable;
-
-import static org.junit.Assert.assertEquals;
-import org.junit.Rule;
 
 
 /**
@@ -94,7 +93,7 @@ public class ChangeLogGeneratorImplTest {
     @Test
     public void testBasicOperation() throws ConnectionException {
 
-        LOG.info( "getChangeLog1" );
+        LOG.info("ChangeLogGeneratorImpl test");
 
         // create an entity and make a series of changes to it so that versions get created
         CollectionScope context = new CollectionScopeImpl(
@@ -127,32 +126,88 @@ public class ChangeLogGeneratorImplTest {
         Observable<Entity> o3 = manager.write( e3 );
         e3 = o3.toBlockingObservable().lastOrDefault( null );
 
-        LOG.info("ChangeLogTest");
+
+
+
         {
+            // test minVersion of e3
+            // 
+            // based on that data we expect something like this:
+            //
+            // Type = PROPERTY_WRITE, Property = count, Value = 2, Versions = [cd54818c-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_WRITE, Property = name, Value = name3, Versions = [cd54818c-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_DELETE, Property = nickname, Value = buddy, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_DELETE, Property = name, Value = name2, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
+
             List<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
 
             ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
-            List<ChangeLogEntry> result = instance.getChangeLog( versions, e3.getVersion() );
+            List<ChangeLogEntry> result = instance.getChangeLog( versions, e3.getVersion() ); // minVersion = e3
 
             for (ChangeLogEntry cle : result) {
                 LOG.info( cle.toString() );
+                Assert.assertFalse( cle.getVersions().isEmpty() );
             }
-            assertEquals(6, result.size() );
+            Assert.assertEquals( 6, result.size() );
+            Assert.assertTrue( isAscendingOrder( result ) );
+
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 1 ).getChangeType() );
+            Assert.assertEquals( "name3", result.get( 1 ).getField().getValue() );
+
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 5 ).getChangeType() );
+            Assert.assertEquals( "name1", result.get( 5 ).getField().getValue() );
         }
        
         {
+
+            // test minVersion of e2
+            // 
+            // based on that data we expect something like this:
+            //
+            // Type = PROPERTY_WRITE, Property = count, Value = 2, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00, cd54818c-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_WRITE, Property = name, Value = name3, Versions = [cd54818c-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_WRITE, Property = nickname, Value = buddy, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_WRITE, Property = name, Value = name2, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
+
             List<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
 
             ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
-            List<ChangeLogEntry> result = instance.getChangeLog( versions, e2.getVersion() );
+            List<ChangeLogEntry> result = instance.getChangeLog( versions, e2.getVersion() ); // minVersion = e2
 
             for (ChangeLogEntry cle : result) {
                 LOG.info( cle.toString() );
+                Assert.assertFalse( cle.getVersions().isEmpty() );
             }
-            assertEquals(6, result.size() );
+            Assert.assertEquals(6, result.size() );
+            Assert.assertTrue( isAscendingOrder( result ) );
+
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 2 ).getChangeType() );
+            Assert.assertEquals( "buddy", result.get( 2 ).getField().getValue() );
+
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 4 ).getChangeType() );
+            Assert.assertEquals( "count", result.get( 4 ).getField().getName() );
         }
+    }
+
+    public static boolean isAscendingOrder( Collection<ChangeLogEntry> col ) {
+        Comparable previous = null;
+        for ( Comparable item : col ) {
+            if ( previous == null ) {
+                previous = item;
+                continue;
+            } 
+            int comparedToPrevious = item.compareTo( previous );
+            if ( comparedToPrevious < 0 ) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
