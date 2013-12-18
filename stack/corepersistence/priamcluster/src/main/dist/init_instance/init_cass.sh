@@ -52,7 +52,8 @@ groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
 
 # Deploy Priam 
 rm -rf /var/lib/tomcat7/webapps/*
-groovy configure_portal_new.groovy > /var/lib/tomcat7/webapps/portal/config.js 
+cp /usr/share/usergrid/lib/priam-cass-extensions-2.0.0-SNAPSHOT.jar /usr/share/cassandra/lib 
+cp /usr/share/usergrid/webapps/priam-web-2.0.0-SNAPSHOT.war /var/lib/tomcat7/webapps/priam.war
 /etc/init.d/tomcat7 restart
 
 groovy tag_instance.groovy

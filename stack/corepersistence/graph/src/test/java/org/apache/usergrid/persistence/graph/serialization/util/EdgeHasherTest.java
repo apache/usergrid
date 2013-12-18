@@ -280,8 +280,11 @@ public class EdgeHasherTest {
     @Test
     public void testLanguageCollisions() {
 
+        // this is a very long running test and so it should be in a special "slowtest" group that
+        // only gets run on a build server. As a stop gap, I've added this limit mechanism:
         int count = 0;
         int limit = 3; // Integer.MAX_VALUE;
+
         for ( Character.UnicodeBlock unicodeBlock : blocks ) {
             if ( count++ < limit ) {
                 testCollisions( unicodeBlock );
