@@ -15,7 +15,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -35,7 +35,7 @@ import rx.util.functions.Func1;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
+public class DeleteStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( DeleteStart.class );
 
@@ -58,7 +58,7 @@ public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
 
 
     @Override
-    public IoEvent<MvccEntity> call( final IoEvent<Id> entityIoEvent ) {
+    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<Id> entityIoEvent ) {
         final Id entityId = entityIoEvent.getEvent();
 
         ValidationUtils.verifyIdentity( entityId );
@@ -87,6 +87,6 @@ public class DeleteStart implements Func1<IoEvent<Id>, IoEvent<MvccEntity>> {
         final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
 
 
-        return new IoEvent<MvccEntity>( collectionScope, nextStage );
+        return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
     }
 }

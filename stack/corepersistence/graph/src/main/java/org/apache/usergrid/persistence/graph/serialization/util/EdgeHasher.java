@@ -38,12 +38,8 @@ import com.netflix.astyanax.serializers.StringSerializer;
  */
 public class EdgeHasher {
 
-    //just re-use the string serializer.  It already does string -> bytes
-//    private static final String UTF_16 = "UTF-16";
-//    private static final Charset CHARSET = Charset.forName( UTF_16 );
     private static final String UTF_8 = "UTF-8";
     private static final Charset CHARSET = Charset.forName( UTF_8 );
-//    private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
 
     /**

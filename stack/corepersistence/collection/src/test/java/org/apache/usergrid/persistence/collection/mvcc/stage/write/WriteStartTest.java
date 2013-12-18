@@ -10,7 +10,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractEntityStageTest;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
@@ -52,7 +52,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
 
 
         //verify the observable is correct
-        IoEvent<MvccEntity> result = newStage.call( new IoEvent<Entity>( context, entity ) );
+        CollectionIoEvent<MvccEntity> result = newStage.call( new CollectionIoEvent<Entity>( context, entity ) );
 
 
         //verify the log entry is correct
@@ -75,7 +75,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
 
 
     @Override
-    protected void validateStage( final IoEvent<Entity> event ) {
+    protected void validateStage( final CollectionIoEvent<Entity> event ) {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         new WriteStart( logStrategy ).call( event );
     }

@@ -11,7 +11,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -44,7 +44,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final Id entityId = TestEntityGenerator.generateId();
 
-        final IoEvent<Id> entityIoEvent = new IoEvent<Id>(collection,  entityId );
+        final CollectionIoEvent<Id> entityIoEvent = new CollectionIoEvent<Id>(collection,  entityId );
 
 
         final Entity entity = TestEntityGenerator.generateEntity(entityId, loadVersion);
@@ -83,7 +83,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final Id entityId = TestEntityGenerator.generateId();
 
-        final IoEvent<Id> entityIoEvent = new IoEvent<Id>(collection,  entityId );
+        final CollectionIoEvent<Id> entityIoEvent = new CollectionIoEvent<Id>(collection,  entityId );
 
 
 
@@ -106,7 +106,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
 
     @Override
-    protected void validateStage( final IoEvent<Id> event ) {
+    protected void validateStage( final CollectionIoEvent<Id> event ) {
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 

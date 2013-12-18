@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -26,17 +26,19 @@ public class ScopedRowKeySerializerTest {
         final Id testKey = new SimpleId( "testKey" );
 
         final CollectionScope collectionScope = new CollectionScopeImpl(new SimpleId( "organization" ), testId, name );
-        final ScopedRowKey<CollectionScope, Id> rowKey = new ScopedRowKey<CollectionScope, Id>( collectionScope, testKey );
+        final ScopedRowKey<CollectionScope, Id>
+                rowKey = new ScopedRowKey<CollectionScope, Id>( collectionScope, testKey );
 
 
-        ScopedRowKeySerializer<Id> scopedRowKeySerializer = new ScopedRowKeySerializer<Id>( IdRowCompositeSerializer
+        CollectionScopedRowKeySerializer<Id>
+                collectionScopedRowKeySerializer = new CollectionScopedRowKeySerializer<Id>( IdRowCompositeSerializer
                 .get() );
 
 
-        ByteBuffer buff = scopedRowKeySerializer.toByteBuffer( rowKey );
+        ByteBuffer buff = collectionScopedRowKeySerializer.toByteBuffer( rowKey );
 
 
-        ScopedRowKey<CollectionScope, Id> parsedRowKey = scopedRowKeySerializer.fromByteBuffer( buff );
+        ScopedRowKey<CollectionScope, Id> parsedRowKey = collectionScopedRowKeySerializer.fromByteBuffer( buff );
 
         assertEquals("Row key serialized correctly", rowKey, parsedRowKey);
 

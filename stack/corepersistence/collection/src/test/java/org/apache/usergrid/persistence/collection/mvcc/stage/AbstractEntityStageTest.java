@@ -51,11 +51,11 @@ public abstract class AbstractEntityStageTest {
 
 
         //run the stage
-        validateStage( new IoEvent<Entity>( context, entity ) );
+        validateStage( new CollectionIoEvent<Entity>( context, entity ) );
     }
 
 
-    /** Get an instance of the Func1 That takes an IoEvent with an entity type for validation testing */
-    protected abstract void validateStage(IoEvent<Entity> event);
+    /** Get an instance of the Func1 That takes an CollectionIoEvent with an entity type for validation testing */
+    protected abstract void validateStage(CollectionIoEvent<Entity> event);
 
 }

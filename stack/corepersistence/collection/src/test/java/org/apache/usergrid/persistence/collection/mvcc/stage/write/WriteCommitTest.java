@@ -11,7 +11,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
@@ -68,7 +68,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy );
 
 
-        Entity result = newStage.call( new IoEvent<MvccEntity>( context, mvccEntityInput ) );
+        Entity result = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) );
 
 
         //verify the log entry is correct
@@ -93,7 +93,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
 
 
     @Override
-    protected void validateStage( final IoEvent<MvccEntity> event ) {
+    protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
         /**
          * Write up mock mutations so we don't npe on the our operations, but rather on the input
          */

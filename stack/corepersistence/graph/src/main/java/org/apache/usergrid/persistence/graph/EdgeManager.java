@@ -57,7 +57,7 @@ public interface EdgeManager {
      * Create or update an edge.  Note that the implementation should also create incoming (reversed) edges for this
      * edge.
      */
-    void writeEdge( Edge edge );
+    Observable<Edge> writeEdge( Edge edge );
 
 
     /**
@@ -117,7 +117,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits strings for edge types
      */
-    Observable<String> getSourceEdgeTypes( SearchEdgeTypes search );
+    Observable<String> getSourceEdgeTypes( SearchEdgeType search );
 
 
     /**
@@ -127,7 +127,7 @@ public interface EdgeManager {
      *
      * @return An observable of all source id types
      */
-    Observable<String> getSourceEdgeIdTypes( SearchEdgeIdTypes search );
+    Observable<String> getSourceEdgeIdTypes( SearchEdgeIdType search );
 
 
     /**
@@ -137,7 +137,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits strings for edge types
      */
-    Observable<String> getTargetEdgeTypes( SearchEdgeTypes search );
+    Observable<String> getTargetEdgeTypes( SearchEdgeType search );
 
 
     /**
@@ -147,5 +147,5 @@ public interface EdgeManager {
      *
      * @return An observable of all source id types
      */
-    Observable<String> getTargetEdgeIdTypes( SearchEdgeIdTypes search );
+    Observable<String> getTargetEdgeIdTypes( SearchEdgeIdType search );
 }

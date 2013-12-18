@@ -12,10 +12,10 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -52,7 +52,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER = new ScopedRowKeySerializer<Id>( ID_SER );
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_DATA =
@@ -98,7 +98,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Column<UUID> column;
 
         try {
-            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey
+                    .fromKey( collectionScope, entityId ) )
                              .getColumn( version ).execute().getResult();
         }
 
@@ -128,7 +129,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         ColumnList<UUID> columns = null;
         try {
             columns =
-                    keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+                    keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey
+                            .fromKey( collectionScope, entityId ) )
                             .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {

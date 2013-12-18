@@ -10,7 +10,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
@@ -124,7 +124,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         //create our observable and start the write
-        Observable<IoEvent<MvccEntity>> observable =  Observable.just( new IoEvent<Entity>( collectionScope, entity ) ).subscribeOn(
+        Observable<CollectionIoEvent<MvccEntity>> observable =  Observable.just( new CollectionIoEvent<Entity>( collectionScope, entity ) ).subscribeOn(
                 scheduler ).map( writeStart );
 
 
@@ -146,7 +146,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
+        return Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
                 scheduler) .map( deleteStart ).map( deleteCommit );
     }
 
@@ -159,7 +159,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
         //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new IoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
+        return Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
                 scheduler ).map( load );
     }
 }

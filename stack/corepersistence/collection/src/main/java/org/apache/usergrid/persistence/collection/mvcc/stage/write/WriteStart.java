@@ -14,7 +14,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.IoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -32,7 +32,7 @@ import rx.util.functions.Func1;
  * new write in the data store for a checkpoint and recovery
  */
 @Singleton
-public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
+public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteStart.class );
 
@@ -51,7 +51,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
 
 
     @Override
-    public IoEvent<MvccEntity> call( final IoEvent<Entity> ioEvent ) {
+    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<Entity> ioEvent ) {
         {
             final Entity entity = ioEvent.getEvent();
             final CollectionScope collectionScope = ioEvent.getEntityCollection();
@@ -80,7 +80,7 @@ public class WriteStart implements Func1<IoEvent<Entity>, IoEvent<MvccEntity>> {
             //create the mvcc entity for the next stage
             final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
 
-            return new IoEvent<MvccEntity>( collectionScope, nextStage );
+            return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
         }
     }
 }
