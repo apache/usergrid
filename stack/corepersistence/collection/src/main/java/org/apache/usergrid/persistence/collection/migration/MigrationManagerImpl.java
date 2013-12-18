@@ -51,8 +51,8 @@ public class MigrationManagerImpl implements MigrationManager {
 
     @Inject
     public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations, final Properties props,
-                                 @Named(STRATEGY_CLASS) final String strategyClass,
-                                 @Named(REPLICATION_FACTOR) final String replicationFactor ) {
+                                 @Named( STRATEGY_CLASS ) final String strategyClass,
+                                 @Named( REPLICATION_FACTOR ) final String replicationFactor ) {
         this.keyspace = keyspace;
         this.migrations = migrations;
         this.props = props;

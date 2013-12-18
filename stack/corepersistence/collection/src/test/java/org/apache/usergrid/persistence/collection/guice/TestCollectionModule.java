@@ -1,21 +1,28 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.locator.SimpleStrategy;
 
-import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
+import org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
 import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
-import org.apache.usergrid.persistence.test.CassandraRule;
 
-import com.google.guiceberry.GuiceBerryModule;
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 
 
 /**
@@ -28,64 +35,67 @@ import com.google.inject.name.Names;
  * @author tnine
  */
 public class TestCollectionModule extends AbstractModule {
+    private static final Logger LOG = LoggerFactory.getLogger( TestCollectionModule.class );
     private final Map<String, String> override;
 
 
+    /**
+     * Our RX I/O threads and this should have the same value
+     */
+    private static final String CONNECTION_COUNT = "20";
+
     public TestCollectionModule( Map<String, String> override ) {
-        this.override = override;
+        this.override = new HashMap<String, String>();
+        this.override.putAll( override );
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public TestCollectionModule() {
-        override = null;
+        override = Collections.emptyMap();
     }
 
 
     @Override
     protected void configure() {
-        //import the guice berry module
-        install( new GuiceBerryModule() );
+        Map<String,Object> propMap = new HashMap<String, Object>();
+        propMap.put( ICassandraConfig.CASSANDRA_HOSTS, "localhost" );
+        propMap.put( ICassandraConfig.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
+        propMap.put( ICassandraConfig.CASSANDRA_CONNECTIONS, CONNECTION_COUNT );
+        propMap.put( ICassandraConfig.CASSANDRA_TIMEOUT, "5000" );
+        propMap.put( ICassandraConfig.CASSANDRA_CLUSTER_NAME, "Usergrid" );
+        propMap.put( ICassandraConfig.CASSANDRA_VERSION, "1.2" );
+        propMap.put( ICassandraConfig.COLLECTIONS_KEYSPACE_NAME, "Usergrid_Collections" );
 
-        //import the runtime module
-        install( new CollectionModule() );
+        propMap.put( MigrationManagerImpl.REPLICATION_FACTOR, "1" );
+        propMap.put( MigrationManagerImpl.STRATEGY_CLASS, SimpleStrategy.class.getName() );
 
+        propMap.put( CassandraThreadScheduler.RX_IO_THREADS, CONNECTION_COUNT );
 
-        //configure our integration test properties. This should remain the same across all tests
+        propMap.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, "60" );
 
-        Properties configProperties = new Properties();
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_HOSTS, "localhost" );
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CONNECTIONS, "10" );
-
-        //time out after 5 seconds
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_TIMEOUT, "5000" );
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_CLUSTER_NAME, "Usergrid" );
-        configProperties.put( AstynaxKeyspaceProvider.CASSANDRA_VERSION + ".String", "1.2" );
-        configProperties.put( AstynaxKeyspaceProvider.COLLECTIONS_KEYSPACE_NAME, "Usergrid_Collections" );
-        configProperties.put( CassandraThreadScheduler.RX_IO_THREADS, "20" );
-
-        if ( override != null ) {
-            configProperties.putAll( override );
-        }
-
-        //bind to the props
-        DynamicPropertyNames.bindProperties( binder(), configProperties );
-
-        // ======
-
-        configProperties.clear();
-        configProperties.put( MigrationManagerImpl.REPLICATION_FACTOR, "1" );
-        configProperties.put( MigrationManagerImpl.STRATEGY_CLASS, SimpleStrategy.class.getName() );
-
-        /**
-         * Set the timeout to 60 seconds, no test should take that long for load+delete without a failure
-         */
-        configProperties.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, "60" );
-
-        if ( override != null ) {
-            configProperties.putAll( override );
-        }
-
-        Names.bindProperties( binder(), configProperties );
+        propMap.putAll( override );
+        install( new CollectionModule( propMap ) );
+//        bindListener( Matchers.any(), new KeyspaceListener ());
     }
+
+
+//    private static class KeyspaceListener implements TypeListener{
+//
+//        @Override
+//        public <I> void hear( final TypeLiteral<I> type, final TypeEncounter<I> encounter ) {
+//            if(type.getType() == AstynaxKeyspaceProvider.class){
+//                CassandraRule cass = new CassandraRule();
+//                try {
+//                    cass.before();
+//                }
+//                catch ( Throwable t ) {
+//                    throw new RuntimeException( "Something nasty happened!", t );
+//                }
+//            }
+//        }
+//    }
+
+
+
 }
