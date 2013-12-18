@@ -51,9 +51,15 @@ groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
 /etc/init.d/cassandra start
 
 # Deploy Priam 
+
+sudo usermod -G cassandra tomcat7
+chgrp cassandra /etc/cassandra/cassandra.yaml 
+chmod 660 /etc/cassandra/cassandra.yaml
+
 rm -rf /var/lib/tomcat7/webapps/*
+cp /usr/share/usergrid/conf/Priam.properties /var/lib/tomcat7/common/classes
 cp /usr/share/usergrid/lib/priam-cass-extensions-2.0.0-SNAPSHOT.jar /usr/share/cassandra/lib 
-cp /usr/share/usergrid/webapps/priam-web-2.0.0-SNAPSHOT.war /var/lib/tomcat7/webapps/priam.war
+cp /usr/share/usergrid/webapps/priam-web-2.0.0-SNAPSHOT.war /var/lib/tomcat7/webapps/Priam.war
 /etc/init.d/tomcat7 restart
 
 groovy tag_instance.groovy
