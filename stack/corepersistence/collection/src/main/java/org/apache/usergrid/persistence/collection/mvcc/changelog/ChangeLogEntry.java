@@ -17,9 +17,11 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
+
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 

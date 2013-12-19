@@ -24,9 +24,7 @@ import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.SearchEdgeIdType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 
 import com.netflix.astyanax.MutationBatch;
@@ -64,7 +62,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getTargetIdTypes(OrganizationScope scope, SearchEdgeIdType search );
+    Iterator<String> getTargetIdTypes(OrganizationScope scope, SearchIdType search );
 
 
     /**
@@ -83,5 +81,5 @@ public interface EdgeMetadataSerialization {
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getSourceIdTypes(OrganizationScope scope, SearchEdgeIdType search );
+    Iterator<String> getSourceIdTypes(OrganizationScope scope, SearchIdType search );
 }

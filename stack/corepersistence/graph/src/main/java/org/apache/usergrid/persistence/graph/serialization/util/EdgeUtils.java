@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.util;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchEdgeIdType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 
 import com.google.common.base.Preconditions;
@@ -61,7 +61,7 @@ public class EdgeUtils {
     /**
      * Validate the search edge
      */
-    public static void validateSearchEdgeIdType( final SearchEdgeIdType search ) {
+    public static void validateSearchEdgeIdType( final SearchIdType search ) {
         Preconditions.checkNotNull( search, "search is required" );
 
         validateSearchEdgeType( search );

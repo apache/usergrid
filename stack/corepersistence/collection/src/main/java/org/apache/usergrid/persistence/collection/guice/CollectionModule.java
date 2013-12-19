@@ -48,11 +48,13 @@ public class CollectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        // We have to access the cassandra configuration to set the thread schedular
+        // We have to access the cassandra configuration to set the thread scheduler
         // configuration below
         CassandraConfigModule cassandraConfigModule = new CassandraConfigModule( overrides );
         Injector injector = Guice.createInjector( cassandraConfigModule );
         IDynamicCassandraConfig cassandraConfig = injector.getInstance( IDynamicCassandraConfig.class );
+
+        //TODO can this be refactored into the core? Both graph and collection depend on the cass config, as well as rx configuration
 
         if ( ConfigurationManager.getConfigInstance() instanceof ConcurrentCompositeConfiguration ) {
             ConcurrentCompositeConfiguration config =

@@ -32,9 +32,10 @@ import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchEdgeIdType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.StringColumnParser;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -184,7 +185,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public Iterator<String> getTargetIdTypes( final OrganizationScope scope, final SearchEdgeIdType search ) {
+    public Iterator<String> getTargetIdTypes( final OrganizationScope scope, final SearchIdType search ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchEdgeIdType( search );
 
@@ -218,7 +219,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public Iterator<String> getSourceIdTypes( final OrganizationScope scope, final SearchEdgeIdType search ) {
+    public Iterator<String> getSourceIdTypes( final OrganizationScope scope, final SearchIdType search ) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 

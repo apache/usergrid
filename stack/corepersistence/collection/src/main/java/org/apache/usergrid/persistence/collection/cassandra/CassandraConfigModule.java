@@ -10,9 +10,6 @@ package org.apache.usergrid.persistence.collection.cassandra;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-
-import org.apache.commons.configuration.SystemConfiguration;
 
 import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
 import org.apache.usergrid.persistence.collection.guice.PropertyUtils;
@@ -21,11 +18,6 @@ import com.google.inject.AbstractModule;
 import com.netflix.config.ConcurrentCompositeConfiguration;
 import com.netflix.config.ConcurrentMapConfiguration;
 import com.netflix.config.ConfigurationManager;
-
-import static org.apache.usergrid.persistence.collection.guice.PropertyUtils.filter;
-import static org.apache.usergrid.persistence.collection.guice.PropertyUtils.loadFromClassPath;
-import static org.apache.usergrid.persistence.collection.guice.PropertyUtils.loadSystemProperties;
-
 
 /**
  * This Module is responsible for injecting dynamic properties into a {@link
@@ -58,16 +50,18 @@ public class CassandraConfigModule extends AbstractModule {
         if ( ConfigurationManager.getConfigInstance() instanceof ConcurrentCompositeConfiguration ) {
             ConcurrentCompositeConfiguration config =
                     ( ConcurrentCompositeConfiguration ) ConfigurationManager.getConfigInstance();
-            Map<String,Object> values = new HashMap<String, Object>( filter( ICassandraConfig.OPTIONS, overrides ) );
+            Map<String,Object> values = new HashMap<String, Object>( PropertyUtils
+                    .filter( ICassandraConfig.OPTIONS, overrides ) );
             //noinspection unchecked
-            values.putAll( ( Map ) loadSystemProperties( ICassandraConfig.OPTIONS ) );
+            values.putAll( ( Map ) PropertyUtils.loadSystemProperties( ICassandraConfig.OPTIONS ) );
             ConcurrentMapConfiguration mapConfiguration = new ConcurrentMapConfiguration( values );
             config.addConfigurationAtFront( mapConfiguration, "CassandraConfigModuleConfig" );
         }
 
         // Generate the defaults for dynamic properties - config has our
         // values if overrides and config files provided them
-        new DynamicPropertyNames().bindProperties( binder(), loadFromClassPath( CASSANDRA_DEFAULTS_PROPERTIES ) );
+        new DynamicPropertyNames().bindProperties( binder(), PropertyUtils
+                .loadFromClassPath( CASSANDRA_DEFAULTS_PROPERTIES ) );
 
         bind( ICassandraConfig.class ).to( DynamicCassandraConfig.class ).asEagerSingleton();
         bind( IDynamicCassandraConfig.class ).to( DynamicCassandraConfig.class ).asEagerSingleton();

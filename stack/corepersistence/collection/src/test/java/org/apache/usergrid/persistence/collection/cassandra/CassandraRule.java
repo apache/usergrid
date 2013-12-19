@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.guice;
+package org.apache.usergrid.persistence.collection.cassandra;
 
 
 import java.io.File;
@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.io.util.FileUtils;
-
-import org.apache.usergrid.persistence.test.AvailablePortFinder;
 
 import com.google.common.io.Files;
 import com.netflix.astyanax.test.EmbeddedCassandra;

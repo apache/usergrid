@@ -25,7 +25,7 @@ package org.apache.usergrid.persistence.graph;
  * using edge types.  Allows you to return all target types for that edge
  *
  * @author tnine */
-public interface SearchEdgeIdType extends SearchEdgeType {
+public interface SearchIdType extends SearchEdgeType {
 
 
     /**

@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.graph.serialization.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 
 import java.util.Iterator;

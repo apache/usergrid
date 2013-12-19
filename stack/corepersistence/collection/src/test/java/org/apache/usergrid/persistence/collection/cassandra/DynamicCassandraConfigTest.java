@@ -30,6 +30,9 @@ import com.netflix.config.DynamicConfiguration;
 import com.netflix.config.FixedDelayPollingScheduler;
 import com.netflix.config.sources.URLConfigurationSource;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.TestCase.assertNotNull;
 import static org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig.CASSANDRA_CLUSTER_NAME;
 import static org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig.CASSANDRA_CONNECTIONS;
 import static org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig.CASSANDRA_HOSTS;
@@ -37,10 +40,6 @@ import static org.apache.usergrid.persistence.collection.cassandra.ICassandraCon
 import static org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig.CASSANDRA_TIMEOUT;
 import static org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig.CASSANDRA_VERSION;
 import static org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig.COLLECTIONS_KEYSPACE_NAME;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.Assert.assertTrue;
 
 
 /**
