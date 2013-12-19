@@ -17,7 +17,7 @@
  *  under the License.
  *
  */
-package org.apache.usergrid.persistence.test;
+package org.apache.usergrid.persistence.collection.cassandra;
 
 
 import java.io.IOException;

@@ -4,7 +4,6 @@ package org.apache.usergrid.persistence.collection.guice;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,17 +11,13 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.locator.SimpleStrategy;
 
 import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
+import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
 import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 
 
 /**

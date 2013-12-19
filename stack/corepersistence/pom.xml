@@ -14,13 +14,17 @@
   <properties>
     <astyanax.version>1.56.46-UG</astyanax.version>
     <jukito.version>1.4-UG</jukito.version>
+    <guice.version>3.0</guice.version>
+    <archaius.version>0.5.12</archaius.version>
+    <slf4j.version>1.7.2</slf4j.version>
+    <log4j.version>1.2.17</log4j.version>
+    <rx.version>0.15.2-UG</rx.version>
   </properties>
 
   <modules>
     <module>model</module>
     <module>graph</module>
     <module>collection</module>
-    <module>testutils</module>
   </modules>
 
   <build>

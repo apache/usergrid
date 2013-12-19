@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.guice.CassandraRule;
+import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -48,7 +48,6 @@ import org.junit.runner.RunWith;
 import rx.Observable;
 
 import static org.junit.Assert.assertEquals;
-import org.junit.Rule;
 
 
 /**
