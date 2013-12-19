@@ -24,13 +24,16 @@ def props = new Properties()
 props.load(new FileInputStream("../conf/Priam.properties"))
 
 for (name in props.stringPropertyNames()) {
+
     def value = props.getProperty(name)
     def key = "${stackName}${name}"
-    new ReplaceableAttribute(name, value, true)
+
     def attrs = new ArrayList()
     attrs.add(new ReplaceableAttribute("appId", stackName, true))
     attrs.add(new ReplaceableAttribute("property", name, true))
     attrs.add(new ReplaceableAttribute("value", value, true))
+
+    // this will set new or update existing attributes
     def par = new PutAttributesRequest(domain, key, attrs)
     sdbClient.putAttributes(par);
 }
