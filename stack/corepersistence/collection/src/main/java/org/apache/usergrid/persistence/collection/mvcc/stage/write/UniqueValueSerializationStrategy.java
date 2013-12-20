@@ -35,7 +35,5 @@ public interface UniqueValueSerializationStrategy {
 
     public List<Field> load( CollectionScope context, Id entityId, String fieldName );
 
-    public MutationBatch clear( CollectionScope context, Id entityId, String fieldName );
-
     public MutationBatch delete( CollectionScope context, Id entityId, String fieldName );
 }
