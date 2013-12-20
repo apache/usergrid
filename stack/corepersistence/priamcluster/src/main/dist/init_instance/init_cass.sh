@@ -52,6 +52,7 @@ cp /usr/share/usergrid/webapps/priam-web-2.0.0-SNAPSHOT.war /var/lib/tomcat7/web
 
 # Make sure Priam via Tomcat can write to /etc/cassandra
 chmod -R 777 /etc/cassandra
+chmod 777 /etc/init.d/cassandra
 # TODO: need to do something like this instead (not sure why it does not work):
 #chmod 770 /etc/cassandra
 #chmod -R 660 /etc/cassandra/*
