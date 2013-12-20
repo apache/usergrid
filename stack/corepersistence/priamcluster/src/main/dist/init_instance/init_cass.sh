@@ -40,6 +40,14 @@ sudo apt-get --force-yes -y install cassandra
 /etc/init.d/cassandra stop
 rm -rf /var/log/cassandra/*
 
+# Provide initial configuration to Cassandra 
+cd /usr/share/usergrid/scripts
+groovy registry_register.groovy
+groovy wait_for_cassandra.groovy
+cd /usr/share/usergrid/init_instance
+cd /usr/share/usergrid/scripts
+groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
+
 # Configure Priam
 cd /usr/share/usergrid/scripts
 groovy configure_priam.groovy
@@ -59,19 +67,7 @@ chmod 777 /etc/init.d/cassandra
 #usermod -a -G cassandra tomcat7
 #chgrp -R cassandra /etc/cassandra
 
-# Start Priam via Tomcat
+# Start Priam via Tomcat, should cause Cassandra to start
 /etc/init.d/tomcat7 restart
-
-# Register as a Cassandra node and wait for enough other servers to join
-cd /usr/share/usergrid/scripts
-groovy registry_register.groovy
-groovy wait_for_cassandra.groovy
-
-# Configure and start Cassandra 
-cd /usr/share/usergrid/init_instance
-cd /usr/share/usergrid/scripts
-groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
-
-/etc/init.d/cassandra start
 
 groovy tag_instance.groovy
