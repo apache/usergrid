@@ -35,4 +35,5 @@ if (response.getAttributes().size() == 1) {
     attrs.add(stackAtt)
     def par = new PutAttributesRequest(domain, hostName, attrs)
     sdbClient.putAttributes(par);
+    println "Registraition done."
 }

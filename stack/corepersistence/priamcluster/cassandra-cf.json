@@ -17,17 +17,11 @@
             "Type": "String",
             "Default": "usergrid"
         },
-        "CassMinServers": {
-            "Description": "Minimum number of Cass servers.",
+        "CassNumServers": {
+            "Description": "Number of Cass servers to start.",
             "Type": "Number",
-            "Default": "2",
-            "MinValue": "2"
-        },
-        "CassMaxServers": {
-            "Description": "Maximum number of Cass servers.",
-            "Type": "Number",
-            "Default": "2",
-            "MinValue": "2"
+            "Default": "3",
+            "MinValue": "3"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
@@ -199,8 +193,8 @@
                 "LaunchConfigurationName": {
                     "Ref": "CassAutoScalingLaunchConfiguration"
                 },
-                "MinSize": {"Ref": "CassMinServers"},
-                "MaxSize": {"Ref": "CassMaxServers"},
+                "MinSize": {"Ref": "CassNumServers"},
+                "MaxSize": {"Ref": "CassNumServers"},
                 "NotificationConfiguration": {
                     "TopicARN": {"Ref": "NotificationTopic"},
                     "NotificationTypes": [
