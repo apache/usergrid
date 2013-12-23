@@ -76,7 +76,7 @@
 		
 	
 	<bean id="cassandraService"
-		class="org.usergrid.persistence.cassandra.CassandraService" init-method="init">
+		class="org.usergrid.persistence.cassandra.CassandraService" init-method="init" destroy-method="destroy">
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
