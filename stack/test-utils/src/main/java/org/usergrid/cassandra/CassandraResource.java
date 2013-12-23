@@ -295,18 +295,35 @@ public class CassandraResource extends ExternalResource {
             System.setProperty( "cassandra.ring_delay_ms", "100" );
             System.setProperty( "cassandra.config", newYamlUrl.toString() );
 
-            while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {
+            
+            //while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {
+            // why previously has a or condition of rpc == 9042?
+            while ( !AvailablePortFinder.available( rpcPort ) ) {
                 rpcPort++;
+            }
+            
+            while ( !AvailablePortFinder.available( storagePort ) ) {
+                storagePort++;
+            }
+            
+            while ( !AvailablePortFinder.available( sslStoragePort ) ) {
+                sslStoragePort++;
+            }
+            
+            while ( !AvailablePortFinder.available( nativeTransportPort ) ) {
+                nativeTransportPort++;
             }
 
             System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
             System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
             System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
+            System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
 
+            LOG.info("before() test, setting system properties for ports : [rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
             if ( !newYamlFile.exists() ) {
                 throw new RuntimeException( "Cannot find new Yaml file: " + newYamlFile );
             }
-
+            
             cassandraDaemon = new CassandraDaemon();
             cassandraDaemon.activate();
 
@@ -439,6 +456,7 @@ public class CassandraResource extends ExternalResource {
 
             instance = new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort,
                     nativeTransportPort );
+            LOG.info("Created a new instance of CassandraResource: {}", instance);
             return instance;
         }
     }
