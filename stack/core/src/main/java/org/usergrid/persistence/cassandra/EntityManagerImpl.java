@@ -2721,12 +2721,19 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
                                           Level resultsLevel ) throws Exception {
-        return getRelationManager( ref( entityId ) )
-                .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
+        return getConnectingEntities(entityId, connectionType, connectedEntityType, resultsLevel, 0);
     }
 
 
     @Override
+	public Results getConnectingEntities(UUID uuid, String connectionType,
+			String entityType, Level level, int count) throws Exception {
+		return getRelationManager( ref( uuid ) )
+                .getConnectingEntities( connectionType, entityType, level, count );
+	}
+
+
+	@Override
     public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception {
 
         return getRelationManager( connectingEntity ).searchConnectedEntities( query );
