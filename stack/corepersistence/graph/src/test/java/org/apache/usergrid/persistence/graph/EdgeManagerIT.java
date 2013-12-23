@@ -25,11 +25,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
@@ -56,7 +58,7 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith( JukitoRunner.class )
-//@UseModules( TestCollectionModule.class )
+@UseModules( TestCollectionModule.class )
 public class EdgeManagerIT {
 
 

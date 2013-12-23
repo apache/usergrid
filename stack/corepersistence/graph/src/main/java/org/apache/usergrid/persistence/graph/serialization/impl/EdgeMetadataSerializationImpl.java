@@ -20,8 +20,16 @@
 package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+
+import org.apache.cassandra.db.marshal.BytesType;
+import org.apache.cassandra.db.marshal.DynamicCompositeType;
+import org.apache.cassandra.db.marshal.ReversedType;
+import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
@@ -159,74 +167,107 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public Iterator<String> getTargetEdgeTypes( final OrganizationScope scope, final SearchEdgeType search ) {
-        ValidationUtils.validateOrganizationScope( scope );
-        EdgeUtils.validateSearchEdgeType( search );
-
-
-        final ScopedRowKey<OrganizationScope, Id> sourceKey =
-                new ScopedRowKey<OrganizationScope, Id>( scope, search.getNode() );
-
-
-        //resume from the last if specified.  Also set the range
-        final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
-
-        RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
-                keyspace.prepareQuery( CF_TARGET_EDGE_TYPES ).getKey( sourceKey ).autoPaginate( true )
-                        .withColumnRange( searchRange );
-
-        try {
-            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+        return getEdgeTypes( scope, search, CF_TARGET_EDGE_TYPES );
     }
 
 
     @Override
     public Iterator<String> getTargetIdTypes( final OrganizationScope scope, final SearchIdType search ) {
-        ValidationUtils.validateOrganizationScope( scope );
-        EdgeUtils.validateSearchEdgeIdType( search );
-
-
-        final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope,
-                        new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
-
-
-        //resume from the last if specified.  Also set the range
-        final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
-
-        RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
-                keyspace.prepareQuery( CF_TARGET_EDGE_ID_TYPES ).getKey( sourceTypeKey ).autoPaginate( true )
-                        .withColumnRange( searchRange );
-
-        try {
-            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+        return getIdTypes( scope, search, CF_TARGET_EDGE_ID_TYPES );
     }
 
 
     @Override
     public Iterator<String> getSourceEdgeTypes( final OrganizationScope scope, final SearchEdgeType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return getEdgeTypes( scope, search, CF_SOURCE_EDGE_TYPES );
+    }
+
+
+    /**
+     * Get the edge types from the search criteria.
+     * @param scope The org scope
+     * @param search The edge type search info
+     * @param cf The column family to execute on
+     * @return
+     */
+    private Iterator<String> getEdgeTypes(final OrganizationScope scope, final SearchEdgeType search, final MultiTennantColumnFamily<OrganizationScope, Id, String> cf){
+        ValidationUtils.validateOrganizationScope( scope );
+                EdgeUtils.validateSearchEdgeType( search );
+
+
+                final ScopedRowKey<OrganizationScope, Id> sourceKey =
+                        new ScopedRowKey<OrganizationScope, Id>( scope, search.getNode() );
+
+
+                //resume from the last if specified.  Also set the range
+                final ByteBufferRange searchRange =
+                        new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
+
+                RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
+                        keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
+                                .withColumnRange( searchRange );
+
+                try {
+                    return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
     }
 
 
     @Override
     public Iterator<String> getSourceIdTypes( final OrganizationScope scope, final SearchIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return getIdTypes( scope, search, CF_SOURCE_EDGE_ID_TYPES );
     }
 
 
+    /**
+     * Get the id types from the specified column family
+     * @param scope The organization scope to use
+     * @param search The search criteria
+     * @param cf The column family to search
+     * @return
+     */
+    public Iterator<String> getIdTypes( final OrganizationScope scope, final SearchIdType search, final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> cf ) {
+            ValidationUtils.validateOrganizationScope( scope );
+            EdgeUtils.validateSearchEdgeIdType( search );
+
+
+            final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> sourceTypeKey =
+                    new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope,
+                            new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
+
+
+            //resume from the last if specified.  Also set the range
+            final ByteBufferRange searchRange =
+                    new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
+
+            RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
+                    keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true )
+                            .withColumnRange( searchRange );
+
+            try {
+                return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to connect to cassandra", e );
+            }
+        }
+
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return Arrays.asList(graphCf(CF_TARGET_EDGE_TYPES), graphCf(CF_SOURCE_EDGE_TYPES), graphCf(CF_TARGET_EDGE_ID_TYPES), graphCf(CF_SOURCE_EDGE_ID_TYPES));
+    }
+
+
+    /**
+     * Helper to generate an edge definition by the type
+     * @param cf
+     * @return
+     */
+    private MultiTennantColumnFamilyDefinition graphCf(MultiTennantColumnFamily cf){
+        return new MultiTennantColumnFamilyDefinition( CF_TARGET_EDGE_TYPES, DynamicCompositeType.class.getSimpleName(), BytesType.class.getSimpleName(), BytesType.class.getSimpleName()  );
     }
 
 
@@ -235,19 +276,32 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      */
     private static class EdgeTypeRowCompositeSerializer implements CompositeFieldSerializer<EdgeIdTypeKey> {
 
+
+        private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
         @Override
         public void toComposite( final CompositeBuilder builder, final EdgeIdTypeKey value ) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            ID_SER.toComposite( builder, value.node );
+
+            builder.addString(value.edgeType);
         }
 
 
         @Override
         public EdgeIdTypeKey fromComposite( final CompositeParser composite ) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+            final Id id = ID_SER.fromComposite( composite );
+
+            final String edgeType = composite.readString();
+
+            return new EdgeIdTypeKey( id, edgeType );
+
         }
     }
 
 
+    /**
+     * Simple key object for I/O
+     */
     private static class EdgeIdTypeKey {
         private final Id node;
         private final String edgeType;
