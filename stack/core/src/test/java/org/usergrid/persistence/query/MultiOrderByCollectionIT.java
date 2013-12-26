@@ -23,6 +23,6 @@ import org.junit.Test;
 public class MultiOrderByCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void multiOrderByCollection() throws Exception {
-        multiOrderBy( new CollectionIoHelper() );
+        multiOrderBy( new CollectionIoHelper( app ) );
     }
 }

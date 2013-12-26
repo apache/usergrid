@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderBySameRangeScanLessCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderBySameRangeScanLessCollection() throws Exception {
-        singleOrderBySameRangeScanLessEqual( new CollectionIoHelper() );
+        singleOrderBySameRangeScanLessEqual( new CollectionIoHelper( app ) );
     }
 }
