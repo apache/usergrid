@@ -309,6 +309,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
             Map<String, String> overrides = new HashMap<String, String>();
             overrides.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, String.valueOf( TIMEOUT ) );
 
+            TestCollectionModule module = new TestCollectionModule();
+            //module.getSerializationFig().setOverrides(  );
             //use the default module with cass
             install( new TestCollectionModule( overrides ) );
         }

@@ -23,6 +23,7 @@ public class CassandraRule extends ExternalResource {
 
     public static final int THRIFT_PORT = AvailablePortFinder.getNextAvailable();
     public static final int GOSSIP_PORT = AvailablePortFinder.getNextAvailable();
+    public static final String THRIFT_PORT_STR = Integer.toString( THRIFT_PORT );
 
     private static final Object mutex = new Object();
 

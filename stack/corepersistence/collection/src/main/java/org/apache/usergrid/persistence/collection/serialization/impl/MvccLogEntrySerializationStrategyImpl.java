@@ -24,12 +24,12 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
@@ -49,9 +49,6 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
  */
 @Singleton
 public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerializationStrategy, Migration {
-
-    public static final String TIMEOUT_PROP = "collection.stage.transient.timeout";
-
     private static final StageSerializer SER = new StageSerializer();
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -63,13 +60,13 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     protected final Keyspace keyspace;
-    protected final int timeout;
+    protected final SerializationFig fig;
 
 
     @Inject
-    public MvccLogEntrySerializationStrategyImpl( final Keyspace keyspace, @Named( TIMEOUT_PROP ) final int timeout ) {
+    public MvccLogEntrySerializationStrategyImpl( final Keyspace keyspace, final SerializationFig fig ) {
         this.keyspace = keyspace;
-        this.timeout = timeout;
+        this.fig = fig;
     }
 
 
@@ -89,7 +86,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
                 //Write the stage with a timeout, it's set as transient
                 if ( stage.isTransient() ) {
-                    colMutation.putColumn( colName, stage, SER, timeout );
+                    colMutation.putColumn( colName, stage, SER, fig.getTimeout() );
                     return;
                 }
 

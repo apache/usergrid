@@ -7,9 +7,12 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.safehaus.guicyfig.Option;
+import org.safehaus.guicyfig.Overrides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
 import com.netflix.config.ConfigurationManager;
 import com.netflix.config.DynamicIntProperty;
 
@@ -39,6 +42,9 @@ public class CassandraThreadSchedulerTest {
      */
     private static final long TEST_TIMEOUT = 30000;
 
+    @Inject
+    @Overrides( name = "junit-test", contexts = Overrides.Env.unit, @Option( method = "", override = "" ) )
+    RxFig rxFig;
 
     @Test
     public void testMaxLimit() throws InterruptedException {
@@ -48,9 +54,6 @@ public class CassandraThreadSchedulerTest {
         //kind of a hack, but necessary with the way properties are singletons.  Otherwise you get side effects from
         // other tests
         ConfigurationManager.getConfigInstance().setProperty( PROP_NAME, "" + maxCount );
-
-        final DynamicIntProperty maxThreads =
-                new DynamicIntProperty( PROP_NAME, maxCount );
 
         final CassandraThreadScheduler cassSchedulerSetup = new CassandraThreadScheduler( maxThreads );
 

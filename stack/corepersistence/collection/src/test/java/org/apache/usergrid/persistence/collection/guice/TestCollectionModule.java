@@ -1,96 +1,82 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import org.safehaus.guicyfig.GuicyFigModule;
+import org.safehaus.guicyfig.Option;
+import org.safehaus.guicyfig.Overrides;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
+import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
+import org.apache.usergrid.persistence.collection.rx.RxFig;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 
-import org.apache.cassandra.locator.SimpleStrategy;
-
-import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig;
-import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
-import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
-
+import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 
 /**
- * This module manually constructs Properties specific to the unit testing environment and then it overlays
- * overrides (if not null). These properties are used to build Named bindings to inject configuration parameters
- * into classes like the {@link AstynaxKeyspaceProvider}.
- *
- * It also installs the GuiceBerryModule, and the CollectionModule.
- *
- * @author tnine
+ * This module manually constructs configs specific to the unit testing environment and then it
+ * overrides (if not null).
  */
 public class TestCollectionModule extends AbstractModule {
-    private static final Logger LOG = LoggerFactory.getLogger( TestCollectionModule.class );
-    private final Map<String, String> override;
-
-
-    /**
-     * Our RX I/O threads and this should have the same value
-     */
+    /** Our RX I/O threads and this should have the same value */
     private static final String CONNECTION_COUNT = "20";
 
-    public TestCollectionModule( Map<String, String> override ) {
-        this.override = new HashMap<String, String>();
-        this.override.putAll( override );
+    @Inject
+    @Overrides(
+        name = "unit-test",
+        contexts = Overrides.Env.unit,
+        options = {
+                @Option( method = "getHosts", override = "localhost" ),
+                @Option( method = "getConnections", override = CONNECTION_COUNT )
+        }
+    )
+    CassandraFig cassandraFig;
+
+    @Inject
+    @Overrides( name = "unit-test", options = @Option( method = "getMaxThreadCount", override = CONNECTION_COUNT ) )
+    RxFig rxFig;
+
+    @Inject
+    SerializationFig serializationFig;
+
+    @Inject
+    MigrationManagerFig migrationManagerFig;
+
+
+    public SerializationFig getSerializationFig() {
+        return serializationFig;
     }
 
 
-    @SuppressWarnings( "UnusedDeclaration" )
     public TestCollectionModule() {
-        override = Collections.emptyMap();
+        //noinspection unchecked
+        Injector injector = Guice.createInjector( new GuicyFigModule(
+            RxFig.class, CassandraFig.class, SerializationFig.class, MigrationManagerFig.class
+        ) );
+        injector.injectMembers( this );
+
+        Preconditions.checkNotNull( cassandraFig );
+        Preconditions.checkNotNull( rxFig );
+        Preconditions.checkNotNull( migrationManagerFig );
+        Preconditions.checkNotNull( serializationFig );
     }
 
 
     @Override
     protected void configure() {
-        Map<String,Object> propMap = new HashMap<String, Object>();
-        propMap.put( ICassandraConfig.CASSANDRA_HOSTS, "localhost" );
-        propMap.put( ICassandraConfig.CASSANDRA_PORT, "" + CassandraRule.THRIFT_PORT );
-        propMap.put( ICassandraConfig.CASSANDRA_CONNECTIONS, CONNECTION_COUNT );
-        propMap.put( ICassandraConfig.CASSANDRA_TIMEOUT, "5000" );
-        propMap.put( ICassandraConfig.CASSANDRA_CLUSTER_NAME, "Usergrid" );
-        propMap.put( ICassandraConfig.CASSANDRA_VERSION, "1.2" );
-        propMap.put( ICassandraConfig.COLLECTIONS_KEYSPACE_NAME, "Usergrid_Collections" );
+        bind( CassandraFig.class ).toInstance( cassandraFig );
+        bind( RxFig.class ).toInstance( rxFig );
+        bind( SerializationFig.class ).toInstance( serializationFig );
+        bind( MigrationManagerFig.class ).toInstance( migrationManagerFig );
 
-        propMap.put( MigrationManagerImpl.REPLICATION_FACTOR, "1" );
-        propMap.put( MigrationManagerImpl.STRATEGY_CLASS, SimpleStrategy.class.getName() );
+        // this is dynamic so we cannot use annotations to get the port
+//        cassandraFig.getOption( cassandraFig.getKeyByMethod( "getPort" ) )
+//                    .setOverride( Integer.toString( CassandraRule.THRIFT_PORT ) );
 
-        propMap.put( CassandraThreadScheduler.RX_IO_THREADS, CONNECTION_COUNT );
-
-        propMap.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, "60" );
-
-        propMap.putAll( override );
-        install( new CollectionModule( propMap ) );
-//        bindListener( Matchers.any(), new KeyspaceListener ());
+        install( new CollectionModule( cassandraFig, migrationManagerFig, serializationFig, rxFig ) );
     }
-
-
-//    private static class KeyspaceListener implements TypeListener{
-//
-//        @Override
-//        public <I> void hear( final TypeLiteral<I> type, final TypeEncounter<I> encounter ) {
-//            if(type.getType() == AstynaxKeyspaceProvider.class){
-//                CassandraRule cass = new CassandraRule();
-//                try {
-//                    cass.before();
-//                }
-//                catch ( Throwable t ) {
-//                    throw new RuntimeException( "Something nasty happened!", t );
-//                }
-//            }
-//        }
-//    }
-
-
-
 }
