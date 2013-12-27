@@ -24,14 +24,14 @@ import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 
 import com.netflix.astyanax.MutationBatch;
 
 
 /**
- * Simple interface for serializing ONLY an edge
+ * Simple interface for serializing an edge meta data
  */
 public interface EdgeMetadataSerialization {
 
@@ -39,12 +39,53 @@ public interface EdgeMetadataSerialization {
     /**
      * Write both the source--->Target edge and the target <----- source edge into the mutation
      */
-    MutationBatch writeEdge(OrganizationScope scope, Edge edge );
+    MutationBatch writeEdge( OrganizationScope scope, Edge edge );
 
     /**
-     *    TODO T.N. delete.  This is a bit complex, we have to read all edges to determine if we can remove meta data from the tree.  We may have to break this down into remove types and direction
-     *    so it can be done in parallel
+     * Remove all meta data from the source to the target type.  The caller must ensure that this is the last
+     * edge with this type at version <= edge version
+     *
+     * @param scope The org scope
+     * @param edge The edge to remove
+     *
+     * @return a mutation batch with the delete operations
      */
+    MutationBatch removeTargetEdgeType( OrganizationScope scope, Edge edge );
+
+
+    /**
+     * Remove all meta data from the source to the target type.  The caller must ensure that this is the last
+          * edge with this type at version <= edge version
+     *
+     * @param scope The org scope
+     * @param edge The edge to remove
+     *
+     * @return a mutation batch with the delete operations
+     */
+    MutationBatch removeTargetIdType( OrganizationScope scope, Edge edge );
+
+    /**
+     * Remove all meta data from the target to the source type.  The caller must ensure that this is the last
+          * edge with this type at version <= edge version
+     *
+     * @param scope The org scope
+     * @param edge The edge to remove
+     *
+     * @return a mutation batch with the delete operations
+     */
+    MutationBatch removeSourceEdgeType( OrganizationScope scope, Edge edge );
+
+
+    /**
+     * Remove all meta data from the target to the source type.  The caller must ensure that this is the last
+          * edge with this type at version <= edge version
+     *
+     * @param scope The org scope
+     * @param edge The edge to remove
+     *
+     * @return a mutation batch with the delete operations
+     */
+    MutationBatch removeSourceIdType( OrganizationScope scope, Edge edge );
 
     /**
      * Get all target edge types for the given source node
@@ -53,7 +94,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return An iterator of all the edge types
      */
-    Iterator<String> getTargetEdgeTypes(OrganizationScope scope, SearchEdgeType search );
+    Iterator<String> getTargetEdgeTypes( OrganizationScope scope, SearchEdgeType search );
 
     /**
      * Get all target id types on the edge with the type given and the source node
@@ -62,7 +103,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getTargetIdTypes(OrganizationScope scope, SearchIdType search );
+    Iterator<String> getTargetIdTypes( OrganizationScope scope, SearchIdType search );
 
 
     /**
@@ -72,7 +113,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return An iterator of all the edge types
      */
-    Iterator<String> getSourceEdgeTypes(OrganizationScope scope, SearchEdgeType search );
+    Iterator<String> getSourceEdgeTypes( OrganizationScope scope, SearchEdgeType search );
 
     /**
      * Get all target id types on the edge with the type given and the target node
@@ -81,5 +122,5 @@ public interface EdgeMetadataSerialization {
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getSourceIdTypes(OrganizationScope scope, SearchIdType search );
+    Iterator<String> getSourceIdTypes( OrganizationScope scope, SearchIdType search );
 }

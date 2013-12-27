@@ -20,16 +20,13 @@
 package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+import java.util.UUID;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.DynamicCompositeType;
-import org.apache.cassandra.db.marshal.ReversedType;
-import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
@@ -40,8 +37,8 @@ import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.StringColumnParser;
@@ -166,6 +163,91 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
+    public MutationBatch removeTargetEdgeType( final OrganizationScope scope, final Edge edge ) {
+        return removeEdgeType( scope, edge.getSourceNode(), edge.getType(), edge.getVersion(), CF_TARGET_EDGE_TYPES );
+    }
+
+
+    @Override
+    public MutationBatch removeTargetIdType( final OrganizationScope scope, final Edge edge ) {
+        return removeIdType( scope, edge.getSourceNode(), edge.getTargetNode(), edge.getType(), edge.getVersion(),
+                CF_TARGET_EDGE_ID_TYPES );
+    }
+
+
+    @Override
+    public MutationBatch removeSourceEdgeType( final OrganizationScope scope, final Edge edge ) {
+        return removeEdgeType( scope, edge.getTargetNode(), edge.getType(), edge.getVersion(), CF_SOURCE_EDGE_TYPES );
+    }
+
+
+    /**
+     * Remove the edge
+     * @param scope The scope
+     * @param rowKeyId The id to use in the row key
+     * @param edgeType The edge type
+     * @param version The version of the edge
+     * @param cf The column family
+     */
+    private MutationBatch removeEdgeType( final OrganizationScope scope, final Id rowKeyId, final String edgeType,
+                                          final UUID version,
+                                          final MultiTennantColumnFamily<OrganizationScope, Id, String> cf ) {
+        final long timestamp = version.timestamp();
+
+
+        //write target<--source edge type meta data
+        final ScopedRowKey<OrganizationScope, Id> targetKey =
+                new ScopedRowKey<OrganizationScope, Id>( scope, rowKeyId );
+
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+
+        batch.withRow( cf, targetKey ).setTimestamp( timestamp ).deleteColumn( edgeType );
+
+        return batch;
+    }
+
+
+    @Override
+    public MutationBatch removeSourceIdType( final OrganizationScope scope, final Edge edge ) {
+        return removeIdType( scope, edge.getTargetNode(), edge.getSourceNode(), edge.getType(), edge.getVersion(),
+                CF_SOURCE_EDGE_ID_TYPES );
+    }
+
+
+    /**
+     * Remove the id type
+     * @param scope The scope to use
+     * @param rowId The id to use in the row key
+     * @param colId The id type to use in the column
+     * @param edgeType The edge type to use in the column
+     * @param version The version to use on the column
+     * @param cf The column family to use
+     * @return A populated mutation with the remove operations
+     */
+    private MutationBatch removeIdType( final OrganizationScope scope, final Id rowId, final Id colId,
+                                        final String edgeType, final UUID version,
+                                        final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> cf ) {
+
+        MutationBatch batch = keyspace.prepareMutationBatch();
+
+
+        final long timestamp = version.timestamp();
+
+
+        //write target<--source edge type and id type to meta data
+        final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> targetTypeKey =
+                new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( rowId, edgeType ) );
+
+
+        batch.withRow( cf, targetTypeKey ).setTimestamp( timestamp ).deleteColumn( colId.getType() );
+
+        return batch;
+    }
+
+
+    @Override
     public Iterator<String> getTargetEdgeTypes( final OrganizationScope scope, final SearchEdgeType search ) {
         return getEdgeTypes( scope, search, CF_TARGET_EDGE_TYPES );
     }
@@ -185,34 +267,34 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     /**
      * Get the edge types from the search criteria.
+     *
      * @param scope The org scope
      * @param search The edge type search info
      * @param cf The column family to execute on
-     * @return
      */
-    private Iterator<String> getEdgeTypes(final OrganizationScope scope, final SearchEdgeType search, final MultiTennantColumnFamily<OrganizationScope, Id, String> cf){
+    private Iterator<String> getEdgeTypes( final OrganizationScope scope, final SearchEdgeType search,
+                                           final MultiTennantColumnFamily<OrganizationScope, Id, String> cf ) {
         ValidationUtils.validateOrganizationScope( scope );
-                EdgeUtils.validateSearchEdgeType( search );
+        EdgeUtils.validateSearchEdgeType( search );
 
 
-                final ScopedRowKey<OrganizationScope, Id> sourceKey =
-                        new ScopedRowKey<OrganizationScope, Id>( scope, search.getNode() );
+        final ScopedRowKey<OrganizationScope, Id> sourceKey =
+                new ScopedRowKey<OrganizationScope, Id>( scope, search.getNode() );
 
 
-                //resume from the last if specified.  Also set the range
-                final ByteBufferRange searchRange =
-                        new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
+        //resume from the last if specified.  Also set the range
+        final ByteBufferRange searchRange =
+                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
 
-                RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
-                        keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
-                                .withColumnRange( searchRange );
+        RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
+                keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true ).withColumnRange( searchRange );
 
-                try {
-                    return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e );
-                }
+        try {
+            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
     }
 
 
@@ -224,50 +306,51 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     /**
      * Get the id types from the specified column family
+     *
      * @param scope The organization scope to use
      * @param search The search criteria
      * @param cf The column family to search
-     * @return
      */
-    public Iterator<String> getIdTypes( final OrganizationScope scope, final SearchIdType search, final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> cf ) {
-            ValidationUtils.validateOrganizationScope( scope );
-            EdgeUtils.validateSearchEdgeIdType( search );
+    public Iterator<String> getIdTypes( final OrganizationScope scope, final SearchIdType search,
+                                        final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> cf ) {
+        ValidationUtils.validateOrganizationScope( scope );
+        EdgeUtils.validateSearchEdgeIdType( search );
 
 
-            final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> sourceTypeKey =
-                    new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope,
-                            new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
+        final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> sourceTypeKey =
+                new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope,
+                        new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
 
 
-            //resume from the last if specified.  Also set the range
-            final ByteBufferRange searchRange =
-                    new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
+        //resume from the last if specified.  Also set the range
+        final ByteBufferRange searchRange =
+                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().orNull() ).build();
 
-            RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
-                    keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true )
-                            .withColumnRange( searchRange );
+        RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
+                keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
 
-            try {
-                return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
-            }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to connect to cassandra", e );
-            }
+        try {
+            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
         }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
+    }
+
 
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        return Arrays.asList(graphCf(CF_TARGET_EDGE_TYPES), graphCf(CF_SOURCE_EDGE_TYPES), graphCf(CF_TARGET_EDGE_ID_TYPES), graphCf(CF_SOURCE_EDGE_ID_TYPES));
+        return Arrays.asList( graphCf( CF_TARGET_EDGE_TYPES ), graphCf( CF_SOURCE_EDGE_TYPES ),
+                graphCf( CF_TARGET_EDGE_ID_TYPES ), graphCf( CF_SOURCE_EDGE_ID_TYPES ) );
     }
 
 
     /**
      * Helper to generate an edge definition by the type
-     * @param cf
-     * @return
      */
-    private MultiTennantColumnFamilyDefinition graphCf(MultiTennantColumnFamily cf){
-        return new MultiTennantColumnFamilyDefinition( CF_TARGET_EDGE_TYPES, DynamicCompositeType.class.getSimpleName(), BytesType.class.getSimpleName(), BytesType.class.getSimpleName()  );
+    private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
+        return new MultiTennantColumnFamilyDefinition( cf, DynamicCompositeType.class.getSimpleName(),
+                BytesType.class.getSimpleName(), BytesType.class.getSimpleName() );
     }
 
 
@@ -279,11 +362,12 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
+
         @Override
         public void toComposite( final CompositeBuilder builder, final EdgeIdTypeKey value ) {
             ID_SER.toComposite( builder, value.node );
 
-            builder.addString(value.edgeType);
+            builder.addString( value.edgeType );
         }
 
 
@@ -294,7 +378,6 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
             final String edgeType = composite.readString();
 
             return new EdgeIdTypeKey( id, edgeType );
-
         }
     }
 
