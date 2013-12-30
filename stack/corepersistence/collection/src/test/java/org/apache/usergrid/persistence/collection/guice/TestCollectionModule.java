@@ -14,7 +14,6 @@ import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvide
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.cassandra.ICassandraConfig;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
-import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 
 import com.google.inject.AbstractModule;
@@ -64,8 +63,8 @@ public class TestCollectionModule extends AbstractModule {
 
         propMap.put( MigrationManagerImpl.REPLICATION_FACTOR, "1" );
         propMap.put( MigrationManagerImpl.STRATEGY_CLASS, SimpleStrategy.class.getName() );
-
-        propMap.put( CassandraThreadScheduler.RX_IO_THREADS, CONNECTION_COUNT );
+//
+//        propMap.put( CassandraThreadScheduler.RX_IO_THREADS, CONNECTION_COUNT );
 
         propMap.put( MvccLogEntrySerializationStrategyImpl.TIMEOUT_PROP, "60" );
 

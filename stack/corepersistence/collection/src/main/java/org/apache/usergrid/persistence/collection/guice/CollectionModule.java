@@ -7,12 +7,10 @@ import java.util.Map;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
-import org.apache.usergrid.persistence.collection.archaius.DynamicPropertyNames;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraConfigModule;
 import org.apache.usergrid.persistence.collection.cassandra.IDynamicCassandraConfig;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
-import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
@@ -23,8 +21,6 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.netflix.config.ConcurrentCompositeConfiguration;
 import com.netflix.config.ConcurrentMapConfiguration;
 import com.netflix.config.ConfigurationManager;
-
-import rx.Scheduler;
 
 
 /**
@@ -62,10 +58,7 @@ public class CollectionModule extends AbstractModule {
 
             //noinspection unchecked
             ConcurrentMapConfiguration mapConfiguration = new ConcurrentMapConfiguration( ( Map ) overrides );
-            if ( ! overrides.containsKey( CassandraThreadScheduler.RX_IO_THREADS ) ) {
-                mapConfiguration.addProperty( CassandraThreadScheduler.RX_IO_THREADS,
-                        overrides.get( CassandraThreadScheduler.RX_IO_THREADS ) );
-            }
+
 
             config.addConfigurationAtFront( mapConfiguration, "CollectionModule" );
         }
@@ -80,10 +73,6 @@ public class CollectionModule extends AbstractModule {
                 .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                 .build( EntityCollectionManagerFactory.class ) );
 
-        // bind our RX scheduler - the default value of the dynamic property
-        new DynamicPropertyNames().bindProperty( binder(), CassandraThreadScheduler.RX_IO_THREADS,
-                String.valueOf( cassandraConfig.getConnections() ) );
 
-        bind( Scheduler.class ).toProvider( CassandraThreadScheduler.class );
     }
 }

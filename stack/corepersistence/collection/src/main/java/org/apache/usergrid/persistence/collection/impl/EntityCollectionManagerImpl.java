@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.hystrix.ReadCommand;
+import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -29,7 +31,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
-import rx.Scheduler;
 
 
 /**
@@ -45,7 +46,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
-    private final Scheduler scheduler;
 
 
     //start stages
@@ -64,7 +64,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService,  final Scheduler scheduler, final WriteStart writeStart,
+    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
                                         final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
@@ -72,11 +72,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         @Assisted final CollectionScope collectionScope ) {
 
 
-        Preconditions.checkNotNull( scheduler, "scheduler is required" );
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
         ValidationUtils.validateCollectionScope( collectionScope );
-
-        this.scheduler = scheduler;
 
 
         this.writeStart = writeStart;
@@ -124,12 +121,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         //create our observable and start the write
-        Observable<CollectionIoEvent<MvccEntity>> observable =  Observable.just( new CollectionIoEvent<Entity>( collectionScope, entity ) ).subscribeOn(
-                scheduler ).map( writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable = WriteCommand.toObservable(
+                new CollectionIoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
 
 
         //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
-        observable = Concurrent.concurrent(scheduler, observable, writeVerifyUnique, writeOptimisticVerify);
+        observable = Concurrent.concurrent(observable, writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
         return observable.map( writeCommit );
@@ -145,9 +142,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
-                scheduler) .map( deleteStart ).map( deleteCommit );
+        return WriteCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -158,8 +153,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        //TODO use our own scheduler to help with multitenancy here
-        return Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn(
-                scheduler ).map( load );
+        return ReadCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
     }
 }

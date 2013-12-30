@@ -136,24 +136,13 @@
       <version>${guice.version}</version>
     </dependency>
 
-    <!-- guice helper removed for now, investigate using this later, it's getting in the way right now while learning guice -->
-    <!--<dependency>
-      <groupId>com.netflix.governator</groupId>
-      <artifactId>governator</artifactId>
-      <version>1.2.3</version>
-    </dependency> -->
-
     <!-- RX java -->
 
-    <!-- temporarily commented out using m2repo in-project repository
-             until a release with our fixes arrives
-
-        https://github.com/Netflix/RxJava/issues/601 -->
 
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-core</artifactId>
-      <version>0.15.2-UG</version>
+      <version>0.15.1</version>
     </dependency>
 
     <dependency>
@@ -186,6 +175,11 @@
       <version>${log4j.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.netflix.hystrix</groupId>
+      <artifactId>hystrix-core</artifactId>
+      <version>${hystrix.version}</version>
+    </dependency>
     <!-- Google Guice Integration Test Injectors -->
 
     <dependency>

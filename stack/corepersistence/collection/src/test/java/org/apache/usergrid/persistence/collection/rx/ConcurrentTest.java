@@ -12,7 +12,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
+import rx.concurrency.Schedulers;
 import rx.util.functions.Func1;
 
 import static org.junit.Assert.assertEquals;
@@ -40,8 +40,12 @@ public class ConcurrentTest {
         TestConcurrent instance2 = new TestConcurrent( latch );
         TestConcurrent instance3 = new TestConcurrent( latch );
 
+        //concurrent inherits thread pool from it's observable, set it's thread pool
+
+        observable = observable.subscribeOn( Schedulers.threadPoolForIO() );
+
         Observable<String> result = Concurrent
-                .concurrent( Schedulers.threadPoolForIO(), observable, instance1, instance2, instance3 );
+                .concurrent(observable, instance1, instance2, instance3 );
 
         assertEquals( "No invocation yet", 0, set.size() );
 
