@@ -37,3 +37,5 @@ for (name in props.stringPropertyNames()) {
     def par = new PutAttributesRequest(domain, key, attrs)
     sdbClient.putAttributes(par);
 }
+
+println "Configured Priam."

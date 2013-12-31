@@ -17,6 +17,8 @@ def replicationFactor = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
+println "Waiting..."
+    
 def count = 0
 while (true) {
     try {
@@ -32,6 +34,9 @@ while (true) {
         }
     } catch (Exception e) {
         println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
+        return
     }
     Thread.sleep(1000)
 }
+
+println "Waiting done."

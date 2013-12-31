@@ -29,11 +29,6 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
-# Register as a Cassandra node and wait for enough other servers to join
-cd /usr/share/usergrid/scripts
-groovy registry_register.groovy
-groovy wait_for_cassandra.groovy
-
 # Install and stop Cassandra
 cd /etc/apt/sources.list.d
 cat >> cassandra.sources.list << EOF
@@ -45,24 +40,34 @@ sudo apt-get --force-yes -y install cassandra
 /etc/init.d/cassandra stop
 rm -rf /var/log/cassandra/*
 
+# Provide initial configuration to Cassandra 
+cd /usr/share/usergrid/scripts
+groovy registry_register.groovy
+groovy wait_for_cassandra.groovy
+cd /usr/share/usergrid/init_instance
+cd /usr/share/usergrid/scripts
+groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
+
+# Configure Priam
+cd /usr/share/usergrid/scripts
+groovy configure_priam.groovy
+
 # Copy Priam extension into Cassandra and Priam WAR into Tomcat
 rm -rf /var/lib/tomcat7/webapps/*
 mkdir -p /usr/share/cassandra/lib 
 cp /usr/share/usergrid/lib/priam-cass-extensions-2.0.0-SNAPSHOT.jar /usr/share/cassandra/lib 
 cp /usr/share/usergrid/webapps/priam-web-2.0.0-SNAPSHOT.war /var/lib/tomcat7/webapps/Priam.war
+
+# Make sure Priam via Tomcat can write to /etc/cassandra
+chmod -R 777 /etc/cassandra
+chmod 777 /etc/init.d/cassandra
+# TODO: need to do something like this instead (not sure why it does not work):
+#chmod 770 /etc/cassandra
+#chmod -R 660 /etc/cassandra/*
+#usermod -a -G cassandra tomcat7
+#chgrp -R cassandra /etc/cassandra
+
+# Start Priam via Tomcat, should cause Cassandra to start
 /etc/init.d/tomcat7 restart
-
-# Configure Priam
-cd /usr/share/usergrid/scripts
-groovy configure_priam.groovy
-sudo usermod -G cassandra tomcat7
-chgrp -R cassandra /etc/cassandra
-chmod 660 /etc/cassandra/cassandra.yaml
-
-# Configure and start Cassandra
-cd /usr/share/usergrid/init_instance
-cd /usr/share/usergrid/scripts
-groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
-/etc/init.d/cassandra start
 
 groovy tag_instance.groovy

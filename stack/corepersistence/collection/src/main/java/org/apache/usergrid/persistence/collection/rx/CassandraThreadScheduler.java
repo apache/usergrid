@@ -16,7 +16,7 @@ import com.google.inject.name.Named;
 import com.netflix.config.DynamicIntProperty;
 
 import rx.Scheduler;
-import rx.schedulers.Schedulers;
+import rx.concurrency.Schedulers;
 
 
 /**
