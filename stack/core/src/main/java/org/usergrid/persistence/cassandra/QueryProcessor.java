@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
@@ -76,6 +78,7 @@ import static org.usergrid.persistence.Schema.getDefaultSchema;
 public class QueryProcessor {
 
     private static final int PAGE_SIZE = 1000;
+    private static final Logger logger = LoggerFactory.getLogger( QueryProcessor.class );
 
     private static final Schema SCHEMA = getDefaultSchema();
 
@@ -277,6 +280,9 @@ public class QueryProcessor {
             if ( resultSize == size ) {
                 itr.finalizeCursor( resultsCursor, entityIds.get( resultSize - 1 ).getUUID() );
             }
+        }
+        if (logger.isDebugEnabled()) {
+        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}", getQuery(), entityIds.size());
         }
 
         final ResultsLoader loader = loaderFactory.getResultsLoader( em, query, query.getResultsLevel() );

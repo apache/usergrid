@@ -23,6 +23,6 @@ import org.junit.Test;
 public class MultiOrderByComplexUnionConnectionIT extends AbstractIteratingQueryIT {
     @Test
     public void multiOrderByComplexUnionConnection() throws Exception {
-        multiOrderByComplexUnion( new CollectionIoHelper() );
+        multiOrderByComplexUnion( new CollectionIoHelper( app ) );
     }
 }

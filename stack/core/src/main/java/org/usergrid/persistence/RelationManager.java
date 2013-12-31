@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.usergrid.persistence.Results.Level;
+
 
 public interface RelationManager {
 
@@ -102,7 +104,9 @@ public interface RelationManager {
     // UUID startResult, int count, boolean reversed, Level resultsLevel)
     // throws Exception;
 
-    public Results searchConnectedEntities( Query query ) throws Exception;
+    public Results getConnectingEntities(String connectionType, String entityType, Level level, int count) throws Exception;
+
+	public Results searchConnectedEntities( Query query ) throws Exception;
 
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;

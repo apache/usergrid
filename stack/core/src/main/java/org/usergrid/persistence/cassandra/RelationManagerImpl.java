@@ -1979,22 +1979,31 @@ public class RelationManagerImpl implements RelationManager {
     public Results getConnectingEntities( String connectionType, String connectedEntityType,
                                           Results.Level resultsLevel ) throws Exception {
 
-        return getConnectingEntities( headEntity, connectionType, connectedEntityType, resultsLevel );
+        return getConnectingEntities(connectionType, connectedEntityType, resultsLevel, 0 );
     }
 
 
-    /**
+    @Override
+    @Metered(group = "core", name = "RelationManager_getConnectingEntities")
+    public Results getConnectingEntities(String connectionType,
+    		String entityType, Level level, int count) throws Exception {
+		return getConnectingEntities(headEntity, connectionType, entityType, level, count );
+	}
+
+
+	/**
      * Get all edges that are to the targetEntity
      *
      * @param targetEntity The target entity to search edges in
      * @param connectionType The type of connection.  If not specified, all connections are returned
      * @param connectedEntityType The connected entity type, if not specified all types are returned
-     * @param resultsLevel The results level to return
+     * @param count result limit
      */
-    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
-                                           Level resultsLevel ) throws Exception {
+	private Results getConnectingEntities(EntityRef targetEntity,
+			String connectionType, String connectedEntityType, Level level, int count) throws Exception {
         Query query = new Query();
-        query.setResultsLevel( resultsLevel );
+        query.setResultsLevel( level );
+        query.setLimit(count);
 
         final ConnectionRefImpl connectionRef =
                 new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
@@ -2004,6 +2013,20 @@ public class RelationManagerImpl implements RelationManager {
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, false );
 
         return qp.getResults( visitor );
+	}
+
+
+	/**
+     * Get all edges that are to the targetEntity
+     *
+     * @param targetEntity The target entity to search edges in
+     * @param connectionType The type of connection.  If not specified, all connections are returned
+     * @param connectedEntityType The connected entity type, if not specified all types are returned
+     * @param resultsLevel The results level to return
+     */
+    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
+                                           Level resultsLevel ) throws Exception {
+    	return getConnectingEntities(targetEntity, connectionType, connectedEntityType, resultsLevel, 0);
     }
 
 

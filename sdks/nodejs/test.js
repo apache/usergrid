@@ -17,6 +17,11 @@ var successCount = 0;
 var logError = true;
 var errorCount = 0;
 var logNotice = true;
+var _unique = new Date().getTime();
+var _username = 'marty'+_unique;
+var _email = 'marty'+_unique+'@timetravel.com';
+var _password = 'password2';
+var _newpassword = 'password3';
 
 	var client = new usergrid.client({
 		orgName:'yourorgname',
@@ -32,12 +37,13 @@ var logNotice = true;
 	var client = new usergrid.client({
 		orgName:'yourorgname',
 		appName:'sandbox',
-		//logging: true, //optional - turn on logging, off by default
+		logging: true, //optional - turn on logging, off by default
 		buildCurl: true //optional - turn on curl commands, off by default
 	});
 
 
 //call the runner function to start the process
+client.logout();
 runner(0);
 
 function runner(step, arg, arg2){
@@ -125,19 +131,19 @@ function runner(step, arg, arg2){
 			refreshUser(step, arg);
 			break;
 		case 21:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': log user in');
 			loginUser(step, arg);
 			break;
 		case 22:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': change users password');
 			changeUsersPassword(step, arg);
 			break;
 		case 23:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': log user out');
 			logoutUser(step, arg);
 			break;
 		case 24:
-			notice('-----running step '+step+': refresh the user from the database');
+			notice('-----running step '+step+': relogin user');
 			reloginUser(step, arg);
 			break;
 		case 25:
@@ -167,6 +173,18 @@ function runner(step, arg, arg2){
 		case 31:
 			notice('-----running step '+step+': try to create existing entity');
 			createExistingEntity(step, arg);
+			break;
+		case 32:
+			notice('-----running step '+step+': try to create new entity with no name');
+			createNewEntityNoName(step, arg);
+			break;
+		case 33:
+			notice('-----running step '+step+': clean up users');
+      cleanUpUsers(step, arg);
+			break;
+		case 34:
+			notice('-----running step '+step+': clean up dogs');
+      cleanUpDogs(step, arg);
 			break;
 		default:
 			notice('-----test complete!-----');
@@ -280,7 +298,7 @@ function makeNewDog(step) {
 
 	var options = {
 		type:'dogs',
-		name:'Dino'
+		name:'Ralph'+_unique
 	}
 
 	client.createEntity(options, function (err, dog) {
@@ -366,7 +384,7 @@ function makeSampleData(step, i) {
 
 	var options = {
 		type:'dogs',
-		name:'dog'+i,
+		name:'dog'+_unique+i,
 		index:i
 	}
 
@@ -533,10 +551,12 @@ function cleanupAllDogs(step){
 	});
 }
 
+
 function prepareDatabaseForNewUser(step) {
 	var options = {
 		method:'DELETE',
-		endpoint:'users/marty'
+		endpoint:'users/',
+    qs:{ql:"select * where username ='marty*'"}
 	};
 	client.request(options, function (err, data) {
 		if (err) {
@@ -551,26 +571,17 @@ function prepareDatabaseForNewUser(step) {
 }
 
 function createUser(step) {
-
-	//type is 'users', set additional paramaters as needed
-	var options = {
-		type:'users',
-		username:'marty',
-		password:'mysecurepassword',
-		name:'Marty McFly',
-		city:'Hill Valley'
-	}
-
-	client.createEntity(options, function (err, marty) {
-		if (err){
-			error('user not created');
-			runner(step, marty);
-		} else {
-			success('user created');
-			runner(step, marty);
+	client.signup(_username, _password, _email, 'Marty McFly',
+		function (err, marty) {
+			if (err){
+				error('user not created');
+				runner(step, marty);
+			} else {
+				success('user created');
+				runner(step, marty);
+			}
 		}
-	});
-
+	);
 }
 
 function updateUser(step, marty) {
@@ -593,7 +604,7 @@ function getExistingUser(step, marty) {
 
 	var options = {
 		type:'users',
-		username:'marty'
+		username:_username
 	}
 	client.getEntity(options, function(err, existingUser){
 		if (err){
@@ -602,7 +613,7 @@ function getExistingUser(step, marty) {
 			success('existing user was retrieved');
 
 			var username = existingUser.get('username');
-			if (username === 'marty'){
+			if (username === _username){
 				success('got existing user username');
 			} else {
 				error('could not get existing user username');
@@ -628,8 +639,8 @@ function refreshUser(step, marty) {
 }
 
 function loginUser(step, marty) {
-	username = 'marty';
-	password = 'mysecurepassword';
+	username = _username;
+	password = _password;
 	client.login(username, password,
 		function (err) {
 			if (err) {
@@ -676,8 +687,8 @@ function loginUser(step, marty) {
 
 function changeUsersPassword(step, marty) {
 
-	marty.set('oldpassword', 'mysecurepassword');
-	marty.set('newpassword', 'mynewsecurepassword');
+	marty.set('oldpassword', _password);
+	marty.set('newpassword', _newpassword);
 	marty.save(function(err){
 		if (err){
 			error('user password not updated');
@@ -706,8 +717,8 @@ function logoutUser(step, marty) {
 
 function reloginUser(step, marty) {
 
-	username = 'marty';
-	password = 'mynewsecurepassword';
+	username = _username
+	password = _newpassword;
 	client.login(username, password,
 		function (err) {
 		if (err) {
@@ -893,3 +904,97 @@ function createExistingEntity(step, marty) {
 	});
 
 }
+
+function createNewEntityNoName(step, marty) {
+
+	var options = {
+   type:"something",
+   othervalue:"something else"
+	}
+
+	client.createEntity(options, function (err, entity) {
+		if (err) {
+			error('Create new entity with no name failed');
+		} else {
+			success('Create new entity with no name succeeded');
+
+      entity.destroy();
+      runner(step);
+		}
+	});
+
+}
+
+function cleanUpUsers(step){
+
+  var options = {
+    type:'users',
+    qs:{limit:50} //limit statement set to 50
+  }
+
+  client.createCollection(options, function (err, users) {
+    if (err) {
+      error('could not get all users');
+    } else {
+      success('got users');
+      //do doggy cleanup
+      while(users.hasNextEntity()) {
+        //get a reference to the dog
+        var user = users.getNextEntity();
+        var username = user.get('name');
+        notice('removing dog ' + username + ' from database');
+        user.destroy(function(err, data) {
+          if (err) {
+            error('user not removed');
+          } else {
+            success('user removed');
+          }
+        });
+      }
+
+      runner(step);
+    }
+  });
+
+}
+
+function cleanUpDogs(step){
+
+    var options = {
+      type:'dogs',
+      qs:{limit:50} //limit statement set to 50
+    }
+
+    client.createCollection(options, function (err, dogs) {
+      if (err) {
+        error('could not get all dogs');
+      } else {
+        success('got at most 50 dogs');
+        //we got 50 dogs, now display the Entities:
+        while(dogs.hasNextEntity()) {
+          //get a reference to the dog
+          var dog = dogs.getNextEntity();
+          var name = dog.get('name');
+          notice('dog is called ' + name);
+        }
+        dogs.resetEntityPointer();
+        //do doggy cleanup
+        while(dogs.hasNextEntity()) {
+          //get a reference to the dog
+          var dog = dogs.getNextEntity();
+          var dogname = dog.get('name');
+          notice('removing dog ' + dogname + ' from database');
+          dog.destroy(function(err, data) {
+            if (err) {
+              error('dog not removed');
+            } else {
+              success('dog removed');
+            }
+          });
+        }
+
+        //no need to wait around for dogs to be removed, so go on to next test
+        runner(step);
+      }
+    });
+  }
