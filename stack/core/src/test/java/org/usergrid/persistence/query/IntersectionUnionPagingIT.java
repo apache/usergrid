@@ -76,15 +76,15 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             String field1;
             String field2;
 
+            //use a value slightly smaller than page size, since we want to simulate
+            //the cursor issues with union queries
             if ( i < pageSize - 10 ) {
-                field1 = String.format( "%08d", (int)(100 * Math.random()) );
+                field1 = String.format( "%08d", i+1 );
                 field2 = zeros;
-
-
             }
             else {
                 field1 = zeros;
-                field2 = String.format( "%08d", (int)(100 * Math.random()) );
+                field2 = String.format( "%08d", i+1 );
             }
 
             names.add( name );
@@ -118,7 +118,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             for ( int i = 0; i < results.size(); i++ ) {
                 final String name = results.getEntities().get( i ).getName();
 
-                assertTrue( names.contains( name ) );
+                assertTrue("Value should not be returned twice", names.contains( name ) );
 
                 names.remove( name );
             }
