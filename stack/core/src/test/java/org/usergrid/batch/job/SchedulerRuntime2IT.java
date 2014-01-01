@@ -17,12 +17,16 @@
 package org.usergrid.batch.job;
 
 
-import org.usergrid.cassandra.Concurrent;
-import org.usergrid.persistence.entities.JobData;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.Concurrent;
+import org.usergrid.persistence.entities.JobData;
 
 
 /**
@@ -30,6 +34,7 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent
 public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
+	private static final Logger logger = LoggerFactory.getLogger(SchedulerRuntime2IT.class.getName());
     /** Test the scheduler ramps up correctly when there are more jobs to be read after a pause */
     @Test
     public void schedulingWithNoJobs() throws InterruptedException {
@@ -41,13 +46,26 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 
+        // previously:
         // now wait until everything fires
-        boolean waited = getJobListener().blockTilDone( getCount(), 15000L );
-
-        assertTrue( "Jobs ran", waited );
-        assertTrue( getCount() + " successful jobs ran", getCount() == getJobListener().getSuccessCount() );
-
-        Thread.sleep( 5000 );
+        // boolean waited = getJobListener().blockTilDone( getCount(), 15000L );
+        // assertTrue( "Jobs ran", waited );
+        // assertTrue( getCount() + " successful jobs ran", getCount() == getJobListener().getSuccessCount() );
+        
+        // now:
+        // note that the waitForCount only wait for job execution. It does NOT wait for job Completion
+        boolean waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS);
+        assertTrue( "Failed to run " + getCount() + " number of jobs. Waited " + waitTime + " seconds.", waited );
+        
+        // now:
+        // blockTilDone look into the JobListener hook and blocked until jobs are completed.
+        // TODO : need a retry count so it doesn't reblock forever
+        while (!getJobListener().blockTilDone(getCount(), waitTime)) {
+        	logger.warn("Jobs not yet finished after waited {}, block again" , waitTime);
+        }
+        assertEquals( "Expected success job: " + getCount()+ ". Actual :" + getJobListener().getSuccessCount() + ". Total count: " + getJobListener().getDoneCount() , getCount() , getJobListener().getSuccessCount() );
+        
+        Thread.sleep( 5000L );
 
         // set the counter job latch size
         counterJob.setLatch( getCount() );
@@ -56,10 +74,25 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 
+        // previously: 
         // now wait until everything fires
-        waited = getJobListener().blockTilDone( 2 * getCount(), 15000L );
-        assertTrue( "Jobs ran", waited );
-        assertTrue( 2 * getCount() + " successful jobs ran",
-                ( 2 * getCount() ) == getJobListener().getSuccessCount() );
+        // waited = getJobListener().blockTilDone( 2 * getCount(), 15000L );
+        // waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS );
+        // assertTrue( "Failed to run " + 2* getCount() + " number of jobs. Success count = " + getJobListener().getSuccessCount() + ". Waited " + waitTime  + " seconds.", waited );
+        // assertTrue( 2 * getCount() + " successful jobs ran",
+        //  ( 2 * getCount() ) == getJobListener().getSuccessCount() );
+		
+		// now:
+        // note that the waitForCount only wait for job execution. It does NOT wait for job Completion
+        waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS);
+        assertTrue( "Failed to run " + getCount() + " number of jobs. Waited " + waitTime + " seconds.", waited );
+        
+        // now:
+        // blockTilDone look into the JobListener hook and blocked until jobs are completed.
+        // TODO : need a retry count so it doesn't reblock forever
+        while (!getJobListener().blockTilDone(getCount(), waitTime)) {
+        	logger.warn("Jobs not yet finished after waited {}, block again" , waitTime);
+        }
+        assertEquals( "Expected success job: " +2 * getCount()+ ". Actual :" + getJobListener().getSuccessCount() + ". Total count: " + getJobListener().getDoneCount() , 2 * getCount() , getJobListener().getSuccessCount() );
     }
 }

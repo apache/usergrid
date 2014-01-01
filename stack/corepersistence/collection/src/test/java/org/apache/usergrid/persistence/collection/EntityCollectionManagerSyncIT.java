@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -193,10 +192,11 @@ public class EntityCollectionManagerSyncIT {
 
         //now try to load it from another org, with the same scope
 
-        CollectionScope collectionScope3 = new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
+        new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
     }
 
 
+    @SuppressWarnings( "UnusedDeclaration" )
     public static class TestModule extends JukitoModule {
 
         @Override

@@ -26,6 +26,7 @@ import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.exceptions.QueryParseException;
+import org.usergrid.persistence.query.ir.OrNode;
 
 import antlr.NoViableAltException;
 
@@ -493,6 +494,40 @@ public class GrammarTreeTest {
 
         assertEquals( "title", rootNode.getProperty().getValue() );
         assertEquals( "hot", ( ( StringLiteral ) rootNode.getLiteral() ).getValue() );
+    }
+
+
+    @Test
+    public void nestedBooleanLogic() throws Exception {
+        String queryString = "select * where field1 = 'foo' AND (field2 = 'bar' OR field2 = 'baz')";
+
+
+        ANTLRStringStream in = new ANTLRStringStream( queryString );
+        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        TokenRewriteStream tokens = new TokenRewriteStream( lexer );
+        QueryFilterParser parser = new QueryFilterParser( tokens );
+
+        Query query = parser.ql().query;
+
+        AndOperand rootNode = ( AndOperand ) query.getRootOperand();
+
+        //left should be field1
+        Equal field1Equal = ( Equal ) rootNode.getLeft();
+
+        assertEquals( "field1", field1Equal.getProperty().getValue() );
+        assertEquals( "foo", ( ( StringLiteral ) field1Equal.getLiteral() ).getValue() );
+
+
+        OrOperand orNode = ( OrOperand ) rootNode.getRight();
+
+        Equal field2Bar = ( Equal ) orNode.getLeft();
+        Equal field2Baz = ( Equal ) orNode.getRight();
+
+        assertEquals( "field2", field2Bar.getProperty().getValue() );
+        assertEquals( "bar", ( ( StringLiteral ) field2Bar.getLiteral() ).getValue() );
+
+        assertEquals( "field2", field2Baz.getProperty().getValue() );
+        assertEquals( "baz", ( ( StringLiteral ) field2Baz.getLiteral() ).getValue() );
     }
 
 

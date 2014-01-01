@@ -17,22 +17,21 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph;
+package org.apache.usergrid.persistence.graph.serialization.impl.parse;
+
+
+import com.netflix.astyanax.model.Column;
 
 
 /**
- * Defines parameters for a search operation where searching from a node
- * using edge types.  Allows you to return all target types for that edge
- *
- * @author tnine */
-public interface SearchEdgeIdType extends SearchEdgeType {
-
+ * Column parser to be used in iterators
+ */
+public interface ColumnParser<C, T> {
 
     /**
-     * Return the edge type to use
+     * Parse the column and return the object
+     * @param column
      * @return
      */
-    String getEdgeType();
-
-
+    public T parseColumn(Column<C> column);
 }

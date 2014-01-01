@@ -354,7 +354,7 @@ public class UserResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        logger.info( "Send activation email for user: " + user.getUuid() );
+        logger.info( "Send activation email for user: {}" , user.getUuid() );
 
         ApiResponse response = createApiResponse();
 

@@ -20,14 +20,18 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
+import java.util.Iterator;
+
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.SearchEdgeIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWriteStage;
 
 import com.google.inject.Inject;
@@ -50,12 +54,16 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final EdgeWriteStage edgeWriteStage;
 
+    private final EdgeMetadataSerialization edgeMetadataSerialization;
+
 
     @Inject
     public EdgeManagerImpl( final EdgeWriteStage edgeWriteStage, final Scheduler scheduler,
-                            @Assisted final OrganizationScope scope ) {
+                            @Assisted final OrganizationScope scope,
+                            final EdgeMetadataSerialization edgeMetadataSerialization ) {
         this.edgeWriteStage = edgeWriteStage;
         this.scheduler = scheduler;
+        this.edgeMetadataSerialization = edgeMetadataSerialization;
 
         ValidationUtils.validateOrganizationScope( scope );
 
@@ -82,12 +90,15 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> loadSourceEdges( final SearchByEdgeType search ) {
+
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
     public Observable<Edge> loadTargetEdges( final SearchByEdgeType search ) {
+
+
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -106,24 +117,45 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<String> getSourceEdgeTypes( final SearchEdgeType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return Observable.create( new ObservableIterator<String>() {
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getSourceEdgeTypes( scope, search );
+            }
+        } );
     }
 
 
     @Override
-    public Observable<String> getSourceEdgeIdTypes( final SearchEdgeIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public Observable<String> getSourceIdTypes( final SearchIdType search ) {
+        return Observable.create( new ObservableIterator<String>() {
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getSourceIdTypes( scope, search );
+            }
+        } );
     }
 
 
     @Override
     public Observable<String> getTargetEdgeTypes( final SearchEdgeType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+
+        return Observable.create( new ObservableIterator<String>() {
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getTargetEdgeTypes( scope, search );
+            }
+        } );
     }
 
 
     @Override
-    public Observable<String> getTargetEdgeIdTypes( final SearchEdgeIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public Observable<String> getTargetIdTypes( final SearchIdType search ) {
+        return Observable.create( new ObservableIterator<String>() {
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getTargetIdTypes( scope, search );
+            }
+        } );
     }
 }

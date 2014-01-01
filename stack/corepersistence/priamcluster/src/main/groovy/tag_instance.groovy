@@ -20,6 +20,9 @@ def resources = new ArrayList()
 resources.add(instanceId)
 
 def tags = new ArrayList()
-tags.add(new Tag("Name", "${stackName}-${type}-${instanceId}"))
+def tag = "${stackName}-${type}-${instanceId}"
+tags.add(new Tag("Name", tag))
 
 ec2Client.createTags(new CreateTagsRequest(resources, tags))
+
+println "Tagged instance as ${tag}"

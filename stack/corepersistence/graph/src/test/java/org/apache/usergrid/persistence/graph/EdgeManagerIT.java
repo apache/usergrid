@@ -24,15 +24,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -53,7 +55,9 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-public class EdgeManagerTest {
+@RunWith( JukitoRunner.class )
+//@UseModules( TestCollectionModule.class )
+public class EdgeManagerIT {
 
 
     @Inject
@@ -531,7 +535,7 @@ public class EdgeManagerTest {
 
         //now test sub edges
 
-        edges = em.getTargetEdgeIdTypes( new SimpleSearchEdgeIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = em.getTargetIdTypes( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -542,7 +546,7 @@ public class EdgeManagerTest {
         assertTrue( "Types correct", results.contains( targetId2 ) );
 
         //now get types for test2
-        edges = em.getTargetEdgeIdTypes( new SimpleSearchEdgeIdType( testTargetEdge.getSourceNode(), "test2", null ) );
+        edges = em.getTargetIdTypes( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -605,7 +609,7 @@ public class EdgeManagerTest {
 
         //now test sub edges
 
-        edges = em.getSourceEdgeTypes( new SimpleSearchEdgeIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = em.getSourceEdgeTypes( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -617,7 +621,7 @@ public class EdgeManagerTest {
 
 
         //now get types for test2
-        edges = em.getSourceEdgeIdTypes( new SimpleSearchEdgeIdType( testTargetEdge.getTargetNode(), "test2", null ) );
+        edges = em.getSourceIdTypes( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -690,7 +694,7 @@ public class EdgeManagerTest {
 
         //now test sub edges
 
-        edges = em.getTargetEdgeIdTypes( new SimpleSearchEdgeIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = em.getTargetIdTypes( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -699,8 +703,8 @@ public class EdgeManagerTest {
 
         //now get the next page
 
-        edges = em.getTargetEdgeIdTypes(
-                new SimpleSearchEdgeIdType( testTargetEdge.getSourceNode(), "test", targetId1.getType() ) );
+        edges = em.getTargetIdTypes(
+                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", targetId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -761,7 +765,7 @@ public class EdgeManagerTest {
 
         //now test sub edges
 
-        edges = em.getSourceEdgeTypes( new SimpleSearchEdgeIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = em.getSourceEdgeTypes( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -771,7 +775,7 @@ public class EdgeManagerTest {
         //now get the next page
 
         edges = em.getSourceEdgeTypes(
-                new SimpleSearchEdgeIdType( testTargetEdge.getTargetNode(), "test", sourceId1.getType() ) );
+                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", sourceId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
 

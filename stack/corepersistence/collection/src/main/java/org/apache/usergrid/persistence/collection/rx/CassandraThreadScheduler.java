@@ -17,7 +17,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import rx.Scheduler;
-import rx.schedulers.Schedulers;
+import rx.concurrency.Schedulers;
 
 
 /**

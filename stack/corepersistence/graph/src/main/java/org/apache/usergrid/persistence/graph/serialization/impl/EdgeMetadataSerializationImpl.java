@@ -32,9 +32,11 @@ import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchEdgeIdType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
+import org.apache.usergrid.persistence.graph.serialization.impl.parse.StringColumnParser;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -72,6 +74,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     private static final EdgeTypeRowCompositeSerializer EDGE_SER = new EdgeTypeRowCompositeSerializer();
     private static final OrganizationScopedRowKeySerializer<EdgeIdTypeKey> EDGE_TYPE_ROW_KEY =
             new OrganizationScopedRowKeySerializer<EdgeIdTypeKey>( EDGE_SER );
+
+    private static final StringColumnParser PARSER = StringColumnParser.get();
 
 
     private static final MultiTennantColumnFamily<OrganizationScope, Id, String> CF_TARGET_EDGE_TYPES =
@@ -172,7 +176,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                         .withColumnRange( searchRange );
 
         try {
-            return new ColumnNameIterator<String>( query.execute().getResult().iterator() );
+            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to cassandra", e );
@@ -181,7 +185,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public Iterator<String> getTargetIdTypes( final OrganizationScope scope, final SearchEdgeIdType search ) {
+    public Iterator<String> getTargetIdTypes( final OrganizationScope scope, final SearchIdType search ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchEdgeIdType( search );
 
@@ -200,7 +204,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                         .withColumnRange( searchRange );
 
         try {
-            return new ColumnNameIterator<String>( query.execute().getResult().iterator() );
+            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER );
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to cassandra", e );
@@ -215,7 +219,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public Iterator<String> getSourceIdTypes( final OrganizationScope scope, final SearchEdgeIdType search ) {
+    public Iterator<String> getSourceIdTypes( final OrganizationScope scope, final SearchIdType search ) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 

@@ -1122,4 +1122,14 @@ public class CassandraService {
             }
         }, 1, 5, TimeUnit.SECONDS );
     }
+    
+    public void destroy() throws Exception {
+    	if (cluster != null) {
+    		HConnectionManager connectionManager = cluster.getConnectionManager();
+    		if (connectionManager != null) {
+    			connectionManager.shutdown();
+    		}
+    	}
+    	cluster = null;
+    }
 }

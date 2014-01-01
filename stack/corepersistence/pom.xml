@@ -40,11 +40,11 @@
   </build>
 
   <repositories>
-      <repository>
-          <id>local-dependencies</id>
-          <name>local-depedendencies</name>
-          <url>file://${project.basedir}/../m2/repository</url>
-      </repository>
+    <repository>
+      <id>local-dependencies</id>
+      <name>local-depedendencies</name>
+      <url>file://${project.basedir}/../m2/repository</url>
+    </repository>
   </repositories>
 
 </project>

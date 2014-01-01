@@ -81,6 +81,12 @@
       <groupId>com.netflix.astyanax</groupId>
       <artifactId>astyanax-cassandra</artifactId>
       <version>${astyanax.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>servlet-api</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -188,7 +194,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-
 
   </dependencies>
 

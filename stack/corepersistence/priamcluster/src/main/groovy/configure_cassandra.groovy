@@ -37,14 +37,14 @@ seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
       parameters:
           - seeds: "${seeds}"
-auto_bootstrap: false
+auto_bootstrap: true
 initial_token:
 hinted_handoff_enabled: true
 hinted_handoff_throttle_in_kb: 1024
 max_hints_delivery_threads: 2
 authenticator: org.apache.cassandra.auth.AllowAllAuthenticator
 authorizer: org.apache.cassandra.auth.AllowAllAuthorizer
-partitioner: org.apache.cassandra.dht.Murmur3Partitioner
+partitioner: org.apache.cassandra.dht.RandomPartitioner
 data_file_directories:
     - /var/lib/cassandra/data
 commitlog_directory: /var/lib/cassandra/commitlog

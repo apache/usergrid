@@ -1,16 +1,13 @@
 package org.apache.usergrid.persistence.collection.rx;
 
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-import java.util.concurrent.ExecutorService;
-
-import org.antlr.misc.MultiMap;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -37,29 +34,35 @@ public class ConcurrentTest {
 
         //we could theoretically use the same instance 3 times.  I just want to use
         //3 actual instances, since this is closer to the real use case.
-        TestConcurrent instance1 = new TestConcurrent();
-        TestConcurrent instance2 = new TestConcurrent();
-        TestConcurrent instance3 = new TestConcurrent();
 
-        Observable<String> result = Concurrent.concurrent( Schedulers.threadPoolForIO(), observable, instance1, instance2, instance3 );
+        final CountDownLatch latch = new CountDownLatch( 0 );
+        TestConcurrent instance1 = new TestConcurrent( latch );
+        TestConcurrent instance2 = new TestConcurrent( latch );
+        TestConcurrent instance3 = new TestConcurrent( latch );
 
-        assertEquals("No invocation yet", 0, set.size());
+        Observable<String> result = Concurrent
+                .concurrent( Schedulers.threadPoolForIO(), observable, instance1, instance2, instance3 );
+
+        assertEquals( "No invocation yet", 0, set.size() );
 
 
         //now invoke it
         String response = result.toBlockingObservable().single();
 
-        assertEquals("Same value emitted",source, response );
+
+        assertEquals( "Same value emitted", source, response );
 
         //verify each function executed in it's own thread
 
-        assertEquals("3 thread invoked", 3, set.size());
+        assertEquals( "3 thread invoked", 3, set.size() );
 
         //print them out just for giggles
         for(Multiset.Entry<String> entry: set.entrySet()){
             System.out.println( entry.getElement() );
-            assertEquals("1 Thread per invocation", 1, entry.getCount());
+            assertEquals( "1 Thread per invocation", 1, entry.getCount() );
         }
+
+
 
     }
 
@@ -72,6 +75,13 @@ public class ConcurrentTest {
      */
     public class TestConcurrent implements Func1<String, String>{
 
+        private final  CountDownLatch latch;
+
+
+        public TestConcurrent( final  CountDownLatch latch) {
+            this.latch = latch;}
+
+
         @Override
         public String call( final String s ) {
             final String threadName = Thread.currentThread().getName();
@@ -80,9 +90,12 @@ public class ConcurrentTest {
 
             set.add( threadName );
 
-            //we sleep to ensure we don't run so fast that a thread is reused in our test
+            //we want to make sure each thread blocks until they all have passed the latch
+            //this way we can ensure they're all running concurrently
             try {
-                Thread.sleep(1000);
+               latch.countDown();
+               latch.await( 30, TimeUnit.SECONDS );
+
             }
             catch ( InterruptedException e ) {
                 logger.error( "Runner interrupted", e );

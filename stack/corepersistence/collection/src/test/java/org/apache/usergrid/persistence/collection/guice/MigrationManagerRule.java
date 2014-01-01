@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.migration.MigrationException;
 import org.apache.usergrid.persistence.collection.migration.MigrationManager;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 

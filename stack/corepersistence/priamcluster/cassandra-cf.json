@@ -17,17 +17,11 @@
             "Type": "String",
             "Default": "usergrid"
         },
-        "CassMinServers": {
-            "Description": "Minimum number of Cass servers.",
+        "CassNumServers": {
+            "Description": "Number of Cass servers to start.",
             "Type": "Number",
-            "Default": "2",
-            "MinValue": "2"
-        },
-        "CassMaxServers": {
-            "Description": "Maximum number of Cass servers.",
-            "Type": "Number",
-            "Default": "2",
-            "MinValue": "2"
+            "Default": "3",
+            "MinValue": "3"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
@@ -59,11 +53,6 @@
             "ap-southeast-2": {"64": "ami-db8611e1"},
             "us-east-1": {"64": "ami-e864da81"},
             "us-west-2": {"64": "ami-50f97060"}
-        },
-        "TwoAZs": {
-            "ap-southeast-2": {"AZ1": "ap-southeast-2a", "AZ2": "ap-southeast-2b"},
-            "us-east-1": {"AZ1": "us-east-1a", "AZ2": "us-east-1b"},
-            "us-west-2": {"AZ1": "us-west-2a", "AZ2": "us-west-2b"}
         }
     },
     "Resources": {
@@ -118,12 +107,12 @@
                                     "\n",
                                     "export DB_SECURITY_GROUP_NAME=", {"Ref": "CassSecurityGroup"}, "\n",
                                     "\n",
+                                    "export JVM_EXTRA_OPTS=-javaagent:/usr/share/cassandra/lib/priam-cass-extensions-2.0.0-SNAPSHOT.jar", "\n",
                                     "export CASSANDRA_CLUSTER_NAME=", {"Ref": "CassClusterName"}, "\n",
                                     "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
                                     "export CASSANDRA_REPLICATION_FACTOR=", {"Ref": "CassReplicationFactor"}, "\n",
                                     "\n",
                                     "export RELEASE_BUCKET=", {"Ref": "ReleaseBucket"}, "\n",
-                                    "export RELEASE_URL=s3://", {"Ref": "ReleaseBucket"}, "/usergrid-deployment-1.0-SNAPSHOT-any.tar.gz\n",
                                     "\n",
                                 "EOF\n",
                                 "\n",
@@ -132,6 +121,13 @@
                                 "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
                                 "export AWS_ACCESS_KEY=", {"Ref": "CassKey"}, "\n",
                                 "export AWS_SECRET_KEY=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
+                                "EOF\n",
+                                "\n",
+
+                                "# put AWS creds Priam's config file\n",
+                                "cat >/etc/awscredential.properties <<EOF\n",
+                                "AWSACCESSID=", {"Ref": "CassKey"}, "\n",
+                                "AWSKEY=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
                                 "EOF\n",
                                 "\n",
 
@@ -197,8 +193,8 @@
                 "LaunchConfigurationName": {
                     "Ref": "CassAutoScalingLaunchConfiguration"
                 },
-                "MinSize": {"Ref": "CassMinServers"},
-                "MaxSize": {"Ref": "CassMaxServers"},
+                "MinSize": {"Ref": "CassNumServers"},
+                "MaxSize": {"Ref": "CassNumServers"},
                 "NotificationConfiguration": {
                     "TopicARN": {"Ref": "NotificationTopic"},
                     "NotificationTypes": [

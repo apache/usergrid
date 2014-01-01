@@ -23,8 +23,9 @@ var successCount = 0;
 var logError = true;
 var errorCount = 0;
 var logNotice = true;
-var _username = 'marty2';
-var _email = 'marty2@timetravel.com';
+var _unique = new Date().getTime();
+var _username = 'marty'+_unique;
+var _email = 'marty'+_unique+'@timetravel.com';
 var _password = 'password2';
 var _newpassword = 'password3';
 
@@ -169,6 +170,14 @@ function runner(step, arg, arg2){
 			notice('-----running step '+step+': try to create new entity with no name');
 			createNewEntityNoName(step, arg);
 			break;
+		case 33:
+			notice('-----running step '+step+': clean up users');
+      cleanUpUsers(step, arg);
+			break;
+		case 34:
+			notice('-----running step '+step+': clean up dogs');
+      cleanUpDogs(step, arg);
+			break;
 		default:
 			notice('-----test complete!-----');
 			notice('Success count= ' + successCount);
@@ -291,7 +300,7 @@ function makeNewDog(step) {
 
 	var options = {
 		type:'dogs',
-		name:'Rocky'
+		name:'Ralph'+_unique
 	}
 
 	client.createEntity(options, function (err, dog) {
@@ -377,7 +386,7 @@ function makeSampleData(step, i) {
 
 	var options = {
 		type:'dogs',
-		name:'dog'+i,
+		name:'dog'+_unique+i,
 		index:i
 	}
 
@@ -548,7 +557,8 @@ function cleanupAllDogs(step){
 function prepareDatabaseForNewUser(step) {
 	var options = {
 		method:'DELETE',
-		endpoint:'users/'+_username
+		endpoint:'users/',
+    qs:{ql:"select * where username ='marty*'"}
 	};
 	client.request(options, function (err, data) {
 		if (err) {
@@ -561,7 +571,6 @@ function prepareDatabaseForNewUser(step) {
 		}
 	});
 }
-
 
 function createUser(step) {
 	client.signup(_username, _password, _email, 'Marty McFly',
@@ -907,4 +916,77 @@ function createNewEntityNoName(step, marty) {
 
 }
 
+function cleanUpUsers(step){
+
+  var options = {
+    type:'users',
+    qs:{limit:50} //limit statement set to 50
+  }
+
+  client.createCollection(options, function (err, users) {
+    if (err) {
+      error('could not get all users');
+    } else {
+      success('got users');
+      //do doggy cleanup
+      while(users.hasNextEntity()) {
+        //get a reference to the dog
+        var user = users.getNextEntity();
+        var username = user.get('name');
+        notice('removing dog ' + username + ' from database');
+        user.destroy(function(err, data) {
+          if (err) {
+            error('user not removed');
+          } else {
+            success('user removed');
+          }
+        });
+      }
+
+      runner(step);
+    }
+  });
+
+}
+
+function cleanUpDogs(step){
+
+    var options = {
+      type:'dogs',
+      qs:{limit:50} //limit statement set to 50
+    }
+
+    client.createCollection(options, function (err, dogs) {
+      if (err) {
+        error('could not get all dogs');
+      } else {
+        success('got at most 50 dogs');
+        //we got 50 dogs, now display the Entities:
+        while(dogs.hasNextEntity()) {
+          //get a reference to the dog
+          var dog = dogs.getNextEntity();
+          var name = dog.get('name');
+          notice('dog is called ' + name);
+        }
+        dogs.resetEntityPointer();
+        //do doggy cleanup
+        while(dogs.hasNextEntity()) {
+          //get a reference to the dog
+          var dog = dogs.getNextEntity();
+          var dogname = dog.get('name');
+          notice('removing dog ' + dogname + ' from database');
+          dog.destroy(function(err, data) {
+            if (err) {
+              error('dog not removed');
+            } else {
+              success('dog removed');
+            }
+          });
+        }
+
+        //no need to wait around for dogs to be removed, so go on to next test
+        runner(step);
+      }
+    });
+  }
 });

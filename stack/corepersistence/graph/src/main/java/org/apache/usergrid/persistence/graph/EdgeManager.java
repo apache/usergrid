@@ -127,7 +127,7 @@ public interface EdgeManager {
      *
      * @return An observable of all source id types
      */
-    Observable<String> getSourceEdgeIdTypes( SearchEdgeIdType search );
+    Observable<String> getSourceIdTypes( SearchIdType search );
 
 
     /**
@@ -147,5 +147,5 @@ public interface EdgeManager {
      *
      * @return An observable of all source id types
      */
-    Observable<String> getTargetEdgeIdTypes( SearchEdgeIdType search );
+    Observable<String> getTargetIdTypes( SearchIdType search );
 }

@@ -17,21 +17,23 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
+
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 /**
  * Records one change to an entry field: entry ID, version, change type and the changed field.
  */
-public class ChangeLogEntry {
+public class ChangeLogEntry implements Comparable {
 
     private final Id entityId;
 
     private final Set<UUID> versions = new TreeSet<UUID>();
-    
+
     public enum ChangeType {
         PROPERTY_WRITE,
         PROPERTY_DELETE
@@ -39,7 +41,7 @@ public class ChangeLogEntry {
 
     private final ChangeType changeType;
 
-    private final Field changedField;
+    private final Field field;
 
     public ChangeLogEntry(Id entryId, UUID version, ChangeType changeType, Field changedField) {
         this.entityId = entryId;
@@ -47,9 +49,14 @@ public class ChangeLogEntry {
             this.versions.add(version);
         }
         this.changeType = changeType;
-        this.changedField = changedField;
+        this.field = changedField;
     }
 
+    public int compareTo( Object o ) {
+        ChangeLogEntry other = (ChangeLogEntry)o;
+        return entityId.getUuid().compareTo( other.entityId.getUuid() );
+    }
+    
     /**
      * @return the entityId
      */
@@ -79,16 +86,16 @@ public class ChangeLogEntry {
     }
 
     /**
-     * @return the changedField
+     * @return the field
      */
-    public Field getChangedField() {
-        return changedField;
+    public Field getField() {
+        return field;
     }
 
     public String toString() {
         return    "Type = " + changeType.toString()
-                + ", Property = " + changedField.getName() 
-                + ", Value = " + changedField.getValue()
+                + ", Property = " + field.getName() 
+                + ", Value = " + field.getValue()
                 + ", Versions = " + versions.toString();
     }
 }
