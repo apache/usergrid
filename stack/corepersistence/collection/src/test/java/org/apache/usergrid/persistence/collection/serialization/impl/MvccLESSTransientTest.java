@@ -1,0 +1,122 @@
+package org.apache.usergrid.persistence.collection.serialization.impl;
+
+
+import java.util.UUID;
+
+import org.jukito.JukitoModule;
+import org.jukito.JukitoRunner;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.safehaus.guicyfig.GuicyFigModule;
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
+import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+
+/** @author tnine */
+@RunWith( JukitoRunner.class )
+public class MvccLESSTransientTest {
+
+
+    @Inject
+    private MvccLogEntrySerializationStrategy logEntryStrategy;
+
+
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
+
+
+    /**
+     * No need to add the @Inject annotation here, Jukito injects automatically:
+     * doing so will create a serious issue. Note we must inject this
+     * MvccLogEntrySerializationStrategy to override the one created by the
+     * class level module for the logEntryStrategy class field. The method argument
+     * version is injected by the method level module.
+     *
+     * @param logEntryStrategy automatically injected using the method's own module TimeoutEnv
+     */
+    @Test @Ignore( "Need some help on this one ... various timout settings are causing issues" )
+    public void transientTimeout( MvccLogEntrySerializationStrategy logEntryStrategy ) throws ConnectionException, InterruptedException {
+        final Id organizationId = new SimpleId( "organization" );
+        final Id applicationId = new SimpleId( "application" );
+        final String name = "test";
+
+
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
+
+
+        final SimpleId id = new SimpleId( "test" );
+        final UUID version = UUIDGenerator.newTimeUUID();
+
+        for ( Stage stage : Stage.values() ) {
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage );
+            logEntryStrategy.write( context, saved ).execute();
+
+            //Read it back after the timeout
+
+            //noinspection PointlessArithmeticExpression
+            Thread.sleep( 1000 );
+
+            MvccLogEntry returned = logEntryStrategy.load( context, id, version );
+
+
+            if ( stage.isTransient() ) {
+                assertNull( "Active is transient and should time out", returned );
+            }
+            else {
+                assertNotNull( "Committed is not transient and should be returned", returned );
+                assertEquals( "Returned should equal the saved", saved, returned );
+            }
+        }
+
+        // null it out
+        TimeoutEnv.cassandraFig.override( "getTimeout", null );
+    }
+
+
+    @SuppressWarnings( "UnusedDeclaration" )
+    public static class TimeoutEnv extends JukitoModule {
+        public static CassandraFig cassandraFig;
+
+        public TimeoutEnv() {
+            super();
+            Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
+            cassandraFig = injector.getInstance( CassandraFig.class );
+            cassandraFig.override( "getTimeout", "1000" );
+        }
+
+        @Override
+        protected void configureTest() {
+            install( new CollectionModule() );
+        }
+    }
+}
+

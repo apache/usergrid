@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
@@ -26,25 +28,14 @@ import rx.Scheduler;
  * @author tnine
  */
 public class CollectionModule extends AbstractModule {
-    private final CassandraFig cassandraFig;
-    private final MigrationManagerFig migrationFig;
-    private final SerializationFig serializationFig;
-    private final RxFig rxFig;
-
-
-    public CollectionModule( CassandraFig cassandraFig, MigrationManagerFig migrationFig,
-                             SerializationFig serializationFig, RxFig rxFig ) {
-        this.cassandraFig = cassandraFig;
-        this.migrationFig = migrationFig;
-        this.serializationFig = serializationFig;
-        this.rxFig = rxFig;
-    }
-
 
     @Override
     protected void configure() {
-        bind( RxFig.class ).toInstance( rxFig );
-        install( new SerializationModule( cassandraFig, migrationFig, serializationFig  ) );
+        //noinspection unchecked
+        install( new GuicyFigModule( RxFig.class, MigrationManagerFig.class,
+                CassandraFig.class, SerializationFig.class ) );
+
+        install( new SerializationModule() );
         install( new ServiceModule() );
 
         // create a guice factor for getting our collection manager

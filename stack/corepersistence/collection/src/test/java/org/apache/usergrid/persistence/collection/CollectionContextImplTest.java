@@ -1,12 +1,13 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -15,7 +16,6 @@ import static junit.framework.TestCase.assertEquals;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class } )
 public class CollectionContextImplTest {
 
 
@@ -53,5 +53,14 @@ public class CollectionContextImplTest {
 
         assertEquals( ownerId, context.getOwner() );
         assertEquals( collection, context.getName() );
+    }
+
+
+    public static class TestModule extends JukitoModule {
+
+        @Override
+        protected void configureTest() {
+            install( new CollectionModule() );
+        }
     }
 }

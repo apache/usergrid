@@ -2,6 +2,7 @@ package org.apache.usergrid.persistence.collection.astynax;
 
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
@@ -9,6 +10,7 @@ import org.safehaus.guicyfig.Key;
 /**
  * Cassandra configuration interface.
  */
+@FigSingleton
 public interface CassandraFig extends GuicyFig {
     @Key( "cassandra.hosts" )
     String getHosts();

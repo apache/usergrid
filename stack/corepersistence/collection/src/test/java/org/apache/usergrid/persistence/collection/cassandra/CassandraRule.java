@@ -5,12 +5,19 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.rules.ExternalResource;
+import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.io.util.FileUtils;
 
+import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
+import org.apache.usergrid.persistence.collection.rx.RxFig;
+
 import com.google.common.io.Files;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.netflix.astyanax.test.EmbeddedCassandra;
 
 
@@ -31,6 +38,26 @@ public class CassandraRule extends ExternalResource {
 
     private static boolean started = false;
 
+    private CassandraFig cassandraFig;
+
+
+    public CassandraRule() {
+        super();
+
+        Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
+        cassandraFig = injector.getInstance( CassandraFig.class );
+        cassandraFig.override( "getPort", THRIFT_PORT_STR );
+        cassandraFig.override( "getConnections", "20" );
+        cassandraFig.override( "getHosts", "localhost" );
+        cassandraFig.override( "getClusterName", "Usergrid" );
+        cassandraFig.override( "getKeyspaceName", "Usergrid_Collections" );
+    }
+
+
+    public CassandraFig getCassandraFig() {
+        return cassandraFig;
+    }
+
 
     @Override
     protected void before() throws Throwable {
@@ -45,6 +72,7 @@ public class CassandraRule extends ExternalResource {
                 return;
             }
 
+            cassandraFig.bypass( "getPort", THRIFT_PORT_STR );
 
             File dataDir = Files.createTempDir();
             dataDir.deleteOnExit();

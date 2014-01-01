@@ -6,21 +6,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.safehaus.guicyfig.Env;
+import org.safehaus.guicyfig.Option;
+import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.rx.RxFig;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -38,18 +46,21 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertSame;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertSame;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNull;
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class } )
 public class MvccEntitySerializationStrategyImplTest {
+    /** Our RX I/O threads and this should have the same value */
+    private static final String CONNECTION_COUNT = "20";
+
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
 
@@ -61,6 +72,43 @@ public class MvccEntitySerializationStrategyImplTest {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+    @Inject
+    @Overrides(
+        name = "unit-test",
+        environments = Env.UNIT,
+        options = {
+            @Option( method = "getHosts", override = "localhost" ),
+            @Option( method = "getConnections", override = CONNECTION_COUNT )
+        }
+    )
+    public CassandraFig cassandraFig;
+
+    @Inject
+    @Overrides( name = "unit-test",
+        options = {
+            @Option( method = "getMaxThreadCount", override = CONNECTION_COUNT )
+        }
+    )
+    public RxFig rxFig;
+
+    @Inject
+    public SerializationFig serializationFig;
+
+    @Inject
+    public MigrationManagerFig migrationManagerFig;
+
+
+    @Before
+    public void setupClass() {
+//        GuicyFigModule.injectMembers( this );
+
+        assertNotNull( cassandraFig );
+        cassandraFig.bypass( "getPort", CassandraRule.THRIFT_PORT_STR );
+
+        assertNotNull( rxFig );
+        rxFig.bypass( "getMaxThreadCount", CassandraRule.THRIFT_PORT_STR );
+    }
 
 
     @Test
@@ -422,5 +470,15 @@ public class MvccEntitySerializationStrategyImplTest {
 
         serializationStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
+    }
+
+
+    @SuppressWarnings( "UnusedDeclaration" )
+    public static class TestModule extends JukitoModule {
+
+        @Override
+        protected void configureTest() {
+            install( new CollectionModule() );
+        }
     }
 }
