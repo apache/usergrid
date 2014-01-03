@@ -26,7 +26,6 @@
     <module>model</module>
     <module>graph</module>
     <module>collection</module>
-    <module>testutils</module>
   </modules>
 
   <build>
