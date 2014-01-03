@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertNull;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
+@UseModules( CollectionModule.class )
 public class MvccLESSTransientTest {
     @Inject
     @Bypass( environments = { Env.ALL, Env.UNIT }, options = @Option( method = "getTimeout", override = "1" ) )
@@ -92,15 +94,6 @@ public class MvccLESSTransientTest {
 
         // null it out
         serializationFig.bypass( "getTimeout", null );
-    }
-
-
-    @SuppressWarnings( "UnusedDeclaration" )
-    public static class TimeoutEnv extends JukitoModule {
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
     }
 }
 

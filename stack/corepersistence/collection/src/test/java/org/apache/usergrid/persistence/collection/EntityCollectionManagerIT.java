@@ -3,6 +3,7 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertNull;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
+@UseModules( CollectionModule.class )
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -208,13 +210,4 @@ public class EntityCollectionManagerIT {
         assertNotNull( collectionScope3 );
     }
 
-
-    @SuppressWarnings( "UnusedDeclaration" )
-    public static class TestModule extends JukitoModule {
-
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
-    }
 }

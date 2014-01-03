@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -57,6 +58,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
+@UseModules( CollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
     /** Our RX I/O threads and this should have the same value */
     private static final String CONNECTION_COUNT = "20";
@@ -394,7 +396,8 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void writeParamsEntity() throws ConnectionException {
-        serializationStrategy.write( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null );
+        serializationStrategy.write(
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null );
     }
 
 
@@ -407,7 +410,8 @@ public class MvccEntitySerializationStrategyImplTest {
     @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
-        serializationStrategy.delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
+        serializationStrategy.delete(
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
                 UUIDGenerator.newTimeUUID() );
     }
 
@@ -416,7 +420,8 @@ public class MvccEntitySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .delete( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null );
     }
 
 
@@ -473,12 +478,5 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @SuppressWarnings( "UnusedDeclaration" )
-    public static class TestModule extends JukitoModule {
 
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
-    }
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
+@UseModules( CollectionModule.class )
 public class MvccLogEntrySerializationStrategyImplTest {
 
     @Inject
@@ -180,7 +182,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     @Test(expected = NullPointerException.class)
     public void deleteParamEntityId() throws ConnectionException {
 
-        logEntryStrategy.delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
+        logEntryStrategy.delete(
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
                 UUIDGenerator.newTimeUUID() );
     }
 
@@ -189,7 +192,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void deleteParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .delete( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .delete( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null );
     }
 
 
@@ -211,7 +215,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .load( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null );
     }
 
 
@@ -234,7 +239,8 @@ public class MvccLogEntrySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         logEntryStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
+                .load( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null, 1 );
     }
 
 
@@ -243,15 +249,6 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
         logEntryStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
-    }
-
-
-    @SuppressWarnings( "UnusedDeclaration" )
-    public static class TestModule extends JukitoModule {
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
     }
 }
 

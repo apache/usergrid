@@ -16,6 +16,7 @@ import static junit.framework.TestCase.assertEquals;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
+@UseModules( CollectionModule.class )
 public class CollectionContextImplTest {
 
 
@@ -56,11 +57,4 @@ public class CollectionContextImplTest {
     }
 
 
-    public static class TestModule extends JukitoModule {
-
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
-    }
 }

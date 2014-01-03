@@ -3,6 +3,7 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertNull;
  *
  */
 @RunWith( JukitoRunner.class )
+@UseModules( CollectionModule.class )
 public class EntityCollectionManagerSyncIT {
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -195,13 +197,4 @@ public class EntityCollectionManagerSyncIT {
         new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
     }
 
-
-    @SuppressWarnings( "UnusedDeclaration" )
-    public static class TestModule extends JukitoModule {
-
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
-    }
 }
