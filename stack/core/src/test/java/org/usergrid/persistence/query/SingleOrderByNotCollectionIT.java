@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderByNotCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByNotCollection() throws Exception {
-        singleOrderByNot( new CollectionIoHelper() );
+        singleOrderByNot( new CollectionIoHelper( app ) );
     }
 }
