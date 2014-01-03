@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.IntegerType;
 import org.apache.cassandra.db.marshal.ReversedType;
@@ -49,6 +52,9 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
  */
 @Singleton
 public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerializationStrategy, Migration {
+
+    private static final Logger LOG =  LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
+
     private static final StageSerializer SER = new StageSerializer();
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -201,7 +207,12 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ).setTimestamp( version.timestamp() ) );
+        final long timestamp = version.timestamp();
+
+
+        LOG.error( "Writing version with timestamp '{}'", timestamp );
+
+        op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ) );
 
         return batch;
     }
