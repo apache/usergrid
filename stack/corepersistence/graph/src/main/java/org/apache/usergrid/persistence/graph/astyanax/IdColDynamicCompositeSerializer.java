@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.astyanax;
 
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
@@ -72,15 +73,14 @@ public class IdColDynamicCompositeSerializer implements DynamicCompositeFieldSer
 
 
     @Override
-    public Id fromComposite( final Iterator<AbstractComposite.Component<?>> composite ) {
+    public Id fromComposite( final DynamicComposite composite, int startIndex ) {
 
-        Preconditions.checkArgument( composite.hasNext(), "Composite must contain a next element for uuid" );
 
-        final UUID uuid = composite.next().getValue( UUID_SERIALIZER );
+        Preconditions.checkArgument( composite.size() > startIndex+2, "Composite must contain a next element for uuid" );
 
-        Preconditions.checkArgument( composite.hasNext(), "Composite must contain a next element for uuid" );
+        final UUID uuid = composite.get(startIndex, UUID_SERIALIZER );
 
-        final String type = composite.next().getValue(STRING_SERIALIZER);
+        final String type = composite.get(startIndex +1, STRING_SERIALIZER);
 
         return new SimpleId(uuid, type );
 

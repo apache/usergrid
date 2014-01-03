@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.graph.serialization.util;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 
@@ -68,4 +70,34 @@ public class EdgeUtils {
 
         ValidationUtils.verifyString( search.getEdgeType(), "edgeType" );
     }
+
+    /**
+     * Validate the search edge
+     */
+    public static void validateSearchByEdgeType( final SearchByEdgeType search ) {
+        Preconditions.checkNotNull( search, "search is required" );
+
+        ValidationUtils.verifyIdentity( search.getNode() );
+        ValidationUtils.verifyString( search.getType(), "type" );
+        ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "version" );
+
+        //only validate if the value is present
+        if(search.last().isPresent()){
+            validateEdge( search.last().get() );
+        }
+
+    }
+
+
+    /**
+     * Validate the search
+     * @param search
+     */
+    public static void validateSearchByIdType(final SearchByIdType search){
+        validateSearchByEdgeType( search );
+
+        ValidationUtils.verifyString(search.getIdType(), "id type");
+
+    }
+
 }

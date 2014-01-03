@@ -47,6 +47,7 @@ public interface DynamicCompositeFieldSerializer<K> {
     /**
      * Create an instance from the composite
      * @param composite The dynamic composite containing the data that iterates each element
+     * @param startIndex The start index
      */
-    public K fromComposite( Iterator<AbstractComposite.Component<?>> composite);
+    public K fromComposite( DynamicComposite composite, int startIndex);
 }
