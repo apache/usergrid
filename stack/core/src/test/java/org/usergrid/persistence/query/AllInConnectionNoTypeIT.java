@@ -17,6 +17,7 @@ package org.usergrid.persistence.query;
 
 
 import org.junit.Test;
+import org.usergrid.CoreApplication;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
@@ -25,19 +26,24 @@ import org.usergrid.persistence.Results;
 public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT {
     @Test
     public void allInConnectionNoType() throws Exception {
-        allIn( new ConnectionNoTypeHelper() );
+        allIn( new ConnectionNoTypeHelper(app) );
     }
 
 
     class ConnectionNoTypeHelper extends ConnectionHelper {
 
+        public ConnectionNoTypeHelper( final CoreApplication app ) {
+            super( app );
+        }
+
+
         /*
-         * (non-Javadoc)
-         *
-         * @see
-         * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
-         * (org.usergrid.persistence.Query)
-         */
+                 * (non-Javadoc)
+                 *
+                 * @see
+                 * org.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
+                 * (org.usergrid.persistence.Query)
+                 */
         @Override
         public Results getResults( Query query ) throws Exception {
             query.setConnectionType( CONNECTION );

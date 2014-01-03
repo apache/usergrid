@@ -23,6 +23,6 @@ import org.junit.Test;
 public class AllInCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void allInCollection() throws Exception {
-        allIn( new CollectionIoHelper() );
+        allIn( new CollectionIoHelper( app ) );
     }
 }

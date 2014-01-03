@@ -23,6 +23,6 @@ import org.junit.Test;
 public class AllInConnectionIT extends AbstractIteratingQueryIT {
     @Test
     public void allInConnection() throws Exception {
-        allIn( new ConnectionHelper() );
+        allIn( new ConnectionHelper(app) );
     }
 }

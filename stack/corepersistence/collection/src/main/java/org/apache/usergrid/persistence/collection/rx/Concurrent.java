@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
-import rx.Scheduler;
+import rx.concurrency.Schedulers;
 import rx.operators.OperationMerge;
 import rx.util.functions.Func1;
 
@@ -22,10 +22,8 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
 
 
     private final Func1<T, R>[] concurrent;
-    private final Scheduler scheduler;
 
-    private Concurrent(final Scheduler scheduler, final Func1<T, R>[] concurrent ){
-        this.scheduler = scheduler;
+    private Concurrent( final Func1<T, R>[] concurrent ){
         this.concurrent = concurrent;
     }
 
@@ -36,7 +34,7 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
 
         //put all our observables together for concurrency
         for( Func1<T, R> funct: concurrent){
-            final Observable<R> observable = Observable.from(input).subscribeOn(scheduler).map( funct );
+            final Observable<R> observable = Observable.from(input).subscribeOn(  Schedulers.threadPoolForIO() ).map( funct );
 
             observables.add( observable );
         }
@@ -59,13 +57,12 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
      * The results are then "zipped" into a single observable which is returned
      *
      *
-     * @param scheduler The scheduler to be used to schedule the concurrent tasks
      * @param observable The observable we're invoking on
      * @param concurrent The concurrent operations we're invoking
      * @return
      */
-    public static <T, R> Observable<R> concurrent( final Scheduler scheduler, final Observable<T> observable, final Func1<T, R>... concurrent ){
-          return observable.mapMany(new Concurrent<T, R>(scheduler,  concurrent ));
+    public static <T, R> Observable<R> concurrent( final Observable<T> observable, final Func1<T, R>... concurrent ){
+          return observable.mapMany( new Concurrent<T, R>( concurrent ));
     }
 
 

@@ -23,6 +23,6 @@ import org.junit.Test;
 public class NotOrderByCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void orderByWithNot() throws Exception {
-        notOrderBy( new CollectionIoHelper() );
+        notOrderBy( new CollectionIoHelper( app ) );
     }
 }

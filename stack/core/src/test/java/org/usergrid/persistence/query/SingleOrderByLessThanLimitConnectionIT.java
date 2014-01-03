@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderByLessThanLimitConnectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByLessThanLimitConnection() throws Exception {
-        singleOrderByLessThanLimit( new ConnectionHelper() );
+        singleOrderByLessThanLimit( new ConnectionHelper(app) );
     }
 }
