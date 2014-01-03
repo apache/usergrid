@@ -79,9 +79,11 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
         rxFig.addPropertyChangeListener( new PropertyChangeListener() {
             @Override
             public void propertyChange( final PropertyChangeEvent evt ) {
-                if ( evt.getPropertyName().equals( rxFig.getKeyByMethod( "getMaxThreadCount" ) ) ) {
-                    pool.setMaximumPoolSize( ( Integer ) evt.getNewValue() );
-                }
+            if ( evt.getPropertyName().equals( rxFig.getKeyByMethod( "getMaxThreadCount" ) ) ) {
+                LOG.debug( "Getting update to property: rxFig.getMaxThreadCount() old = {}, new = {} ",
+                        evt.getOldValue(), evt.getNewValue() );
+                pool.setMaximumPoolSize( ( Integer ) evt.getNewValue() );
+            }
             }
         } );
 

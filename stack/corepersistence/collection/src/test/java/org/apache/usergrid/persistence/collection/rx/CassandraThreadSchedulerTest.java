@@ -101,7 +101,7 @@ public class CassandraThreadSchedulerTest {
     /**
      * Test running from a max limit to a lower limit and fails to schedule new threads
      */
-    @Test @Ignore( "Can't figure out what you're trying to achieve" )
+    @Test
     public void testMaxLimitShrink() throws InterruptedException {
 
         final int maxCount = 10;
@@ -192,7 +192,7 @@ public class CassandraThreadSchedulerTest {
     /**
      * Test that when we're fully blocked, if we expand we have capacity
      */
-    @Test @Ignore( "Can't figure out what you're trying to achieve" )
+    @Test
     public void testExpandLimit() throws InterruptedException {
 
         final int startCount = 10;

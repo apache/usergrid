@@ -13,7 +13,6 @@ import org.junit.runner.RunWith;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
@@ -22,6 +21,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -65,12 +65,14 @@ public class MvccLESSTransientTest {
      */
     @Test @Ignore( "Need some help on this one ... various timout settings are causing issues" )
     public void transientTimeout( MvccLogEntrySerializationStrategy logEntryStrategy ) throws ConnectionException, InterruptedException {
+        TimeoutEnv.serializationFig.override( "getTimeout", "1" );
+
         final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
 
-        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( organizationId, applicationId, name );
 
 
         final SimpleId id = new SimpleId( "test" );
@@ -83,7 +85,7 @@ public class MvccLESSTransientTest {
             //Read it back after the timeout
 
             //noinspection PointlessArithmeticExpression
-            Thread.sleep( 1000 );
+            Thread.sleep( 500 );
 
             MvccLogEntry returned = logEntryStrategy.load( context, id, version );
 
@@ -98,19 +100,19 @@ public class MvccLESSTransientTest {
         }
 
         // null it out
-        TimeoutEnv.cassandraFig.override( "getTimeout", null );
+        TimeoutEnv.serializationFig.override( "getTimeout", null );
     }
 
 
     @SuppressWarnings( "UnusedDeclaration" )
     public static class TimeoutEnv extends JukitoModule {
-        public static CassandraFig cassandraFig;
+        public static SerializationFig serializationFig;
 
         public TimeoutEnv() {
             super();
-            Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
-            cassandraFig = injector.getInstance( CassandraFig.class );
-            cassandraFig.override( "getTimeout", "1000" );
+            Injector injector = Guice.createInjector( new GuicyFigModule( SerializationFig.class ) );
+            serializationFig = injector.getInstance( SerializationFig.class );
+            serializationFig.override( "getTimeout", "1" );
         }
 
         @Override
