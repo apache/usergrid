@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderByNoIntersectionCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByNoIntersectionCollection() throws Exception {
-        singleOrderByNoIntersection( new CollectionIoHelper() );
+        singleOrderByNoIntersection( new CollectionIoHelper( app ) );
     }
 }

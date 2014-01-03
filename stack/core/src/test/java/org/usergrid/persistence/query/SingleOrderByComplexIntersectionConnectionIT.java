@@ -24,6 +24,6 @@ public class SingleOrderByComplexIntersectionConnectionIT extends AbstractIterat
 
     @Test
     public void singleOrderByComplexIntersectionConnection() throws Exception {
-        singleOrderByComplexIntersection( new ConnectionHelper() );
+        singleOrderByComplexIntersection( new ConnectionHelper(app) );
     }
 }

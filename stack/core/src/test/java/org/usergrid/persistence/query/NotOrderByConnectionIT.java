@@ -23,6 +23,6 @@ import org.junit.Test;
 public class NotOrderByConnectionIT extends AbstractIteratingQueryIT {
     @Test
     public void orderByWithNot() throws Exception {
-        notOrderBy( new ConnectionHelper() );
+        notOrderBy( new ConnectionHelper(app) );
     }
 }
