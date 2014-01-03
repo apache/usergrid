@@ -6,11 +6,12 @@ import java.util.UUID;
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.safehaus.guicyfig.GuicyFigModule;
+import org.safehaus.guicyfig.Bypass;
+import org.safehaus.guicyfig.Env;
+import org.safehaus.guicyfig.Option;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
@@ -26,9 +27,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static junit.framework.TestCase.assertNotNull;
@@ -39,6 +38,9 @@ import static org.junit.Assert.assertNull;
 /** @author tnine */
 @RunWith( JukitoRunner.class )
 public class MvccLESSTransientTest {
+    @Inject
+    @Bypass( environments = { Env.ALL, Env.UNIT }, options = @Option( method = "getTimeout", override = "1" ) )
+    public SerializationFig serializationFig;
 
 
     @Inject
@@ -54,19 +56,8 @@ public class MvccLESSTransientTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    /**
-     * No need to add the @Inject annotation here, Jukito injects automatically:
-     * doing so will create a serious issue. Note we must inject this
-     * MvccLogEntrySerializationStrategy to override the one created by the
-     * class level module for the logEntryStrategy class field. The method argument
-     * version is injected by the method level module.
-     *
-     * @param logEntryStrategy automatically injected using the method's own module TimeoutEnv
-     */
-    @Test @Ignore( "Need some help on this one ... various timout settings are causing issues" )
-    public void transientTimeout( MvccLogEntrySerializationStrategy logEntryStrategy ) throws ConnectionException, InterruptedException {
-        TimeoutEnv.serializationFig.override( "getTimeout", "1" );
-
+    @Test
+    public void transientTimeout() throws ConnectionException, InterruptedException {
         final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
@@ -85,7 +76,7 @@ public class MvccLESSTransientTest {
             //Read it back after the timeout
 
             //noinspection PointlessArithmeticExpression
-            Thread.sleep( 500 );
+            Thread.sleep( 1000 );
 
             MvccLogEntry returned = logEntryStrategy.load( context, id, version );
 
@@ -100,21 +91,12 @@ public class MvccLESSTransientTest {
         }
 
         // null it out
-        TimeoutEnv.serializationFig.override( "getTimeout", null );
+        serializationFig.bypass( "getTimeout", null );
     }
 
 
     @SuppressWarnings( "UnusedDeclaration" )
     public static class TimeoutEnv extends JukitoModule {
-        public static SerializationFig serializationFig;
-
-        public TimeoutEnv() {
-            super();
-            Injector injector = Guice.createInjector( new GuicyFigModule( SerializationFig.class ) );
-            serializationFig = injector.getInstance( SerializationFig.class );
-            serializationFig.override( "getTimeout", "1" );
-        }
-
         @Override
         protected void configureTest() {
             install( new CollectionModule() );
