@@ -21,8 +21,8 @@ package org.apache.usergrid.persistence.collection.mvcc.changelog;
 import java.util.Collection;
 import java.util.List;
 
+import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -57,7 +57,6 @@ import rx.Observable;
  * Test basic operation of change log
  */
 @RunWith( JukitoRunner.class )
-@UseModules( { TestCollectionModule.class } )
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
@@ -208,6 +207,16 @@ public class ChangeLogGeneratorImplTest {
             }
         }
         return true;
+    }
+
+
+    @SuppressWarnings( "UnusedDeclaration" )
+    public static class TestModule extends JukitoModule {
+
+        @Override
+        protected void configureTest() {
+            install( new CollectionModule() );
+        }
     }
 }
 

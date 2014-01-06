@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.collection.rx;
 
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
-import com.netflix.config.DynamicIntProperty;
 
 import rx.Scheduler;
 import rx.concurrency.Schedulers;
@@ -26,21 +27,15 @@ import rx.concurrency.Schedulers;
 public class CassandraThreadScheduler implements Provider<Scheduler> {
 
 
-    /**
-     * Max number of threads a pool can allocate.  Can be dynamically changed after starting
-     */
-    public static final String RX_IO_THREADS = "rx.cassandra.io.threads";
-
     private static final Logger LOG = LoggerFactory.getLogger(CassandraThreadScheduler.class);
 
 
-
-    private final DynamicIntProperty maxThreadCount;
+    private final RxFig rxFig;
 
 
     @Inject
-    public CassandraThreadScheduler( @Named(RX_IO_THREADS) final DynamicIntProperty maxThreadCount ) {
-        this.maxThreadCount = maxThreadCount;
+    public CassandraThreadScheduler( final RxFig rxFig ) {
+        this.rxFig = rxFig;
     }
 
 
@@ -75,21 +70,22 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
          * to completion, without allowing additional tasks to be queued.
          *
          */
-        final ThreadPoolExecutor pool = new ThreadPoolExecutor( 0, maxThreadCount.get(), 60L, TimeUnit.SECONDS,
+        final ThreadPoolExecutor pool = new ThreadPoolExecutor( 0, rxFig.getMaxThreadCount(), 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(), factory, new ThreadPoolExecutor.AbortPolicy() );
 
 
         //if our max thread count is updated, we want to immediately update the pool.  Per the javadoc
         //if the size is smaller, existing threads will continue to run until they become idle and time out
-        maxThreadCount.addCallback( new Runnable() {
-
+        rxFig.addPropertyChangeListener( new PropertyChangeListener() {
             @Override
-            public void run() {
-                pool.setMaximumPoolSize( maxThreadCount.get() );
+            public void propertyChange( final PropertyChangeEvent evt ) {
+            if ( evt.getPropertyName().equals( rxFig.getKeyByMethod( "getMaxThreadCount" ) ) ) {
+                LOG.debug( "Getting update to property: rxFig.getMaxThreadCount() old = {}, new = {} ",
+                        evt.getOldValue(), evt.getNewValue() );
+                pool.setMaximumPoolSize( ( Integer ) evt.getNewValue() );
+            }
             }
         } );
-
-
 
         return Schedulers.executor( pool );
     }

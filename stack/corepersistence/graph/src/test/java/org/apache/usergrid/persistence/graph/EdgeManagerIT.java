@@ -25,11 +25,18 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
@@ -56,8 +63,18 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith( JukitoRunner.class )
-//@UseModules( TestCollectionModule.class )
+@UseModules( { CollectionModule.class, GraphModule.class } )
 public class EdgeManagerIT {
+
+
+
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
 
 
     @Inject
@@ -87,7 +104,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -96,7 +113,7 @@ public class EdgeManagerIT {
         Observable<Edge> edges = em.loadSourceEdges( search );
 
         //implicitly blows up if more than 1 is returned from "single"
-        Edge returned = edges.toBlockingObservable().single();
+        Edge returned = edges.toBlockingObservable().last();
 
         assertEquals( "Correct edge returned", edge, returned );
 
@@ -120,7 +137,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -155,7 +172,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -191,7 +208,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -321,7 +338,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -357,7 +374,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -393,7 +410,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
@@ -449,7 +466,7 @@ public class EdgeManagerIT {
 
         Edge edge = createRealEdge( "source", "test", "target" );
 
-        em.writeEdge( edge );
+        em.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 

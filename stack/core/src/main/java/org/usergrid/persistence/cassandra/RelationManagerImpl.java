@@ -1997,7 +1997,6 @@ public class RelationManagerImpl implements RelationManager {
      * @param targetEntity The target entity to search edges in
      * @param connectionType The type of connection.  If not specified, all connections are returned
      * @param connectedEntityType The connected entity type, if not specified all types are returned
-     * @param resultsLevel The results level to return
      * @param count result limit
      */
 	private Results getConnectingEntities(EntityRef targetEntity,

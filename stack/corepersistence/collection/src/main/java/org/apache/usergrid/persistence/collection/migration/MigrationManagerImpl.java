@@ -16,7 +16,6 @@ import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFami
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -35,29 +34,20 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( MigrationManagerImpl.class );
 
-    public static final String STRATEGY_CLASS = "collections.keyspace.strategy.class";
-    public static final String STRATEGY_OPTIONS = "collections.keyspace.strategy.options";
-    public static final String REPLICATION_FACTOR = "collections.keyspace.replicationfactor";
-
-
-    private final String strategyClass;
-    private final String replicationFactor;
-
-
     private final Set<Migration> migrations;
     private final Keyspace keyspace;
     private final Properties props;
 
+    private final MigrationManagerFig fig;
+
 
     @Inject
     public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations, final Properties props,
-                                 @Named( STRATEGY_CLASS ) final String strategyClass,
-                                 @Named( REPLICATION_FACTOR ) final String replicationFactor ) {
+                                 MigrationManagerFig fig ) {
         this.keyspace = keyspace;
         this.migrations = migrations;
         this.props = props;
-        this.strategyClass = strategyClass;
-        this.replicationFactor = replicationFactor;
+        this.fig = fig;
     }
 
 
@@ -144,13 +134,13 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
         ImmutableMap.Builder<String, Object> strategyOptions =
-                ImmutableMap.<String, Object>builder().put( "replication_factor", replicationFactor );
+                ImmutableMap.<String, Object>builder().put( "replication_factor", fig.getReplicationFactor() );
 
         strategyOptions.putAll( getKeySpaceProps() );
 
 
         ImmutableMap<String, Object> options =
-                ImmutableMap.<String, Object>builder().put( "strategy_class", strategyClass )
+                ImmutableMap.<String, Object>builder().put( "strategy_class", fig.getStrategyClass() )
                             .put( "strategy_options", strategyOptions.build() ).build();
 
 
@@ -169,11 +159,11 @@ public class MigrationManagerImpl implements MigrationManager {
         for ( Map.Entry<Object, Object> entry : props.entrySet() ) {
             final String key = entry.getKey().toString();
 
-            if ( !key.startsWith( STRATEGY_OPTIONS ) ) {
+            if ( ! key.startsWith( fig.getKeyByMethod( "getStrategyOptions" ) ) ) {
                 continue;
             }
 
-            final String optionKey = key.substring( STRATEGY_OPTIONS.length() + 1 );
+            final String optionKey = key.substring( fig.getKeyByMethod( "getStrategyOptions" ).length() + 1 );
 
             keyspaceProps.put( optionKey, entry.getValue().toString() );
         }
