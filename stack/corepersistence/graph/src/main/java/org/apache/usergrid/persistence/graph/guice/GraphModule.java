@@ -19,7 +19,13 @@
 
 package org.apache.usergrid.persistence.graph.guice;
 
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.migration.Migration;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
@@ -31,6 +37,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializatio
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.Multibinder;
 
 
 /**
@@ -42,6 +49,9 @@ public class GraphModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        //configure collections and our core astyanax framework
+        install(new CollectionModule());
+
         bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
 
         bind( EdgeMetadataSerialization.class).to( EdgeMetadataSerializationImpl.class);
@@ -52,6 +62,13 @@ public class GraphModule extends AbstractModule {
         install( new FactoryModuleBuilder()
                 .implement( EdgeManager.class, EdgeManagerImpl.class )
                 .build( EdgeManagerFactory.class ) );
+
+
+
+        //do multibindings for migrations
+        Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
+        uriBinder.addBinding().to( EdgeMetadataSerializationImpl.class );
+        uriBinder.addBinding().to( EdgeSerializationImpl.class );
 
 
     }

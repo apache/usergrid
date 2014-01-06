@@ -302,7 +302,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         try {
             return new ColumnNameIterator<DirectedEdge, Edge>( query.execute().getResult().iterator(),
-                    new SourceEdgeColumnParser( nodeId, edgeTypeName ) );
+                    new SourceEdgeColumnParser( nodeId, edgeTypeName ), edgeType.last().isPresent() );
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to cassandra", e );

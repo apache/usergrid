@@ -13,13 +13,14 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.util.functions.Action1;
+import rx.util.functions.Func1;
 
 
 /**
  * Stage for writing the edge data
  */
 @Singleton
-public class EdgeWriteStage implements Action1<GraphIoEvent<Edge>> {
+public class EdgeWriteStage implements Func1<GraphIoEvent<Edge>, Edge> {
 
 
     private final EdgeSerialization edgeSerialization;
@@ -38,7 +39,7 @@ public class EdgeWriteStage implements Action1<GraphIoEvent<Edge>> {
 
 
     @Override
-    public void call( final GraphIoEvent<Edge> edgeGraphIoEvent ) {
+    public Edge call( final GraphIoEvent<Edge> edgeGraphIoEvent ) {
         final MutationBatch mutation =
                 edgeMetadata.writeEdge( edgeGraphIoEvent.getOrganization(), edgeGraphIoEvent.getEvent() );
 
@@ -53,5 +54,7 @@ public class EdgeWriteStage implements Action1<GraphIoEvent<Edge>> {
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to cassandra", e );
         }
+
+        return edgeGraphIoEvent.getEvent();
     }
 }
