@@ -15,7 +15,7 @@ public class SimpleSearchIdType extends SimpleSearchEdgeType implements SearchId
     private final String edgeType;
 
 
-    public SimpleSearchIdType( final Id node, final String last, final String edgeType ) {
+    public SimpleSearchIdType( final Id node, final String edgeType, final String last ) {
         super( node, last );
 
         ValidationUtils.verifyString( edgeType, "edgeType" );

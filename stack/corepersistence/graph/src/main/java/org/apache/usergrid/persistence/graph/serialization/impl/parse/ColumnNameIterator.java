@@ -24,9 +24,14 @@ public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
 
 
-    public ColumnNameIterator( final Iterator<Column<C>> sourceIterator, final ColumnParser<C, T> parser ) {
+    public ColumnNameIterator( final Iterator<Column<C>> sourceIterator, final ColumnParser<C, T> parser, final boolean skipFirst ) {
         this.sourceIterator = sourceIterator;
         this.parser = parser;
+
+        //if we are to skip the first element, we need to advance the iterator
+        if(skipFirst && sourceIterator.hasNext()){
+            sourceIterator.next();
+        }
     }
 
 

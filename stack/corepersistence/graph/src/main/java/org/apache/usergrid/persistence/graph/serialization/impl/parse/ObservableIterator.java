@@ -3,6 +3,8 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
+import com.netflix.hystrix.HystrixCommand;
+
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -18,6 +20,7 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribeFun
 
     @Override
     public Subscription onSubscribe( final Observer<? super T> observer ) {
+
 
         try {
             //get our iterator and push data to the observer
