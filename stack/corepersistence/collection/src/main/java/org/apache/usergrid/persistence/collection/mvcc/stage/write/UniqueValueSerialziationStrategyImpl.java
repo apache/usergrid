@@ -17,8 +17,9 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.serializers.AbstractSerializer;
@@ -29,19 +30,18 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 /**
  *
  */
-public class UniqueValueSerialziationImpl implements UniqueValueSerializationStrategy {
+public class UniqueValueSerialziationStrategyImpl implements UniqueValueSerializationStrategy {
 
-    private static final UniqueValueSerialziationImpl.UniqueValueSerializer SER = 
-        new UniqueValueSerialziationImpl.UniqueValueSerializer();
+    private static final UniqueValueSerialziationStrategyImpl.FieldSerializer SER = 
+        new UniqueValueSerialziationStrategyImpl.FieldSerializer();
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
@@ -50,21 +50,37 @@ public class UniqueValueSerialziationImpl implements UniqueValueSerializationStr
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_UNIQUE_VALUES =
         new MultiTennantColumnFamily<CollectionScope, Id, UUID>( 
-                "Unique_Values", ROW_KEY_SER, UUIDSerializer.get() );
+            "Unique_Values", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
+    protected final int timeout;
 
     @Inject
-    public UniqueValueSerialziationImpl( final Keyspace keyspace ) {
+    public UniqueValueSerialziationStrategyImpl( final Keyspace keyspace, final int timeout ) {
         this.keyspace = keyspace;
+        this.timeout = timeout;
     }
 
-    public MutationBatch write( CollectionScope context, MvccEntity entity, String fieldName ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); 
+    public MutationBatch write( CollectionScope collectionScope, UniqueValue value, String fieldName ) {
+
+        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( value, "value is required" );
+
+        final UUID colName = value.getEntityVersion();
+        final Field field = value.getField();
+
+        return doWrite( collectionScope, value.getEntityId(), value.getEntityVersion(), 
+                new UniqueValueSerialziationStrategyImpl.RowOp() {
+
+            @Override
+            public void doOp( final ColumnListMutation<UUID> colMutation ) {
+                colMutation.putColumn( colName, field, SER, null );
+            }
+        } );
     }
 
-    public MvccEntity load( CollectionScope context, MvccEntity entity, String fieldName ) {
+    public UniqueValue load( CollectionScope context, UniqueValue entity, String fieldName ) {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
@@ -80,20 +96,46 @@ public class UniqueValueSerialziationImpl implements UniqueValueSerializationStr
         throw new UnsupportedOperationException( "Not supported yet." ); 
     }
 
-    private static class UniqueValueSerializer  extends AbstractSerializer<Optional<Entity>> {
+    private static class FieldSerializer  extends AbstractSerializer<Field> {
 
-        public UniqueValueSerializer() {
+        public FieldSerializer() {
         }
 
         @Override
-        public ByteBuffer toByteBuffer( Optional<Entity> t ) {
+        public ByteBuffer toByteBuffer( Field field ) {
             throw new UnsupportedOperationException( "Not supported yet." ); 
         }
 
         @Override
-        public Optional<Entity> fromByteBuffer( ByteBuffer bb ) {
-            throw new UnsupportedOperationException( "Not supported yet." ); 
+        public Field fromByteBuffer(ByteBuffer bb) {
+            throw new UnsupportedOperationException("Not supported yet."); 
         }
+    }
+
+    /**
+     * Simple callback to perform puts and deletes with a common row setup code
+     */
+    private static interface RowOp {
+
+        /**
+         * The operation to perform on the row
+         */
+        void doOp( ColumnListMutation<UUID> colMutation );
+    }
+
+
+    /**
+     * Do the column update or delete for the given column and row key
+     * @param context We need to use this when getting the keyspace
+     */
+    private MutationBatch doWrite( CollectionScope context, Id entityId, UUID version, RowOp op ) {
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+        op.doOp( batch.withRow( CF_UNIQUE_VALUES, 
+            ScopedRowKey.fromKey( context, entityId ) ).setTimestamp( version.timestamp() ) );
+
+        return batch;
     }
     
 }

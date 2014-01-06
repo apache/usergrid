@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import com.netflix.astyanax.MutationBatch;
 import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -29,9 +28,9 @@ import org.apache.usergrid.persistence.model.field.Field;
  */
 public interface UniqueValueSerializationStrategy {
 
-    public MutationBatch write( CollectionScope context, MvccEntity entity, String fieldName );
+    public MutationBatch write( CollectionScope context, UniqueValue entity, String fieldName );
 
-    public MvccEntity load( CollectionScope context, MvccEntity entity, String fieldName );
+    public UniqueValue load( CollectionScope context, UniqueValue entity, String fieldName );
 
     public List<Field> load( CollectionScope context, Id entityId, String fieldName );
 
