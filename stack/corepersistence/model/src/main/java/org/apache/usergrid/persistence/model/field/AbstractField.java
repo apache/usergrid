@@ -12,10 +12,24 @@ public abstract class AbstractField<T> implements Field<T> {
      */
     protected EntityObject parent;
     protected String name;
+    protected Boolean unique;
     protected T value;
 
     /**
-     * Name and value must always be present.
+     * Create field with unqiue value; name and value must always be present.
+     *
+     * @param name The name of this field
+     * @param value The value to set. If value is null, this means that the value should be
+     * explicitly removed from the field storage
+     */
+    protected AbstractField( String name, T value, boolean unique  ) {
+        this.name = name;
+        this.value = value;
+        this.unique = unique;
+    }
+
+    /**
+     * Create field with non-unique value; name and value must always be present.
      *
      * @param name The name of this field
      * @param value The value to set. If value is null, this means that the value should be
@@ -24,6 +38,7 @@ public abstract class AbstractField<T> implements Field<T> {
     protected AbstractField( String name, T value ) {
         this.name = name;
         this.value = value;
+        this.unique = false;
     }
 
     /**
@@ -35,6 +50,10 @@ public abstract class AbstractField<T> implements Field<T> {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isUnique() {
+        return unique;
     }
 
     @Override

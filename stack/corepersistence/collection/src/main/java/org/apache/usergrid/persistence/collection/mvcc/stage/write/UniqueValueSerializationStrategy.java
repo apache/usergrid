@@ -18,10 +18,11 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.List;
+import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 /**
  * Reads and writes to UniqueValues column family.
@@ -30,9 +31,11 @@ public interface UniqueValueSerializationStrategy {
 
     public MutationBatch write( CollectionScope context, UniqueValue entity, String fieldName );
 
-    public UniqueValue load( CollectionScope context, UniqueValue entity, String fieldName );
+    public UniqueValue load( CollectionScope colScope, 
+            Id entityId, final UUID version, String fieldName ) throws ConnectionException;
 
-    public List<Field> load( CollectionScope context, Id entityId, String fieldName );
+    public List<UniqueValue> load( CollectionScope context, 
+            Id entityId, String fieldName ) throws ConnectionException;
 
     public MutationBatch delete( CollectionScope context, Id entityId, String fieldName );
 }

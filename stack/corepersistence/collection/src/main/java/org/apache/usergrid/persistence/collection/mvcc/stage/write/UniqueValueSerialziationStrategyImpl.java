@@ -22,15 +22,21 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
+import com.netflix.astyanax.model.Column;
+import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
+import com.netflix.astyanax.util.RangeBuilder;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -62,15 +68,15 @@ public class UniqueValueSerialziationStrategyImpl implements UniqueValueSerializ
         this.timeout = timeout;
     }
 
-    public MutationBatch write( CollectionScope collectionScope, UniqueValue value, String fieldName ) {
+    public MutationBatch write( CollectionScope colScope, UniqueValue value, String fieldName ) {
 
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( colScope, "collectionScope is required" );
         Preconditions.checkNotNull( value, "value is required" );
 
         final UUID colName = value.getEntityVersion();
         final Field field = value.getField();
 
-        return doWrite( collectionScope, value.getEntityId(), value.getEntityVersion(), 
+        return doWrite( colScope, value.getEntityId(), value.getEntityVersion(), 
                 new UniqueValueSerialziationStrategyImpl.RowOp() {
 
             @Override
@@ -80,16 +86,50 @@ public class UniqueValueSerialziationStrategyImpl implements UniqueValueSerializ
         } );
     }
 
-    public UniqueValue load( CollectionScope context, UniqueValue entity, String fieldName ) {
-        throw new UnsupportedOperationException( "Not supported yet." );
+    public UniqueValue load( CollectionScope colScope, 
+            Id entityId, final UUID version, String fieldName ) throws ConnectionException {
+        Preconditions.checkNotNull( colScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "entity version is required" );
+        Preconditions.checkNotNull( fieldName, "fieldName is required" );
+
+        Column<UUID> result;
+
+        try {
+            result = keyspace.prepareQuery( CF_UNIQUE_VALUES )
+                .getKey( ScopedRowKey.fromKey( colScope, entityId ) )
+                .getColumn( version ).execute().getResult();
+        }
+        catch ( NotFoundException nfe ) {
+            return null;
+        }
+
+        final Field field = result.getValue( SER );
+        return new UniqueValueImpl( colScope, field, version, entityId );
     }
 
-    public List<Field> load( CollectionScope context, Id entityId, String fieldName ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); 
-    }
+    public List<UniqueValue> load( CollectionScope colScope, 
+            Id entityId, String fieldName ) throws ConnectionException {
+        Preconditions.checkNotNull( colScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( fieldName, "fieldName is required" );
 
-    public MutationBatch clear( CollectionScope context, Id entityId, String fieldName ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); 
+        ColumnList<UUID> columns =
+            keyspace.prepareQuery( CF_UNIQUE_VALUES )
+                .getKey( ScopedRowKey.fromKey( colScope, entityId ) )
+                .withColumnRange(new RangeBuilder().setLimit(Integer.MAX_VALUE).build())
+                .execute()
+                .getResult();
+
+        List<UniqueValue> results = new ArrayList<UniqueValue>( columns.size() );
+
+        for ( Column<UUID> col : columns ) {
+            final UUID storedVersion = col.getName();
+            final Field field = col.getValue( SER );
+            results.add( new UniqueValueImpl( colScope, field, storedVersion, entityId ) );
+        }
+
+        return results;
     }
 
     public MutationBatch delete( CollectionScope context, Id entityId, String fieldName ) {

@@ -26,10 +26,9 @@ public interface UniqueValue {
 
     public CollectionScope getCollectionScope();
 
+    public Id getEntityId();
+
     public Field getField();
 
     public UUID getEntityVersion();
-
-    public Id getEntityId();
-    
 }

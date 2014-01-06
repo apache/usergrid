@@ -24,6 +24,8 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.field.Field;
 
 import rx.util.functions.Func1;
 
@@ -44,9 +46,13 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, C
 
         ValidationUtils.verifyMvccEntityWithEntity( mvccEntityIoEvent.getEvent() );
 
-        // for each entity
+        Entity entity = mvccEntityIoEvent.getEvent().getEntity().get();
+        for ( Field field : entity.getFields() ) {
 
-            // for each unique field
+            if ( field.isUnique() ) {
+
+            }
+        }
 
                 // search UniqueValues to ensure that no other entity has that name/value
 

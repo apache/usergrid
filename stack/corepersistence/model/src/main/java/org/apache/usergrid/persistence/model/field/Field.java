@@ -23,5 +23,10 @@ public interface Field<T> extends Serializable {
      */
     public T getValue();
 
+    /** 
+     * True if field value must be unique within Entity Collection.
+     * @return 
+     */
+    public boolean isUnique();
 
 }
