@@ -23,9 +23,9 @@ package org.apache.usergrid.persistence.graph.serialization.impl;
 import java.nio.ByteBuffer;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
-import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 

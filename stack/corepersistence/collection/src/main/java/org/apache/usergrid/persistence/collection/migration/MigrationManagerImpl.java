@@ -11,7 +11,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

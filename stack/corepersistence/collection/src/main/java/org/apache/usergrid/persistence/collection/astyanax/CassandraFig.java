@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.astynax;
+package org.apache.usergrid.persistence.collection.astyanax;
 
 
 import org.safehaus.guicyfig.Default;

@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.collection.migration;
 
 import java.util.Collection;
 
-import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 
 
 /**

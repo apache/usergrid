@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;

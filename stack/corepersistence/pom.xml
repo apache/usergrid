@@ -47,5 +47,5 @@
       <url>file://${project.basedir}/../m2/repository</url>
     </repository>
   </repositories>
-
+    <name>core-persistence</name>
 </project>

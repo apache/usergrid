@@ -18,10 +18,10 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astynax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.astynax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.collection.astynax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;

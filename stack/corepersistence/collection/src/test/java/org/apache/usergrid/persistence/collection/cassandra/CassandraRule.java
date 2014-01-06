@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.io.util.FileUtils;
 
-import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
+import org.apache.usergrid.persistence.collection.astyanax.CassandraFig;
 import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
