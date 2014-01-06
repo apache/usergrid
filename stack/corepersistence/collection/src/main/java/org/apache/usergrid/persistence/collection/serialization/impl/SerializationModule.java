@@ -1,7 +1,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import org.apache.usergrid.persistence.collection.astynax.AstynaxKeyspaceProvider;
+import org.apache.usergrid.persistence.collection.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
@@ -21,8 +21,8 @@ public class SerializationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        // bind our keyspace to the AstynaxKeyspaceProvider
-        bind( Keyspace.class ).toProvider( AstynaxKeyspaceProvider.class );
+        // bind our keyspace to the AstyanaxKeyspaceProvider
+        bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class );
 
         // bind our migration manager
         bind( MigrationManager.class ).to( MigrationManagerImpl.class );

@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.astynax;
+package org.apache.usergrid.persistence.collection.astyanax;
 
 
 import com.google.inject.Inject;
@@ -20,12 +20,12 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
  *
  * @author tnine
  */
-public class AstynaxKeyspaceProvider implements Provider<Keyspace> {
+public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     private final CassandraFig cassandraConfig;
 
 
     @Inject
-    public AstynaxKeyspaceProvider( final CassandraFig cassandraConfig ) {
+    public AstyanaxKeyspaceProvider( final CassandraFig cassandraConfig ) {
         this.cassandraConfig = cassandraConfig;
     }
 

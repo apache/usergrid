@@ -19,7 +19,7 @@ import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astynax.CassandraFig;
+import org.apache.usergrid.persistence.collection.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;

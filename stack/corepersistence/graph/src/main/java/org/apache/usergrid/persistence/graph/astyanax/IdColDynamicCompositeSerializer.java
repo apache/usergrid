@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.astynax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
