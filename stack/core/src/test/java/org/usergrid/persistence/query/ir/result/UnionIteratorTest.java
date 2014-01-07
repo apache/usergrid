@@ -24,11 +24,14 @@ import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class UnionIteratorTest {
 
     @Test
@@ -242,6 +245,51 @@ public class UnionIteratorTest {
 
         assertTrue( results.isEmpty() );
         assertFalse( union.hasNext() );
+    }
+
+
+    @Test
+    public void iterationCompleted() {
+
+        UUID id1 = UUIDUtils.minTimeUUID( 1 );
+        UUID id2 = UUIDUtils.minTimeUUID( 2 );
+        UUID id3 = UUIDUtils.minTimeUUID( 3 );
+        UUID id4 = UUIDUtils.minTimeUUID( 4 );
+        UUID id5 = UUIDUtils.minTimeUUID( 5 );
+
+
+        UnionIterator union = new UnionIterator( 5 );
+
+        InOrderIterator first = new InOrderIterator( 100 );
+
+        InOrderIterator second = new InOrderIterator( 100 );
+        second.add( id1 );
+        second.add( id2 );
+        second.add( id3 );
+        second.add( id4 );
+        second.add( id5 );
+
+        union.addIterator( first );
+        union.addIterator( second );
+
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertTrue( union.hasNext() );
+
+        Set<ScanColumn> ids = union.next();
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertTrue( ids.contains( uuidColumn( id1 ) ) );
+        assertTrue( ids.contains( uuidColumn( id2 ) ) );
+        assertTrue( ids.contains( uuidColumn( id3 ) ) );
+        assertTrue( ids.contains( uuidColumn( id4 ) ) );
+        assertTrue( ids.contains( uuidColumn( id5 ) ) );
+
+        //now try to get the next page
+        ids = union.next();
+        assertNull(ids);
+
+
     }
 
 
