@@ -138,7 +138,10 @@ public class IntersectionIterator extends MultiIterator {
                 return results;
             }
 
-            results.addAll( Sets.intersection( current, child.next() ) );
+
+            final Set<ScanColumn> childResults = child.next();
+
+            results.addAll( Sets.intersection( current, childResults ) );
         }
 
         return results;
