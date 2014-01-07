@@ -29,11 +29,11 @@ import org.apache.usergrid.persistence.model.field.Field;
 public class UniqueValueImpl implements UniqueValue {
     private CollectionScope collectionScope;
     private Field field;
-    private UUID entityVersion;
     private Id entityId;
+    private UUID entityVersion;
 
     public UniqueValueImpl(
-            final CollectionScope scope, final Field field, final UUID version, Id entityId ) {
+            final CollectionScope scope, final Field field, Id entityId, final UUID version ) {
 
         Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( field, "field is required" );

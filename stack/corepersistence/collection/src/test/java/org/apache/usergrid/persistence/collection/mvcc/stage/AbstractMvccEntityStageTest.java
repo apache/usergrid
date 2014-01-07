@@ -24,33 +24,37 @@ import static org.mockito.Mockito.when;
 @RunWith(Theories.class)
 public abstract class AbstractMvccEntityStageTest {
 
-
     /**
-     * Tests all possible combinations that will result in a NullPointerException input fail the MvccEntity interface to
-     * be a mockito mock impl
+     * Tests all possible combinations that will result in a NullPointerException input fail the 
+     * MvccEntity interface to be a mockito mock impl
      */
     @Test(expected = NullPointerException.class)
     @Theory
-    public void testNonNullable( @InvalidMvccEntityGenerator.NullFields final MvccEntity mvccEntity, @InvalidEntityGenerator.NullFields final Entity entity,
-                                 @InvalidIdGenerator.NullFields final Id nullValidationFailId ) throws Exception {
+    public void testNonNullable( 
+            @InvalidMvccEntityGenerator.NullFields final MvccEntity mvccEntity, 
+            @InvalidEntityGenerator.NullFields final Entity entity,
+            @InvalidIdGenerator.NullFields final Id nullValidationFailId ) throws Exception {
         testStage( mvccEntity, entity, nullValidationFailId );
     }
 
 
     /**
-     * Tests all possible combinations that will result in an invalid input Excepts the MvccEntity interface to be a
-     * mockito mock impl
+     * Tests all possible combinations that will result in an invalid input Excepts the MvccEntity 
+     * interface to be a mockito mock impl
      */
     @Test(expected = IllegalArgumentException.class)
     @Theory
-    public void testInvalidValue( @InvalidMvccEntityGenerator.IllegalFields final MvccEntity mvccEntity,   @InvalidEntityGenerator.IllegalFields final Entity entity,
-                                  @InvalidIdGenerator.IllegalFields final Id invalidValueId ) throws Exception {
+    public void testInvalidValue( 
+            @InvalidMvccEntityGenerator.IllegalFields final MvccEntity mvccEntity,   
+            @InvalidEntityGenerator.IllegalFields final Entity entity,
+            @InvalidIdGenerator.IllegalFields final Id invalidValueId ) throws Exception {
 
         testStage( mvccEntity, entity, invalidValueId );
     }
 
 
-    public void testStage( final MvccEntity mvccEntity, final Entity entity,  final Id id ) throws Exception {
+    public void testStage( 
+            final MvccEntity mvccEntity, final Entity entity,  final Id id ) throws Exception {
 
         if(entity != null){
             EntityUtils.setId( entity, id );
@@ -67,6 +71,9 @@ public abstract class AbstractMvccEntityStageTest {
     }
 
 
-    /** Get an instance of the Func1 That takes an CollectionIoEvent with an entity type for validation testing */
+    /** 
+     * Get an instance of the Func1 That takes an CollectionIoEvent with an entity type 
+     * for validation testing 
+     */
     protected abstract void validateStage( CollectionIoEvent<MvccEntity> event );
 }

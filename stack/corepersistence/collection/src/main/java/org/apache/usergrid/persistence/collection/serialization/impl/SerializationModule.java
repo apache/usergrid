@@ -11,6 +11,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 
 
 /**
@@ -35,5 +36,6 @@ public class SerializationModule extends AbstractModule {
         Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
         uriBinder.addBinding().to( MvccEntitySerializationStrategyImpl.class );
         uriBinder.addBinding().to( MvccLogEntrySerializationStrategyImpl.class );
+        uriBinder.addBinding().to( UniqueValueSerializationStrategyImpl.class );
     }
 }

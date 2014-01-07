@@ -24,41 +24,70 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import rx.util.functions.Func1;
-
 
 /**
  * This phase should execute any verification on the MvccEntity
  */
 @Singleton
-public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>> {
+public class WriteUniqueVerify 
+    implements Func1<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>> {
+
+    private static final Logger LOG = LoggerFactory.getLogger( WriteUniqueVerify.class );
+
+    private UniqueValueSerializationStrategy uniqueValueSerializiationStrategy;
 
     @Inject
-    public WriteUniqueVerify() {
+    public WriteUniqueVerify( UniqueValueSerializationStrategy uniqueValueSerializiationStrategy ) {
+        this.uniqueValueSerializiationStrategy = uniqueValueSerializiationStrategy;
     }
 
-
     @Override
-    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> mvccEntityIoEvent ) {
+    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioevent ) {
 
-        ValidationUtils.verifyMvccEntityWithEntity( mvccEntityIoEvent.getEvent() );
+        ValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
-        Entity entity = mvccEntityIoEvent.getEvent().getEntity().get();
+        Entity entity = ioevent.getEvent().getEntity().get();
+
         for ( Field field : entity.getFields() ) {
 
             if ( field.isUnique() ) {
 
+                UniqueValue uniqueValue = null;
+                try {
+                    uniqueValue = uniqueValueSerializiationStrategy.load(
+                        ioevent.getEntityCollection(), field );
+
+                } catch ( ConnectionException e ) {
+                    throw new CollectionRuntimeException( e );
+                }
+
+                if ( uniqueValue != null ) {
+                    throw new CollectionRuntimeException( 
+                            "Duplicate field value " + field.toString() );
+                }
+
+                uniqueValue  = new UniqueValueImpl( ioevent.getEntityCollection(), 
+                                                    field, entity.getId(), entity.getVersion());
+
+                MutationBatch mb = uniqueValueSerializiationStrategy.write(uniqueValue);
+                try {
+                    mb.execute();
+                } catch (ConnectionException ex) {
+                    throw new CollectionRuntimeException( 
+                            "Error writing unique value " + field.toString(), ex );
+                }
             }
         }
 
-                // search UniqueValues to ensure that no other entity has that name/value
-
-                    // if other entity has that name/value then throw runtime exception
-
-        //no op, just emit the value
-        return mvccEntityIoEvent;
+        return ioevent;
     }
 }
