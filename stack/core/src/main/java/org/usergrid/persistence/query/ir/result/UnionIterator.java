@@ -111,7 +111,7 @@ public class UnionIterator extends MultiIterator {
             resultSet = returnSet;
         }
 
-        return resultSet;
+        return resultSet.size() > 0 ? resultSet: null;
     }
 
 
