@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.collection.cassandra;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.rules.ExternalResource;
+import org.safehaus.guicyfig.EnvironResource;
 import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import com.netflix.astyanax.test.EmbeddedCassandra;
  * @TODO - I wanted this in the test module but unfortunately that will create a circular dep
  *         due to the inclusion of the MigrationManager
  */
-public class CassandraRule extends ExternalResource {
+public class CassandraRule extends EnvironResource {
     private static final Logger LOG = LoggerFactory.getLogger( CassandraRule.class );
 
     public static final int THRIFT_PORT = AvailablePortFinder.getNextAvailable();

@@ -12,9 +12,10 @@
 
   <properties>
     <guice.version>3.0</guice.version>
-    <guicyfig.version>3.2-SNAPSHOT</guicyfig.version>
+    <guicyfig.version>3.2</guicyfig.version>
     <slf4j.version>1.7.2</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
+    <chop.version>1.0-SNAPSHOT</chop.version>
   </properties>
 
   <artifactId>collection</artifactId>
@@ -53,6 +54,43 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.safehaus.chop</groupId>
+        <artifactId>chop-maven-plugin</artifactId>
+        <version>1.0-SNAPSHOT</version>
+
+        <!--
+        NOTE: you should be putting most of these variables into your settings.xml
+        as an automatically activated profile.
+        -->
+
+        <configuration>
+          <accessKey>${aws.s3.key}</accessKey>
+          <secretKey>${aws.s3.secret}</secretKey>
+          <bucketName>${aws.s3.bucket}</bucketName>
+          <managerAppUsername>admin</managerAppUsername>
+          <managerAppPassword>${manager.app.password}</managerAppPassword>
+          <testPackageBase>org.safehaus.chop.example</testPackageBase>
+          <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
+          <failIfCommitNecessary>false</failIfCommitNecessary>
+          <amiID>${ami.id}</amiID>
+          <awsSecurityGroup>${security.group}</awsSecurityGroup>
+          <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
+          <minimumRunners>5</minimumRunners>
+          <maximumRunners>8</maximumRunners>
+          <securityGroupExceptions>
+            <!--
+            Add your own IP address as an exception to allow access
+            but please do this in the settings.xml file .. essentially
+            all parameters should be in the settings.xml file.
+            -->
+            <param>${myip.address}/32:8080</param>
+            <param>${myip.address}/32:22</param>
+          </securityGroupExceptions>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 
@@ -93,6 +131,12 @@
       <groupId>org.safehaus.guicyfig</groupId>
       <artifactId>guicyfig</artifactId>
       <version>${guicyfig.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.safehaus.chop</groupId>
+      <artifactId>chop-api</artifactId>
+      <version>${chop.version}</version>
     </dependency>
 
     <dependency>
