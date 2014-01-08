@@ -281,13 +281,18 @@ public class AbstractConnectionsService extends AbstractService {
         if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
+            if (logger.isDebugEnabled()) {
+            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" , count, level.name());
+            }
         }
 
         if ( context.getRequest().isReturnsTree() ) {
             level = Results.Level.ALL_PROPERTIES;
         }
 
-        query.setLimit( count );
+//        query.setLimit( count );
+        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following same style in AstractCollectionService
+        query.setLimit( query.getLimit( count ) );
         query.setResultsLevel( level );
 
         Results r = null;
@@ -298,8 +303,10 @@ public class AbstractConnectionsService extends AbstractService {
                 return null;
             }
             else {
-                r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
-                        query.getEntityType(), level );
+//            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
+//            			query.getEntityType(), level );
+                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding the limit to the method parameter downstream.
+            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),query.getEntityType(), level , query.getLimit()); 
             }
         }
         else {

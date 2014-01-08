@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.Role;
@@ -492,7 +493,10 @@ public interface EntityManager {
                                           Results.Level resultsLevel ) throws Exception;
 
 
-    public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception;
+    public Results getConnectingEntities(UUID uuid, String connectionType,
+    		String entityType, Level level, int count) throws Exception;
+
+	public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception;
 
 
     // Application roles
