@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFam
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
+import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.field.Field;
 
 // TODO: unit test for this, e.g. timeout value. 
@@ -47,7 +48,8 @@ import org.apache.usergrid.persistence.model.field.Field;
 public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializationStrategy, Migration {
 
     // TODO: use "real" field serializer here instead once it is ready
-    private static final RowKeySerializer ROW_KEY_SER = new RowKeySerializer();
+    private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER = 
+            new CollectionScopedRowKeySerializer<Field>( FieldSerializer.get() );
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 

@@ -69,8 +69,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = new CollectionScopedRowKeySerializer<Id>( ID_SER );
-
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = 
+            new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_DATA =
             new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Version_Data", ROW_KEY_SER,

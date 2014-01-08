@@ -76,7 +76,8 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = new CollectionScopedRowKeySerializer<Id>( ID_SER );
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = 
+            new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_LOG =
             new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );

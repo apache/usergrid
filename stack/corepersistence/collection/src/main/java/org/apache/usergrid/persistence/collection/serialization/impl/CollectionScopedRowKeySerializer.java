@@ -23,13 +23,13 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 
 
 /**
@@ -67,6 +67,8 @@ public class CollectionScopedRowKeySerializer<K>
         //add the key type
         keySerializer.toComposite( builder, scopedRowKey.getKey() );
 
+        //addOtherComponents( builder, scopedRowKey );
+
         return builder.build();
     }
 
@@ -81,8 +83,16 @@ public class CollectionScopedRowKeySerializer<K>
         final K value = keySerializer.fromComposite( parser );
 
         return new ScopedRowKey<CollectionScope, K>( 
-                new CollectionScopeImpl( orgId, scopeId, scopeName ), value );
+                new CollectionScopeImpl( orgId, scopeId, scopeName ), value ); 
+
+        //return buildScopedRowKey( parser, orgId, scopeId, scopeName, value );
     }
+
+//    public abstract ScopedRowKey<CollectionScope, K> buildScopedRowKey( 
+//            CompositeParser parser, Id orgId, Id scopeId, String scopeName, K value );
+//
+//    public abstract void addOtherComponents( 
+//            CompositeBuilder builder, ScopedRowKey<CollectionScope, K> scopedRowKey );
 }
 
 
