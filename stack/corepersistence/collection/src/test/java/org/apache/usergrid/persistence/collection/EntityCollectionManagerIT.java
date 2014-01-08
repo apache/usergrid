@@ -83,30 +83,30 @@ public class EntityCollectionManagerIT {
     }
 
 
-    @Test
-    public void writeWithUniqueValues() {
-
-        CollectionScope context = new CollectionScopeImpl(
-                new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
-
-        EntityCollectionManager manager = factory.createCollectionManager( context );
-
-        {
-            Entity newEntity = new Entity( new SimpleId( "test" ) );
-            newEntity.setField(new IntegerField("count", 5, true));
-
-            Observable<Entity> observable = manager.write( newEntity );
-            Entity returned = observable.toBlockingObservable().lastOrDefault( null );
-        }
-
-        {
-            Entity newEntity = new Entity( new SimpleId( "test" ) );
-            newEntity.setField(new IntegerField("count", 5, true));
-
-            Observable<Entity> observable = manager.write( newEntity );
-            Entity returned = observable.toBlockingObservable().lastOrDefault( null );
-        }
-    }
+//    @Test
+//    public void writeWithUniqueValues() {
+//
+//        CollectionScope context = new CollectionScopeImpl(
+//                new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
+//
+//        EntityCollectionManager manager = factory.createCollectionManager( context );
+//
+//        {
+//            Entity newEntity = new Entity( new SimpleId( "test" ) );
+//            newEntity.setField( new IntegerField("count", 5, true) );
+//
+//            Observable<Entity> observable = manager.write( newEntity );
+//            Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+//        }
+//
+//        {
+//            Entity newEntity = new Entity( new SimpleId( "test" ) );
+//            newEntity.setField( new IntegerField("count", 5, true) );
+//
+//            Observable<Entity> observable = manager.write( newEntity );
+//            Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+//        }
+//    }
 
     @Test
     public void writeAndLoad() {

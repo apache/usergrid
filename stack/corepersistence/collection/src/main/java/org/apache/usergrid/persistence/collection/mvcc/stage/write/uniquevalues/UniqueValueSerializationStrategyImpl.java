@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -26,34 +26,38 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.IntegerSerializer;
-import com.netflix.astyanax.serializers.StringSerializer;
 import java.util.Collections;
-import java.util.UUID;
 import org.apache.cassandra.db.marshal.BytesType;
-import org.apache.cassandra.db.marshal.IntegerType;
-import org.apache.cassandra.db.marshal.UTF8Type;
+import org.apache.cassandra.db.marshal.DynamicCompositeType;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 
+// TODO: unit test for this, e.g. timeout value. 
+// What happens if write times out?
+// We add unique values before we actually write the entity
+// We write them once with a timeout, then commit entity then write again with no timeout
+
 /**
- *
+ * Reads and writes to UniqueValues column family.
  */
 public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializationStrategy, Migration {
 
-    private static final UniqueValueRowKeySerializer ROW_KEY_SER = new UniqueValueRowKeySerializer();
+    // TODO: use "real" field serializer here instead once it is ready
+    private static final RowKeySerializer ROW_KEY_SER = new RowKeySerializer();
 
-    private static final MultiTennantColumnFamily<CollectionScope, Field, String> CF_UNIQUE_VALUES =
-        new MultiTennantColumnFamily<CollectionScope, Field, String>( 
-            "Unique_Values", ROW_KEY_SER, StringSerializer.get() );
+    private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
+
+    private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> CF_UNIQUE_VALUES =
+        new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( 
+            "Unique_Values", ROW_KEY_SER, ENTITY_VERSION_SER );
 
     protected final Keyspace keyspace;
     protected final int timeout;
+
 
     @Inject
     public UniqueValueSerializationStrategyImpl( final Keyspace keyspace, final int timeout ) {
@@ -61,24 +65,32 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         this.timeout = timeout;
     }
 
+
+    @Override
+    public java.util.Collection getColumnFamilies() {
+
+        MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( 
+                CF_UNIQUE_VALUES,
+                BytesType.class.getSimpleName(), 
+                DynamicCompositeType.class.getSimpleName(),
+                BytesType.class.getSimpleName() );
+
+        return Collections.singleton( cf );
+    } 
+
+
     public MutationBatch write( UniqueValue value ) {
 
         Preconditions.checkNotNull( value, "value is required" );
 
-        final StringBuilder sb = new StringBuilder();
-        sb.append( value.getEntityId().getUuid().toString() );
-        sb.append( "|" );
-        sb.append( value.getEntityId().getType() );
-        sb.append( "|" );
-        sb.append( value.getEntityVersion().toString() );
-        final String colName = sb.toString();
+        final EntityVersion ev = new EntityVersion( value.getEntityId(), value.getEntityVersion() );
 
         return doWrite( value.getCollectionScope(), value.getField(), 
             new UniqueValueSerializationStrategyImpl.RowOp() {
 
             @Override
-            public void doOp( final ColumnListMutation<String> colMutation ) {
-                colMutation.putColumn( colName, 0, IntegerSerializer.get(), null );
+            public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
+                colMutation.putColumn( ev, 0, IntegerSerializer.get(), null );
             }
         } );
     }
@@ -87,6 +99,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     public MutationBatch delete(UniqueValue uniqueValue) {
         return null;
     } 
+
     
     /**
      * Do the column update or delete for the given column and row key
@@ -98,12 +111,12 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         return batch;
     }
 
+
     public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException {
 
         Preconditions.checkNotNull( field, "field is required" );
 
-        ColumnList<String> result;
-
+        ColumnList<EntityVersion> result;
         try {
             result = keyspace.prepareQuery( CF_UNIQUE_VALUES )
                 .getKey( ScopedRowKey.fromKey( colScope, field ) )
@@ -117,35 +130,15 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
             return null;
         }
 
-        String colName = result.getColumnByIndex(0).getStringValue();
-        String parts[] = colName.split("|");
-        Id entityId = new SimpleId( UUID.fromString( parts[0] ), parts[1] );
-        UUID entityVersion = UUID.fromString( parts[2] );
-
-        return new UniqueValueImpl( colScope, field, entityId, entityVersion );
-
+        EntityVersion ev = result.getColumnByIndex(0).getName();
+        return new UniqueValueImpl( colScope, field, ev.getEntityId(), ev.getEntityVersion() );
     }
 
 
-
-    @Override
-    public java.util.Collection getColumnFamilies() {
-        // create the CF entity data.  We want it reversed b/c we want the most recent version 
-        // at the top of the row for fast seeks
-        MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( 
-                CF_UNIQUE_VALUES, // column family
-                BytesType.class.getSimpleName(),
-                UTF8Type.class.getSimpleName(),
-                IntegerType.class.getSimpleName() );
-
-
-        return Collections.singleton( cf );
-    } 
-    
     /**
      * Simple callback to perform puts and deletes with a common row setup code
      */
     private static interface RowOp {
-        void doOp( ColumnListMutation<String> colMutation );
+        void doOp( ColumnListMutation<EntityVersion> colMutation );
     }
 }

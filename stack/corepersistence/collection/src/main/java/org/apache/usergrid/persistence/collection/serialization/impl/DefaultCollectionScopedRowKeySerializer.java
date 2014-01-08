@@ -15,33 +15,21 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.exception;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
-/**
- * @author tnine
- */
-public class CollectionRuntimeException extends RuntimeException {
-    public CollectionRuntimeException() {
+import com.netflix.astyanax.model.CompositeBuilder;
+import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
+
+
+public class DefaultCollectionScopedRowKeySerializer
+    extends AbstractCollectionScopedRowKeySerializer {
+
+    public DefaultCollectionScopedRowKeySerializer(CompositeFieldSerializer ks) {
+        super(ks);
     }
 
-
-    public CollectionRuntimeException( final String message ) {
-        super( message );
-    }
-
-
-    public CollectionRuntimeException( final String message, final Throwable cause ) {
-        super( message, cause );
-    }
-
-
-    public CollectionRuntimeException( final Throwable cause ) {
-        super( cause );
-    }
-
-
-    public CollectionRuntimeException( final String message, final Throwable cause, final boolean enableSuppression,
-                                       final boolean writableStackTrace ) {
-        super( message, cause, enableSuppression, writableStackTrace );
+    @Override
+    public void addOtherComponents(CompositeBuilder builder) {
+        // default has no other components
     }
 }

@@ -15,21 +15,29 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
 
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.model.field.Field;
+import java.util.UUID;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 /**
- * Reads and writes to UniqueValues column family.
+ * Combine entity ID and entity version for use as column name for UniqueValues Column Family.
  */
-public interface UniqueValueSerializationStrategy {
+class EntityVersion {
+    private final Id entityId;
+    private final UUID entityVersion;
 
-    public MutationBatch write( UniqueValue uniqueValue );
+    public EntityVersion(Id id, UUID uuid) {
+        this.entityId = id;
+        this.entityVersion = uuid;
+    }
 
-    public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException;
+    public Id getEntityId() {
+        return entityId;
+    }
 
-    public MutationBatch delete( UniqueValue uniqueValue );
+    public UUID getEntityVersion() {
+        return entityVersion;
+    }
+    
 }

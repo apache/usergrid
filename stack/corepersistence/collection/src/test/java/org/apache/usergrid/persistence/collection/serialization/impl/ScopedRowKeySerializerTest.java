@@ -30,13 +30,10 @@ public class ScopedRowKeySerializerTest {
                 rowKey = new ScopedRowKey<CollectionScope, Id>( collectionScope, testKey );
 
 
-        CollectionScopedRowKeySerializer<Id>
-                collectionScopedRowKeySerializer = new CollectionScopedRowKeySerializer<Id>( IdRowCompositeSerializer
-                .get() );
-
+        AbstractCollectionScopedRowKeySerializer<Id> collectionScopedRowKeySerializer = 
+                new DefaultCollectionScopedRowKeySerializer( IdRowCompositeSerializer.get() );
 
         ByteBuffer buff = collectionScopedRowKeySerializer.toByteBuffer( rowKey );
-
 
         ScopedRowKey<CollectionScope, Id> parsedRowKey = collectionScopedRowKeySerializer.fromByteBuffer( buff );
 

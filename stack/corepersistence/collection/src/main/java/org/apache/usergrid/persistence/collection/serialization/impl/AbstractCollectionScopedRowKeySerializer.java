@@ -15,31 +15,43 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.serialization.impl;
+
+import java.nio.ByteBuffer;
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
+
 
 /**
- * Serializer for serializing a UniqueValue field to a composite key.
+ * Serializer for serializing CollectionScope + any type into row keys
  */
-public class UniqueValueRowKeySerializer extends AbstractSerializer<ScopedRowKey<CollectionScope, Field>> {
-
-    private static final UniqueValueFieldSerializer FIELD_SER = UniqueValueFieldSerializer.get();
+public abstract class AbstractCollectionScopedRowKeySerializer<K> 
+    extends AbstractSerializer<ScopedRowKey<CollectionScope, K>> {
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
+    /**
+     * The delegate serializer for the key
+     */
+    private final CompositeFieldSerializer<K> keySerializer;
+
+
+    public AbstractCollectionScopedRowKeySerializer( final CompositeFieldSerializer<K> ks ) {
+        this.keySerializer = ks;
+    }
+
     @Override
-    public ByteBuffer toByteBuffer( final ScopedRowKey<CollectionScope, Field> scopedRowKey ) {
+    public ByteBuffer toByteBuffer( final ScopedRowKey<CollectionScope, K> scopedRowKey ) {
 
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
@@ -52,23 +64,27 @@ public class UniqueValueRowKeySerializer extends AbstractSerializer<ScopedRowKey
         //add the scope's name
         builder.addString( scopedRowKey.getScope().getName() );
 
-        FIELD_SER.toComposite( builder, scopedRowKey.getKey() );
-         
+        //add the key type
+        keySerializer.toComposite( builder, scopedRowKey.getKey() );
+
         return builder.build();
     }
 
-
     @Override
-    public ScopedRowKey<CollectionScope, Field> fromByteBuffer( final ByteBuffer byteBuffer ) {
+    public ScopedRowKey<CollectionScope, K> fromByteBuffer( final ByteBuffer byteBuffer ) {
         final CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
         //read back the id
         final Id orgId = ID_SER.fromComposite( parser );
         final Id scopeId = ID_SER.fromComposite( parser );
         final String scopeName = parser.readString();
-        final Field field = FIELD_SER.fromComposite( parser );
+        final K value = keySerializer.fromComposite( parser );
 
-        return new ScopedRowKey<CollectionScope, Field>( 
-                new CollectionScopeImpl( orgId, scopeId, scopeName ), field );
+        return new ScopedRowKey<CollectionScope, K>( 
+                new CollectionScopeImpl( orgId, scopeId, scopeName ), value );
     }
+
+    public abstract void addOtherComponents( CompositeBuilder builder );
 }
+
+

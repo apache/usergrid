@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
 
 import com.google.common.base.Preconditions;
 import java.util.UUID;
@@ -24,12 +24,12 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- *
+ * Represents a Unique Value of a field within a collection.
  */
 public class UniqueValueImpl implements UniqueValue {
-    private CollectionScope collectionScope;
-    private Field field;
-    private Id entityId;
+    private final CollectionScope collectionScope;
+    private final Field field;
+    private final Id entityId;
     private UUID entityVersion;
 
     public UniqueValueImpl(

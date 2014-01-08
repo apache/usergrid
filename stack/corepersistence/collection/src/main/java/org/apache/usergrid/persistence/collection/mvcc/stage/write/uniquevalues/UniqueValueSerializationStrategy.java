@@ -15,33 +15,21 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.exception;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
+
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- * @author tnine
+ * Reads and writes to UniqueValues column family.
  */
-public class CollectionRuntimeException extends RuntimeException {
-    public CollectionRuntimeException() {
-    }
+public interface UniqueValueSerializationStrategy {
 
+    public MutationBatch write( UniqueValue uniqueValue );
 
-    public CollectionRuntimeException( final String message ) {
-        super( message );
-    }
+    public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException;
 
-
-    public CollectionRuntimeException( final String message, final Throwable cause ) {
-        super( message, cause );
-    }
-
-
-    public CollectionRuntimeException( final Throwable cause ) {
-        super( cause );
-    }
-
-
-    public CollectionRuntimeException( final String message, final Throwable cause, final boolean enableSuppression,
-                                       final boolean writableStackTrace ) {
-        super( message, cause, enableSuppression, writableStackTrace );
-    }
+    public MutationBatch delete( UniqueValue uniqueValue );
 }

@@ -18,6 +18,9 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValue;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -61,30 +64,33 @@ public class WriteUniqueVerify
 
             if ( field.isUnique() ) {
 
-                UniqueValue uniqueValue = null;
-                try {
-                    uniqueValue = uniqueValueSerializiationStrategy.load(
-                        ioevent.getEntityCollection(), field );
+                // write unique value
+                UniqueValue written  = new UniqueValueImpl( 
+                        ioevent.getEntityCollection(), field, entity.getId(), entity.getVersion());
 
-                } catch ( ConnectionException e ) {
-                    throw new CollectionRuntimeException( e );
-                }
-
-                if ( uniqueValue != null ) {
-                    throw new CollectionRuntimeException( 
-                            "Duplicate field value " + field.toString() );
-                }
-
-                uniqueValue  = new UniqueValueImpl( ioevent.getEntityCollection(), 
-                                                    field, entity.getId(), entity.getVersion());
-
-                MutationBatch mb = uniqueValueSerializiationStrategy.write(uniqueValue);
+                MutationBatch mb = uniqueValueSerializiationStrategy.write(written);
                 try {
                     mb.execute();
                 } catch (ConnectionException ex) {
                     throw new CollectionRuntimeException( 
                             "Error writing unique value " + field.toString(), ex );
+                }   
+               
+                // read back value that was saved for collection scope and field name/value
+                UniqueValue loaded;
+                try {
+                    loaded = uniqueValueSerializiationStrategy.load( 
+                            ioevent.getEntityCollection(), field );
+
+                } catch (ConnectionException ex) {
+                    throw new CollectionRuntimeException( ex );
                 }
+
+                // if written value does not match loaded, then value not unique
+                if ( !loaded.equals(written) ) {
+                    throw new CollectionRuntimeException( "Duplicate field value " + field.toString() );
+                }
+
             }
         }
 

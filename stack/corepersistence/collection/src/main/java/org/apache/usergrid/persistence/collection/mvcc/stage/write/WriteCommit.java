@@ -90,6 +90,8 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         //now get our actual insert into the entity data
         MutationBatch entityMutation = entitySerializationStrategy.write( collectionScope, entity );
 
+        // TODO: commit the unique values, as part of the "merged" mutation
+
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
 

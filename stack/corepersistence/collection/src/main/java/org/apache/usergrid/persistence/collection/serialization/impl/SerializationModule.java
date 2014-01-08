@@ -11,7 +11,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategyImpl;
 
 
 /**

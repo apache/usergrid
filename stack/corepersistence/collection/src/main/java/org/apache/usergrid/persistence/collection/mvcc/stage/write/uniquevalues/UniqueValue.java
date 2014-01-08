@@ -15,13 +15,16 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
 
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
+/**
+ * Represents a Unique Value of a field within a collection.
+ */
 public interface UniqueValue {
 
     public CollectionScope getCollectionScope();

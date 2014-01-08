@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
 
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
@@ -28,11 +28,12 @@ import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 
+// TODO: replace with "real" serializer
 
 /**
- * Serializer for serializing a UniqueValue field to a composite key.
+ * Serialize Field for use as part of row-key in Unique Values Column Family.
  */
-public class UniqueValueFieldSerializer implements CompositeFieldSerializer<Field> {
+public class FieldSerializer implements CompositeFieldSerializer<Field> {
 
     public enum FieldType {
         BOOLEAN_FIELD,
@@ -43,14 +44,16 @@ public class UniqueValueFieldSerializer implements CompositeFieldSerializer<Fiel
         UUID_FIELD
     };
 
-    private static final UniqueValueFieldSerializer INSTANCE = new UniqueValueFieldSerializer();
+    private static final FieldSerializer INSTANCE = new FieldSerializer();
 
-    private UniqueValueFieldSerializer() {}
+    private FieldSerializer() {}
 
     @Override
     public void toComposite( final CompositeBuilder builder, final Field field ) {
 
         builder.addString( field.getName() );
+
+        // TODO: use the real field value serializer(s) here? Store hash instead?
         builder.addString( field.getValue().toString() );
          
         final String simpleName = field.getClass().getSimpleName();
@@ -87,7 +90,7 @@ public class UniqueValueFieldSerializer implements CompositeFieldSerializer<Fiel
     /**
      * Get the singleton serializer
      */
-    public static UniqueValueFieldSerializer get() {
+    public static FieldSerializer get() {
         return INSTANCE;
     }
 }
