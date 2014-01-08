@@ -39,5 +39,24 @@ class EntityVersion {
     public UUID getEntityVersion() {
         return entityVersion;
     }
+
+    public boolean equals( Object o ) {
+
+        if ( o == null || !(o instanceof EntityVersion) ) {
+            return false;
+        }
+
+        EntityVersion other = (EntityVersion)o;
+
+        if ( !other.getEntityId().equals( getEntityId() )) {
+            return false;
+        }
+
+        if ( !other.getEntityVersion().equals( getEntityVersion() )) {
+            return false;
+        }
+
+        return true;
+    }
     
 }

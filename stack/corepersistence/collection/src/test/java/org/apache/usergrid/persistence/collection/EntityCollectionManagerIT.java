@@ -40,6 +40,7 @@ import rx.Observable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import org.junit.Ignore;
 
 
 /** @author tnine */
@@ -84,6 +85,7 @@ public class EntityCollectionManagerIT {
 
 
     @Test
+    //@Ignore
     public void writeWithUniqueValues() {
 
         CollectionScope context = new CollectionScopeImpl(

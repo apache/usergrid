@@ -42,6 +42,7 @@ class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
         DynamicComposite composite = new DynamicComposite();
         
         ID_COL_SERIALIZER.toComposite(composite, ev.getEntityId());
+
         composite.addComponent(ev.getEntityVersion(), UUID_SERIALIZER);
         
         return composite.serialize();
@@ -51,10 +52,10 @@ class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
     public EntityVersion fromByteBuffer(final ByteBuffer byteBuffer) {
 
         DynamicComposite composite = DynamicComposite.fromByteBuffer(byteBuffer);
-        Preconditions.checkArgument(composite.size() == 2, "Composite should have 2 elements");
+        Preconditions.checkArgument(composite.size() == 3, "Composite should have 3 elements");
 
         final Id id = ID_COL_SERIALIZER.fromComposite(composite, 0);
-        final UUID version = composite.get(1, UUID_SERIALIZER);
+        final UUID version = composite.get(2, UUID_SERIALIZER);
         
         return new EntityVersion(id, version);
     }

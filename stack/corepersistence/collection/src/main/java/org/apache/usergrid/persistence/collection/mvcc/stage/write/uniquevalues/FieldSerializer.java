@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -27,6 +28,8 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO: replace with "real" serializer
 
@@ -34,6 +37,8 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
  * Serialize Field for use as part of row-key in Unique Values Column Family.
  */
 public class FieldSerializer implements CompositeFieldSerializer<Field> {
+
+    private static final Logger LOG = LoggerFactory.getLogger( FieldSerializer.class );
 
     public enum FieldType {
         BOOLEAN_FIELD,
@@ -46,8 +51,6 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
 
     private static final FieldSerializer INSTANCE = new FieldSerializer();
 
-    private FieldSerializer() {}
-
     @Override
     public void toComposite( final CompositeBuilder builder, final Field field ) {
 
@@ -56,8 +59,10 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
         // TODO: use the real field value serializer(s) here? Store hash instead?
         builder.addString( field.getValue().toString() );
          
-        final String simpleName = field.getClass().getSimpleName();
-        final String fieldType = simpleName.substring(0, simpleName.length() - "Field".length());
+        String simpleName = field.getClass().getSimpleName();
+        int nameIndex = simpleName.lastIndexOf(".");
+        String fieldType = simpleName.substring(nameIndex + 1, simpleName.length() - "Field".length());
+        fieldType = StringUtils.upperCase( fieldType + "_FIELD" );
 
         builder.addString( fieldType );
     }
@@ -67,8 +72,9 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
 
         final String name = composite.readString();
         final String value = composite.readString();
+        final String typeString = composite.readString();
 
-        final FieldType fieldType = FieldType.valueOf(composite.readString());
+        final FieldType fieldType = FieldType.valueOf( typeString );
 
         switch (fieldType) {
             case DOUBLE_FIELD: 
