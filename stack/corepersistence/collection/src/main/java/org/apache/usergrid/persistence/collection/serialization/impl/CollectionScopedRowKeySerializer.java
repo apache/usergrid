@@ -84,15 +84,7 @@ public class CollectionScopedRowKeySerializer<K>
 
         return new ScopedRowKey<CollectionScope, K>( 
                 new CollectionScopeImpl( orgId, scopeId, scopeName ), value ); 
-
-        //return buildScopedRowKey( parser, orgId, scopeId, scopeName, value );
     }
-
-//    public abstract ScopedRowKey<CollectionScope, K> buildScopedRowKey( 
-//            CompositeParser parser, Id orgId, Id scopeId, String scopeName, K value );
-//
-//    public abstract void addOtherComponents( 
-//            CompositeBuilder builder, ScopedRowKey<CollectionScope, K> scopedRowKey );
 }
 
 
