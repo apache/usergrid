@@ -24,6 +24,6 @@ public class SingleOrderByMaxLimitConnectionIT extends AbstractIteratingQueryIT 
 
     @Test
     public void singleOrderByMaxLimitConnection() throws Exception {
-        singleOrderByMaxLimit( new ConnectionHelper() );
+        singleOrderByMaxLimit( new ConnectionHelper(app) );
     }
 }

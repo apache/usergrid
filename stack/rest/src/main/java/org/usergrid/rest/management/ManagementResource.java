@@ -215,7 +215,7 @@ public class ManagementResource extends AbstractContextResource {
                     }
                     catch ( UnconfirmedAdminUserException uaue ) {
                         errorDescription = "User must be confirmed to authenticate";
-                        logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" );
+                        logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" , user);
 
                         OAuthResponse response = OAuthResponse.errorResponse( SC_FORBIDDEN )
                                                               .setError( OAuthError.TokenResponse.INVALID_GRANT )

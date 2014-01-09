@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderByNotConnectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByNotConnection() throws Exception {
-        singleOrderByNot( new ConnectionHelper() );
+        singleOrderByNot( new ConnectionHelper(app) );
     }
 }

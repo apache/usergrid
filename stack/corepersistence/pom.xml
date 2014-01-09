@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>core-persistence</name>
+    <description>Prototype for refactoring persistence of usergrid</description>
+
+    <groupId>org.apache.usergrid</groupId>
+    <artifactId>persistence</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <astyanax.version>1.56.46-UG</astyanax.version>
+        <jukito.version>1.4-UG</jukito.version>
+        <guice.version>3.0</guice.version>
+        <archaius.version>0.5.12</archaius.version>
+        <slf4j.version>1.7.2</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
+        <rx.version>0.15.1</rx.version>
+        <hystrix.version>1.3.8</hystrix.version>
+    </properties>
+
+    <modules>
+        <module>model</module>
+        <module>graph</module>
+        <module>collection</module>
+    </modules>
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.16</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.16</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <repositories>
+        <repository>
+            <id>local-dependencies</id>
+            <name>local-depedendencies</name>
+            <url>file://${project.basedir}/../m2/repository</url>
+        </repository>
+    </repositories>
+
+</project>

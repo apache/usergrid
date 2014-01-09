@@ -22,10 +22,15 @@ package org.usergrid.cassandra;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -35,6 +40,8 @@ import java.util.TreeSet;
  * @see <a href="http://www.iana.org/assignments/port-numbers">IANA.org</a>
  */
 public class AvailablePortFinder {
+	
+	private static final Logger LOG = LoggerFactory.getLogger( AvailablePortFinder.class );
     /** The minimum number of server port number. */
     public static final int MIN_PORT_NUMBER = 1;
 
@@ -119,10 +126,27 @@ public class AvailablePortFinder {
         DatagramSocket ds = null;
 
         try {
-            ss = new ServerSocket( port );
+			// Jackson: It seems like the code below intends to
+			// setReuseAddress(true), but that needs to be set before the bind.
+			// The constructor for the ServerSocket(int) will bind, so not sure
+			// how it would have been working as intended previously. 
+        	
+			// Changing ServerSocket constructor to use default constructor,
+			// this would be unbound, then set the socket reuse, and
+			// call the bind separately
+        	
+            //ss = new ServerSocket( port );
+        	ss = new ServerSocket();
             ss.setReuseAddress( true );
-            ds = new DatagramSocket( port );
+            ss.bind(new InetSocketAddress((InetAddress) null, port), 0);
+            
+			// Unlike ServerSocket, the default constructor of DatagramSocket
+			// will bound. To create an unbound DatagramSocket, use null address 
+            //ds = new DatagramSocket( port );
+            ds = new DatagramSocket(null);
             ds.setReuseAddress( true );
+            ds.bind(new InetSocketAddress((InetAddress) null, port));
+            LOG.info("port {} available", port);
             return true;
         }
         catch ( IOException e ) {
@@ -142,7 +166,7 @@ public class AvailablePortFinder {
                 }
             }
         }
-
+        LOG.info("port {} unavailable", port);
         return false;
     }
 

@@ -35,4 +35,5 @@ public interface IndexScanner
     public void reset();
 
     public int getPageSize();
+
 }

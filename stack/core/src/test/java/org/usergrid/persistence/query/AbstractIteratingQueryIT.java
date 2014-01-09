@@ -1200,7 +1200,7 @@ public abstract class AbstractIteratingQueryIT {
      *
      * @author tnine
      */
-    private interface IoHelper {
+    public static interface IoHelper {
         /** Perform any setup required */
         public void doSetup() throws Exception;
 
@@ -1222,7 +1222,16 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    class CollectionIoHelper implements IoHelper {
+    public static  class CollectionIoHelper implements IoHelper {
+
+        protected final CoreApplication app;
+
+
+        public CollectionIoHelper( final CoreApplication app ) {
+            this.app = app;
+        }
+
+
         @Override
         public void doSetup() throws Exception {
         }
@@ -1241,13 +1250,18 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    class ConnectionHelper extends CollectionIoHelper {
+    public static class ConnectionHelper extends CollectionIoHelper {
 
         /**
          *
          */
         protected static final String CONNECTION = "connection";
         protected Entity rootEntity;
+
+
+        public ConnectionHelper( final CoreApplication app) {
+            super( app );
+        }
 
 
         @Override

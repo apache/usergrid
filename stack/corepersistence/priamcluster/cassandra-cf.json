@@ -1,0 +1,325 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Cassandra Test Stack",
+    "Parameters": {
+        "ReleaseBucket": {
+            "Description": "S3 Bucket where Priam-Cluster assembly is to be found.",
+            "Type": "String",
+            "Default": "ug-cloudformation-priam"
+        },
+        "KeyPair": {
+            "Description": "EC2 key pair to be use for SSH access",
+            "Type": "String",
+            "Default": "ug-cloudformation"
+        },
+        "CassClusterName": {
+            "Description": "Name to be used for Cassandra cluster.",
+            "Type": "String",
+            "Default": "usergrid"
+        },
+        "CassNumServers": {
+            "Description": "Number of Cass servers to start.",
+            "Type": "Number",
+            "Default": "3",
+            "MinValue": "3"
+        },
+        "CassInstanceType": {
+            "Description": "Instance type for Cass servers",
+            "Type": "String",
+            "Default": "m1.small",
+            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
+            "ConstraintDescription": "must be valid instance type."
+        },
+        "CassReplicationFactor": {
+            "Description": "Cassandra replication factor",
+            "Type": "Number",
+            "Default": "2",
+            "MinValue": "1"
+        },
+        "NotificationEmail": {
+            "Description": "Email for notifications",
+            "Type": "String",
+            "Default": "dmjohnson+cf@apigee.com"
+        }
+    },
+    "Mappings": {
+        "AWSInstanceType2Arch": {
+            "m1.small": {"Arch": "64"},
+            "m1.medium": {"Arch": "64"},
+            "m1.large": {"Arch": "64"},
+            "m1.xlarge": {"Arch": "64"}
+        },
+        "AWSRegionArch2AMI": {
+            "ap-southeast-2": {"64": "ami-db8611e1"},
+            "us-east-1": {"64": "ami-e864da81"},
+            "us-west-2": {"64": "ami-50f97060"}
+        }
+    },
+    "Resources": {
+        "CassUser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [{
+                        "PolicyName": "root",
+                        "PolicyDocument": {"Statement": [{
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+                                }]}
+                    }]
+            }
+        },
+        "CassKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {"Ref": "CassUser"}
+            }
+        },
+        "CassAutoScalingLaunchConfiguration": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "UserData": {
+                    "Fn::Base64": {"Fn::Join": ["", [
+
+                                "#!/bin/bash -ex\n",
+
+                                "# CASSANDRA NODE STARTUP \n",
+
+                                "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                "\n",
+                                "mkdir -p /usr/share/usergrid\n",
+                                "\n",
+
+                                "# create script that sets our environment variables\n",
+                                "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                    "alias sudo='sudo -E'\n",
+                                    "\n",
+                                    "export TYPE=cass\n",
+                                    "export STACK_NAME=", {"Ref": "AWS::StackName"}, "\n",
+                                    "\n",
+                                    "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                    "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                    "\n",
+                                    "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                    "export EC2_REGION=", {"Ref": "AWS::Region"}, "\n",
+                                    "export EC2_URL=https://ec2.amazonaws.com/\n",
+                                    "\n",
+                                    "export DB_SECURITY_GROUP_NAME=", {"Ref": "CassSecurityGroup"}, "\n",
+                                    "\n",
+                                    "export JVM_EXTRA_OPTS=-javaagent:/usr/share/cassandra/lib/priam-cass-extensions-2.0.0-SNAPSHOT.jar", "\n",
+                                    "export CASSANDRA_CLUSTER_NAME=", {"Ref": "CassClusterName"}, "\n",
+                                    "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                                    "export CASSANDRA_REPLICATION_FACTOR=", {"Ref": "CassReplicationFactor"}, "\n",
+                                    "\n",
+                                    "export RELEASE_BUCKET=", {"Ref": "ReleaseBucket"}, "\n",
+                                    "\n",
+                                "EOF\n",
+                                "\n",
+
+                                "# put AWS creds in environment\n",
+                                "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                "export AWS_ACCESS_KEY=", {"Ref": "CassKey"}, "\n",
+                                "export AWS_SECRET_KEY=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
+                                "EOF\n",
+                                "\n",
+
+                                "# put AWS creds Priam's config file\n",
+                                "cat >/etc/awscredential.properties <<EOF\n",
+                                "AWSACCESSID=", {"Ref": "CassKey"}, "\n",
+                                "AWSKEY=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
+                                "EOF\n",
+                                "\n",
+
+                                "# setup s3cmd (will be installed by init script) \n",
+                                "cat >/etc/s3cfg <<EOF\n",
+                                "access_key=", {"Ref": "CassKey"}, "\n",
+                                "secret_key=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
+                                "EOF\n",
+                                "chmod 644 /etc/s3cfg\n",
+                                "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                "\n",
+
+                                "# download usergrid and init script bundle from S3\n",
+                                "apt-get update\n",
+                                "apt-get -y install s3cmd\n",
+                                "cd /usr/share/usergrid\n",
+                                "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "tar xvf priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "rm -fr priamcluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                "chmod 755 ./init_instance/*.sh\n",
+                                "cd ./init_instance\n",
+
+                                "# init as a Cassandra node \n",
+                                "sh ./init_cass.sh\n"
+
+                            ]]}
+                },
+                "KeyName": {"Ref": "KeyPair"},
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegionArch2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "AWSInstanceType2Arch",
+                                {
+                                    "Ref": "CassInstanceType"
+                                },
+                                "Arch"
+                            ]
+                        }
+                    ]
+                },
+                "InstanceType": {
+                    "Ref": "CassInstanceType"
+                },
+                "IamInstanceProfile": {
+                    "Ref": "RootInstanceProfile"
+                },
+                "SecurityGroups": [{"Ref": "CassSecurityGroup"}]
+            }
+        },
+        "CassAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Version": "2009-05-15",
+            "Properties": {
+                "AvailabilityZones": {
+                    "Fn::GetAZs": ""
+                },
+                "LaunchConfigurationName": {
+                    "Ref": "CassAutoScalingLaunchConfiguration"
+                },
+                "MinSize": {"Ref": "CassNumServers"},
+                "MaxSize": {"Ref": "CassNumServers"},
+                "NotificationConfiguration": {
+                    "TopicARN": {"Ref": "NotificationTopic"},
+                    "NotificationTypes": [
+                        "autoscaling:EC2_INSTANCE_LAUNCH",
+                        "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                        "autoscaling:EC2_INSTANCE_TERMINATE",
+                        "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                    ]
+                }
+            }
+        },
+        "NotificationTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [{
+                        "Endpoint": {"Ref": "NotificationEmail"},
+                        "Protocol": "email"
+                    }]
+            }
+        },
+        "RootRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/"
+            }
+        },
+        "RolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "root",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": "*",
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "RootRole"
+                    }
+                ]
+            }
+        },
+        "RootInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "RootRole"
+                    }
+                ]
+            }
+        },
+        "CassSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Database Machines",
+                "SecurityGroupIngress": [{
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    }, {
+                        "IpProtocol": "tcp",
+                        "FromPort": "9160",
+                        "ToPort": "9160",
+                        "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
+                    }]
+            }
+        },
+        "CassSecurityGroupPort7000": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {"Ref": "CassSecurityGroup"},
+                "IpProtocol": "tcp",
+                "FromPort": "7000",
+                "ToPort": "7000",
+                "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
+            }
+        },
+        "CassSecurityGroupPort9160": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {"Ref": "CassSecurityGroup"},
+                "IpProtocol": "tcp",
+                "FromPort": "9160",
+                "ToPort": "9160",
+                "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
+            }
+        },
+        "RestSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "REST Machines",
+                "SecurityGroupIngress": [{
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    }, {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8080",
+                        "ToPort": "8080",
+                        "CidrIp": "0.0.0.0/0"
+                    }]
+            }
+        }
+    }
+}
