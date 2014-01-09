@@ -15,23 +15,48 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 import java.util.UUID;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- * Represents a Unique Value of a field within a collection.
+ * Combine entity ID and entity version for use as column name for UniqueValues Column Family.
  */
-public interface UniqueValue {
+class EntityVersion {
+    private final Id entityId;
+    private final UUID entityVersion;
 
-    public CollectionScope getCollectionScope();
+    public EntityVersion(Id id, UUID uuid) {
+        this.entityId = id;
+        this.entityVersion = uuid;
+    }
 
-    public Id getEntityId();
+    public Id getEntityId() {
+        return entityId;
+    }
 
-    public Field getField();
+    public UUID getEntityVersion() {
+        return entityVersion;
+    }
 
-    public UUID getEntityVersion();
+    public boolean equals( Object o ) {
+
+        if ( o == null || !(o instanceof EntityVersion) ) {
+            return false;
+        }
+
+        EntityVersion other = (EntityVersion)o;
+
+        if ( !other.getEntityId().equals( getEntityId() )) {
+            return false;
+        }
+
+        if ( !other.getEntityVersion().equals( getEntityVersion() )) {
+            return false;
+        }
+
+        return true;
+    }
+    
 }

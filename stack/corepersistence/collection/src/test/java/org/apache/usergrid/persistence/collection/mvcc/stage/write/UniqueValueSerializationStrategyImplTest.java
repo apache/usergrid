@@ -15,8 +15,11 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueImpl;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.UUID;

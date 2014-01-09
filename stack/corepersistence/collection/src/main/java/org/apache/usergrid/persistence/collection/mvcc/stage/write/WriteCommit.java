@@ -39,9 +39,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValue;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.model.field.Field;
 
 import rx.util.functions.Func1;

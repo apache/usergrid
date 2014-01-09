@@ -16,7 +16,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;

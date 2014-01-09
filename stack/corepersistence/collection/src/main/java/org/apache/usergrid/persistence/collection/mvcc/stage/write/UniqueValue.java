@@ -15,26 +15,23 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.UUID;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 
-public class EntityVersionSerializerTest {
-    
-    @Test
-    public void testBasicOperation() {
+/**
+ * Represents a Unique Value of a field within a collection.
+ */
+public interface UniqueValue {
 
-        EntityVersion original = new EntityVersion( new SimpleId("test"), UUIDGenerator.newTimeUUID() );
+    public CollectionScope getCollectionScope();
 
-        EntityVersionSerializer evs = new EntityVersionSerializer();
-        ByteBuffer serialized = evs.toByteBuffer(original);
+    public Id getEntityId();
 
-        EntityVersion deserialized = evs.fromBytes( serialized.array() );
+    public Field getField();
 
-        Assert.assertEquals( original, deserialized );
-    }
+    public UUID getEntityVersion();
 }

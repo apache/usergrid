@@ -15,33 +15,28 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.Composites;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.EntityVersion;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.EntityVersionSerializer;
 import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.IntegerField;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class FieldSerializerTest {
-
+public class EntityVersionSerializerTest {
+    
     @Test
     public void testBasicOperation() {
 
-        Field original = new IntegerField( "count", 5 );
+        EntityVersion original = new EntityVersion( new SimpleId("test"), UUIDGenerator.newTimeUUID() );
 
-        CompositeBuilder builder = Composites.newCompositeBuilder();
-        FieldSerializer fs = new FieldSerializer();
-        fs.toComposite( builder, original );
-        ByteBuffer serializer = builder.build();
+        EntityVersionSerializer evs = new EntityVersionSerializer();
+        ByteBuffer serialized = evs.toByteBuffer(original);
 
-        CompositeParser parser = Composites.newCompositeParser( serializer );
-        
-        Field deserialized = fs.fromComposite( parser );
+        EntityVersion deserialized = evs.fromBytes( serialized.array() );
 
         Assert.assertEquals( original, deserialized );
-    } 
+    }
 }

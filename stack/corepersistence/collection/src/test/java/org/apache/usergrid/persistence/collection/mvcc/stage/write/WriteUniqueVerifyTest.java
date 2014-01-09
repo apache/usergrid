@@ -17,7 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 import com.google.inject.Inject;
 import org.junit.Test;
 

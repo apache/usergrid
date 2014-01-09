@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 import com.google.common.base.Preconditions;
 import java.util.UUID;

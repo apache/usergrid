@@ -18,9 +18,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValue;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
