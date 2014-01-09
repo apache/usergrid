@@ -68,7 +68,7 @@ public class WriteUniqueVerify
                 UniqueValue written  = new UniqueValueImpl( 
                         ioevent.getEntityCollection(), field, entity.getId(), entity.getVersion());
 
-                MutationBatch mb = uniqueValueSerializiationStrategy.write(written);
+                MutationBatch mb = uniqueValueSerializiationStrategy.write( written, null );
                 try {
                     mb.execute();
                 } catch (ConnectionException ex) {

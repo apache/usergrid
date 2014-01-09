@@ -27,9 +27,30 @@ import org.apache.usergrid.persistence.model.field.Field;
  */
 public interface UniqueValueSerializationStrategy {
 
-    public MutationBatch write( UniqueValue uniqueValue );
+    /**
+     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
+     * 
+     * @param uniqueValue Object to be written
+     * @param timeToLive How long object should live in seconds (or null to live forever)
+     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     */
+    public MutationBatch write( UniqueValue uniqueValue, Integer timeToLive );
 
+    /**
+     * Load UniqueValue that matches field from collection or null if that value does not exist.
+     * 
+     * @param colScope Collection scope in which to look for field name/value
+     * @param field Field name/value to search for
+     * @return UniqueValue or null if not found
+     * @throws ConnectionException on error connecting to Cassandra
+     */
     public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException;
 
+    /**
+     * Delete the specified Unique Value from Cassandra.
+     * 
+     * @param uniqueValue Object to be deleted.
+     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     */
     public MutationBatch delete( UniqueValue uniqueValue );
 }

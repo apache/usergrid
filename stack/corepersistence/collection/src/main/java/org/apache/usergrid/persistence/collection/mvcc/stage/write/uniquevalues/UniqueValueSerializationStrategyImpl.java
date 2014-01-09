@@ -27,7 +27,6 @@ import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.ColumnList;
 import java.util.Collections;
 import org.apache.cassandra.db.marshal.BytesType;
-import org.apache.cassandra.db.marshal.DynamicCompositeType;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
@@ -36,10 +35,6 @@ import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.field.Field;
 
-// TODO: unit test for this, e.g. timeout value. 
-// What happens if write times out?
-// We add unique values before we actually write the entity
-// We write them once with a timeout, then commit entity then write again with no timeout
 
 /**
  * Reads and writes to UniqueValues column family.
@@ -58,13 +53,15 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
                 ENTITY_VERSION_SER );
 
     protected final Keyspace keyspace;
-    protected final int timeout;
 
 
+    /**
+     * Construct serialization strategy for keyspace.
+     * @param keyspace Keyspace in which to store Unique Values.
+     */
     @Inject
-    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace, final int timeout ) {
+    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace ) {
         this.keyspace = keyspace;
-        this.timeout = timeout;
     }
 
 
@@ -81,7 +78,8 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     } 
 
 
-    public MutationBatch write( UniqueValue value ) {
+    @Override
+    public MutationBatch write( UniqueValue value, final Integer timeToLive ) {
 
         Preconditions.checkNotNull( value, "value is required" );
 
@@ -92,14 +90,27 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
             @Override
             public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
-                colMutation.putColumn( ev, 0x0, null );
+                colMutation.putColumn( ev, 0x0, timeToLive );
             }
         } );
     }
 
 
-    public MutationBatch delete(UniqueValue uniqueValue) {
-        return null;
+    @Override
+    public MutationBatch delete(UniqueValue value) {
+
+        Preconditions.checkNotNull( value, "value is required" );
+
+        final EntityVersion ev = new EntityVersion( value.getEntityId(), value.getEntityVersion() );
+
+        return doWrite( value.getCollectionScope(), value.getField(), 
+            new UniqueValueSerializationStrategyImpl.RowOp() {
+
+            @Override
+            public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
+                colMutation.deleteColumn(ev);
+            }
+        } );
     } 
 
     
@@ -114,6 +125,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     }
 
 
+    @Override
     public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException {
 
         Preconditions.checkNotNull( field, "field is required" );
