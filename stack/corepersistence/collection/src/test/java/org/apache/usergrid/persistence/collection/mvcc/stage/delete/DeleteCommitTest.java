@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -50,6 +51,8 @@ public class DeleteCommitTest extends AbstractMvccEntityStageTest {
         //mock up the serialization call for the entity and returning the mutation
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
 
+        final UniqueValueSerializationStrategy uniqueValueStrategy = mock( UniqueValueSerializationStrategy.class );
+
         final ArgumentCaptor<MvccEntity> mvccEntityCapture = ArgumentCaptor.forClass( MvccEntity.class );
 
         final MutationBatch mvccEntityMutation = mock( MutationBatch.class );
@@ -66,7 +69,7 @@ public class DeleteCommitTest extends AbstractMvccEntityStageTest {
 
 
         //run the stage
-        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy );
+        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy );
 
 
         //verify the observable is correct

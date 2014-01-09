@@ -39,6 +39,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValue;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.model.field.Field;
 
 import rx.util.functions.Func1;
 
@@ -49,22 +53,28 @@ import rx.util.functions.Func1;
 @Singleton
 public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity> {
 
-
     private static final Logger LOG = LoggerFactory.getLogger( WriteCommit.class );
 
-    private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
-    private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    @Inject
+    private UniqueValueSerializationStrategy uniqueValueStrat;
+
+    private final MvccLogEntrySerializationStrategy logEntryStrat;
+
+    private final MvccEntitySerializationStrategy entityStrat;
 
 
     @Inject
     public WriteCommit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                        final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+                        final MvccEntitySerializationStrategy entitySerializationStrategy,
+                        final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy) {
+
         Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
 
 
-        this.logEntrySerializationStrategy = logEntrySerializationStrategy;
-        this.entitySerializationStrategy = entitySerializationStrategy;
+        this.logEntryStrat = logEntrySerializationStrategy;
+        this.entityStrat = entitySerializationStrategy;
+        this.uniqueValueStrat = uniqueValueSerializiationStrategy;
     }
 
 
@@ -85,19 +95,28 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( collectionScope, startEntry );
+        MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );
 
-        //now get our actual insert into the entity data
-        MutationBatch entityMutation = entitySerializationStrategy.write( collectionScope, entity );
+        // now get our actual insert into the entity data
+        MutationBatch entityMutation = entityStrat.write( collectionScope, entity );
 
-        // TODO: commit the unique values, as part of the "merged" mutation
-
-        //merge the 2 into 1 mutation
+        // merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
 
+        // re-write the unique values but this time with no TTL
+        for ( Field field : entity.getEntity().get().getFields() ) {
+            if ( field.isUnique() ) {
+                UniqueValue written  = new UniqueValueImpl( 
+                        ioEvent.getEntityCollection(), field, entity.getId(), entity.getVersion());
+                MutationBatch mb = uniqueValueStrat.write( written, null );
+
+                // merge into our existing mutation batch
+                logMutation.mergeShallow( mb );
+            }
+        }
 
         try {
-            //TODO Async execution
+            // TODO: Async execution
             logMutation.execute();
         }
         catch ( ConnectionException e ) {

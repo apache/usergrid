@@ -16,6 +16,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues.UniqueValueSerializationStrategy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -60,12 +61,13 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         //set up the mock to return the entity from the start phase
         final Entity entity = TestEntityGenerator.generateEntity();
 
-
         final MvccEntity mvccEntityInput = TestEntityGenerator.fromEntity( entity );
+
+        final UniqueValueSerializationStrategy uniqueValueStrategy = mock( UniqueValueSerializationStrategy.class );
 
 
         //run the stage
-        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy );
+        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy );
 
 
         Entity result = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) );
@@ -107,10 +109,12 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
 
         final MutationBatch entityMutation = mock( MutationBatch.class );
 
+        final UniqueValueSerializationStrategy uniqueValueStrategy = mock( UniqueValueSerializationStrategy.class );
+
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
-        new WriteCommit( logStrategy, mvccEntityStrategy ).call( event );
+        new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy ).call( event );
     }
 }
 

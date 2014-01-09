@@ -46,11 +46,11 @@ public class WriteUniqueVerify
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
-    private UniqueValueSerializationStrategy uniqueValueSerializiationStrategy;
+    private UniqueValueSerializationStrategy uniqueValueStrat;
 
     @Inject
     public WriteUniqueVerify( UniqueValueSerializationStrategy uniqueValueSerializiationStrategy ) {
-        this.uniqueValueSerializiationStrategy = uniqueValueSerializiationStrategy;
+        this.uniqueValueStrat = uniqueValueSerializiationStrategy;
     }
 
     @Override
@@ -64,29 +64,30 @@ public class WriteUniqueVerify
 
             if ( field.isUnique() ) {
 
-                // write unique value
+                // use write-first then read strategy 
                 UniqueValue written  = new UniqueValueImpl( 
                         ioevent.getEntityCollection(), field, entity.getId(), entity.getVersion());
 
-                MutationBatch mb = uniqueValueSerializiationStrategy.write( written, null );
+                // use TTL in case something goes wrong before entity is finally committed
+                // TODO: make TTL configurable
+                MutationBatch mb = uniqueValueStrat.write( written, 10 );
                 try {
                     mb.execute();
                 } catch (ConnectionException ex) {
                     throw new CollectionRuntimeException( 
                             "Error writing unique value " + field.toString(), ex );
                 }   
-               
-                // read back value that was saved for collection scope and field name/value
+              
+                // does the database value match what we wrote?
                 UniqueValue loaded;
                 try {
-                    loaded = uniqueValueSerializiationStrategy.load( 
+                    loaded = uniqueValueStrat.load( 
                             ioevent.getEntityCollection(), field );
 
                 } catch (ConnectionException ex) {
                     throw new CollectionRuntimeException( ex );
                 }
 
-                // if written value does not match loaded, then value not unique
                 if ( !loaded.equals(written) ) {
                     throw new CollectionRuntimeException( "Duplicate field value " + field.toString() );
                 }
