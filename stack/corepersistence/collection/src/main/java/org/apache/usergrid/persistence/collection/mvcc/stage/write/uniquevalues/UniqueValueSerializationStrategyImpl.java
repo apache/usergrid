@@ -25,7 +25,6 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.ColumnList;
-import com.netflix.astyanax.serializers.IntegerSerializer;
 import java.util.Collections;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.DynamicCompositeType;
@@ -54,8 +53,9 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
     private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> CF_UNIQUE_VALUES =
-        new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( 
-            "Unique_Values", ROW_KEY_SER, ENTITY_VERSION_SER );
+        new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values", 
+                ROW_KEY_SER, 
+                ENTITY_VERSION_SER );
 
     protected final Keyspace keyspace;
     protected final int timeout;
@@ -74,7 +74,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( 
                 CF_UNIQUE_VALUES,
                 BytesType.class.getSimpleName(), 
-                DynamicCompositeType.class.getSimpleName(),
+                BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName() );
 
         return Collections.singleton( cf );
@@ -92,7 +92,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
             @Override
             public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
-                colMutation.putColumn( ev, 0, IntegerSerializer.get(), null );
+                colMutation.putColumn( ev, 0x0, null );
             }
         } );
     }

@@ -18,46 +18,50 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write.uniquevalues;
 
 import com.google.common.base.Preconditions;
+import com.netflix.astyanax.model.CompositeBuilder;
+import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.model.DynamicComposite;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 import java.nio.ByteBuffer;
 import java.util.UUID;
-import org.apache.usergrid.persistence.astyanax.IdColDynamicCompositeSerializer;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Serialize EntityVersion, entity ID and version, for use a column name in Unique Values Column Family. 
  */
 class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
 
-    private static final IdColDynamicCompositeSerializer ID_COL_SERIALIZER = 
-            IdColDynamicCompositeSerializer.get();
-
-    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
+    private static final Logger LOG = LoggerFactory.getLogger( EntityVersionSerializer.class );
 
     @Override
     public ByteBuffer toByteBuffer(final EntityVersion ev) {
 
-        DynamicComposite composite = new DynamicComposite();
-        
-        ID_COL_SERIALIZER.toComposite(composite, ev.getEntityId());
+        CompositeBuilder builder = Composites.newDynamicCompositeBuilder();
 
-        composite.addComponent(ev.getEntityVersion(), UUID_SERIALIZER);
-        
-        return composite.serialize();
+        builder.add( ev.getEntityId().getUuid(), UUIDSerializer.get() );
+        builder.add( ev.getEntityId().getType(), StringSerializer.get() );
+        builder.add( ev.getEntityVersion(),      UUIDSerializer.get() );
+
+        return builder.build();
     }
 
     @Override
     public EntityVersion fromByteBuffer(final ByteBuffer byteBuffer) {
 
+        // would use Composites.newDynamicCompositeParser(byteBuffer) but it is not implemented
+
         DynamicComposite composite = DynamicComposite.fromByteBuffer(byteBuffer);
         Preconditions.checkArgument(composite.size() == 3, "Composite should have 3 elements");
 
-        final Id id = ID_COL_SERIALIZER.fromComposite(composite, 0);
-        final UUID version = composite.get(2, UUID_SERIALIZER);
+        final UUID entityId     = composite.get( 0, UUIDSerializer.get() );
+        final String entityType = composite.get( 1, StringSerializer.get() );
+        final UUID version      = composite.get( 2, UUIDSerializer.get() );
         
-        return new EntityVersion(id, version);
+        return new EntityVersion( new SimpleId( entityId, entityType ), version);
     }
     
 }

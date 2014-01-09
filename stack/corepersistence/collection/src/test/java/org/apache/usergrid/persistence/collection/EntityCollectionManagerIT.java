@@ -34,6 +34,8 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.junit.Assert;
 
 import rx.Observable;
 
@@ -85,7 +87,6 @@ public class EntityCollectionManagerIT {
 
 
     @Test
-    //@Ignore
     public void writeWithUniqueValues() {
 
         CollectionScope context = new CollectionScopeImpl(
@@ -102,11 +103,18 @@ public class EntityCollectionManagerIT {
         }
 
         {
-            Entity newEntity = new Entity( new SimpleId( "test" ) );
-            newEntity.setField( new IntegerField("count", 5, true) );
+            boolean dupPrevented = false;
+            try {
+                Entity newEntity = new Entity( new SimpleId( "test" ) );
+                newEntity.setField( new IntegerField("count", 5, true) );
 
-            Observable<Entity> observable = manager.write( newEntity );
-            Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+                Observable<Entity> observable = manager.write( newEntity );
+                Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+
+            } catch ( CollectionRuntimeException cre ) {
+                dupPrevented = true;
+            }
+            Assert.assertTrue( dupPrevented );
         }
     }
 
