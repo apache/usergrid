@@ -16,6 +16,7 @@
 package org.usergrid.persistence.query.ir.result;
 
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -182,17 +183,17 @@ public class UnionIteratorTest {
         int firstIntersection = 100;
         int secondIntersection = 200;
 
-        int pageSize = 100;
+        int pageSize = 10;
 
         UUID[] firstSet = new UUID[size];
         UUID[] secondSet = new UUID[size];
         UUID[] thirdSet = new UUID[size];
 
-        InOrderIterator first = new InOrderIterator( 60 );
-        InOrderIterator second = new InOrderIterator( 60 );
-        InOrderIterator third = new InOrderIterator( 60 );
+        InOrderIterator first = new InOrderIterator( pageSize/2 );
+        InOrderIterator second = new InOrderIterator( pageSize/2 );
+        InOrderIterator third = new InOrderIterator( pageSize/2 );
 
-        Set<UUID> results = new LinkedHashSet<UUID>( size / secondIntersection );
+        Set<UUID> results = new HashSet<UUID>( size  );
 
         for ( int i = 0; i < size; i++ ) {
             firstSet[i] = UUIDUtils.newTimeUUID();
@@ -239,7 +240,9 @@ public class UnionIteratorTest {
             Set<ScanColumn> resultSet = union.next();
 
             for ( ScanColumn col : resultSet ) {
-                results.remove( col.getUUID() );
+                boolean existed = results.remove( col.getUUID() );
+
+                assertTrue("Duplicate element was detected", existed);
             }
         }
 
