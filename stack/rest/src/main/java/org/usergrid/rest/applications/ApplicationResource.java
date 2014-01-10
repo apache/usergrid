@@ -265,12 +265,6 @@ public class ApplicationResource extends ServiceResource {
                 catch ( Exception e1 ) {
                 }
             }
-            else if ( "authorization_code".equals( grant_type ) ) {
-                AccessInfo access_info = new AccessInfo();
-                access_info.setAccessToken( code );
-                return Response.status( SC_OK ).type( jsonMediaType( callback ) )
-                               .entity( wrapWithCallback( access_info, callback ) ).build();
-            }
 
             if ( user == null ) {
                 OAuthResponse response =
