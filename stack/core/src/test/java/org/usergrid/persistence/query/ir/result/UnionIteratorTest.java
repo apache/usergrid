@@ -17,13 +17,13 @@ package org.usergrid.persistence.query.ir.result;
 
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -66,20 +66,21 @@ public class UnionIteratorTest {
         second.add( id10 );
 
         InOrderIterator third = new InOrderIterator( 100 );
+        third.add( id6 );
+        third.add( id7 );
         third.add( id1 );
         third.add( id3 );
         third.add( id5 );
-        third.add( id6 );
-        third.add( id7 );
         third.add( id8 );
 
         InOrderIterator fourth = new InOrderIterator( 100 );
         fourth.add( id1 );
+        fourth.add( id6 );
         fourth.add( id2 );
         fourth.add( id3 );
-        fourth.add( id6 );
         fourth.add( id8 );
         fourth.add( id9 );
+
 
         UnionIterator iter = new UnionIterator( 100 );
         iter.addIterator( first );
@@ -183,17 +184,17 @@ public class UnionIteratorTest {
         int firstIntersection = 100;
         int secondIntersection = 200;
 
-        int pageSize = 10;
+        int pageSize = 20;
 
         UUID[] firstSet = new UUID[size];
         UUID[] secondSet = new UUID[size];
         UUID[] thirdSet = new UUID[size];
 
-        InOrderIterator first = new InOrderIterator( pageSize/2 );
-        InOrderIterator second = new InOrderIterator( pageSize/2 );
-        InOrderIterator third = new InOrderIterator( pageSize/2 );
+        InOrderIterator first = new InOrderIterator( pageSize / 2 );
+        InOrderIterator second = new InOrderIterator( pageSize / 2 );
+        InOrderIterator third = new InOrderIterator( pageSize / 2 );
 
-        Set<UUID> results = new HashSet<UUID>( size  );
+        Set<UUID> results = new HashSet<UUID>( size );
 
         for ( int i = 0; i < size; i++ ) {
             firstSet[i] = UUIDUtils.newTimeUUID();
@@ -242,11 +243,11 @@ public class UnionIteratorTest {
             for ( ScanColumn col : resultSet ) {
                 boolean existed = results.remove( col.getUUID() );
 
-                assertTrue("Duplicate element was detected", existed);
+                assertTrue( "Duplicate element was detected", existed );
             }
         }
 
-        assertTrue( results.isEmpty() );
+        assertEquals( 0, results.size() );
         assertFalse( union.hasNext() );
     }
 
@@ -290,9 +291,7 @@ public class UnionIteratorTest {
 
         //now try to get the next page
         ids = union.next();
-        assertNull(ids);
-
-
+        assertNull( ids );
     }
 
 
