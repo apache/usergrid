@@ -82,7 +82,7 @@ public class UnionIteratorTest {
         fourth.add( id9 );
 
 
-        UnionIterator iter = new UnionIterator( 100 );
+        UnionIterator iter = new UnionIterator( 100, 0, null );
         iter.addIterator( first );
         iter.addIterator( second );
         iter.addIterator( third );
@@ -119,7 +119,7 @@ public class UnionIteratorTest {
         first.add( id3 );
         first.add( id4 );
 
-        UnionIterator union = new UnionIterator( 100 );
+        UnionIterator union = new UnionIterator( 100, 0, null );
         union.addIterator( first );
 
         Set<ScanColumn> ids = union.next();
@@ -151,7 +151,7 @@ public class UnionIteratorTest {
         second.add( id3 );
         second.add( id4 );
 
-        UnionIterator union = new UnionIterator( 100 );
+        UnionIterator union = new UnionIterator( 100, 0, null );
         union.addIterator( first );
         union.addIterator( second );
 
@@ -170,7 +170,7 @@ public class UnionIteratorTest {
     @Test
     public void testNoIterator() {
 
-        UnionIterator union = new UnionIterator( 100 );
+        UnionIterator union = new UnionIterator( 100, 0, null );
 
         // now make sure it's right, only 1, 3 and 8 intersect
         assertFalse( union.hasNext() );
@@ -229,7 +229,7 @@ public class UnionIteratorTest {
         third.add( thirdSet );
 
         // now intersect them and make sure we get all results in a small set
-        UnionIterator union = new UnionIterator( pageSize );
+        UnionIterator union = new UnionIterator( pageSize, 0, null );
         union.addIterator( first );
         union.addIterator( second );
         union.addIterator( third );
@@ -262,7 +262,7 @@ public class UnionIteratorTest {
         UUID id5 = UUIDUtils.minTimeUUID( 5 );
 
 
-        UnionIterator union = new UnionIterator( 5 );
+        UnionIterator union = new UnionIterator( 5, 0, null );
 
         InOrderIterator first = new InOrderIterator( 100 );
 

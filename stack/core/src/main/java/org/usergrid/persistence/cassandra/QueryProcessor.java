@@ -242,6 +242,16 @@ public class QueryProcessor {
     }
 
 
+    /**
+     * Return the node id from the cursor cache
+     * @param nodeId
+     * @return
+     */
+    public ByteBuffer getCursorCache(int nodeId){
+        return cursorCache.getCursorBytes( nodeId );
+    }
+
+
     private SortPredicate getSort( String propertyName ) {
         for ( SortPredicate sort : sorts ) {
             if ( sort.getPropertyName().equals( propertyName ) ) {
@@ -384,7 +394,7 @@ public class QueryProcessor {
             QueryNode leftResult = nodes.pop();
 
             // rewrite with the new Or operand
-            OrNode orNode = new OrNode( leftResult, rightResult );
+            OrNode orNode = new OrNode( leftResult, rightResult,  ++contextCount );
 
             nodes.push( orNode );
         }

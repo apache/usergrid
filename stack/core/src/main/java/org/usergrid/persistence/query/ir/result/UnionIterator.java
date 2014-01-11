@@ -16,6 +16,7 @@
 package org.usergrid.persistence.query.ir.result;
 
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +29,8 @@ import java.util.UUID;
 import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.utils.UUIDUtils;
 
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+
 
 /**
  * Simple iterator to perform Unions
@@ -38,17 +41,24 @@ public class UnionIterator extends MultiIterator {
 
     private static final ScanColumnComparator COMP = new ScanColumnComparator();
 
+    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
 
-     private SortedColumnList list;
 
+    private SortedColumnList list;
+
+    private final int id;
 
 
     /**
-     * @param pageSize
+     * @param pageSize The page size to return
+     * @param id The id assigned to this node
+     * @param minUuid The minimum UUID to return
      */
-    public UnionIterator( int pageSize ) {
+    public UnionIterator( int pageSize, int id, ByteBuffer minUuid ) {
         super( pageSize );
-        list = new SortedColumnList( pageSize );
+
+        this.id = id;
+        list = new SortedColumnList( pageSize, UUID_SERIALIZER.fromByteBuffer( minUuid ) );
     }
 
 
@@ -86,8 +96,6 @@ public class UnionIterator extends MultiIterator {
     }
 
 
-
-
     /*
      * (non-Javadoc)
      *
@@ -98,15 +106,16 @@ public class UnionIterator extends MultiIterator {
     @Override
     public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
 
+        ByteBuffer buff = UUIDSerializer.get().toByteBuffer( lastLoaded );
+        cache.setNextCursor( id, buff );
         //get our scan column and put them in the cache
-       //we finalize the cursor of the min
+        //we finalize the cursor of the min
     }
 
 
     /**
-     * A Sorted Set with a max size. When a new entry is added, the max is removed.  You can mark the next
-     * "min" by calling the mark method.  Values > min are accepted.  Values > min and that are over size are
-     * discarded
+     * A Sorted Set with a max size. When a new entry is added, the max is removed.  You can mark the next "min" by
+     * calling the mark method.  Values > min are accepted.  Values > min and that are over size are discarded
      */
     public static final class SortedColumnList {
 
@@ -120,34 +129,37 @@ public class UnionIterator extends MultiIterator {
         private ScanColumn min;
 
 
-        public SortedColumnList( int maxSize ) {
+        public SortedColumnList( final int maxSize, final UUID minUuid ) {
             //we need to allocate the extra space if required
-            this.list = new ArrayList<ScanColumn>(maxSize);
+            this.list = new ArrayList<ScanColumn>( maxSize );
             this.maxSize = maxSize;
+
+            if ( minUuid != null ) {
+                min = new AbstractScanColumn( minUuid, null ) {};
+            }
         }
 
 
         /**
          * Add the column to this list
-         * @param col
          */
         public void add( ScanColumn col ) {
             //less than our min, don't add
-            if(COMP.compare( min, col ) >= 0){
+            if ( COMP.compare( min, col ) >= 0 ) {
                 return;
             }
 
             int index = Collections.binarySearch( this.list, col, COMP );
 
             //already present
-            if(index > -1){
-                return ;
+            if ( index > -1 ) {
+                return;
             }
 
-            index = (index * -1) - 1;
+            index = ( index * -1 ) - 1;
 
             //outside the renage
-            if(index >= maxSize){
+            if ( index >= maxSize ) {
                 return;
             }
 
@@ -155,34 +167,31 @@ public class UnionIterator extends MultiIterator {
 
             final int size = this.list.size();
 
-            if(size > maxSize){
+            if ( size > maxSize ) {
                 this.list.subList( maxSize, size ).clear();
             }
-
         }
 
 
         /**
          * Add all the elements to this list
-         * @param cols
          */
         public void addAll( final Collection<? extends ScanColumn> cols ) {
-            for(ScanColumn col:cols){
-               add(col);
+            for ( ScanColumn col : cols ) {
+                add( col );
             }
         }
 
 
         /**
          * Returns a new list.  If no elements are present, returns null
-         * @return
          */
-        public Set<ScanColumn> asSet(){
-            if(this.list.size() == 0){
+        public Set<ScanColumn> asSet() {
+            if ( this.list.size() == 0 ) {
                 return null;
             }
 
-            return new LinkedHashSet<ScanColumn>(this.list);
+            return new LinkedHashSet<ScanColumn>( this.list );
         }
 
 
@@ -194,24 +203,20 @@ public class UnionIterator extends MultiIterator {
             final int size = this.list.size();
 
             //we don't have any elements in the list, and we've never set a min
-            if(size == 0){
+            if ( size == 0 ) {
                 return;
             }
 
-            min = this.list.get( size -1);
+            min = this.list.get( size - 1 );
         }
 
 
         /**
          * Clear the list
          */
-        public void clear(){
+        public void clear() {
             this.list.clear();
         }
-
-
-
-
     }
 
 
