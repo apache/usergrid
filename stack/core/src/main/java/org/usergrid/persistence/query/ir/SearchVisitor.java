@@ -119,7 +119,9 @@ public abstract class SearchVisitor implements NodeVisitor {
         ResultIterator right = results.pop();
         ResultIterator left = results.pop();
 
-        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ) );
+        final int nodeId = node.getId();
+
+        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache(nodeId  ) );
 
         if ( left != null ) {
             union.addIterator( left );

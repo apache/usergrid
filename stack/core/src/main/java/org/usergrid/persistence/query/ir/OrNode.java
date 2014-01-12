@@ -16,15 +16,29 @@
 package org.usergrid.persistence.query.ir;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class OrNode extends BooleanNode {
+
+    private final int id;
+
 
     /**
      * @param left
      * @param right
      */
-    public OrNode( QueryNode left, QueryNode right ) {
+    public OrNode( QueryNode left, QueryNode right, int id ) {
         super( left, right );
+        this.id = id;
+    }
+
+
+    /**
+     * Get the context id
+     */
+    public int getId() {
+        return this.id;
     }
 
 

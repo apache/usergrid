@@ -3,6 +3,7 @@ package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import org.apache.cassandra.utils.ByteBufferUtil;
 
 
 /**
@@ -56,5 +57,14 @@ public abstract class AbstractScanColumn implements ScanColumn {
     @Override
     public int hashCode() {
         return uuid.hashCode();
+    }
+
+
+    @Override
+    public String toString() {
+        return "AbstractScanColumn{" +
+                "uuid=" + uuid +
+                ", buffer=" + ByteBufferUtil.bytesToHex( buffer ) +
+                '}';
     }
 }

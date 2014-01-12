@@ -16,13 +16,14 @@
 package org.usergrid.persistence.query.ir.result;
 
 
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -65,22 +66,23 @@ public class UnionIteratorTest {
         second.add( id10 );
 
         InOrderIterator third = new InOrderIterator( 100 );
+        third.add( id6 );
+        third.add( id7 );
         third.add( id1 );
         third.add( id3 );
         third.add( id5 );
-        third.add( id6 );
-        third.add( id7 );
         third.add( id8 );
 
         InOrderIterator fourth = new InOrderIterator( 100 );
         fourth.add( id1 );
+        fourth.add( id6 );
         fourth.add( id2 );
         fourth.add( id3 );
-        fourth.add( id6 );
         fourth.add( id8 );
         fourth.add( id9 );
 
-        UnionIterator iter = new UnionIterator( 100 );
+
+        UnionIterator iter = new UnionIterator( 100, 0, null );
         iter.addIterator( first );
         iter.addIterator( second );
         iter.addIterator( third );
@@ -117,7 +119,7 @@ public class UnionIteratorTest {
         first.add( id3 );
         first.add( id4 );
 
-        UnionIterator union = new UnionIterator( 100 );
+        UnionIterator union = new UnionIterator( 100, 0, null );
         union.addIterator( first );
 
         Set<ScanColumn> ids = union.next();
@@ -149,7 +151,7 @@ public class UnionIteratorTest {
         second.add( id3 );
         second.add( id4 );
 
-        UnionIterator union = new UnionIterator( 100 );
+        UnionIterator union = new UnionIterator( 100, 0, null );
         union.addIterator( first );
         union.addIterator( second );
 
@@ -168,7 +170,7 @@ public class UnionIteratorTest {
     @Test
     public void testNoIterator() {
 
-        UnionIterator union = new UnionIterator( 100 );
+        UnionIterator union = new UnionIterator( 100, 0, null );
 
         // now make sure it's right, only 1, 3 and 8 intersect
         assertFalse( union.hasNext() );
@@ -182,17 +184,17 @@ public class UnionIteratorTest {
         int firstIntersection = 100;
         int secondIntersection = 200;
 
-        int pageSize = 100;
+        int pageSize = 20;
 
         UUID[] firstSet = new UUID[size];
         UUID[] secondSet = new UUID[size];
         UUID[] thirdSet = new UUID[size];
 
-        InOrderIterator first = new InOrderIterator( 60 );
-        InOrderIterator second = new InOrderIterator( 60 );
-        InOrderIterator third = new InOrderIterator( 60 );
+        InOrderIterator first = new InOrderIterator( pageSize / 2 );
+        InOrderIterator second = new InOrderIterator( pageSize / 2 );
+        InOrderIterator third = new InOrderIterator( pageSize / 2 );
 
-        Set<UUID> results = new LinkedHashSet<UUID>( size / secondIntersection );
+        Set<UUID> results = new HashSet<UUID>( size );
 
         for ( int i = 0; i < size; i++ ) {
             firstSet[i] = UUIDUtils.newTimeUUID();
@@ -227,7 +229,7 @@ public class UnionIteratorTest {
         third.add( thirdSet );
 
         // now intersect them and make sure we get all results in a small set
-        UnionIterator union = new UnionIterator( pageSize );
+        UnionIterator union = new UnionIterator( pageSize, 0, null );
         union.addIterator( first );
         union.addIterator( second );
         union.addIterator( third );
@@ -239,11 +241,13 @@ public class UnionIteratorTest {
             Set<ScanColumn> resultSet = union.next();
 
             for ( ScanColumn col : resultSet ) {
-                results.remove( col.getUUID() );
+                boolean existed = results.remove( col.getUUID() );
+
+                assertTrue( "Duplicate element was detected", existed );
             }
         }
 
-        assertTrue( results.isEmpty() );
+        assertEquals( 0, results.size() );
         assertFalse( union.hasNext() );
     }
 
@@ -258,7 +262,7 @@ public class UnionIteratorTest {
         UUID id5 = UUIDUtils.minTimeUUID( 5 );
 
 
-        UnionIterator union = new UnionIterator( 5 );
+        UnionIterator union = new UnionIterator( 5, 0, null );
 
         InOrderIterator first = new InOrderIterator( 100 );
 
@@ -287,9 +291,7 @@ public class UnionIteratorTest {
 
         //now try to get the next page
         ids = union.next();
-        assertNull(ids);
-
-
+        assertNull( ids );
     }
 
 
