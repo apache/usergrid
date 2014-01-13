@@ -31,7 +31,15 @@ public interface UniqueValueSerializationStrategy {
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
      * 
      * @param uniqueValue Object to be written
-     * @param timeToLive How long object should live in seconds (or null to live forever)
+     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     */
+    public MutationBatch write( UniqueValue uniqueValue );
+
+    /**
+     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
+     * 
+     * @param uniqueValue Object to be written
+     * @param timeToLive How long object should live in seconds 
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
     public MutationBatch write( UniqueValue uniqueValue, Integer timeToLive );

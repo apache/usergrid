@@ -78,19 +78,32 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     } 
 
 
+    public MutationBatch write( UniqueValue uniqueValue ) {
+        return write( uniqueValue, Integer.MAX_VALUE );
+    }
+
+
     @Override
-    public MutationBatch write( UniqueValue value, final Integer timeToLive ) {
+    public MutationBatch write( UniqueValue value, Integer timeToLive ) {
 
         Preconditions.checkNotNull( value, "value is required" );
+        Preconditions.checkNotNull( timeToLive, "timeToLive is required" );
 
         final EntityVersion ev = new EntityVersion( value.getEntityId(), value.getEntityVersion() );
+
+        final Integer ttl;
+        if ( timeToLive.equals( Integer.MAX_VALUE )) {
+            ttl = null;
+        } else {
+            ttl = timeToLive;
+        }
 
         return doWrite( value.getCollectionScope(), value.getField(), 
             new UniqueValueSerializationStrategyImpl.RowOp() {
 
             @Override
             public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
-                colMutation.putColumn( ev, 0x0, timeToLive );
+                colMutation.putColumn( ev, 0x0, ttl );
             }
         } );
     }
