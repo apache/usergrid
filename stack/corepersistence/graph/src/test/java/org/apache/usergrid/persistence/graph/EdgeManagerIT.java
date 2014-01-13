@@ -55,13 +55,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Ignore;
 import static org.mockito.Mockito.mock;
+
+
 import static org.mockito.Mockito.when;
+
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.*;
 
 
 @Ignore // tests fail due to unimplemented methods in EdgeManagerImpl that return null
 
 @RunWith( JukitoRunner.class )
-@UseModules( { CollectionModule.class, GraphModule.class } )
+@UseModules( { GraphModule.class } )
 public class EdgeManagerIT {
 
 
@@ -100,7 +104,7 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -133,7 +137,7 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -168,7 +172,7 @@ public class EdgeManagerIT {
         final UUID earlyVersion = UUIDGenerator.newTimeUUID();
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -204,7 +208,7 @@ public class EdgeManagerIT {
         final UUID earlyVersion = UUIDGenerator.newTimeUUID();
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -237,15 +241,15 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge1 = createRealEdge( "source", "test", "target" );
+        Edge edge1 = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge1 );
 
-        Edge edge2 = createRealEdge( "source", "test", "target" );
+        Edge edge2 = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge2 );
 
-        Edge edge3 = createRealEdge( "source", "test", "target" );
+        Edge edge3 = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge3 );
 
@@ -286,15 +290,15 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge1 = createRealEdge( "source", "test", "target" );
+        Edge edge1 = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge1 );
 
-        Edge edge2 = createRealEdge( "source", "test", "target" );
+        Edge edge2 = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge2 );
 
-        Edge edge3 = createRealEdge( "source", "test", "target" );
+        Edge edge3 = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge3 );
 
@@ -334,7 +338,7 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -370,7 +374,7 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -406,7 +410,7 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -462,7 +466,7 @@ public class EdgeManagerIT {
         EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createRealEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target" );
 
         em.writeEdge( edge ).toBlockingObservable().last();
 
@@ -802,35 +806,8 @@ public class EdgeManagerIT {
 
 
     //TODO invalid input testing with Jukito
-
-
-    private Edge createRealEdge( final String sourceType, final String edgeType, final String targetType ) {
-
-
-        Id sourceId = mock( Id.class );
-        when( sourceId.getType() ).thenReturn( sourceType );
-        when( sourceId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-
-
-        Id targetId = mock( Id.class );
-        when( targetId.getType() ).thenReturn( targetType );
-        when( targetId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-
-        return new SimpleEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
-    }
-
-
-    private SearchByEdgeType createSearchByEdge( final Id sourceId, final String type, final UUID maxVersion,
-                                                 final Edge last ) {
-        return new SimpleSearchByEdgeType( sourceId, type, maxVersion, last );
-    }
-
-
-    private SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final UUID maxVersion,
-                                                    final String idType, final Edge last ) {
-        return new SimpleSearchByIdType( sourceId, type, maxVersion, idType, last );
-    }
 }
+
 
 
 
