@@ -333,10 +333,9 @@ class Client {
       if ($token = $this->get_oauth_token()) {
         $query_string_array['access_token'] = $token;
       }
-      else {
-        $query_string_array['client_id'] = $this->get_client_id();
-        $query_string_array['client_secret'] = $this->get_client_secret();
-      }
+    } else {
+      $query_string_array['client_id'] = $this->get_client_id();
+      $query_string_array['client_secret'] = $this->get_client_secret();
     }
 
     foreach ($query_string_array as $key => $value) {
