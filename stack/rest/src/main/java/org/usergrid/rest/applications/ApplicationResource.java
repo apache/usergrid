@@ -245,6 +245,8 @@ public class ApplicationResource extends ServiceResource {
                     errorDescription = "user disabled";
                 }
                 catch ( Exception e1 ) {
+                    logger.warn( "Unexpected exception during token username/password verification", e1 );
+
                 }
             }
             else if ( "pin".equals( grant_type ) ) {
@@ -252,6 +254,8 @@ public class ApplicationResource extends ServiceResource {
                     user = management.verifyAppUserPinCredentials( services.getApplicationId(), username, pin );
                 }
                 catch ( Exception e1 ) {
+                    logger.warn( "Unexpected exception during token pin verification", e1 );
+
                 }
             }
             else if ( "client_credentials".equals( grant_type ) ) {
@@ -263,6 +267,7 @@ public class ApplicationResource extends ServiceResource {
                     }
                 }
                 catch ( Exception e1 ) {
+                    logger.warn( "Unexpected exception during token client authentication", e1 );
                 }
             }
 
@@ -453,6 +458,7 @@ public class ApplicationResource extends ServiceResource {
                 errorDescription = "user disabled";
             }
             catch ( Exception e1 ) {
+                logger.warn("Unexpected exception in authorize username/password verification", e1);
             }
 
             if ( ( user != null ) && isNotBlank( redirect_uri ) ) {
