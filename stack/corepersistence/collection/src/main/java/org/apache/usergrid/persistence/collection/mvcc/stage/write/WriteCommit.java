@@ -61,17 +61,17 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
 
     @Inject
-    public WriteCommit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                        final MvccEntitySerializationStrategy entitySerializationStrategy,
-                        final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy) {
+    public WriteCommit( final MvccLogEntrySerializationStrategy logStrat,
+                        final MvccEntitySerializationStrategy entryStrat,
+                        final UniqueValueSerializationStrategy uniqueValueStrat) {
 
-        Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
-        Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
+        Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
+        Preconditions.checkNotNull( entryStrat, "MvccEntitySerializationStrategy is required" );
+        Preconditions.checkNotNull( uniqueValueStrat, "UniqueValueSerializationStrategy is required" );
 
-
-        this.logEntryStrat = logEntrySerializationStrategy;
-        this.entityStrat = entitySerializationStrategy;
-        this.uniqueValueStrat = uniqueValueSerializiationStrategy;
+        this.logEntryStrat = logStrat;
+        this.entityStrat = entryStrat;
+        this.uniqueValueStrat = uniqueValueStrat;
     }
 
 

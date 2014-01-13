@@ -17,9 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueImpl;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.UUID;
