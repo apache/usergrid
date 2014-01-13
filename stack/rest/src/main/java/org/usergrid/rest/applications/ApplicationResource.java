@@ -74,8 +74,7 @@ import org.apache.shiro.codec.Base64;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -245,6 +244,11 @@ public class ApplicationResource extends ServiceResource {
                     errorDescription = "user disabled";
                 }
                 catch ( Exception e1 ) {
+                    logger.error( "Verification Error", e1 );
+                    OAuthResponse res = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR ).setError(e1.getMessage()).buildJSONMessage();
+                    return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
+                            .entity( wrapWithCallback( res.getBody(), callback ) ).build();
+
                 }
             }
             else if ( "pin".equals( grant_type ) ) {
@@ -252,6 +256,10 @@ public class ApplicationResource extends ServiceResource {
                     user = management.verifyAppUserPinCredentials( services.getApplicationId(), username, pin );
                 }
                 catch ( Exception e1 ) {
+                    logger.error( "Pin Verification Error", e1 );
+                    OAuthResponse res = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR).setError(e1.getMessage()).buildJSONMessage();
+                    return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
+                            .entity( wrapWithCallback( res.getBody(), callback ) ).build();
                 }
             }
             else if ( "client_credentials".equals( grant_type ) ) {
@@ -263,6 +271,10 @@ public class ApplicationResource extends ServiceResource {
                     }
                 }
                 catch ( Exception e1 ) {
+                    logger.error( "Client Credentials Error", e1 );
+                    OAuthResponse res = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR ).setError(e1.getMessage()).buildJSONMessage();
+                    return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
+                            .entity( wrapWithCallback( res.getBody(), callback ) ).build();
                 }
             }
 

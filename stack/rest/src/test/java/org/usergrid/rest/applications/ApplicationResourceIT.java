@@ -528,4 +528,14 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         assertNotNull( node.get( "entities" ) );
     }
+    @Test
+    public void pinExceptionVerification () throws Exception {
+        ApplicationInfo appinfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
+
+        JsonNode node = resource().path( "/test-organization/test-app/token" ).queryParam( "username", "ed@anuff.com" )
+                .queryParam( "pin", "//b//a//!//$**$&#(bulrs" ).queryParam( "grant_type", "pin" )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+
+    }
 }
