@@ -1,12 +1,12 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.config.ConfigurationManager;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -58,12 +59,27 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
-@IterationChop( iterations = 1000, runners = 6, threads = 9 )
+@IterationChop( iterations = 1000, threads = 9 )
 @RunWith( JukitoRunner.class )
 @UseModules( CollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
     /** Our RX I/O threads and this should have the same value */
     private static final String CONNECTION_COUNT = "20";
+
+    static {
+        /*
+         * --------------------------------------------------------------------
+         * Archaius Configuration Settings
+         * --------------------------------------------------------------------
+         */
+
+        try {
+            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
+        }
+    }
 
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
@@ -90,6 +106,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Inject
     @Overrides( name = "unit-test",
+        environments = Env.UNIT,
         options = {
             @Option( method = "getMaxThreadCount", override = CONNECTION_COUNT )
         }
@@ -105,7 +122,6 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Before
     public void setupClass() {
-//        GuicyFigModule.injectMembers( this );
 
         assertNotNull( cassandraFig );
         cassandraFig.bypass( "getPort", CassandraRule.THRIFT_PORT_STR );

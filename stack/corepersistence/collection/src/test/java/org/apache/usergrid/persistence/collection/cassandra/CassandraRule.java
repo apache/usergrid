@@ -43,11 +43,6 @@ public class CassandraRule extends EnvironResource {
 
         Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
         cassandraFig = injector.getInstance( CassandraFig.class );
-        cassandraFig.override( "getPort", THRIFT_PORT_STR );
-        cassandraFig.override( "getConnections", "20" );
-        cassandraFig.override( "getHosts", "localhost" );
-        cassandraFig.override( "getClusterName", "Usergrid" );
-        cassandraFig.override( "getKeyspaceName", "Usergrid_Collections" );
     }
 
 
@@ -58,6 +53,12 @@ public class CassandraRule extends EnvironResource {
 
     @Override
     protected void before() throws Throwable {
+        cassandraFig.override( "getPort", THRIFT_PORT_STR );
+        cassandraFig.override( "getConnections", "20" );
+        cassandraFig.override( "getHosts", "localhost" );
+        cassandraFig.override( "getClusterName", "Usergrid" );
+        cassandraFig.override( "getKeyspaceName", "Usergrid_Collections" );
+
         if ( started ) {
             return;
         }
