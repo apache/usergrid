@@ -105,7 +105,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
             if ( field.isUnique() ) {
                 UniqueValue written  = new UniqueValueImpl( 
                         ioEvent.getEntityCollection(), field, entity.getId(), entity.getVersion());
-                MutationBatch mb = uniqueValueStrat.write( written, null );
+                MutationBatch mb = uniqueValueStrat.write( written );
 
                 // merge into our existing mutation batch
                 logMutation.mergeShallow( mb );

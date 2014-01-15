@@ -65,7 +65,7 @@ public class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity");
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( scope, field, entityId, version );
-        strategy.write( stored, null ).execute();
+        strategy.write( stored ).execute();
 
         UniqueValue retrieved = strategy.load( scope, field );
         Assert.assertNotNull( retrieved );
@@ -111,7 +111,7 @@ public class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity");
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( scope, field, entityId, version );
-        strategy.write( stored, null ).execute();
+        strategy.write( stored ).execute();
 
         strategy.delete( stored ).execute();
 

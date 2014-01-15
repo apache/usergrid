@@ -134,8 +134,9 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         //write source->target edge type and id type to meta data
+        EdgeIdTypeKey tk = new EdgeIdTypeKey( source, edgeType ); 
         final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( source, edgeType ) );
+                new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, tk );
 
 
         batch.withRow( CF_TARGET_EDGE_ID_TYPES, sourceTypeKey ).setTimestamp( timestamp )

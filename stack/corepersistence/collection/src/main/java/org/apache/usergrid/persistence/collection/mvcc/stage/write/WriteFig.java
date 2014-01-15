@@ -17,24 +17,26 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.junit.Assert;
-import org.junit.Test;
+import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.GuicyFig;
+import org.safehaus.guicyfig.Key;
 
-public class EntityVersionSerializerTest {
-    
-    @Test
-    public void testBasicOperation() {
+/**
+ * Configuration for Write stage classes.
+ */
+public interface WriteFig extends GuicyFig {
 
-        EntityVersion original = new EntityVersion( new SimpleId("test"), UUIDGenerator.newTimeUUID() );
+    /**
+     * Max number of threads the uniqueness verification pool can allocate.  Can be dynamically changed after starting
+     */
+    @Key( "collection.stage.write.verification.threads" )
+    @Default( "20" )
+    int getMaxThreadCount();
 
-        EntityVersionSerializer evs = new EntityVersionSerializer();
-        ByteBuffer serialized = evs.toByteBuffer(original);
-
-        EntityVersion deserialized = evs.fromBytes( serialized.array() );
-
-        Assert.assertEquals( original, deserialized );
-    }
+    /**
+     * Time to Live for Unique Values before commit.
+     */
+    @Key( "collection.stage.write.verification.ttl.seconds" )
+    @Default( "10" )
+    int getUniqueValueTimeToLive();
 }

@@ -17,7 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.FieldSerializer;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
