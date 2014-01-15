@@ -71,10 +71,11 @@
           <bucketName>${aws.s3.bucket}</bucketName>
           <managerAppUsername>admin</managerAppUsername>
           <managerAppPassword>${manager.app.password}</managerAppPassword>
-          <testPackageBase>org.safehaus.chop.example</testPackageBase>
+          <testPackageBase>org.apache.usergrid</testPackageBase>
           <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
           <failIfCommitNecessary>false</failIfCommitNecessary>
           <amiID>${ami.id}</amiID>
+          <coldRestartTomcat>true</coldRestartTomcat>
           <awsSecurityGroup>${security.group}</awsSecurityGroup>
           <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
           <minimumRunners>6</minimumRunners>
