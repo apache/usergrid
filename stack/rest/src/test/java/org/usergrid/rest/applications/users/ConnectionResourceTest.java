@@ -207,8 +207,29 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         JsonNode response = things.entity( "thing2" ).delete();
 
-        assertNull (things.entity( thing1Id).connection("likes").entity( thing2Id).get());
+        JsonNode node = things.entity ( "thing2" ).get();
 
+        assertNull(node);
+
+    }
+
+    @Test //USERGRID-3011
+    public void connectionsDeleteFirstEntityInConnectionTest() {
+
+        CustomCollection things = context.collection( "things" );
+
+        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+
+        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+
+        //create the connection
+        things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
+
+        JsonNode response = things.entity( "thing1" ).delete();
+
+        JsonNode node = things.entity ( "thing1" ).get();
+
+        assertNull(node);
 
     }
 
