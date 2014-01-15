@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.safehaus.chop.api.IterationChop;
 import org.safehaus.guicyfig.Env;
+import org.safehaus.guicyfig.GuicyFigModule;
 import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
 
@@ -45,7 +46,9 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.config.ConfigurationManager;
 
@@ -66,20 +69,6 @@ public class MvccEntitySerializationStrategyImplTest {
     /** Our RX I/O threads and this should have the same value */
     private static final String CONNECTION_COUNT = "20";
 
-    static {
-        /*
-         * --------------------------------------------------------------------
-         * Archaius Configuration Settings
-         * --------------------------------------------------------------------
-         */
-
-        try {
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
-        }
-    }
 
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
@@ -122,12 +111,8 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Before
     public void setupClass() {
-
         assertNotNull( cassandraFig );
-        cassandraFig.bypass( "getPort", CassandraRule.THRIFT_PORT_STR );
-
         assertNotNull( rxFig );
-        rxFig.bypass( "getMaxThreadCount", CassandraRule.THRIFT_PORT_STR );
     }
 
 

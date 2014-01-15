@@ -29,7 +29,7 @@ public interface CassandraFig extends GuicyFig {
 
     @Key( "cassandra.port" )
     @Default( "9160" )
-    int getPort();
+    int getThriftPort();
 
     @Key( "cassandra.connections" )
     @Default( "20" )
