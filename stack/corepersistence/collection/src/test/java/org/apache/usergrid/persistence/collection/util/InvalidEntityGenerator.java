@@ -32,6 +32,8 @@ import org.junit.experimental.theories.PotentialAssignment;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -42,6 +44,7 @@ import static org.mockito.Mockito.when;
  */
 public class InvalidEntityGenerator {
 
+    private static final Logger LOG = LoggerFactory.getLogger( InvalidIdGenerator.class );
 
     @Retention(RetentionPolicy.RUNTIME)
     @ParametersSuppliedBy(NullFieldsSupplier.class)
@@ -84,6 +87,7 @@ public class InvalidEntityGenerator {
 
         @Override
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
+
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
 
             result.add( PotentialAssignment

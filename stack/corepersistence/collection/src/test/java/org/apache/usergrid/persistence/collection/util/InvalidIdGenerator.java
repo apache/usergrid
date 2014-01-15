@@ -17,7 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.util;
 
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -34,15 +33,17 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Generates a list of invalid entities for input verification.  To be used with Theory testing.
+ * Generates a list of invalid entities for input verification. To be used with Theory testing.
  *
  * @author tnine
  */
 public class InvalidIdGenerator {
 
+    private static final Logger LOG = LoggerFactory.getLogger( InvalidIdGenerator.class );
 
     @Retention( RetentionPolicy.RUNTIME )
     @ParametersSuppliedBy( NullFieldsSupplier.class )
@@ -50,9 +51,10 @@ public class InvalidIdGenerator {
 
     }
 
-    /** Supplies all possible combination of null fields on ids */
+    /**
+     * Supplies all possible combination of null fields on ids
+     */
     public static class NullFieldsSupplier extends ParameterSupplier {
-
 
         @Override
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
@@ -65,21 +67,22 @@ public class InvalidIdGenerator {
             return result;
         }
 
-
-        /** Missing fields */
+        /**
+         * Missing fields
+         */
         private static Id nullEntityId() {
-
 
             final Id entityId = mock( Id.class );
 
             when( entityId.getUuid() ).thenReturn( null );
             when( entityId.getType() ).thenReturn( "test" );
 
-            return entityId ;
+            return entityId;
         }
 
-
-        /** Null entity type */
+        /**
+         * Null entity type
+         */
         private static Id nullEntityType() {
 
             final Id entityId = mock( Id.class );
@@ -87,10 +90,9 @@ public class InvalidIdGenerator {
             when( entityId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
             when( entityId.getType() ).thenReturn( null );
 
-            return entityId ;
+            return entityId;
         }
     }
-
 
     @Retention( RetentionPolicy.RUNTIME )
     @ParametersSuppliedBy( IllegalFieldsSupplier.class )
@@ -98,28 +100,25 @@ public class InvalidIdGenerator {
 
     }
 
-
-    /** Supplies all possible combination of null fields on ids */
+    /**
+     * Supplies all possible combination of null fields on ids
+     */
     public static class IllegalFieldsSupplier extends ParameterSupplier {
-
 
         @Override
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
+
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
-
-
             result.add( PotentialAssignment.forValue( "wrongEntityUuidType", wrongEntityUuidType() ) );
             result.add( PotentialAssignment.forValue( "wrongEntityTypeLength", wrongEntityTypeLength() ) );
 
             return result;
         }
 
-
-        /** Incorrect fields */
-
-
+        /**
+         * Incorrect fields
+         */
         private static Id wrongEntityUuidType() {
-
 
             final Id entityId = mock( Id.class );
 
@@ -127,12 +126,10 @@ public class InvalidIdGenerator {
             when( entityId.getUuid() ).thenReturn( UUID.randomUUID() );
             when( entityId.getType() ).thenReturn( "test" );
 
-            return entityId ;
+            return entityId;
         }
 
-
         private static Id wrongEntityTypeLength() {
-
 
             final Id entityId = mock( Id.class );
 
@@ -140,7 +137,7 @@ public class InvalidIdGenerator {
             when( entityId.getUuid() ).thenReturn( UUID.randomUUID() );
             when( entityId.getType() ).thenReturn( "" );
 
-            return entityId ;
+            return entityId;
         }
     }
 }

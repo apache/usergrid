@@ -49,26 +49,37 @@ public class WriteUniqueVerify
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
-    private final WriteFig writeFig;
-
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
     private final ExecutorService threadPool;
 
+    private final int MAX_THREAD_COUNT;
+
+    private final int UNIQUE_VALUE_TTL;
+
     @Inject
     public WriteUniqueVerify( WriteFig writeFig, 
             UniqueValueSerializationStrategy uniqueValueSerializiationStrategy ) {
-        this.writeFig = writeFig;
+
         this.uniqueValueStrat = uniqueValueSerializiationStrategy;
-        this.threadPool = Executors.newFixedThreadPool( writeFig.getMaxThreadCount() );
+
+        if ( writeFig == null) {
+            MAX_THREAD_COUNT = 100;
+            UNIQUE_VALUE_TTL = 30;
+        } else {
+            MAX_THREAD_COUNT = writeFig.getMaxThreadCount();
+            UNIQUE_VALUE_TTL = writeFig.getUniqueValueTimeToLive();
+        }
+
+        this.threadPool = Executors.newFixedThreadPool( MAX_THREAD_COUNT );
     }
 
     @Override
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioevent ) {
 
-        final Entity entity = ioevent.getEvent().getEntity().get();
-
         ValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
+
+        final Entity entity = ioevent.getEvent().getEntity().get();
 
         // use simple thread pool to verify fields in parallel
         final List<Future<FieldUniquenessResult>> results = 
@@ -87,8 +98,7 @@ public class WriteUniqueVerify
                                 field, entity.getId(), entity.getVersion() );
 
                         // use TTL in case something goes wrong before entity is finally committed
-                        MutationBatch mb = uniqueValueStrat.write( 
-                                written, writeFig.getUniqueValueTimeToLive() );
+                        MutationBatch mb = uniqueValueStrat.write( written, UNIQUE_VALUE_TTL );
 
                         try {
                             mb.execute();

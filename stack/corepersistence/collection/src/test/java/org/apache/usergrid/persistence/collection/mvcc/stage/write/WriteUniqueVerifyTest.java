@@ -30,18 +30,15 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertSame;
 import org.junit.ClassRule;
-import org.junit.runner.RunWith;
 import static org.mockito.Mockito.mock;
 
 
 /** 
  * @author tnine 
  */
-@RunWith( JukitoRunner.class )
 @UseModules( CollectionModule.class )
 public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
@@ -50,9 +47,6 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
     @Inject
     private UniqueValueSerializationStrategy uniqueValueSerializiationStrategy;
-
-    @Inject
-    private WriteFig writeFig;
 
     /** Standard flow */
     @Test
@@ -66,7 +60,7 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( writeFig, uniqueValueSerializiationStrategy );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( null, uniqueValueSerializiationStrategy );
 
         CollectionIoEvent<MvccEntity>
             result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -86,7 +80,7 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
-        new WriteUniqueVerify( writeFig, uniqueValueSerializiationStrategy ).call( event );
+        new WriteUniqueVerify( null, uniqueValueSerializiationStrategy ).call( event );
     }
 
 }

@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage;
+package org.apache.usergrid.persistence.collection.util;
 
 
 import java.lang.annotation.Retention;
@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -44,6 +46,7 @@ import static org.mockito.Mockito.when;
  */
 public class InvalidMvccEntityGenerator {
 
+    private static final Logger LOG = LoggerFactory.getLogger( InvalidIdGenerator.class );
 
     @Retention( RetentionPolicy.RUNTIME )
     @ParametersSuppliedBy( NullFieldsSupplier.class )
@@ -58,6 +61,7 @@ public class InvalidMvccEntityGenerator {
 
         @Override
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
+
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
 
             result.add( PotentialAssignment.forValue( "nullValue", null ) );
@@ -95,7 +99,7 @@ public class InvalidMvccEntityGenerator {
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
 
             result.add( PotentialAssignment.forValue( "wrongUuidType", wrongUuidType() ) );
-            result.add( PotentialAssignment.forValue( "invalidSubTypes", mock( MvccEntity.class )) );
+            result.add( PotentialAssignment.forValue( "invalidSubTypes", invalidId() ) );
 
             return result;
         }
@@ -119,6 +123,20 @@ public class InvalidMvccEntityGenerator {
             return entity;
         }
 
+        private static MvccEntity invalidId() {
+
+            final Id id = mock( Id.class );
+
+            when( id.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
+            when( id.getType() ).thenReturn( "" );
+
+            final MvccEntity entity = mock( MvccEntity.class );
+
+            when( entity.getId() ).thenReturn( id );
+            when( entity.getVersion() ).thenReturn( UUID.randomUUID() );
+
+            return entity;
+        }
 
     }
 
