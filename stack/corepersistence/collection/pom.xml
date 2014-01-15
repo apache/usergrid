@@ -77,8 +77,8 @@
           <amiID>${ami.id}</amiID>
           <awsSecurityGroup>${security.group}</awsSecurityGroup>
           <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
-          <minimumRunners>5</minimumRunners>
-          <maximumRunners>8</maximumRunners>
+          <minimumRunners>6</minimumRunners>
+          <maximumRunners>9</maximumRunners>
           <securityGroupExceptions>
             <!--
             Add your own IP address as an exception to allow access
