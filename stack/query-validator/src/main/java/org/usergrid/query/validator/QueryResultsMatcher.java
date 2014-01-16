@@ -17,51 +17,13 @@
  */
 package org.usergrid.query.validator;
 
+import org.usergrid.persistence.Entity;
+
+import java.util.List;
+
 /**
  * @author Sungju Jin
  */
-public class QueryRequest {
-    private String dbQuery;
-    private ApiQuery apiQuery;
-
-    public  QueryRequest() {
-        this.apiQuery = new ApiQuery();
-    }
-
-    public String getDbQuery() {
-        return dbQuery;
-    }
-
-    public void setDbQuery(String dbQuery) {
-        this.dbQuery = dbQuery;
-    }
-
-    public ApiQuery getApiQuery() {
-        return apiQuery;
-    }
-
-    static public class ApiQuery {
-        private String query;
-        private int limit;
-
-        public ApiQuery() {
-            limit = 10;
-        }
-
-        public String getQuery() {
-            return query;
-        }
-
-        public void setQuery(String query) {
-            this.query = query;
-        }
-
-        public int getLimit() {
-            return limit;
-        }
-
-        public void setLimit(int limit) {
-            this.limit = limit;
-        }
-    }
+public interface QueryResultsMatcher {
+    boolean equals(List<Entity> expectedEntities, List<Entity> actuallyEntities);
 }
