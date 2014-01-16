@@ -1086,22 +1086,29 @@ public class RelationManagerImpl implements RelationManager {
 
 
         PagingResultsIterator itr =
-                new PagingResultsIterator( getConnectingEntities( headEntity, null, null, Level.REFS ) );
+                new PagingResultsIterator( getConnectedEntities(headEntity, null, null, Level.REFS) );
 
-        ConnectionRefImpl connection;
+        ConnectionRefImpl connection = null;
 
         while ( itr.hasNext() ) {
-            connection = ( ConnectionRefImpl ) itr.next();
+            Object itrObj = itr.next();
+            if ( itrObj instanceof ConnectionRefImpl ) {
+                connection = (ConnectionRefImpl) itrObj;
+            }
+            else if ( itrObj instanceof SimpleEntityRef ) {
+                connection = new ConnectionRefImpl( (SimpleEntityRef) itrObj );
+            }
+            else {
+                if ( itrObj instanceof EntityRef ) {
+                    connection = new ConnectionRefImpl( new SimpleEntityRef((EntityRef) itr.next()));
+                }
+                else if ( itrObj instanceof UUID ) {
+                    connection = new ConnectionRefImpl( new SimpleEntityRef((UUID)itr.next()));
+                }
+            }
 
             batchUpdateEntityConnection( batch, true, connection, timestampUuid );
         }
-        //
-        //    List<ConnectionRefImpl> connections = getConnectionsWithEntity(headEntity.getUuid());
-        //    if (connections != null) {
-        //      for (ConnectionRefImpl connection : connections) {
-        //        batchUpdateEntityConnection(batch, true, connection, timestampUuid);
-        //      }
-        //    }
     }
 
 
