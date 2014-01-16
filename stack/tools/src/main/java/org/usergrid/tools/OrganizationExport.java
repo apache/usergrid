@@ -4,7 +4,6 @@ package org.usergrid.tools;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
@@ -57,7 +56,7 @@ public class OrganizationExport extends ExportingToolBase {
 
         CSVWriter writer = new CSVWriter( new FileWriter( outputDir.getAbsolutePath() + "/admins.csv" ), ',' );
 
-        writer.writeNext( new String[] { "Org uuid", "Org Name", "Admin uuid", "Admin Name", "Admin Email", "Admin Created Date" } );
+        writer.writeNext( new String[] { "Organization Name", "Organization UUID", "Admin Name", "Admin Email", "Admin UUID", "Admin Activated?", "Admin Confirmed?", "Admin Disabled?", "Admin Created Date" } );
 
         Results organizations = null;
 
@@ -66,20 +65,29 @@ public class OrganizationExport extends ExportingToolBase {
             organizations = getOrganizations( query );
 
             for ( Entity organization : organizations.getEntities() ) {
-                final String orgName = organization.getProperty( "path" ).toString();
-                final UUID orgId = organization.getUuid();
+                String orgName = organization.getProperty( "path" ).toString();
 
-                logger.info( "Org Name: {} key: {}", orgName, orgId );
+                logger.info( "Org Name: {} key: {}", orgName, organization.getUuid() );
 
                 for ( UserInfo user : managementService.getAdminUsersForOrganization( organization.getUuid() ) ) {
 
                     Entity admin = managementService.getAdminUserEntityByUuid( user.getUuid() );
 
-                    Long createdDate = ( Long ) admin.getProperties().get( "created" );
+                    Long createdDate  = ( Long ) admin.getProperties().get( "created" );
+                    Boolean activated = ( Boolean ) admin.getProperties().get( "activated" );
+                    Boolean confirmed = ( Boolean ) admin.getProperties().get( "confirmed" );
+                    Boolean disabled  = ( Boolean ) admin.getProperties().get( "disabled" );
 
-                    writer.writeNext( new String[] { orgId.toString(),
-                            orgName, user.getUuid().toString(), user.getName(), user.getEmail(),
-                            createdDate == null ? "Unknown" : sdf.format( new Date( createdDate ) )
+                    writer.writeNext( new String[] {
+                            orgName,
+                            ( String ) organization.getUuid().toString(),
+                            user.getName(),
+                            user.getEmail(),
+                            ( String ) user.getUuid().toString(),
+                            activated == null ? "Unknown" : ( String ) activated.toString(),
+                            confirmed == null ? "Unknown" : ( String ) confirmed.toString(),
+                            disabled  == null ? "Unknown" : ( String ) disabled.toString(),
+                            createdDate == null ? "Unknown" : ( String ) createdDate.toString()
                     } );
                 }
             }
