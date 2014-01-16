@@ -15,23 +15,26 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.model.field;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-/**
- *
- * @author: tnine
- *
- */
-public class DoubleField extends AbstractField<Double> {
+import java.nio.ByteBuffer;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.junit.Assert;
+import org.junit.Test;
 
-    public DoubleField(String name, Double value) {
-        super(name, value);
-    }
+public class EntityVersionSerializerTest {
+    
+    @Test
+    public void testBasicOperation() {
 
-    public DoubleField(String name, Double value, boolean unique) {
-        super(name, value, unique);
-    }
+        EntityVersion original = new EntityVersion( new SimpleId("test"), UUIDGenerator.newTimeUUID() );
 
-    public DoubleField() {
+        EntityVersionSerializer evs = new EntityVersionSerializer();
+        ByteBuffer serialized = evs.toByteBuffer(original);
+
+        EntityVersion deserialized = evs.fromBytes( serialized.array() );
+
+        Assert.assertEquals( original, deserialized );
     }
 }

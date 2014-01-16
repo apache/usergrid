@@ -15,23 +15,23 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.model.field;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+
+import java.util.UUID;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- *
- * @author: tnine
- *
+ * Represents a Unique Value of a field within a collection.
  */
-public class DoubleField extends AbstractField<Double> {
+public interface UniqueValue {
 
-    public DoubleField(String name, Double value) {
-        super(name, value);
-    }
+    public CollectionScope getCollectionScope();
 
-    public DoubleField(String name, Double value, boolean unique) {
-        super(name, value, unique);
-    }
+    public Id getEntityId();
 
-    public DoubleField() {
-    }
+    public Field getField();
+
+    public UUID getEntityVersion();
 }

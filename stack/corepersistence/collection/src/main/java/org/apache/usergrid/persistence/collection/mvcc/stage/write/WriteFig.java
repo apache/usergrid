@@ -15,23 +15,28 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.model.field;
+package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+
+import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.GuicyFig;
+import org.safehaus.guicyfig.Key;
 
 /**
- *
- * @author: tnine
- *
+ * Configuration for Write stage classes.
  */
-public class DoubleField extends AbstractField<Double> {
+public interface WriteFig extends GuicyFig {
 
-    public DoubleField(String name, Double value) {
-        super(name, value);
-    }
+    /**
+     * Max number of threads the uniqueness verification pool can allocate.  Can be dynamically changed after starting
+     */
+    @Key( "collection.stage.write.verification.threads" )
+    @Default( "20" )
+    int getMaxThreadCount();
 
-    public DoubleField(String name, Double value, boolean unique) {
-        super(name, value, unique);
-    }
-
-    public DoubleField() {
-    }
+    /**
+     * Time to Live for Unique Values before commit.
+     */
+    @Key( "collection.stage.write.verification.ttl.seconds" )
+    @Default( "10" )
+    int getUniqueValueTimeToLive();
 }

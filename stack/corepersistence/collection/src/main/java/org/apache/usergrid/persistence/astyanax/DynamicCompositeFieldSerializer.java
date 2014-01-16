@@ -17,14 +17,9 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.astyanax;
+package org.apache.usergrid.persistence.astyanax;
 
 
-import java.util.Iterator;
-
-import com.netflix.astyanax.model.AbstractComposite;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.DynamicComposite;
 
 

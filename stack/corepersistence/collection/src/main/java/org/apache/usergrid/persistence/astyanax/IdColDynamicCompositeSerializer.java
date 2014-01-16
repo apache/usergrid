@@ -17,21 +17,15 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.astyanax;
+package org.apache.usergrid.persistence.astyanax;
 
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.common.base.Preconditions;
-import com.netflix.astyanax.model.AbstractComposite;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.DynamicComposite;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
