@@ -1,6 +1,11 @@
 package org.apache.usergrid.persistence.collection.astyanax;
 
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.netflix.astyanax.AstyanaxConfiguration;
@@ -23,6 +28,8 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     private final CassandraFig cassandraConfig;
 
+    private final static Set<AstyanaxContext<Keyspace>> contexts =
+            new HashSet<AstyanaxContext<Keyspace>>();
 
     @Inject
     public AstyanaxKeyspaceProvider( final CassandraFig cassandraConfig ) {
@@ -32,6 +39,7 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
 
     @Override
     public Keyspace get() {
+
         AstyanaxConfiguration config = new AstyanaxConfigurationImpl()
                 .setDiscoveryType( NodeDiscoveryType.TOKEN_AWARE )
                 .setTargetCassandraVersion( cassandraConfig.getVersion() );
@@ -61,8 +69,25 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
                         .buildKeyspace( ThriftFamilyFactory.getInstance() );
 
         context.start();
-
-
+        synchronized ( contexts ) {
+            contexts.add( context );
+        }
         return context.getClient();
+    }
+
+
+    // @todo by aok - this must be considered to enable stress tests to shutdown or else
+    // @todo the system will run out of file descriptors (sockets) and tests will fail.
+    // this is where the lifecycle management annotations would come in handy.
+    public void shutdown() {
+        synchronized ( contexts ) {
+            HashSet<AstyanaxContext<Keyspace>> copy = new HashSet<AstyanaxContext<Keyspace>>( contexts.size() );
+            copy.addAll( contexts );
+
+            for ( AstyanaxContext<Keyspace> context : copy ) {
+                context.shutdown();
+                contexts.remove( context );
+            }
+        }
     }
 }

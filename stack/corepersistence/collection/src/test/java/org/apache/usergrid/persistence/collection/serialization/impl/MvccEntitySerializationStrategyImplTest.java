@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -21,6 +23,7 @@ import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
@@ -77,6 +80,8 @@ public class MvccEntitySerializationStrategyImplTest {
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
 
+    @Inject
+    AstyanaxKeyspaceProvider provider;
 
     @Inject
     @Rule
@@ -110,9 +115,15 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
     @Before
-    public void setupClass() {
+    public void setup() {
         assertNotNull( cassandraFig );
         assertNotNull( rxFig );
+    }
+
+
+    @After
+    public void tearDown() {
+        provider.shutdown();
     }
 
 
