@@ -290,7 +290,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void setup() throws Exception {
 
-        if ( parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) ) ) {
+        if ( getBooleanProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) ) {
             String test_app_name = properties.getProperty( PROPERTIES_TEST_ACCOUNT_APP );
             String test_organization_name = properties.getProperty( PROPERTIES_TEST_ACCOUNT_ORGANIZATION );
             String test_admin_username = properties.getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME );
@@ -328,7 +328,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public boolean superuserEnabled() {
-        boolean superuser_enabled = parseBoolean( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED ) );
+        boolean superuser_enabled = getBooleanProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED );
         String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
         String superuser_email = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL );
         String superuser_password = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_PASSWORD );
@@ -339,7 +339,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void provisionSuperuser() throws Exception {
-        boolean superuser_enabled = parseBoolean( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED ) );
+        boolean superuser_enabled = getBooleanProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED );
         String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
         String superuser_email = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL );
         String superuser_password = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_PASSWORD );
@@ -1247,13 +1247,11 @@ public class ManagementServiceImpl implements ManagementService {
             userInfo = getUserInfo( MANAGEMENT_APPLICATION_ID, user );
 
             boolean userIsSuperAdmin =
-                    properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ).equals( userInfo.getEmail() );
-
-            boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
+                    StringUtils.equals( getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail() );
+            boolean testUserEnabled = getBooleanProperty( PROPERTIES_SETUP_TEST_ACCOUNT );
 
             boolean userIsTestUser = !testUserEnabled ? false :
-                                     properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL )
-                                               .equals( userInfo.getEmail() );
+                    StringUtils.equals(getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail());
 
             if ( !userIsSuperAdmin && !userIsTestUser ) {
 
@@ -1489,7 +1487,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         Map<UUID, String> organizations;
 
-        boolean superuser_enabled = parseBoolean( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED ) );
+        boolean superuser_enabled = getBooleanProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED );
         String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
         if ( superuser_enabled && ( superuser_username != null ) && superuser_username.equals( user.getUsername() ) ) {
             organizations = buildOrgBiMap( getOrganizations( null, 10 ) );
@@ -2905,5 +2903,21 @@ public class ManagementServiceImpl implements ManagementService {
     public Object registerAppWithAPM( OrganizationInfo orgInfo, ApplicationInfo appInfo ) throws Exception {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    private String getProperty(String key) {
+        String obj = properties.getProperty(key);
+        if(StringUtils.isEmpty(obj))
+            return null;
+        else
+            return obj;
+    }
+
+    private boolean getBooleanProperty(String key) {
+        String obj = getProperty(key);
+        if(StringUtils.isEmpty(obj))
+            return false;
+        else
+            return Boolean.parseBoolean(obj);
     }
 }
