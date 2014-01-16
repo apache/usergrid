@@ -65,7 +65,7 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
-@IterationChop( iterations = 1000, threads = 9 )
+@IterationChop( iterations = 1, threads = 1 )
 @RunWith( JukitoRunner.class )
 @UseModules( CollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
