@@ -15,20 +15,14 @@ import com.google.common.io.Files;
 /** @author tnine */
 public class TomcatResource extends ExternalResource {
 
+    public static final TomcatResource instance = new TomcatResource();
     private static Object mutex = new Object();
-
     private static final String CONTEXT = "/";
-
+    private String webAppsPath;
     private int port;
-
-
-
-
     private Tomcat tomcat;
 
     protected TomcatResource(){
-
-
     }
 
     @Override
@@ -51,9 +45,7 @@ public class TomcatResource extends ExternalResource {
             tomcat = new Tomcat();
             tomcat.setBaseDir( dataDir.getAbsolutePath() );
             tomcat.setPort( port );
-            tomcat.addWebapp( CONTEXT, new File( "src/main/webapp" ).getAbsolutePath() );
-
-
+            tomcat.addWebapp( CONTEXT, new File( getWebAppsPath() ).getAbsolutePath() );
             tomcat.start();
         }
     }
@@ -67,8 +59,11 @@ public class TomcatResource extends ExternalResource {
         return port;
     }
 
+    public String getWebAppsPath() {
+        return webAppsPath;
+    }
 
-    public static final TomcatResource instance = new TomcatResource();
-
-
+    public void setWebAppsPath(String webAppsPath) {
+        this.webAppsPath = webAppsPath;
+    }
 }

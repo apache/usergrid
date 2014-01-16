@@ -53,10 +53,14 @@ public class ITSetup extends ExternalResource {
     public ITSetup( CassandraResource cassandraResource ) {
         this.cassandraResource = cassandraResource;
         tomcatResource = TomcatResource.instance;
-
-
+        tomcatResource.setWebAppsPath("src/main/webapp");
     }
 
+    public ITSetup( CassandraResource cassandraResource, String webAppsPath ) {
+        this.cassandraResource = cassandraResource;
+        tomcatResource = TomcatResource.instance;
+        tomcatResource.setWebAppsPath(webAppsPath);
+    }
 
     private boolean setupCalled = false;
     private boolean ready = false;
