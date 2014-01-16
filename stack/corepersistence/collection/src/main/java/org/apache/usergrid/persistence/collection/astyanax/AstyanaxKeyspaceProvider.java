@@ -1,10 +1,8 @@
 package org.apache.usergrid.persistence.collection.astyanax;
 
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -28,6 +26,7 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     private final CassandraFig cassandraConfig;
 
+    // @todo aok - this being static is utterly horrible and needs to change
     private final static Set<AstyanaxContext<Keyspace>> contexts =
             new HashSet<AstyanaxContext<Keyspace>>();
 

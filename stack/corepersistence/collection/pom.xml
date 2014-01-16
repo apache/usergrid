@@ -78,7 +78,7 @@
           <coldRestartTomcat>true</coldRestartTomcat>
           <awsSecurityGroup>${security.group}</awsSecurityGroup>
           <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
-          <minimumRunners>6</minimumRunners>
+          <minimumRunners>9</minimumRunners>
           <maximumRunners>9</maximumRunners>
           <securityGroupExceptions>
             <!--

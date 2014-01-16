@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,7 +9,6 @@ import java.util.UUID;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -18,7 +16,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.safehaus.chop.api.IterationChop;
 import org.safehaus.guicyfig.Env;
-import org.safehaus.guicyfig.GuicyFigModule;
 import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
 
@@ -49,11 +46,8 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.config.ConfigurationManager;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -65,7 +59,7 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
-@IterationChop( iterations = 1, threads = 1 )
+@IterationChop( iterations = 1000, threads = 3 )
 @RunWith( JukitoRunner.class )
 @UseModules( CollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
