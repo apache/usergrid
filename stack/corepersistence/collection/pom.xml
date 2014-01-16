@@ -68,6 +68,7 @@
         <configuration>
           <accessKey>${aws.s3.key}</accessKey>
           <secretKey>${aws.s3.secret}</secretKey>
+          <availabilityZone>${availabilityZone}</availabilityZone>
           <bucketName>${aws.s3.bucket}</bucketName>
           <managerAppUsername>admin</managerAppUsername>
           <managerAppPassword>${manager.app.password}</managerAppPassword>
