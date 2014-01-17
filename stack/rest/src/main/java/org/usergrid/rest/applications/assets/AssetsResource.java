@@ -71,7 +71,7 @@ public class AssetsResource extends ServiceResource {
     public JSONWithPadding executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
-        logger.info( "In AssetsResource.executeGet with ui: {} and callback: {}", ui );
+        logger.info( "In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback );
         return super.executeGet( ui, callback );
     }
 
@@ -93,17 +93,20 @@ public class AssetsResource extends ServiceResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/data")
     public Response uploadData( @FormDataParam("file") InputStream uploadedInputStream,
-                                @FormDataParam("file") FormDataContentDisposition fileDetail,
+                                // @FormDataParam("file") FormDataContentDisposition fileDetail,
                                 @PathParam("entityId") PathSegment entityId ) throws Exception {
+    	if (uploadedInputStream != null ) {
+    		UUID assetId = UUID.fromString( entityId.getPath() );
+    		logger.info( "In AssetsResource.uploadData with id: {}", assetId );
+    		EntityManager em = emf.getEntityManager( getApplicationId() );
+    		Asset asset = em.get( assetId, Asset.class );
 
-        UUID assetId = UUID.fromString( entityId.getPath() );
-        logger.info( "In AssetsResource.uploadData with id: {}", assetId );
-        EntityManager em = emf.getEntityManager( getApplicationId() );
-        Asset asset = em.get( assetId, Asset.class );
-
-        binaryStore.write( getApplicationId(), asset, uploadedInputStream );
-        em.update( asset );
-        return Response.status( 200 ).build();
+    		binaryStore.write( getApplicationId(), asset, uploadedInputStream );
+    		em.update( asset );
+    		return Response.status( 200 ).build();
+    	} else {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("File Not Found").build();
+    	}
     }
 
 

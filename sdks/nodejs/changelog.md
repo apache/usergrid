@@ -1,5 +1,11 @@
 ##Change log
 
+
+###0.10.7
+- Fixed issue where token was appeneded even when no token was present
+- Updated tests
+
+
 ###0.10.5
 
 - Added new class and methods for Groups

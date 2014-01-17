@@ -20,18 +20,18 @@ package org.usergrid.batch.job;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.usergrid.batch.JobExecution;
-import org.usergrid.batch.service.JobListener;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.batch.JobExecution;
+import org.usergrid.batch.service.JobListener;
 
 
 /**
  * Implementation of the JobListener for tests.
  */
 public class TestJobListener implements JobListener {
-    public static final long WAIT_MAX_MILLIS = 250;
+    // public static final long WAIT_MAX_MILLIS = 250;
+	public static final long WAIT_MAX_MILLIS = 60000L; // max wait 1 minutes 
     private static final Logger LOG = LoggerFactory.getLogger( TestJobListener.class );
     private AtomicInteger submittedCounter = new AtomicInteger();
     private AtomicInteger failureCounter = new AtomicInteger();
@@ -77,6 +77,15 @@ public class TestJobListener implements JobListener {
     }
 
 
+
+    /**
+     * block until submitted jobs are all accounted for.
+     * 
+     * @param jobCount total submitted job
+     * @param idleTime idleTime in millisecond.
+     * @return true when all jobs are completed (could be succeed or failed) within the given idleTime range, or {@value #WAIT_MAX_MILLIS}, whichever is smaller
+     * @throws InterruptedException
+     */
     public boolean blockTilDone( int jobCount, long idleTime ) throws InterruptedException
     {
         final long waitTime = Math.min( idleTime, WAIT_MAX_MILLIS );
@@ -89,7 +98,8 @@ public class TestJobListener implements JobListener {
             currentCount = getDoneCount();
 
             if ( startCount == currentCount ) {
-                if ( timeNotChanged > idleTime ) {
+//                if ( timeNotChanged > idleTime ) {
+                if ( timeNotChanged > waitTime ) {
                     return false;
                 }
 

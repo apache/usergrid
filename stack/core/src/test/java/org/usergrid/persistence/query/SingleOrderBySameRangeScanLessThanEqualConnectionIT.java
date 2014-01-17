@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderBySameRangeScanLessThanEqualConnectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderBySameRangeScanLessThanEqualConnection() throws Exception {
-        singleOrderBySameRangeScanLessThanEqual( new ConnectionHelper() );
+        singleOrderBySameRangeScanLessThanEqual( new ConnectionHelper(app) );
     }
 }

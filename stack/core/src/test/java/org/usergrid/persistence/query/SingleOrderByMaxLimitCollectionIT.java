@@ -24,6 +24,6 @@ public class SingleOrderByMaxLimitCollectionIT extends AbstractIteratingQueryIT 
 
     @Test
     public void singleOrderByMaxLimitCollection() throws Exception {
-        singleOrderByMaxLimit( new CollectionIoHelper() );
+        singleOrderByMaxLimit( new CollectionIoHelper( app ) );
     }
 }

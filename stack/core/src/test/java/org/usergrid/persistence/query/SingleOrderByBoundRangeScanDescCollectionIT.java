@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderByBoundRangeScanDescCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByBoundRangeScanDescCollection() throws Exception {
-        singleOrderByBoundRangeScanDesc( new CollectionIoHelper() );
+        singleOrderByBoundRangeScanDesc( new CollectionIoHelper( app ) );
     }
 }

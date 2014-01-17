@@ -25,6 +25,6 @@ import org.usergrid.cassandra.Concurrent;
 public class SingleOrderByIntersectionCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByIntersectionCollection() throws Exception {
-        singleOrderByIntersection( new CollectionIoHelper() );
+        singleOrderByIntersection( new CollectionIoHelper( app ) );
     }
 }
