@@ -76,6 +76,8 @@
           <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
           <failIfCommitNecessary>false</failIfCommitNecessary>
           <amiID>${ami.id}</amiID>
+          <resultsDirectory>${resultsDirectory}</resultsDirectory>
+          <dumpType>${dumpType}</dumpType>
           <coldRestartTomcat>true</coldRestartTomcat>
           <awsSecurityGroup>${security.group}</awsSecurityGroup>
           <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>

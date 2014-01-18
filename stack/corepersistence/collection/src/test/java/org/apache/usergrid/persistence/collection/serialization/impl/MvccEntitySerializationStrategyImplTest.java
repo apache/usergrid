@@ -59,7 +59,7 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
-@IterationChop( iterations = 1000, threads = 3 )
+@IterationChop( iterations = 1000, threads = 2 )
 @RunWith( JukitoRunner.class )
 @UseModules( CollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
