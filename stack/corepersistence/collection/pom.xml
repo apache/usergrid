@@ -76,6 +76,7 @@
           <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
           <failIfCommitNecessary>false</failIfCommitNecessary>
           <amiID>${ami.id}</amiID>
+          <instanceType>m1.large</instanceType>
           <resultsDirectory>${resultsDirectory}</resultsDirectory>
           <dumpType>${dumpType}</dumpType>
           <coldRestartTomcat>true</coldRestartTomcat>
