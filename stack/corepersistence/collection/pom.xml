@@ -82,8 +82,7 @@
           <coldRestartTomcat>true</coldRestartTomcat>
           <awsSecurityGroup>${security.group}</awsSecurityGroup>
           <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
-          <minimumRunners>9</minimumRunners>
-          <maximumRunners>9</maximumRunners>
+          <runnerCount>9</runnerCount>
           <securityGroupExceptions>
             <!--
             Add your own IP address as an exception to allow access
