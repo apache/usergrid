@@ -69,26 +69,6 @@ public class ChangeLogGeneratorImplTest {
     @Inject
     MvccEntitySerializationStrategy mvccEntitySerializationStrategy;
 
-    public ChangeLogGeneratorImplTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-
     /**
      * Test that change log creation follows Todd's example. 
      */

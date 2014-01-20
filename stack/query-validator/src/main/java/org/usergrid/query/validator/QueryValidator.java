@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright 2013 baas.io
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.usergrid.query.validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ import org.usergrid.persistence.Entity;
 import java.util.List;
 
 /**
- * @author Sung-ju Jin(realbeast)
+ * @author Sungju Jin
  */
 @Component
 public class QueryValidator {
@@ -45,14 +47,13 @@ public class QueryValidator {
     }
 
     public QueryResponse execute(QueryRequest request) {
+        return execute(request, new DefaultQueryResultsMatcher());
+    }
+
+    public QueryResponse execute(QueryRequest request, QueryResultsMatcher matcher) {
         List<Entity> sqlEntities = sql.execute(request.getDbQuery());
         List<Entity> apiEntities = api.execute(request.getApiQuery().getQuery(), request.getApiQuery().getLimit());
-        boolean equals = false;
-        if( request.isIgnoreOrdering() ) {
-            equals = sqlEntities.size() == apiEntities.size();
-        } else {
-            equals = sqlEntities.equals(apiEntities);
-        }
+        boolean equals = matcher.equals(sqlEntities, apiEntities);
 
         QueryResponse response = new QueryResponse();
         response.setResult(equals);
