@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.persistence.astyanax;
 
 
@@ -42,13 +41,13 @@ public class IdColDynamicCompositeSerializer implements DynamicCompositeFieldSer
     private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
     private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
 
-    private static final IdColDynamicCompositeSerializer INSTANCE = new IdColDynamicCompositeSerializer();
+    private static final IdColDynamicCompositeSerializer INSTANCE = 
+            new IdColDynamicCompositeSerializer();
 
 
     private IdColDynamicCompositeSerializer() {
 
     }
-
 
 
     /**
