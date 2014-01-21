@@ -218,7 +218,7 @@ describe('Usergrid', function(){
 				});
 			})
 		});
-		it('should create a new dogs collection', function(done){
+		it('should CREATE a new dogs collection', function(done){
 			var options = {
 				type:'dogs',
 				qs:{ql:'order by index'}
@@ -230,33 +230,23 @@ describe('Usergrid', function(){
 				done();
 			});
 		});
-		it('should retrieve dogs from the collection', function(done){
+		it('should RETRIEVE dogs from the collection', function(done){
 			loop(done);
 		});
-		it('should retrieve the next page of dogs from the collection', function(done){
+		it('should RETRIEVE the next page of dogs from the collection', function(done){
 			if(dogs.hasNextPage()){
 				dogs.getNextPage(function(err){loop(done);});
 			}else{
 				done();
 			}
 		});
-		it('should retrieve the previous page of dogs from the collection', function(done){
+		it('should RETRIEVE the previous page of dogs from the collection', function(done){
 			if(dogs.hasPreviousPage()){
 				dogs.getPreviousPage(function(err){loop(done);});
 			}else{
 				done();
 			}
 		});
-		/*it('should retrieve the dog', function(done){
-			if(!dog){
-				assert(false, "dog not created");
-				done();
-			}
-			dog.fetch(function(err){
-				assert(!err, "dog not fetched");
-				done();
-			});
-		});*/
 	});
 	describe('Usergrid Events', function(){
 		var ev;
@@ -264,7 +254,7 @@ describe('Usergrid', function(){
 		var HOUR=MINUTE*60;
 		var time=Date.now()-HOUR;
 
-		it('should create an event', function(done){
+		it('should CREATE an event', function(done){
 			ev = new Usergrid.Event({client:client, data:{category:'mocha_test', timestamp:time, name:"test", counters:{test:0,test_counter:0}}}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
@@ -278,7 +268,7 @@ describe('Usergrid', function(){
 				done();
 			});
 		});
-		/*it('should reset a counter', function(done){
+		it('should reset a counter', function(done){
 			time+=MINUTE*10
 			ev.set("timestamp", time);
 			ev.reset('test', function(err, data){
@@ -286,7 +276,7 @@ describe('Usergrid', function(){
 				console.log(data);
 				done();
 			});
-		});*/
+		});
 		it("should increment 'test' counter", function(done){
 			time+=MINUTE*10
 			ev.set("timestamp", time);
@@ -322,23 +312,14 @@ describe('Usergrid', function(){
 				done();
 			});
 		});
-		/*it('should fetch counter data', function(done){
+		it('should fetch counter data', function(done){
 			ev.getData('all', null, null, ['test', 'test_counter'], function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
 				console.log(time, Date.now());
 				done();
 			});
-		});*/
-	});
-	/*describe('Usergrid Counters', function(){
-		it('should create a counter', function(done){
-			var counter = new Apigee.Event({client:client, data:{category:"mocha_test", timestamp:28, name:'test'}}, function(err, data){
-				assert(!err, data.error_description);
-				console.log(data);
-				done();
-			});
 		});
-	});*/
+	});
 });
 
