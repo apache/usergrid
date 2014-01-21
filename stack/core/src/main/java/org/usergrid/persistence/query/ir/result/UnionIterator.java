@@ -58,7 +58,14 @@ public class UnionIterator extends MultiIterator {
         super( pageSize );
 
         this.id = id;
-        list = new SortedColumnList( pageSize, UUID_SERIALIZER.fromByteBuffer( minUuid ) );
+
+        UUID parseMinUuid = null;
+
+        if(minUuid != null)      {
+            parseMinUuid = UUID_SERIALIZER.fromByteBuffer( minUuid );
+        }
+
+        list = new SortedColumnList( pageSize, parseMinUuid );
     }
 
 
