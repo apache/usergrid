@@ -30,7 +30,7 @@ public class UniqueValueImpl implements UniqueValue {
     private final CollectionScope collectionScope;
     private final Field field;
     private final Id entityId;
-    private UUID entityVersion;
+    private final UUID entityVersion;
 
     public UniqueValueImpl(
             final CollectionScope scope, final Field field, Id entityId, final UUID version ) {

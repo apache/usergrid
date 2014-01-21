@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
@@ -31,8 +49,9 @@ import rx.util.functions.Func1;
 
 
 /**
- * This is the first stage and should be invoked immediately when a write is started.  It should persist the start of a
- * new write in the data store for a checkpoint and recovery
+ * This is the first stage and should be invoked immediately when a write is started.  
+ * It should persist the start of a new write in the data store for 
+ * a checkpoint and recovery
  */
 @Singleton
 public class DeleteStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent<MvccEntity>> {
@@ -48,7 +67,10 @@ public class DeleteStart implements Func1<CollectionIoEvent<Id>, CollectionIoEve
      * Create a new stage with the current context
      */
     @Inject
-    public DeleteStart( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
+    public DeleteStart( 
+            final MvccLogEntrySerializationStrategy logStrategy, 
+            final UUIDService uuidService ) {
+
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
@@ -84,7 +106,8 @@ public class DeleteStart implements Func1<CollectionIoEvent<Id>, CollectionIoEve
 
 
         //create the mvcc entity for the next stage
-        final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, Optional.<Entity>absent() );
+        final MvccEntityImpl nextStage = new MvccEntityImpl( 
+                entityId, version, Optional.<Entity>absent() );
 
 
         return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
