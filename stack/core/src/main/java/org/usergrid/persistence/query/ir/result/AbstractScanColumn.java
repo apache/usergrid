@@ -19,7 +19,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     protected AbstractScanColumn( UUID uuid, ByteBuffer buffer ) {
         this.uuid = uuid;
-        this.buffer = buffer.duplicate();
+        this.buffer = buffer;
     }
 
 
@@ -31,7 +31,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
     @Override
     public ByteBuffer getCursorValue() {
-        return buffer.duplicate();
+        return buffer == null ? null :buffer.duplicate();
     }
 
 
