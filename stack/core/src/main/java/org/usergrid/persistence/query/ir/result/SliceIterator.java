@@ -125,7 +125,7 @@ public class SliceIterator implements ResultIterator {
         /**
          * Skip the first value, it's from the previous cursor
          */
-        if ( skipFirst && pagesLoaded == 0 && results.hasNext() ) {
+        if ( skipFirst  && results.hasNext() ) {
             results.next();
         }
 

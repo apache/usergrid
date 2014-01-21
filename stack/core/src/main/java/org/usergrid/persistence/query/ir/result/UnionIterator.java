@@ -165,7 +165,7 @@ public class UnionIterator extends MultiIterator {
 
             index = ( index * -1 ) - 1;
 
-            //outside the renage
+            //outside the range
             if ( index >= maxSize ) {
                 return;
             }
