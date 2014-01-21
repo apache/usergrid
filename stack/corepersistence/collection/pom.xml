@@ -5,10 +5,10 @@
 
   <properties>
     <guice.version>3.0</guice.version>
-    <guicyfig.version>3.3-SNAPSHOT</guicyfig.version>
+    <guicyfig.version>3.3</guicyfig.version>
     <slf4j.version>1.7.2</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
-    <chop.version>1.0-SNAPSHOT</chop.version>
+    <chop.version>1.0</chop.version>
   </properties>
 
     <parent>
@@ -59,7 +59,7 @@
         <plugin>
           <groupId>org.safehaus.chop</groupId>
           <artifactId>chop-maven-plugin</artifactId>
-          <version>1.0-SNAPSHOT</version>
+          <version>${chop.version}</version>
 
           <!--
           NOTE: you should be putting most of these variables into your settings.xml
@@ -83,7 +83,7 @@
             <coldRestartTomcat>true</coldRestartTomcat>
             <awsSecurityGroup>${security.group}</awsSecurityGroup>
             <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
-            <runnerCount>12</runnerCount>
+            <runnerCount>6</runnerCount>
             <securityGroupExceptions>
               <!--
               Add your own IP address as an exception to allow access
@@ -108,14 +108,6 @@
 
       <!-- Google Guice Integration Test Injectors -->
 
-      <dependency>
-        <groupId>${project.parent.groupId}</groupId>
-        <artifactId>testutils</artifactId>
-        <version>${project.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-        <!-- Depends on the basic models -->
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>model</artifactId>
