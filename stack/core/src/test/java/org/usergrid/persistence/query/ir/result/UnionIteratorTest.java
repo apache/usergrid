@@ -16,12 +16,15 @@
 package org.usergrid.persistence.query.ir.result;
 
 
+import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.utils.UUIDUtils;
+
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -292,6 +295,73 @@ public class UnionIteratorTest {
         //now try to get the next page
         ids = union.next();
         assertNull( ids );
+    }
+
+
+    @Test
+    public void nullCursorBytes() {
+
+        UUID id1 = UUIDUtils.minTimeUUID( 1 );
+        UUID id2 = UUIDUtils.minTimeUUID( 2 );
+        UUID id3 = UUIDUtils.minTimeUUID( 3 );
+        UUID id4 = UUIDUtils.minTimeUUID( 4 );
+        UUID id5 = UUIDUtils.minTimeUUID( 5 );
+
+
+        InOrderIterator second = new InOrderIterator( 100 );
+        second.add( id1 );
+        second.add( id2 );
+        second.add( id3 );
+        second.add( id4 );
+        second.add( id5 );
+
+        UnionIterator union = new UnionIterator( 100, 1, null );
+
+        union.addIterator( second );
+
+        Set<ScanColumn> ids = union.next();
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertTrue( ids.contains( uuidColumn( id1 ) ) );
+        assertTrue( ids.contains( uuidColumn( id2 ) ) );
+        assertTrue( ids.contains( uuidColumn( id3 ) ) );
+        assertTrue( ids.contains( uuidColumn( id4 ) ) );
+        assertTrue( ids.contains( uuidColumn( id5 ) ) );
+    }
+
+
+    @Test
+    public void validCursorBytes() {
+
+
+        ByteBuffer cursor = UUIDSerializer.get().toByteBuffer( UUIDUtils.minTimeUUID( 4 ) );
+
+        UUID id1 = UUIDUtils.minTimeUUID( 1 );
+        UUID id2 = UUIDUtils.minTimeUUID( 2 );
+        UUID id3 = UUIDUtils.minTimeUUID( 3 );
+        UUID id4 = UUIDUtils.minTimeUUID( 4 );
+        UUID id5 = UUIDUtils.minTimeUUID( 5 );
+
+
+        InOrderIterator second = new InOrderIterator( 100 );
+        second.add( id1 );
+        second.add( id2 );
+        second.add( id3 );
+        second.add( id4 );
+        second.add( id5 );
+
+        UnionIterator union = new UnionIterator( 100, 1, cursor );
+
+        union.addIterator( second );
+
+        Set<ScanColumn> ids = union.next();
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertFalse( ids.contains( uuidColumn( id1 ) ) );
+        assertFalse( ids.contains( uuidColumn( id2 ) ) );
+        assertFalse( ids.contains( uuidColumn( id3 ) ) );
+        assertFalse( ids.contains( uuidColumn( id4 ) ) );
+        assertTrue( ids.contains( uuidColumn( id5 ) ) );
     }
 
 
