@@ -44,28 +44,28 @@ describe('Usergrid', function(){
 			method:'GET',
 			endpoint:'users'
 		};
-		it('should Create a new user', function(done){
+		it('should CREATE a new user', function(done){
 			client.request({method:'POST',endpoint:'users', body:{ username:'fred', password:'secret' }}, function (err, data) {
 				usergridTestHarness(err, data, done, [
 					function(err, data){assert(true)}
 				]);
 		    });
 		});
-		it('should Retrieve an existing user', function(done){
+		it('should RETRIEVE an existing user', function(done){
 			client.request({method:'GET',endpoint:'users/fred', body:{}}, function (err, data) {
 				usergridTestHarness(err, data, done, [
 					function(err, data){assert(true)}
 				]);
 		    });
 		});
-		it('should Update an existing user', function(done){
+		it('should UPDATE an existing user', function(done){
 			client.request({method:'PUT',endpoint:'users/fred', body:{ newkey:'newvalue' }}, function (err, data) {
 				usergridTestHarness(err, data, done, [
 					function(err, data){assert(true)}
 				]);
 		    });
 		});
-		it('should Delete the user from the database', function(done){
+		it('should DELETE the user from the database', function(done){
 			client.request({method:'DELETE',endpoint:'users/fred'}, function (err, data) {
 				usergridTestHarness(err, data, done, [
 					function(err, data){assert(true)}
@@ -98,7 +98,7 @@ describe('Usergrid', function(){
 	    		done();
 		    });
 	  	});
-		it('should create a new dog', function(done){
+		it('should CREATE a new dog', function(done){
 			var options = {
 				type:'dogs',
 				name:'Rocky'
@@ -110,7 +110,7 @@ describe('Usergrid', function(){
 				done();
 			});
 		});
-		it('should retrieve the dog', function(done){
+		it('should RETRIEVE the dog', function(done){
 			if(!dog){
 				assert(false, "dog not created");
 				done();
@@ -122,7 +122,7 @@ describe('Usergrid', function(){
 				done();
 			});
 		});
-		it('should update the dog', function(done){
+		it('should UPDATE the dog', function(done){
 			if(!dog){
 				assert(false, "dog not created");
 				done();
@@ -145,7 +145,7 @@ describe('Usergrid', function(){
 				done();
 			});
 		});
-		it('should remove the dog', function(done){
+		it('should DELETE the dog', function(done){
 			if(!dog){
 				assert(false, "dog not created");
 				done();
@@ -263,6 +263,7 @@ describe('Usergrid', function(){
 		var MINUTE=1000*60;
 		var HOUR=MINUTE*60;
 		var time=Date.now()-HOUR;
+
 		it('should create an event', function(done){
 			ev = new Usergrid.Event({client:client, data:{category:'mocha_test', timestamp:time, name:"test", counters:{test:0,test_counter:0}}}, function(err, data){
 				assert(!err, data.error_description);
@@ -312,7 +313,7 @@ describe('Usergrid', function(){
 				console.log(JSON.stringify(data,null,4));
 				done();
 			});
-		});
+		});	
 		it('should fetch event', function(done){
 			ev.fetch(function(err, data){
 				assert(!err, data.error_description);
@@ -339,10 +340,5 @@ describe('Usergrid', function(){
 			});
 		});
 	});*/
-	describe('Usergrid extra', function(){
-		it('should not be phonegap', function(done){
-			
-		});
-	});
 });
 

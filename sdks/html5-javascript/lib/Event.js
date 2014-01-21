@@ -1,23 +1,3 @@
-var COUNTER_RESOLUTIONS = {
-  'ALL': 'all',
-  'MINUTE': 'minute',
-  'FIVE_MINUTES': 'five_minutes',
-  'HALF_HOUR': 'half_hour',
-  'HOUR': 'hour',
-  'SIX_DAY': 'six_day',
-  'DAY': 'day',
-  'WEEK': 'week',
-  'MONTH': 'month'
-};
-COUNTER_RESOLUTIONS.valueOf=function(str){
-  Object.keys(COUNTER_RESOLUTIONS).forEach(function(res){
-    if(COUNTER_RESOLUTIONS[res]===str){
-      return COUNTER_RESOLUTIONS[res];
-    }
-  });
-  return COUNTER_RESOLUTIONS.ALL;
-};
-
 /*
  *  A class to model a Usergrid event.
  *
@@ -38,7 +18,10 @@ Usergrid.Event = function(options, callback) {
   }
   //this.save(callback);
 };
-
+var COUNTER_RESOLUTIONS=[
+  'all', 'minute', 'five_minutes', 'half_hour',
+  'hour', 'six_day', 'day', 'week', 'month'
+];
 /*
  *  Inherit from Usergrid.Entity.
  *  Note: This only accounts for data on the group object itself.
@@ -67,7 +50,7 @@ Usergrid.Event.prototype.increment=function(name, value, callback){
       return callback.call(self, true, "'value' for increment, decrement must be a number");
     }
   }
-  self._data.counters[name]=parseInt(value);
+  self._data.counters[name]=(parseInt(value))||1;
   return self.save(callback);
 };
 /*
@@ -83,7 +66,7 @@ Usergrid.Event.prototype.increment=function(name, value, callback){
  */
 
 Usergrid.Event.prototype.decrement=function(name, value, callback){
-  this.increment(name, -(value), callback);
+  this.increment(name, -((parseInt(value))||1), callback);
 };
 /*
  * resets the counter for a specific event
@@ -104,7 +87,10 @@ Usergrid.Event.prototype.reset=function(name, callback){
 Usergrid.Event.prototype.getData=function(start, end, resolution, counters, callback){
   var start_time, 
       end_time,
-      res=COUNTER_RESOLUTIONS.valueOf(resolution);
+      res=(resolution||'all').toLowerCase();
+  if(COUNTER_RESOLUTIONS.indexOf(res)===-1){
+    res='all';
+  }
   if(start){
     switch(typeof start){
       case "undefined":

@@ -46,6 +46,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
   var mQuery = options.mQuery || false; //is this a query to the management endpoint?
   var orgName = this.get('orgName');
   var appName = this.get('appName');
+  var uri;
   if(!mQuery && !orgName && !appName){
     if (typeof(this.logoutCallback) === 'function') {
       return this.logoutCallback(true, 'no_org_or_app_name_specified');
