@@ -2,6 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <properties>
+    <guice.version>3.0</guice.version>
+    <guicyfig.version>3.3</guicyfig.version>
+    <slf4j.version>1.7.2</slf4j.version>
+    <log4j.version>1.2.17</log4j.version>
+    <chop.version>1.0</chop.version>
+  </properties>
+
     <parent>
         <artifactId>persistence</artifactId>
         <groupId>org.apache.usergrid</groupId>
@@ -46,12 +55,59 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
+
+        <plugin>
+          <groupId>org.safehaus.chop</groupId>
+          <artifactId>chop-maven-plugin</artifactId>
+          <version>${chop.version}</version>
+
+          <!--
+          NOTE: you should be putting most of these variables into your settings.xml
+          as an automatically activated profile.
+          -->
+
+          <configuration>
+            <accessKey>${aws.s3.key}</accessKey>
+            <secretKey>${aws.s3.secret}</secretKey>
+            <availabilityZone>${availabilityZone}</availabilityZone>
+            <bucketName>${aws.s3.bucket}</bucketName>
+            <managerAppUsername>admin</managerAppUsername>
+            <managerAppPassword>${manager.app.password}</managerAppPassword>
+            <testPackageBase>org.apache.usergrid</testPackageBase>
+            <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
+            <failIfCommitNecessary>false</failIfCommitNecessary>
+            <amiID>${ami.id}</amiID>
+            <instanceType>m1.large</instanceType>
+            <resultsDirectory>${resultsDirectory}</resultsDirectory>
+            <dumpType>${dumpType}</dumpType>
+            <coldRestartTomcat>true</coldRestartTomcat>
+            <awsSecurityGroup>${security.group}</awsSecurityGroup>
+            <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
+            <runnerCount>6</runnerCount>
+            <securityGroupExceptions>
+              <!--
+              Add your own IP address as an exception to allow access
+              but please do this in the settings.xml file .. essentially
+              all parameters should be in the settings.xml file.
+              -->
+              <param>${myip.address}/32:8080</param>
+              <param>${myip.address}/32:22</param>
+            </securityGroupExceptions>
+          </configuration>
+        </plugin>
+      </plugins>
     </build>
 
     <dependencies>
 
-        <!-- Depends on the basic models -->
+      <dependency>
+        <groupId>org.safehaus.chop</groupId>
+        <artifactId>chop-api</artifactId>
+        <version>${chop.version}</version>
+      </dependency>
+
+      <!-- Google Guice Integration Test Injectors -->
+
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>model</artifactId>
@@ -175,5 +231,4 @@
         </dependency>
 
     </dependencies>
-
 </project>
