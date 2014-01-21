@@ -94,17 +94,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<Entity> write( final Entity entity ) {
         //do our input validation
 
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+        Preconditions.checkNotNull( entity, 
+            "Entity is required in the new stage of the mvcc write" );
 
         final Id entityId = entity.getId();
 
-        Preconditions.checkNotNull( entityId, "The entity id is required to be set for an update operation" );
+        Preconditions.checkNotNull( entityId, 
+            "The entity id is required to be set for an update operation" );
 
-        Preconditions
-                .checkNotNull( entityId.getUuid(), "The entity id uuid is required to be set for an update operation" );
+        Preconditions.checkNotNull( entityId.getUuid(), 
+            "The entity id uuid is required to be set for an update operation" );
 
-        Preconditions
-                .checkNotNull( entityId.getType(), "The entity id type required to be set for an update operation" );
+        Preconditions.checkNotNull( entityId.getType(), 
+            "The entity id type required to be set for an update operation" );
 
 
         final UUID version = uuidService.newTimeUUID();
@@ -115,7 +117,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         /**
          *fire the stages
          * TODO use our own scheduler to help with multitenancy here.
-         * TODO writeOptimisticVerify and writeVerifyUnique should happen concurrently to reduce user wait time
+         * TODO writeOptimisticVerify and writeVerifyUnique should happen 
+         * concurrently to reduce user wait time
          */
 
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
@@ -125,7 +128,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 new CollectionIoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
 
 
-        //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
+        //execute all validation stages concurrently.  Needs refactored when this is done.  
+        // https://github.com/Netflix/RxJava/issues/627
         observable = Concurrent.concurrent(observable, writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
@@ -142,7 +146,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        return WriteCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
+        return WriteCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) )
+            .map( deleteStart )
+            .map( deleteCommit );
     }
 
 
