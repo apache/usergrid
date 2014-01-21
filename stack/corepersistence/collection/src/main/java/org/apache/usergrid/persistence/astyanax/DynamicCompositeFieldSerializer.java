@@ -24,8 +24,9 @@ import com.netflix.astyanax.model.DynamicComposite;
 
 
 /**
- * This interface is for re-using multiple components in a composite. Implementing this allows many different types to
- * be serialized together in a single composite
+ * This interface is for re-using multiple components in a composite. 
+ * Implementing this allows many different types to be serialized 
+ * together in a single composite
  *
  * @author tnine
  */

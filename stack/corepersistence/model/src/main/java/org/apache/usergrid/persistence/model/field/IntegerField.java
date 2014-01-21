@@ -18,9 +18,7 @@
 package org.apache.usergrid.persistence.model.field;
 
 /**
- *
  * @author: tnine
- *
  */
 public class IntegerField extends AbstractField<Integer> {
 

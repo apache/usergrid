@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
@@ -27,28 +45,28 @@ import rx.util.functions.Func1;
 
 
 /**
- * This phase should invoke any finalization, and mark the entity as committed in the data store before returning
+ * This phase should invoke any finalization, and mark the entity 
+ * as committed in the data store before returning
  */
 @Singleton
 public class DeleteCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
-
     private static final Logger LOG = LoggerFactory.getLogger( DeleteCommit.class );
 
-    private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
-    private final MvccEntitySerializationStrategy entitySerializationStrategy;
-
+    private final MvccLogEntrySerializationStrategy logStrat;
+    private final MvccEntitySerializationStrategy entityStrat;
 
     @Inject
-    public DeleteCommit( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                         final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+    public DeleteCommit( final MvccLogEntrySerializationStrategy logStrat,
+                         final MvccEntitySerializationStrategy entityStrat ) {
 
-        Preconditions.checkNotNull( logEntrySerializationStrategy, "logEntrySerializationStrategy is required" );
-        Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
+        Preconditions.checkNotNull( 
+                logStrat, "logEntrySerializationStrategy is required" );
+        Preconditions.checkNotNull( 
+                entityStrat, "entitySerializationStrategy is required" );
 
-
-        this.logEntrySerializationStrategy = logEntrySerializationStrategy;
-        this.entitySerializationStrategy = entitySerializationStrategy;
+        this.logStrat = logStrat;
+        this.entityStrat = entityStrat;
     }
 
 
@@ -69,10 +87,10 @@ public class DeleteCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
 
-        MutationBatch logMutation = logEntrySerializationStrategy.write( collectionScope, startEntry );
+        MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
 
         //insert a "cleared" value into the versions.  Post processing should actually delete
-        MutationBatch entityMutation = entitySerializationStrategy.clear( collectionScope, entityId, version );
+        MutationBatch entityMutation = entityStrat.clear( collectionScope, entityId, version );
 
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
