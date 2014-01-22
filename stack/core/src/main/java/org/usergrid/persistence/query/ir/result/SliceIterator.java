@@ -142,6 +142,9 @@ public class SliceIterator implements ResultIterator {
                 continue;
             }
 
+
+            logger.debug( "Parsed column with uuid '{}'", parsed.getUUID() );
+
             last = parsed;
             cols.put( parsed.getUUID(), parsed );
             parsedCols.add( parsed );

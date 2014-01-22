@@ -49,11 +49,13 @@ public class IntersectionIteratorTest {
 
         // we should get intersection on 1, 3, and 8
         InOrderIterator first = new InOrderIterator( 100 );
+        first.add( id9 );
+        first.add( id8 );
         first.add( id1 );
         first.add( id2 );
         first.add( id3 );
-        first.add( id8 );
-        first.add( id9 );
+
+
 
         InOrderIterator second = new InOrderIterator( 100 );
         second.add( id1 );
