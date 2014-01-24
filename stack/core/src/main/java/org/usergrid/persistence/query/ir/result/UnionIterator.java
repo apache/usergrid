@@ -120,6 +120,16 @@ public class UnionIterator extends MultiIterator {
     }
 
 
+    @Override
+    public void doReset() {
+        //reset sub iterators if we need to
+        super.doReset();
+
+        list.reset();
+
+    }
+
+
     /**
      * A Sorted Set with a max size. When a new entry is added, the max is removed.  You can mark the next "min" by
      * calling the mark method.  Values > min are accepted.  Values > min and that are over size are discarded
@@ -223,6 +233,11 @@ public class UnionIterator extends MultiIterator {
          */
         public void clear() {
             this.list.clear();
+        }
+
+        public void reset(){
+            clear();
+            this.min = null;
         }
     }
 

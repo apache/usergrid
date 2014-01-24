@@ -62,24 +62,27 @@ public abstract class MergeIterator implements ResultIterator {
     @Override
     public boolean hasNext() {
         //if next isn't set, try to advance
-        if ( next == null ) {
-            doAdvance();
+        if(next != null){
+            return true;
         }
 
-        boolean results = next != null && next.size() > 0;
 
-        if ( results ) {
-            last = next;
-            loadCount++;
-        }
+        doAdvance();
 
-        return results;
+
+        return next != null;
     }
 
 
     /** Advance to the next page */
     protected void doAdvance() {
         next = advance();
+
+
+        if ( next != null && next.size() > 0 ) {
+            last = next;
+            loadCount++;
+        }
     }
 
 

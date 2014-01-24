@@ -365,6 +365,94 @@ public class UnionIteratorTest {
     }
 
 
+    @Test
+    public void resetCorrect() {
+
+        UUID id1 = UUIDUtils.minTimeUUID( 1 );
+        UUID id2 = UUIDUtils.minTimeUUID( 2 );
+        UUID id3 = UUIDUtils.minTimeUUID( 3 );
+        UUID id4 = UUIDUtils.minTimeUUID( 4 );
+        UUID id5 = UUIDUtils.minTimeUUID( 5 );
+        UUID id6 = UUIDUtils.minTimeUUID( 6 );
+        UUID id7 = UUIDUtils.minTimeUUID( 75 );
+
+
+        UnionIterator union = new UnionIterator( 5, 0, null );
+
+        InOrderIterator first = new InOrderIterator( 100 );
+        first.add( id3 );
+        first.add( id6 );
+        first.add( id4 );
+
+
+        InOrderIterator second = new InOrderIterator( 100 );
+        second.add( id7 );
+        second.add( id1 );
+        second.add( id2 );
+        second.add( id5 );
+
+
+        union.addIterator( first );
+        union.addIterator( second );
+
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertTrue( union.hasNext() );
+
+        Set<ScanColumn> ids = union.next();
+
+
+        assertEquals(5, ids.size());
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertTrue( ids.contains( uuidColumn( id1 ) ) );
+        assertTrue( ids.contains( uuidColumn( id2 ) ) );
+        assertTrue( ids.contains( uuidColumn( id3 ) ) );
+        assertTrue( ids.contains( uuidColumn( id4 ) ) );
+        assertTrue( ids.contains( uuidColumn( id5 ) ) );
+
+        ids = union.next();
+
+
+        assertEquals(2, ids.size());
+
+        assertTrue( ids.contains( uuidColumn( id6 ) ) );
+        assertTrue( ids.contains( uuidColumn( id7 ) ) );
+
+        //now try to get the next page
+        ids = union.next();
+        assertNull( ids );
+
+        //now reset and re-test
+        union.reset();
+
+        ids = union.next();
+
+        assertEquals(5, ids.size());
+
+
+        // now make sure it's right, only 1, 3 and 8 intersect
+        assertTrue( ids.contains( uuidColumn( id1 ) ) );
+        assertTrue( ids.contains( uuidColumn( id2 ) ) );
+        assertTrue( ids.contains( uuidColumn( id3 ) ) );
+        assertTrue( ids.contains( uuidColumn( id4 ) ) );
+        assertTrue( ids.contains( uuidColumn( id5 ) ) );
+
+
+        ids = union.next();
+
+        assertEquals(2, ids.size());
+
+        assertTrue( ids.contains( uuidColumn( id6 ) ) );
+        assertTrue( ids.contains( uuidColumn( id7 ) ) );
+
+
+        //now try to get the next page
+        ids = union.next();
+        assertNull( ids );
+    }
+
+
     private void reverse( UUID[] array ) {
 
         UUID temp = null;
