@@ -1,0 +1,24 @@
+<div class="content-page" ng-controller="GroupsActivitiesCtrl">
+
+  <br>
+  <div>
+    <table class="table table-striped">
+      <tbody>
+      <tr class="table-header">
+        <td>Date</td>
+        <td>Content</td>
+        <td>Verb</td>
+        <td>UUID</td>
+      </tr>
+      <tr class="zebraRows" ng-repeat="activity in selectedGroup.activities">
+        <td>{{activity.createdDate}}</td>
+        <td>{{activity.content}}</td>
+        <td>{{activity.verb}}</td>
+        <td>{{activity.uuid}}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+</div>

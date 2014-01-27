@@ -1,0 +1,127 @@
+<div class="content-page" ng-controller="GroupsRolesCtrl">
+
+  <bsmodal id="addGroupToRole"
+           title="Add group to role"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="addGroupToRoleDialog"
+           extrabuttonlabel="Add"
+           ng-cloak>
+    <div class="btn-group">
+      <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
+        <span class="filter-label">{{$parent.name != '' ? $parent.name : 'Role name...'}}</span>
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li ng-repeat="role in $parent.rolesTypeaheadValues" class="filterItem"><a ng-click="$parent.$parent.name = role.name">{{role.name}}</a></li>
+      </ul>
+    </div>
+  </bsmodal>
+
+  <bsmodal id="leaveRoleFromGroup"
+           title="Confirmation"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="leaveRoleDialog"
+           extrabuttonlabel="Leave"
+           ng-cloak>
+    <p>Are you sure you want to remove the group from the role(s)?</p>
+  </bsmodal>
+
+
+  <div class="button-strip">
+    <button class="btn btn-primary" ng-click="showModal('addGroupToRole')">Add Role to Group</button>
+    <button class="btn btn-primary" ng-disabled="!hasRoles || !valueSelected(groupsCollection.roles._list)" ng-click="showModal('leaveRoleFromGroup')">Remove Role(s) from Group</button>
+  </div>
+  <h4>Roles</h4>
+  <table class="table table-striped">
+    <tbody>
+    <tr class="table-header">
+      <td style="width: 30px;"><input type="checkbox" ng-show="hasRoles" id="groupsSelectAllCheckBox" ng-model="groupRoleSelected" ng-click="selectAllEntities(groupsCollection.roles._list,this,'groupRoleSelected')" ></td>
+      <td>Role Name</td>
+      <td>Role title</td>
+    </tr>
+    <tr class="zebraRows" ng-repeat="role in groupsCollection.roles._list">
+      <td>
+        <input
+          type="checkbox"
+          ng-model="role.checked"
+          >
+      </td>
+      <td>{{role._data.name}}</td>
+      <td>{{role._data.title}}</td>
+    </tr>
+    </tbody>
+  </table>
+  <div style="padding: 10px 5px 10px 5px">
+    <button class="btn btn-primary" ng-click="getPreviousRoles()" style="display:{{roles_previous_display}}">< Previous</button>
+    <button class="btn btn-primary" ng-click="getNextRoles()" style="display:{{roles_next_display}};float:right;">Next ></button>
+  </div>
+
+
+  <bsmodal id="deletePermission"
+           title="Confirmation"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="deleteGroupPermissionDialog"
+           extrabuttonlabel="Delete"
+           ng-cloak>
+    <p>Are you sure you want to delete the permission(s)?</p>
+  </bsmodal>
+
+
+  <bsmodal id="addPermission"
+           title="New Permission"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="addGroupPermissionDialog"
+           extrabuttonlabel="Add"
+           ng-cloak>
+    <p>Path: <input ng-model="$parent.permissions.path" placeholder="ex: /mydata" id="groupsrolespermissions" type="text" ng-pattern="pathRegex" ng-attr-title="{{pathRegexDescription}}" required ug-validate  /></p>
+    <div class="control-group">
+      <input type="checkbox" ng-model="$parent.permissions.getPerm"> GET
+    </div>
+    <div class="control-group">
+      <input type="checkbox" ng-model="$parent.permissions.postPerm"> POST
+    </div>
+    <div class="control-group">
+      <input type="checkbox" ng-model="$parent.permissions.putPerm"> PUT
+    </div>
+    <div class="control-group">
+      <input type="checkbox" ng-model="$parent.permissions.deletePerm"> DELETE
+    </div>
+  </bsmodal>
+
+
+  <div class="button-strip">
+    <button class="btn btn-primary" ng-click="showModal('addPermission')">Add Permission</button>
+    <button class="btn btn-primary" ng-disabled="!hasPermissions || !valueSelected(selectedGroup.permissions)" ng-click="showModal('deletePermission')">Delete Permission(s)</button>
+  </div>
+  <h4>Permissions</h4>
+  <table class="table table-striped">
+    <tbody>
+    <tr class="table-header">
+      <td style="width: 30px;"><input ng-show="hasPermissions" type="checkbox" id="permissionsSelectAllCheckBox" ng-model="groupPermissionsSelected" ng-click="selectAllEntities(selectedGroup.permissions,this,'groupPermissionsSelected')"  ></td>
+      <td>Path</td>
+      <td>GET</td>
+      <td>POST</td>
+      <td>PUT</td>
+      <td>DELETE</td>
+    </tr>
+    <tr class="zebraRows" ng-repeat="permission in selectedGroup.permissions">
+      <td>
+        <input
+          type="checkbox"
+          ng-model="permission.checked"
+          >
+      </td>
+      <td>{{permission.path}}</td>
+      <td>{{permission.operations.get}}</td>
+      <td>{{permission.operations.post}}</td>
+      <td>{{permission.operations.put}}</td>
+      <td>{{permission.operations.delete}}</td>
+    </tr>
+    </tbody>
+  </table>
+
+</div>
