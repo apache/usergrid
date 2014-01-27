@@ -6,19 +6,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.safehaus.chop.api.IterationChop;
 import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.collection.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
@@ -57,11 +59,13 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
+@IterationChop( iterations = 1000, threads = 2 )
 @RunWith( JukitoRunner.class )
 @UseModules( CollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
     /** Our RX I/O threads and this should have the same value */
     private static final String CONNECTION_COUNT = "20";
+
 
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
@@ -70,6 +74,8 @@ public class MvccEntitySerializationStrategyImplTest {
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
 
+    @Inject
+    AstyanaxKeyspaceProvider provider;
 
     @Inject
     @Rule
@@ -88,6 +94,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Inject
     @Overrides( name = "unit-test",
+        environments = Env.UNIT,
         options = {
             @Option( method = "getMaxThreadCount", override = CONNECTION_COUNT )
         }
@@ -102,14 +109,15 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
     @Before
-    public void setupClass() {
-//        GuicyFigModule.injectMembers( this );
-
+    public void setup() {
         assertNotNull( cassandraFig );
-        cassandraFig.bypass( "getPort", CassandraRule.THRIFT_PORT_STR );
-
         assertNotNull( rxFig );
-        rxFig.bypass( "getMaxThreadCount", CassandraRule.THRIFT_PORT_STR );
+    }
+
+
+    @After
+    public void tearDown() {
+        provider.shutdown();
     }
 
 

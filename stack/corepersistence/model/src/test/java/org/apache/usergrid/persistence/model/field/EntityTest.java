@@ -14,8 +14,8 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertSame;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertSame;
 import static org.junit.Assert.assertTrue;
 
 
