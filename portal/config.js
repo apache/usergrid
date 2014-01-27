@@ -23,7 +23,7 @@ Usergrid.options = {
       ]
     },
     {
-      path:'#!/users',pic:'&#59214;',title:'Users',
+      path:'#!/users',pic: '&#128100;',title:'Users',
       items:[
         {path:'#!/users',pic:'&#128100;',title:'Users'},
         {path:'#!/groups',pic:'&#128101;',title:'Groups'},
