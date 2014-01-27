@@ -5,7 +5,7 @@
  *  @param {object} options {timestamp:0, category:'value', counters:{name : value}}
  *  @returns {callback} callback(err, event)
  */
-Usergrid.Event = function(options, callback) {
+Usergrid.Counter = function(options, callback) {
   var self=this;
   this._client = options.client;
   this._data = options.data || {};
@@ -27,9 +27,9 @@ var COUNTER_RESOLUTIONS=[
  *  Note: This only accounts for data on the group object itself.
  *  You need to use add and remove to manipulate group membership.
  */
-Usergrid.Event.prototype = new Usergrid.Entity();
+Usergrid.Counter.prototype = new Usergrid.Entity();
 
-Usergrid.Event.prototype.fetch=function(callback){
+Usergrid.Counter.prototype.fetch=function(callback){
   this.getData(null, null, null, null, callback);
 }
 /*
@@ -43,7 +43,7 @@ Usergrid.Event.prototype.fetch=function(callback){
  * @param {function} callback
  * @returns {callback} callback(err, event)
  */
-Usergrid.Event.prototype.increment=function(name, value, callback){
+Usergrid.Counter.prototype.increment=function(name, value, callback){
   var self=this;
   if(isNaN(value)){
     if(typeof(callback) === 'function') {
@@ -65,7 +65,7 @@ Usergrid.Event.prototype.increment=function(name, value, callback){
  * @returns {callback} callback(err, event)
  */
 
-Usergrid.Event.prototype.decrement=function(name, value, callback){
+Usergrid.Counter.prototype.decrement=function(name, value, callback){
   this.increment(name, -((parseInt(value))||1), callback);
 };
 /*
@@ -80,11 +80,11 @@ Usergrid.Event.prototype.decrement=function(name, value, callback){
  * @returns {callback} callback(err, event)
  */
 
-Usergrid.Event.prototype.reset=function(name, callback){
+Usergrid.Counter.prototype.reset=function(name, callback){
   this.increment(name, 0, callback);
 };
 
-Usergrid.Event.prototype.getData=function(start, end, resolution, counters, callback){
+Usergrid.Counter.prototype.getData=function(start, end, resolution, counters, callback){
   var start_time, 
       end_time,
       res=(resolution||'all').toLowerCase();
