@@ -1,5 +1,5 @@
 module.exports = function(grunt) {
-  var files = ['lib/Usergrid.js', 'lib/Client.js', 'lib/Entity.js', 'lib/Collection.js', 'lib/Group.js', 'lib/Event.js'];
+  var files = ['lib/Usergrid.js', 'lib/Client.js', 'lib/Entity.js', 'lib/Collection.js', 'lib/Group.js', 'lib/Counter.js'];
   var tests = [ 'tests/mocha/index.html','tests/mocha/test_*.html' ];
    // Project configuration.
   grunt.initConfig({

@@ -248,21 +248,21 @@ describe('Usergrid', function(){
 			}
 		});
 	});
-	describe('Usergrid Events', function(){
-		var ev;
+	describe('Usergrid Counters', function(){
+		var counter;
 		var MINUTE=1000*60;
 		var HOUR=MINUTE*60;
 		var time=Date.now()-HOUR;
 
-		it('should CREATE an event', function(done){
-			ev = new Usergrid.Event({client:client, data:{category:'mocha_test', timestamp:time, name:"test", counters:{test:0,test_counter:0}}}, function(err, data){
+		it('should CREATE a counter', function(done){
+			counter = new Usergrid.Counter({client:client, data:{category:'mocha_test', timestamp:time, name:"test", counters:{test:0,test_counter:0}}}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
 				done();
 			});
 		});
-		it('should save an event', function(done){
-			ev.save(function(err, data){
+		it('should save a counter', function(done){
+			counter.save(function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
 				done();
@@ -270,8 +270,8 @@ describe('Usergrid', function(){
 		});
 		it('should reset a counter', function(done){
 			time+=MINUTE*10
-			ev.set("timestamp", time);
-			ev.reset('test', function(err, data){
+			counter.set("timestamp", time);
+			counter.reset({name:'test'}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
 				done();
@@ -279,8 +279,8 @@ describe('Usergrid', function(){
 		});
 		it("should increment 'test' counter", function(done){
 			time+=MINUTE*10
-			ev.set("timestamp", time);
-			ev.increment('test', 1, function(err, data){
+			counter.set("timestamp", time);
+			counter.increment({name:'test', value:1}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
 				done();
@@ -288,8 +288,8 @@ describe('Usergrid', function(){
 		});
 		it("should increment 'test_counter' counter by 4", function(done){
 			time+=MINUTE*10
-			ev.set("timestamp", time);
-			ev.increment('test_counter', 4, function(err, data){
+			counter.set("timestamp", time);
+			counter.increment({name:'test_counter', value:4}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(JSON.stringify(data,null,4));
 				done();
@@ -297,15 +297,15 @@ describe('Usergrid', function(){
 		});
 		it("should decrement 'test' counter", function(done){
 			time+=MINUTE*10
-			ev.set("timestamp", time);
-			ev.decrement('test', 1, function(err, data){
+			counter.set("timestamp", time);
+			counter.decrement({name:'test', value:1}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(JSON.stringify(data,null,4));
 				done();
 			});
 		});	
-		it('should fetch event', function(done){
-			ev.fetch(function(err, data){
+		it('should fetch the counter', function(done){
+			counter.fetch(function(err, data){
 				assert(!err, data.error_description);
 				console.log(JSON.stringify(data,null,4));
 				console.log(time, Date.now());
@@ -313,7 +313,7 @@ describe('Usergrid', function(){
 			});
 		});
 		it('should fetch counter data', function(done){
-			ev.getData('all', null, null, ['test', 'test_counter'], function(err, data){
+			counter.getData({resolution:'all', counters:['test', 'test_counter']}, function(err, data){
 				assert(!err, data.error_description);
 				console.log(data);
 				console.log(time, Date.now());

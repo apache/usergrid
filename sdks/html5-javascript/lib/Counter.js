@@ -29,8 +29,17 @@ var COUNTER_RESOLUTIONS=[
  */
 Usergrid.Counter.prototype = new Usergrid.Entity();
 
+/*
+ * overrides Entity.prototype.fetch. Returns all data for counters
+ * associated with the object as specified in the constructor
+ *
+ * @public
+ * @method increment
+ * @param {function} callback
+ * @returns {callback} callback(err, event)
+ */
 Usergrid.Counter.prototype.fetch=function(callback){
-  this.getData(null, null, null, null, callback);
+  this.getData({}, callback);
 }
 /*
  * increments the counter for a specific event
@@ -43,15 +52,22 @@ Usergrid.Counter.prototype.fetch=function(callback){
  * @param {function} callback
  * @returns {callback} callback(err, event)
  */
-Usergrid.Counter.prototype.increment=function(name, value, callback){
-  var self=this;
-  if(isNaN(value)){
+Usergrid.Counter.prototype.increment=function(options, callback){
+  var self=this,
+    name=options.name,
+    value=options.value;
+  if(!name){
     if(typeof(callback) === 'function') {
       return callback.call(self, true, "'value' for increment, decrement must be a number");
     }
+  }else if(isNaN(value)){
+    if(typeof(callback) === 'function') {
+      return callback.call(self, true, "'value' for increment, decrement must be a number");
+    }
+  }else{
+    self._data.counters[name]=(parseInt(value))||1;
+    return self.save(callback);
   }
-  self._data.counters[name]=(parseInt(value))||1;
-  return self.save(callback);
 };
 /*
  * decrements the counter for a specific event
@@ -65,8 +81,11 @@ Usergrid.Counter.prototype.increment=function(name, value, callback){
  * @returns {callback} callback(err, event)
  */
 
-Usergrid.Counter.prototype.decrement=function(name, value, callback){
-  this.increment(name, -((parseInt(value))||1), callback);
+Usergrid.Counter.prototype.decrement=function(options, callback){
+  var self=this,
+    name=options.name,
+    value=options.value;
+  self.increment({name:name, value:-((parseInt(value))||1)}, callback);
 };
 /*
  * resets the counter for a specific event
@@ -80,13 +99,36 @@ Usergrid.Counter.prototype.decrement=function(name, value, callback){
  * @returns {callback} callback(err, event)
  */
 
-Usergrid.Counter.prototype.reset=function(name, callback){
-  this.increment(name, 0, callback);
+Usergrid.Counter.prototype.reset=function(options, callback){
+  var self=this,
+    name=options.name;
+  self.increment({name:name, value:0}, callback);
 };
 
-Usergrid.Counter.prototype.getData=function(start, end, resolution, counters, callback){
+/*
+ * gets data for one or more counters over a given
+ * time period at a specified resolution
+ *
+ * options object: {
+ *                   counters: ['counter1', 'counter2', ...],
+ *                   start: epoch timestamp or ISO date string,
+ *                   end: epoch timestamp or ISO date string,
+ *                   resolution: one of ('all', 'minute', 'five_minutes', 'half_hour', 'hour', 'six_day', 'day', 'week', or 'month')
+ *                   }
+ *
+ * @public
+ * @method getData
+ * @params {object} options
+ * @param {function} callback
+ * @returns {callback} callback(err, event)
+ */
+Usergrid.Counter.prototype.getData=function(options, callback){
   var start_time, 
       end_time,
+      start=options.start||0,
+      end=options.end||Date.now(),
+      resolution=(options.resolution||'all').toLowerCase(),
+      counters=options.counters||Object.keys(this._data.counters),
       res=(resolution||'all').toLowerCase();
   if(COUNTER_RESOLUTIONS.indexOf(res)===-1){
     res='all';
@@ -123,8 +165,6 @@ Usergrid.Counter.prototype.getData=function(start, end, resolution, counters, ca
   }
   var self=this;
   //https://api.usergrid.com/yourorgname/sandbox/counters?counter=test_counter
-  if(counters===null || "undefined"===typeof counters)
-  counters=Object.keys(this._data.counters);
   var params=Object.keys(counters).map(function(counter){
       return ["counter", encodeURIComponent(counters[counter])].join('=');
     });
@@ -133,10 +173,7 @@ Usergrid.Counter.prototype.getData=function(start, end, resolution, counters, ca
   params.push('end_time='+String(end_time))
     
   var endpoint="counters?"+params.join('&');
-  var options= {
-    endpoint:endpoint
-  };
-  this._client.request(options, function(err, data){
+  this._client.request({endpoint:endpoint}, function(err, data){
     if(data.counters && data.counters.length){
       data.counters.forEach(function(counter){
         self._data.counters[counter.name]=counter.value||counter.values;

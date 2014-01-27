@@ -1,4 +1,4 @@
-/*! usergrid@0.0.0 2014-01-21 */
+/*! usergrid@0.0.0 2014-01-27 */
 /*
  *  This module is a collection of classes designed to make working with
  *  the Appigee App Services API as easy as possible.
@@ -2169,7 +2169,7 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback) {
  *  @param {object} options {timestamp:0, category:'value', counters:{name : value}}
  *  @returns {callback} callback(err, event)
  */
-Usergrid.Event = function(options, callback) {
+Usergrid.Counter = function(options, callback) {
     var self = this;
     this._client = options.client;
     this._data = options.data || {};
@@ -2189,10 +2189,19 @@ var COUNTER_RESOLUTIONS = [ "all", "minute", "five_minutes", "half_hour", "hour"
  *  Note: This only accounts for data on the group object itself.
  *  You need to use add and remove to manipulate group membership.
  */
-Usergrid.Event.prototype = new Usergrid.Entity();
+Usergrid.Counter.prototype = new Usergrid.Entity();
 
-Usergrid.Event.prototype.fetch = function(callback) {
-    this.getData(null, null, null, null, callback);
+/*
+ * overrides Entity.prototype.fetch. Returns all data for counters
+ * associated with the object as specified in the constructor
+ *
+ * @public
+ * @method increment
+ * @param {function} callback
+ * @returns {callback} callback(err, event)
+ */
+Usergrid.Counter.prototype.fetch = function(callback) {
+    this.getData({}, callback);
 };
 
 /*
@@ -2206,15 +2215,20 @@ Usergrid.Event.prototype.fetch = function(callback) {
  * @param {function} callback
  * @returns {callback} callback(err, event)
  */
-Usergrid.Event.prototype.increment = function(name, value, callback) {
-    var self = this;
-    if (isNaN(value)) {
+Usergrid.Counter.prototype.increment = function(options, callback) {
+    var self = this, name = options.name, value = options.value;
+    if (!name) {
         if (typeof callback === "function") {
             return callback.call(self, true, "'value' for increment, decrement must be a number");
         }
+    } else if (isNaN(value)) {
+        if (typeof callback === "function") {
+            return callback.call(self, true, "'value' for increment, decrement must be a number");
+        }
+    } else {
+        self._data.counters[name] = parseInt(value) || 1;
+        return self.save(callback);
     }
-    self._data.counters[name] = parseInt(value) || 1;
-    return self.save(callback);
 };
 
 /*
@@ -2228,8 +2242,12 @@ Usergrid.Event.prototype.increment = function(name, value, callback) {
  * @param {function} callback
  * @returns {callback} callback(err, event)
  */
-Usergrid.Event.prototype.decrement = function(name, value, callback) {
-    this.increment(name, -(parseInt(value) || 1), callback);
+Usergrid.Counter.prototype.decrement = function(options, callback) {
+    var self = this, name = options.name, value = options.value;
+    self.increment({
+        name: name,
+        value: -(parseInt(value) || 1)
+    }, callback);
 };
 
 /*
@@ -2243,12 +2261,33 @@ Usergrid.Event.prototype.decrement = function(name, value, callback) {
  * @param {function} callback
  * @returns {callback} callback(err, event)
  */
-Usergrid.Event.prototype.reset = function(name, callback) {
-    this.increment(name, 0, callback);
+Usergrid.Counter.prototype.reset = function(options, callback) {
+    var self = this, name = options.name;
+    self.increment({
+        name: name,
+        value: 0
+    }, callback);
 };
 
-Usergrid.Event.prototype.getData = function(start, end, resolution, counters, callback) {
-    var start_time, end_time, res = (resolution || "all").toLowerCase();
+/*
+ * gets data for one or more counters over a given
+ * time period at a specified resolution
+ *
+ * options object: {
+ *                   counters: ['counter1', 'counter2', ...],
+ *                   start: epoch timestamp or ISO date string,
+ *                   end: epoch timestamp or ISO date string,
+ *                   resolution: one of ('all', 'minute', 'five_minutes', 'half_hour', 'hour', 'six_day', 'day', 'week', or 'month')
+ *                   }
+ *
+ * @public
+ * @method getData
+ * @params {object} options
+ * @param {function} callback
+ * @returns {callback} callback(err, event)
+ */
+Usergrid.Counter.prototype.getData = function(options, callback) {
+    var start_time, end_time, start = options.start || 0, end = options.end || Date.now(), resolution = (options.resolution || "all").toLowerCase(), counters = options.counters || Object.keys(this._data.counters), res = (resolution || "all").toLowerCase();
     if (COUNTER_RESOLUTIONS.indexOf(res) === -1) {
         res = "all";
     }
@@ -2290,7 +2329,6 @@ Usergrid.Event.prototype.getData = function(start, end, resolution, counters, ca
     }
     var self = this;
     //https://api.usergrid.com/yourorgname/sandbox/counters?counter=test_counter
-    if (counters === null || "undefined" === typeof counters) counters = Object.keys(this._data.counters);
     var params = Object.keys(counters).map(function(counter) {
         return [ "counter", encodeURIComponent(counters[counter]) ].join("=");
     });
@@ -2298,10 +2336,9 @@ Usergrid.Event.prototype.getData = function(start, end, resolution, counters, ca
     params.push("start_time=" + String(start_time));
     params.push("end_time=" + String(end_time));
     var endpoint = "counters?" + params.join("&");
-    var options = {
+    this._client.request({
         endpoint: endpoint
-    };
-    this._client.request(options, function(err, data) {
+    }, function(err, data) {
         if (data.counters && data.counters.length) {
             data.counters.forEach(function(counter) {
                 self._data.counters[counter.name] = counter.value || counter.values;
