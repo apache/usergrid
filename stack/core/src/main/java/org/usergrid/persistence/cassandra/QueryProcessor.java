@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
@@ -76,6 +78,7 @@ import static org.usergrid.persistence.Schema.getDefaultSchema;
 public class QueryProcessor {
 
     private static final int PAGE_SIZE = 1000;
+    private static final Logger logger = LoggerFactory.getLogger( QueryProcessor.class );
 
     private static final Schema SCHEMA = getDefaultSchema();
 
@@ -239,6 +242,16 @@ public class QueryProcessor {
     }
 
 
+    /**
+     * Return the node id from the cursor cache
+     * @param nodeId
+     * @return
+     */
+    public ByteBuffer getCursorCache(int nodeId){
+        return cursorCache.getCursorBytes( nodeId );
+    }
+
+
     private SortPredicate getSort( String propertyName ) {
         for ( SortPredicate sort : sorts ) {
             if ( sort.getPropertyName().equals( propertyName ) ) {
@@ -277,6 +290,9 @@ public class QueryProcessor {
             if ( resultSize == size ) {
                 itr.finalizeCursor( resultsCursor, entityIds.get( resultSize - 1 ).getUUID() );
             }
+        }
+        if (logger.isDebugEnabled()) {
+        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}", getQuery(), entityIds.size());
         }
 
         final ResultsLoader loader = loaderFactory.getResultsLoader( em, query, query.getResultsLevel() );
@@ -378,7 +394,7 @@ public class QueryProcessor {
             QueryNode leftResult = nodes.pop();
 
             // rewrite with the new Or operand
-            OrNode orNode = new OrNode( leftResult, rightResult );
+            OrNode orNode = new OrNode( leftResult, rightResult,  ++contextCount );
 
             nodes.push( orNode );
         }

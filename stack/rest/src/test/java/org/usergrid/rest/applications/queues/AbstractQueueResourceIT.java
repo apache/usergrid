@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.AbstractRestIT;
@@ -137,7 +138,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
     protected class IncrementHandler implements ResponseHandler {
 
         int max;
-        int current = 0;
+        AtomicInteger current = new AtomicInteger(0);
 
 
         protected IncrementHandler( int max ) {
@@ -154,18 +155,19 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          */
         @Override
         public void response( JsonNode node ) {
-            if ( current > max ) {
+        	int currentValue = current.getAndIncrement();
+            if ( currentValue > max ) {
                 fail( String.format( "Received %d messages, but we should only receive %d", current, max ) );
             }
 
-            assertEquals( current, node.get( "id" ).asInt() );
-            current++;
+            assertEquals( currentValue, node.get( "id" ).asInt() );
+            // current++;
         }
 
 
         @Override
         public void assertResults() {
-            assertEquals( max, current );
+            assertEquals( max, current.get() );
         }
     }
 
@@ -178,13 +180,13 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
     protected class DecrementHandler implements ResponseHandler {
 
         int max;
-        int current;
-        int count = 0;
+        AtomicInteger current;
+        AtomicInteger count = new AtomicInteger(0);
 
 
         protected DecrementHandler( int max ) {
             this.max = max;
-            current = max - 1;
+            current = new AtomicInteger(max - 1);
         }
 
 
@@ -197,19 +199,21 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          */
         @Override
         public void response( JsonNode node ) {
-            if ( current < 0 ) {
+        	int currentValue = current.getAndDecrement();
+            if ( currentValue < 0 ) {
                 fail( String.format( "Received %d messages, but we should only receive %d", current, max ) );
             }
 
-            assertEquals( current, node.get( "id" ).asInt() );
-            current--;
-            count++;
+            assertEquals( currentValue, node.get( "id" ).asInt() );
+            count.incrementAndGet();
+            // current--;
+            // count++;
         }
 
 
         @Override
         public void assertResults() {
-            assertEquals( max, count );
+            assertEquals( max, count.get() );
         }
     }
 

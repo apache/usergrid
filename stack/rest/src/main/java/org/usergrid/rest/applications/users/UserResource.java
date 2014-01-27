@@ -458,7 +458,7 @@ public class UserResource extends ServiceResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Send activation email for user: " + getUserUuid() );
+        logger.info( "Send activation email for user: {}",  getUserUuid() );
 
         ApiResponse response = createApiResponse();
 
@@ -475,7 +475,7 @@ public class UserResource extends ServiceResource {
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Revoking user tokens for " + getUserUuid() );
+        logger.info( "Revoking user tokens for {}" , getUserUuid() );
 
         ApiResponse response = createApiResponse();
 
@@ -501,7 +501,7 @@ public class UserResource extends ServiceResource {
                                             @QueryParam("callback") @DefaultValue("callback") String callback,
                                             @QueryParam("token") String token ) throws Exception {
 
-        logger.info( "Revoking user token for " + getUserUuid() );
+        logger.info( "Revoking user token for {}",  getUserUuid() );
 
         ApiResponse response = createApiResponse();
 

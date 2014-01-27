@@ -23,6 +23,6 @@ import org.junit.Test;
 public class SingleOrderByLessThanLimitCollectionIT extends AbstractIteratingQueryIT {
     @Test
     public void singleOrderByLessThanLimitCollection() throws Exception {
-        singleOrderByLessThanLimit( new CollectionIoHelper() );
+        singleOrderByLessThanLimit( new CollectionIoHelper( app ) );
     }
 }

@@ -916,13 +916,13 @@ public class EntityManagerImpl implements EntityManager {
                     ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to increment counter application.collection." + collection_name, e );
+            logger.error( "Unable to increment counter application.collection: {}.", new Object[]{ collection_name, e} );
         }
         try {
             incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to increment counter application.entities", e );
+            logger.error( "Unable to increment counter application.entities for collection: {} with timestamp: {}", new Object[]{collection_name, cassandraTimestamp,e} );
         }
     }
 
@@ -940,13 +940,13 @@ public class EntityManagerImpl implements EntityManager {
                     cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to decrement counter application.collection." + collection_name, e );
+            logger.error( "Unable to decrement counter application.collection: {}.", new Object[]{collection_name, e} );
         }
         try {
             incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, -ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to decrement counter application.entities", e );
+        	logger.error( "Unable to decrement counter application.entities for collection: {} with timestamp: {}", new Object[]{collection_name, cassandraTimestamp,e} );
         }
     }
 
@@ -1076,7 +1076,7 @@ public class EntityManagerImpl implements EntityManager {
         // }
 
         if ( results == null ) {
-            logger.warn( "getEntity(): No properties found for entity " + entityId + ", probably doesn't exist..." );
+            logger.warn( "getEntity(): No properties found for entity {}, probably doesn't exist...", entityId );
             return null;
         }
 
@@ -1085,7 +1085,7 @@ public class EntityManagerImpl implements EntityManager {
 
         if ( !entityId.equals( id ) ) {
 
-            logger.error( "Expected entity id " + entityId + ", found " + id, new Throwable() );
+            logger.error( "Expected entity id {}, found {}. Returning null entity", new Object[]{entityId, id, new Throwable()} );
             return null;
         }
 
@@ -1134,8 +1134,7 @@ public class EntityManagerImpl implements EntityManager {
                 Map<String, Object> properties = deserializeEntityProperties( results.getByKey( key ) );
 
                 if ( properties == null ) {
-                    logger.error( "Error deserializing entity with key " + key
-                            + ", entity probaby doesn't exist, where did this key come from?" );
+                    logger.error( "Error deserializing entity with key {} entity probaby doesn't exist, where did this key come from?", key );
                     continue;
                 }
 
@@ -1143,8 +1142,7 @@ public class EntityManagerImpl implements EntityManager {
                 String type = string( properties.get( PROPERTY_TYPE ) );
 
                 if ( ( id == null ) || ( type == null ) ) {
-                    logger.error( "Error retrieving entity with key " + key
-                            + ", no type or id deseriazable, where did this key come from?" );
+                    logger.error( "Error retrieving entity with key {}, no type or id deseriazable, where did this key come from?", key );
                     continue;
                 }
                 A entity = EntityFactory.newEntity( id, type, entityClass );
@@ -1762,7 +1760,7 @@ public class EntityManagerImpl implements EntityManager {
                 entityRef = getRef( entityRef.getUuid() );
             }
             catch ( Exception e ) {
-                logger.error( "Unable to load entity" + entityRef.getUuid().toString(), e );
+                logger.error( "Unable to load entity: {}", new Object[] {entityRef.getUuid(), e} );
             }
             if ( entityRef == null ) {
                 throw new EntityNotFoundException( "Entity " + entityId.toString() + " cannot be verified" );
@@ -1801,7 +1799,7 @@ public class EntityManagerImpl implements EntityManager {
     public EntityRef getRef( UUID entityId ) throws Exception {
         String entityType = getEntityType( entityId );
         if ( entityType == null ) {
-            logger.warn( "Unable to get type for entity " + entityId, new Exception() );
+            logger.warn( "Unable to get type for entity: {} ", new Object[] { entityId, new Exception()} );
             return null;
         }
         return ref( entityType, entityId );
@@ -1834,7 +1832,7 @@ public class EntityManagerImpl implements EntityManager {
             e = ( A ) getEntity( entityId, ( Class<Entity> ) entityClass );
         }
         catch ( ClassCastException e1 ) {
-            logger.error( "Unable to get typed entity", e1 );
+            logger.error( "Unable to get typed entity: {} of class {}", new Object[] {entityId, entityClass.getCanonicalName(), e1} );
         }
         return e;
     }
@@ -2723,12 +2721,19 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
                                           Level resultsLevel ) throws Exception {
-        return getRelationManager( ref( entityId ) )
-                .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
+        return getConnectingEntities(entityId, connectionType, connectedEntityType, resultsLevel, 0);
     }
 
 
     @Override
+	public Results getConnectingEntities(UUID uuid, String connectionType,
+			String entityType, Level level, int count) throws Exception {
+		return getRelationManager( ref( uuid ) )
+                .getConnectingEntities( connectionType, entityType, level, count );
+	}
+
+
+	@Override
     public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception {
 
         return getRelationManager( connectingEntity ).searchConnectedEntities( query );
