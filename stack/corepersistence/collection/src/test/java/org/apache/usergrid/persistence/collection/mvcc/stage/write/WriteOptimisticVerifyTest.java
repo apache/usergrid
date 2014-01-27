@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -36,17 +37,14 @@ import org.junit.ClassRule;
 import static org.mockito.Mockito.mock;
 
 
-/** 
- * @author tnine 
- */
 @UseModules( CollectionModule.class )
-public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
+public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
 
     @Inject
-    private UniqueValueSerializationStrategy uniqueValueSerializiationStrategy;
+    private MvccLogEntrySerializationStrategy logEntryStrat;
 
     /** Standard flow */
     @Test
@@ -60,7 +58,7 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( null, uniqueValueSerializiationStrategy );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( null, logEntryStrat );
 
         CollectionIoEvent<MvccEntity>
             result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -80,7 +78,7 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
-        new WriteUniqueVerify( null, uniqueValueSerializiationStrategy ).call( event );
+        new WriteOptimisticVerify( null, logEntryStrat ).call( event );
     }
 
 }

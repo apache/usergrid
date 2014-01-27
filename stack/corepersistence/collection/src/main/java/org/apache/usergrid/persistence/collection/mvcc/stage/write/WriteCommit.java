@@ -39,6 +39,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.model.field.Field;
 
 import rx.util.functions.Func1;
@@ -89,8 +90,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED );
 
         MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );
 
