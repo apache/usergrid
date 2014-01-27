@@ -62,7 +62,7 @@ public abstract class MergeIterator implements ResultIterator {
     @Override
     public boolean hasNext() {
         //if next isn't set, try to advance
-        if(next != null){
+        if(checkNext()){
             return true;
         }
 
@@ -70,7 +70,16 @@ public abstract class MergeIterator implements ResultIterator {
         doAdvance();
 
 
-        return next != null;
+        return checkNext();
+    }
+
+
+    /**
+     * Single source of logic to check if a next is present.
+     * @return
+     */
+    protected boolean checkNext(){
+        return next != null && next.size() > 0;
     }
 
 
