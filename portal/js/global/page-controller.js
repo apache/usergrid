@@ -129,8 +129,9 @@ AppServices.Controllers.controller('PageCtrl',
        ug.set('token', $routeParams.access_token);
        ug.set('email', $routeParams.admin_email);
        ug.set('uuid', $routeParams.uuid);
-       var clean_uri = location.protocol + "//" + location.host + location.pathname;
-       window.history.replaceState({}, document.title, clean_uri);
+       $location.search('access_token', null);
+       $location.search('admin_email', null);
+       $location.search('uuid', null);
      }
 
      $scope.deferredLogin = $q.defer();
