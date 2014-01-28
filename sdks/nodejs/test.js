@@ -23,23 +23,12 @@ var _email = 'marty'+_unique+'@timetravel.com';
 var _password = 'password2';
 var _newpassword = 'password3';
 
-	var client = new usergrid.client({
-		orgName:'yourorgname',
-		appName:'yourappname',
-		authType:usergrid.AUTH_CLIENT_ID,
-		clientId:'<your client id>',
-		clientSecret:'<your client secret>',
-		logging: false, //optional - turn on logging, off by default
-		buildCurl: false //optional - turn on curl commands, off by default
-	});
-
-
-	var client = new usergrid.client({
-		orgName:'yourorgname',
-		appName:'sandbox',
-		logging: true, //optional - turn on logging, off by default
-		buildCurl: true //optional - turn on curl commands, off by default
-	});
+var client = new usergrid.client({
+	orgName:'yourorgname',
+	appName:'sandbox',
+	logging: true, //optional - turn on logging, off by default
+	buildCurl: true //optional - turn on curl commands, off by default
+});
 
 
 //call the runner function to start the process
@@ -185,6 +174,26 @@ function runner(step, arg, arg2){
 		case 34:
 			notice('-----running step '+step+': clean up dogs');
       cleanUpDogs(step, arg);
+			break;
+		case 35:
+			notice('-----running step '+step+': create counter');
+      counterCreate(step, arg);
+			break;
+		case 36:
+			notice('-----running step '+step+': reset counter');
+      counterReset(step, arg);
+			break;
+		case 37:
+			notice('-----running step '+step+': increment counter');
+      counterIncrement(step, arg);
+			break;
+		case 38:
+			notice('-----running step '+step+': decrement counter');
+      counterDecrement(step, arg);
+			break;
+		case 34:
+			notice('-----running step '+step+': fetch counter data');
+      counterFetch(step, arg);
 			break;
 		default:
 			notice('-----test complete!-----');
@@ -998,3 +1007,54 @@ function cleanUpDogs(step){
       }
     });
   }
+//var counter;
+function counterCreate(step){
+	var counter = new usergrid.counter({client:client, data:{category:'mocha_test', timestamp:0, name:"test", counters:{test:0,test_counter:0}}}, function(err, data){
+        if (err) {
+          error('counter not removed');
+        } else {
+          success('counter created');
+        }
+	});
+	runner(step, counter);
+}
+function counterReset(step, counter){
+	counter.reset({name:'test'}, function(err, data){
+        if (err) {
+          error('counter not reset');
+        } else {
+          success('counter reset');
+        }
+		runner(step, counter);
+	});
+}
+function counterIncrement(step, counter){
+	counter.increment({name:'test', value:1}, function(err, data){
+        if (err) {
+          error('counter not incremented');
+        } else {
+          success('counter incremented');
+        }
+		runner(step, counter);
+	});
+}
+function counterDecrement(step, counter){
+	counter.decrement({name:'test', value:1}, function(err, data){
+        if (err) {
+          error('counter not decremented');
+        } else {
+          success('counter decremented');
+        }
+		runner(step, counter);
+	});
+}
+function counterFetch(step, counter){
+	counter.getData({resolution:'all', counters:['test', 'test_counter']}, function(err, data){
+        if (err) {
+          error('counter not fetched');
+        } else {
+          success('counter fetched');
+        }
+		runner(step, counter);
+	});
+}
