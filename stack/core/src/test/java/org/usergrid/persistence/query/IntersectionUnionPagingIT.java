@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.cassandra.QueryProcessor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,7 +45,8 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             "select * where (field1Or > '00000000' OR field2Or > '00000000') AND fieldDate = '0000-00-00'";
     private static final String scanUnion =
             "select * where fieldDate = '0000-00-00' AND (field1Or > '00000000' OR field2Or > '00000000') ";
-    private static final int PAGE_SIZE = 20;
+
+    private static final int PAGE_SIZE = 300;
 
 
     @Test
@@ -77,7 +79,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
     private Set<String> performSetup( final IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 40;
+        int size = ( int ) ( QueryProcessor.PAGE_SIZE*2.5);
 
         long start = System.currentTimeMillis();
 
