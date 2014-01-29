@@ -26,6 +26,7 @@ import org.usergrid.management.OrganizationInfo;
 public class ExportOrg extends OrganizationInfo {
 
     private List<String> adminUserNames;
+    private int passwordHistorySize;
 
 
     public ExportOrg() {
@@ -54,5 +55,15 @@ public class ExportOrg extends OrganizationInfo {
 
     public void addAdmin( String username ) {
         adminUserNames.add( username );
+    }
+
+
+    public int getPasswordHistorySize() {
+        return passwordHistorySize;
+    }
+
+
+    public void setPasswordHistorySize( final int passwordHistorySize ) {
+        this.passwordHistorySize = passwordHistorySize;
     }
 }
