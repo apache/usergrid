@@ -179,7 +179,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
                 IndexScanner scanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
                         key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null, PAGE_SIZE, false,
-                        indexBucketLocator, applicationId, collectionName );
+                        indexBucketLocator, applicationId, collectionName, false );
 
                 SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser() );
 
