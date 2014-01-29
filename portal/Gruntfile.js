@@ -163,6 +163,12 @@ module.exports = function (grunt) {
           port: 3006,
           base: distPath
         }
+      },
+      'e2e-firefox': {
+        options: {
+          port: 3007,
+          base: distPath
+        }
       }
     },
     karma: {
@@ -185,22 +191,39 @@ module.exports = function (grunt) {
       phantom: {
         options: {
           args: {
+            baseUrl:'http://localhost:3005',
             // Arguments passed to the command
-            capabilities: {
-              baseUrl:'http://localhost:3005',
-              'browserName': 'phantomjs'
-            }
+            'browser': 'phantomjs'
           }
         }
       },
       chrome: {
         options: {
           args: {
+            baseUrl:'http://localhost:3006',
             // Arguments passed to the command
-            capabilities: {
-              baseUrl:'http://localhost:3006',
-              'browserName': 'chrome'
+            'browser': 'chrome'
+          }
+        }
+      },
+      prod: {
+        options: {
+          args: {
+            baseUrl:'http://apigee.com/usergrid',
+            // Arguments passed to the command
+            browser: 'chrome',
+            params:{
+              useSso:true
             }
+          }
+        }
+      },
+      firefox: {
+        options: {
+          args: {
+            baseUrl:'http://localhost:3007',
+            // Arguments passed to the command
+            'browser': 'firefox'
           }
         }
       }
@@ -296,7 +319,8 @@ module.exports = function (grunt) {
 
   grunt.registerTask('e2e', ['karma:unit','connect:e2e-phantom','protractor:phantom']);
   grunt.registerTask('e2e-chrome', ['karma:unit','connect:e2e-chrome','protractor:chrome']);
-
+  grunt.registerTask('e2e-firefox', ['karma:unit','connect:e2e-firefox','protractor:firefox']);
+  grunt.registerTask('e2e-prod', ['protractor:prod']);
 
   grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit','compress']);
 

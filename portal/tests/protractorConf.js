@@ -68,7 +68,8 @@ exports.config = {
     },
     orgName:'rippela',
     appName1:'test',
-    appName2:'sandbox'
+    appName2:'sandbox',
+    useSso:false
 
   },
   // ----- More information for your tests ----
