@@ -181,7 +181,7 @@ public class UniqueIndexCleanup extends ToolBase {
                         key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null, PAGE_SIZE, false,
                         indexBucketLocator, applicationId, collectionName );
 
-                SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser(), false );
+                SliceIterator itr = new SliceIterator( null, scanner, new UUIDIndexSliceParser() );
 
 
                 while ( itr.hasNext() ) {

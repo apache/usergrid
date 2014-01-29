@@ -91,13 +91,13 @@ public class IntersectionIteratorTest {
 
         // now make sure it's right, only 1, 3 and 8 intersect
         assertTrue( union.hasNext() );
+        assertEquals( id8, union.next().getUUID() );
+
+        assertTrue( union.hasNext() );
         assertEquals( id1, union.next().getUUID() );
 
         assertTrue( union.hasNext() );
         assertEquals( id3, union.next().getUUID() );
-
-        assertTrue( union.hasNext() );
-        assertEquals( id8, union.next().getUUID() );
 
         assertFalse( union.hasNext() );
     }
