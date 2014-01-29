@@ -7,6 +7,10 @@ describe('Forgot Password', function () {
     util.logout();
   });
   it('should have correct iframe url', function () {
+    if(browser.params.useSso){
+      //this will not work with sso since its an enterprise config.
+      return;
+    }
     browser.wait(function () {
       return browser.driver.getCurrentUrl().then(function (url) {
         return /login/.test(url);

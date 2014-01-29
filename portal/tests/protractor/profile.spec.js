@@ -8,6 +8,10 @@ describe('Test User Profile', function () {
   })
   describe('Test Changing profile values',function(){
     it('should set email to some random value',function(){
+      if(browser.params.useSso){
+        //this will not work with sso since its an enterprise config.
+        return;
+      }
       browser.driver.get(browser.baseUrl+'/#!/profile');
       element(by.id('account-link')).click();
       element(by.model('user.email')).isPresent().then(function() {
