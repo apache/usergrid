@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import org.jukito.UseModules;
+import org.junit.Assert;
 import static org.junit.Assert.assertSame;
 import org.junit.ClassRule;
 import static org.mockito.Mockito.mock;
@@ -50,6 +51,8 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
     @Test
     public void testStartStage() throws Exception {
 
+        Assert.assertNotNull( logEntryStrat );
+
         final CollectionScope collectionScope = mock( CollectionScope.class );
 
         // set up the mock to return the entity from the start phase
@@ -58,7 +61,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteOptimisticVerify newStage = new WriteOptimisticVerify( null, logEntryStrat );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( logEntryStrat );
 
         CollectionIoEvent<MvccEntity>
             result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -78,7 +81,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
-        new WriteOptimisticVerify( null, logEntryStrat ).call( event );
+        new WriteOptimisticVerify( logEntryStrat ).call( event );
     }
 
 }

@@ -41,9 +41,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.netflix.config.ConfigurationManager;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteFig;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 
 import rx.Scheduler;
 
@@ -66,10 +70,12 @@ public class CollectionModule extends AbstractModule {
             ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
         }
         catch ( IOException e ) {
-            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
+            throw new RuntimeException( 
+                    "Cannot do much without properly loading our configuration.", e );
         }
 
-        Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class, RxFig.class ) );
+        Injector injector = Guice.createInjector( 
+                new GuicyFigModule( CassandraFig.class, RxFig.class ) );
         CassandraFig cassandraFig = injector.getInstance( CassandraFig.class );
         RxFig rxFig = injector.getInstance( RxFig.class );
 
@@ -78,7 +84,7 @@ public class CollectionModule extends AbstractModule {
             String thriftPort = String.valueOf( AvailablePortFinder.getNextAvailable() );
             cassandraFig.bypass( "getThriftPort", thriftPort );
             cassandraFig.bypass( "getConnections", "20" );
-            rxFig.bypass( "getMaxThreadCount", "20" );
+            rxFig.bypass(        "getMaxThreadCount", "20" );
             cassandraFig.bypass( "getHosts", "localhost" );
             cassandraFig.bypass( "getClusterName", "Usergrid" );
             cassandraFig.bypass( "getKeyspaceName", "Usergrid_Collections" );
@@ -87,7 +93,8 @@ public class CollectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        //noinspection unchecked
+
+        // noinspection unchecked
         install( new GuicyFigModule( 
                 RxFig.class, 
                 MigrationManagerFig.class,
@@ -96,6 +103,10 @@ public class CollectionModule extends AbstractModule {
                 WriteFig.class ) );
 
         install( new SerializationModule() );
+        bind( MvccEntitySerializationStrategy.class ).to( MvccEntitySerializationStrategyImpl.class );
+        bind( MvccLogEntrySerializationStrategy.class ).to( MvccLogEntrySerializationStrategyImpl.class );
+        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
+        
         install( new ServiceModule() );
 
         // create a guice factor for getting our collection manager
@@ -105,7 +116,5 @@ public class CollectionModule extends AbstractModule {
                 .build( EntityCollectionManagerFactory.class ) );
 
         bind( Scheduler.class ).toProvider( CassandraThreadScheduler.class );
-
-        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
     }
 }
