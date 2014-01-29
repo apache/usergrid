@@ -2,16 +2,16 @@
 var util = require('./util');
 describe('Test User Profile', function () {
 
-  var newUser = 'sfeldman+protractor@apigee.com';
+  var newUser = 'sfeldman+apijeeps2@apigee.com';
   beforeEach(function(){
     util.login();
   })
   describe('Test Changing profile values',function(){
+    if(browser.params.useSso){
+      //this will not work with sso since its an enterprise config.
+      return;
+    }
     it('should set email to some random value',function(){
-      if(browser.params.useSso){
-        //this will not work with sso since its an enterprise config.
-        return;
-      }
       browser.driver.get(browser.baseUrl+'/#!/profile');
       element(by.id('account-link')).click();
       element(by.model('user.email')).isPresent().then(function() {
@@ -22,7 +22,7 @@ describe('Test User Profile', function () {
         email.clear();
         email.sendKeys(newUser);
         name.clear();
-        name.sendKeys('shawn feldman test');
+        name.sendKeys('rod simpson');
         element(by.id('button-update-account')).submit();
       });
       browser.wait(function() {
@@ -30,7 +30,7 @@ describe('Test User Profile', function () {
           var test =  text === newUser;
           if(test){
             var name = element(by.model('user.name'));
-            expect(name.getAttribute('value')).toEqual('shawn feldman test');
+            expect(name.getAttribute('value')).toEqual('rod simpson');
           }
           return test;
         });
@@ -44,7 +44,7 @@ describe('Test User Profile', function () {
         email.sendKeys(browser.params.login.user);
         var name = element(by.model('user.name'));
         name.clear();
-        name.sendKeys('shawn feldman');
+        name.sendKeys('sam jeeps');
         element(by.id('button-update-account')).submit();
       })
       browser.wait(function() {
@@ -52,7 +52,7 @@ describe('Test User Profile', function () {
           var test =  text === browser.params.login.user;
           if(test){
             var name = element(by.model('user.name'));
-            expect(name.getAttribute('value')).toEqual('shawn feldman');
+            expect(name.getAttribute('value')).toEqual('sam jeeps');
           }
           return test;
         });

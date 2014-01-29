@@ -13,15 +13,15 @@ describe('Test Applications Dropdown', function () {
       browser.driver.get(browser.baseUrl+'/#!/app-overview/summary');
       browser.wait(function(){
         return element(by.id('app-overview-title')).getText().then(function(text){
-          return text===appName1.toUpperCase();
+          return text===appName2.toUpperCase();
         })
       })
       element(by.id('app-overview-title')).isPresent().then(function(){
         element(by.id('current-app-selector')).click();
-        element(by.id('app-'+appName2+'-link-id')).click();
+        element(by.id('app-'+appName1+'-link-id')).click();
         browser.wait(function() {
           return element(by.id('app-overview-title')).getText().then(function(text) {
-            return text === appName2.toUpperCase();
+            return text === appName1.toUpperCase();
           });
         });
       });

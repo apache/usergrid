@@ -18,6 +18,7 @@ describe('Forgot Password', function () {
     });
     element(by.id('button-forgot-password')).isPresent().then(function () {
       element(by.id('button-forgot-password')).click();
+      browser.driver.get(browser.baseUrl+'/#!/forgot-password')
     });
     browser.wait(function () {
       return browser.driver.getCurrentUrl().then(function (url) {
