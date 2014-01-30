@@ -247,19 +247,8 @@ Usergrid.Client.prototype.createGroup = function(options, callback) {
 Usergrid.Client.prototype.createEntity = function (options, callback) {
   // todo: replace the check for new / save on not found code with simple save
   // when users PUT on no user fix is in place.
-  /*
-   var options = {
-   client:this,
-   data:options
-   }
-   var entity = new Usergrid.Entity(options);
-   entity.save(function(err, data) {
-   if (typeof(callback) === 'function') {
-   callback(err, entity);
-   }
-   });
-   */
   var getOnExist = options.getOnExist || false; //if true, will return entity if one already exists
+  delete options.getOnExist;//so it doesn't become part of our data model
   var options = {
     client:this,
     data:options
