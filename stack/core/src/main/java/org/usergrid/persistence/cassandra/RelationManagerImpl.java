@@ -1086,7 +1086,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
         PagingResultsIterator itr =
-                new PagingResultsIterator( getConnectedEntities( headEntity, null, null, Level.REFS ) );
+                new PagingResultsIterator( getConnectingEntities( headEntity, null, null, Level.REFS ) );
 
         ConnectionRefImpl connection = null;
 
