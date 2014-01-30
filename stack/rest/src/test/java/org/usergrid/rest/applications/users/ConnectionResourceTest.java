@@ -17,6 +17,7 @@ import org.usergrid.rest.test.resource.CustomCollection;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -190,4 +191,46 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         assertEquals( "Should point to thing2 as an entity connection", thing2Id, returned );
     }
+
+    @Test //USERGRID-3011
+    public void connectionsDeleteSecondEntityInConnectionTest() {
+
+        CustomCollection things = context.collection( "things" );
+
+        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+
+        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+
+        //create the connection
+        things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
+
+        JsonNode response = things.entity( "thing2" ).delete();
+
+        JsonNode node = things.entity ( "thing2" ).get();
+
+        assertNull(node);
+
+    }
+
+    @Test //USERGRID-3011
+    public void connectionsDeleteFirstEntityInConnectionTest() {
+
+        CustomCollection things = context.collection( "things" );
+
+        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+
+        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+
+        //create the connection
+        things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
+
+        JsonNode response = things.entity( "thing1" ).delete();
+
+        JsonNode node = things.entity ( "thing1" ).get();
+
+        assertNull(node);
+
+    }
+
+
 }
