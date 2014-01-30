@@ -1098,15 +1098,12 @@ public class RelationManagerImpl implements RelationManager {
             else if ( itrObj instanceof SimpleEntityRef ) {
                 connection = new ConnectionRefImpl( (SimpleEntityRef) itrObj );
             }
-            else {
-                if ( itrObj instanceof EntityRef ) {
+            else if ( itrObj instanceof EntityRef ) {
                     connection = new ConnectionRefImpl( new SimpleEntityRef((EntityRef) itr.next()));
-                }
-                else if ( itrObj instanceof UUID ) {
-                    connection = new ConnectionRefImpl( new SimpleEntityRef((UUID)itr.next()));
-                }
             }
-
+            else if ( itrObj instanceof UUID ) {
+                    connection = new ConnectionRefImpl( new SimpleEntityRef((UUID)itr.next()));
+            }
 
             batchUpdateEntityConnection( batch, true, connection, timestampUuid );
         }
