@@ -20,8 +20,8 @@ AppServices.Controllers.controller('PageCtrl',
                      $routeParams,
                      $q,
                      $route,
-                     $log,
-                     $analytics) {
+                     $log
+                     ) {
 
   var initScopeVariables = function(){
     //$rootScope.urls()... will determine which URL should be used for a given environment
@@ -379,7 +379,6 @@ AppServices.Controllers.controller('PageCtrl',
       if(!$scope.showDemoBar){
         $rootScope.demoData = false;
       }
-      $analytics.pageTrack($location.path());
     });
     $scope.$on('applications-received', function (event, applications) {
       $scope.applications = applications;
