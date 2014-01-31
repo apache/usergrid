@@ -25,4 +25,7 @@ chmod a+x /usr/bin/javac
 chmod a+x /usr/bin/javaws
 chown -R root:root /usr/lib/jvm/jdk1.7.0
 
+sudo rm /usr/lib/jvm/default-java
+sudo ln -s /usr/lib/jvm/jdk1.7.0 /usr/lib/jvm/default-java
+
 popd
