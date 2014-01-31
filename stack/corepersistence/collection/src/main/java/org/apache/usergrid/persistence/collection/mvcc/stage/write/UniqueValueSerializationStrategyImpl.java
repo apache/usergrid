@@ -27,10 +27,13 @@ import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.ColumnList;
 import java.util.Collections;
 import org.apache.cassandra.db.marshal.BytesType;
+import org.apache.cassandra.db.marshal.DynamicCompositeType;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -69,8 +72,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     public java.util.Collection getColumnFamilies() {
 
         MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( 
-                CF_UNIQUE_VALUES,
-                BytesType.class.getSimpleName(), 
+                CF_UNIQUE_VALUES, ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
                 BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName() );
 
@@ -143,6 +145,8 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         Preconditions.checkNotNull( field, "field is required" );
 
+
+        //TODO Dave, this doesn't limit the size.  We should limit it to 1 explicitly, otherwise you can get a huge result set explosion if multiple values are attempting to write the same unique value.
         ColumnList<EntityVersion> result;
         try {
             result = keyspace.prepareQuery( CF_UNIQUE_VALUES )
