@@ -72,16 +72,16 @@ public class SimpleId implements Id, Serializable {
         if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof SimpleId ) ) {
+        if ( !( o instanceof Id ) ) {
             return false;
         }
 
-        final SimpleId simpleId = ( SimpleId ) o;
+        final Id id = ( Id ) o;
 
-        if ( !type.equals( simpleId.type ) ) {
+        if ( !type.equals( id.getType() ) ) {
             return false;
         }
-        if ( !uuid.equals( simpleId.uuid ) ) {
+        if ( !uuid.equals( id.getUuid() ) ) {
             return false;
         }
 

@@ -22,14 +22,10 @@ package org.apache.usergrid.persistence.graph.serialization.util;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.UUID;
 
 import org.apache.cassandra.utils.MurmurHash;
 
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.netflix.astyanax.serializers.StringSerializer;
 
 
 /**

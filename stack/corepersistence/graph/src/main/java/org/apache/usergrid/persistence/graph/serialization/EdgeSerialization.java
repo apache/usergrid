@@ -54,38 +54,36 @@ public interface EdgeSerialization {
     MutationBatch deleteEdge( OrganizationScope scope, Edge edge );
 
     /**
-     * Get an iterator of all edges by edge type from source node
+     * Get an iterator of all edges by edge type originating from source node
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getTargetEdges( OrganizationScope scope, SearchByEdgeType edgeType );
+    Iterator<Edge> getEdgesFromSource( OrganizationScope scope, SearchByEdgeType edgeType );
 
 
     /**
-     * Get an iterator of all edges by edge type and target type from source node * @param scope The org scope of the
-     * graph
+     * Get an iterator of all edges by edge type originating from source node.  Also filters by target node id type
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getTargetIdEdges( OrganizationScope scope, SearchByIdType edgeType );
+    Iterator<Edge> getEdgesFromSourceByTargetType( OrganizationScope scope, SearchByIdType edgeType );
 
     /**
-     * Get an iterator of all edges by edge type from target node * @param scope The org scope of the graph
-     *
+     * Get an iterator of all edges by edge type pointing to the target node
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getSourceEdges( OrganizationScope scope, SearchByEdgeType edgeType );
+    Iterator<Edge> getEdgesToTarget( OrganizationScope scope, SearchByEdgeType edgeType );
 
 
     /**
-     * Get an iterator of all edges by edge type and source type from target node * @param scope The org scope of the
-     * graph
+     * Get an iterator of all edges by edge type pointing to the target node.  Also uses the source id
+     * type to limit the results
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getSourceIdEdges( OrganizationScope scope, SearchByIdType edgeType );
+    Iterator<Edge> getEdgesToTargetBySourceType( OrganizationScope scope, SearchByIdType edgeType );
 }

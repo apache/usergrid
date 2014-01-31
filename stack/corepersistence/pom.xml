@@ -13,7 +13,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <astyanax.version>1.56.46-UG</astyanax.version>
+        <astyanax.version>1.56.48</astyanax.version>
         <jukito.version>1.4-UG</jukito.version>
         <guice.version>3.0</guice.version>
         <archaius.version>0.5.12</archaius.version>

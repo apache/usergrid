@@ -29,13 +29,14 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.cassandra.db.marshal.BytesType;
-import org.apache.cassandra.db.marshal.DynamicCompositeType;
 
+import org.apache.usergrid.persistence.astyanax.IdColDynamicCompositeSerializer;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -59,9 +60,9 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.DynamicComposite;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.LongSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
-import org.apache.usergrid.persistence.astyanax.IdColDynamicCompositeSerializer;
 
 
 /**
@@ -89,23 +90,35 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     // column families
-    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> CF_SOURCE_EDGES =
-            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_Source_Edges", ORG_ROW_KEY_SER,
-                    EDGE_TYPE_SERIALIZER );
+    /**
+     * Edges that are from the source node. The row key is the source node
+     */
+    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> GRAPH_SOURCE_NODE_EDGES =
+            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_Source_Node_Edges",
+                    ORG_ROW_KEY_SER, EDGE_TYPE_SERIALIZER );
 
 
-    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> CF_TARGET_EDGES =
-            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_Target_Edges", ORG_ROW_KEY_SER,
-                    EDGE_TYPE_SERIALIZER );
+    /**
+     * Edges that are incoming to the target node.  The target node is the row key
+     */
+    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> GRAPH_TARGET_NODE_EDGES =
+            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_Target_Node_Edges",
+                    ORG_ROW_KEY_SER, EDGE_TYPE_SERIALIZER );
 
 
-    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> CF_SOURCE_TYPE_EDGES =
-            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_SourceType_Edges",
+    /**
+     * The edges that are from the source node with target type.  The source node is the row key.
+     */
+    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> GRAPH_SOURCE_NODE_TARGET_TYPE =
+            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_Source_Node_Target_Type",
                     ORG_ROW_KEY_SER, EDGE_TYPE_ID_SERIALIZER );
 
 
-    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> CF_TARGET_TYPE_EDGES =
-            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_TargetType_Edges",
+    /**
+     * The edges that are to the target node with the source type.  The target node is the row key
+     */
+    private static final MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> GRAPH_TARGET_NODE_SOURCE_TYPE =
+            new MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge>( "Graph_Target_Node_Source_Type",
                     ORG_ROW_KEY_SER, EDGE_TYPE_ID_SERIALIZER );
 
 
@@ -155,20 +168,21 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final DirectedEdge targetEdge = new DirectedEdge( edgeTypeName, sourceNodeId, version );
 
 
+        //TODO T.N Resume here
         /**
-         * Write edges from source->target
+         * Write edges from target<-source
          */
-        batch.withRow( CF_SOURCE_EDGES, sourceKey ).putColumn( sourceEdge, HOLDER );
+        batch.withRow( GRAPH_SOURCE_NODE_EDGES, sourceKey ).putColumn( sourceEdge, HOLDER );
 
-        batch.withRow( CF_SOURCE_TYPE_EDGES, sourceKey ).putColumn( sourceEdge, HOLDER );
+        batch.withRow( GRAPH_SOURCE_NODE_TARGET_TYPE, sourceKey ).putColumn( sourceEdge, HOLDER );
 
         /**
-         * Write edges target<- source
+         * Write edges source->target
          */
 
-        batch.withRow( CF_TARGET_EDGES, targetKey ).putColumn( targetEdge, HOLDER );
+        batch.withRow( GRAPH_TARGET_NODE_EDGES, targetKey ).putColumn( targetEdge, HOLDER );
 
-        batch.withRow( CF_TARGET_TYPE_EDGES, targetKey ).putColumn( targetEdge, HOLDER );
+        batch.withRow( GRAPH_TARGET_NODE_SOURCE_TYPE, targetKey ).putColumn( targetEdge, HOLDER );
 
         return batch;
     }
@@ -210,60 +224,67 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         /**
          * Write edges from source->target
          */
-        batch.withRow( CF_SOURCE_EDGES, sourceKey ).deleteColumn( sourceEdge );
+        batch.withRow( GRAPH_SOURCE_NODE_EDGES, sourceKey ).deleteColumn( sourceEdge );
 
-        batch.withRow( CF_SOURCE_TYPE_EDGES, sourceKey ).deleteColumn( sourceEdge );
+        batch.withRow( GRAPH_SOURCE_NODE_TARGET_TYPE, sourceKey ).deleteColumn( sourceEdge );
 
         /**
          * Write edges target<- source
          */
 
-        batch.withRow( CF_TARGET_EDGES, targetKey ).deleteColumn( targetEdge );
+        batch.withRow( GRAPH_TARGET_NODE_EDGES, targetKey ).deleteColumn( targetEdge );
 
-        batch.withRow( CF_TARGET_TYPE_EDGES, targetKey ).deleteColumn( targetEdge );
+        batch.withRow( GRAPH_TARGET_NODE_SOURCE_TYPE, targetKey ).deleteColumn( targetEdge );
 
         return batch;
     }
 
 
     @Override
-    public Iterator<Edge> getTargetEdges( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
-        return getEdges( scope, edgeType, CF_SOURCE_EDGES, EDGE_TYPE_ID_SERIALIZER, SOURCE_DIRECTED_EDGE_CREATOR );
+    public Iterator<Edge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
+        return getEdges( scope, edgeType, GRAPH_SOURCE_NODE_EDGES, EDGE_TYPE_SERIALIZER, TARGET_DIRECTED_EDGE_CREATOR, new SourceEdgeColumnParser( edgeType ) );
     }
 
 
     @Override
-    public Iterator<Edge> getTargetIdEdges( final OrganizationScope scope, final SearchByIdType edgeType ) {
-        return getEdges( scope, edgeType, CF_SOURCE_TYPE_EDGES, EDGE_TYPE_SERIALIZER, SOURCE_DIRECTED_EDGE_CREATOR );
-    }
-
-
-
-    @Override
-    public Iterator<Edge> getSourceEdges( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
-        return getEdges( scope, edgeType, CF_TARGET_EDGES, EDGE_TYPE_SERIALIZER, TARGET_DIRECTED_EDGE_CREATOR );
+    public Iterator<Edge> getEdgesFromSourceByTargetType( final OrganizationScope scope,
+                                                          final SearchByIdType edgeType ) {
+        return getEdges( scope, edgeType, GRAPH_SOURCE_NODE_TARGET_TYPE, EDGE_TYPE_SERIALIZER,
+                SOURCE_DIRECTED_EDGE_CREATOR,  new SourceEdgeColumnParser( edgeType ) );
     }
 
 
     @Override
-    public Iterator<Edge> getSourceIdEdges( final OrganizationScope scope, final SearchByIdType edgeType ) {
-        return getEdges( scope, edgeType, CF_TARGET_TYPE_EDGES, EDGE_TYPE_ID_SERIALIZER, TARGET_DIRECTED_EDGE_CREATOR );
+    public Iterator<Edge> getEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
+        return getEdges( scope, edgeType, GRAPH_TARGET_NODE_EDGES, EDGE_TYPE_ID_SERIALIZER,
+                SOURCE_DIRECTED_EDGE_CREATOR,  new TargetEdgeColumnParser( edgeType ) );
+    }
+
+
+    @Override
+    public Iterator<Edge> getEdgesToTargetBySourceType( final OrganizationScope scope, final SearchByIdType edgeType ) {
+        return getEdges( scope, edgeType, GRAPH_TARGET_NODE_SOURCE_TYPE, EDGE_TYPE_ID_SERIALIZER,
+                TARGET_DIRECTED_EDGE_CREATOR,  new TargetEdgeColumnParser( edgeType ) );
     }
 
 
     /**
      * Get the edges with the specified criteria
+     *
      * @param scope The organization scope
      * @param edgeType The search type
      * @param cf The column familiy to search
      * @param edgeSerializer The serializer to use when reading columns
      * @param directedEdgeCreator The creator to use when creating the edges for searching
+     * @param edgeColumnParser The parser to user when iterating the columns
+     *
      * @return An iterator of all Edge instance that match the criteria
      */
     private Iterator<Edge> getEdges( final OrganizationScope scope, final SearchByEdgeType edgeType,
                                      MultiTennantColumnFamily<OrganizationScope, Id, DirectedEdge> cf,
                                      final EdgeSerializer edgeSerializer,
-                                     final DirectedEdgeCreator directedEdgeCreator ) {
+                                     final DirectedEdgeCreator directedEdgeCreator,
+                                     final EdgeColumnParser edgeColumnParser) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdgeType( edgeType );
 
@@ -276,33 +297,33 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         /**
          * Edge from source->target
          */
-        final ScopedRowKey<OrganizationScope, Id> sourceKey = new ScopedRowKey<OrganizationScope, Id>( scope, nodeId );
+        final ScopedRowKey<OrganizationScope, Id> rowkey = new ScopedRowKey<OrganizationScope, Id>( scope, nodeId );
 
 
-        DirectedEdge sourceEdge;
+        DirectedEdge lastEdge;
 
         /**
          * If the edge is present, we need to being seeking from this
          */
         if ( edgeType.last().isPresent() ) {
-            sourceEdge = directedEdgeCreator.getDirectedEdge( edgeType.last().get() );
+            lastEdge = directedEdgeCreator.getDirectedEdge( edgeType.last().get() );
         }
         else {
-            sourceEdge = new DirectedEdge( edgeTypeName, nodeId, version );
+            lastEdge = new DirectedEdge( edgeTypeName, nodeId, version );
         }
 
 
         //resume from the last if specified.  Also set the range
         final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( sourceEdge, edgeSerializer ).build();
+                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( lastEdge, edgeSerializer ).build();
 
         RowQuery<ScopedRowKey<OrganizationScope, Id>, DirectedEdge> query =
-                keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true ).withColumnRange( searchRange );
+                keyspace.prepareQuery( cf ).getKey( rowkey ).autoPaginate( true ).withColumnRange( searchRange );
 
 
         try {
             return new ColumnNameIterator<DirectedEdge, Edge>( query.execute().getResult().iterator(),
-                    new SourceEdgeColumnParser( nodeId, edgeTypeName ), edgeType.last().isPresent() );
+                   edgeColumnParser, edgeType.last().isPresent() );
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to cassandra", e );
@@ -310,12 +331,10 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
-
-
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        return Arrays.asList( graphCf( CF_SOURCE_EDGES ), graphCf( CF_TARGET_EDGES ),
-                graphCf( CF_SOURCE_TYPE_EDGES ), graphCf( CF_TARGET_TYPE_EDGES ) );
+        return Arrays.asList( graphCf( GRAPH_SOURCE_NODE_EDGES ), graphCf( GRAPH_TARGET_NODE_EDGES ),
+                graphCf( GRAPH_SOURCE_NODE_TARGET_TYPE ), graphCf( GRAPH_TARGET_NODE_SOURCE_TYPE ) );
     }
 
 
@@ -323,7 +342,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      * Helper to generate an edge definition by the type
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf, DynamicCompositeType.class.getSimpleName(),
+        return new MultiTennantColumnFamilyDefinition( cf, ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
                 BytesType.class.getSimpleName(), BytesType.class.getSimpleName() );
     }
 
@@ -337,6 +356,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         private static final IdColDynamicCompositeSerializer ID_COL_SERIALIZER = IdColDynamicCompositeSerializer.get();
 
         private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
+        private static final LongSerializer LONG_SERIALIZER = LongSerializer.get();
 
 
         @Override
@@ -346,14 +366,13 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             DynamicComposite composite = new DynamicComposite();
 
-            for ( long hash : targetEdgeTypes ) {
-                composite.add( hash );
-            }
+            composite.addComponent( targetEdgeTypes[0], LONG_SERIALIZER );
+            composite.addComponent( targetEdgeTypes[1], LONG_SERIALIZER );
 
-            ID_COL_SERIALIZER.toComposite( composite, edge.id );
 
             composite.addComponent( edge.version, UUID_SERIALIZER );
 
+            ID_COL_SERIALIZER.toComposite( composite, edge.id );
 
             return composite.serialize();
         }
@@ -366,9 +385,10 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             Preconditions.checkArgument( composite.size() == 5, "Composite should have 5 elements" );
 
+            final UUID version = composite.get( 2, UUID_SERIALIZER );
+
             final Id id = ID_COL_SERIALIZER.fromComposite( composite, 3 );
 
-            final UUID version = composite.get( 5, UUID_SERIALIZER );
 
             return new DirectedEdge( null, id, version );
         }
@@ -435,9 +455,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         /**
          * Default constructor. Needs to take the id and edge used in the search
          */
-        protected EdgeColumnParser( final Id id, final String edgeType ) {
-            this.id = id;
-            this.edgeType = edgeType;
+        protected EdgeColumnParser( SearchByEdgeType searchByEdgeType ) {
+            this.id = searchByEdgeType.getNode();
+            this.edgeType = searchByEdgeType.getType();
         }
 
 
@@ -460,11 +480,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      */
     private static class SourceEdgeColumnParser extends EdgeColumnParser {
 
+
         /**
          * Default constructor. Needs to take the id and edge used in the search
          */
-        protected SourceEdgeColumnParser( final Id id, final String edgeType ) {
-            super( id, edgeType );
+        protected SourceEdgeColumnParser( final SearchByEdgeType searchByEdgeType ) {
+            super( searchByEdgeType );
         }
 
 
@@ -480,11 +501,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      */
     private static class TargetEdgeColumnParser extends EdgeColumnParser {
 
+
         /**
          * Default constructor. Needs to take the id and edge used in the search
          */
-        protected TargetEdgeColumnParser( final Id id, final String edgeType ) {
-            super( id, edgeType );
+        protected TargetEdgeColumnParser( final SearchByEdgeType searchByEdgeType ) {
+            super( searchByEdgeType );
         }
 
 

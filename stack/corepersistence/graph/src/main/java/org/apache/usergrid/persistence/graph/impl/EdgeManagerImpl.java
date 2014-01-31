@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.graph.impl;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.hystrix.ReadCommand;
 import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -39,13 +38,9 @@ import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWrite
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.netflix.hystrix.Hystrix;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.util.functions.Func1;
 
 
 /**

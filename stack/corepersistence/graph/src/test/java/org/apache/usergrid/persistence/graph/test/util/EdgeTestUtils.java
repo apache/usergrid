@@ -32,10 +32,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 
 /**
@@ -75,11 +73,7 @@ public class EdgeTestUtils {
      * @return
      */
     public static Id createId(String type){
-        Id sourceId = mock( Id.class );
-        when( sourceId.getType() ).thenReturn( type );
-        when( sourceId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-
-        return sourceId;
+       return new SimpleId( UUIDGenerator.newTimeUUID(), type );
     }
 
 

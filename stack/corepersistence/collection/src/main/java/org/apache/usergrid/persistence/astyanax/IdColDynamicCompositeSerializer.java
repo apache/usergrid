@@ -69,7 +69,7 @@ public class IdColDynamicCompositeSerializer implements DynamicCompositeFieldSer
     public Id fromComposite( final DynamicComposite composite, int startIndex ) {
 
 
-        Preconditions.checkArgument( composite.size() > startIndex+2, "Composite must contain a next element for uuid" );
+        Preconditions.checkArgument( composite.size() >= startIndex+2, "Composite must contain a next element for uuid and type" );
 
         final UUID uuid = composite.get(startIndex, UUID_SERIALIZER );
 

@@ -3,8 +3,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
-import com.netflix.hystrix.HystrixCommand;
-
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;

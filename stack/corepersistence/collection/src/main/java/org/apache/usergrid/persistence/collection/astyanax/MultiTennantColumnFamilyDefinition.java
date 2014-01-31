@@ -40,21 +40,21 @@ public class MultiTennantColumnFamilyDefinition {
 
 
     private final ColumnFamily columnFamily;
-    private final String comparator;
+    private final String columnComparatorType;
     private final String keyValidationType;
     private final String valueValidationType;
 
 
-    public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String comparator,
+    public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String columnComparatorType,
                                                final String keyValidationType, final String valueValidationType ) {
 
         Preconditions.checkNotNull( columnFamily, "columnFamily is required" );
-        Preconditions.checkNotNull( comparator, "comparator is required" );
+        Preconditions.checkNotNull( columnComparatorType, "columnComparatorType is required" );
         Preconditions.checkNotNull( keyValidationType, "keyValidationType is required" );
         Preconditions.checkNotNull( valueValidationType, "valueValidationType is required" );
 
         this.columnFamily = columnFamily;
-        this.comparator = comparator;
+        this.columnComparatorType = columnComparatorType;
         this.keyValidationType = keyValidationType;
         this.valueValidationType = valueValidationType;
     }
@@ -63,11 +63,11 @@ public class MultiTennantColumnFamilyDefinition {
     public Map<String, Object> getOptions() {
 
         Map<String, Object> options = new HashMap<String, Object>();
-        options.put( COMPARATOR_TYPE, comparator );
+        options.put( COMPARATOR_TYPE, columnComparatorType );
         options.put( KEY_VALIDATION, keyValidationType );
         options.put( VALUE_VALIDATION, valueValidationType );
 
-        //always use 10% load repair chance!
+        //always use 10% read repair chance!
         options.put( READ_REPAIR_CHANCE, 0.1d );
 
         return options;
