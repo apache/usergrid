@@ -16,12 +16,7 @@
 package org.usergrid.management;
 
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-
+import com.google.common.collect.BiMap;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
@@ -33,7 +28,7 @@ import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.services.ServiceResults;
 
-import com.google.common.collect.BiMap;
+import java.util.*;
 
 
 public interface ManagementService {
@@ -316,4 +311,7 @@ public interface ManagementService {
 
     /** For testing purposes only */
     public Properties getProperties();
+
+
+    public JobInfo processExportData( ExportInfo exportData );
 }

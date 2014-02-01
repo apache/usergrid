@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ExportInfo;
+import org.usergrid.management.JobInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -130,10 +132,9 @@ public class ManagementResource extends AbstractContextResource {
 
 
     @Path( "users" )
-    public UsersResource getUsers() {
-        return getSubResource( UsersResource.class );
+        public UsersResource getUsers() {
+            return getSubResource( UsersResource.class );
     }
-
 
     @GET
     @Path( "me" )
@@ -436,6 +437,28 @@ public class ManagementResource extends AbstractContextResource {
         catch ( Exception e ) {
             return handleViewable( "error", e );
         }
+    }
+    //TODO: url encoded form of export
+
+    @Path( "export" )
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response exportPostJson (@Context UriInfo ui, Map<String, Object> json,
+                                    @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback){
+
+        ExportInfo exportData = new ExportInfo(json);
+        JobInfo jobStatus = management.processExportData(exportData);
+        AccessInfo wrapperJob = new AccessInfo();
+        wrapperJob.setState(jobStatus.getStatusType().toString());
+        /*
+        * output contains two elements
+        * 1.) storage provider : (In this first pass it will always be s3)
+        * 2.) info: information nee3ded for the storage provider
+        *   info will be extrapolated like the above.
+        * */
+
+        return  Response.status( SC_OK ).type( jsonMediaType( callback ) )
+                        .entity( wrapWithCallback( wrapperJob, callback ) ).build();
     }
 
 
