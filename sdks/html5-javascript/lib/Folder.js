@@ -12,22 +12,17 @@ Usergrid.Folder = function(options, callback) {
 	self._client = options.client;
 	self._data = options.data || {};
 	self._data.type = "folders";
-	["name", "owner", "path"].forEach(function(required) {
-		if (!(required in self._data)) {
-			messages.push(required + " is a required data element.");
-			throw required + " is a required data element.";
-		}
-	});
-	if (messages.length) {
-		return doCallback(callback, [true, messages.join("\n")], self)
+	var missingData = ["name", "owner", "path"].some(function(required) { return !(required in self._data)});
+	if(missingData){
+		return doCallback(callback, [true, new Usergrid.Error("Invalid asset data: 'name', 'owner', and 'path' are required properties.")], self);
 	}
-	var errors = ['service_resource_not_found', 'no_name_specified', 'null_pointer'];
 	self.save(function(err, data) {
 		if (err) {
-			doCallback(callback, [true, data], self);
+			doCallback(callback, [true, new Usergrid.Error(data)], self);
 		} else {
-			console.log(data.entities[0]);
-			self.set(data.entities[0]);
+			if (data.entities.length){
+				self.set(data.entities[0]);
+			}
 			doCallback(callback, [false, self], self);
 		}
 	});
@@ -39,7 +34,7 @@ Usergrid.Folder.prototype = new Usergrid.Entity();
 
 
 /*
- *  fetch the folder.
+ *  fetch the folder and associated assets
  *
  *  @method fetch
  *  @public
@@ -116,6 +111,15 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
 		}], self)
 	}
 };
+
+/*
+ *  Remove an asset from the folder.
+ *
+ *  @method removeAsset
+ *  @public
+ *  @param {object} options {asset:(uuid || Usergrid.Asset || {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000" }) }
+ *  @returns {callback} callback(err, folder)
+ */
 Usergrid.Folder.prototype.removeAsset = function(options, callback) {
 	var self = this;
 	if (('asset' in options)) {
@@ -150,8 +154,14 @@ Usergrid.Folder.prototype.removeAsset = function(options, callback) {
 		}], self)
 	}
 };
+
+/*
+ *  List the assets in the folder.
+ *
+ *  @method getAssets
+ *  @public
+ *  @returns {callback} callback(err, assets)
+ */
 Usergrid.Folder.prototype.getAssets = function(callback) {
 	return this.getConnections("assets", callback);
 };
-
-//Usergrid.Folder.prototype.getAssets = function(options, callback){};

@@ -2430,22 +2430,19 @@ Usergrid.Folder = function(options, callback) {
     self._client = options.client;
     self._data = options.data || {};
     self._data.type = "folders";
-    [ "name", "owner", "path" ].forEach(function(required) {
-        if (!(required in self._data)) {
-            messages.push(required + " is a required data element.");
-            throw required + " is a required data element.";
-        }
+    var missingData = [ "name", "owner", "path" ].some(function(required) {
+        return !(required in self._data);
     });
-    if (messages.length) {
-        return doCallback(callback, [ true, messages.join("\n") ], self);
+    if (missingData) {
+        return doCallback(callback, [ true, new Usergrid.Error("Invalid asset data: 'name', 'owner', and 'path' are required properties.") ], self);
     }
-    var errors = [ "service_resource_not_found", "no_name_specified", "null_pointer" ];
     self.save(function(err, data) {
         if (err) {
-            doCallback(callback, [ true, data ], self);
+            doCallback(callback, [ true, new Usergrid.Error(data) ], self);
         } else {
-            console.log(data.entities[0]);
-            self.set(data.entities[0]);
+            if (data.entities.length) {
+                self.set(data.entities[0]);
+            }
             doCallback(callback, [ false, self ], self);
         }
     });
@@ -2457,7 +2454,7 @@ Usergrid.Folder = function(options, callback) {
 Usergrid.Folder.prototype = new Usergrid.Entity();
 
 /*
- *  fetch the folder.
+ *  fetch the folder and associated assets
  *
  *  @method fetch
  *  @public
@@ -2537,6 +2534,14 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
     }
 };
 
+/*
+ *  Remove an asset from the folder.
+ *
+ *  @method removeAsset
+ *  @public
+ *  @param {object} options {asset:(uuid || Usergrid.Asset || {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000" }) }
+ *  @returns {callback} callback(err, folder)
+ */
 Usergrid.Folder.prototype.removeAsset = function(options, callback) {
     var self = this;
     if ("asset" in options) {
@@ -2573,17 +2578,30 @@ Usergrid.Folder.prototype.removeAsset = function(options, callback) {
     }
 };
 
+/*
+ *  List the assets in the folder.
+ *
+ *  @method getAssets
+ *  @public
+ *  @returns {callback} callback(err, assets)
+ */
 Usergrid.Folder.prototype.getAssets = function(callback) {
     return this.getConnections("assets", callback);
 };
 
+/*
+ *  XMLHttpRequest.prototype.sendAsBinary polyfill
+ *  from: https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest#sendAsBinary()
+ *
+ *  @method sendAsBinary
+ *  @param {string} sData
+ */
 if (!XMLHttpRequest.prototype.sendAsBinary) {
     XMLHttpRequest.prototype.sendAsBinary = function(sData) {
         var nBytes = sData.length, ui8Data = new Uint8Array(nBytes);
         for (var nIdx = 0; nIdx < nBytes; nIdx++) {
             ui8Data[nIdx] = sData.charCodeAt(nIdx) & 255;
         }
-        /* send as ArrayBufferView...: */
         this.send(ui8Data);
     };
 }
@@ -2596,21 +2614,26 @@ if (!XMLHttpRequest.prototype.sendAsBinary) {
  *  @returns {callback} callback(err, asset)
  */
 Usergrid.Asset = function(options, callback) {
-    var self = this, okToSave = true, messages = [];
+    var self = this, messages = [];
     self._client = options.client;
     self._data = options.data || {};
     self._data.type = "assets";
-    [ "name", "owner", "path" ].forEach(function(required) {
-        if (!(required in self._data)) {
-            messages.push(required + " is a required data element.");
-            okToSave = false;
+    var missingData = [ "name", "owner", "path" ].some(function(required) {
+        return !(required in self._data);
+    });
+    if (missingData) {
+        return doCallback(callback, [ true, new Usergrid.Error("Invalid asset data: 'name', 'owner', and 'path' are required properties.") ], self);
+    }
+    self.save(function(err, data) {
+        if (err) {
+            doCallback(callback, [ true, new Usergrid.Error(data) ], self);
+        } else {
+            if (data.entities.length) {
+                self.set(data.entities[0]);
+            }
+            doCallback(callback, [ false, self ], self);
         }
     });
-    if (okToSave) {
-        self.save(callback);
-    } else {
-        doCallback(callback, [ !okToSave, new Usergrid.Error(messages.join("\n")) ], self);
-    }
 };
 
 /*
@@ -2641,22 +2664,21 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
                 method: "POST",
                 endpoint: endpoint
             };
-            this._client.request(options, function(err, data) {
-                if (typeof callback === "function") {
-                    doCallback(callback, [ !okToSave, new Usergrid.Error(data) ], self);
-                    callback(err, data);
-                }
-            });
+            this._client.request(options, callback);
         });
     } else {
-        if (callback && typeof callback === "function") {
-            callback.call(self, true, {
-                error_description: "folder not specified"
-            });
-        }
+        doCallback(callback, [ true, new Usergrid.Error("folder not specified") ], self);
     }
 };
 
+/*
+ *  Upload Asset data
+ *
+ *  @method upload
+ *  @public
+ *  @param {object} data Can be a javascript Blob or File object
+ *  @returns {callback} callback(err, asset)
+ */
 Usergrid.Asset.prototype.upload = function(data, callback) {
     if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
         return doCallback(callback, [ true, new Usergrid.Error("The File APIs are not fully supported by your browser.") ], self);
@@ -2672,7 +2694,7 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
     };
     xhr.onload = function(ev) {
         if (xhr.status >= 300) {
-            doCallback(callback, [ null, JSON.parse(xhr.responseText) ], self);
+            doCallback(callback, [ true, new Usergrid.Error(JSON.parse(xhr.responseText)) ], self);
         } else {
             doCallback(callback, [ null, self ], self);
         }
@@ -2688,6 +2710,13 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
     fr.readAsBinaryString(data);
 };
 
+/*
+ *  Download Asset data
+ *
+ *  @method download
+ *  @public
+ *  @returns {callback} callback(err, blob) blob is a javascript Blob object.
+ */
 Usergrid.Asset.prototype.download = function(callback) {
     var self = this;
     var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
