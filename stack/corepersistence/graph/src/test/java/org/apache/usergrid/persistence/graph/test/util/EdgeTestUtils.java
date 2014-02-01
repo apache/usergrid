@@ -23,10 +23,12 @@ package org.apache.usergrid.persistence.graph.test.util;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
@@ -51,19 +53,31 @@ public class EdgeTestUtils {
      * @return an Edge for testing
      */
     public static Edge createEdge( final String sourceType, final String edgeType, final String targetType ) {
-        return createEdge( createId( sourceType ), edgeType, createId( targetType ) );
+        return createEdge( createId( sourceType ), edgeType, createId( targetType ), UUIDGenerator.newTimeUUID() );
     }
 
 
     /**
-     * Create an edge with the specified params
+     * Create an edge for testing
      * @param sourceId
      * @param edgeType
      * @param targetId
      * @return
      */
     public static Edge createEdge(final Id sourceId, final String edgeType, final Id targetId){
-       return new SimpleEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
+        return  createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
+    }
+
+    /**
+     * Create an edge with the specified params
+     * @param sourceId
+     * @param edgeType
+     * @param targetId
+     * @param version
+     * @return
+     */
+    public static Edge createEdge(final Id sourceId, final String edgeType, final Id targetId, final UUID version){
+       return new SimpleEdge( sourceId, edgeType, targetId, version );
     }
 
 
@@ -127,6 +141,21 @@ public class EdgeTestUtils {
      */
     public static SimpleSearchIdType createSearchIdType( final Id sourceId, final String type, final String last ) {
         return new SimpleSearchIdType( sourceId, type, last );
+    }
+
+
+    /**
+     * Get the edge by type
+     * @param sourceId
+     * @param type
+     * @param targetId
+     * @param maxVersion
+     * @param last
+     * @return
+     */
+    public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId, final UUID maxVersion,
+                                                 final Edge last ) {
+        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, last );
     }
 
 }

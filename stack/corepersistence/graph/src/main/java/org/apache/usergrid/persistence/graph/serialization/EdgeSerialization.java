@@ -24,6 +24,7 @@ import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 
@@ -53,6 +54,13 @@ public interface EdgeSerialization {
      */
     MutationBatch deleteEdge( OrganizationScope scope, Edge edge );
 
+
+    /**
+     * Search for specific versions of the edge from source->target. Will return all versions
+     *
+     */
+    Iterator<Edge> getEdgeFromSource( OrganizationScope scope, SearchByEdge search );
+
     /**
      * Get an iterator of all edges by edge type originating from source node
      *
@@ -72,15 +80,21 @@ public interface EdgeSerialization {
 
     /**
      * Get an iterator of all edges by edge type pointing to the target node
+     *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
     Iterator<Edge> getEdgesToTarget( OrganizationScope scope, SearchByEdgeType edgeType );
 
+    /**
+     * Search for specific versions of the edge from source->target. Will return all versions
+     */
+    Iterator<Edge> getEdgeToTarget( OrganizationScope scope, SearchByEdge search );
+
 
     /**
-     * Get an iterator of all edges by edge type pointing to the target node.  Also uses the source id
-     * type to limit the results
+     * Get an iterator of all edges by edge type pointing to the target node.  Also uses the source id type to limit the
+     * results
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge

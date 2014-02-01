@@ -79,7 +79,6 @@ public class EdgeUtils {
 
         ValidationUtils.verifyIdentity( search.getNode() );
         ValidationUtils.verifyString( search.getType(), "type" );
-        ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "version" );
 
         //only validate if the value is present
         if(search.last().isPresent()){

@@ -39,27 +39,39 @@ public class EdgeHasher {
 
 
     /**
-     * Create a UUID based on the edge type and the type of the id that will be inserted into the column
+     * Create a hash based on the edge type and the type of the id that will be inserted into the column
      *
      *
      * @param edgeType The name of the edge type
      * @param idForColumn The id of the value that will be in the column
      *
-     * @return A UUID that represents a consistent one way hash of the fields
+     * @return A hash that represents a consistent one way hash of the fields
      */
     public static long[] createEdgeHash( final String edgeType, final Id idForColumn ) {
 
+        return createEdgeHash( edgeType, idForColumn.getType() );
+    }
+
+
+    /**
+     * Create the edge hash from the edge type and id type
+     * @param edgeType
+     * @param idType
+     * @return
+     */
+    public static long[] createEdgeHash(final String edgeType, final String idType){
+
         final String hashString =
-                new StringBuilder( edgeType ).append( idForColumn.getType() ).toString();
+                new StringBuilder( edgeType ).append(idType ).toString();
 
         return createEdgeHash( hashString );
     }
 
 
     /**
-     * Create a UUID based on the edge type and the type of the id that will be inserted into the column
+     * Create a ash based on the edge type and the type of the id that will be inserted into the column
      *
-     * @return A UUID that represents a consistent one way hash of the fields
+     * @return A hash that represents a consistent one way hash of the fields
      */
     public static long[] createEdgeHash( final String edgeType ) {
 
