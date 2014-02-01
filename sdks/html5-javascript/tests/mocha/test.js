@@ -4,7 +4,7 @@
  */
 function getClient() {
 	return new Usergrid.Client({
-		orgName: 'rbridges',
+		orgName: 'yourorgname',
 		appName: 'sandbox',
 		logging: false, //optional - turn on logging, off by default
 		buildCurl: true //optional - turn on curl commands, off by default
