@@ -41,8 +41,8 @@ Usergrid.USERGRID_SDK_VERSION = '0.10.07';
  * @param {string} uuid The string to test
  * @returns {Boolean} true if string is uuid
  */
-function isUUID (uuid) {
-  var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+function isUUID(uuid) {
   if (!uuid) {
     return false;
   }
@@ -57,7 +57,7 @@ function isUUID (uuid) {
  *  @params {object} params - an object of name value pairs that will be urlencoded
  *  @return {string} Returns the encoded string
  */
-function encodeParams (params) {
+function encodeParams(params) {
   var tail = [];
   var item = [];
   var i;
@@ -84,4 +84,43 @@ function encodeParams (params) {
     }
   }
   return tail.join("&");
+}
+
+/*
+ *  method to determine whether or not the passed variable is a function
+ *
+ *  @method isFunction
+ *  @public
+ *  @params {any} f - any variable
+ *  @return {boolean} Returns true or false
+ */
+function isFunction(f) {
+  return (f && f !== null && typeof(f) === 'function');
+}
+
+/*
+ *  a safe wrapper for executing a callback
+ *
+ *  @method doCallback
+ *  @public
+ *  @params {Function} callback - the passed-in callback method
+ *  @params {Array} params - an array of arguments to pass to the callback
+ *  @params {Object} context - an optional calling context for the callback
+ *  @return Returns whatever would be returned by the callback. or false.
+ */
+function doCallback(callback, params, context) {
+  var returnValue;
+  if (isFunction(callback)) {
+    if (!params) params = [];
+    if (!context) context = this;
+    params.push(context);
+    try {
+      returnValue = callback.apply(context, params);
+    } catch (ex) {
+      if (console && console.error) {
+        console.error("Callback error:", ex);
+      }
+    }
+  }
+  return returnValue;
 }

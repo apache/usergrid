@@ -13,6 +13,31 @@ Usergrid.Entity = function(options) {
 };
 
 /*
+ *  method to determine whether or not the passed variable is a Usergrid Entity
+ *
+ *  @method isEntity
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isEntity = function(obj){
+  return (obj && obj instanceof Usergrid.Entity);
+}
+
+/*
+ *  method to determine whether or not the passed variable is a Usergrid Entity
+ *  That has been saved.
+ *
+ *  @method isPersistedEntity
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isPersistedEntity = function(obj){
+  return (isEntity(obj) && isUUID(obj.get('uuid')));
+}
+
+/*
  *  returns a serialized version of the entity object
  *
  *  Note: use the client.restoreEntity() function to restore
@@ -86,14 +111,13 @@ Usergrid.Entity.prototype.save = function (callback) {
   var self = this;
   var data = {};
   var entityData = this.get();
-    var password = this.get('password');
-    var oldpassword = this.get('oldpassword');
-    var newpassword = this.get('newpassword');
+  var password = this.get('password');
+  var oldpassword = this.get('oldpassword');
+  var newpassword = this.get('newpassword');
+  var SYSTEM_PROPERTIES=['metadata','created','modified','oldpassword','newpassword','type','activated','uuid'];
   //remove system specific properties
   for (var item in entityData) {
-    if (item === 'metadata' || item === 'created' || item === 'modified' ||
-          item === 'oldpassword' || item === 'newpassword' || //old and new pw not added to data
-      item === 'type' || item === 'activated' || item === 'uuid') {
+    if (SYSTEM_PROPERTIES.indexOf(item) !== -1) {
       continue;
     }
     data[item] = entityData[item];

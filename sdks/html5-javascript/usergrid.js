@@ -1,4 +1,4 @@
-/*! usergrid@0.0.0 2014-01-27 */
+/*! usergrid@0.0.0 2014-02-01 */
 /*
  *  This module is a collection of classes designed to make working with
  *  the Appigee App Services API as easy as possible.
@@ -42,8 +42,9 @@ Usergrid.USERGRID_SDK_VERSION = "0.10.07";
  * @param {string} uuid The string to test
  * @returns {Boolean} true if string is uuid
  */
+var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 function isUUID(uuid) {
-    var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     if (!uuid) {
         return false;
     }
@@ -85,6 +86,45 @@ function encodeParams(params) {
         }
     }
     return tail.join("&");
+}
+
+/*
+ *  method to determine whether or not the passed variable is a function
+ *
+ *  @method isFunction
+ *  @public
+ *  @params {any} f - any variable
+ *  @return {boolean} Returns true or false
+ */
+function isFunction(f) {
+    return f && f !== null && typeof f === "function";
+}
+
+/*
+ *  a safe wrapper for executing a callback
+ *
+ *  @method doCallback
+ *  @public
+ *  @params {Function} callback - the passed-in callback method
+ *  @params {Array} params - an array of arguments to pass to the callback
+ *  @params {Object} context - an optional calling context for the callback
+ *  @return Returns whatever would be returned by the callback. or false.
+ */
+function doCallback(callback, params, context) {
+    var returnValue;
+    if (isFunction(callback)) {
+        if (!params) params = [];
+        if (!context) context = this;
+        params.push(context);
+        try {
+            returnValue = callback.apply(context, params);
+        } catch (ex) {
+            if (console && console.error) {
+                console.error("Callback error:", ex);
+            }
+        }
+    }
+    return returnValue;
 }
 
 Usergrid.Client = function(options) {
@@ -314,20 +354,10 @@ Usergrid.Client.prototype.createGroup = function(options, callback) {
 Usergrid.Client.prototype.createEntity = function(options, callback) {
     // todo: replace the check for new / save on not found code with simple save
     // when users PUT on no user fix is in place.
-    /*
-   var options = {
-   client:this,
-   data:options
-   }
-   var entity = new Usergrid.Entity(options);
-   entity.save(function(err, data) {
-   if (typeof(callback) === 'function') {
-   callback(err, entity);
-   }
-   });
-   */
     var getOnExist = options.getOnExist || false;
     //if true, will return entity if one already exists
+    delete options.getOnExist;
+    //so it doesn't become part of our data model
     var options = {
         client: this,
         data: options
@@ -930,6 +960,31 @@ Usergrid.Entity = function(options) {
 };
 
 /*
+ *  method to determine whether or not the passed variable is a Usergrid Entity
+ *
+ *  @method isEntity
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isEntity = function(obj) {
+    return obj && obj instanceof Usergrid.Entity;
+};
+
+/*
+ *  method to determine whether or not the passed variable is a Usergrid Entity
+ *  That has been saved.
+ *
+ *  @method isPersistedEntity
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isPersistedEntity = function(obj) {
+    return isEntity(obj) && isUUID(obj.get("uuid"));
+};
+
+/*
  *  returns a serialized version of the entity object
  *
  *  Note: use the client.restoreEntity() function to restore
@@ -1005,10 +1060,10 @@ Usergrid.Entity.prototype.save = function(callback) {
     var password = this.get("password");
     var oldpassword = this.get("oldpassword");
     var newpassword = this.get("newpassword");
+    var SYSTEM_PROPERTIES = [ "metadata", "created", "modified", "oldpassword", "newpassword", "type", "activated", "uuid" ];
     //remove system specific properties
     for (var item in entityData) {
-        if (item === "metadata" || item === "created" || item === "modified" || item === "oldpassword" || item === "newpassword" || //old and new pw not added to data
-        item === "type" || item === "activated" || item === "uuid") {
+        if (SYSTEM_PROPERTIES.indexOf(item) !== -1) {
             continue;
         }
         data[item] = entityData[item];
@@ -1542,6 +1597,18 @@ Usergrid.Collection = function(options, callback) {
         //populate the collection
         this.fetch(callback);
     }
+};
+
+/*
+ *  method to determine whether or not the passed variable is a Usergrid Collection
+ *
+ *  @method isCollection
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isCollection = function(obj) {
+    return obj && obj instanceof Usergrid.Collection;
 };
 
 /*
@@ -2349,3 +2416,309 @@ Usergrid.Counter.prototype.getData = function(options, callback) {
         }
     });
 };
+
+/*
+ *  A class to model a Usergrid folder.
+ *
+ *  @constructor
+ *  @param {object} options {name:"MyPhotos", path:"/user/uploads", owner:"00000000-0000-0000-0000-000000000000" }
+ *  @returns {callback} callback(err, folder)
+ */
+Usergrid.Folder = function(options, callback) {
+    var self = this, messages = [];
+    console.log("FOLDER OPTIONS", options);
+    self._client = options.client;
+    self._data = options.data || {};
+    self._data.type = "folders";
+    [ "name", "owner", "path" ].forEach(function(required) {
+        if (!(required in self._data)) {
+            messages.push(required + " is a required data element.");
+            throw required + " is a required data element.";
+        }
+    });
+    if (messages.length) {
+        return doCallback(callback, [ true, messages.join("\n") ], self);
+    }
+    var errors = [ "service_resource_not_found", "no_name_specified", "null_pointer" ];
+    self.save(function(err, data) {
+        if (err) {
+            doCallback(callback, [ true, data ], self);
+        } else {
+            console.log(data.entities[0]);
+            self.set(data.entities[0]);
+            doCallback(callback, [ false, self ], self);
+        }
+    });
+};
+
+/*
+ *  Inherit from Usergrid.Entity.
+ */
+Usergrid.Folder.prototype = new Usergrid.Entity();
+
+/*
+ *  fetch the folder.
+ *
+ *  @method fetch
+ *  @public
+ *  @param {function} callback(err, self)
+ *  @returns {callback} callback(err, self)
+ */
+Usergrid.Folder.prototype.fetch = function(callback) {
+    var self = this;
+    Usergrid.Entity.prototype.fetch.call(self, function(err, data) {
+        console.log("self", self.get());
+        console.log("data", data);
+        if (!err) {
+            self.getAssets(function(err, data) {
+                if (err) {
+                    doCallback(callback, [ true, new Usergrid.Error(data) ], self);
+                } else {
+                    doCallback(callback, [ null, self ], self);
+                }
+            });
+        } else {
+            doCallback(callback, [ true, new Usergrid.Error(data) ], self);
+        }
+    });
+};
+
+/*
+ *  Add an asset to the folder.
+ *
+ *  @method addAsset
+ *  @public
+ *  @param {object} options {asset:(uuid || Usergrid.Asset || {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000" }) }
+ *  @returns {callback} callback(err, folder)
+ */
+Usergrid.Folder.prototype.addAsset = function(options, callback) {
+    var self = this;
+    if ("asset" in options) {
+        var asset = null;
+        switch (typeof options.asset) {
+          case "object":
+            asset = options.asset;
+            if (!(asset instanceof Usergrid.Entity)) {
+                asset = new Usergrid.Asset(asset);
+            }
+            break;
+
+          case "string":
+            if (isUUID(options.asset)) {
+                asset = new Usergrid.Asset({
+                    client: self._client,
+                    data: {
+                        uuid: options.asset,
+                        type: "assets"
+                    }
+                });
+            }
+            break;
+        }
+        if (asset && asset instanceof Usergrid.Entity) {
+            asset.fetch(function(err, data) {
+                if (err) {
+                    doCallback(callback, [ err, new Usergrid.Error(data) ], self);
+                } else {
+                    var endpoint = [ "folders", self.get("uuid"), "assets", asset.get("uuid") ].join("/");
+                    var options = {
+                        method: "POST",
+                        endpoint: endpoint
+                    };
+                    self._client.request(options, callback);
+                }
+            });
+        }
+    } else {
+        //nothing to add
+        doCallback(callback, [ true, {
+            error_description: "No asset specified"
+        } ], self);
+    }
+};
+
+Usergrid.Folder.prototype.removeAsset = function(options, callback) {
+    var self = this;
+    if ("asset" in options) {
+        var asset = null;
+        switch (typeof options.asset) {
+          case "object":
+            asset = options.asset;
+            break;
+
+          case "string":
+            if (isUUID(options.asset)) {
+                asset = new Usergrid.Asset({
+                    client: self._client,
+                    data: {
+                        uuid: options.asset,
+                        type: "assets"
+                    }
+                });
+            }
+            break;
+        }
+        if (asset && asset !== null) {
+            var endpoint = [ "folders", self.get("uuid"), "assets", asset.get("uuid") ].join("/");
+            self._client.request({
+                method: "DELETE",
+                endpoint: endpoint
+            }, callback);
+        }
+    } else {
+        //nothing to add
+        doCallback(callback, [ true, {
+            error_description: "No asset specified"
+        } ], self);
+    }
+};
+
+Usergrid.Folder.prototype.getAssets = function(callback) {
+    return this.getConnections("assets", callback);
+};
+
+if (!XMLHttpRequest.prototype.sendAsBinary) {
+    XMLHttpRequest.prototype.sendAsBinary = function(sData) {
+        var nBytes = sData.length, ui8Data = new Uint8Array(nBytes);
+        for (var nIdx = 0; nIdx < nBytes; nIdx++) {
+            ui8Data[nIdx] = sData.charCodeAt(nIdx) & 255;
+        }
+        /* send as ArrayBufferView...: */
+        this.send(ui8Data);
+    };
+}
+
+/*
+ *  A class to model a Usergrid asset.
+ *
+ *  @constructor
+ *  @param {object} options {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000" }
+ *  @returns {callback} callback(err, asset)
+ */
+Usergrid.Asset = function(options, callback) {
+    var self = this, okToSave = true, messages = [];
+    self._client = options.client;
+    self._data = options.data || {};
+    self._data.type = "assets";
+    [ "name", "owner", "path" ].forEach(function(required) {
+        if (!(required in self._data)) {
+            messages.push(required + " is a required data element.");
+            okToSave = false;
+        }
+    });
+    if (okToSave) {
+        self.save(callback);
+    } else {
+        doCallback(callback, [ !okToSave, new Usergrid.Error(messages.join("\n")) ], self);
+    }
+};
+
+/*
+ *  Inherit from Usergrid.Entity.
+ */
+Usergrid.Asset.prototype = new Usergrid.Entity();
+
+/*
+ *  Add an asset to a folder.
+ *
+ *  @method connect
+ *  @public
+ *  @param {object} options {folder:"F01DE600-0000-0000-0000-000000000000"}
+ *  @returns {callback} callback(err, asset)
+ */
+Usergrid.Asset.prototype.addToFolder = function(options, callback) {
+    var self = this, error = null;
+    if ("folder" in options && isUUID(options.folder)) {
+        //we got a valid UUID
+        var folder = Usergrid.Folder({
+            uuid: options.folder
+        }, function(err, folder) {
+            if (err) {
+                return callback.call(self, err, folder);
+            }
+            var endpoint = [ "folders", folder.get("uuid"), "assets", self.get("uuid") ].join("/");
+            var options = {
+                method: "POST",
+                endpoint: endpoint
+            };
+            this._client.request(options, function(err, data) {
+                if (typeof callback === "function") {
+                    doCallback(callback, [ !okToSave, new Usergrid.Error(data) ], self);
+                    callback(err, data);
+                }
+            });
+        });
+    } else {
+        if (callback && typeof callback === "function") {
+            callback.call(self, true, {
+                error_description: "folder not specified"
+            });
+        }
+    }
+};
+
+Usergrid.Asset.prototype.upload = function(data, callback) {
+    if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
+        return doCallback(callback, [ true, new Usergrid.Error("The File APIs are not fully supported by your browser.") ], self);
+    }
+    var self = this;
+    var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
+    //self._client.buildAssetURL(self.get("uuid"));
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", endpoint, true);
+    xhr.onerror = function(err) {
+        //callback(true, err);
+        doCallback(callback, [ true, new Usergrid.Error("The File APIs are not fully supported by your browser.") ], self);
+    };
+    xhr.onload = function(ev) {
+        if (xhr.status >= 300) {
+            doCallback(callback, [ null, JSON.parse(xhr.responseText) ], self);
+        } else {
+            doCallback(callback, [ null, self ], self);
+        }
+    };
+    var fr = new FileReader();
+    fr.onload = function() {
+        var binary = fr.result;
+        xhr.overrideMimeType("application/octet-stream");
+        setTimeout(function() {
+            xhr.sendAsBinary(binary);
+        }, 1e3);
+    };
+    fr.readAsBinaryString(data);
+};
+
+Usergrid.Asset.prototype.download = function(callback) {
+    var self = this;
+    var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", endpoint, true);
+    xhr.responseType = "blob";
+    xhr.onload = function(ev) {
+        var blob = xhr.response;
+        //callback(null, blob);
+        doCallback(callback, [ false, blob ], self);
+    };
+    xhr.onerror = function(err) {
+        callback(true, err);
+        doCallback(callback, [ true, new Usergrid.Error(err) ], self);
+    };
+    xhr.send();
+};
+
+Usergrid.Error = function(options) {
+    this.name = "UsergridError";
+    this.timestamp = options.timestamp || Date.now();
+    if (options instanceof Error) {
+        this.exception = options.name || "";
+        this.message = options.message || "An error has occurred";
+    } else if ("object" === typeof options) {
+        this.exception = options.error || "unknown_error";
+        this.message = options.error_description || "An error has occurred";
+    } else if ("string" === typeof options) {
+        this.exception = "unknown_error";
+        this.message = options || "An error has occurred";
+    }
+};
+
+Usergrid.Error.prototype = new Error();

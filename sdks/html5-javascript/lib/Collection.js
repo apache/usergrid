@@ -44,6 +44,19 @@ Usergrid.Collection = function(options, callback) {
 
 
 /*
+ *  method to determine whether or not the passed variable is a Usergrid Collection
+ *
+ *  @method isCollection
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isCollection = function(obj){
+  return (obj && obj instanceof Usergrid.Collection);
+}
+
+
+/*
  *  gets the data from the collection object for serialization
  *
  *  @method serialize
