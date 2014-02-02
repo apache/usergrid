@@ -3,8 +3,6 @@
 # Install and stop ElasticSearch
 pushd /etc/apt/sources.list.d
 
-
-
 cat >> elasticsearch.sources.list << EOF
 deb http://packages.elasticsearch.org/elasticsearch/1.0/debian stable main
 EOF
@@ -12,10 +10,10 @@ apt-get update
 apt-get --force-yes -y install elasticsearch
 /etc/init.d/elasticsearch stop
 
-mkdir /mnt/data/elasticsearch
-chown elasticsearch /mnt/data/elasticsearch]
+mkdir -p /mnt/data/elasticsearch
+chown elasticsearch /mnt/data/elasticsearch
 
-mkdir /mnt/log/elasticsearch
+mkdir -p /mnt/log/elasticsearch
 chown elasticsearch /mnt/log/elasticsearch
 
 # Configure and restart ElasticSearch

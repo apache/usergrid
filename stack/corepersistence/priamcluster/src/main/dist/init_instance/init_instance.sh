@@ -10,6 +10,7 @@ dpkg-reconfigure -f noninteractive tzdata
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
+cd /usr/share/usergrid/init_instance
 ./create_raid0.sh
 
 # Install the easy stuff
@@ -29,6 +30,7 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
 # Install and stop Cassandra 

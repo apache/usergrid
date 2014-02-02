@@ -26,7 +26,7 @@
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
             "Type": "String",
-            "Default": "m1.small",
+            "Default": "m1.xlarge",
             "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
             "ConstraintDescription": "must be valid instance type."
         },
@@ -278,11 +278,6 @@
                         "FromPort": "22",
                         "ToPort": "22",
                         "CidrIp": "0.0.0.0/0"
-                    }, {
-                        "IpProtocol": "tcp",
-                        "FromPort": "9160",
-                        "ToPort": "9160",
-                        "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
                     }]
             }
         },
