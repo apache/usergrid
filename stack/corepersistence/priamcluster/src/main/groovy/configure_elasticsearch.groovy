@@ -38,7 +38,10 @@ discovery.zen.ping.unicast.hosts: [${seeds}]
 node:
     name: ${hostName} 
 network:
-    host: ${hostName}
+    host: ${hostName}\
+path:
+  logs: /mnt/log/elasticsearch
+  data: /mnt/data/elasticsearch
 """
 
 println elasticSearchConfig

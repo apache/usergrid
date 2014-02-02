@@ -46,15 +46,15 @@ authenticator: org.apache.cassandra.auth.AllowAllAuthenticator
 authorizer: org.apache.cassandra.auth.AllowAllAuthorizer
 partitioner: org.apache.cassandra.dht.RandomPartitioner
 data_file_directories:
-    - /var/lib/cassandra/data
-commitlog_directory: /var/lib/cassandra/commitlog
+    - /mnt/data/cassandra/data
+commitlog_directory: /mnt/data/cassandra/commitlog
 disk_failure_policy: stop
 key_cache_size_in_mb:
 key_cache_save_period: 14400
 row_cache_size_in_mb: 0
 row_cache_save_period: 0
 row_cache_provider: SerializingCacheProvider
-saved_caches_directory: /var/lib/cassandra/saved_caches
+saved_caches_directory: /mnt/data/cassandra/saved_caches
 commitlog_sync: periodic
 commitlog_sync_period_in_ms: 10000
 commitlog_segment_size_in_mb: 32

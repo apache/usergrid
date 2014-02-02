@@ -10,8 +10,9 @@ apt-get update
 apt-get -y install libcap2
 apt-get --force-yes -y install cassandra
 /etc/init.d/cassandra stop
-mkdir -p /var/lib/cassandra
-chown cassandra /var/lib/cassandra
+
+mkdir -p /mnt/data/cassandra
+chown cassandra /mnt/data/cassandra
 
 # Wait for other instances to start up
 cd /usr/share/usergrid/scripts

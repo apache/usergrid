@@ -10,6 +10,8 @@ dpkg-reconfigure -f noninteractive tzdata
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
+./create_raid0.sh
+
 # Install the easy stuff
 PKGS="ntp unzip groovy tomcat7 curl"
 apt-get update
