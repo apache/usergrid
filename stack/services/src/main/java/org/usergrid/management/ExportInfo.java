@@ -5,6 +5,7 @@ import java.util.Map;
 /**
  * Created by ApigeeCorporation on 1/31/14.
  */
+//TODO: Documentation on this class.
 public class ExportInfo {
 
     private String path;
@@ -37,7 +38,16 @@ public class ExportInfo {
     public String getStorage_provider () {
         return storage_provider;
     }
-    //TODO: write getter and setter methods
+    //TODO: write setter methods
+
+    public Map<String, Object> getStorage_info () { return storage_info; }
+
+    public String getS3_token () { return s3_token; }
+    //TODO: is this a security concern? How would we get rid of the key once we're done with this value?
+    public String getS3_key () { return s3_key; }
+
+    public String getBucket_location () { return bucket_location; }
+
 
 
 }
