@@ -531,12 +531,13 @@ Usergrid.Client.prototype.getObject = function(key) {
 
 Usergrid.Client.prototype.get = function (key) {
   var keyStore = 'apigee_' + key;
+  var value=null;
   if (this[key]) {
-    return this[key];
+    value= this[key];
   } else if(typeof(Storage)!=="undefined") {
-    return localStorage.getItem(keyStore);
+    value= localStorage.getItem(keyStore);
   }
-  return null;
+  return value;
 };
 
 /*
@@ -778,10 +779,7 @@ Usergrid.Client.prototype.getLoggedInUser = function (callback) {
  *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
  */
 Usergrid.Client.prototype.isLoggedIn = function () {
-  if (this.getToken() && this.getToken() != 'null') {
-    return true;
-  }
-  return false;
+  return "undefined" !== typeof this.getToken();
 };
 
 /*
@@ -804,32 +802,23 @@ Usergrid.Client.prototype.logout = function () {
  *  @return {string} curl
  */
 Usergrid.Client.prototype.buildCurlCall = function (options) {
-  var curl = 'curl';
+  var curl = ['curl'];
   var method = (options.method || 'GET').toUpperCase();
-  var body = options.body || {};
+  var body = options.body;
   var uri = options.uri;
 
   //curl - add the method to the command (no need to add anything for GET)
-  if (method === 'POST') {
-    curl += ' -X POST';
-  } else if (method === 'PUT') {
-    curl += ' -X PUT';
-  } else if (method === 'DELETE') {
-    curl += ' -X DELETE';
-  } else {
-    curl += ' -X GET';
-  }
+  curl.push('-X');
+  curl.push((['POST','PUT','DELETE'].indexOf(method)>=0)?method:'GET');
 
   //curl - append the path
-  curl += ' ' + uri;
+  curl.push(uri);
 
-  //curl - add the body
-  if("undefined"!== typeof window){body = JSON.stringify(body);}//only in node module
-  if (body !== '"{}"' && method !== 'GET' && method !== 'DELETE') {
-    //curl - add in the json obj
-    curl += " -d '" + body + "'";
+  if("object"===typeof body && Object.keys(body).length>0 && ['POST','PUT'].indexOf(method)!==-1){
+    curl.push('-d');
+    curl.push("'"+JSON.stringify(body)+"'");
   }
-
+  curl=curl.join(' ');
   //log the curl command to the console
   console.log(curl);
 
@@ -837,18 +826,18 @@ Usergrid.Client.prototype.buildCurlCall = function (options) {
 }
 
 Usergrid.Client.prototype.getDisplayImage = function (email, picture, size) {
+    size = size || 50;
+    var image='https://apigee.com/usergrid/images/user_profile.png';
   try {
     if (picture) {
-      return picture;
-    }
-    var size = size || 50;
-    if (email.length) {
-      return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size + encodeURI("&d=https://apigee.com/usergrid/images/user_profile.png");
-    } else {
-      return 'https://apigee.com/usergrid/images/user_profile.png';
+      image= picture;
+    }else if (email.length) {
+      image= 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size + encodeURI("&d=https://apigee.com/usergrid/images/user_profile.png");
     }
   } catch(e) {
-    return 'https://apigee.com/usergrid/images/user_profile.png';
+    //TODO do something with this error?
+  }finally{
+    return image;
   }
 }
 

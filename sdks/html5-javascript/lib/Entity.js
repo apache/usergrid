@@ -20,7 +20,7 @@ Usergrid.Entity = function(options) {
  *  @params {any} obj - any variable
  *  @return {boolean} Returns true or false
  */
-Usergrid.isEntity = function(obj){
+Usergrid.Entity.isEntity = function(obj){
   return (obj && obj instanceof Usergrid.Entity);
 }
 
@@ -33,7 +33,7 @@ Usergrid.isEntity = function(obj){
  *  @params {any} obj - any variable
  *  @return {boolean} Returns true or false
  */
-Usergrid.isPersistedEntity = function(obj){
+Usergrid.Entity.isPersistedEntity = function(obj){
   return (isEntity(obj) && isUUID(obj.get('uuid')));
 }
 
@@ -58,11 +58,7 @@ Usergrid.Entity.prototype.serialize = function () {
  *  @return {string} || {object} data
  */
 Usergrid.Entity.prototype.get = function (field) {
-  if (field) {
-    return this._data[field];
-  } else {
-    return this._data;
-  }
+    return (field) ? this._data[field] : this._data;
 };
 
 /*
@@ -100,33 +96,39 @@ Usergrid.Entity.prototype.set = function (key, value) {
  *  @return {callback} callback(err, data)
  */
 Usergrid.Entity.prototype.save = function (callback) {
-  var type = this.get('type');
-  var method = 'POST';
-  if (isUUID(this.get('uuid'))) {
-    method = 'PUT';
-    type += '/' + this.get('uuid');
-  }
+  var self = this,
+    type = this.get('type'),
+    method = 'POST',
+    entityId=this.get("uuid"),
+    data = {},
+    entityData = this.get(),
+    password = this.get('password'),
+    oldpassword = this.get('oldpassword'),
+    newpassword = this.get('newpassword'),
+    SYSTEM_PROPERTIES=['metadata','created','modified','oldpassword','newpassword','type','activated','uuid'],
+    options={
+      method:method,
+      endpoint:type
+    };
 
   //update the entity
-  var self = this;
-  var data = {};
-  var entityData = this.get();
-  var password = this.get('password');
-  var oldpassword = this.get('oldpassword');
-  var newpassword = this.get('newpassword');
-  var SYSTEM_PROPERTIES=['metadata','created','modified','oldpassword','newpassword','type','activated','uuid'];
-  //remove system specific properties
-  for (var item in entityData) {
-    if (SYSTEM_PROPERTIES.indexOf(item) !== -1) {
-      continue;
-    }
-    data[item] = entityData[item];
+  console.log("entityId", entityId);
+  if (entityId) {
+    options.method = 'PUT';
+    options.endpoint += '/' + entityId;
   }
-  var options =  {
-    method:method,
-    endpoint:type,
-    body:data
-  };
+
+  //remove system-specific properties
+  Object
+    .keys(entityData) /* get the list of properties we have */
+    .filter(function(key){
+      return (SYSTEM_PROPERTIES.indexOf(key)===-1) /* remove system properties from the payload */
+    })
+    .forEach(function(key){
+      data[key]= entityData[key];
+    });
+    options.body=data;
+    console.log(options.body);
   //save the entity first
   this._client.request(options, function (err, retdata) {
       //clear out pw info if present
@@ -353,7 +355,7 @@ Usergrid.Entity.prototype.getEntityId = function (entity) {
   if (isUUID(entity.get('uuid'))) {
     id = entity.get('uuid');
   } else {
-    if (type === 'users') {
+    if (this.get("type") === 'users') {
       id = entity.get('username');
     } else if (entity.get('name')) {
       id = entity.get('name');
