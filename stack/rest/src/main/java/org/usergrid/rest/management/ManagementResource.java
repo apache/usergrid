@@ -446,7 +446,8 @@ public class ManagementResource extends AbstractContextResource {
     public Response exportPostJson (@Context UriInfo ui, Map<String, Object> json,
                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback){
 
-        ExportInfo exportData = new ExportInfo(json);
+
+       // ExportInfo exportData = new ExportInfo(json);
         JobInfo jobStatus = management.processExportData(exportData);
         AccessInfo wrapperJob = new AccessInfo();
         wrapperJob.setState(jobStatus.getStatusType().toString());
