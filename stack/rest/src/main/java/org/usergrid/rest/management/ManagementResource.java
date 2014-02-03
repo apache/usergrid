@@ -456,7 +456,8 @@ public class ManagementResource extends AbstractContextResource {
         * 2.) info: information nee3ded for the storage provider
         *   info will be extrapolated like the above.
         * */
-
+        //TODO: determine whether this wrapper is suitable as the return type for export.
+        // currently returns the jobStatus
         return  Response.status( SC_OK ).type( jsonMediaType( callback ) )
                         .entity( wrapWithCallback( wrapperJob, callback ) ).build();
     }
