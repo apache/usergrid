@@ -26,7 +26,7 @@
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
             "Type": "String",
-            "Default": "m1.small",
+            "Default": "m1.xlarge",
             "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
             "ConstraintDescription": "must be valid instance type."
         },
@@ -105,10 +105,12 @@
                                     "export EC2_REGION=", {"Ref": "AWS::Region"}, "\n",
                                     "export EC2_URL=https://ec2.amazonaws.com/\n",
                                     "\n",
-                                    "export DB_SECURITY_GROUP_NAME=", {"Ref": "CassSecurityGroup"}, "\n",
+                                    "export CASS_SECURITY_GROUP_NAME=", {"Ref": "CassSecurityGroup"}, "\n",
                                     "\n",
-                                    "export JVM_EXTRA_OPTS=-javaagent:/usr/share/cassandra/lib/priam-cass-extensions-2.0.0-SNAPSHOT.jar", "\n",
+                                    "export JVM_EXTRA_OPTS=-javaagent:/usr/share/cassandra/lib/priam-cass-extensions-1.2.24.jar", "\n",
+                                    "\n",
                                     "export CASSANDRA_CLUSTER_NAME=", {"Ref": "CassClusterName"}, "\n",
+                                    "export CASSANDRA_NUM_SERVERS=", {"Ref": "CassNumServers"}, "\n",
                                     "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
                                     "export CASSANDRA_REPLICATION_FACTOR=", {"Ref": "CassReplicationFactor"}, "\n",
                                     "\n",
@@ -152,7 +154,7 @@
                                 "cd ./init_instance\n",
 
                                 "# init as a Cassandra node \n",
-                                "sh ./init_cass.sh\n"
+                                "sh ./init_instance.sh\n"
 
                             ]]}
                 },
@@ -276,11 +278,6 @@
                         "FromPort": "22",
                         "ToPort": "22",
                         "CidrIp": "0.0.0.0/0"
-                    }, {
-                        "IpProtocol": "tcp",
-                        "FromPort": "9160",
-                        "ToPort": "9160",
-                        "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
                     }]
             }
         },
@@ -304,21 +301,14 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
-        "RestSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
+        "CassSecurityGroupPort9200": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
-                "GroupDescription": "REST Machines",
-                "SecurityGroupIngress": [{
-                        "IpProtocol": "tcp",
-                        "FromPort": "22",
-                        "ToPort": "22",
-                        "CidrIp": "0.0.0.0/0"
-                    }, {
-                        "IpProtocol": "tcp",
-                        "FromPort": "8080",
-                        "ToPort": "8080",
-                        "CidrIp": "0.0.0.0/0"
-                    }]
+                "GroupName": {"Ref": "CassSecurityGroup"},
+                "IpProtocol": "tcp",
+                "FromPort": "9200",
+                "ToPort": "9200",
+                "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         }
     }
