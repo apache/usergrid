@@ -343,122 +343,114 @@ Function.prototype.extend = function(superClass) {
 		// (Mozilla has never prefixed these objects, so we don't need global.mozIDB*)
 		global.IDBTransaction = global.IDBTransaction || global.webkitIDBTransaction || global.msIDBTransaction;
 		global.IDBKeyRange = global.IDBKeyRange || global.webkitIDBKeyRange || global.msIDBKeyRange;
-
 		function KeyStore(database, version, storeName, keyPath, callback) {
 			this.logger=new global.Logger(name);
 			this.db = null;
 			this.error = null;
 			this.ready = false;
+			this.database=database;
+			this.version=version;
 			this.storeName = storeName;
 			this.keyPath = keyPath;
+			this.openDatabase(callback)
+			
+		}
+		KeyStore.prototype.openDatabase=function(callback) {
 			var self = this;
-			var request = indexedDB.open(database, version);
-
-			function useDatabase(db, callback) {
-				db.onversionchange = function(event) {
-					db.close();
-					console.warn("A new version of this keystore has been loaded. Please restart your application!");
-				};
-				self.db = db;
-				self.ready = true;
+			var req = global.indexedDB.open(this.database, this.version);
+			req.onsuccess = function (evt) {
+				self.db = this.result;
+				self.objectStore=self.db.transaction([self.storeName], "readwrite").objectStore(self.storeName);
 				isFunction(callback) && callback(null, self);
-			}
-			request.onerror = function(event) {
-				console.error("internal keystore error: " + event.target.errorCode);
-				self.ready = true;
-				self.error = event.target;
-				isFunction(callback) && callback(event.target, self);
 			};
-			request.onupgradeneeded = function(event) {
-				console.warn("upgrading internal keystore");
-				var db = event.target.result;
-				var objectStore, index;
+			req.onupgradeneeded = function (evt) {
 				try {
-					objectStore = event.currentTarget.transaction.objectStore(self.storeName);
-					//console.log(objectStore);
-					if (!objectStore) throw "not found";
+					self.objectStore = event.currentTarget.transaction.objectStore(self.storeName);
 				} catch (e) {
-					objectStore = db.createObjectStore(self.storeName, {
-						keyPath: self.keyPath
-					});
-				} finally {
-					objectStore.transaction.oncomplete = function(event) {
-						console.info("created ObjectStore: '%s'", self.storeName);
-						//useDatabase(db, callback);
-					};
+					self.objectStore = self.db.createObjectStore(self.storeName, {keyPath: self.keyPath});
+					self.objectStore.createIndex(self.keyPath, self.keyPath, {unique: true});
 				}
-				try {
-					index = objectStore.index(self.keyPath);
-					if (!index) throw "not found";
-				} catch (e) {
-					objectStore.createIndex(self.keyPath, self.keyPath, {
-						unique: true
-					});
-				} finally {
-					objectStore.transaction.oncomplete = function(event) {
-						console.info("created ObjectStore index: '%s'", self.keyPath);
-						//useDatabase(db, callback);
-					};
-				}
-			};
-			request.onsuccess = function(event) {
-				console.info("successfully opened database %s", event.target.result);
-				useDatabase(event.target.result, callback);
 			};
 		}
+		KeyStore.prototype.getStore=function(callback){
+			this.openDatabase(function(err, self){
+				callback(err, self.objectStore);
+			})
+		};
 		KeyStore.prototype.delete = function(key, callback) {
-			var transaction = this.db.transaction([this.storeName], "readwrite");
-			var objectStore = transaction.objectStore(this.storeName);
-			var item = objectStore.get(key);
-			item.onsuccess = function(event) {
-				objectStore.delete(key);
-				isFunction(callback) && callback(null, key);
-			};
-			item.onerror = function(event) {
-				console.warn("Attempt to delete nonexistent item from keystore: %s", key);
-				isFunction(callback) && callback(null, key);
-			};
+			var self=this;
+			self.openDatabase(function(err, self){
+			self.getStore(function(err, store){
+				var item = store.get(key);
+				item.onsuccess = function(event) {
+					store.delete(key);
+					isFunction(callback) && callback(null, key);
+				};
+				item.onerror = function(event) {
+					console.warn("Attempt to delete nonexistent item from keystore: %s", key);
+					isFunction(callback) && callback(null, key);
+				};
+			});
+			})
 		};
 
 		KeyStore.prototype.get = function(key, callback) {
-			var transaction = this.db.transaction([this.storeName], "readwrite");
-			var objectStore = transaction.objectStore(this.storeName);
-			var item = objectStore.get(key);
-			item.onsuccess = function(event) {
-				console.log(event.target.result);
-				isFunction(callback) && callback(null, event.target.result ? event.target.result.value : null);
-			};
-			item.onerror = function(event) {
-				isFunction(callback) && callback(event.target, event.target.result ? event.target.result.value : null);
-			};
+			var self=this;
+			self.getStore(function(err, store){
+				var item = store.get(key);
+				item.onsuccess = function(event) {
+					isFunction(callback) && callback(null, this.result ? this.result.value : null);
+				};
+				item.onerror = function(event) {
+					isFunction(callback) && callback(this, null);
+				};
+			});
 		};
-
 		KeyStore.prototype.set = function(key, value, callback) {
-			var transaction = this.db.transaction([this.storeName], "readwrite");
-			var objectStore = transaction.objectStore(this.storeName);
+			var self=this;
 			var data = {
 				'key': key,
 				'value': value
 			};
-			var item = objectStore.get(key);
-			item.onsuccess = function(event) {
-				data.created = (event.target.result) ? event.target.result.created : Date.now();
-				data.modified = Date.now();
-				objectStore.delete(key);
-				objectStore.add(data).onsuccess = function(event) {
-					//event.target.result is the 'key'
-					console.info("KEYSTORE: update %s=%s", data.key, data.value);
-					isFunction(callback) && callback(null, data.value);
+			function add(data){
+				self.getStore(function(err, store){
+					var item=store.add(data);
+					item.onsuccess = function(event) {
+						isFunction(callback) && callback(null, data.value);
+					};
+					item.onerror=function(event){
+						isFunction(callback) && callback(this, null);
+					}
+				});
+			}
+			self.getStore(function(err, store){
+				var item = store.get(key);
+				item.onsuccess = function(event) {
+					data.created = (this.result) ? this.result.created : Date.now();
+					data.modified = Date.now();
+					var req=store.delete(key);
+					req.onerror=req.onsuccess=function(){
+						add(data);
+					};
 				};
-			};
-			item.onerror = function(event) {
-				data.created = Date.now();
-				data.modified = Date.now();
-				objectStore.add(data).onsuccess = function(event) {
-					console.info("KEYSTORE: create %s=%s", data.key = data.value);
-					isFunction(callback) && callback(null, data);
+				item.onerror = function(event) {
+					data.created = Date.now();
+					data.modified = Date.now();
+					add(data);
 				};
-			};
+			});
+		};
+		KeyStore.prototype.clear = function(callback) {
+			var self=this;
+		    self.getStore(function(err, store){
+				var req=store.clear();
+			    req.onsuccess = function(evt) {
+					isFunction(callback) && callback(null, null);
+			    };
+			    req.onerror = function (evt) {
+					isFunction(callback) && callback(new Usergrid.Error(this), null);
+			    };
+			});
 		};
 		return KeyStore;
 	}());
@@ -479,50 +471,10 @@ Function.prototype.extend = function(superClass) {
 		function Usergrid(){
 			this.logger=new global.Logger(name);
 			var self=this;
-			this.keyStore=new KeyStore('usergrid-javascript-sdk', 2, "data", "key", function(err, ks){
-				self.logger.info("'%s' keystore created.", 'usergrid-javascript-sdk');
-			});
 		}
 		Usergrid.isValidEndpoint = function(endpoint) {
 			//TODO actually implement this
 			return true;
-		};
-		Usergrid.prototype.set = function(key, value, callback) {
-			if ("object" === typeof value) {
-				try {
-					value = JSON.stringify(value);
-				} catch (e) {
-					self.logger.warn("unable to stringify object: %s", e.message, value);
-				}
-			}
-			this[key] = value;
-			if ("undefined" !== typeof this.keyStore) {
-				if (value) {
-					this.keyStore.set(key, value, callback);
-				} else {
-					this.keyStore.delete(key, callback);
-				}
-			}else{
-				callback.apply(this, [null, null]);
-			}
-		};
-
-		Usergrid.prototype.get = function(key, callback) {
-			var keyStore = keyPrefix + key,
-				value;
-			if ("undefined" !== typeof this.keyStore) {
-				this.keyStore.get(key, callback);
-			}
-			try {
-				if (/^(\{|\[)/.test(value)) {
-					value = JSON.parse(value);
-				}
-			} catch (e) {
-				self.logger.warn("unable to parse object: %s", e.message, value);
-			} finally {
-
-			}
-			return value;
 		};
 		var VALID_REQUEST_METHODS=['GET','POST','PUT','DELETE'];
 		Usergrid.Request=function(method, endpoint, query_params, data, callback){
@@ -544,29 +496,44 @@ Function.prototype.extend = function(superClass) {
 				this.endpoint += "?" + encoded_params;
 			}
   			Ajax.request(this.method, this.endpoint, this.data).then(function(err, request){
-  				//TODO create Usergrid.Response object
-  				var response=new Usergrid.Response(request.responseText);
-  				if(err){
-  					callback(new Usergrid.Error(err), null);
-  				}else if (response.data.error){
-  					callback(new Usergrid.Error(response.data), null);
-  				}else{
-  					callback(null, response);
-  				}
+  				return new Usergrid.Response(err, request, callback);
   			});
 		};
 
 
-
-		Usergrid.Response=function(response_data){
-			this.text=response_data;
+		//TODO more granular handling of statusCodes
+		Usergrid.Response=function(err, response, callback){
 			this.logger=new global.Logger(name);
-			var self=this;
+			this.success=true;
+			this.err=err;
+			this.response=response;
+			this.text=this.response.responseText;
 			try{
 				this.data=JSON.parse(this.text);
 			}catch(e){
 				this.logger.error("Error parsing response text: ",this.text);
 				this.data=null;
+			}
+			this.status=parseInt(response.status);
+			this.statusGroup=(this.status - this.status%100);
+			switch(this.statusGroup){
+				case 200:
+					this.success=true;
+					break;
+				case 400:
+				case 500:
+				case 300:
+				case 100:
+				default:
+					//server error
+					this.success=false;
+					break;
+			}
+			var self=this;
+			if(this.success){
+				callback(null, self);
+			}else{
+				callback(new Usergrid.Error(this.data), self);
 			}
 		};
 
@@ -586,7 +553,27 @@ Function.prototype.extend = function(superClass) {
 		}
 		Usergrid.Error.prototype=new Error();
 
-		Usergrid.Client=function(){};
+		Usergrid.Client=function(callback){
+			this.logger=new global.Logger(name);
+			var self=this;
+			var keyStore=new KeyStore('usergrid-javascript-sdk', 2, "data", "key", function(err, ks){
+				self.keyStore=ks;
+				callback(err, self);
+			});
+		};
+		Usergrid.Client.prototype.set = function(key, value, callback) {
+			value = JSON.stringify(value);
+			if (value) {
+				this.keyStore.set(key, value, callback);
+			} else {
+				this.keyStore.delete(key, callback);
+			}
+		};
+		Usergrid.Client.prototype.get = function(key, callback) {
+			if ("undefined" !== typeof this.keyStore) {
+				this.keyStore.get(key, callback);
+			}
+		};
 		Usergrid.Entity=function(){};
 		Usergrid.Collection=function(){};
 		return Usergrid;
