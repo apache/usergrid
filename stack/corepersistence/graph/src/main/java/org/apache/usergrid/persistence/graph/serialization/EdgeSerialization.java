@@ -57,7 +57,9 @@ public interface EdgeSerialization {
 
     /**
      * Search for specific versions of the edge from source->target. Will return all versions
-     *
+     * @param scope
+     * @param search
+     * @return
      */
     Iterator<Edge> getEdgeFromSource( OrganizationScope scope, SearchByEdge search );
 
@@ -79,7 +81,7 @@ public interface EdgeSerialization {
     Iterator<Edge> getEdgesFromSourceByTargetType( OrganizationScope scope, SearchByIdType edgeType );
 
     /**
-     * Get an iterator of all edges by edge type pointing to the target node
+     * Get an iterator of all edges by edge type pointing to the target node.  Returns all versions
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
@@ -88,6 +90,9 @@ public interface EdgeSerialization {
 
     /**
      * Search for specific versions of the edge from source->target. Will return all versions
+     * @param scope
+     * @param search
+     * @return
      */
     Iterator<Edge> getEdgeToTarget( OrganizationScope scope, SearchByEdge search );
 

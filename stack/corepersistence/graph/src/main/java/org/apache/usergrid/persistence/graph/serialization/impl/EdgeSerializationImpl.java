@@ -174,7 +174,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
-
     private void doWrite( final OrganizationScope scope, final Edge edge, final RowOp op ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateEdge( edge );
@@ -218,7 +217,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
-
     @Override
     public Iterator<Edge> getEdgeFromSource( final OrganizationScope scope, final SearchByEdge search ) {
         ValidationUtils.validateOrganizationScope( scope );
@@ -245,9 +243,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                 }
 
 
-                //                final DirectedEdge last = new DirectedEdge( targetId, maxVersion );
-                //                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
-                //                builder.setEnd( colValue );
+                final DirectedEdge last = new DirectedEdge( targetId, maxVersion );
+                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
+                builder.setEnd( colValue );
             }
 
 
@@ -524,7 +522,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             public Edge parseColumn( final Column<DirectedEdge> column ) {
                 final DirectedEdge edge = column.getName();
 
-                return new SimpleEdge( targetId, type, edge.id, edge.version );
+                return new SimpleEdge(edge.id, type,  targetId, edge.version );
             }
         } );
     }
