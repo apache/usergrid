@@ -1,6 +1,7 @@
-package org.usergrid.management;
+package org.usergrid.management.export;
 
 
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -9,16 +10,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.mq.Message;
+import org.usergrid.persistence.PathQuery;
 import org.usergrid.services.AbstractCollectionService;
+import org.usergrid.services.ServiceContext;
+import org.usergrid.services.ServiceParameter;
+import org.usergrid.services.ServiceResults;
 
 
 /**
  *
  *
  */
-public class ExportService extends AbstractCollectionService {
+public class ExportServiceImpl extends AbstractCollectionService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExportService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExportServiceImpl.class);
 
     // ms to add when scheduling to ensure scheduler doesn't miss processing
     private static final long SCHEDULER_GRACE_PERIOD = 250;
@@ -64,7 +69,8 @@ public class ExportService extends AbstractCollectionService {
 
     //create pool here to check for in active jobs.
 
-    public ExportService() {
+    public ExportServiceImpl() {
+        super();
         LOG.info("/export");
     }
 
@@ -77,6 +83,22 @@ public class ExportService extends AbstractCollectionService {
         if (autoExpireAfterString != null) {
             pushAutoExpireAfter = Long.parseLong( autoExpireAfterString );
         }
+    }
+
+    private PathQuery<String> getPathQuery(List<ServiceParameter> parameters) {
+        //TODO:Fill in export specific getPathQuery
+        PathQuery pathQuery = null;
+        return pathQuery;
+    }
+
+    @Override
+    public ServiceResults postCollection(ServiceContext context) throws Exception {
+        //difference between getOriginalParameters and getParameters.
+        //PathQuery<String> pathQuery = getPathQuery(context.getRequest().getOriginalParameters());
+        System.out.println("Magic");
+        //ServiceResults results = super.postCollection( context );
+
+        return super.postCollection( context );
     }
 
     private void safeHeartbeat(JobExecution jobExecution) {

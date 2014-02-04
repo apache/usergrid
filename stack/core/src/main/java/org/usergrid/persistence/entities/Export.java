@@ -5,8 +5,10 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.usergrid.persistence.PathQuery;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityProperty;
 
@@ -48,6 +50,9 @@ public class Export extends TypedEntity {
     /** Error message */
     @EntityProperty
     protected String errorMessage;
+
+    @EntityProperty
+    protected PathQuery<String> pathQuery;
 
     /** Contains the Query included with the Path **/
 
@@ -116,12 +121,16 @@ public class Export extends TypedEntity {
     }
     /* there might need to be queued stuff here.  */
     /*
-    * Path Query Ignored for first pass
+    * Path Query Ignored for first pass*/
 
     //ask scott why these are ignored
     @JsonIgnore
-    public PathQuery< What device is set here?> getPathQuery() {
-
+    public PathQuery<String> getPathQuery() {
+        return pathQuery;
     }
-    */
+
+    public void setPathQuery(PathQuery<String> pathQuery) {
+        this.pathQuery = pathQuery;
+    }
+
 }

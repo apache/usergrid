@@ -38,11 +38,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ExportInfo;
-import org.usergrid.management.JobInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.management.exceptions.UnconfirmedAdminUserException;
+import org.usergrid.management.export.ExportService;
+import org.usergrid.management.export.ExportServiceDos;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
@@ -90,7 +91,8 @@ public class ManagementResource extends AbstractContextResource {
      *
      * /management/users/<user-name>/login
      * /management/users/<user-name>/password
-     * 
+     *
+     * /management/export
      */
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementResource.class );
@@ -440,27 +442,61 @@ public class ManagementResource extends AbstractContextResource {
     }
     //TODO: url encoded form of export
 
+
     @Path( "export" )
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response exportPostJson (@Context UriInfo ui, Map<String, Object> json,
                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback){
 
+        //parse the json into some useful object (the config params)
+        ExportInfo objEx = new ExportInfo(json);
 
-       // ExportInfo exportData = new ExportInfo(json);
-        JobInfo jobStatus = management.processExportData(exportData);
-        AccessInfo wrapperJob = new AccessInfo();
-        wrapperJob.setState(jobStatus.getStatusType().toString());
-        /*
-        * output contains two elements
-        * 1.) storage provider : (In this first pass it will always be s3)
-        * 2.) info: information nee3ded for the storage provider
-        *   info will be extrapolated like the above.
-        * */
-        //TODO: determine whether this wrapper is suitable as the return type for export.
-        // currently returns the jobStatus
-        return  Response.status( SC_OK ).type( jsonMediaType( callback ) )
-                        .entity( wrapWithCallback( wrapperJob, callback ) ).build();
+        ExportService ex = new ExportServiceDos();
+
+        // exportService.schedule(config)
+        ex.schedule( objEx );
+
+        //TODO: make schedule or doExport return a response? Or create one.
+        return null;
+
+
+
+
+//        String path = (String) json.get("path");
+//        Map<String, Object> properties = (Map) json.get("properties");
+//        String storage_provider = (String) properties.get ("storage_provider");
+//        Map<String, Object> storage_info = (Map) properties.get("storage_info");
+//        String s3_token = (String) storage_info.get("s3_token");
+//        String s3_key = (String) storage_info.get("s3_key");
+//        String bucket_location = (String) storage_info.get("bucket_location");
+//
+        //objEx.setPathQuery( path );
+
+
+
+
+
+//
+//        ExportInfo exportData = new ExportInfo(json);
+//        JobInfo jobStatus = management.processExportData(exportData);
+//        AccessInfo wrapperJob = new AccessInfo();
+//        wrapperJob.setState(jobStatus.getStatusType().toString());
+//        /*
+//        * output contains two elements
+//        * 1.) storage provider : (In this first pass it will always be s3)
+//        * 2.) info: information nee3ded for the storage provider
+//        *   info will be extrapolated like the above.
+//        * */
+//        Service s = new ExportServiceImpl();
+//
+//
+//        //Export objExport =
+//
+//         //TODO: determine whether this wrapper is suitable as the return type for export.
+//        // currently returns the jobStatus
+//        return  Response.status( SC_OK ).type( jsonMediaType( callback ) )
+//                        .entity( wrapWithCallback( wrapperJob, callback ) ).build();
     }
 
 

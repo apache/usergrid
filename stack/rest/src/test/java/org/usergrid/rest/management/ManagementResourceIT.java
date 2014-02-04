@@ -434,6 +434,20 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( Status.BAD_REQUEST, responseStatus );
     }
 
+    @Test
+    public void exportCallSuccessful() throws Exception {
+        Status responseStatus = null;
+
+        try {
+            resource().path( "/management/export" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.BAD_REQUEST, responseStatus );
+    }
 
     @Test
     public void revokeToken() throws Exception {
