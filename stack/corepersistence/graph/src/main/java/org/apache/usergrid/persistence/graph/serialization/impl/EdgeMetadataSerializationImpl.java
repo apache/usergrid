@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -66,8 +67,6 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     private static final byte[] HOLDER = new byte[] { 0 };
 
-    //TODO, make this a config property?
-    private static final int PAGE_SIZE = 100;
 
     //row key serializers
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -103,12 +102,16 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
 
+
     protected final Keyspace keyspace;
+    private final GraphFig graphFig;
+
 
 
     @Inject
-    public EdgeMetadataSerializationImpl( final Keyspace keyspace ) {
+    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final GraphFig graphFig) {
         this.keyspace = keyspace;
+        this.graphFig = graphFig;
     }
 
 
@@ -291,7 +294,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         final RangeBuilder rangeBuilder =
-                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().or( "" ) );
+                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
 
         RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
@@ -333,7 +336,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         //resume from the last if specified.  Also set the range
         final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( PAGE_SIZE ).setStart( search.getLast().or( "" ) ).build();
+                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) ).build();
 
         RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );

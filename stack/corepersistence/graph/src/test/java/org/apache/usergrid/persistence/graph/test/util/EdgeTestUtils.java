@@ -39,17 +39,18 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 
 /**
- *  Simple class for edge testing generation
- *
+ * Simple class for edge testing generation
  */
 public class EdgeTestUtils {
 
 
     /**
      * Create an edge for testing
+     *
      * @param sourceType The source type to use in the id
      * @param edgeType The edge type to use
      * @param targetType The target type to use
+     *
      * @return an Edge for testing
      */
     public static Edge createEdge( final String sourceType, final String edgeType, final String targetType ) {
@@ -59,35 +60,36 @@ public class EdgeTestUtils {
 
     /**
      * Create an edge for testing
-     * @param sourceId
-     * @param edgeType
-     * @param targetId
-     * @return
      */
-    public static Edge createEdge(final Id sourceId, final String edgeType, final Id targetId){
-        return  createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
+    public static Edge createEdge( final Id sourceId, final String edgeType, final Id targetId ) {
+        return createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
     }
+
 
     /**
      * Create an edge with the specified params
-     * @param sourceId
-     * @param edgeType
-     * @param targetId
-     * @param version
-     * @return
      */
-    public static Edge createEdge(final Id sourceId, final String edgeType, final Id targetId, final UUID version){
-       return new SimpleEdge( sourceId, edgeType, targetId, version );
+    public static Edge createEdge( final Id sourceId, final String edgeType, final Id targetId, final UUID version ) {
+        return new SimpleEdge( sourceId, edgeType, targetId, version );
     }
 
 
     /**
      * Create the id
-     * @param type
-     * @return
      */
-    public static Id createId(String type){
-       return new SimpleId( UUIDGenerator.newTimeUUID(), type );
+    public static Id createId( String type ) {
+        return createId( UUIDGenerator.newTimeUUID(), type );
+    }
+
+
+    /**
+     * Generate an ID with the type and id
+     *
+     * @param id The uuid in the id
+     * @param type The type of id
+     */
+    public static Id createId( UUID id, String type ) {
+        return new SimpleId( id, type );
     }
 
 
@@ -100,7 +102,7 @@ public class EdgeTestUtils {
      * @return
      */
     public static SearchByEdgeType createSearchByEdge( final Id sourceId, final String type, final UUID maxVersion,
-                                                 final Edge last ) {
+                                                       final Edge last ) {
         return new SimpleSearchByEdgeType( sourceId, type, maxVersion, last );
     }
 
@@ -115,7 +117,7 @@ public class EdgeTestUtils {
      * @return
      */
     public static SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final UUID maxVersion,
-                                                    final String idType, final Edge last ) {
+                                                          final String idType, final Edge last ) {
         return new SimpleSearchByIdType( sourceId, type, maxVersion, idType, last );
     }
 
@@ -133,11 +135,6 @@ public class EdgeTestUtils {
 
     /**
      * Create the search by Id type
-     *
-     * @param sourceId
-     * @param type
-     * @param last
-     * @return
      */
     public static SimpleSearchIdType createSearchIdType( final Id sourceId, final String type, final String last ) {
         return new SimpleSearchIdType( sourceId, type, last );
@@ -146,18 +143,11 @@ public class EdgeTestUtils {
 
     /**
      * Get the edge by type
-     * @param sourceId
-     * @param type
-     * @param targetId
-     * @param maxVersion
-     * @param last
-     * @return
      */
-    public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId, final UUID maxVersion,
-                                                 final Edge last ) {
+    public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId,
+                                                final UUID maxVersion, final Edge last ) {
         return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, last );
     }
-
 }
 
 

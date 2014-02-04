@@ -20,11 +20,14 @@
 package org.apache.usergrid.persistence.graph.guice;
 
 
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
 import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -48,6 +51,9 @@ public class GraphModule extends AbstractModule {
 
         //configure collections and our core astyanax framework
         install(new CollectionModule());
+
+        //install our configuration
+        install (new GuicyFigModule( GraphFig.class ));
 
         bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
 

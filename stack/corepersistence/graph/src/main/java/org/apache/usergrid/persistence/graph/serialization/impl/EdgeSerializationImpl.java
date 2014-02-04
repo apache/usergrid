@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
@@ -76,8 +77,7 @@ import com.netflix.astyanax.util.RangeBuilder;
 @Singleton
 public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
-    //TODO, make this a config property?
-    private static final int PAGE_SIZE = 100;
+
 
     //holder to put data into col value
     private static final byte[] HOLDER = new byte[] { 0 };
@@ -128,11 +128,13 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     protected final Keyspace keyspace;
+    protected final GraphFig graphFig;
 
 
     @Inject
-    public EdgeSerializationImpl( final Keyspace keyspace ) {
+    public EdgeSerializationImpl( final Keyspace keyspace, final GraphFig graphFig ) {
         this.keyspace = keyspace;
+        this.graphFig = graphFig;
     }
 
 
@@ -452,7 +454,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          * If the edge is present, we need to being seeking from this
          */
 
-        final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( PAGE_SIZE );
+        final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( graphFig.getScanPageSize() );
 
 
         //set the range into the search
