@@ -169,17 +169,22 @@ public class EdgeSerializationTest {
      */
     @Test
     public void directEdgeGets() throws ConnectionException {
-        final Edge edgev1 = createEdge( "source", "edge", "target" );
+        final Edge edgev1 = createEdge( "source", "edge1", "target" );
 
         final Id sourceId = edgev1.getSourceNode();
         final Id targetId = edgev1.getTargetNode();
 
 
-        final Edge edgev2 = createEdge( sourceId, "edge", targetId );
+        final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
         assertTrue( "Edge version 1 has lower time uuid", edgev1.getVersion().compareTo( edgev2.getVersion() ) < 0 );
 
+        //create edge type 2 to ensure we don't get it in results
+        final Edge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
+
         serialization.writeEdge( scope, edgev1 ).execute();
+        serialization.writeEdge( scope, edgev2 ).execute();
+        serialization.writeEdge( scope, edgeType2V1 ).execute();
 
         final UUID now = UUIDGenerator.newTimeUUID();
 

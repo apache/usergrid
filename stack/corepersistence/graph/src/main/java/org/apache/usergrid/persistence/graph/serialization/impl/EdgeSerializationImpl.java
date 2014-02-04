@@ -52,11 +52,13 @@ import org.apache.usergrid.persistence.graph.serialization.util.EdgeHasher;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.AbstractComposite;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
@@ -88,7 +90,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     //Edge serializers
     private static final EdgeSerializer EDGE_SERIALIZER = new EdgeSerializer();
-
 
 
     // column families
@@ -173,17 +174,11 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
-    @Override
-    public Iterator<Edge> getEdgeFromSource( final OrganizationScope scope, final SearchByEdge search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
 
     private void doWrite( final OrganizationScope scope, final Edge edge, final RowOp op ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateEdge( edge );
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
         final Id sourceNodeId = edge.getSourceNode();
         final Id targetNodeId = edge.getTargetNode();
         final UUID version = edge.getVersion();
@@ -223,6 +218,63 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
+
+    @Override
+    public Iterator<Edge> getEdgeFromSource( final OrganizationScope scope, final SearchByEdge search ) {
+        ValidationUtils.validateOrganizationScope( scope );
+        EdgeUtils.validateSearchByEdge( search );
+
+        final Id sourceId = search.sourceNode();
+        final Id targetId = search.targetNode();
+        final String type = search.getType();
+        final UUID maxVersion = search.getMaxVersion();
+        final Optional<Edge> last = search.last();
+
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>() {
+
+            @Override
+            public void setRange( final RangeBuilder builder ) {
+
+                //set our start range since it was supplied to us
+                if ( search.last().isPresent() ) {
+
+                    final Edge edge = search.last().get();
+                    DirectedEdge sourceEdge = new DirectedEdge( edge.getTargetNode(), edge.getVersion() );
+
+                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
+                }
+
+
+                //                final DirectedEdge last = new DirectedEdge( targetId, maxVersion );
+                //                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
+                //                builder.setEnd( colValue );
+            }
+
+
+            @Override
+            public ScopedRowKey<OrganizationScope, RowKey> getRowKey() {
+                final RowKey sourceRowKey = new RowKey( sourceId, type );
+
+                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            }
+
+
+            @Override
+            public boolean hasPage() {
+                return search.last().isPresent();
+            }
+
+
+            @Override
+            public Edge parseColumn( final Column<DirectedEdge> column ) {
+                final DirectedEdge edge = column.getName();
+
+                return new SimpleEdge( sourceId, type, edge.id, edge.version );
+            }
+        } );
+    }
+
+
     @Override
     public Iterator<Edge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
 
@@ -232,7 +284,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id sourceId = edgeType.getNode();
         final String type = edgeType.getType();
 
-        return getEdges( scope, GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>() {
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>() {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
@@ -283,7 +335,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String type = edgeType.getType();
         final String targetType = edgeType.getIdType();
 
-        return getEdges( scope, GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>() {
+        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>() {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
@@ -301,7 +353,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public ScopedRowKey<OrganizationScope, RowKeyType> getRowKey() {
-                final RowKeyType sourceRowKey = new RowKeyType( targetId, type, targetType);
+                final RowKeyType sourceRowKey = new RowKeyType( targetId, type, targetType );
 
                 return ScopedRowKey.fromKey( scope, sourceRowKey );
             }
@@ -332,7 +384,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id targetId = edgeType.getNode();
         final String type = edgeType.getType();
 
-        return getEdges( scope, GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>() {
+        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>() {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
@@ -366,7 +418,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             public Edge parseColumn( final Column<DirectedEdge> column ) {
                 final DirectedEdge edge = column.getName();
 
-                return new SimpleEdge( edge.id,  type, targetId, edge.version );
+                return new SimpleEdge( edge.id, type, targetId, edge.version );
             }
         } );
     }
@@ -374,7 +426,57 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public Iterator<Edge> getEdgeToTarget( final OrganizationScope scope, final SearchByEdge search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        ValidationUtils.validateOrganizationScope( scope );
+        EdgeUtils.validateSearchByEdge( search );
+
+        final Id sourceId = search.sourceNode();
+        final Id targetId = search.targetNode();
+        final String type = search.getType();
+        final UUID maxVersion = search.getMaxVersion();
+        final Optional<Edge> last = search.last();
+
+        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>() {
+
+            @Override
+            public void setRange( final RangeBuilder builder ) {
+
+                //set our start range since it was supplied to us
+                if ( last.isPresent() ) {
+
+                    final Edge edge = last.get();
+                    DirectedEdge sourceEdge = new DirectedEdge( edge.getSourceNode(), edge.getVersion() );
+
+                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
+                }
+
+
+                final DirectedEdge last = new DirectedEdge( sourceId, maxVersion );
+                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
+                builder.setEnd( colValue );
+            }
+
+
+            @Override
+            public ScopedRowKey<OrganizationScope, RowKey> getRowKey() {
+                final RowKey sourceRowKey = new RowKey( targetId, type );
+
+                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            }
+
+
+            @Override
+            public boolean hasPage() {
+                return last.isPresent();
+            }
+
+
+            @Override
+            public Edge parseColumn( final Column<DirectedEdge> column ) {
+                final DirectedEdge edge = column.getName();
+
+                return new SimpleEdge( edge.id, type, targetId, edge.version );
+            }
+        } );
     }
 
 
@@ -388,7 +490,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String sourceType = edgeType.getIdType();
         final String type = edgeType.getType();
 
-        return getEdges( scope, GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>() {
+        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>() {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
@@ -436,8 +538,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      *
      * @return An iterator of all Edge instance that match the criteria
      */
-    private <R> Iterator<Edge> getEdges( final OrganizationScope scope,
-                                         MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> cf,
+    private <R> Iterator<Edge> getEdges( MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> cf,
                                          final EdgeSearcher<R> searcher ) {
 
 
@@ -514,14 +615,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         @Override
         public ByteBuffer toByteBuffer( final DirectedEdge edge ) {
-            DynamicComposite composite = new DynamicComposite();
+            final DynamicComposite colValue = createComposite( edge, AbstractComposite.ComponentEquality.EQUAL );
 
-            ID_COL_SERIALIZER.toComposite( composite, edge.id );
-
-            //add our edge
-            composite.addComponent( edge.version, UUID_SERIALIZER );
-
-            return composite.serialize();
+            return colValue.serialize();
         }
 
 
@@ -540,6 +636,33 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             return new DirectedEdge( id, version );
+        }
+
+
+        /**
+         * Creates a column value that will include the directed Edge as it's last element.  I.E all edges returned from
+         * the scan will have the node id and a version <= the specified directed edge version
+         */
+        public ByteBuffer createSearchEdgeInclusive( DirectedEdge edge ) {
+            final DynamicComposite colValue =
+                    createComposite( edge, AbstractComposite.ComponentEquality.GREATER_THAN_EQUAL );
+
+            return colValue.serialize();
+        }
+
+
+        /**
+         * Create the dynamic composite for this directed edge
+         */
+        private DynamicComposite createComposite( DirectedEdge edge, AbstractComposite.ComponentEquality equality ) {
+            DynamicComposite composite = new DynamicComposite();
+
+            ID_COL_SERIALIZER.toComposite( composite, edge.id );
+
+            //add our edge
+            composite.addComponent( edge.version, UUID_SERIALIZER, equality );
+
+            return composite;
         }
     }
 
