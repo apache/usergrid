@@ -222,51 +222,38 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdge( search );
 
-        final Id sourceId = search.sourceNode();
         final Id targetId = search.targetNode();
+        final Id sourceId = search.sourceNode();
         final String type = search.getType();
         final UUID maxVersion = search.getMaxVersion();
-        final Optional<Edge> last = search.last();
 
-        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>() {
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, search.last() ) {
+
 
             @Override
             public void setRange( final RangeBuilder builder ) {
+                super.setRange( builder );
 
-                //set our start range since it was supplied to us
-                if ( search.last().isPresent() ) {
-
-                    final Edge edge = search.last().get();
-                    DirectedEdge sourceEdge = new DirectedEdge( edge.getTargetNode(), edge.getVersion() );
-
-                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
-                }
-
-
+                //set the last value in the range based on the max version
                 final DirectedEdge last = new DirectedEdge( targetId, maxVersion );
                 final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
                 builder.setEnd( colValue );
             }
 
-
             @Override
-            public ScopedRowKey<OrganizationScope, RowKey> getRowKey() {
-                final RowKey sourceRowKey = new RowKey( sourceId, type );
-
-                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            protected RowKey generateRowKey() {
+                return new RowKey( sourceId, type );
             }
 
 
             @Override
-            public boolean hasPage() {
-                return search.last().isPresent();
+            protected DirectedEdge getStartColumn( final Edge last ) {
+                return new DirectedEdge( last.getTargetNode(), last.getVersion() );
             }
 
 
             @Override
-            public Edge parseColumn( final Column<DirectedEdge> column ) {
-                final DirectedEdge edge = column.getName();
-
+            protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( sourceId, type, edge.id, edge.version );
             }
         } );
@@ -282,42 +269,24 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id sourceId = edgeType.getNode();
         final String type = edgeType.getType();
 
-        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>() {
-
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
             @Override
-            public void setRange( final RangeBuilder builder ) {
-
-                //set our start range since it was supplied to us
-                if ( edgeType.last().isPresent() ) {
-
-                    final Edge edge = edgeType.last().get();
-                    DirectedEdge sourceEdge = new DirectedEdge( edge.getTargetNode(), edge.getVersion() );
-
-                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
-                }
+            protected RowKey generateRowKey() {
+                return new RowKey( sourceId, type );
             }
 
 
             @Override
-            public ScopedRowKey<OrganizationScope, RowKey> getRowKey() {
-                final RowKey sourceRowKey = new RowKey( sourceId, type );
-
-                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            protected DirectedEdge getStartColumn( final Edge last ) {
+                return new DirectedEdge( last.getTargetNode(), last.getVersion() );
             }
 
 
             @Override
-            public boolean hasPage() {
-                return edgeType.last().isPresent();
-            }
-
-
-            @Override
-            public Edge parseColumn( final Column<DirectedEdge> column ) {
-                final DirectedEdge edge = column.getName();
-
+            protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( sourceId, type, edge.id, edge.version );
             }
+
         } );
     }
 
@@ -333,42 +302,25 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String type = edgeType.getType();
         final String targetType = edgeType.getIdType();
 
-        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>() {
-
+        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>( scope, edgeType.last() ) {
             @Override
-            public void setRange( final RangeBuilder builder ) {
-
-                //set our start range since it was supplied to us
-                if ( edgeType.last().isPresent() ) {
-
-                    final Edge edge = edgeType.last().get();
-                    DirectedEdge sourceEdge = new DirectedEdge( edge.getTargetNode(), edge.getVersion() );
-
-                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
-                }
+            protected RowKeyType generateRowKey() {
+                return new RowKeyType( targetId, type, targetType );
             }
 
 
             @Override
-            public ScopedRowKey<OrganizationScope, RowKeyType> getRowKey() {
-                final RowKeyType sourceRowKey = new RowKeyType( targetId, type, targetType );
-
-                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            protected DirectedEdge getStartColumn( final Edge last ) {
+                return new DirectedEdge( last.getTargetNode(), last.getVersion() );
             }
 
 
             @Override
-            public boolean hasPage() {
-                return edgeType.last().isPresent();
-            }
-
-
-            @Override
-            public Edge parseColumn( final Column<DirectedEdge> column ) {
-                final DirectedEdge edge = column.getName();
-
+            protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( targetId, type, edge.id, edge.version );
             }
+
+
         } );
     }
 
@@ -382,42 +334,27 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id targetId = edgeType.getNode();
         final String type = edgeType.getType();
 
-        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>() {
+        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
+
+
 
             @Override
-            public void setRange( final RangeBuilder builder ) {
-
-                //set our start range since it was supplied to us
-                if ( edgeType.last().isPresent() ) {
-
-                    final Edge edge = edgeType.last().get();
-                    DirectedEdge sourceEdge = new DirectedEdge( edge.getSourceNode(), edge.getVersion() );
-
-                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
-                }
+            protected RowKey generateRowKey() {
+                return new RowKey( targetId, type );
             }
 
 
             @Override
-            public ScopedRowKey<OrganizationScope, RowKey> getRowKey() {
-                final RowKey sourceRowKey = new RowKey( targetId, type );
-
-                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            protected DirectedEdge getStartColumn( final Edge last ) {
+                return new DirectedEdge( last.getSourceNode(), last.getVersion() );
             }
 
 
             @Override
-            public boolean hasPage() {
-                return edgeType.last().isPresent();
-            }
-
-
-            @Override
-            public Edge parseColumn( final Column<DirectedEdge> column ) {
-                final DirectedEdge edge = column.getName();
-
+            protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( edge.id, type, targetId, edge.version );
             }
+
         } );
     }
 
@@ -429,25 +366,17 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id sourceId = search.sourceNode();
         final Id targetId = search.targetNode();
-        final String type = search.getType();
         final UUID maxVersion = search.getMaxVersion();
-        final Optional<Edge> last = search.last();
+        final String type = search.getType();
 
-        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>() {
+        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, search.last() ) {
+
 
             @Override
             public void setRange( final RangeBuilder builder ) {
+                super.setRange( builder );
 
-                //set our start range since it was supplied to us
-                if ( last.isPresent() ) {
-
-                    final Edge edge = last.get();
-                    DirectedEdge sourceEdge = new DirectedEdge( edge.getSourceNode(), edge.getVersion() );
-
-                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
-                }
-
-
+                //set the last value in the range based on the max version
                 final DirectedEdge last = new DirectedEdge( sourceId, maxVersion );
                 final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
                 builder.setEnd( colValue );
@@ -455,25 +384,23 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            public ScopedRowKey<OrganizationScope, RowKey> getRowKey() {
-                final RowKey sourceRowKey = new RowKey( targetId, type );
-
-                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            protected RowKey generateRowKey() {
+                return new RowKey( targetId, type );
             }
 
 
             @Override
-            public boolean hasPage() {
-                return last.isPresent();
+            protected DirectedEdge getStartColumn( final Edge last ) {
+                return new DirectedEdge( last.getSourceNode(), last.getVersion() );
             }
 
 
             @Override
-            public Edge parseColumn( final Column<DirectedEdge> column ) {
-                final DirectedEdge edge = column.getName();
-
+            protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( edge.id, type, targetId, edge.version );
             }
+
+
         } );
     }
 
@@ -488,41 +415,22 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String sourceType = edgeType.getIdType();
         final String type = edgeType.getType();
 
-        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>() {
-
+        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>( scope, edgeType.last() ) {
             @Override
-            public void setRange( final RangeBuilder builder ) {
-
-                //set our start range since it was supplied to us
-                if ( edgeType.last().isPresent() ) {
-
-                    final Edge edge = edgeType.last().get();
-                    DirectedEdge sourceEdge = new DirectedEdge( edge.getTargetNode(), edge.getVersion() );
-
-                    builder.setStart( sourceEdge, EDGE_SERIALIZER );
-                }
+            protected RowKeyType generateRowKey() {
+                return new RowKeyType( targetId, type, sourceType );
             }
 
 
             @Override
-            public ScopedRowKey<OrganizationScope, RowKeyType> getRowKey() {
-                final RowKeyType sourceRowKey = new RowKeyType( targetId, type, sourceType );
-
-                return ScopedRowKey.fromKey( scope, sourceRowKey );
+            protected DirectedEdge getStartColumn( final Edge last ) {
+                return new DirectedEdge( last.getTargetNode(), last.getVersion() );
             }
 
 
             @Override
-            public boolean hasPage() {
-                return edgeType.last().isPresent();
-            }
-
-
-            @Override
-            public Edge parseColumn( final Column<DirectedEdge> column ) {
-                final DirectedEdge edge = column.getName();
-
-                return new SimpleEdge(edge.id, type,  targetId, edge.version );
+            protected Edge createEdge( final DirectedEdge edge ) {
+                return new SimpleEdge( edge.id, type, targetId, edge.version );
             }
         } );
     }
@@ -531,8 +439,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     /**
      * Get the edges with the specified criteria
      *
-     * @param scope The organization scope
-     * @param cf The column familiy to search
+     * @param cf The column family to search
+     * @param searcher The searcher to use to construct the queries
      *
      * @return An iterator of all Edge instance that match the criteria
      */
@@ -577,6 +485,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     /**
      * Helper to generate an edge definition by the type
+     * @param cf
+     * @return
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf, ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
@@ -691,6 +601,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
+    /**
+     * The row key with the additional type
+     */
     private static class RowKeyType extends RowKey {
 
         /**
@@ -723,53 +636,80 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
-     * Simple parser to parse column names
+     * Searcher to be used when performing the search.  Performs I/O transformation
+     * as well as parsing for the iterator
      */
-    private interface EdgeSearcher<R> extends ColumnParser<DirectedEdge, Edge> {
+    private static abstract class EdgeSearcher<R> implements ColumnParser<DirectedEdge, Edge> {
+
+        protected final Optional<Edge> last;
+        protected final OrganizationScope scope;
+
+
+        protected EdgeSearcher( final OrganizationScope scope, final Optional<Edge> last ) {
+            this.scope = scope;
+            this.last = last;
+        }
 
 
         /**
          * Set the range on a search
          */
-        public void setRange( RangeBuilder builder );
+        public void setRange( final RangeBuilder builder ) {
+
+            //set our start range since it was supplied to us
+            if ( last.isPresent() ) {
+                DirectedEdge sourceEdge = getStartColumn( last.get() );
+
+                builder.setStart( sourceEdge, EDGE_SERIALIZER );
+            }
+        }
+
 
         /**
          * Get the row key to be used for the search
          */
-        public abstract ScopedRowKey<OrganizationScope, R> getRowKey();
+        public ScopedRowKey<OrganizationScope, R> getRowKey() {
+            return ScopedRowKey.fromKey( scope, generateRowKey() );
+        }
+
+
+        public boolean hasPage() {
+            return last.isPresent();
+        }
+
+
+        @Override
+        public Edge parseColumn( final Column<DirectedEdge> column ) {
+            final DirectedEdge edge = column.getName();
+
+            return createEdge( edge );
+        }
+
 
         /**
-         * Return true if the search has a page value, meaning we should skip the first value
-         *
-         * @return true if there is an element in the page
+         * Create a row key for this search to use
+         * @return
          */
-        public boolean hasPage();
+        protected abstract R generateRowKey();
 
 
-        //        protected abstract Edge buildEdge( final Id rowKeyId, final String edgeType, final Id colId,
-        //                                           final UUID version );
+        /**
+         * Set the start column to begin searching from.  The last is provided
+         * @param last
+         * @return
+         */
+        protected abstract DirectedEdge getStartColumn( Edge last );
+
+
+        /**
+         * Create an edge to return to the user based on the directed edge provided
+         * @param edge
+         * @return
+         */
+        protected abstract Edge createEdge( DirectedEdge edge );
+
+
     }
-
-    //
-    //    /**
-    //     * Creator from source->target
-    //     */
-    //    private static class SourceEdgeColumnParser extends EdgeSearcher {
-    //
-    //
-    //        /**
-    //         * Default constructor. Needs to take the id and edge used in the search
-    //         */
-    //        protected SourceEdgeColumnParser( final SearchByEdgeType searchByEdgeType ) {
-    //            super( searchByEdgeType );
-    //        }
-    //
-    //
-    //        @Override
-    //        protected Edge buildEdge( final Id rowKeyId, final String edgeType, final Id colId, final UUID version ) {
-    //            return new SimpleEdge( rowKeyId, edgeType, colId, version );
-    //        }
-    //    }
 
 
     /**
@@ -832,66 +772,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
-    /**
-     * Serializes the row key by sourceId, edge type
-     */
-    private static class SourceRowSerializer extends RowSerializer {
-
-        private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-
-
-        protected long[] hash( Edge e ) {
-            return EdgeHasher.createEdgeHash( e.getType() );
-        }
-
-
-        protected Id getRowId( Edge e ) {
-            return e.getSourceNode();
-        }
-    }
-
-
-    /**
-     * Serializes the row key by sourceId, edge type, and target node type
-     */
-    private static class SourceRowTypeSerializer extends SourceRowSerializer {
-
-        @Override
-        protected long[] hash( final Edge e ) {
-            return EdgeHasher.createEdgeHash( e.getType(), e.getTargetNode() );
-        }
-    }
-
-
-    /**
-     * Serializes the row key by targetId, edge type
-     */
-    private static class TargetRowSerializer extends RowSerializer {
-
-        private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-
-
-        protected long[] hash( Edge e ) {
-            return EdgeHasher.createEdgeHash( e.getType() );
-        }
-
-
-        protected Id getRowId( Edge e ) {
-            return e.getTargetNode();
-        }
-    }
-
-
-    /**
-     * Serializes the row key by targetId, edge type, and source node type
-     */
-    private static class TargetRowTypeSerializer extends SourceRowSerializer {
-
-        @Override
-        protected long[] hash( final Edge e ) {
-            return EdgeHasher.createEdgeHash( e.getType(), e.getSourceNode() );
-        }
-    }
 
 
     /**
