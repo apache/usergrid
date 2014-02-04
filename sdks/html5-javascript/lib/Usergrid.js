@@ -352,16 +352,24 @@ Function.prototype.extend = function(superClass) {
 			this.version=version;
 			this.storeName = storeName;
 			this.keyPath = keyPath;
-			this.openDatabase(callback)
+			this.init(callback)
 			
 		}
-		KeyStore.prototype.openDatabase=function(callback) {
-			var self = this;
+		KeyStore.prototype.init=function(callback) {
+			var self=this;
+			Promise.chain([
+				function(){return self.openDatabase(null,self)},
+				function(err,self){return self.getStore(err,self)}
+			]).then(callback);
+		};
+		KeyStore.prototype.openDatabase=function(err, self) {
+			var p = new Promise();
 			var req = global.indexedDB.open(this.database, this.version);
+			req.onerror=function(){done(this, self)};
 			req.onsuccess = function (evt) {
 				self.db = this.result;
-				self.objectStore=self.db.transaction([self.storeName], "readwrite").objectStore(self.storeName);
-				isFunction(callback) && callback(null, self);
+				//self.objectStore=self.db.transaction([self.storeName], "readwrite").objectStore(self.storeName);
+				p.done(null, self);
 			};
 			req.onupgradeneeded = function (evt) {
 				try {
@@ -371,40 +379,52 @@ Function.prototype.extend = function(superClass) {
 					self.objectStore.createIndex(self.keyPath, self.keyPath, {unique: true});
 				}
 			};
+			return p;
 		}
-		KeyStore.prototype.getStore=function(callback){
-			this.openDatabase(function(err, self){
-				callback(err, self.objectStore);
-			})
+		KeyStore.prototype.getStore=function(err, self){
+			var p = new Promise();
+			self.objectStore = self.db.transaction([self.storeName], "readwrite").objectStore(self.storeName);
+			p.done(null, self);
+			return p;
 		};
 		KeyStore.prototype.delete = function(key, callback) {
 			var self=this;
-			self.openDatabase(function(err, self){
-			self.getStore(function(err, store){
-				var item = store.get(key);
+			var p = new Promise();
+			self.get(key).then(function(err, value){
+				var item = self.objectStore.get(key);
 				item.onsuccess = function(event) {
-					store.delete(key);
-					isFunction(callback) && callback(null, key);
+					self.objectStore.delete(key);
+					p.done(null, self);
 				};
 				item.onerror = function(event) {
-					console.warn("Attempt to delete nonexistent item from keystore: %s", key);
-					isFunction(callback) && callback(null, key);
+					p.done(this, self);
 				};
+				isFunction(callback) && callback(err, self);
 			});
-			})
+			return p;
 		};
-
 		KeyStore.prototype.get = function(key, callback) {
 			var self=this;
-			self.getStore(function(err, store){
-				var item = store.get(key);
-				item.onsuccess = function(event) {
-					isFunction(callback) && callback(null, this.result ? this.result.value : null);
-				};
-				item.onerror = function(event) {
-					isFunction(callback) && callback(this, null);
-				};
-			});
+			var p = new Promise();
+			Promise.chain([
+				function(){return self.openDatabase(null,self)},
+				function(err,self){return self.getStore(err,self)},
+				function(err, self){
+					var p = new Promise();
+					var item = self.objectStore.get(key);
+					item.onsuccess = function(event) {
+						p.done(null, this.result ? this.result.value : null);
+					};
+					item.onerror = function(event) {
+						p.done(this, null);
+					};
+					return p;
+				}
+			]).then(function(err, value){
+				isFunction(callback) && callback(err, value);
+				p.done(null, self);
+			})
+			return p;
 		};
 		KeyStore.prototype.set = function(key, value, callback) {
 			var self=this;
@@ -412,33 +432,19 @@ Function.prototype.extend = function(superClass) {
 				'key': key,
 				'value': value
 			};
-			function add(data){
-				self.getStore(function(err, store){
-					var item=store.add(data);
+			var p = new Promise();
+			self.delete(key)
+				.then(function(err, self){
+					var item= self.objectStore.add(data);
 					item.onsuccess = function(event) {
-						isFunction(callback) && callback(null, data.value);
+						p.done(null, data.value);
 					};
 					item.onerror=function(event){
-						isFunction(callback) && callback(this, null);
+						p.done(this, null);
 					}
-				});
-			}
-			self.getStore(function(err, store){
-				var item = store.get(key);
-				item.onsuccess = function(event) {
-					data.created = (this.result) ? this.result.created : Date.now();
-					data.modified = Date.now();
-					var req=store.delete(key);
-					req.onerror=req.onsuccess=function(){
-						add(data);
-					};
-				};
-				item.onerror = function(event) {
-					data.created = Date.now();
-					data.modified = Date.now();
-					add(data);
-				};
-			});
+					isFunction(callback) && callback(err, self);
+				})
+			return p;
 		};
 		KeyStore.prototype.clear = function(callback) {
 			var self=this;
@@ -578,17 +584,6 @@ Function.prototype.extend = function(superClass) {
 		Usergrid.Collection=function(){};
 		return Usergrid;
 	}());
-	//TODO create keystore interface (Function.length)
-	
-
-	//define a key prefix for our storage object keys
-	/*Object.defineProperty(this, "keyPrefix", {
-		enumerable: false,
-		configurable: false,
-		writable: false,
-		value: "apigee_"
-	});*/
-
 	global[name] =  exports;
 	global[name].noConflict = function() {
 		if(overwrittenName){
@@ -619,3 +614,5 @@ Function.prototype.extend = function(superClass) {
 	};
 	return global[name];
 }(this, localStorage));*/
+
+
