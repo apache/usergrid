@@ -30,7 +30,6 @@ import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
-import org.apache.usergrid.persistence.collection.rx.RxFig;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -92,14 +91,7 @@ public class MvccEntitySerializationStrategyImplTest {
     )
     public CassandraFig cassandraFig;
 
-    @Inject
-    @Overrides( name = "unit-test",
-        environments = Env.UNIT,
-        options = {
-            @Option( method = "getMaxThreadCount", override = CONNECTION_COUNT )
-        }
-    )
-    public RxFig rxFig;
+
 
     @Inject
     public SerializationFig serializationFig;
@@ -111,7 +103,6 @@ public class MvccEntitySerializationStrategyImplTest {
     @Before
     public void setup() {
         assertNotNull( cassandraFig );
-        assertNotNull( rxFig );
     }
 
 
