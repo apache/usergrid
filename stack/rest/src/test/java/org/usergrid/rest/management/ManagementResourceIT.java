@@ -435,21 +435,6 @@ public class ManagementResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void exportCallSuccessful() throws Exception {
-        Status responseStatus = null;
-
-        try {
-            resource().path( "/management/export" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-
-    @Test
     public void revokeToken() throws Exception {
         String token1 = super.adminToken();
         String token2 = super.adminToken();
@@ -541,5 +526,30 @@ public class ManagementResourceIT extends AbstractRestIT {
         }
 
         assertEquals( Status.OK, status );
+    }
+
+    @Test
+    public void exportCallSuccessful() throws Exception {
+        Status responseStatus = null;
+
+        //        Map<String, String> payload =
+        //                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
+        //                                                   .map( "ttl", Long.MAX_VALUE + "" );
+        Map<String, String> storageinfo = hashMap ( "s3_token","insert_token_data_here").map("s3_key","insert_secret_here")
+                .map( "bucket_location","insert_bucket_location_here");
+        Map<String, Object> propertiesPayload = hashMap("storage_provider",(Object)"s3").map("storage_info",storageinfo);
+        Map<String, Object> payload = hashMap( "path", (Object)"test-organization/test-app/user" );
+        payload.put( "properties", propertiesPayload );
+        //.map( "properties",propertiesPayload);
+
+        try {
+            resource().path( "/management/export" ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class , payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.OK, responseStatus );
     }
 }

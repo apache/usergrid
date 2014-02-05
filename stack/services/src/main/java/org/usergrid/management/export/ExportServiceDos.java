@@ -1,5 +1,6 @@
 package org.usergrid.management.export;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,6 +15,9 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.management.ExportInfo;
 import org.usergrid.management.ManagementService;
@@ -24,12 +28,8 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.utils.JsonUtils;
 
 import com.google.common.collect.BiMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,17 +40,21 @@ public class ExportServiceDos implements ExportService{
 
     //dependency injection
     //inject scheduler - needs to be auto wired
+    @Autowired
     private SchedulerService sch;
     //inject the entity manager - needs to be auto wired
+    @Autowired
     private EntityManager em;
 
     //injected the Entity Manager Factory
     protected EntityManagerFactory emf;
 
     //inject properties for organization properties
+    @Autowired
     private Properties properties;
 
     //inject Management Service to access Organization Data
+    @Autowired
     private ManagementService managementService;
 
     //ORG uuid .
@@ -60,6 +64,12 @@ public class ExportServiceDos implements ExportService{
     public static final int MAX_ENTITY_FETCH = 100;
 
     private JsonFactory jsonFactory = new JsonFactory();
+
+    private String outputDir = "~/";
+
+    protected long startTime = System.currentTimeMillis();
+
+    protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
 
     //TODO: Todd, do I refactor most of the methods out to just leave schedule and doExport much like
     //the exporting toolbase class?
@@ -78,10 +88,10 @@ public class ExportServiceDos implements ExportService{
         Map<UUID, String> organizations = getOrgs();
         for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
 
-            if ( organization.equals( properties.getProperty( "usergrid.test-account.organization" ) ) ) {
-                // Skip test data from being exported.
-                continue;
-            }
+//            if ( organization.equals( properties.getProperty( "usergrid.test-account.organization" ) ) ) {
+//                // Skip test data from being exported.
+//                continue;
+//            }
 
             exportApplicationsForOrg( organization );
         }
@@ -262,10 +272,10 @@ public class ExportServiceDos implements ExportService{
         }
 
         // Write connections
-        saveConnections( entity, em, jg );
+        //saveConnections( entity, em, jg );
 
         // Write dictionaries
-        saveDictionaries( entity, em, jg );
+        //saveDictionaries( entity, em, jg );
 
         // End the object if it was Started
         jg.writeEndObject();
@@ -282,6 +292,36 @@ public class ExportServiceDos implements ExportService{
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
         jg.setCodec( new ObjectMapper() );
         return jg;
+    }
+
+    protected File createOutputFile( String type, String name ) {
+        return new File( outputDir, prepareOutputFileName( type, name ) );
+    }
+
+
+    /**
+     * @param type just a label such us: organization, application.
+     *
+     * @return the file name concatenated with the type and the name of the collection
+     */
+    protected String prepareOutputFileName( String type, String name ) {
+        name = name.replace( "/", PATH_REPLACEMENT );
+        // Add application and timestamp
+        StringBuilder str = new StringBuilder();
+        // str.append(baseOutputFileName);
+        // str.append(".");
+        str.append( type );
+        str.append( "." );
+        str.append( name );
+        str.append( "." );
+        str.append( startTime );
+        str.append( ".json" );
+
+        String outputFileName = str.toString();
+
+        //logger.info( "Creating output filename:" + outputFileName );
+
+        return outputFileName;
     }
 
 }

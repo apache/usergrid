@@ -449,16 +449,24 @@ public class ManagementResource extends AbstractContextResource {
     public Response exportPostJson (@Context UriInfo ui, Map<String, Object> json,
                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback){
 
+        try {
+
+
         //parse the json into some useful object (the config params)
         ExportInfo objEx = new ExportInfo(json);
 
         ExportService ex = new ExportServiceDos();
 
         // exportService.schedule(config)
-        ex.schedule( objEx );
+        ex.doExport( objEx );
+        }
+        catch (Exception e) {
+            //TODO:throw descriptive error message and or include on in the response
+            return Response.serverError().build();
+        }
 
         //TODO: make schedule or doExport return a response? Or create one.
-        return null;
+        return Response.ok().build();
 
 
 
