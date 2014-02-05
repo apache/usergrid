@@ -13,6 +13,7 @@
   <version>1.0-SNAPSHOT</version>
 
   <properties>
+    <surefire.version>2.16</surefire.version>
     <astyanax.version>1.56.48</astyanax.version>
     <jukito.version>1.4-UG</jukito.version>
     <guice.version>3.0</guice.version>
@@ -38,12 +39,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.16</version>
-          <configuration>
-             <environmentVariables>
-               <archaius.deployment.environment>UNIT</archaius.deployment.environment>
-             </environmentVariables>
-           </configuration>
+          <version>${surefire.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -52,12 +48,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.16</version>
+        <version>${surefire.version}</version>
         <configuration>
           <includes>
             <include>**/*Test.java</include>
             <include>**/*IT.java</include>
           </includes>
+          <systemPropertyVariables>
+            <archaius.deployment.environment>UNIT</archaius.deployment.environment>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
 
@@ -74,6 +73,26 @@
         </executions>
       </plugin>
     </plugins>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </testResource>
+    </testResources>
 
   </build>
 

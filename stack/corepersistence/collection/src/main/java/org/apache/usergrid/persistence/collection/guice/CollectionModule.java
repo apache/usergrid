@@ -55,35 +55,6 @@ import rx.Scheduler;
  */
 public class CollectionModule extends AbstractModule {
 
-//    static {
-//        /*
-//         * --------------------------------------------------------------------
-//         * Archaius Configuration Settings
-//         * --------------------------------------------------------------------
-//         */
-//
-//        try {
-//            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
-//        }
-//        catch ( IOException e ) {
-//            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
-//        }
-
-//        Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class, RxFig.class ) );
-//        CassandraFig cassandraFig = injector.getInstance( CassandraFig.class );
-//        RxFig rxFig = injector.getInstance( RxFig.class );
-//
-//        Env env = Env.getEnvironment();
-//        if ( env == Env.UNIT || env == Env.ALL ) {
-//            String thriftPort = String.valueOf( AvailablePortFinder.getNextAvailable() );
-//            cassandraFig.bypass( "getThriftPort", thriftPort );
-//            cassandraFig.bypass( "getConnections", "20" );
-//            rxFig.bypass( "getMaxThreadCount", "20" );
-//            cassandraFig.bypass( "getHosts", "localhost" );
-//            cassandraFig.bypass( "getClusterName", "Usergrid" );
-//            cassandraFig.bypass( "getKeyspaceName", "Usergrid_Collections" );
-//        }
-//    }
 
     @Override
     protected void configure() {
