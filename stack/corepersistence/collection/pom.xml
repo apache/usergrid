@@ -161,7 +161,14 @@
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-core</artifactId>
-      <version>0.15.1</version>
+      <version>0.16.1</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-contrib</artifactId>
+      <version>0.14.6</version>
     </dependency>
 
     <dependency>
