@@ -50,6 +50,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.util.functions.FuncN;
 
 
 /**
@@ -144,7 +145,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
-        observable = Concurrent.concurrent(observable, writeVerifyUnique, writeOptimisticVerify);
+        observable = Concurrent.concurrent(observable, new WaitZip( observable ), writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
         return observable.map( writeCommit );
@@ -172,5 +173,20 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
         return CassandraCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
+    }
+
+    private static class WaitZip<R> implements FuncN<R>{
+
+        private final R value;
+
+
+        private WaitZip( final R value ) {this.value = value;}
+
+
+        @Override
+        public R call( final Object... args ) {
+            //no op, just here to require a join before proceeding
+            return value;
+        }
     }
 }

@@ -8,12 +8,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 import rx.Observable;
 import rx.concurrency.Schedulers;
 import rx.util.functions.Func1;
+import rx.util.functions.FuncN;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,22 +33,23 @@ public class ConcurrentTest {
     public void concurrent(){
 
         final String source = "test";
-        Observable<String> observable = Observable.from(source);
+        Observable<String> observable = CassandraCommand.toObservable( source );
 
         //we could theoretically use the same instance 3 times.  I just want to use
         //3 actual instances, since this is closer to the real use case.
 
-        final CountDownLatch latch = new CountDownLatch( 0 );
+        final CountDownLatch latch = new CountDownLatch( 3 );
         TestConcurrent instance1 = new TestConcurrent( latch );
         TestConcurrent instance2 = new TestConcurrent( latch );
         TestConcurrent instance3 = new TestConcurrent( latch );
 
+        Zip zip = new Zip();
+
+
+
         //concurrent inherits thread pool from it's observable, set it's thread pool
-
-        observable = observable.subscribeOn( Schedulers.threadPoolForIO() );
-
         Observable<String> result = Concurrent
-                .concurrent(observable, instance1, instance2, instance3 );
+                .concurrent(observable, zip, instance1, instance2, instance3 );
 
         assertEquals( "No invocation yet", 0, set.size() );
 
@@ -73,6 +77,31 @@ public class ConcurrentTest {
 
     private Multiset<String> set  = HashMultiset.create();
 
+
+    public class Zip implements FuncN<String> {
+
+
+
+        @Override
+        public String call( final Object... args ) {
+            //no op, just a blocker for joining
+
+
+            for(int i = 0; i < args.length; i ++){
+
+                String current = ( String ) args[i];
+
+                for(int j = i+1; j< args.length; j++){
+
+                    assertEquals(current, args[j]);
+                }
+
+
+            }
+
+            return ( String ) args[0];
+        }
+    }
 
     /**
      * Simple function that just adds data to our multiset for later evaluation

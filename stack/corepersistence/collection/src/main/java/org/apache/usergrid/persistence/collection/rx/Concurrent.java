@@ -22,10 +22,15 @@ package org.apache.usergrid.persistence.collection.rx;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
+
+import com.netflix.hystrix.HystrixCommand;
+
 import rx.Observable;
 import rx.concurrency.Schedulers;
 import rx.operators.OperationMerge;
 import rx.util.functions.Func1;
+import rx.util.functions.FuncN;
 
 
 /**
@@ -37,34 +42,35 @@ import rx.util.functions.Func1;
 public class Concurrent<T, R> implements Func1<T, Observable<R>> {
 
     private final Func1<T, R>[] concurrent;
+    private final FuncN<R> zip;
 
-    private Concurrent( final Func1<T, R>[] concurrent ){
+    private Concurrent( final FuncN<R> zip, final Func1<T, R>[] concurrent ){
         this.concurrent = concurrent;
+        this.zip = zip;
     }
 
     @Override
       public Observable<R> call( final T input ) {
 
+
+        //TODO T.N Is this resetting the timeouts in hystrix?
+
         List<Observable<R>> observables = new ArrayList<Observable<R>>(concurrent.length);
 
-        //put all our observables together for concurrency
+        //Create multiple observables for each function.  They simply emit the input value.
+        //this is the "fork" step of the concurrent processing
         for( Func1<T, R> funct: concurrent){
-            final Observable<R> observable = 
-                    Observable.from(input).subscribeOn(  
-                            Schedulers.threadPoolForIO() ).map( funct );
+            final Observable<R> observable = CassandraCommand.toObservable( input ).map( funct );
 
             observables.add( observable );
         }
 
+        final Observable<R> zipped = Observable.zip( observables, zip );
 
 
 
-        final Observable.OnSubscribeFunc<R> merge = OperationMerge.merge( observables );
-        final Observable<R> newObservable = Observable.create( merge );
-
-
-        //wait until the last operation completes to proceed
-        return newObservable.takeLast( 1 );
+        //return an observable that
+        return zipped;
 
       }
 
@@ -72,15 +78,16 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
     /**
      * Create an instance of concurrent execution.  All functions specified 
      * in the list are invoked in parallel. The results are then "zipped" 
-     * into a single observable which is returned
+     * into a single observable which is returned  with the specified function
      *
      * @param observable The observable we're invoking on
+     * @param zipFunction The zip function to aggregate the results
      * @param concurrent The concurrent operations we're invoking
-     * @return
+     * @return The observable emitted from the zipped function
      */
     public static <T, R> Observable<R> concurrent( 
-            final Observable<T> observable, final Func1<T, R>... concurrent ){
-        return observable.mapMany( new Concurrent<T, R>( concurrent ));
+            final Observable<T> observable, final FuncN zipFunction, final Func1<T, R>... concurrent ){
+        return observable.mapMany( new Concurrent<T, R>( zipFunction, concurrent ));
     }
 
 

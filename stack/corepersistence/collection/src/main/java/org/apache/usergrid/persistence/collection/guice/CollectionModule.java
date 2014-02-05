@@ -30,8 +30,6 @@ import org.apache.usergrid.persistence.collection.cassandra.AvailablePortFinder;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
-import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
-import org.apache.usergrid.persistence.collection.rx.RxFig;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
@@ -59,8 +57,7 @@ public class CollectionModule extends AbstractModule {
     @Override
     protected void configure() {
         //noinspection unchecked
-        install( new GuicyFigModule( 
-                RxFig.class, 
+        install( new GuicyFigModule(
                 MigrationManagerFig.class,
                 CassandraFig.class, 
                 SerializationFig.class,
@@ -74,8 +71,6 @@ public class CollectionModule extends AbstractModule {
                 .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
                 .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                 .build( EntityCollectionManagerFactory.class ) );
-
-        bind( Scheduler.class ).toProvider( CassandraThreadScheduler.class );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
     }

@@ -33,12 +33,12 @@ import rx.Observable;
  */
 public class CassandraCommand<R> extends HystrixCommand<R> {
 
-    private static final HystrixCommandGroupKey GROUP_KEY =HystrixCommandGroupKey.Factory.asKey( "CassandraCommand" );
+    public static final HystrixCommandGroupKey GROUP_KEY =HystrixCommandGroupKey.Factory.asKey( "CassandraCommand" );
 
 
     private final R value;
 
-    protected CassandraCommand(final R value) {
+    public CassandraCommand(final R value) {
         super( GROUP_KEY );
         this.value = value;
     }
