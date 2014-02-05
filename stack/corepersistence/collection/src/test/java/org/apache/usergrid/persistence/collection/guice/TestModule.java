@@ -13,22 +13,15 @@ import com.netflix.config.SimpleDeploymentContext;
  *
  */
 public abstract class TestModule extends AbstractModule {
-
-
     static {
-                  /*
-                    * --------------------------------------------------------------------
-                    * Bootstrap the config for Archaius Configuration Settings.  We don't want to
-                    * bootstrap more than once per JVM
-                    * --------------------------------------------------------------------
-                    */
+      /*
+       * --------------------------------------------------------------------
+       * Bootstrap the config for Archaius Configuration Settings.  We don't want to
+       * bootstrap more than once per JVM
+       * --------------------------------------------------------------------
+       */
 
         try {
-            //set our deployment context to UNIT so that we load our unit tests
-            SimpleDeploymentContext ctx = new SimpleDeploymentContext();
-            ctx.setDeploymentEnvironment( "UNIT" );
-            ConfigurationManager.setDeploymentContext( ctx );
-
             //load up the properties
             ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
         }
