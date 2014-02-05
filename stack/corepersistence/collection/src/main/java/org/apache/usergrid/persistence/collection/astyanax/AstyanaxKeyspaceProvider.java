@@ -58,7 +58,7 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     public Keyspace get() {
 
         AstyanaxConfiguration config = new AstyanaxConfigurationImpl()
-                .setDiscoveryType( NodeDiscoveryType.TOKEN_AWARE )
+                .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraConfig.getDiscoveryType() ) )
                 .setTargetCassandraVersion( cassandraConfig.getVersion() );
 
         ConnectionPoolConfiguration connectionPoolConfiguration =

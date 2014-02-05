@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.graph.impl;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
+import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
@@ -76,7 +76,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        return WriteCommand.toObservable(new GraphIoEvent<Edge>(scope, edge)).map( edgeWriteStage );
+        return CassandraCommand.toObservable( new GraphIoEvent<Edge>( scope, edge ) ).map( edgeWriteStage );
     }
 
 

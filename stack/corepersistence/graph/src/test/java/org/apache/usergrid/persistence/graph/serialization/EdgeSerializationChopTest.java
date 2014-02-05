@@ -19,6 +19,7 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
+import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.when;
  */
 @IterationChop( iterations = 10, threads = 2 )
 @RunWith( JukitoRunner.class )
-@UseModules( { GraphModule.class } )
+@UseModules( { TestGraphModule.class } )
 public class EdgeSerializationChopTest {
 
     @ClassRule

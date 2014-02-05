@@ -35,6 +35,6 @@ public interface RxFig extends GuicyFig {
      * Max number of threads a pool can allocate.  Can be dynamically changed after starting
      */
     @Key( "rx.cassandra.io.threads" )
-    @Default( "20" )
+    @Default( "100" )
     int getMaxThreadCount();
 }

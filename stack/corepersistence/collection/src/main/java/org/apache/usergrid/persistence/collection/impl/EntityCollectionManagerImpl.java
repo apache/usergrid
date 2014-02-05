@@ -24,10 +24,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.thrift.Cassandra;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.hystrix.ReadCommand;
-import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
+import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -139,8 +140,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         //create our observable and start the write
-        Observable<CollectionIoEvent<MvccEntity>> observable = WriteCommand.toObservable(
-                new CollectionIoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable = CassandraCommand.toObservable( new CollectionIoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
 
 
         //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
@@ -160,7 +160,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        return WriteCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
+        return CassandraCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -171,6 +171,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        return ReadCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
+        return CassandraCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
     }
 }
