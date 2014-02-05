@@ -17,29 +17,31 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.google.inject.Inject;
+
+import org.jukito.UseModules;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
+import com.google.inject.Inject;
+
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
-import org.jukito.UseModules;
 import static org.junit.Assert.assertSame;
-import org.junit.ClassRule;
 import static org.mockito.Mockito.mock;
 
 
 /** 
  * @author tnine 
  */
-@UseModules( CollectionModule.class )
+@UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
     @ClassRule

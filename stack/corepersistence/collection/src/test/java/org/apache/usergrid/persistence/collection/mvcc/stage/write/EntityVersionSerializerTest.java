@@ -17,11 +17,14 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
+
 import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 public class EntityVersionSerializerTest {
     

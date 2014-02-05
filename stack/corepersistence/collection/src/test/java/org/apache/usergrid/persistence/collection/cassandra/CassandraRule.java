@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.io.util.FileUtils;
 
 import org.apache.usergrid.persistence.collection.astyanax.CassandraFig;
+
 import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -72,7 +73,7 @@ public class CassandraRule extends EnvironResource {
                         AvailablePortFinder.getNextAvailable() );
                 cass.start();
 
-                LOG.info( "Cassandra started" );
+                LOG.info( "Cassandra boostrapped" );
 
                 started = true;
             }

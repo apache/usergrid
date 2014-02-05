@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
+import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -56,7 +57,7 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith( JukitoRunner.class )
-@UseModules( { GraphModule.class } )
+@UseModules( { TestGraphModule.class } )
 public class EdgeMetadataSerializationTest {
 
 

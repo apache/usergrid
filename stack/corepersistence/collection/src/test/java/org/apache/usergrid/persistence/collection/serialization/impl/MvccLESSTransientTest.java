@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.UUID;
 
-import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
@@ -16,8 +15,8 @@ import org.safehaus.guicyfig.Option;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -38,7 +37,7 @@ import static org.junit.Assert.assertNull;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( CollectionModule.class )
+@UseModules( TestCollectionModule.class )
 public class MvccLESSTransientTest {
     @Inject
     @Bypass( environments = { Env.ALL, Env.UNIT }, options = @Option( method = "getTimeout", override = "1" ) )
