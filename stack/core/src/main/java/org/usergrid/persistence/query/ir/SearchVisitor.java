@@ -119,7 +119,9 @@ public abstract class SearchVisitor implements NodeVisitor {
         ResultIterator right = results.pop();
         ResultIterator left = results.pop();
 
-        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ) );
+        final int nodeId = node.getId();
+
+        UnionIterator union = new UnionIterator( queryProcessor.getPageSizeHint( node ), nodeId, queryProcessor.getCursorCache(nodeId  ) );
 
         if ( left != null ) {
             union.addIterator( left );
@@ -168,8 +170,7 @@ public abstract class SearchVisitor implements NodeVisitor {
             if ( subResults == null ) {
                 QuerySlice firstFieldSlice = new QuerySlice( slice.getPropertyName(), -1 );
                 subResults =
-                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), COLLECTION_PARSER,
-                                slice.hasCursor() );
+                        new SliceIterator( slice, secondaryIndexScan( orderByNode, firstFieldSlice ), COLLECTION_PARSER );
             }
 
             orderIterator = new OrderByIterator( slice, orderByNode.getSecondarySorts(), subResults, em,
@@ -188,7 +189,7 @@ public abstract class SearchVisitor implements NodeVisitor {
                 scanner = secondaryIndexScan( orderByNode, slice );
             }
 
-            SliceIterator joinSlice = new SliceIterator( slice, scanner, COLLECTION_PARSER, slice.hasCursor() );
+            SliceIterator joinSlice = new SliceIterator( slice, scanner, COLLECTION_PARSER);
 
             IntersectionIterator union = new IntersectionIterator( queryProcessor.getPageSizeHint( orderByNode ) );
             union.addIterator( joinSlice );
@@ -219,7 +220,7 @@ public abstract class SearchVisitor implements NodeVisitor {
         for ( QuerySlice slice : node.getAllSlices() ) {
             IndexScanner scanner = secondaryIndexScan( node, slice );
 
-            intersections.addIterator( new SliceIterator( slice, scanner, COLLECTION_PARSER, slice.hasCursor() ) );
+            intersections.addIterator( new SliceIterator( slice, scanner, COLLECTION_PARSER) );
         }
 
         results.push( intersections );

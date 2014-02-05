@@ -1,0 +1,49 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mocha Tests</title>
+  <link rel="stylesheet" href="../resources/css/mocha.css" />
+
+
+
+
+
+
+
+  <script src="../resources/js/mocha.js"></script>
+  <script>mocha.setup('bdd')</script>
+  <script src="../resources/js/blanket_mocha.min.js"></script>
+  <script type="text/javascript" src="../../node_modules/grunt-blanket-mocha/support/mocha-blanket.js"></script>
+	<script>
+      function assert(expr, msg) {
+        if (!expr) throw new Error(msg || 'failed');
+      }
+    </script>
+
+  <script src="../../usergrid.js" data-cover></script>
+  <script src="test.js"></script>
+<!-- run mocha -->
+    <script type="text/javascript" charset="utf-8">
+    	var _onload=onload||function(){};
+        onload = function(){
+        	_onload.apply(this, arguments);
+	        mocha.checkLeaks();
+	        mocha.globals(['']);
+	        var runner = mocha.run();
+	        /*runner.on('test end', function(test){
+	          console.log(test.fullTitle());
+	        });*/
+	      };
+    </script>
+
+  <script>
+    if (window.PHANTOMJS) {
+        blanket.options("reporter", "../../node_modules/grunt-blanket-mocha/support/grunt-reporter.js");
+    }
+  </script>
+
+</head>
+<body>
+	<div id="mocha"></div>
+</body>
+</html>

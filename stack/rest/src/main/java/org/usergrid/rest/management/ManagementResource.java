@@ -299,14 +299,14 @@ public class ManagementResource extends AbstractContextResource {
     @Path( "me" )
     @Consumes( APPLICATION_FORM_URLENCODED )
     public Response getAccessTokenLightPost( @Context UriInfo ui, @HeaderParam( "Authorization" ) String authorization,
-                                             @QueryParam( "grant_type" ) String grant_type,
-                                             @QueryParam( "username" ) String username,
-                                             @QueryParam( "password" ) String password,
-                                             @QueryParam( "client_id" ) String client_id,
-                                             @QueryParam( "client_secret" ) String client_secret,
-                                             @QueryParam( "ttl" ) long ttl,
-                                             @QueryParam( "access_token" ) String access_token,
-                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+                                             @FormParam( "grant_type" ) String grant_type,
+                                             @FormParam( "username" ) String username,
+                                             @FormParam( "password" ) String password,
+                                             @FormParam( "client_id" ) String client_id,
+                                             @FormParam( "client_secret" ) String client_secret,
+                                             @FormParam( "ttl" ) long ttl,
+                                             @FormParam( "access_token" ) String access_token,
+                                             @FormParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false );

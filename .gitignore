@@ -12,4 +12,11 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+/portal/performance/
+
+/portal/node_modules/
+/portal/dist
+/portal/bower_components
+/portal/.idea
+.Trashes
 /stack/corepersistence/priamcluster/aws.properties

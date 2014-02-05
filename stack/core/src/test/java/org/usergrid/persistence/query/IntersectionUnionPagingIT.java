@@ -25,8 +25,10 @@ import java.util.Set;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.cassandra.QueryProcessor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +45,8 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             "select * where (field1Or > '00000000' OR field2Or > '00000000') AND fieldDate = '0000-00-00'";
     private static final String scanUnion =
             "select * where fieldDate = '0000-00-00' AND (field1Or > '00000000' OR field2Or > '00000000') ";
-    private static final int PAGE_SIZE = 100;
+
+    private static final int PAGE_SIZE = 300;
 
 
     @Test
@@ -55,7 +58,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
         Set<String> created = performSetup( collectionIoHelper );
 
 
-        testUnionPaging( collectionIoHelper, unionScan, created );
+//        testUnionPaging( collectionIoHelper, unionScan, created );
         testUnionPaging( collectionIoHelper, scanUnion, created );
     }
 
@@ -76,7 +79,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
     private Set<String> performSetup( final IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 500;
+        int size = ( int ) ( QueryProcessor.PAGE_SIZE*2.5);
 
         long start = System.currentTimeMillis();
 
@@ -92,17 +95,16 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             entity.put( "name", name );
             entity.put( "fieldDate", "0000-00-00" );
 
-            String field1;
+            String field1 = String.format( "%08d", i + 1 );
             String field2;
 
             //use a value slightly smaller than page size, since we want to simulate
             //the cursor issues with union queries
-            if ( i < PAGE_SIZE - 10 ) {
-                field1 = String.format( "%08d", i + 1 );
+
+            if ( i < size - 10 ) {
                 field2 = zeros;
             }
             else {
-                field1 = zeros;
                 field2 = String.format( "%08d", i + 1 );
             }
 
@@ -111,7 +113,9 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             entity.put( "field1Or", field1 );
             entity.put( "field2Or", field2 );
 
-            io.writeEntity( entity );
+            Entity saved =  io.writeEntity( entity );
+
+            LOG.info("Writing entity with id '{}'", saved.getUuid());
         }
 
         long stop = System.currentTimeMillis();

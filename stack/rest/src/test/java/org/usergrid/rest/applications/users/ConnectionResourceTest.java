@@ -8,7 +8,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestIT;
@@ -232,5 +231,6 @@ public class ConnectionResourceTest extends AbstractRestIT {
         assertNull(node);
 
     }
+
 
 }

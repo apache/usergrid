@@ -1,0 +1,18 @@
+[
+  {
+    "id": "appOverview",
+    "top5Crashes": {
+
+      "testdata": 123
+
+    }
+  },
+  {
+    "id": "errorsCrashes",
+    "top5Errors": {
+
+      "testdata": 456
+
+    }
+  }
+]
