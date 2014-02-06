@@ -116,4 +116,11 @@ public interface AccountCreationProps {
     public void setProperty( String name, String value );
 
     public Properties getMailProperties();
+    public SuperUser getSuperUser();
+    public static interface SuperUser{
+       boolean isEnabled();
+        String getUsername();
+        String getEmail();
+        String getPassword();
+    }
 }
