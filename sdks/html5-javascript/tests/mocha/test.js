@@ -115,7 +115,7 @@ describe('Usergrid', function() {
 				usergridTestHarness(err, data, done, [
 
 					function(err, data) {
-						assert(data.entities.length >= 0);
+						assert(!data.entities);
 						console.log(JSON.stringify(data))
 					}
 				]);
@@ -129,7 +129,7 @@ describe('Usergrid', function() {
 				usergridTestHarness(err, data, done, [
 
 					function(err, data) {
-						assert(data.entities.length === 0)
+						assert(!data.entities)
 					}
 				]);
 			});
@@ -152,10 +152,10 @@ describe('Usergrid', function() {
 				type: 'dogs',
 				name: 'Rocky'
 			}
-
-			client.createEntity(options, function(err, data) {
+			client.createEntity(options, function(err, entity) {
 				assert(!err, "dog not created");
-				dog = data;
+				dog = entity;
+                console.log("AFTER CREATE", dog.get());
 				done();
 			});
 		});
@@ -165,6 +165,7 @@ describe('Usergrid', function() {
 				done();
 				return;
 			}
+            console.log("BEFORE FETCH", dog.get());
 			//once the dog is created, you can set single properties:
 			dog.fetch(function(err) {
 				assert(!err, "dog not fetched");
@@ -187,7 +188,7 @@ describe('Usergrid', function() {
 			}
 			//set is additive, so previously set properties are not overwritten
 			dog.set(data);
-
+            console.log("BEFORE SAVE", dog.get());
 			//finally, call save on the object to save it back to the database
 			dog.save(function(err) {
 				assert(!err, "dog not saved");

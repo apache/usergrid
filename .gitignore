@@ -15,3 +15,5 @@ Icon
 /portal/performance/
 
 /portal/node_modules/
+#Webstorm artifacts
+.idea/

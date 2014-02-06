@@ -27,11 +27,51 @@
 window.console = window.console || {};
 window.console.log = window.console.log || function() {};
 
+
+function extend(subClass, superClass) {
+    var F = function() {};
+    F.prototype = superClass.prototype;
+    subClass.prototype = new F();
+    subClass.prototype.constructor = subClass;
+
+    subClass.superclass = superClass.prototype;
+    if(superClass.prototype.constructor == Object.prototype.constructor) {
+        superClass.prototype.constructor = superClass;
+    }
+    return subClass;
+}
+
+function NOOP(){}
+
 //Usergrid namespace encapsulates this SDK
 /*window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
 Usergrid.USERGRID_SDK_VERSION = '0.10.07';*/
 
+
+function isValidUrl(url) {
+    if (!url) return false;
+    var doc, base, anchor, isValid=false;
+    try{
+        doc = document.implementation.createHTMLDocument('');
+        base = doc.createElement('base');
+        base.href = base || window.lo;
+        doc.head.appendChild(base);
+        anchor = doc.createElement('a');
+        anchor.href = url;
+        doc.body.appendChild(anchor);
+        isValid=!(anchor.href === '')
+    }catch(e){
+        console.error(e);
+    }finally{
+        doc.head.removeChild(base);
+        doc.body.removeChild(anchor);
+        base=null;
+        anchor=null;
+        doc=null;
+        return isValid;
+    }
+}
 
 /*
  * Tests if the string is a uuid
@@ -55,33 +95,20 @@ function isUUID(uuid) {
  *  @return {string} Returns the encoded string
  */
 function encodeParams(params) {
-	var tail = [];
-	var item = [];
-	var i;
-	if (params instanceof Array) {
-		for (i in params) {
-			item = params[i];
-			if ((item instanceof Array) && (item.length > 1)) {
-				tail.push(item[0] + "=" + encodeURIComponent(item[1]));
-			}
-		}
-	} else {
-		for (var key in params) {
-			if (params.hasOwnProperty(key)) {
-				var value = params[key];
-				if (value instanceof Array) {
-					for (i in value) {
-						item = value[i];
-						tail.push(key + "=" + encodeURIComponent(item));
-					}
-				} else {
-					tail.push(key + "=" + encodeURIComponent(value));
-				}
-			}
-		}
-	}
-	return tail.join("&");
+    var queryString;
+    if(params && Object.keys(params)){
+        queryString = [].slice.call(arguments)
+            .reduce(function(a, b) {return a.concat((b instanceof Array)?b:[b]);},[])
+            .filter(function(c){return "object"===typeof c})
+            .reduce(function(p,c){(!(c instanceof Array)) ? p= p.concat(Object.keys(c).map(function(key){return [key,c[key]]})): p.push(c); return p;},[])
+            .reduce(function(p,c){((c.length===2) ? p.push(c) : p= p.concat(c)); return p;},[])
+            .reduce(function(p,c){(c[1] instanceof Array) ? c[1].forEach(function(v){p.push([c[0],v])}): p.push(c); return p;},[])
+            .map(function(c){c[1]=encodeURIComponent(c[1]); return c.join('=')})
+            .join('&');
+    }
+    return queryString;
 }
+
 
 /*
  *  method to determine whether or not the passed variable is a function
@@ -122,490 +149,381 @@ function doCallback(callback, params, context) {
 	return returnValue;
 }
 
-Function.prototype.extend = function(superClass) {
-				var subClass=this,F = function() {};
-				F.prototype = superClass.prototype;
-				subClass.prototype = new F();
-				subClass.prototype.constructor = subClass;
- 
-				subClass.superclass = superClass.prototype;
-				if(superClass.prototype.constructor == Object.prototype.constructor) {
-								superClass.prototype.constructor = superClass;
-				}
-				return subClass;
-}
-//Logger
-(function() {
-	var name = 'Logger', global = this, overwrittenName = global[name], exports;
-	/* logging */
-	exports = (function() {
-		function Logger(name) {
-			function tr(m) {
-				return {
-					'E': 'End',
-					'%': 'group',
-					'#': 'profile',
-					'!': 'time'
-				}[m];
-			}
-			var logEnabled = true,
-				methods = "log error warn info debug assert clear count dir dirxml exception % %Collapsed %E # #E table ! !E trace".replace(/([E%#!])/g, tr).split(' '),
-				con = window.console;
-			if(!name){
-				name="UNKNOWN";
-			}
-			function createLogMethod(method) {
-				return function() {
-					var args=[].slice.call(arguments);
-					var prepend='['+method.toUpperCase()+']['+name+']:';
-					if("string"===typeof args[0]){
-						args[0]=prepend+args[0];
-					}else{
-						args.unshift(prepend);
-					}
-					logEnabled && con && con[method] && con[method].apply(con, args);
-				}
-			}
-			for (var i = 0; i < methods.length; i++) {
-				var method = methods[i];
-				this[method] = createLogMethod(method);
-			}
-		}
-		return Logger;
-	}());
-
-	global[name] =  exports;
-	global[name].noConflict = function() {
-		if(overwrittenName){
-			global[name] = overwrittenName;
-		}
-		return exports;
-	};
-	return global[name];
-}());
-//Promise
-(function() {
-	var name = 'Promise', global = this, overwrittenName = global[name], exports;
-	
-	exports = (function(global) {
-		function Promise() {
-			this.complete = false;
-			this.error = null;
-			this.result = null;
-			this.callbacks = [];
-		}
-		Promise.prototype.create = function() {
-			return new Promise()
-		};
-		Promise.prototype.then = function(callback, context) {
-			var f = function() {
-				return callback.apply(context, arguments)
-			};
-			if (this.complete) {
-				f(this.error, this.result);
-			} else {
-				this.callbacks.push(f);
-			}
-		};
-		Promise.prototype.done = function(error, result) {
-			this.complete = true;
-			this.error = error;
-			this.result = result;
-			for (var i = 0; i < this.callbacks.length; i++) this.callbacks[i](error, result);
-			this.callbacks.length = 0;
-		};
-		Promise.join = function(promises) {
-			var p = new Promise(),
-				total = promises.length,
-				completed = 0,
-				errors = [],
-				results = [];
-
-			function notifier(i) {
-				return function(error, result) {
-					completed += 1;
-					errors[i] = error;
-					results[i] = result;
-					if (completed === total) {
-						p.done(errors, results);
-					}
-				};
-			}
-			for (var i = 0; i < total; i++) {
-				promises[i]().then(notifier(i));
-			}
-			return p;
-		};
-		Promise.chain = function(promises, error, result) {
-			var p = new Promise();
-			if (promises===null||promises.length === 0) {
-				p.done(error, result);
-			} else {
-				promises[0](error, result).then(function(res, err) {
-					promises.splice(0, 1);
-					//self.logger.info(promises.length)
-					if(promises){
-						Promise.chain(promises, res, err).then(function(r, e) {
-							p.done(r, e);
-						});
-					}else{
-						p.done(res, err);
-					}
-				});
-			}
-			return p;
-		};
-		return Promise;
-	}(window));
-
-
-	global[name] =  exports;
-	global[name].noConflict = function() {
-		if(overwrittenName){
-			global[name] = overwrittenName;
-		}
-		return exports;
-	};
-	return global[name];
-}());
-//Ajax
-(function() {
-	var name = 'Ajax', global = this, overwrittenName = global[name], exports;
-
-	Function.prototype.partial = function() {
-		var fn = this,
-			b = [].slice.call(arguments);
-		return function() {
-			return fn.apply(this, b.concat([].slice.call(arguments)))
-		}
-	}
-	
-	exports = (function() {
-		function Ajax() {
-			this.logger=new global.Logger(name);
-			var self=this;
-			function encode(data) {
-				var result = "";
-				if (typeof data === "string") {
-					result = data;
-				} else {
-					var e = encodeURIComponent;
-					for (var i in data) {
-						if (data.hasOwnProperty(i)) {
-							result += '&' + e(i) + '=' + e(data[i]);
-						}
-					}
-				}
-				return result;
-			}
-			var request = function(m, u, d) {
-				var p = new Promise();
-				(function(xhr) {
-					xhr.onreadystatechange = function() {
-						this.readyState ^ 4 || (self.logger.timeEnd(m + ' ' + u), p.done(null, this));
-					};
-					xhr.onerror=function(response){
-						p.done(response, null);
-					}
-					xhr.onecomplete=function(response){
-						self.info("%s request to %s returned %s", m, u, this.status );
-					}
-					xhr.open(m, u);
-					self.logger.time(m + ' ' + u);
-					xhr.send(encode(d));
-				}(new XMLHttpRequest()));
-				return p;
-			};
-			this.request=request;
-			this.get = request.partial('GET');
-			this.post = request.partial('POST');
-			this.put = request.partial('PUT');
-			this.delete = request.partial('DELETE');
-		}
-		return new Ajax();
-	}());
-
-	global[name] =  exports;
-	global[name].noConflict = function() {
-		if(overwrittenName){
-			global[name] = overwrittenName;
-		}
-		return exports;
-	};
-	return global[name];
-}());
-//KeyStore
-(function() {
-	var name = 'KeyStore', global = this, overwrittenName = global[name], exports;
-	
-	exports = (function() {
-		global.indexedDB = global.indexedDB || global.mozIndexedDB || global.webkitIndexedDB || global.msIndexedDB;
-		// (Mozilla has never prefixed these objects, so we don't need global.mozIDB*)
-		global.IDBTransaction = global.IDBTransaction || global.webkitIDBTransaction || global.msIDBTransaction;
-		global.IDBKeyRange = global.IDBKeyRange || global.webkitIDBKeyRange || global.msIDBKeyRange;
-		function KeyStore(database, version, storeName, keyPath, callback) {
-			this.logger=new global.Logger(name);
-			this.db = null;
-			this.error = null;
-			this.ready = false;
-			this.database=database;
-			this.version=version;
-			this.storeName = storeName;
-			this.keyPath = keyPath;
-			this.init(callback)
-			
-		}
-		KeyStore.prototype.init=function(callback) {
-			var self=this;
-			Promise.chain([
-				function(){return self.openDatabase(null,self)},
-				function(err,self){return self.getStore(err,self)}
-			]).then(callback);
-		};
-		KeyStore.prototype.openDatabase=function(err, self) {
-			var p = new Promise();
-			var req = global.indexedDB.open(this.database, this.version);
-			req.onerror=function(){done(this, self)};
-			req.onsuccess = function (evt) {
-				self.db = this.result;
-				//self.objectStore=self.db.transaction([self.storeName], "readwrite").objectStore(self.storeName);
-				p.done(null, self);
-			};
-			req.onupgradeneeded = function (evt) {
-				try {
-					self.objectStore = event.currentTarget.transaction.objectStore(self.storeName);
-				} catch (e) {
-					self.objectStore = self.db.createObjectStore(self.storeName, {keyPath: self.keyPath});
-					self.objectStore.createIndex(self.keyPath, self.keyPath, {unique: true});
-				}
-			};
-			return p;
-		}
-		KeyStore.prototype.getStore=function(err, self){
-			var p = new Promise();
-			self.objectStore = self.db.transaction([self.storeName], "readwrite").objectStore(self.storeName);
-			p.done(null, self);
-			return p;
-		};
-		KeyStore.prototype.delete = function(key, callback) {
-			var self=this;
-			var p = new Promise();
-			self.get(key).then(function(err, value){
-				var item = self.objectStore.get(key);
-				item.onsuccess = function(event) {
-					self.objectStore.delete(key);
-					p.done(null, self);
-				};
-				item.onerror = function(event) {
-					p.done(this, self);
-				};
-				isFunction(callback) && callback(err, self);
-			});
-			return p;
-		};
-		KeyStore.prototype.get = function(key, callback) {
-			var self=this;
-			var p = new Promise();
-			Promise.chain([
-				function(){return self.openDatabase(null,self)},
-				function(err,self){return self.getStore(err,self)},
-				function(err, self){
-					var p = new Promise();
-					var item = self.objectStore.get(key);
-					item.onsuccess = function(event) {
-						p.done(null, this.result ? this.result.value : null);
-					};
-					item.onerror = function(event) {
-						p.done(this, null);
-					};
-					return p;
-				}
-			]).then(function(err, value){
-				isFunction(callback) && callback(err, value);
-				p.done(null, self);
-			})
-			return p;
-		};
-		KeyStore.prototype.set = function(key, value, callback) {
-			var self=this;
-			var data = {
-				'key': key,
-				'value': value
-			};
-			var p = new Promise();
-			self.delete(key)
-				.then(function(err, self){
-					var item= self.objectStore.add(data);
-					item.onsuccess = function(event) {
-						p.done(null, data.value);
-					};
-					item.onerror=function(event){
-						p.done(this, null);
-					}
-					isFunction(callback) && callback(err, self);
-				})
-			return p;
-		};
-		KeyStore.prototype.clear = function(callback) {
-			var self=this;
-		    self.getStore(function(err, store){
-				var req=store.clear();
-			    req.onsuccess = function(evt) {
-					isFunction(callback) && callback(null, null);
-			    };
-			    req.onerror = function (evt) {
-					isFunction(callback) && callback(new Usergrid.Error(this), null);
-			    };
-			});
-		};
-		return KeyStore;
-	}());
-	
-	global[name] =  exports;
-	global[name].noConflict = function() {
-		if(overwrittenName){
-			global[name] = overwrittenName;
-		}
-		return exports;
-	};
-	return global[name];
-}());
-(function() {
-	var name = 'Usergrid', global = this, overwrittenName = global[name], exports;
-	
-	exports = (function() {
-		function Usergrid(){
-			this.logger=new global.Logger(name);
-			var self=this;
-		}
-		Usergrid.isValidEndpoint = function(endpoint) {
-			//TODO actually implement this
-			return true;
-		};
-		var VALID_REQUEST_METHODS=['GET','POST','PUT','DELETE'];
-		Usergrid.Request=function(method, endpoint, query_params, data, callback){
-			var p = new Promise();
-			this.method=method.toUpperCase();
-			this.endpoint=endpoint;
-			this.query_params=query_params;
-			this.data=data;
-			this.logger=new global.Logger("Usergrid.Request");
-			var self=this;
-			if(VALID_REQUEST_METHODS.indexOf(this.method)===-1){
-				throw "invalid request method '"+this.method+"'";
-			}
-			if(!Usergrid.isValidEndpoint(this.endpoint)){
-				throw "The provided endpoint is not valid: "+this.endpoint;
-			}
-			var encoded_params = encodeParams(this.query_params);
-			if (encoded_params) {
-				this.endpoint += "?" + encoded_params;
-			}
-  			Ajax.request(this.method, this.endpoint, this.data).then(function(err, request){
-  				return new Usergrid.Response(err, request, callback);
-  			});
-		};
-
-
-		//TODO more granular handling of statusCodes
-		Usergrid.Response=function(err, response, callback){
-			this.logger=new global.Logger(name);
-			this.success=true;
-			this.err=err;
-			this.response=response;
-			this.text=this.response.responseText;
-			try{
-				this.data=JSON.parse(this.text);
-			}catch(e){
-				this.logger.error("Error parsing response text: ",this.text);
-				this.data=null;
-			}
-			this.status=parseInt(response.status);
-			this.statusGroup=(this.status - this.status%100);
-			switch(this.statusGroup){
-				case 200:
-					this.success=true;
-					break;
-				case 400:
-				case 500:
-				case 300:
-				case 100:
-				default:
-					//server error
-					this.success=false;
-					break;
-			}
-			var self=this;
-			if(this.success){
-				callback(null, self);
-			}else{
-				callback(new Usergrid.Error(this.data), self);
-			}
-		};
-
-		Usergrid.Error=function(options){
-			this.name="UsergridError"; 
-			this.timestamp=Date.now();
-			if(options instanceof Error){
-				this.exception=options.name||"";
-				this.message=options.message||"An error has occurred";
-			}else if("object"===typeof options){
-				this.exception=options.error||"unknown_error";
-				this.message=options.error_description||"An error has occurred";
-			}else if("string"===typeof options){
-				this.exception="unknown_error";
-				this.message=options||"An error has occurred";
-			}
-		}
-		Usergrid.Error.prototype=new Error();
-
-		Usergrid.Client=function(callback){
-			this.logger=new global.Logger(name);
-			var self=this;
-			var keyStore=new KeyStore('usergrid-javascript-sdk', 2, "data", "key", function(err, ks){
-				self.keyStore=ks;
-				callback(err, self);
-			});
-		};
-		Usergrid.Client.prototype.set = function(key, value, callback) {
-			value = JSON.stringify(value);
-			if (value) {
-				this.keyStore.set(key, value, callback);
-			} else {
-				this.keyStore.delete(key, callback);
-			}
-		};
-		Usergrid.Client.prototype.get = function(key, callback) {
-			if ("undefined" !== typeof this.keyStore) {
-				this.keyStore.get(key, callback);
-			}
-		};
-		Usergrid.Entity=function(){};
-		Usergrid.Collection=function(){};
-		return Usergrid;
-	}());
-	global[name] =  exports;
-	global[name].noConflict = function() {
-		if(overwrittenName){
-			global[name] = overwrittenName;
-		}
-		return exports;
-	};
-	return global[name];
-}());
-/*(function(global, storage) {
+//noinspection ThisExpressionReferencesGlobalObjectJS
+(function(global) {
 	var name = 'Usergrid', overwrittenName = global[name];
-	var Usergrid=Usergrid||global.Usergrid;
 
-	global[name] =  {
-			Request		: Usergrid.Request, 
-			Response	: Usergrid.Response,
-			Error 		: Usergrid.Error,
-			Client 		: Usergrid.Client,		
-			Entity 		: Usergrid.Entity,		
-			Collection 	: Usergrid.Collection,		
-			version   : '0.10.07'
-	};
+    function Usergrid() {
+        this.logger = new Logger(name);
+    }
+
+    Usergrid.isValidEndpoint = function (endpoint) {
+        //TODO actually implement this
+        return true;
+    };
+    var VALID_REQUEST_METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
+    Usergrid.Request = function (method, endpoint, query_params, data, callback) {
+        var p = new Promise();
+        /*
+         Create a logger
+         */
+        this.logger = new global.Logger("Usergrid.Request");
+        this.logger.time("process request " + method + " " + endpoint);
+        /*
+         Validate our input
+         */
+        this.endpoint=endpoint;
+        this.method = method.toUpperCase();
+        this.query_params = query_params;
+        this.data = ("object" === typeof data) ? JSON.stringify(data) : data;
+
+        if (VALID_REQUEST_METHODS.indexOf(this.method) === -1) {
+            throw new UsergridInvalidHTTPMethodError("invalid request method '" + this.method + "'");
+        }
+
+        /*
+         Prepare our request
+         */
+        if (!isValidUrl(this.endpoint)) {
+            this.logger.error(endpoint, this.endpoint, /^https:\/\//.test(endpoint), api_uri, orgName, appName);
+            throw new UsergridError("The provided endpoint is not valid: " + this.endpoint);
+        }
+        /* a callback to make the request */
+        var request=function () {return Ajax.request(this.method, this.endpoint, this.data)}.bind(this);
+        /* a callback to process the response */
+        var response=function (err, request) {return new Usergrid.Response(err, request)}.bind(this);
+        /* a callback to clean up and return data to the client */
+        var oncomplete=function (err, response) {
+            p.done(err, response);
+            this.logger.info("REQUEST", err, response);
+            doCallback(callback, [err, response]);
+            this.logger.timeEnd("process request " + method + " " + endpoint);
+        }.bind(this);
+        /* and a promise to chain them all together */
+        Promise.chain([request,response]).then(oncomplete);
+
+        return p;
+    };
+    Usergrid.Request.prototype= new UsergridStorable();
+    Usergrid.Request.prototype.validate=function(){
+        var p = new Promise();
+        p.done(null, this);
+        return p;
+    }
+    Usergrid.Request.prototype.prepare=function(){
+        var p = new Promise();
+        p.done(null, this);
+        return p;
+    }
+    Usergrid.Request.prototype.fire=function(){
+        var p = new Promise();
+        p.done(null, this);
+        return p;
+    }
+
+    //TODO more granular handling of statusCodes
+    Usergrid.Response = function (err, response) {
+        var p = new Promise();
+        this.logger = new global.Logger(name);
+        this.success = true;
+        this.err = err;
+        this.data = {};
+        var data;
+        try {
+            data = JSON.parse(response.responseText);
+        } catch (e) {
+            //this.logger.error("Error parsing response text: ",this.text);
+            this.logger.error("Caught error ", e.message);
+            data = {}
+        } finally {
+            this.data = data;
+        }
+        this.status = parseInt(response.status);
+        this.statusGroup = (this.status - this.status % 100);
+        switch (this.statusGroup) {
+            case 200:
+                this.success = true;
+                break;
+            case 400:
+            case 500:
+            case 300:
+            case 100:
+            default:
+                //server error
+                this.success = false;
+                break;
+        }
+        var self = this;
+        if (this.success) {
+            p.done(null, this);
+        } else {
+            p.done(UsergridError.fromResponse(this.data), this);
+        }
+        return p;
+    };
+    Usergrid.Response.prototype.getEntities = function () {
+        var entities=[]
+        if (this.success && this.data.entities) {
+            entities=this.data.entities;
+        }
+        return entities;
+    }
+    Usergrid.Response.prototype.getEntity = function () {
+        var entities=this.getEntities();
+        return entities[0];
+    }
+    Usergrid.Client = function (options) {
+        this.logger = new global.Logger('Usergrid.Client');
+        var self = this;
+        this.getStorage();
+        this.set('api_uri', options.URI || 'https://api.usergrid.com');
+        this.set('orgName', options.orgName);
+        this.set('appName', options.appName);
+        //other options
+        this.set('buildCurl', options.buildCurl || false);
+        this.set('logging', options.logging || false);
+
+        //Moved to Ajax transport layer
+        /*this.set('api_call_timeout', options.callTimeout || 30000);
+         this.set('api_call_timeout_callback', options.callTimeoutCallback || global.NOOP);
+         this.set('api_logout_callback', options.logoutCallback || global.NOOP);*/
+
+
+    };
+    /*
+     Add browser storage capability (defaults to sessionStorage,
+     but you can inject anything that implements window.Storage
+     eg. client._storage=localStorage;
+     */
+    UsergridStorable.mixin(Usergrid.Client);
+    /*
+     Add rudimentary eventing
+     */
+    UsergridEventable.mixin(Usergrid.Client);
+
+    /*
+     *  function for building asset urls
+     *
+     *  @method buildAssetURL
+     *  @public
+     *  @params {string} uuid
+     *  @return {string} assetURL
+     */
+    Usergrid.Client.prototype.buildAssetURL = function(uuid) {
+        var qs = {};
+        var uri_elements=this.get('api_uri','orgName','appName');
+        uri_elements=uri_elements.concat(['assets', uuid, 'data']);
+        var assetURL = uri_elements.join('/');
+        var token = this.getToken();
+        if (token) {
+            qs.access_token = token;
+        }
+        //append params to the path
+        var encoded_params = encodeParams(qs);
+        if (encoded_params) {
+            assetURL += "?" + encoded_params;
+        }
+
+        return assetURL;
+    };
+
+    /*
+     *  function for building asset urls
+     *
+     *  @method buildAssetURL
+     *  @public
+     *  @params {string} uuid
+     *  @return {string} assetURL
+     */
+    Usergrid.Client.prototype.buildEndpointURL = function(endpoint, qs) {
+        qs =qs|| {};
+        var endSlashes=/(^\/|\/$)/g;
+        var assetURL = [endpoint.replace(endSlashes,'')].concat(this.get('api_uri','orgName','appName'));
+        var token = this.getToken();
+        if (token) {qs.access_token = token;}
+        var encoded_params = encodeParams(qs);
+        if (encoded_params) {
+            assetURL += "?" + encoded_params;
+        }
+
+        return assetURL;
+    };
+
+
+    /*
+     *  Main function for making requests to the API.  Can be called directly.
+     *
+     *  options object:
+     *  `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
+     *  `qs` - object containing querystring values to be appended to the uri
+     *  `body` - object containing entity body for POST and PUT requests
+     *  `endpoint` - API endpoint, for example 'users/fred'
+     *  `mQuery` - boolean, set to true if running management query, defaults to false
+     *
+     *  @method request
+     *  @public
+     *  @params {object} options
+     *  @param {function} callback
+     *  @return {callback} callback(err, data)
+     */
+    Usergrid.Client.prototype.request = function (options, callback) {
+        var p = new Promise();
+        var _callback = function (err, data) {
+            p.done(err, data);
+            doCallback(callback, [err, data]);
+        };
+        this.logger = new Logger("Request");
+        var self = this;
+        var method = options.method || 'GET';
+        var endpoint = options.endpoint;
+        var body = options.body || {};
+        var qs = options.qs || {};
+        var mQuery = options.mQuery || false; //is this a query to the management endpoint?
+        /*
+         could also use headers for the token
+         xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
+         xhr.withCredentials = true;
+         */
+        var api_uri = this.get('api_uri');
+        var orgName = this.get('orgName');
+        var appName = this.get('appName');
+        if (this.getToken())qs.access_token = this.getToken();
+
+        //if(isValidUrl(endpoint)){
+        if (api_uri && orgName && appName) {
+            endpoint = [api_uri, orgName, appName, endpoint].join('/');
+        } else {
+            endpoint = [api_uri, endpoint].join('/');
+            //throw new UsergridInvalidURIError('No Org name or App name specified.', 'no_org_or_app_name_specified');
+        }
+
+        var req = new Usergrid.Request(method, endpoint, qs, body, function (err, response) {
+            if ([
+                "auth_expired_session_token",
+                "auth_missing_credentials",
+                "auth_unverified_oath",
+                "expired_token",
+                "unauthorized",
+                "auth_invalid"
+            ].indexOf(response.error) !== -1) {
+                //throw err;
+            }
+            doCallback(callback, [err, response]);
+            p.done(err, response);
+        });
+
+
+        return p;
+        /*}catch(e){
+         if (typeof(this.logoutCallback) === 'function') {
+         this.logoutCallback(true, 'no_org_or_app_name_specified');
+         }
+         _callback(true, e);
+
+         }*/
+    };
+
+    /*
+     *  Main function for creating new entities - should be called directly.
+     *
+     *  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
+     *
+     *  @method createEntity
+     *  @public
+     *  @params {object} options
+     *  @param {function} callback
+     *  @return {callback} callback(err, data)
+     */
+    Usergrid.Client.prototype.createEntity = function (options, callback) {
+        // todo: replace the check for new / save on not found code with simple save
+        // when users PUT on no user fix is in place.
+        var getOnExist = options['getOnExist'] || false; //if true, will return entity if one already exists
+        delete options['getOnExist']; //so it doesn't become part of our data model
+        var entity_data = {
+            client: this,
+            data: options
+        };
+        var entity = new Usergrid.Entity(entity_data);
+        var self = this;
+        entity.fetch(function (err, data) {
+            console.log(err, data);
+            //if the fetch doesn't find what we are looking for, or there is no error, do a save
+            var common_errors = ['service_resource_not_found', 'no_name_specified', 'null_pointer'];
+            var okToSave = (err.name && common_errors.indexOf(err.name) !== -1) || (!err && getOnExist);
+
+            if (okToSave) {
+                entity.set(entity_data.data); //add the data again just in case
+                entity.save(function (err, data) {
+                    doCallback(callback, [err, entity, data]);
+                });
+            } else {
+                doCallback(callback, [err, entity, data]);
+            }
+        });
+
+    };
+
+    /*
+     *  Main function for getting existing entities - should be called directly.
+     *
+     *  You must supply a uuid or (username or name). Username only applies to users.
+     *  Name applies to all custom entities
+     *
+     *  options object: options {data:{'type':'collection_type', 'name':'value', 'username':'value'}, uuid:uuid}}
+     *
+     *  @method createEntity
+     *  @public
+     *  @params {object} options
+     *  @param {function} callback
+     *  @return {callback} doCallback(callback, [err, data])
+     */
+    Usergrid.Client.prototype.getEntity = function (options, callback) {
+        var entity_data = {
+            client: this,
+            data: options
+        };
+        var entity = new Usergrid.Entity(entity_data);
+        entity.fetch(function (err, data) {
+            doCallback(callback, [err, entity, data]);
+        });
+    };
+
+    /*
+     *  Main function for restoring an entity from serialized data.
+     *
+     *  serializedObject should have come from entityObject.serialize();
+     *
+     *  @method restoreEntity
+     *  @public
+     *  @param {string} serializedObject
+     *  @return {object} Entity Object
+     */
+    Usergrid.Client.prototype.restoreEntity = function (serializedObject) {
+        return new Usergrid.Entity({ client: this, data: JSON.parse(serializedObject)});
+    };
+    /*
+     *  Main function for creating new collections - should be called directly.
+     *
+     *  options object: options {client:client, type: type, qs:qs}
+     *
+     *  @method createCollection
+     *  @public
+     *  @params {object} options
+     *  @param {function} callback
+     *  @return {callback} callback(err, data)
+     */
+    Usergrid.Client.prototype.createCollection = function (options, callback) {
+        options.client = this;
+        var collection = new Usergrid.Collection(options, function (err, data) {
+            if (typeof(callback) === 'function') {
+                callback(err, collection, data);
+            }
+        });
+    };
+
+    //Usergrid.Entity=function(){};
+		//Usergrid.Collection=function(){};
+	global[name] =  Usergrid;
 	global[name].noConflict = function() {
 		if(overwrittenName){
 			global[name] = overwrittenName;
@@ -613,6 +531,7 @@ Function.prototype.extend = function(superClass) {
 		return Usergrid;
 	};
 	return global[name];
-}(this, localStorage));*/
+}(this));
+
 
 
