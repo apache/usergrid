@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -14,6 +15,15 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.jclouds.ContextBuilder;
+import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.blobstore.domain.BlobBuilder;
+import org.jclouds.blobstore.options.PutOptions;
+import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
+import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.batch.service.SchedulerService;
@@ -28,6 +38,9 @@ import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraService;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.inject.Module;
 
 
 /**
@@ -57,7 +70,9 @@ public class ExportServiceImpl implements ExportService{
 
     protected long startTime = System.currentTimeMillis();
 
-    protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
+    protected static final String PATH_REPLACEMENT = "/Users/ApigeeCorporation/";
+
+    private String filename = PATH_REPLACEMENT;
 
     //TODO: Todd, do I refactor most of the methods out to just leave schedule and doExport much like
     //the exporting toolbase class?
@@ -85,7 +100,7 @@ public class ExportServiceImpl implements ExportService{
 //                continue;
 //            }
 
-            exportApplicationsForOrg( organization );
+            exportApplicationsForOrg( organization , config );
         }
     }
 
@@ -151,7 +166,7 @@ public class ExportServiceImpl implements ExportService{
     }
 
 
-    private void exportApplicationsForOrg( Map.Entry<UUID, String> organization ) throws Exception {
+    private void exportApplicationsForOrg( Map.Entry<UUID, String> organization,final ExportInfo config ) throws Exception {
 
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
 
@@ -165,9 +180,10 @@ public class ExportServiceImpl implements ExportService{
             logger.info( application.getValue() + " : " + application.getKey() );
 
             // Get the JSon serializer.
-           // JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
+            //Creates the applications folder
+            JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
 
-            JsonGenerator jg = getJsonGenerator( new File( "/Users/ApigeeCorporation/derp.txt" ));
+            //JsonGenerator jg = getJsonGenerator( new File( "/Users/ApigeeCorporation/derp.txt" ));
 
 
 
@@ -213,6 +229,7 @@ public class ExportServiceImpl implements ExportService{
 
             // Create a GENERATOR for the application collections.
             JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
+
             collectionsJg.writeStartObject();
 
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
@@ -259,6 +276,7 @@ public class ExportServiceImpl implements ExportService{
             // Close writer and file for this application.
             jg.writeEndArray();
             jg.close();
+            copyToS3( filename , config );
         }
     }
 
@@ -318,6 +336,7 @@ public class ExportServiceImpl implements ExportService{
 
 
     protected JsonGenerator getJsonGenerator( File outFile ) throws IOException {
+        //TODO:shouldn't the below be UTF-16?
         PrintWriter out = new PrintWriter( outFile, "UTF-8" );
         JsonGenerator jg = jsonFactory.createJsonGenerator( out );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
@@ -326,8 +345,7 @@ public class ExportServiceImpl implements ExportService{
     }
 
     protected File createOutputFile( String type, String name ) {
-        return new File ("helper");
-       // return new File( outputDir, prepareOutputFileName( type, name ) );
+        return new File(prepareOutputFileName( type, name ) );
     }
 
 
@@ -337,23 +355,77 @@ public class ExportServiceImpl implements ExportService{
      * @return the file name concatenated with the type and the name of the collection
      */
     protected String prepareOutputFileName( String type, String name ) {
-        name = name.replace( "/", PATH_REPLACEMENT );
+        //name = name.replace( "/", PATH_REPLACEMENT );
         // Add application and timestamp
         StringBuilder str = new StringBuilder();
         // str.append(baseOutputFileName);
         // str.append(".");
-        str.append( type );
-        str.append( "." );
+        str.append( PATH_REPLACEMENT );
+        //str.append( type );
+        //str.append( "." );
         str.append( name );
         str.append( "." );
         str.append( startTime );
         str.append( ".json" );
 
         String outputFileName = str.toString();
+        filename = outputFileName;
 
         //logger.info( "Creating output filename:" + outputFileName );
 
         return outputFileName;
+    }
+
+    private void copyToS3( String fileName , final ExportInfo exportInfo) {
+
+        Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
+        /*won't need any of the properties as I have the export info*/
+        String bucketName = exportInfo.getBucket_location();
+        String accessId = exportInfo.getS3_accessId();
+        String secretKey = exportInfo.getS3_key();
+
+        Properties overrides = new Properties();
+        overrides.setProperty( "s3" + ".identity", accessId );
+        overrides.setProperty( "s3" + ".credential", secretKey );
+
+        final Iterable<? extends Module> MODULES = ImmutableSet
+                .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule
+                        () );
+
+        BlobStoreContext context =
+                ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
+                              .overrides( overrides ).buildView( BlobStoreContext.class );
+
+        // Create Container (the bucket in s3)
+        try {
+            AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
+            // BlobStore (returns false if it already exists)
+            ListenableFuture<Boolean> container = blobStore.createContainerInLocation( null, bucketName );
+            if ( container.get() ) {
+                logger.info( "Created bucket " + bucketName );
+            }
+        }
+        catch ( Exception ex ) {
+            logger.error( "Could not start binary service: {}", ex.getMessage() );
+            throw new RuntimeException( ex );
+        }
+
+        try {
+            File file = new File( fileName );
+            AsyncBlobStore blobStore = context.getAsyncBlobStore();
+            BlobBuilder blobBuilder =
+                    blobStore.blobBuilder( file.getName() ).payload( file ).calculateMD5().contentType( "text/plain" )
+                             .contentLength( file.length() );
+
+            Blob blob = blobBuilder.build();
+
+            ListenableFuture<String> futureETag = blobStore.putBlob( bucketName, blob, PutOptions.Builder.multipart() );
+
+            logger.info( "Uploaded file etag=" + futureETag.get() );
+        }
+        catch ( Exception e ) {
+            logger.error( "Error uploading to blob store", e );
+        }
     }
 
 }

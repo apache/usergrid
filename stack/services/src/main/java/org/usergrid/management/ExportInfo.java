@@ -12,6 +12,7 @@ public class ExportInfo {
     private Map<String, Object> properties;
     private String storage_provider;
     private Map<String, Object> storage_info;
+    private String s3_accessId;
     private String s3_token;
     private String s3_key;
     private String bucket_location;
@@ -21,6 +22,7 @@ public class ExportInfo {
         properties = (Map) exportData.get("properties");
         storage_provider = (String) properties.get ("storage_provider");
         storage_info = (Map) properties.get("storage_info");
+        s3_accessId = (String) storage_info.get("s3_accessId");
         s3_token = (String) storage_info.get("s3_token");
         s3_key = (String) storage_info.get("s3_key");
         bucket_location = (String) storage_info.get("bucket_location");
@@ -47,6 +49,8 @@ public class ExportInfo {
     public String getS3_key () { return s3_key; }
 
     public String getBucket_location () { return bucket_location; }
+
+    public String getS3_accessId () { return s3_accessId; }
 
 
 

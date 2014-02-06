@@ -461,7 +461,7 @@ public class ManagementResource extends AbstractContextResource {
         ExportInfo objEx = new ExportInfo(json);
 
 
-        exportService.schedule(objEx);
+        //exportService.schedule(objEx);
         exportService.doExport( objEx );
         }
         catch (Exception e) {

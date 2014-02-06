@@ -561,10 +561,11 @@ public class ManagementResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
-
+        //TODO: always put dummy values here and ignore this test.
         storage_info.put( "s3_token","insert_token_data_here" );
-        storage_info.put( "s3_key","insert_secret_here" );
-        storage_info.put( "bucket_location","insert_bucket_location_here");
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
 
         properties.put( "storage_provider","s3");
         properties.put( "storage_info",storage_info);
