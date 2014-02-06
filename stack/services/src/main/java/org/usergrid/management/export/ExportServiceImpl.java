@@ -181,12 +181,16 @@ public class ExportServiceImpl implements ExportService{
 
             // Get the JSon serializer.
             //Creates the applications folder
-            JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
+            /* What needs to be done:
+             * take the file name generator and create one that will only output the collections we need
+              * this will probably icnlude taking both file names, and making sure that it is not doing
+              * two passes as todd had it originally. */
 
-            //JsonGenerator jg = getJsonGenerator( new File( "/Users/ApigeeCorporation/derp.txt" ));
+            // JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
 
+            String appFileName =  prepareOutputFileName( "application", application.getValue() );
 
-
+            JsonGenerator jg = getJsonGenerator( new File( appFileName ) );
 
             // load the dictionary
 
@@ -228,7 +232,10 @@ public class ExportServiceImpl implements ExportService{
             jg.writeObject( nsEntity );
 
             // Create a GENERATOR for the application collections.
-            JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
+            //JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
+
+            String collectionsFilename = prepareOutputFileName( "collections","appDummyName" );
+            JsonGenerator collectionsJg = getJsonGenerator( new File( collectionsFilename ) );
 
             collectionsJg.writeStartObject();
 
@@ -276,7 +283,9 @@ public class ExportServiceImpl implements ExportService{
             // Close writer and file for this application.
             jg.writeEndArray();
             jg.close();
-            copyToS3( filename , config );
+            copyToS3( appFileName , config );
+            //below line doesn't copy very good data anyways.
+            //copyToS3( collectionsFilename, config );
         }
     }
 
