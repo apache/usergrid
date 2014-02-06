@@ -530,7 +530,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     @Test
     public void exportCallSuccessful() throws Exception {
-        Status responseStatus = Status.ACCEPTED;
+        Status responseStatus = Status.OK;
         JsonNode node = null;
 
         HashMap<String, Object> payload = new HashMap<String, Object>();
@@ -557,6 +557,6 @@ public class ManagementResourceIT extends AbstractRestIT {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
-       // assertEquals( Status.OK, responseStatus );
+        assertEquals( Status.OK, responseStatus );
     }
 }
