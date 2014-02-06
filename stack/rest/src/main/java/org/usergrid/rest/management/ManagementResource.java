@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ExportInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -453,18 +454,23 @@ public class ManagementResource extends AbstractContextResource {
                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback){
 
 
-
-        //access_info.setProperty( "user", management.getAdminUserOrganizationData( user, loadAdminData ) );
-
-        String errorDescription = "User must be confirmed to authenticate";
-        //logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" , user);
-
         OAuthResponse response = null;
         try {
-//            response = OAuthResponse.errorResponse( SC_FORBIDDEN )
-//                                                  .setError( OAuthError.TokenResponse.INVALID_GRANT )
-//                                                  .setErrorDescription( errorDescription )
-//                                                  .buildJSONMessage();
+
+        //parse the json into some useful object (the config params)
+        ExportInfo objEx = new ExportInfo(json);
+
+
+        exportService.schedule(objEx);
+        exportService.doExport( objEx );
+        }
+        catch (Exception e) {
+            //TODO:throw descriptive error message and or include on in the response
+            return Response.status( SC_BAD_REQUEST ).build();
+        }
+
+        //TODO: make schedule or doExport return a response? Or create one.
+        try {
             response = OAuthResponse.status( SC_OK ).buildJSONMessage();
         }
         catch ( OAuthSystemException e ) {
@@ -472,40 +478,6 @@ public class ManagementResource extends AbstractContextResource {
         }
         return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                        .entity( wrapWithCallback( response.getBody(), callback ) ).build();
-       // return Response.ok().build();
-//        return Response.status( SC_OK ).type( jsonMediaType( callback ) )
-//                       .entity( wrapWithCallback( access_info, callback ) ).build();
-
-        //return Response.status( SC_OK ).build();
-
-//        try {
-//
-//
-//        //parse the json into some useful object (the config params)
-//        //ExportInfo objEx = new ExportInfo(json);
-//
-//
-//        //exportService.schedule(objEx);
-//        //exportService.doExport( objEx );
-//        }
-//        catch (Exception e) {
-//            //TODO:throw descriptive error message and or include on in the response
-//            return Response.status( SC_BAD_REQUEST ).build();
-//        }
-//
-//        //TODO: make schedule or doExport return a response? Or create one.
-//        return Response.status( SC_OK ).build();
-
-
-//        String path = (String) json.get("path");
-//        Map<String, Object> properties = (Map) json.get("properties");
-//        String storage_provider = (String) properties.get ("storage_provider");
-//        Map<String, Object> storage_info = (Map) properties.get("storage_info");
-//        String s3_token = (String) storage_info.get("s3_token");
-//        String s3_key = (String) storage_info.get("s3_key");
-//        String bucket_location = (String) storage_info.get("bucket_location");
-//
-        //objEx.setPathQuery( path );
     }
 
 
