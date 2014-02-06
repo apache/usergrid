@@ -466,6 +466,7 @@ public class ManagementResource extends AbstractContextResource {
         }
         catch (Exception e) {
             //TODO:throw descriptive error message and or include on in the response
+            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
             return Response.status( SC_BAD_REQUEST ).build();
         }
 

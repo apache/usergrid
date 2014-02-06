@@ -165,8 +165,10 @@ public class ExportServiceImpl implements ExportService{
             logger.info( application.getValue() + " : " + application.getKey() );
 
             // Get the JSon serializer.
-           // JsonGenerator jg =
-            JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
+           // JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
+
+            JsonGenerator jg = getJsonGenerator( new File( "/Users/ApigeeCorporation/derp.txt" ));
+
 
 
 
