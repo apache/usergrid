@@ -65,4 +65,10 @@
         <property name="managementService" ref="managementService"/>
     </bean>
 
+  <bean id="exportService" class="org.usergrid.management.export.ExportServiceImpl" >
+    <property name="managementService" ref="managementService"/>
+    <property name="emf" ref="entityManagerFactory"/>
+    <property name="sch" ref="schedulerService"/>
+  </bean>
+
 </beans>

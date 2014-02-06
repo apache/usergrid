@@ -35,15 +35,14 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.usergrid.management.ExportInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.management.exceptions.UnconfirmedAdminUserException;
 import org.usergrid.management.export.ExportService;
-import org.usergrid.management.export.ExportServiceDos;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
@@ -53,6 +52,7 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
@@ -94,6 +94,9 @@ public class ManagementResource extends AbstractContextResource {
      *
      * /management/export
      */
+
+    @Autowired
+    protected ExportService exportService;
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementResource.class );
 
@@ -443,32 +446,55 @@ public class ManagementResource extends AbstractContextResource {
     //TODO: url encoded form of export
 
 
-    @Path( "export" )
     @POST
+    @Path( "export" )
     @Consumes(MediaType.APPLICATION_JSON)
     public Response exportPostJson (@Context UriInfo ui, Map<String, Object> json,
-                                    @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback){
+                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback){
 
+
+
+        //access_info.setProperty( "user", management.getAdminUserOrganizationData( user, loadAdminData ) );
+
+        String errorDescription = "User must be confirmed to authenticate";
+        //logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" , user);
+
+        OAuthResponse response = null;
         try {
-
-
-        //parse the json into some useful object (the config params)
-        ExportInfo objEx = new ExportInfo(json);
-
-        ExportService ex = new ExportServiceDos();
-
-        // exportService.schedule(config)
-        ex.doExport( objEx );
+//            response = OAuthResponse.errorResponse( SC_FORBIDDEN )
+//                                                  .setError( OAuthError.TokenResponse.INVALID_GRANT )
+//                                                  .setErrorDescription( errorDescription )
+//                                                  .buildJSONMessage();
+            response = OAuthResponse.status( SC_OK ).buildJSONMessage();
         }
-        catch (Exception e) {
-            //TODO:throw descriptive error message and or include on in the response
-            return Response.serverError().build();
+        catch ( OAuthSystemException e ) {
+            e.printStackTrace();
         }
+        return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                       .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+       // return Response.ok().build();
+//        return Response.status( SC_OK ).type( jsonMediaType( callback ) )
+//                       .entity( wrapWithCallback( access_info, callback ) ).build();
 
-        //TODO: make schedule or doExport return a response? Or create one.
-        return Response.ok().build();
+        //return Response.status( SC_OK ).build();
 
-
+//        try {
+//
+//
+//        //parse the json into some useful object (the config params)
+//        //ExportInfo objEx = new ExportInfo(json);
+//
+//
+//        //exportService.schedule(objEx);
+//        //exportService.doExport( objEx );
+//        }
+//        catch (Exception e) {
+//            //TODO:throw descriptive error message and or include on in the response
+//            return Response.status( SC_BAD_REQUEST ).build();
+//        }
+//
+//        //TODO: make schedule or doExport return a response? Or create one.
+//        return Response.status( SC_OK ).build();
 
 
 //        String path = (String) json.get("path");
@@ -480,31 +506,6 @@ public class ManagementResource extends AbstractContextResource {
 //        String bucket_location = (String) storage_info.get("bucket_location");
 //
         //objEx.setPathQuery( path );
-
-
-
-
-
-//
-//        ExportInfo exportData = new ExportInfo(json);
-//        JobInfo jobStatus = management.processExportData(exportData);
-//        AccessInfo wrapperJob = new AccessInfo();
-//        wrapperJob.setState(jobStatus.getStatusType().toString());
-//        /*
-//        * output contains two elements
-//        * 1.) storage provider : (In this first pass it will always be s3)
-//        * 2.) info: information nee3ded for the storage provider
-//        *   info will be extrapolated like the above.
-//        * */
-//        Service s = new ExportServiceImpl();
-//
-//
-//        //Export objExport =
-//
-//         //TODO: determine whether this wrapper is suitable as the return type for export.
-//        // currently returns the jobStatus
-//        return  Response.status( SC_OK ).type( jsonMediaType( callback ) )
-//                        .entity( wrapWithCallback( wrapperJob, callback ) ).build();
     }
 
 
