@@ -21,7 +21,9 @@ package org.apache.usergrid.persistence.collection.rx;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
@@ -45,7 +47,8 @@ public class ParallelTest {
     private static final Logger logger = LoggerFactory.getLogger( ParallelTest.class );
 
 
-    @Test( timeout = 5000 )
+//    @Test( timeout = 5000 )
+    @Test
     public void concurrentFunctions() {
         final String input = "input";
 
@@ -56,19 +59,22 @@ public class ParallelTest {
         //latch used to make each thread block to prove correctness
         final CountDownLatch latch = new CountDownLatch( size );
 
-        List<Observable<String>> observables = new ArrayList<Observable<String>>( size );
+        final List<Observable<String>> observables = new ArrayList<Observable<String>>( size );
 
+
+        //this is not using a hystrix thread pool as I expected but rather the Rx computation thread pool.  Am I doing this
+        //incorrectly?
         for ( int i = 0; i < size; i++ ) {
             observables.add( new CassandraCommand<String>( input ).toObservable().map( new Func1<String, String>() {
                 @Override
                 public String call( final String s ) {
 
-//                    logger.info( "Function executing on thread {} with latch value {}", Thread.currentThread().getName(), latch.getCount() );
+                    final String threadName = Thread.currentThread().getName();
 
                     latch.countDown();
 
-                    logger.info( "Function executing on thread {} with latch value {}", Thread.currentThread().getName(), latch.getCount() );
-
+                    logger.info( "Function executing on thread {} with latch value {}",
+                            threadName, latch.getCount() );
 
 
                     try {
