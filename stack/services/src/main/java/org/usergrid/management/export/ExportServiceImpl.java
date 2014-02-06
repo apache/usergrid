@@ -369,6 +369,7 @@ public class ExportServiceImpl implements ExportService{
         str.append( ".json" );
 
         String outputFileName = str.toString();
+        //TODO:this is , i feel, bad practice so make sure to come back here and fix it up.
         filename = outputFileName;
 
         //logger.info( "Creating output filename:" + outputFileName );

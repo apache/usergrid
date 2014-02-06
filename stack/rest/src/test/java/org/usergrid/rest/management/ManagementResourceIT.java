@@ -532,37 +532,13 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void exportCallSuccessful() throws Exception {
         Status responseStatus = Status.ACCEPTED;
         JsonNode node = null;
-                ;
-
-        //        Map<String, String> payload =
-        //                hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
-        //                                                   .map( "ttl", Long.MAX_VALUE + "" );
-       // Map<String, String> storageinfo = hashMap ( "s3_token","insert_token_data_here").map("s3_key","insert_secret_here")
-       //         .map( "bucket_location","insert_bucket_location_here");
-       // Map<String, Object> propertiesPayload = hashMap("storage_provider",(Object)"s3").map("storage_info",storageinfo);
-       // Map<String, Object> payload = hashMap( "path","test-organization/test-app/user");
-        //payload.put( "properties", propertiesPayload );
-        //.map( "properties",propertiesPayload);
-        //problem with payload
-
-        //Map<String,String> altPropertiesPayload = hashMap("storage_provider","s3").map( "storage_info",
-        //        String.valueOf( storageinfo ) );
-
-        //Map<String, String> payload = hashMap( "path","test-organization/test-app/user");
-       // payload.put( "properties", String.valueOf( propertiesPayload ) );
-
-        //Map<String, Object> payload = new HashMap<String, Object>();
-
-
-        //HashMap<String, Object> payload = new HashMap<String, Object>();
-        //Map<String, Object> properties = new HashMap<String, Object>();
-        //properties.put( "securityLevel", 5 );
 
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: make sure to put a valid admin token here.
+        storage_info.put( "admin_token","insert_token_data_here" );
         //TODO: always put dummy values here and ignore this test.
-        storage_info.put( "s3_token","insert_token_data_here" );
         storage_info.put( "s3_key","insert key here" );
         storage_info.put( "s3_accessId","insert access id here");
         storage_info.put( "bucket_location","insert bucket name here");
@@ -572,14 +548,6 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         payload.put( "path", "test-organization/test-app/user");
         payload.put( "properties", properties);
-
-
-       // Map<String, String> payload =
-       //         hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" );
-
-        //JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
-          //                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-
 
         try {
             node = resource().path( "/management/export" ).accept( MediaType.APPLICATION_JSON )

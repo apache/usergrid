@@ -13,7 +13,7 @@ public class ExportInfo {
     private String storage_provider;
     private Map<String, Object> storage_info;
     private String s3_accessId;
-    private String s3_token;
+    private String admin_token;
     private String s3_key;
     private String bucket_location;
 
@@ -23,7 +23,7 @@ public class ExportInfo {
         storage_provider = (String) properties.get ("storage_provider");
         storage_info = (Map) properties.get("storage_info");
         s3_accessId = (String) storage_info.get("s3_accessId");
-        s3_token = (String) storage_info.get("s3_token");
+        admin_token = (String) storage_info.get("admin_token");
         s3_key = (String) storage_info.get("s3_key");
         bucket_location = (String) storage_info.get("bucket_location");
     }
@@ -44,7 +44,7 @@ public class ExportInfo {
 
     public Map<String, Object> getStorage_info () { return storage_info; }
 
-    public String getS3_token () { return s3_token; }
+    public String getAdmin_token () { return admin_token; }
     //TODO: is this a security concern? How would we get rid of the key once we're done with this value?
     public String getS3_key () { return s3_key; }
 
