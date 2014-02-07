@@ -129,10 +129,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMA
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_PASSWORD;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
@@ -321,37 +318,25 @@ public class ManagementServiceImpl implements ManagementService {
             logger.warn( "Test app creation disabled" );
         }
 
-        if ( superuserEnabled() ) {
+        if ( properties.getSuperUser().isEnabled() ) {
             provisionSuperuser();
         }
     }
 
 
-    public boolean superuserEnabled() {
-        boolean superuser_enabled = parseBoolean( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED ) );
-        String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
-        String superuser_email = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL );
-        String superuser_password = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_PASSWORD );
-
-        return superuser_enabled && !anyNull( superuser_username, superuser_email, superuser_password );
-    }
 
 
     @Override
     public void provisionSuperuser() throws Exception {
-        boolean superuser_enabled = parseBoolean( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED ) );
-        String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
-        String superuser_email = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL );
-        String superuser_password = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_PASSWORD );
-
-        if ( !anyNull( superuser_username, superuser_email, superuser_password ) ) {
-            UserInfo user = this.getAdminUserByUsername( superuser_username );
+        final AccountCreationProps.SuperUser superUser = properties.getSuperUser();
+        if ( superUser.isEnabled() ) {
+            UserInfo user = this.getAdminUserByUsername( superUser.getUsername() );
             if ( user == null ) {
-                createAdminUser( superuser_username, "Super User", superuser_email, superuser_password,
-                        superuser_enabled, !superuser_enabled );
+                createAdminUser( superUser.getUsername(), "Super User", superUser.getEmail(), superUser.getPassword(),
+                        superUser.isEnabled(), !superUser.isEnabled() );
             }
             else {
-                this.setAdminUserPassword( user.getUuid(), superuser_password );
+                this.setAdminUserPassword( user.getUuid(), superUser.getPassword() );
             }
         }
         else {
@@ -1246,13 +1231,12 @@ public class ManagementServiceImpl implements ManagementService {
         if ( verify( MANAGEMENT_APPLICATION_ID, user.getUuid(), password ) ) {
             userInfo = getUserInfo( MANAGEMENT_APPLICATION_ID, user );
 
-            boolean userIsSuperAdmin =
-                    properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ).equals( userInfo.getEmail() );
+            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled() && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
 
             boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
 
             boolean userIsTestUser = !testUserEnabled ? false :
-                                     properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL )
+                                     properties.getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL )
                                                .equals( userInfo.getEmail() );
 
             if ( !userIsSuperAdmin && !userIsTestUser ) {
@@ -1488,10 +1472,8 @@ public class ManagementServiceImpl implements ManagementService {
         json.put( "organizations", jsonOrganizations );
 
         Map<UUID, String> organizations;
-
-        boolean superuser_enabled = parseBoolean( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED ) );
-        String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
-        if ( superuser_enabled && ( superuser_username != null ) && superuser_username.equals( user.getUsername() ) ) {
+        AccountCreationProps.SuperUser superUser = properties.getSuperUser();
+        if ( superUser.isEnabled() && superUser.getUsername().equals( user.getUsername() ) ) {
             organizations = buildOrgBiMap( getOrganizations( null, 10 ) );
         }
         else {
