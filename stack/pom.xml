@@ -1806,11 +1806,11 @@
     </plugins>
   </reporting>
 
-  <repositories>
+<!--  <repositories>
     <repository>
       <id>usergrid-dependencies</id>
       <name>Usergrid s3 dependencies repository</name>
       <url>https://usergrid-maven.s3.amazonaws.com/dependencies</url>
     </repository>
-  </repositories>
+  </repositories>-->
 </project>
