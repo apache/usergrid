@@ -315,13 +315,13 @@ public class LauncherFrame extends JFrame {
         pane.add( label, c );
 
         List<Image> icons = new ArrayList<Image>( 4 );
-        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/usergrid/launcher/icon_16.png" ) )
+        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/apache/usergrid/launcher/icon_16.png" ) )
                 .getImage() );
-        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/usergrid/launcher/icon_32.png" ) )
+        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/apache/usergrid/launcher/icon_32.png" ) )
                 .getImage() );
-        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/usergrid/launcher/icon_64.png" ) )
+        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/apache/usergrid/launcher/icon_64.png" ) )
                 .getImage() );
-        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/usergrid/launcher/icon_256.png" ) )
+        icons.add( new ImageIcon( getClass().getClassLoader().getResource( "org/apache/usergrid/launcher/icon_256.png" ) )
                 .getImage() );
         setIconImages( icons );
     }

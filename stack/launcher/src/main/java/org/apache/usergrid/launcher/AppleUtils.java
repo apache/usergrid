@@ -30,8 +30,8 @@ public class AppleUtils {
             @Override
             public void handleAbout( com.apple.eawt.AppEvent.AboutEvent evt ) {
                 JOptionPane.showMessageDialog( null,
-                        "Usergrid Standalone Server Launcher\nCopyright 2011 Ed Anuff & Usergrid",
-                        "About Usergrid Launcher", JOptionPane.INFORMATION_MESSAGE );
+                        "Apache Usergrid Standalone Server Launcher\nApache Software Foundation",
+                        "About Apache Usergrid Launcher", JOptionPane.INFORMATION_MESSAGE );
             }
         } );
     }
