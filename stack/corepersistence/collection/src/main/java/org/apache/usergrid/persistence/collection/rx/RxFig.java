@@ -31,10 +31,12 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface RxFig extends GuicyFig {
 
+    public static final String PROP_THREAD = "rx.cassandra.io.threads";
+
     /**
      * Max number of threads a pool can allocate.  Can be dynamically changed after starting
      */
-    @Key( "rx.cassandra.io.threads" )
+    @Key( PROP_THREAD )
     @Default( "100" )
     int getMaxThreadCount();
 }

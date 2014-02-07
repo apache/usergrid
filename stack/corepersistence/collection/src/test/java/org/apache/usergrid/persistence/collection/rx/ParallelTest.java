@@ -65,7 +65,7 @@ public class ParallelTest {
     /**
      * An example of how an observable that requires a "fan out" then join should execute.
      */
-    @Test( timeout = 5000 )
+    @Test(timeout = 5000)
     public void concurrentFunctions() {
         final String input = "input";
 
@@ -138,9 +138,13 @@ public class ParallelTest {
 
                             logger.info( "Invoking parallel task in thread {}", threadName );
 
-                            //Simulate a Hystrix command making a call to an external resource.  Invokes
-                            //the Hystrix command immediately as the function is invoked
-
+                            /**
+                             * Simulate a Hystrix command making a call to an external resource.  Invokes
+                             * the Hystrix command immediately as the function is invoked.  This is currently
+                             * how we have to call Cassandra.
+                             *
+                             * TODO This needs to be re-written and evaluated once this PR is released https://github.com/Netflix/Hystrix/pull/209
+                             */
                             return new HystrixCommand<Integer>( GROUP_KEY ) {
                                 @Override
                                 protected Integer run() throws Exception {

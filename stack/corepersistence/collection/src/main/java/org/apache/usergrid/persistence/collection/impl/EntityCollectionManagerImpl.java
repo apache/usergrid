@@ -50,6 +50,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.Scheduler;
 import rx.util.functions.FuncN;
 
 
@@ -66,6 +67,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
+    private final Scheduler scheduler;
 
 
     //start stages
@@ -84,7 +86,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
+    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart, final Scheduler scheduler,
                                         final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
@@ -106,6 +108,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         this.uuidService = uuidService;
+        this.scheduler = scheduler;
         this.collectionScope = collectionScope;
     }
 
@@ -143,11 +146,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //create our observable and start the write
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = CassandraCommand.toObservable( writeData ).map( writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable =  Observable.from( writeData ).subscribeOn( scheduler ).map( writeStart );
 
 
         //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
-        observable = Concurrent.concurrent(observable, new WaitZip( ), writeVerifyUnique, writeOptimisticVerify);
+        observable = Concurrent.concurrent(observable, scheduler, new WaitZip( ), writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
         return observable.map( writeCommit );
@@ -163,7 +166,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        return CassandraCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( deleteStart ).map( deleteCommit );
+        return Observable.from(new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler ).map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -174,7 +177,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        return CassandraCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler ).map( load );
     }
 
 

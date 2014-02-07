@@ -76,7 +76,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        return CassandraCommand.toObservable( new GraphIoEvent<Edge>( scope, edge ) ).map( edgeWriteStage );
+        return Observable.from( new GraphIoEvent<Edge>( scope, edge ) ).map( edgeWriteStage );
     }
 
 

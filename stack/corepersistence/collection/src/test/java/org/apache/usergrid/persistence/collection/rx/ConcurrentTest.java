@@ -17,6 +17,8 @@ import com.google.common.collect.Multiset;
 import com.netflix.config.ConfigurationManager;
 
 import rx.Observable;
+import rx.Scheduler;
+import rx.concurrency.Schedulers;
 import rx.util.functions.Func1;
 import rx.util.functions.FuncN;
 
@@ -34,48 +36,18 @@ public class ConcurrentTest {
     private static final Logger logger = LoggerFactory.getLogger( ConcurrentTest.class );
 
 
-    private int preRunThreadCount = -1;
-    private int queueDepth = -1;
-
-
-    @Before
-    public void getSettings() {
-
-        //        preRunThreadCount = ConfigurationManager.getConfigInstance().getInt( CassandraCommand
-        // .THREAD_POOL_SIZE );
-        //
-        //
-        //        //reject requests we have to queue
-        //        queueDepth = ConfigurationManager.getConfigInstance().getInt( CassandraCommand.THREAD_POOL_QUEUE );
-    }
-
-
-    @After
-    public void restoreSettings() {
-        ConfigurationManager.getConfigInstance().setProperty( CassandraCommand.THREAD_POOL_SIZE, preRunThreadCount );
-
-
-        //reject requests we have to queue
-        ConfigurationManager.getConfigInstance().setProperty( CassandraCommand.THREAD_POOL_QUEUE, queueDepth );
-    }
-
 
     @Test( timeout = 5000 )
     public void concurrent() {
+        //use the I/O scheduler so we always have enough threads
+        final Scheduler scheduler = Schedulers.threadPoolForIO();
 
         final String source = "test";
-        Observable<String> observable = CassandraCommand.toObservable( source );
+        Observable<String> observable =  Observable.from( source );
 
         //we could theoretically use the same instance over and over
 
-        final int size = 100;
-
-        //set the size of concurrent threads to our requests/2.  Should be more than sufficient for this test
-        ConfigurationManager.getConfigInstance().setProperty( CassandraCommand.THREAD_POOL_SIZE, size / 2 );
-
-
-        //reject requests we have to queue
-        ConfigurationManager.getConfigInstance().setProperty( CassandraCommand.THREAD_POOL_QUEUE, -1 );
+        final int size = 5;
 
 
         final CountDownLatch latch = new CountDownLatch( size );
@@ -90,7 +62,7 @@ public class ConcurrentTest {
 
 
         //concurrent inherits thread pool from it's observable, set it's thread pool
-        Observable<Integer> result = Concurrent.concurrent( observable, zip, concurrentFunctions );
+        Observable<Integer> result = Concurrent.concurrent( observable, scheduler,  zip, concurrentFunctions );
 
         assertEquals( "No invocation yet", 0, set.size() );
 

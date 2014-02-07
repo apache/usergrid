@@ -30,6 +30,9 @@ import rx.concurrency.Schedulers;
 /**
  * Default command that just returns the value handed to it.  Useful for creating observables that are subscribed on the
  * correct underlying Hystrix thread pool
+ *
+ * TODO change this when this PR makes it into head to wrap our observables
+ * https://github.com/Netflix/Hystrix/pull/209
  */
 public class CassandraCommand<R> extends HystrixCommand<R> {
 
@@ -45,7 +48,7 @@ public class CassandraCommand<R> extends HystrixCommand<R> {
     private final R value;
 
 
-    public CassandraCommand( final R value ) {
+    private CassandraCommand( final R value ) {
         super( GROUP_KEY );
         this.value = value;
     }
@@ -64,7 +67,7 @@ public class CassandraCommand<R> extends HystrixCommand<R> {
      *
      * @return The value wrapped in a Hystrix observable
      */
-    public static <R> Observable<R> toObservable( R readValue ) {
+    private static <R> Observable<R> toObservable( R readValue ) {
         //create a new command and ensure it's observed on the correct thread scheduler
         return new CassandraCommand<R>( readValue ).toObservable( Schedulers.threadPoolForIO() );
     }
