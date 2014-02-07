@@ -141,11 +141,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         //create our observable and start the write
-        Observable<CollectionIoEvent<MvccEntity>> observable = CassandraCommand.toObservable( new CollectionIoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
+        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+
+        Observable<CollectionIoEvent<MvccEntity>> observable = CassandraCommand.toObservable( writeData ).map( writeStart );
 
 
         //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
-        observable = Concurrent.concurrent(observable, new WaitZip( observable ), writeVerifyUnique, writeOptimisticVerify);
+        observable = Concurrent.concurrent(observable, new WaitZip( ), writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
         return observable.map( writeCommit );
@@ -175,18 +177,27 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         return CassandraCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
     }
 
+
+    /**
+     * Class that validates all results are equal then proceeds
+     * @param <R>
+     */
     private static class WaitZip<R> implements FuncN<R>{
 
-        private final R value;
 
 
-        private WaitZip( final R value ) {this.value = value;}
+        private WaitZip() {
+        }
 
 
         @Override
         public R call( final Object... args ) {
-            //no op, just here to require a join before proceeding
-            return value;
+
+            for(int i = 0; i < args.length-1; i ++){
+                assert args[i] == args[i+1];
+            }
+
+            return ( R ) args[0];
         }
     }
 }

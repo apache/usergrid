@@ -39,23 +39,20 @@ import rx.util.functions.FuncN;
  * This is useful when you want to perform operations on a single initial observable, 
  * then combine the result into a single observable to continue the sequence
  */
-public class Concurrent<T, R> implements Func1<T, Observable<R>> {
+public class Concurrent<T, R, Z> implements Func1<T, Observable<Z>> {
 
     private final Func1<T, R>[] concurrent;
-    private final FuncN<R> zip;
+    private final FuncN<Z> zip;
 
-    private Concurrent( final FuncN<R> zip, final Func1<T, R>[] concurrent ){
+    private Concurrent( final FuncN<Z> zip, final Func1<T, R>[] concurrent ){
         this.concurrent = concurrent;
         this.zip = zip;
     }
 
     @Override
-      public Observable<R> call( final T input ) {
+      public Observable<Z> call( final T input ) {
 
-
-        //TODO T.N Is this resetting the timeouts in hystrix?
-
-        List<Observable<R>> observables = new ArrayList<Observable<R>>(concurrent.length);
+         List<Observable<R>> observables = new ArrayList<Observable<R>>(concurrent.length);
 
         //Create multiple observables for each function.  They simply emit the input value.
         //this is the "fork" step of the concurrent processing
@@ -65,11 +62,11 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
             observables.add( observable );
         }
 
-        final Observable<R> zipped = Observable.zip( observables, zip );
+        final Observable<Z> zipped = Observable.zip( observables, zip );
 
 
 
-        //return an observable that
+        //return an observable that is hte result of the zip
         return zipped;
 
       }
@@ -80,14 +77,14 @@ public class Concurrent<T, R> implements Func1<T, Observable<R>> {
      * in the list are invoked in parallel. The results are then "zipped" 
      * into a single observable which is returned  with the specified function
      *
-     * @param observable The observable we're invoking on
-     * @param zipFunction The zip function to aggregate the results
+     * @param observable The observable we're invoking many concurrent operations on
+     * @param zipFunction The zip function to aggregate the results. And return the observable
      * @param concurrent The concurrent operations we're invoking
-     * @return The observable emitted from the zipped function
+     * @return The observable emitted from the zipped function of type Z
      */
-    public static <T, R> Observable<R> concurrent( 
-            final Observable<T> observable, final FuncN zipFunction, final Func1<T, R>... concurrent ){
-        return observable.mapMany( new Concurrent<T, R>( zipFunction, concurrent ));
+    public static <T, R, Z> Observable<Z> concurrent(
+            final Observable<T> observable, final FuncN<Z> zipFunction, final Func1<T, R>... concurrent ){
+        return observable.mapMany( new Concurrent<T, R, Z>( zipFunction, concurrent ));
     }
 
 

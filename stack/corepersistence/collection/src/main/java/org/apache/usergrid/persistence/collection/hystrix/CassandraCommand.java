@@ -24,21 +24,28 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
+import rx.concurrency.Schedulers;
 
 
 /**
- * Default command that just returns the value handed to it.  Useful for creating observables
- * that are subscribed on the correct underlying Hystrix thread pool
- *
+ * Default command that just returns the value handed to it.  Useful for creating observables that are subscribed on the
+ * correct underlying Hystrix thread pool
  */
 public class CassandraCommand<R> extends HystrixCommand<R> {
 
-    public static final HystrixCommandGroupKey GROUP_KEY =HystrixCommandGroupKey.Factory.asKey( "CassandraCommand" );
+    public static final String NAME = "CassandraCommand";
+
+    public static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( NAME );
+
+    public static final String THREAD_POOL_SIZE = CommandUtils.getThreadPoolCoreSize( NAME );
+
+    public static final String THREAD_POOL_QUEUE = CommandUtils.getThreadPoolMaxQueueSize( NAME );
 
 
     private final R value;
 
-    public CassandraCommand(final R value) {
+
+    public CassandraCommand( final R value ) {
         super( GROUP_KEY );
         this.value = value;
     }
@@ -54,10 +61,11 @@ public class CassandraCommand<R> extends HystrixCommand<R> {
      * Get the write command
      *
      * @param readValue The value to observe on
+     *
      * @return The value wrapped in a Hystrix observable
      */
-    public static <R> Observable<R> toObservable( R readValue ){
-         return new CassandraCommand<R>(readValue).toObservable();
+    public static <R> Observable<R> toObservable( R readValue ) {
+        //create a new command and ensure it's observed on the correct thread scheduler
+        return new CassandraCommand<R>( readValue ).toObservable( Schedulers.threadPoolForIO() );
     }
-
 }

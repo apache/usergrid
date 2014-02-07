@@ -21,88 +21,195 @@ package org.apache.usergrid.persistence.collection.rx;
 
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
+import org.apache.usergrid.persistence.collection.hystrix.CommandUtils;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.netflix.config.ConfigurationManager;
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
+import rx.Scheduler;
+import rx.concurrency.Schedulers;
 import rx.util.functions.Func1;
 import rx.util.functions.FuncN;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
- * Simple tests that provides examples of how to perform common operations in RX
+ * Tests that provides examples of how to perform more complex RX operations
  */
 public class ParallelTest {
 
     private static final Logger logger = LoggerFactory.getLogger( ParallelTest.class );
 
 
-//    @Test( timeout = 5000 )
-    @Test
+    private static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( "TEST_KEY" );
+
+
+    public static final String THREAD_POOL_SIZE = CommandUtils.getThreadPoolCoreSize( GROUP_KEY.name() );
+
+    public static final String THREAD_POOL_QUEUE = CommandUtils.getThreadPoolMaxQueueSize( GROUP_KEY.name() );
+
+
+    /**
+     * An example of how an observable that requires a "fan out" then join should execute.
+     */
+    @Test( timeout = 5000 )
     public void concurrentFunctions() {
         final String input = "input";
 
-        final int size = 9;
+        final int size = 100;
+        //since we start at index 0
+        final int expected = size - 1;
 
-        //TODO Tweak our thread pool size beyond 10.
+
+        /**
+         * QUESTION Using this thread blocks indefinitely.  The execution of the Hystrix command happens on the
+         * computation
+         * Thread if this is used
+         */
+        //        final Scheduler scheduler = Schedulers.threadPoolForComputation();
+
+        //use the I/O scheduler to allow enough thread, otherwise our pool will be the same size as the # of cores
+        final Scheduler scheduler = Schedulers.threadPoolForIO();
+
+        //set our size equal
+        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, size );
+        //        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, 10 );
+
+        //reject requests we have to queue
+        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_QUEUE, -1 );
 
         //latch used to make each thread block to prove correctness
         final CountDownLatch latch = new CountDownLatch( size );
 
-        final List<Observable<String>> observables = new ArrayList<Observable<String>>( size );
+
+        final Multiset<String> set = HashMultiset.create();
 
 
-        //this is not using a hystrix thread pool as I expected but rather the Rx computation thread pool.  Am I doing this
-        //incorrectly?
-        for ( int i = 0; i < size; i++ ) {
-            observables.add( new CassandraCommand<String>( input ).toObservable().map( new Func1<String, String>() {
-                @Override
-                public String call( final String s ) {
+        //create our observable and execute it in the I/O pool since we'll be doing I/O operations
 
-                    final String threadName = Thread.currentThread().getName();
+        /**
+         *  QUESTION: Should this use the computation scheduler since all operations (except the hystrix command) are
+         *  non blocking?
+         */
 
-                    latch.countDown();
-
-                    logger.info( "Function executing on thread {} with latch value {}",
-                            threadName, latch.getCount() );
+        final Observable<String> observable = Observable.from( input ).observeOn( scheduler );
 
 
-                    try {
-                        latch.await();
-                    }
-                    catch ( InterruptedException e ) {
-                        throw new RuntimeException( e );
-                    }
-
-                    return s;
-                }
-            } ) );
-        }
-
-
-        Observable<String> zipped = Observable.zip( observables, new FuncN<String>() {
+        Observable<Integer> thing = observable.mapMany( new Func1<String, Observable<Integer>>() {
 
             @Override
-            public String call( final Object... args ) {
-                assertEquals( size, args.length );
-                return input;
+            public Observable<Integer> call( final String s ) {
+                List<Observable<Integer>> functions = new ArrayList<Observable<Integer>>();
+
+                logger.info( "Creating new set of observables in thread {}", Thread.currentThread().getName() );
+
+                for ( int i = 0; i < size; i++ ) {
+
+
+                    final int index = i;
+
+                    //create a new observable and execute the function on it.  These should happen in parallel when
+                    // a subscription occurs
+
+                    /**
+                     * QUESTION: Should this again be the process thread, not the I/O
+                     */
+                    Observable<String> newObservable = Observable.from( input ).subscribeOn( scheduler );
+
+                    Observable<Integer> transformed = newObservable.map( new Func1<String, Integer>() {
+
+                        @Override
+                        public Integer call( final String s ) {
+
+                            final String threadName = Thread.currentThread().getName();
+
+                            logger.info( "Invoking parallel task in thread {}", threadName );
+
+                            //Simulate a Hystrix command making a call to an external resource.  Invokes
+                            //the Hystrix command immediately as the function is invoked
+
+                            return new HystrixCommand<Integer>( GROUP_KEY ) {
+                                @Override
+                                protected Integer run() throws Exception {
+
+                                    final String threadName = Thread.currentThread().getName();
+
+                                    logger.info( "Invoking hystrix task in thread {}", threadName );
+
+
+                                    set.add( threadName );
+
+                                    latch.countDown();
+
+                                    try {
+                                        latch.await();
+                                    }
+                                    catch ( InterruptedException e ) {
+                                        throw new RuntimeException( "Interrupted", e );
+                                    }
+
+                                    assertTrue( isExecutedInThread() );
+
+                                    return index;
+                                }
+                            }.execute();
+                        }
+                    } );
+
+                    functions.add( transformed );
+                }
+
+                /**
+                 * Execute the functions above and zip the results together
+                 */
+                Observable<Integer> zipped = Observable.zip( functions, new FuncN<Integer>() {
+
+                    @Override
+                    public Integer call( final Object... args ) {
+
+                        logger.info( "Invoking zip in thread {}", Thread.currentThread().getName() );
+
+                        assertEquals( size, args.length );
+
+                        for ( int i = 0; i < args.length; i++ ) {
+                            assertEquals( "Indexes are returned in order", i, args[i] );
+                        }
+
+                        //just return our string
+                        return ( Integer ) args[args.length - 1];
+                    }
+                } );
+
+                return zipped;
             }
         } );
 
 
-        String last = zipped.toBlockingObservable().last();
+        final Integer last = thing.toBlockingObservable().last();
 
 
-        assertEquals( input, last );
+        assertEquals( expected, last.intValue() );
+
+        assertEquals( size, set.size() );
+
+        /**
+         * Ensure only 1 entry per thread
+         */
+        for ( String entry : set.elementSet() ) {
+            assertEquals( 1, set.count( entry ) );
+        }
     }
 }
