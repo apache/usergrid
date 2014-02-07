@@ -11,7 +11,7 @@
 	http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.1.xsd
 	http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-	<context:component-scan base-package="org.usergrid.persistence" />
+	<context:component-scan base-package="org.apache.usergrid.persistence" />
 	<context:annotation-config />
 
 	<bean id="properties"
@@ -53,7 +53,7 @@
 		<entry key="password" value="${cassandra.password}" />
 	</util:map>
 
-	<bean id="realm" class="org.usergrid.security.shiro.Realm">
+	<bean id="realm" class="org.apache.usergrid.security.shiro.Realm">
 		<property name="name" value="realm" />
 	</bean>
 
@@ -86,11 +86,11 @@
 		<constructor-arg ref="cassandraCredentials" />
 	</bean>
 
-	<!-- bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" /> -->
-	<bean name="lockManager" class="org.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
+	<!-- bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" /> -->
+	<bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
 
 	<bean id="cassandraService"
-		class="org.usergrid.persistence.cassandra.CassandraService" init-method="init">
+		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init">
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
@@ -98,23 +98,23 @@
 	</bean>
 
 	<bean id="entityManagerFactory"
-		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
+		class="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
 	</bean>
 
 	<bean id="queueManagerFactory"
-		class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
+		class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
 	</bean>
 
-	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
+	<bean id="serviceManagerFactory" class="org.apache.usergrid.services.ServiceManagerFactory">
 		<constructor-arg>
 			<ref bean="entityManagerFactory" />
 		</constructor-arg>
 	</bean>
 
-	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+	<bean id="tokenService" class="org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
 
-	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
+	<bean id="managementService" class="org.apache.usergrid.management.cassandra.ManagementServiceImpl" />
 
 </beans>

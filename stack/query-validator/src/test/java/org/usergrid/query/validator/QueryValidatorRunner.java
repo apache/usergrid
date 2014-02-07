@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.query.validator;
+package org.apache.usergrid.query.validator;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -21,12 +21,12 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.cassandra.DataControl;
-import org.usergrid.management.ManagementService;
-import org.usergrid.persistence.Entity;
-import org.usergrid.standalone.Server;
-import org.usergrid.utils.JsonUtils;
+import org.apache.usergrid.cassandra.CassandraRunner;
+import org.apache.usergrid.cassandra.DataControl;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.standalone.Server;
+import org.apache.usergrid.utils.JsonUtils;
 
 import java.io.IOException;
 import java.net.URL;

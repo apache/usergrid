@@ -28,13 +28,13 @@
 
 	<import resource="classpath:/usergrid-core-context.xml"/>
 
-  <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+  <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
     <constructor-arg ref="entityManagerFactory"/>
     <constructor-arg ref="cassandraService"/>
   </bean>
 
   <!-- Refer to a named schemaManager from the DataControl annotation thusly -->
-  <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+  <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
     <constructor-arg ref="setup"/>
     <constructor-arg ref="cassandraCluster"/>
   </bean>

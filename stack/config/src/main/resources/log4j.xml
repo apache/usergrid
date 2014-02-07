@@ -23,31 +23,31 @@
         <level value="error"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.BATCH">
+    <logger name="org.apache.usergrid.persistence.cassandra.BATCH">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.ConnectionRefImpl">
+    <logger name="org.apache.usergrid.persistence.cassandra.ConnectionRefImpl">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.DaoUtils">
+    <logger name="org.apache.usergrid.persistence.cassandra.DaoUtils">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.DB">
+    <logger name="org.apache.usergrid.persistence.cassandra.DB">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
+    <logger name="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.EntityManagerImpl">
+    <logger name="org.apache.usergrid.persistence.cassandra.EntityManagerImpl">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.rest.security.AllowAjaxFilter">
+    <logger name="org.apache.usergrid.rest.security.AllowAjaxFilter">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>

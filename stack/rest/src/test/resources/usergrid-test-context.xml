@@ -23,33 +23,33 @@
 
 	<import resource="usergrid-rest-context.xml"/>
 
-    <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager">
+    <bean id="traceTagManager" class="org.apache.usergrid.persistence.cassandra.util.TraceTagManager">
         <property name="reportUnattached" value="false"/>
         <property name="traceEnabled" value="false"/>
     </bean>
 
 
-    <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore"/>
+    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore"/>
 
-    <!--<bean id="binaryStore" class="org.usergrid.services.assets.data.S3BinaryStore">-->
+    <!--<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.S3BinaryStore">-->
         <!--<constructor-arg name="accessId" value="xx" />-->
         <!--<constructor-arg name="secretKey" value="xx" />-->
         <!--<constructor-arg name="bucketName" value="xx" />-->
     <!--</bean>-->
 
-    <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+    <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
     </bean>
     <!-- The default schema manager -->
     <!--
-    <bean class="org.usergrid.persistence.CoreSchemaManager">
+    <bean class="org.apache.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="svcSetup"/>
         <constructor-arg ref="cassandraCluster"/>
     </bean>
     -->
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->
-    <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+    <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>
         <constructor-arg ref="cassandraCluster"/>
     </bean>
