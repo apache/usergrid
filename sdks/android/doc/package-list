@@ -1,5 +1,3 @@
-org.usergrid.android.client
-org.usergrid.android.client.callbacks
-org.usergrid.android.client.entities
-org.usergrid.android.client.response
-org.usergrid.android.client.utils
+org.apache.usergrid.android.client
+org.apache.usergrid.android.client.callbacks
+org.apache.usergrid.android.client.utils
