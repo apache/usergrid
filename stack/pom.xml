@@ -811,7 +811,7 @@
       <dependency>
         <groupId>net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <version>0.0.8</version>
+        <version>0.0.7</version>
       </dependency>
 
       <dependency>
@@ -1806,11 +1806,12 @@
     </plugins>
   </reporting>
 
-  <repositories>
-    <repository>
-      <id>usergrid-dependencies</id>
-      <name>Usergrid s3 dependencies repository</name>
-      <url>https://usergrid-maven.s3.amazonaws.com/dependencies</url>
-    </repository>
-  </repositories>
+    <repositories>
+        <repository>
+            <id>local-dependencies</id>
+            <name>local-depedendencies</name>
+            <url>file://${project.basedir}/../m2/repository</url>
+        </repository>
+    </repositories>
+
 </project>
