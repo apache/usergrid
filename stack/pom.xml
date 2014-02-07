@@ -811,6 +811,7 @@
       <dependency>
         <groupId>net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
+        <!-- we'd like to use 0.0.8 but it is not in Maven Central -->
         <version>0.0.7</version>
       </dependency>
 
@@ -1280,7 +1281,8 @@
       <dependency>
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
-        <version>1.5</version>
+        <!-- we'd like to use 1.5, but it is not in Maven Central -->
+        <version>1.4</version>
       </dependency>
 
       <dependency>
