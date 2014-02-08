@@ -128,7 +128,7 @@ public class EdgeManagerImpl implements EdgeManager {
        return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
         } );
 
@@ -140,7 +140,7 @@ public class EdgeManagerImpl implements EdgeManager {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
+                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
             }
         } );
     }
@@ -152,7 +152,7 @@ public class EdgeManagerImpl implements EdgeManager {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
             }
         } );
     }
@@ -163,7 +163,7 @@ public class EdgeManagerImpl implements EdgeManager {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
+                return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
             }
         } );
     }
