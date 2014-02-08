@@ -11,7 +11,7 @@ of the query and CRUD operations so that this can happen.
 While Mongo is a full-featured database, in practice only a small subset of
 it's commands are used. To verify this, a Mongo proxy was written at:
 
-org.usergrid.mongo.testproxy.MongoProxyServer
+org.apache.usergrid.mongo.testproxy.MongoProxyServer
 
 This proxy serves as a "man in the middle" and decodes and logs all Mongo
 commands sent to and from an application and MongoDB. Using a couple of GUI

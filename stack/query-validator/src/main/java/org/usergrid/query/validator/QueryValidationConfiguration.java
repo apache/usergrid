@@ -1,7 +1,7 @@
-package org.usergrid.query.validator;
+package org.apache.usergrid.query.validator;
 
-import org.usergrid.persistence.Entity;
-import org.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.utils.InflectionUtils;
 
 import java.util.List;
 

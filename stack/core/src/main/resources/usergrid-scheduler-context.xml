@@ -6,7 +6,7 @@
 
 	<import resource="classpath:/usergrid-core-context.xml" />
 
-	<bean id="jobSchedulerBackgroundService" class="org.usergrid.batch.service.JobSchedulerService">
+	<bean id="jobSchedulerBackgroundService" class="org.apache.usergrid.batch.service.JobSchedulerService">
 		<property name="jobFactory" ref="jobFactory" />
 		<property name="jobAccessor" ref="schedulerService" />
 		<property name="workerSize" value="${usergrid.scheduler.job.workers}" />
@@ -14,17 +14,17 @@
 		<property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
 	</bean>
 
-	<bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">
+	<bean id="schedulerService" class="org.apache.usergrid.batch.service.SchedulerServiceImpl">
 		<property name="jobTimeout" value="${usergrid.scheduler.job.timeout}" />
 		<property name="jobQueueName" value="${usergrid.scheduler.job.queueName}" />
 	</bean>
 
 
-	<bean id="jobFactory" class="org.usergrid.batch.UsergridJobFactory" />
+	<bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
 
 
 	<!-- scan all job classes -->
-	<context:component-scan base-package="org.usergrid.batch.job" />
+	<context:component-scan base-package="org.apache.usergrid.batch.job" />
 	<context:annotation-config />
 	
 	<!-- other beans -->

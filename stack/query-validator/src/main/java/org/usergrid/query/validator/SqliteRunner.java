@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.query.validator;
+package org.apache.usergrid.query.validator;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Schema;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
