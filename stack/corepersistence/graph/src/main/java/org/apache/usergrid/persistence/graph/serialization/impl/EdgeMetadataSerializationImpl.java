@@ -82,23 +82,30 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     private static final StringColumnParser PARSER = StringColumnParser.get();
 
 
-    private static final MultiTennantColumnFamily<OrganizationScope, Id, String> CF_TARGET_EDGE_TYPES =
-            new MultiTennantColumnFamily<OrganizationScope, Id, String>( "Graph_Target_Edge_Types", ROW_KEY_SER,
-                    STRING_SERIALIZER );
-
+    /**
+     * CFs where the row key contains the source node id
+     */
     private static final MultiTennantColumnFamily<OrganizationScope, Id, String> CF_SOURCE_EDGE_TYPES =
             new MultiTennantColumnFamily<OrganizationScope, Id, String>( "Graph_Source_Edge_Types", ROW_KEY_SER,
                     STRING_SERIALIZER );
 
-    //all target id types for source edge type
-    private static final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> CF_TARGET_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String>( "Graph_Target_Edge_Id_Types",
+       //all target id types for source edge type
+    private static final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> CF_SOURCE_EDGE_ID_TYPES =
+            new MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String>( "Graph_Source_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
+
+    /**
+     * CFs where the row key is the target node id
+     */
+    private static final MultiTennantColumnFamily<OrganizationScope, Id, String> CF_TARGET_EDGE_TYPES =
+            new MultiTennantColumnFamily<OrganizationScope, Id, String>( "Graph_Target_Edge_Types", ROW_KEY_SER,
+                    STRING_SERIALIZER );
+
 
 
     //all source id types for target edge type
-    private static final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> CF_SOURCE_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String>( "Graph_Source_Edge_Id_Types",
+    private static final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> CF_TARGET_EDGE_ID_TYPES =
+            new MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String>( "Graph_Target_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
 
@@ -133,7 +140,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         //add source->target edge type to meta data
         final ScopedRowKey<OrganizationScope, Id> sourceKey = new ScopedRowKey<OrganizationScope, Id>( scope, source );
 
-        batch.withRow( CF_TARGET_EDGE_TYPES, sourceKey ).setTimestamp( timestamp ).putColumn( edgeType, HOLDER );
+        batch.withRow( CF_SOURCE_EDGE_TYPES, sourceKey ).setTimestamp( timestamp ).putColumn( edgeType, HOLDER );
 
 
         //write source->target edge type and id type to meta data
@@ -142,7 +149,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, tk );
 
 
-        batch.withRow( CF_TARGET_EDGE_ID_TYPES, sourceTypeKey ).setTimestamp( timestamp )
+        batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey ).setTimestamp( timestamp )
              .putColumn( target.getType(), HOLDER );
 
 
@@ -150,7 +157,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         final ScopedRowKey<OrganizationScope, Id> targetKey = new ScopedRowKey<OrganizationScope, Id>( scope, target );
 
 
-        batch.withRow( CF_SOURCE_EDGE_TYPES, targetKey ).setTimestamp( timestamp ).putColumn( edgeType, HOLDER );
+        batch.withRow( CF_TARGET_EDGE_TYPES, targetKey ).setTimestamp( timestamp ).putColumn( edgeType, HOLDER );
 
 
         //write target<--source edge type and id type to meta data
@@ -158,7 +165,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( target, edgeType ) );
 
 
-        batch.withRow( CF_SOURCE_EDGE_ID_TYPES, targetTypeKey ).setTimestamp( timestamp )
+        batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey ).setTimestamp( timestamp )
              .putColumn( source.getType(), HOLDER );
 
 
@@ -167,29 +174,29 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public MutationBatch removeTargetEdgeType( final OrganizationScope scope, final Edge edge ) {
-        return removeEdgeType( scope, edge.getSourceNode(), edge.getType(), edge.getVersion(), CF_TARGET_EDGE_TYPES );
+    public MutationBatch removeEdgeTypeFromSource( final OrganizationScope scope, final Edge edge ) {
+        return removeEdgeType( scope, edge.getSourceNode(), edge.getType(), edge.getVersion(), CF_SOURCE_EDGE_TYPES );
     }
 
 
     @Override
-    public MutationBatch removeTargetIdType( final OrganizationScope scope, final Edge edge ) {
+    public MutationBatch removeIdTypeFromSource( final OrganizationScope scope, final Edge edge ) {
         return removeIdType( scope, edge.getSourceNode(), edge.getTargetNode(), edge.getType(), edge.getVersion(),
-                CF_TARGET_EDGE_ID_TYPES );
-    }
-
-
-    @Override
-    public MutationBatch removeSourceEdgeType( final OrganizationScope scope, final Edge edge ) {
-        return removeEdgeType( scope, edge.getTargetNode(), edge.getType(), edge.getVersion(), CF_SOURCE_EDGE_TYPES );
-    }
-
-
-
-    @Override
-    public MutationBatch removeSourceIdType( final OrganizationScope scope, final Edge edge ) {
-        return removeIdType( scope, edge.getTargetNode(), edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 CF_SOURCE_EDGE_ID_TYPES );
+    }
+
+
+    @Override
+    public MutationBatch removeEdgeTypeToTarget( final OrganizationScope scope, final Edge edge ) {
+        return removeEdgeType( scope, edge.getTargetNode(), edge.getType(), edge.getVersion(), CF_TARGET_EDGE_TYPES );
+    }
+
+
+
+    @Override
+    public MutationBatch removeIdTypeToTarget( final OrganizationScope scope, final Edge edge ) {
+        return removeIdType( scope, edge.getTargetNode(), edge.getSourceNode(), edge.getType(), edge.getVersion(),
+                CF_TARGET_EDGE_ID_TYPES );
     }
 
 
@@ -256,20 +263,20 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public Iterator<String> getTargetEdgeTypes( final OrganizationScope scope, final SearchEdgeType search ) {
-        return getEdgeTypes( scope, search, CF_TARGET_EDGE_TYPES );
-    }
-
-
-    @Override
-    public Iterator<String> getTargetIdTypes( final OrganizationScope scope, final SearchIdType search ) {
-        return getIdTypes( scope, search, CF_TARGET_EDGE_ID_TYPES );
-    }
-
-
-    @Override
-    public Iterator<String> getSourceEdgeTypes( final OrganizationScope scope, final SearchEdgeType search ) {
+    public Iterator<String> getEdgeTypesFromSource( final OrganizationScope scope, final SearchEdgeType search ) {
         return getEdgeTypes( scope, search, CF_SOURCE_EDGE_TYPES );
+    }
+
+
+    @Override
+    public Iterator<String> getIdTypesFromSource( final OrganizationScope scope, final SearchIdType search ) {
+        return getIdTypes( scope, search, CF_SOURCE_EDGE_ID_TYPES );
+    }
+
+
+    @Override
+    public Iterator<String> getEdgeTypesToTarget( final OrganizationScope scope, final SearchEdgeType search ) {
+        return getEdgeTypes( scope, search, CF_TARGET_EDGE_TYPES );
     }
 
 
@@ -311,8 +318,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public Iterator<String> getSourceIdTypes( final OrganizationScope scope, final SearchIdType search ) {
-        return getIdTypes( scope, search, CF_SOURCE_EDGE_ID_TYPES );
+    public Iterator<String> getIdTypesToTarget( final OrganizationScope scope, final SearchIdType search ) {
+        return getIdTypes( scope, search, CF_TARGET_EDGE_ID_TYPES );
     }
 
 
@@ -353,8 +360,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        return Arrays.asList( graphCf( CF_TARGET_EDGE_TYPES ), graphCf( CF_SOURCE_EDGE_TYPES ),
-                graphCf( CF_TARGET_EDGE_ID_TYPES ), graphCf( CF_SOURCE_EDGE_ID_TYPES ) );
+        return Arrays.asList( graphCf( CF_SOURCE_EDGE_TYPES ), graphCf( CF_TARGET_EDGE_TYPES ),
+                graphCf( CF_SOURCE_EDGE_ID_TYPES ), graphCf( CF_TARGET_EDGE_ID_TYPES ) );
     }
 
 

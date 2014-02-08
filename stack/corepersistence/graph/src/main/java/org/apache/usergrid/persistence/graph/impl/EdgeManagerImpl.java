@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.graph.impl;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
@@ -32,6 +31,7 @@ import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.stage.GraphIoEvent;
 import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWriteStage;
@@ -58,14 +58,19 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
+    private final EdgeSerialization edgeSerialization;
+
 
     @Inject
     public EdgeManagerImpl( final EdgeWriteStage edgeWriteStage, final Scheduler scheduler,
-                            @Assisted final OrganizationScope scope,
-                            final EdgeMetadataSerialization edgeMetadataSerialization ) {
+                            final EdgeMetadataSerialization edgeMetadataSerialization,
+                            final EdgeSerialization edgeSerialization,
+                            @Assisted final OrganizationScope scope ) {
         this.edgeWriteStage = edgeWriteStage;
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
+        this.edgeSerialization = edgeSerialization;
+
 
         ValidationUtils.validateOrganizationScope( scope );
 
@@ -76,50 +81,54 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        return Observable.from( new GraphIoEvent<Edge>( scope, edge ) ).map( edgeWriteStage );
+        return Observable.from( new GraphIoEvent<Edge>( scope, edge ) ).subscribeOn( scheduler ).map( edgeWriteStage );
     }
 
 
     @Override
     public void deleteEdge( final Edge edge ) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 
     @Override
-    public Observable<Edge> loadSourceEdges( final SearchByEdgeType search ) {
+    public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
+        return Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesFromSource( scope, search );
+            }
+        } );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
+
 
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
-    public Observable<Edge> loadTargetEdges( final SearchByEdgeType search ) {
-
-
+    public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
-    public Observable<Edge> loadSourceEdges( final SearchByIdType search ) {
+    public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
-    public Observable<Edge> loadTargetEdges( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<String> getSourceEdgeTypes( final SearchEdgeType search ) {
+    public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
 
        return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getSourceEdgeTypes( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
             }
         } );
 
@@ -127,34 +136,34 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     @Override
-    public Observable<String> getSourceIdTypes( final SearchIdType search ) {
+    public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getSourceIdTypes( scope, search );
+                return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
             }
         } );
     }
 
 
     @Override
-    public Observable<String> getTargetEdgeTypes( final SearchEdgeType search ) {
+    public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
 
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getTargetEdgeTypes( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
         } );
     }
 
 
     @Override
-    public Observable<String> getTargetIdTypes( final SearchIdType search ) {
+    public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getTargetIdTypes( scope, search );
+                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
             }
         } );
     }

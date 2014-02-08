@@ -50,7 +50,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeTargetEdgeType( OrganizationScope scope, Edge edge );
+    MutationBatch removeEdgeTypeFromSource( OrganizationScope scope, Edge edge );
 
 
     /**
@@ -62,7 +62,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeTargetIdType( OrganizationScope scope, Edge edge );
+    MutationBatch removeIdTypeFromSource( OrganizationScope scope, Edge edge );
 
     /**
      * Remove all meta data from the target to the source type.  The caller must ensure that this is the last
@@ -73,7 +73,7 @@ public interface EdgeMetadataSerialization {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeSourceEdgeType( OrganizationScope scope, Edge edge );
+    MutationBatch removeEdgeTypeToTarget( OrganizationScope scope, Edge edge );
 
 
     /**
@@ -85,42 +85,42 @@ public interface EdgeMetadataSerialization {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeSourceIdType( OrganizationScope scope, Edge edge );
+    MutationBatch removeIdTypeToTarget( OrganizationScope scope, Edge edge );
 
     /**
-     * Get all target edge types for the given source node
+     * Get all edge types from the given source node
      *
      * @param search The search to execute
      *
      * @return An iterator of all the edge types
      */
-    Iterator<String> getTargetEdgeTypes( OrganizationScope scope, SearchEdgeType search );
+    Iterator<String> getEdgeTypesFromSource( OrganizationScope scope, SearchEdgeType search );
 
     /**
-     * Get all target id types on the edge with the type given and the source node
+     * Get all target id types on the edge with the type given from the source node
      *
      * @param search The search to execute
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getTargetIdTypes( OrganizationScope scope, SearchIdType search );
+    Iterator<String> getIdTypesFromSource( OrganizationScope scope, SearchIdType search );
 
 
     /**
-     * Get all target edge types for the given target node
+     * Get all source edge types pointing to the given target node
      *
      * @param search The search to execute
      *
      * @return An iterator of all the edge types
      */
-    Iterator<String> getSourceEdgeTypes( OrganizationScope scope, SearchEdgeType search );
+    Iterator<String> getEdgeTypesToTarget( OrganizationScope scope, SearchEdgeType search );
 
     /**
-     * Get all target id types on the edge with the type given and the target node
+     * Get all source id types on the edge with the type given pointing to the target node
      *
      * @param search The search to execute
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getSourceIdTypes( OrganizationScope scope, SearchIdType search );
+    Iterator<String> getIdTypesToTarget( OrganizationScope scope, SearchIdType search );
 }

@@ -27,7 +27,6 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +34,7 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.graph.guice.GraphModule;
+import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
@@ -58,10 +57,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@Ignore // tests fail due to unimplemented methods in EdgeManagerImpl that return null
 
 @RunWith( JukitoRunner.class )
-@UseModules( { GraphModule.class } )
+@UseModules( { TestGraphModule.class } )
 public class EdgeManagerIT {
 
 
@@ -108,7 +106,7 @@ public class EdgeManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadSourceEdges( search );
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().last();
@@ -118,7 +116,7 @@ public class EdgeManagerIT {
         //change edge type to be invalid, shouldn't get a result
         search = createSearchByEdge( edge.getSourceNode(), edge.getType() + "invalid", edge.getVersion(), null );
 
-        edges = em.loadSourceEdges( search );
+        edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -141,7 +139,7 @@ public class EdgeManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadTargetEdges( search );
+        Observable<Edge> edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -151,7 +149,7 @@ public class EdgeManagerIT {
         //change edge type to be invalid, shouldn't get a result
         search = createSearchByEdge( edge.getTargetNode(), edge.getType() + "invalid", edge.getVersion(), null );
 
-        edges = em.loadTargetEdges( search );
+        edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -176,7 +174,7 @@ public class EdgeManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadSourceEdges( search );
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -186,7 +184,7 @@ public class EdgeManagerIT {
         //now test with an earlier version, we shouldn't get the edge back
         search = createSearchByEdge( edge.getSourceNode(), edge.getType(), earlyVersion, null );
 
-        edges = em.loadSourceEdges( search );
+        edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -212,7 +210,7 @@ public class EdgeManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadTargetEdges( search );
+        Observable<Edge> edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -222,7 +220,7 @@ public class EdgeManagerIT {
         //change edge type to be invalid, shouldn't get a result
         search = createSearchByEdge( edge.getTargetNode(), edge.getType(), earlyVersion, null );
 
-        edges = em.loadTargetEdges( search );
+        edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -239,15 +237,15 @@ public class EdgeManagerIT {
 
         Edge edge1 = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge1 );
+        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );;
 
         Edge edge2 = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge2 );
+        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );;
 
         Edge edge3 = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge3 );
+        em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );;
 
 
         //now test retrieving it
@@ -255,7 +253,7 @@ public class EdgeManagerIT {
         SearchByEdgeType search =
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getVersion(), null );
 
-        Observable<Edge> edges = em.loadSourceEdges( search );
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Iterator<Edge> returned = edges.toBlockingObservable().next().iterator();
@@ -268,7 +266,7 @@ public class EdgeManagerIT {
 
         search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getVersion(), edge2 );
 
-        edges = em.loadSourceEdges( search );
+        edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().next().iterator();
@@ -288,15 +286,15 @@ public class EdgeManagerIT {
 
         Edge edge1 = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge1 );
+        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );;
 
         Edge edge2 = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge2 );
+        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );;
 
         Edge edge3 = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge3 );
+        em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );;
 
 
         //now test retrieving it
@@ -304,7 +302,7 @@ public class EdgeManagerIT {
         SearchByEdgeType search =
                 createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getVersion(), null );
 
-        Observable<Edge> edges = em.loadTargetEdges( search );
+        Observable<Edge> edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Iterator<Edge> returned = edges.toBlockingObservable().next().iterator();
@@ -317,7 +315,7 @@ public class EdgeManagerIT {
 
         search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getVersion(), edge2 );
 
-        edges = em.loadTargetEdges( search );
+        edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().next().iterator();
@@ -343,7 +341,7 @@ public class EdgeManagerIT {
         SearchByIdType search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 edge.getTargetNode().getType(), null );
 
-        Observable<Edge> edges = em.loadSourceEdges( search );
+        Observable<Edge> edges = em.loadEdgesFromSourceByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -355,7 +353,7 @@ public class EdgeManagerIT {
         search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 edge.getTargetNode().getType() + "invalid", null );
 
-        edges = em.loadSourceEdges( search );
+        edges = em.loadEdgesFromSourceByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -379,7 +377,7 @@ public class EdgeManagerIT {
         SearchByIdType search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
                 edge.getSourceNode().getType(), null );
 
-        Observable<Edge> edges = em.loadTargetEdges( search );
+        Observable<Edge> edges = em.loadEdgesToTargetByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -391,7 +389,7 @@ public class EdgeManagerIT {
         search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
                 edge.getSourceNode().getType() + "invalid", null );
 
-        edges = em.loadTargetEdges( search );
+        edges = em.loadEdgesToTargetByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -415,7 +413,7 @@ public class EdgeManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadSourceEdges( search );
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -425,7 +423,7 @@ public class EdgeManagerIT {
         SearchByIdType searchById = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 edge.getTargetNode().getType(), null );
 
-        edges = em.loadSourceEdges( searchById );
+        edges = em.loadEdgesFromSourceByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().single();
@@ -437,7 +435,7 @@ public class EdgeManagerIT {
         em.deleteEdge( edge );
 
         //now test retrieval, should be null
-        edges = em.loadSourceEdges( search );
+        edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -447,7 +445,7 @@ public class EdgeManagerIT {
 
         //no search by type, should be null as well
 
-        edges = em.loadSourceEdges( searchById );
+        edges = em.loadEdgesFromSourceByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -471,7 +469,7 @@ public class EdgeManagerIT {
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadSourceEdges( search );
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -481,7 +479,7 @@ public class EdgeManagerIT {
         SearchByIdType searchById = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
                 edge.getSourceNode().getType(), null );
 
-        edges = em.loadSourceEdges( searchById );
+        edges = em.loadEdgesFromSourceByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().single();
@@ -493,7 +491,7 @@ public class EdgeManagerIT {
         em.deleteEdge( edge );
 
         //now test retrieval, should be null
-        edges = em.loadTargetEdges( search );
+        edges = em.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -503,7 +501,7 @@ public class EdgeManagerIT {
 
         //no search by type, should be null as well
 
-        edges = em.loadTargetEdges( searchById );
+        edges = em.loadEdgesToTargetByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -523,21 +521,21 @@ public class EdgeManagerIT {
 
         Edge testTargetEdge = new SimpleEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge );
+        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
         Edge testTarget2Edge = new SimpleEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTarget2Edge );
+        em.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );;
 
 
         Edge test2TargetEdge = new SimpleEdge( sourceId, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge );
+        em.writeEdge( test2TargetEdge).toBlockingObservable().singleOrDefault( null );
 
 
         //get our 2 edge types
         Observable<String> edges =
-                em.getTargetEdgeTypes( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
+                em.getEdgeTypesToTarget( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
 
 
         List<String> results = edges.toList().toBlockingObservable().single();
@@ -550,7 +548,7 @@ public class EdgeManagerIT {
 
         //now test sub edges
 
-        edges = em.getTargetIdTypes( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = em.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -561,7 +559,7 @@ public class EdgeManagerIT {
         assertTrue( "Types correct", results.contains( targetId2 ) );
 
         //now get types for test2
-        edges = em.getTargetIdTypes( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
+        edges = em.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -575,7 +573,7 @@ public class EdgeManagerIT {
         em.deleteEdge( test2TargetEdge );
 
 
-        edges = em.getTargetEdgeTypes( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
+        edges = em.getEdgeTypesToTarget( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -595,22 +593,22 @@ public class EdgeManagerIT {
 
         Edge testTargetEdge = new SimpleEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge );
+        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );;
 
         Edge testTarget2Edge = new SimpleEdge( sourceId2, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTarget2Edge );
+        em.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );;
 
 
         Edge test2TargetEdge = new SimpleEdge( sourceId1, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge );
+        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );;
 
 
         //get our 2 edge types
         final SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null );
 
-        Observable<String> edges = em.getSourceEdgeTypes( edgeTypes );
+        Observable<String> edges = em.getEdgeTypesFromSource( edgeTypes );
 
 
         List<String> results = edges.toList().toBlockingObservable().single();
@@ -624,7 +622,7 @@ public class EdgeManagerIT {
 
         //now test sub edges
 
-        edges = em.getSourceEdgeTypes( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = em.getEdgeTypesFromSource( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -636,7 +634,7 @@ public class EdgeManagerIT {
 
 
         //now get types for test2
-        edges = em.getSourceIdTypes( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null ) );
+        edges = em.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -650,7 +648,7 @@ public class EdgeManagerIT {
         em.deleteEdge( test2TargetEdge );
 
 
-        edges = em.getTargetEdgeTypes( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
+        edges = em.getEdgeTypesToTarget( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
 
         results = edges.toList().toBlockingObservable().single();
 
@@ -670,23 +668,23 @@ public class EdgeManagerIT {
 
         Edge testTargetEdge = new SimpleEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge );
+        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );;
 
 
         Edge testTargetEdge2 = new SimpleEdge( sourceId1, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge2 );
+        em.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );;
 
 
         Edge test2TargetEdge = new SimpleEdge( sourceId1, "test2", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge );
+        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );;
 
 
         //get our 2 edge types
         SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null );
 
-        Observable<String> edges = em.getTargetEdgeTypes( edgeTypes );
+        Observable<String> edges = em.getEdgeTypesToTarget( edgeTypes );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -698,7 +696,7 @@ public class EdgeManagerIT {
 
         edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), "test" );
 
-        edges = em.getTargetEdgeTypes( edgeTypes );
+        edges = em.getEdgeTypesToTarget( edgeTypes );
 
 
         results = edges.toBlockingObservable().getIterator();
@@ -709,7 +707,7 @@ public class EdgeManagerIT {
 
         //now test sub edges
 
-        edges = em.getTargetIdTypes( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = em.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -718,7 +716,7 @@ public class EdgeManagerIT {
 
         //now get the next page
 
-        edges = em.getTargetIdTypes(
+        edges = em.getIdTypesToTarget(
                 new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", targetId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
@@ -742,22 +740,22 @@ public class EdgeManagerIT {
 
         Edge testTargetEdge = new SimpleEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge );
+        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );;
 
 
         Edge testTargetEdge2 = new SimpleEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge2 );
+        em.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );;
 
         Edge test2TargetEdge = new SimpleEdge( sourceId2, "test2", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge );
+        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );;
 
 
         //get our 2 edge types
         SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null );
 
-        Observable<String> edges = em.getSourceEdgeTypes( edgeTypes );
+        Observable<String> edges = em.getEdgeTypesFromSource( edgeTypes );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -769,7 +767,7 @@ public class EdgeManagerIT {
 
         edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), "test" );
 
-        edges = em.getSourceEdgeTypes( edgeTypes );
+        edges = em.getEdgeTypesFromSource( edgeTypes );
 
 
         results = edges.toBlockingObservable().getIterator();
@@ -780,7 +778,7 @@ public class EdgeManagerIT {
 
         //now test sub edges
 
-        edges = em.getSourceEdgeTypes( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = em.getEdgeTypesFromSource( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -789,7 +787,7 @@ public class EdgeManagerIT {
 
         //now get the next page
 
-        edges = em.getSourceEdgeTypes(
+        edges = em.getEdgeTypesFromSource(
                 new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", sourceId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();

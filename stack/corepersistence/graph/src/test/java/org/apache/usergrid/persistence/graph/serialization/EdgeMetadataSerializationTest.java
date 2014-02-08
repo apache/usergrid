@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -108,7 +107,7 @@ public class EdgeMetadataSerializationTest {
         serialization.writeEdge( scope, edge3 ).execute();
 
         //now check we get both types back
-        Iterator<String> edges = serialization.getTargetEdgeTypes( scope, createSearchEdge( sourceId, null ) );
+        Iterator<String> edges = serialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, null ) );
 
         assertEquals( "edge", edges.next() );
         assertEquals( "edge2", edges.next() );
@@ -116,7 +115,7 @@ public class EdgeMetadataSerializationTest {
 
         //now check we can resume correctly with a "last"
 
-        edges = serialization.getTargetEdgeTypes( scope, createSearchEdge( sourceId, "edge" ) );
+        edges = serialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, "edge" ) );
 
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
@@ -142,7 +141,7 @@ public class EdgeMetadataSerializationTest {
         serialization.writeEdge( scope, edge3 ).execute();
 
         //now check we get both types back
-        Iterator<String> edges = serialization.getSourceEdgeTypes( scope, createSearchEdge( targetId, null ) );
+        Iterator<String> edges = serialization.getEdgeTypesToTarget( scope, createSearchEdge( targetId, null ) );
 
         assertEquals( "edge", edges.next() );
         assertEquals( "edge2", edges.next() );
@@ -150,7 +149,7 @@ public class EdgeMetadataSerializationTest {
 
         //now check we can resume correctly with a "last"
 
-        edges = serialization.getSourceEdgeTypes( scope, createSearchEdge( targetId, "edge" ) );
+        edges = serialization.getEdgeTypesToTarget( scope, createSearchEdge( targetId, "edge" ) );
 
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
@@ -180,7 +179,8 @@ public class EdgeMetadataSerializationTest {
         serialization.writeEdge( scope, edge4 ).execute();
 
         //now check we get both types back
-        Iterator<String> types = serialization.getTargetIdTypes( scope, createSearchIdType( sourceId, "edge", null ) );
+        Iterator<String> types = serialization.getIdTypesFromSource( scope,
+                createSearchIdType( sourceId, "edge", null ) );
 
         assertEquals( "target", types.next() );
         assertEquals( "target2", types.next() );
@@ -189,14 +189,14 @@ public class EdgeMetadataSerializationTest {
 
         //now check we can resume correctly with a "last"
 
-        types = serialization.getTargetIdTypes( scope, createSearchIdType( sourceId, "edge", "target" ) );
+        types = serialization.getIdTypesFromSource( scope, createSearchIdType( sourceId, "edge", "target" ) );
 
         assertEquals( "target2", types.next() );
         assertFalse( types.hasNext() );
 
 
         //check by other type
-        types = serialization.getTargetIdTypes( scope, createSearchIdType( sourceId, "edge2", null ) );
+        types = serialization.getIdTypesFromSource( scope, createSearchIdType( sourceId, "edge2", null ) );
         assertEquals( "target3", types.next() );
         assertFalse( types.hasNext() );
     }
@@ -225,7 +225,8 @@ public class EdgeMetadataSerializationTest {
         serialization.writeEdge( scope, edge4 ).execute();
 
         //now check we get both types back
-        Iterator<String> types = serialization.getSourceIdTypes( scope, createSearchIdType( targetId, "edge", null ) );
+        Iterator<String> types = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge",
+                null ) );
 
         assertEquals( "source", types.next() );
         assertEquals( "source2", types.next() );
@@ -234,14 +235,14 @@ public class EdgeMetadataSerializationTest {
 
         //now check we can resume correctly with a "last"
 
-        types = serialization.getSourceIdTypes( scope, createSearchIdType( targetId, "edge", "source" ) );
+        types = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge", "source" ) );
 
         assertEquals( "source2", types.next() );
         assertFalse( types.hasNext() );
 
 
         //check by other type
-        types = serialization.getSourceIdTypes( scope, createSearchIdType( targetId, "edge2", null ) );
+        types = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge2", null ) );
         assertEquals( "source3", types.next() );
         assertFalse( types.hasNext() );
     }
@@ -266,35 +267,35 @@ public class EdgeMetadataSerializationTest {
         serialization.writeEdge( scope, edge3 ).execute();
 
         //now check we get both types back
-        Iterator<String> edges = serialization.getTargetEdgeTypes( scope, createSearchEdge( sourceId, null ) );
+        Iterator<String> edges = serialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, null ) );
 
         assertEquals( "edge", edges.next() );
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
 
         //this shouldn't remove the edge, since edge1 has a version < edge2
-        serialization.removeTargetEdgeType( scope, edge1 ).execute();
+        serialization.removeEdgeTypeFromSource( scope, edge1 ).execute();
 
-        edges = serialization.getTargetEdgeTypes( scope, createSearchEdge( sourceId, null ) );
+        edges = serialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, null ) );
 
         assertEquals( "edge", edges.next() );
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
 
         //this should delete it. The version is the max for that edge type
-        serialization.removeTargetEdgeType( scope, edge2 ).execute();
+        serialization.removeEdgeTypeFromSource( scope, edge2 ).execute();
 
 
         //now check we have 1 left
-        edges = serialization.getTargetEdgeTypes( scope, createSearchEdge( sourceId, null ) );
+        edges = serialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, null ) );
 
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
 
-        serialization.removeTargetEdgeType( scope, edge3 ).execute();
+        serialization.removeEdgeTypeFromSource( scope, edge3 ).execute();
 
         //check we have nothing
-        edges = serialization.getTargetEdgeTypes( scope, createSearchEdge( sourceId, null ) );
+        edges = serialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, null ) );
 
         assertFalse( edges.hasNext() );
     }
@@ -320,34 +321,34 @@ public class EdgeMetadataSerializationTest {
 
 
         //now check we get both types back
-        Iterator<String> edges = serialization.getSourceEdgeTypes( scope, createSearchEdge( targetId, null ) );
+        Iterator<String> edges = serialization.getEdgeTypesToTarget( scope, createSearchEdge( targetId, null ) );
 
         assertEquals( "edge", edges.next() );
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
 
         //this shouldn't remove the edge, since edge1 has a version < edge2
-        serialization.removeTargetEdgeType( scope, edge1 ).execute();
+        serialization.removeEdgeTypeFromSource( scope, edge1 ).execute();
 
-        edges = serialization.getSourceEdgeTypes( scope, createSearchEdge( targetId, null ) );
+        edges = serialization.getEdgeTypesToTarget( scope, createSearchEdge( targetId, null ) );
 
         assertEquals( "edge", edges.next() );
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
 
 
-        serialization.removeSourceEdgeType( scope, edge2 ).execute();
+        serialization.removeEdgeTypeToTarget( scope, edge2 ).execute();
 
         //now check we have 1 left
-        edges = serialization.getSourceEdgeTypes( scope, createSearchEdge( targetId, null ) );
+        edges = serialization.getEdgeTypesToTarget( scope, createSearchEdge( targetId, null ) );
 
         assertEquals( "edge2", edges.next() );
         assertFalse( edges.hasNext() );
 
-        serialization.removeSourceEdgeType( scope, edge3 ).execute();
+        serialization.removeEdgeTypeToTarget( scope, edge3 ).execute();
 
         //check we have nothing
-        edges = serialization.getSourceEdgeTypes( scope, createSearchEdge( targetId, null ) );
+        edges = serialization.getEdgeTypesToTarget( scope, createSearchEdge( targetId, null ) );
 
         assertFalse( edges.hasNext() );
     }
@@ -373,35 +374,36 @@ public class EdgeMetadataSerializationTest {
         serialization.writeEdge( scope, edge3 ).execute();
 
         //now check we get both types back
-        Iterator<String> edges = serialization.getTargetIdTypes( scope, createSearchIdType( sourceId, "edge", null ) );
+        Iterator<String> edges = serialization.getIdTypesFromSource( scope,
+                createSearchIdType( sourceId, "edge", null ) );
 
         assertEquals( "target", edges.next() );
         assertEquals( "target2", edges.next() );
         assertFalse( edges.hasNext() );
 
         //this shouldn't remove the edge, since edge1 has a version < edge2
-        serialization.removeTargetIdType( scope, edge1 ).execute();
+        serialization.removeIdTypeFromSource( scope, edge1 ).execute();
 
-        edges = serialization.getTargetIdTypes( scope,  createSearchIdType( sourceId, "edge", null ) );
+        edges = serialization.getIdTypesFromSource( scope, createSearchIdType( sourceId, "edge", null ) );
 
         assertEquals( "target", edges.next() );
         assertEquals( "target2", edges.next() );
         assertFalse( edges.hasNext() );
 
         //this should delete it. The version is the max for that edge type
-        serialization.removeTargetIdType( scope, edge2 ).execute();
+        serialization.removeIdTypeFromSource( scope, edge2 ).execute();
 
 
         //now check we have 1 left
-        edges = serialization.getTargetIdTypes( scope,  createSearchIdType( sourceId, "edge", null ) );
+        edges = serialization.getIdTypesFromSource( scope, createSearchIdType( sourceId, "edge", null ) );
 
         assertEquals( "target2", edges.next() );
         assertFalse( edges.hasNext() );
 
-        serialization.removeTargetIdType( scope, edge3 ).execute();
+        serialization.removeIdTypeFromSource( scope, edge3 ).execute();
 
         //check we have nothing
-        edges = serialization.getTargetIdTypes( scope,  createSearchIdType( sourceId, "edge", null ));
+        edges = serialization.getIdTypesFromSource( scope, createSearchIdType( sourceId, "edge", null ) );
 
         assertFalse( edges.hasNext() );
     }
@@ -427,34 +429,35 @@ public class EdgeMetadataSerializationTest {
 
 
         //now check we get both types back
-        Iterator<String> edges = serialization.getSourceIdTypes( scope,  createSearchIdType( targetId, "edge", null ) );
+        Iterator<String> edges = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge",
+                null ) );
 
         assertEquals( "source", edges.next() );
         assertEquals( "source2", edges.next() );
         assertFalse( edges.hasNext() );
 
         //this shouldn't remove the edge, since edge1 has a version < edge2
-        serialization.removeSourceIdType( scope, edge1 ).execute();
+        serialization.removeIdTypeToTarget( scope, edge1 ).execute();
 
-        edges = serialization.getSourceIdTypes( scope, createSearchIdType( targetId, "edge", null ) );
+        edges = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge", null ) );
 
         assertEquals( "source", edges.next() );
         assertEquals( "source2", edges.next() );
         assertFalse( edges.hasNext() );
 
 
-        serialization.removeSourceIdType( scope, edge2 ).execute();
+        serialization.removeIdTypeToTarget( scope, edge2 ).execute();
 
         //now check we have 1 left
-        edges = serialization.getSourceIdTypes( scope, createSearchIdType( targetId, "edge", null ) );
+        edges = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge", null ) );
 
         assertEquals( "source2", edges.next() );
         assertFalse( edges.hasNext() );
 
-        serialization.removeSourceIdType( scope, edge3 ).execute();
+        serialization.removeIdTypeToTarget( scope, edge3 ).execute();
 
         //check we have nothing
-        edges = serialization.getSourceIdTypes( scope, createSearchIdType( targetId, "edge", null ) );
+        edges = serialization.getIdTypesToTarget( scope, createSearchIdType( targetId, "edge", null ) );
 
         assertFalse( edges.hasNext() );
     }
