@@ -26,16 +26,19 @@ import org.apache.usergrid.management.AccountCreationProps;
 import static java.lang.Boolean.parseBoolean;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.utils.ListUtils.anyNull;
 
 
 public class AccountCreationPropsImpl implements AccountCreationProps {
     private static final Logger logger = LoggerFactory.getLogger( AccountCreationPropsImpl.class );
 
-    protected Properties properties;
+    protected final Properties properties;
+    private final SuperUser superUser;
 
 
     public AccountCreationPropsImpl( Properties properties ) {
         this.properties = properties;
+        this.superUser = new SuperUserImpl(properties);
     }
 
 
@@ -108,5 +111,47 @@ public class AccountCreationPropsImpl implements AccountCreationProps {
             }
         }
         return p;
+    }
+
+    public SuperUser getSuperUser() {
+        return superUser;
+    }
+
+    protected static class SuperUserImpl implements SuperUser {
+        private final boolean enabled;
+        private final String username;
+        private final String email;
+        private final String password;
+
+        public SuperUserImpl(Properties properties) {
+            enabled = parseBoolean(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
+            username = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
+            email = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+            password = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return superuserEnabled();
+        }
+
+        @Override
+        public String getUsername() {
+            return username;
+        }
+
+        @Override
+        public String getEmail() {
+            return email;
+        }
+
+        @Override
+        public String getPassword() {
+            return password;
+        }
+
+        private boolean superuserEnabled() {
+            return enabled && !anyNull(username, email, password);
+        }
     }
 }
