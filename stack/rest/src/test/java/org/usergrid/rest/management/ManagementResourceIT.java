@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.cassandra.Concurrent;
 import org.usergrid.management.OrganizationInfo;
@@ -527,8 +528,9 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         //assertEquals( Status.OK, status );
     }
-
-    @Test
+//test needs to be updated to do validation of files/ and validation of file created in s3.
+    // eventually will need to simulate dropped connections as well.
+    @Ignore
     public void exportCallSuccessful() throws Exception {
         Status responseStatus = Status.OK;
         JsonNode node = null;
@@ -552,6 +554,46 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
             node = resource().path( "/management/export" ).accept( MediaType.APPLICATION_JSON )
                       .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.OK, responseStatus );
+    }
+
+    @Ignore
+    public void exportCallCreationEntities100() throws Exception {
+        Status responseStatus = Status.OK;
+        JsonNode node = null;
+
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: make sure to put a valid admin token here.
+        storage_info.put( "admin_token", adminToken() );
+        //TODO: always put dummy values here and ignore this test.
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "properties", properties);
+
+        for (int i = 0; i < 100; i++) {
+            Map<String, String> userCreation = hashMap( "type", "app_user" ).map( "name", "fred"+i );
+
+            node = resource().path( "/test-organization/test-app/app_users" )
+                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, userCreation );
+        }
+
+        try {
+            node = resource().path( "/management/export" ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();

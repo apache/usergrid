@@ -450,18 +450,21 @@ public class ManagementResource extends AbstractContextResource {
     @POST
     @Path( "export" )
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response exportPostJson (@Context UriInfo ui, Map<String, Object> json,
+    public Response exportPostJson (@Context UriInfo ui,@HeaderParam( "Authorization" ) String authorization,
+                                    Map<String, Object> json,
                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback){
 
 
         OAuthResponse response = null;
+        String client_id;
+        String client_secret;
+
         try {
 
         //parse the json into some useful object (the config params)
         ExportInfo objEx = new ExportInfo(json);
 
-
-        //exportService.schedule(objEx);
+        exportService.schedule(objEx);
         exportService.doExport( objEx );
         }
         catch (Exception e) {

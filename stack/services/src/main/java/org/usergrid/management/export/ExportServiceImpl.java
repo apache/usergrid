@@ -36,6 +36,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,8 @@ import com.google.inject.Module;
  */
 public class ExportServiceImpl implements ExportService{
 
+
+    private static final Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
     //dependency injection
     //inject scheduler - needs to be auto wired
     private SchedulerService sch;
@@ -80,11 +83,39 @@ public class ExportServiceImpl implements ExportService{
 
     @Override
     public void schedule( final ExportInfo config ) {
-        //SchedulerServiceImpl sch =
 
-        //validate org exists
-        //validate user has access to or
+        //validate that org exists,then app, then collection.
+        String pathToBeParsed = config.getPath();
+        //split the path so that you can verify that the organization and the app exist.
+        String[] pathItems = pathToBeParsed.split( "/" );
+        try {
+            managementService.getOrganizationByName( pathItems[0] );
+        }
+        catch ( Exception e ) {
+            logger.error( "Organization doesn't exist" );
+        }
+
+        try {
+            managementService.getApplicationInfo( pathItems[1] );
+        }
+        catch ( Exception e ) {
+            logger.error( "Application doesn't exist" );
+        }
+
+
+        //TODO: parse path and make sure all the things you need actually exist. then throw
+        // good error messages when not found.
+
+        //  managementService.getOrganizationByName(  )
+        //validate user has access key to org (rather valid user has admin access token)
+            //this is token validation
         //schedule the job
+        JobData jobData = new JobData();
+
+        jobData.setProperty( "jobId", "0001" );//TODO: store uuid here, give export job uuid.
+        long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
+        sch.createJob( "queueExportJob",soonestPossible, jobData );
+
 
     }
 
@@ -123,6 +154,7 @@ public class ExportServiceImpl implements ExportService{
             if ( info == null ) {
 
                 //logger.error( "Organization info is null!" );
+                //TODO: remove all instances of system.exit in code case that was adapated.
                 System.exit( 1 );
             }
 
@@ -168,7 +200,7 @@ public class ExportServiceImpl implements ExportService{
 
     private void exportApplicationsForOrg( Map.Entry<UUID, String> organization,final ExportInfo config ) throws Exception {
 
-        Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
+
 
         logger.info( "" + organization );
 

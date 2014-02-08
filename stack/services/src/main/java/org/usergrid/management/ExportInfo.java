@@ -6,7 +6,7 @@ import java.util.Map;
  * Created by ApigeeCorporation on 1/31/14.
  */
 //TODO: Documentation on this class.
-public class ExportInfo {
+public class ExportInfo { //extends Entity something {
 
     private String path;
     private Map<String, Object> properties;
@@ -16,6 +16,24 @@ public class ExportInfo {
     private String admin_token;
     private String s3_key;
     private String bucket_location;
+
+
+    /**
+     *
+     *the sch system doesn't make any assumes about the job or how it works.
+     * and so if I need additional information to be persistant.
+     *
+     * The way to save data between queue and storing it.
+     *
+     * in my case, create a export entity. before I schedule the job and it'll have the pending state in it and
+     * all the information I need to run. Then I'll pass the ID of the export info I saved in a collection and i'll put that in the jbo
+     * data.
+     *
+     * persist the state in mechanisum that they can all access.
+     *
+     * I could make it a class and I can make it an entity. That way I can get it in and out.
+     * doesn't get exposed to the user.
+     */
 
     public ExportInfo ( Map<String, Object> exportData) {
         path = (String) exportData.get("path");
