@@ -108,6 +108,16 @@
     </license>
   </licenses>
 
+  <organization>
+    <name>The Apache Software Foundation</name>
+    <url>http://www.apache.org/</url>
+  </organization>
+
+  <issueManagement>
+    <system>Jira</system>
+    <url>https://issues.apache.org/jira/browse/USERGRID</url>
+  </issueManagement>
+
   <developers>
     <developer>
       <id>eanuff</id>
@@ -136,9 +146,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</connection>
-    <developerConnection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</developerConnection>
-    <url>git@github.com:apigee/usergrid-stack-internal.git</url>
+    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
+    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
+    <url>https://github.com/usergrid/usergrid</url>
   </scm>
 
   <distributionManagement>
