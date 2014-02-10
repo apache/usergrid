@@ -221,6 +221,7 @@ describe('Usergrid', function() {
 			if (done) done();
 		}
 		before(function(done) {
+            console.log("remove existing dogs");
 			//Make sure our dog doesn't already exist
 			var options = {
 				type: 'dogs',
@@ -234,11 +235,12 @@ describe('Usergrid', function() {
 					assert(!err, "could not retrieve list of dogs: " + dogs.error_description);
 					//we got 50 dogs, now display the Entities:
 					//do doggy cleanup
-					if (dogs.hasNextEntity()) {
+					//if (dogs.hasNextEntity()) {
 						while (dogs.hasNextEntity()) {
 							//get a reference to the dog
 							var dog = dogs.getNextEntity();
 							//notice('removing dog ' + dogname + ' from database');
+                            if(dog === null) continue;
 							dog.destroy(function(err, data) {
 								assert(!err, dog.get('name') + " not removed: " + data.error_description);
 								if (!dogs.hasNextEntity()) {
@@ -246,29 +248,11 @@ describe('Usergrid', function() {
 								}
 							});
 						}
-					} else {
+					//} else {
 						done();
-					}
+					//}
 				}
 			});
-		});
-		before(function(done) {
-			this.timeout(10000);
-			var totalDogs = 30;
-			Array.apply(0, Array(totalDogs)).forEach(function(x, y) {
-				var dogNum = y + 1;
-				var options = {
-					type: 'dogs',
-					name: 'dog' + dogNum,
-					index: y
-				}
-				client.createEntity(options, function(err, dog) {
-					assert(!err, " not created: " + dog.error_description);
-					if (dogNum === totalDogs) {
-						done();
-					}
-				});
-			})
 		});
 		it('should CREATE a new dogs collection', function(done) {
 			var options = {
@@ -284,9 +268,28 @@ describe('Usergrid', function() {
 				done();
 			});
 		});
-		it('should RETRIEVE dogs from the collection', function(done) {
-			loop(done);
-		});
+        it('should CREATE dogs in the collection', function(done) {
+            this.timeout(10000);
+            var totalDogs = 30;
+            Array.apply(0, Array(totalDogs)).forEach(function(x, y) {
+                var dogNum = y + 1;
+                var options = {
+                    type: 'dogs',
+                    name: 'dog' + dogNum,
+                    index: y
+                }
+                client.createEntity(options, function(err, dog) {
+                    console.log(err, dog);
+                    assert(!err, "dog not created");
+                    if (dogNum === totalDogs) {
+                        done();
+                    }
+                });
+            })
+        });
+        it('should RETRIEVE dogs from the collection', function(done) {
+            loop(done);
+        });
 		it('should RETRIEVE the next page of dogs from the collection', function(done) {
 			if (dogs.hasNextPage()) {
 				dogs.getNextPage(function(err) {
@@ -425,9 +428,11 @@ describe('Usergrid', function() {
 			req.onload = function() {
 				test_image = req.response;
 				image_type = req.getResponseHeader('Content-Type');
+                console.log(test_image, image_type);
 				done();
 			}
 			req.onerror = function(err) {
+                console.error(err);
 				done();
 			};
 			req.send(null);
@@ -438,9 +443,12 @@ describe('Usergrid', function() {
 				method: 'GET',
 				endpoint: 'Assets'
 			}, function(err, data) {
-				var assets = data.entities.filter(function(asset) {
-					return asset.name === filename
-				});
+				var assets = [];
+                if(data && data.entities && data.entities.length){
+                    assets.concat(data.entities.filter(function(asset) {
+                        return asset.name === filename
+                    }));
+                }
 				if (assets.length) {
 					assets.forEach(function(asset) {
 						client.request({
@@ -460,9 +468,12 @@ describe('Usergrid', function() {
 				method: 'GET',
 				endpoint: 'folders'
 			}, function(err, data) {
-				var folders = data.entities.filter(function(folder) {
-					return folder.name === foldername
-				});
+				var folders = [];
+                if(data && data.entities && data.entities.length){
+                    folders.concat(data.entities.filter(function(folder) {
+                        return folder.name === foldername
+                    }));
+                }
 				if (folders.length) {
 					folders.forEach(function(folder) {
 						client.request({

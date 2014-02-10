@@ -2,12 +2,16 @@
 (function() {
     var name = 'Ajax', global = this, overwrittenName = global[name], exports;
 
-    Function.prototype.partial = function() {
+    /*Function.prototype.partial = function() {
         var fn = this,b = [].slice.call(arguments);
         return fn.bind(undefined, b);
+    }*/
+    function partial(fn){
+        var args = Array.prototype.slice.call(arguments,1);
+        return function(){
+            return fn.apply(this, args.concat(Array.prototype.slice(arguments,0)))
+        }
     }
-
-    exports = (function() {
         function Ajax() {
             this.logger=new global.Logger(name);
             var self=this;
@@ -25,7 +29,7 @@
                 }
                 return result;
             }
-            var request = function(m, u, d) {
+            function request(m, u, d) {
                 var p = new Promise(), timeout;
                 self.logger.time(m + ' ' + u);
                 self.logger.timeEnd(m + ' ' + u);
@@ -56,14 +60,12 @@
                 return p;
             };
             this.request=request;
-            this.get = request.partial('GET');
-            this.post = request.partial('POST');
-            this.put = request.partial('PUT');
-            this.delete = request.partial('DELETE');
+            this.get = partial(request, 'GET');
+            this.post = partial(request, 'POST');
+            this.put = partial(request, 'PUT');
+            this.delete = partial(request, 'DELETE');
         }
-        return new Ajax();
-    }());
-    global[name] =  exports;
+    global[name] =  new Ajax();
     global[name].noConflict = function() {
         if(overwrittenName){
             global[name] = overwrittenName;

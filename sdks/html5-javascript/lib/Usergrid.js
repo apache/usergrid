@@ -133,18 +133,19 @@ function isFunction(f) {
  *  @return Returns whatever would be returned by the callback. or false.
  */
 function doCallback(callback, params, context) {
+    console.info("CALLED FROM", this.name||(context)?context.name:"UNKNOWN");
 	var returnValue;
 	if (isFunction(callback)) {
 		if (!params) params = [];
 		if (!context) context = this;
 		params.push(context);
-		try {
+		//try {
 			returnValue = callback.apply(context, params);
-		} catch (ex) {
+		/*} catch (ex) {
 			if (console && console.error) {
 				console.error("Callback error:", ex);
 			}
-		}
+		}*/
 	}
 	return returnValue;
 }
@@ -185,7 +186,7 @@ function doCallback(callback, params, context) {
          Prepare our request
          */
         if (!isValidUrl(this.endpoint)) {
-            this.logger.error(endpoint, this.endpoint, /^https:\/\//.test(endpoint), api_uri, orgName, appName);
+            this.logger.error(endpoint, this.endpoint, /^https:\/\//.test(endpoint));
             throw new UsergridError("The provided endpoint is not valid: " + this.endpoint);
         }
         /* a callback to make the request */
@@ -272,254 +273,6 @@ function doCallback(callback, params, context) {
         var entities=this.getEntities();
         return entities[0];
     }
-    Usergrid.Client = function (options) {
-        this.logger = new global.Logger('Usergrid.Client');
-        var self = this;
-        this.getStorage();
-        this.set('api_uri', options.URI || 'https://api.usergrid.com');
-        this.set('orgName', options.orgName);
-        this.set('appName', options.appName);
-        //other options
-        this.set('buildCurl', options.buildCurl || false);
-        this.set('logging', options.logging || false);
-
-        //Moved to Ajax transport layer
-        /*this.set('api_call_timeout', options.callTimeout || 30000);
-         this.set('api_call_timeout_callback', options.callTimeoutCallback || global.NOOP);
-         this.set('api_logout_callback', options.logoutCallback || global.NOOP);*/
-
-
-    };
-    /*
-     Add browser storage capability (defaults to sessionStorage,
-     but you can inject anything that implements window.Storage
-     eg. client._storage=localStorage;
-     */
-    UsergridStorable.mixin(Usergrid.Client);
-    /*
-     Add rudimentary eventing
-     */
-    UsergridEventable.mixin(Usergrid.Client);
-
-    /*
-     *  function for building asset urls
-     *
-     *  @method buildAssetURL
-     *  @public
-     *  @params {string} uuid
-     *  @return {string} assetURL
-     */
-    Usergrid.Client.prototype.buildAssetURL = function(uuid) {
-        var qs = {};
-        var uri_elements=this.get('api_uri','orgName','appName');
-        uri_elements=uri_elements.concat(['assets', uuid, 'data']);
-        var assetURL = uri_elements.join('/');
-        var token = this.getToken();
-        if (token) {
-            qs.access_token = token;
-        }
-        //append params to the path
-        var encoded_params = encodeParams(qs);
-        if (encoded_params) {
-            assetURL += "?" + encoded_params;
-        }
-
-        return assetURL;
-    };
-
-    /*
-     *  function for building asset urls
-     *
-     *  @method buildAssetURL
-     *  @public
-     *  @params {string} uuid
-     *  @return {string} assetURL
-     */
-    Usergrid.Client.prototype.buildEndpointURL = function(endpoint, qs) {
-        qs =qs|| {};
-        var endSlashes=/(^\/|\/$)/g;
-        var assetURL = [endpoint.replace(endSlashes,'')].concat(this.get('api_uri','orgName','appName'));
-        var token = this.getToken();
-        if (token) {qs.access_token = token;}
-        var encoded_params = encodeParams(qs);
-        if (encoded_params) {
-            assetURL += "?" + encoded_params;
-        }
-
-        return assetURL;
-    };
-
-
-    /*
-     *  Main function for making requests to the API.  Can be called directly.
-     *
-     *  options object:
-     *  `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
-     *  `qs` - object containing querystring values to be appended to the uri
-     *  `body` - object containing entity body for POST and PUT requests
-     *  `endpoint` - API endpoint, for example 'users/fred'
-     *  `mQuery` - boolean, set to true if running management query, defaults to false
-     *
-     *  @method request
-     *  @public
-     *  @params {object} options
-     *  @param {function} callback
-     *  @return {callback} callback(err, data)
-     */
-    Usergrid.Client.prototype.request = function (options, callback) {
-        var p = new Promise();
-        var _callback = function (err, data) {
-            p.done(err, data);
-            doCallback(callback, [err, data]);
-        };
-        this.logger = new Logger("Request");
-        var self = this;
-        var method = options.method || 'GET';
-        var endpoint = options.endpoint;
-        var body = options.body || {};
-        var qs = options.qs || {};
-        var mQuery = options.mQuery || false; //is this a query to the management endpoint?
-        /*
-         could also use headers for the token
-         xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
-         xhr.withCredentials = true;
-         */
-        var api_uri = this.get('api_uri');
-        var orgName = this.get('orgName');
-        var appName = this.get('appName');
-        if (this.getToken())qs.access_token = this.getToken();
-
-        //if(isValidUrl(endpoint)){
-        if (api_uri && orgName && appName) {
-            endpoint = [api_uri, orgName, appName, endpoint].join('/');
-        } else {
-            endpoint = [api_uri, endpoint].join('/');
-            //throw new UsergridInvalidURIError('No Org name or App name specified.', 'no_org_or_app_name_specified');
-        }
-
-        var req = new Usergrid.Request(method, endpoint, qs, body, function (err, response) {
-            if ([
-                "auth_expired_session_token",
-                "auth_missing_credentials",
-                "auth_unverified_oath",
-                "expired_token",
-                "unauthorized",
-                "auth_invalid"
-            ].indexOf(response.error) !== -1) {
-                //throw err;
-            }
-            doCallback(callback, [err, response]);
-            p.done(err, response);
-        });
-
-
-        return p;
-        /*}catch(e){
-         if (typeof(this.logoutCallback) === 'function') {
-         this.logoutCallback(true, 'no_org_or_app_name_specified');
-         }
-         _callback(true, e);
-
-         }*/
-    };
-
-    /*
-     *  Main function for creating new entities - should be called directly.
-     *
-     *  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
-     *
-     *  @method createEntity
-     *  @public
-     *  @params {object} options
-     *  @param {function} callback
-     *  @return {callback} callback(err, data)
-     */
-    Usergrid.Client.prototype.createEntity = function (options, callback) {
-        // todo: replace the check for new / save on not found code with simple save
-        // when users PUT on no user fix is in place.
-        var getOnExist = options['getOnExist'] || false; //if true, will return entity if one already exists
-        delete options['getOnExist']; //so it doesn't become part of our data model
-        var entity_data = {
-            client: this,
-            data: options
-        };
-        var entity = new Usergrid.Entity(entity_data);
-        var self = this;
-        entity.fetch(function (err, data) {
-            console.log(err, data);
-            //if the fetch doesn't find what we are looking for, or there is no error, do a save
-            var common_errors = ['service_resource_not_found', 'no_name_specified', 'null_pointer'];
-            var okToSave = (err.name && common_errors.indexOf(err.name) !== -1) || (!err && getOnExist);
-
-            if (okToSave) {
-                entity.set(entity_data.data); //add the data again just in case
-                entity.save(function (err, data) {
-                    doCallback(callback, [err, entity, data]);
-                });
-            } else {
-                doCallback(callback, [err, entity, data]);
-            }
-        });
-
-    };
-
-    /*
-     *  Main function for getting existing entities - should be called directly.
-     *
-     *  You must supply a uuid or (username or name). Username only applies to users.
-     *  Name applies to all custom entities
-     *
-     *  options object: options {data:{'type':'collection_type', 'name':'value', 'username':'value'}, uuid:uuid}}
-     *
-     *  @method createEntity
-     *  @public
-     *  @params {object} options
-     *  @param {function} callback
-     *  @return {callback} doCallback(callback, [err, data])
-     */
-    Usergrid.Client.prototype.getEntity = function (options, callback) {
-        var entity_data = {
-            client: this,
-            data: options
-        };
-        var entity = new Usergrid.Entity(entity_data);
-        entity.fetch(function (err, data) {
-            doCallback(callback, [err, entity, data]);
-        });
-    };
-
-    /*
-     *  Main function for restoring an entity from serialized data.
-     *
-     *  serializedObject should have come from entityObject.serialize();
-     *
-     *  @method restoreEntity
-     *  @public
-     *  @param {string} serializedObject
-     *  @return {object} Entity Object
-     */
-    Usergrid.Client.prototype.restoreEntity = function (serializedObject) {
-        return new Usergrid.Entity({ client: this, data: JSON.parse(serializedObject)});
-    };
-    /*
-     *  Main function for creating new collections - should be called directly.
-     *
-     *  options object: options {client:client, type: type, qs:qs}
-     *
-     *  @method createCollection
-     *  @public
-     *  @params {object} options
-     *  @param {function} callback
-     *  @return {callback} callback(err, data)
-     */
-    Usergrid.Client.prototype.createCollection = function (options, callback) {
-        options.client = this;
-        var collection = new Usergrid.Collection(options, function (err, data) {
-            if (typeof(callback) === 'function') {
-                callback(err, collection, data);
-            }
-        });
-    };
 
     //Usergrid.Entity=function(){};
 		//Usergrid.Collection=function(){};

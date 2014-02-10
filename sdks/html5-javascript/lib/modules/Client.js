@@ -1,6 +1,6 @@
 (function() {
   var name = 'Client', global = this, overwrittenName = global[name], exports;
-exports = (function() {
+
   Usergrid.Client = function(options) {
     //usergrid endpoint
     this.URI = options.URI || 'https://api.usergrid.com';
@@ -21,10 +21,6 @@ exports = (function() {
     this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
     this._callTimeoutCallback =  options.callTimeoutCallback || null;
     this.logoutCallback =  options.logoutCallback || null;
-    var self=this;
-    this.keyStore=options.keyStore||new KeyStore('usergrid-javascript-sdk', 2, "data", "key", function(err, ks){
-        self.logger.info("'%s' keystore created.", 'usergrid-javascript-sdk');
-      });
   };
 
   /*
@@ -71,8 +67,21 @@ exports = (function() {
        xhr.withCredentials = true;
        */
     }
-
-    //append params to the path
+      var req = new Usergrid.Request(method, uri, qs, body, function (err, response) {
+          if ([
+              "auth_expired_session_token",
+              "auth_missing_credentials",
+              "auth_unverified_oath",
+              "expired_token",
+              "unauthorized",
+              "auth_invalid"
+          ].indexOf(response.error) !== -1) {
+              //throw err;
+          }
+          doCallback(callback, [err, response]);
+          //p.done(err, response);
+      });
+    /*//append params to the path
     var encoded_params = encodeParams(qs);
     if (encoded_params) {
       uri += "?" + encoded_params;
@@ -175,7 +184,7 @@ exports = (function() {
       this.buildCurlCall(curlOptions);
     }
     this._start = new Date().getTime();
-    xhr.send(body);
+    xhr.send(body);*/
   }
 
   /*
@@ -250,35 +259,33 @@ exports = (function() {
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.createEntity = function (options, callback) {
-    // todo: replace the check for new / save on not found code with simple save
-    // when users PUT on no user fix is in place.
-    var getOnExist = options.getOnExist || false; //if true, will return entity if one already exists
-    delete options.getOnExist;//so it doesn't become part of our data model
-    var options = {
-      client:this,
-      data:options
-    };
-    var entity = new Usergrid.Entity(options);
-    entity.fetch(function(err, data) {
-      //if the fetch doesn't find what we are looking for, or there is no error, do a save
-      var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
-      if(okToSave) {
-        entity.set(options.data); //add the data again just in case
-        entity.save(function(err, data) {
-          if (typeof(callback) === 'function') {
-            callback(err, entity, data);
-          }
+    Usergrid.Client.prototype.createEntity = function (options, callback) {
+        // todo: replace the check for new / save on not found code with simple save
+        // when users PUT on no user fix is in place.
+        var getOnExist = options['getOnExist'] || false; //if true, will return entity if one already exists
+        delete options['getOnExist']; //so it doesn't become part of our data model
+        var entity_data = {
+            client: this,
+            data: options
+        };
+        var entity = new Usergrid.Entity(entity_data);
+        var self = this;
+        entity.fetch(function (err, data) {
+            //if the fetch doesn't find what we are looking for, or there is no error, do a save
+            var common_errors = ['service_resource_not_found', 'no_name_specified', 'null_pointer'];
+            var okToSave = (!err && getOnExist)||(err && err.name && common_errors.indexOf(err.name) !== -1);
+
+            if (okToSave) {
+                entity.set(entity_data.data); //add the data again just in case
+                entity.save(function (err, data) {
+                    doCallback(callback, [err, entity, data]);
+                });
+            } else {
+                doCallback(callback, [null, entity, data]);
+            }
         });
-      } else {
-        if (typeof(callback) === 'function') {
-          callback(err, entity, data);
-        }
-      }
-    });
 
-  };
-
+    };
   /*
    *  Main function for getting existing entities - should be called directly.
    *
@@ -300,9 +307,7 @@ exports = (function() {
     }
     var entity = new Usergrid.Entity(options);
     entity.fetch(function(err, data) {
-      if (typeof(callback) === 'function') {
-        callback(err, entity, data);
-      }
+        doCallback(callback, [err, entity, data]);
     });
   };
 
@@ -340,9 +345,7 @@ exports = (function() {
   Usergrid.Client.prototype.createCollection = function (options, callback) {
     options.client = this;
     var collection = new Usergrid.Collection(options, function(err, data) {
-      if (typeof(callback) === 'function') {
-        callback(err, collection, data);
-      }
+        doCallback(callback, [err, collection, data]);
     });
   };
 
@@ -465,7 +468,7 @@ exports = (function() {
           "height":80,
           "url":user.get("picture"),
           "width":80
-        },
+        }
       },
       "verb":"post",
       "content":content
@@ -846,9 +849,7 @@ exports = (function() {
       return image;
     }
   }
-  return Usergrid.Client;
-}());
-  global[name] =  exports;
+  global[name] =  Usergrid.Client;
   global[name].noConflict = function() {
     if(overwrittenName){
       global[name] = overwrittenName;

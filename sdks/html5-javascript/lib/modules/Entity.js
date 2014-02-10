@@ -260,7 +260,7 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         if(entity){
             self.set(entity);
         }
-        console.log("AFTER FETCH", self.get(), entity, response);
+        console.log("AFTER FETCH", err, self.get(), entity, response);
         doCallback(callback,[err, entity, self]);
     });
 };
@@ -417,7 +417,7 @@ Usergrid.Entity.prototype.getConnections = function (connection, callback) {
 
     self[connection] = {};
 
-    var length = data.entities.length;
+    var length = (data && data.entities)?data.entities.length:0;
     for (var i = 0; i < length; i++) {
       if (data.entities[i].type === 'user'){
         self[connection][data.entities[i].username] = data.entities[i];

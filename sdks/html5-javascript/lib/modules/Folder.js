@@ -20,7 +20,7 @@ Usergrid.Folder = function(options, callback) {
 		if (err) {
 			doCallback(callback, [true, new Usergrid.Error(data)], self);
 		} else {
-			if (data.entities.length){
+			if (data && data.entities && data.entities.length){
 				self.set(data.entities[0]);
 			}
 			doCallback(callback, [false, self], self);
