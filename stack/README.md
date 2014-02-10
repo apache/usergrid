@@ -84,9 +84,7 @@ Let’s use it to create a collection with some data in it:
 
 ## Contributing
 
-We welcome all contributions! If you want to submit code, please submit a pull request to [apigee/usergrid-stack](https://github.com/apigee/usergrid-stack/), using a [topic branch](http://git-scm.com/book/en/Git-Branching-Branching-Workflows).
-
-We’d prefer if your commit messages referenced the issue at hand (if applicable). We don’t have particular guidelines for commit messages but we appreciate branch names that observe the following format: `issue#-singleworddescription` (i.e. `325-twitter`) or just a single word if no issue exists on the topic. Thanks!
+We welcome all contributions, including via pull requests on GitHub! If you want to submit code, please read more about our [contribution workflow](https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow)
 
 ## Licenses
 
