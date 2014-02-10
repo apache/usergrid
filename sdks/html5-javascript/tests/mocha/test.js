@@ -29,6 +29,76 @@ function usergridTestHarness(err, data, done, tests, ignoreError) {
 	}
 	done();
 }
+describe('Ajax', function() {
+    var dogName="dog"+Math.floor(Math.random()*10000);
+    var dogData=JSON.stringify({type:"dog",name:dogName});
+    var dogURI='https://api.usergrid.com/yourorgname/sandbox/dogs'
+    it('should POST to a URI',function(done){
+        Ajax.post(dogURI, dogData).then(function(err, data){
+            assert(!err, err);
+            done();
+        })
+    })
+    it('should GET a URI',function(done){
+        Ajax.get(dogURI+'/'+dogName).then(function(err, data){
+            assert(!err, err);
+            done();
+        })
+    })
+    it('should PUT to a URI',function(done){
+        Ajax.put(dogURI+'/'+dogName, {"favorite":true}).then(function(err, data){
+            assert(!err, err);
+            done();
+        })
+    })
+    it('should DELETE a URI',function(done){
+        Ajax.delete(dogURI+'/'+dogName, dogData).then(function(err, data){
+            assert(!err, err);
+            done();
+        })
+    })
+});
+describe('Usergrid Request/Response', function() {
+    var dogName="dog"+Math.floor(Math.random()*10000);
+    var dogData=JSON.stringify({type:"dog",name:dogName});
+    var dogURI='https://api.usergrid.com/yourorgname/sandbox/dogs'
+    it('should POST to a URI',function(done){
+        var req=new Usergrid.Request("POST", dogURI, {}, dogData, function(err, response){
+            assert(!err, err);
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            done();
+        })
+    })
+    it('should GET a URI',function(done){
+        var req=new Usergrid.Request("GET", dogURI+'/'+dogName, {}, null, function(err, response){
+            assert(!err, err);
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            done();
+        })
+    })
+    it('should PUT to a URI',function(done){
+        var req=new Usergrid.Request("PUT", dogURI+'/'+dogName, {}, {favorite:true}, function(err, response){
+            assert(!err, err);
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            done();
+        })
+    })
+    it('should DELETE a URI',function(done){
+        var req=new Usergrid.Request("DELETE", dogURI+'/'+dogName, {}, null, function(err, response){
+            assert(!err, err);
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            done();
+        })
+    })
+    it('should return a UsergridError object on an invalid URI',function(done){
+        var req=new Usergrid.Request("GET", dogURI+'/'+dogName+'zzzzz', {}, null, function(err, response){
+            assert(err, "Should have returned an error");
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            assert(err instanceof UsergridError, "Error is not and instance of UsergridError");
+            done();
+        })
+    })
+});
 describe('Usergrid', function() {
 	var client = getClient();
 	describe('Usergrid CRUD', function() {

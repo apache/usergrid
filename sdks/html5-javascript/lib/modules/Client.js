@@ -49,10 +49,13 @@
     var orgName = this.get('orgName');
     var appName = this.get('appName');
     var uri;
+      var logoutCallback=function(){
+          if (typeof(this.logoutCallback) === 'function') {
+              return this.logoutCallback(true, 'no_org_or_app_name_specified');
+          }
+      }.bind(this);
     if(!mQuery && !orgName && !appName){
-      if (typeof(this.logoutCallback) === 'function') {
-        return this.logoutCallback(true, 'no_org_or_app_name_specified');
-      }
+        return logoutCallback();
     }
     if (mQuery) {
       uri = this.URI + '/' + endpoint;
@@ -76,115 +79,11 @@
               "unauthorized",
               "auth_invalid"
           ].indexOf(response.error) !== -1) {
-              //throw err;
+              return logoutCallback();
           }
           doCallback(callback, [err, response]);
           //p.done(err, response);
       });
-    /*//append params to the path
-    var encoded_params = encodeParams(qs);
-    if (encoded_params) {
-      uri += "?" + encoded_params;
-    }
-
-    //stringify the body object
-    body = JSON.stringify(body);
-
-    //so far so good, so run the query
-    var xhr = new XMLHttpRequest();
-    xhr.open(method, uri, true);
-    //add content type = json if there is a json payload
-    if (body) {
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.setRequestHeader("Accept", "application/json");
-    }
-
-    // Handle response.
-    xhr.onerror = function(response) {
-      self._end = new Date().getTime();
-      if (self.logging) {
-        console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri);
-      }
-      if (self.logging) {
-        console.log('Error: API call failed at the network level.');
-      }
-      //network error
-      clearTimeout(timeout);
-      var err = true;
-      if (typeof(callback) === 'function') {
-        callback(err, response);
-      }
-    };
-
-    xhr.onload = function(response) {
-      //call timing, get time, then log the call
-      self._end = new Date().getTime();
-      if (self.logging) {
-        console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri);
-      }
-      //call completed
-      clearTimeout(timeout);
-      //decode the response
-      try{
-        response = JSON.parse(xhr.responseText);
-      }catch (e){
-        response = {error:'unhandled_error',error_description:xhr.responseText};
-        xhr.status = xhr.status === 200 ? 400 : xhr.status;
-        console.error(e);
-      }
-      if (xhr.status != 200)   {
-        //there was an api error
-        var error = response.error;
-        var error_description = response.error_description;
-        if (self.logging) {
-          console.log('Error (' + xhr.status + ')(' + error + '): ' + error_description);
-        }
-        if ( (error == "auth_expired_session_token") ||
-          (error == "auth_missing_credentials")   ||
-          (error == "auth_unverified_oath")       ||
-          (error == "expired_token")              ||
-          (error == "unauthorized")               ||
-          (error == "auth_invalid")) {
-          //these errors mean the user is not authorized for whatever reason. If a logout function is defined, call it
-          //if the user has specified a logout callback:
-          if (typeof(self.logoutCallback) === 'function') {
-            return self.logoutCallback(true, response);
-          }
-        }
-        if (typeof(callback) === 'function') {
-          callback(true, response);
-        }
-      } else {
-        if (typeof(callback) === 'function') {
-          callback(false, response);
-        }
-      }
-    };
-
-    var timeout = setTimeout(
-      function() {
-        xhr.abort();
-        if (self._callTimeoutCallback === 'function') {
-          self._callTimeoutCallback('API CALL TIMEOUT');
-        } else {
-          self.callback('API CALL TIMEOUT');
-        }
-      },
-      self._callTimeout); //set for 30 seconds
-
-    if (this.logging) {
-      console.log('calling: ' + method + ' ' + uri);
-    }
-    if (this.buildCurl) {
-      var curlOptions = {
-        uri:uri,
-        body:body,
-        method:method
-      }
-      this.buildCurlCall(curlOptions);
-    }
-    this._start = new Date().getTime();
-    xhr.send(body);*/
   }
 
   /*

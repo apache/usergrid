@@ -181,15 +181,10 @@ UsergridEventable.mixin = function(destObject) {
 //Ajax
 (function() {
     var name = "Ajax", global = this, overwrittenName = global[name], exports;
-    /*Function.prototype.partial = function() {
-        var fn = this,b = [].slice.call(arguments);
-        return fn.bind(undefined, b);
-    }*/
-    function partial(fn) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        return function() {
-            return fn.apply(this, args.concat(Array.prototype.slice(arguments, 0)));
-        };
+    function partial() {
+        var args = Array.prototype.slice.call(arguments);
+        var fn = args.shift();
+        return fn.bind(this, args);
     }
     function Ajax() {
         this.logger = new global.Logger(name);
@@ -211,7 +206,6 @@ UsergridEventable.mixin = function(destObject) {
         function request(m, u, d) {
             var p = new Promise(), timeout;
             self.logger.time(m + " " + u);
-            self.logger.timeEnd(m + " " + u);
             (function(xhr) {
                 xhr.onreadystatechange = function() {
                     this.readyState ^ 4 || (self.logger.timeEnd(m + " " + u), clearTimeout(timeout), 
@@ -223,10 +217,14 @@ UsergridEventable.mixin = function(destObject) {
                 };
                 xhr.oncomplete = function(response) {
                     clearTimeout(timeout);
+                    self.logger.timeEnd(m + " " + u);
                     self.info("%s request to %s returned %s", m, u, this.status);
                 };
                 xhr.open(m, u);
                 if (d) {
+                    if ("object" === typeof d) {
+                        d = JSON.stringify(d);
+                    }
                     xhr.setRequestHeader("Content-Type", "application/json");
                     xhr.setRequestHeader("Accept", "application/json");
                 }
@@ -494,14 +492,18 @@ function isFunction(f) {
  *  @return Returns whatever would be returned by the callback. or false.
  */
 function doCallback(callback, params, context) {
-    console.info("CALLED FROM", this.name || context ? context.name : "UNKNOWN");
     var returnValue;
     if (isFunction(callback)) {
         if (!params) params = [];
         if (!context) context = this;
         params.push(context);
-        //try {
-        returnValue = callback.apply(context, params);
+        try {
+            returnValue = callback.apply(context, params);
+        } catch (ex) {
+            if (console && console.error) {
+                console.error("Callback error:", ex);
+            }
+        }
     }
     return returnValue;
 }
@@ -688,10 +690,13 @@ function doCallback(callback, params, context) {
         var orgName = this.get("orgName");
         var appName = this.get("appName");
         var uri;
-        if (!mQuery && !orgName && !appName) {
+        var logoutCallback = function() {
             if (typeof this.logoutCallback === "function") {
                 return this.logoutCallback(true, "no_org_or_app_name_specified");
             }
+        }.bind(this);
+        if (!mQuery && !orgName && !appName) {
+            return logoutCallback();
         }
         if (mQuery) {
             uri = this.URI + "/" + endpoint;
@@ -702,7 +707,9 @@ function doCallback(callback, params, context) {
             qs.access_token = self.getToken();
         }
         var req = new Usergrid.Request(method, uri, qs, body, function(err, response) {
-            if ([ "auth_expired_session_token", "auth_missing_credentials", "auth_unverified_oath", "expired_token", "unauthorized", "auth_invalid" ].indexOf(response.error) !== -1) {}
+            if ([ "auth_expired_session_token", "auth_missing_credentials", "auth_unverified_oath", "expired_token", "unauthorized", "auth_invalid" ].indexOf(response.error) !== -1) {
+                return logoutCallback();
+            }
             doCallback(callback, [ err, response ]);
         });
     };
@@ -1329,6 +1336,8 @@ function doCallback(callback, params, context) {
     return global[name];
 })();
 
+var ENTITY_SYSTEM_PROPERTIES = [ "metadata", "created", "modified", "oldpassword", "newpassword", "type", "activated", "uuid" ];
+
 /*
  *  A class to Model a Usergrid Entity.
  *  Set the type and uuid of entity in the 'data' json object
@@ -1470,7 +1479,7 @@ Usergrid.Entity.prototype.save = function(callback) {
     var self = this, type = this.get("type"), method = "POST", entityId = this.get("uuid"), data = {}, entityData = this.get(), /*password = this.get('password'),
     oldpassword = this.get('oldpassword'),
     newpassword = this.get('newpassword'),*/
-    SYSTEM_PROPERTIES = [ "metadata", "created", "modified", "oldpassword", "newpassword", "type", "activated", "uuid" ], options = {
+    options = {
         method: method,
         endpoint: type
     };
@@ -1482,7 +1491,7 @@ Usergrid.Entity.prototype.save = function(callback) {
     }
     //remove system-specific properties
     Object.keys(entityData).filter(function(key) {
-        return SYSTEM_PROPERTIES.indexOf(key) === -1;
+        return ENTITY_SYSTEM_PROPERTIES.indexOf(key) === -1;
     }).forEach(function(key) {
         data[key] = entityData[key];
     });
@@ -2394,7 +2403,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
                 callback(err, data);
             }
         } else {
-            if (data.entities) {
+            if (data.entities && data.entities.length) {
                 var groupData = data.entities[0];
                 self._data = groupData || {};
                 self._client.request(memberOptions, function(err, data) {
@@ -2806,13 +2815,13 @@ Usergrid.Folder.prototype.fetch = function(callback) {
         if (!err) {
             self.getAssets(function(err, data) {
                 if (err) {
-                    doCallback(callback, [ true, new Usergrid.Error(data) ], self);
+                    doCallback(callback, [ true, new UsergridError(data) ], self);
                 } else {
                     doCallback(callback, [ null, self ], self);
                 }
             });
         } else {
-            doCallback(callback, [ true, new Usergrid.Error(data) ], self);
+            doCallback(callback, [ true, new UsergridError(data) ], self);
         }
     });
 };
@@ -2852,7 +2861,7 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
         if (asset && asset instanceof Usergrid.Entity) {
             asset.fetch(function(err, data) {
                 if (err) {
-                    doCallback(callback, [ err, new Usergrid.Error(data) ], self);
+                    doCallback(callback, [ err, new UsergridError(data) ], self);
                 } else {
                     var endpoint = [ "folders", self.get("uuid"), "assets", asset.get("uuid") ].join("/");
                     var options = {
@@ -3004,7 +3013,7 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
             this._client.request(options, callback);
         });
     } else {
-        doCallback(callback, [ true, new Usergrid.Error("folder not specified") ], self);
+        doCallback(callback, [ true, new UsergridError("folder not specified") ], self);
     }
 };
 
@@ -3018,7 +3027,7 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
  */
 Usergrid.Asset.prototype.upload = function(data, callback) {
     if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
-        return doCallback(callback, [ true, new Usergrid.Error("The File APIs are not fully supported by your browser.") ], self);
+        return doCallback(callback, [ true, new UsergridError("The File APIs are not fully supported by your browser.") ], self);
     }
     var self = this;
     var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
@@ -3027,11 +3036,11 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
     xhr.open("POST", endpoint, true);
     xhr.onerror = function(err) {
         //callback(true, err);
-        doCallback(callback, [ true, new Usergrid.Error("The File APIs are not fully supported by your browser.") ], self);
+        doCallback(callback, [ true, new UsergridError("The File APIs are not fully supported by your browser.") ], self);
     };
     xhr.onload = function(ev) {
         if (xhr.status >= 300) {
-            doCallback(callback, [ true, new Usergrid.Error(JSON.parse(xhr.responseText)) ], self);
+            doCallback(callback, [ true, new UsergridError(JSON.parse(xhr.responseText)) ], self);
         } else {
             doCallback(callback, [ null, self ], self);
         }
@@ -3067,7 +3076,7 @@ Usergrid.Asset.prototype.download = function(callback) {
     };
     xhr.onerror = function(err) {
         callback(true, err);
-        doCallback(callback, [ true, new Usergrid.Error(err) ], self);
+        doCallback(callback, [ true, new UsergridError(err) ], self);
     };
     xhr.send();
 };

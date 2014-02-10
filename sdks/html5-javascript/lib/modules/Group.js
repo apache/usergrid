@@ -52,7 +52,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
         callback(err, data);
       }
     } else {
-      if(data.entities) {
+      if(data.entities && data.entities.length) {
         var groupData = data.entities[0];
         self._data = groupData || {};
         self._client.request(memberOptions, function(err, data) {

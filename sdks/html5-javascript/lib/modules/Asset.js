@@ -79,7 +79,7 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
 			this._client.request(options, callback);
 		});
 	} else {
-		doCallback(callback, [true, new Usergrid.Error('folder not specified')], self);
+		doCallback(callback, [true, new UsergridError('folder not specified')], self);
 	}
 };
 
@@ -93,7 +93,7 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
  */
 Usergrid.Asset.prototype.upload = function(data, callback) {
 	if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
-		return doCallback(callback, [true, new Usergrid.Error('The File APIs are not fully supported by your browser.')], self);
+		return doCallback(callback, [true, new UsergridError('The File APIs are not fully supported by your browser.')], self);
 	}
 	var self = this;
 	var endpoint = [this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), 'data'].join('/'); //self._client.buildAssetURL(self.get("uuid"));
@@ -102,11 +102,11 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
 	xhr.open("POST", endpoint, true);
 	xhr.onerror = function(err) {
 		//callback(true, err);
-		doCallback(callback, [true, new Usergrid.Error('The File APIs are not fully supported by your browser.')], self)
+		doCallback(callback, [true, new UsergridError('The File APIs are not fully supported by your browser.')], self)
 	};
 	xhr.onload = function(ev) {
 		if (xhr.status >= 300) {
-			doCallback(callback, [true, new Usergrid.Error(JSON.parse(xhr.responseText))], self)
+			doCallback(callback, [true, new UsergridError(JSON.parse(xhr.responseText))], self)
 		} else {
 			doCallback(callback, [null, self], self)
 		}
@@ -142,7 +142,7 @@ Usergrid.Asset.prototype.download = function(callback) {
 	};
 	xhr.onerror = function(err) {
 		callback(true, err);
-		doCallback(callback, [true, new Usergrid.Error(err)], self)
+		doCallback(callback, [true, new UsergridError(err)], self)
 	};
 
 	xhr.send();

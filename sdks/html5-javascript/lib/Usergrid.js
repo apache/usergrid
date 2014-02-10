@@ -133,19 +133,18 @@ function isFunction(f) {
  *  @return Returns whatever would be returned by the callback. or false.
  */
 function doCallback(callback, params, context) {
-    console.info("CALLED FROM", this.name||(context)?context.name:"UNKNOWN");
 	var returnValue;
 	if (isFunction(callback)) {
 		if (!params) params = [];
 		if (!context) context = this;
 		params.push(context);
-		//try {
+		try {
 			returnValue = callback.apply(context, params);
-		/*} catch (ex) {
+		} catch (ex) {
 			if (console && console.error) {
 				console.error("Callback error:", ex);
 			}
-		}*/
+		}
 	}
 	return returnValue;
 }

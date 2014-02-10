@@ -1,3 +1,5 @@
+var ENTITY_SYSTEM_PROPERTIES=['metadata','created','modified','oldpassword','newpassword','type','activated','uuid'];
+
 /*
  *  A class to Model a Usergrid Entity.
  *  Set the type and uuid of entity in the 'data' json object
@@ -140,7 +142,6 @@ Usergrid.Entity.prototype.save = function (callback) {
     /*password = this.get('password'),
     oldpassword = this.get('oldpassword'),
     newpassword = this.get('newpassword'),*/
-    SYSTEM_PROPERTIES=['metadata','created','modified','oldpassword','newpassword','type','activated','uuid'],
     options={
       method:method,
       endpoint:type
@@ -155,7 +156,7 @@ Usergrid.Entity.prototype.save = function (callback) {
 
   //remove system-specific properties
   Object.keys(entityData)
-      .filter(function(key){return (SYSTEM_PROPERTIES.indexOf(key)===-1)})
+      .filter(function(key){return (ENTITY_SYSTEM_PROPERTIES.indexOf(key)===-1)})
     .forEach(function(key){
       data[key]= entityData[key];
     });

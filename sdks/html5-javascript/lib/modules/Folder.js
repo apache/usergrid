@@ -49,13 +49,13 @@ Usergrid.Folder.prototype.fetch = function(callback) {
 		if (!err) {
 			self.getAssets(function(err, data) {
 				if (err) {
-					doCallback(callback, [true, new Usergrid.Error(data)], self);
+					doCallback(callback, [true, new UsergridError(data)], self);
 				} else {
 					doCallback(callback, [null, self], self);
 				}
 			});
 		} else {
-			doCallback(callback, [true, new Usergrid.Error(data)], self)
+			doCallback(callback, [true, new UsergridError(data)], self)
 		}
 	})
 };
@@ -93,7 +93,7 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
 		if (asset && asset instanceof Usergrid.Entity) {
 			asset.fetch(function(err, data) {
 				if (err) {
-					doCallback(callback, [err, new Usergrid.Error(data)], self)
+					doCallback(callback, [err, new UsergridError(data)], self)
 				} else {
 					var endpoint = ["folders", self.get("uuid"), "assets", asset.get("uuid")].join('/');
 					var options = {
