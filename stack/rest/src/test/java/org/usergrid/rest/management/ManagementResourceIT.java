@@ -530,7 +530,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     }
 //test needs to be updated to do validation of files/ and validation of file created in s3.
     // eventually will need to simulate dropped connections as well.
-    @Ignore
+    @Test
     public void exportCallSuccessful() throws Exception {
         Status responseStatus = Status.OK;
         JsonNode node = null;

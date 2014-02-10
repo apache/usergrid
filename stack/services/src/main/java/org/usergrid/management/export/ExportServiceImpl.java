@@ -112,9 +112,10 @@ public class ExportServiceImpl implements ExportService{
         //schedule the job
         JobData jobData = new JobData();
 
-        jobData.setProperty( "jobId", "0001" );//TODO: store uuid here, give export job uuid.
+        jobData.setProperty( "exportId", "0001" );//TODO: store uuid here, give export job uuid.
+        jobData.setProperty( "exportInfo",config );
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
-        sch.createJob( "queueExportJob",soonestPossible, jobData );
+        sch.createJob( "exportJob",soonestPossible, jobData );
 
 
     }
