@@ -22,6 +22,7 @@ import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -180,7 +181,8 @@ public class EdgeSerializationTest {
 
         final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
-        assertTrue( "Edge version 1 has lower time uuid", edgev1.getVersion().compareTo( edgev2.getVersion() ) < 0 );
+        assertTrue( "Edge version 1 has lower time uuid", UUIDComparator
+                        .staticCompare( edgev1.getVersion(),  edgev2.getVersion() ) < 0 );
 
         //create edge type 2 to ensure we don't get it in results
         final Edge edgeType2V1 = createEdge( sourceId, "edge2", targetId );

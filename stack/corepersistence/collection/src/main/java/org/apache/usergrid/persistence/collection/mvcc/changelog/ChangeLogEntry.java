@@ -25,6 +25,9 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
+import com.fasterxml.uuid.UUIDComparator;
+
+
 /**
  * Records one change to an entry field: entry ID, version, change type and the changed field.
  */
@@ -54,7 +57,7 @@ public class ChangeLogEntry implements Comparable {
 
     public int compareTo( Object o ) {
         ChangeLogEntry other = (ChangeLogEntry)o;
-        return entityId.getUuid().compareTo( other.entityId.getUuid() );
+        return UUIDComparator.staticCompare(entityId.getUuid(), other.entityId.getUuid());
     }
     
     /**
