@@ -186,7 +186,7 @@ function doCallback(callback, params, context) {
          */
         if (!isValidUrl(this.endpoint)) {
             this.logger.error(endpoint, this.endpoint, /^https:\/\//.test(endpoint));
-            throw new UsergridError("The provided endpoint is not valid: " + this.endpoint);
+            throw new UsergridInvalidURIError("The provided endpoint is not valid: " + this.endpoint);
         }
         /* a callback to make the request */
         var request=function () {return Ajax.request(this.method, this.endpoint, this.data)}.bind(this);
@@ -205,22 +205,6 @@ function doCallback(callback, params, context) {
         return p;
     };
     Usergrid.Request.prototype= new UsergridStorable();
-    Usergrid.Request.prototype.validate=function(){
-        var p = new Promise();
-        p.done(null, this);
-        return p;
-    }
-    Usergrid.Request.prototype.prepare=function(){
-        var p = new Promise();
-        p.done(null, this);
-        return p;
-    }
-    Usergrid.Request.prototype.fire=function(){
-        var p = new Promise();
-        p.done(null, this);
-        return p;
-    }
-
     //TODO more granular handling of statusCodes
     Usergrid.Response = function (err, response) {
         var p = new Promise();

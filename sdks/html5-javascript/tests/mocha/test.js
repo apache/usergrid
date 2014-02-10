@@ -94,6 +94,26 @@ describe('Usergrid Request/Response', function() {
             done();
         })
     })
+    it('should GET an array of entity data from the Usergrid.Response object',function(done){
+        var req=new Usergrid.Request("GET", dogURI, {}, null, function(err, response){
+            assert(!err, err);
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            var entities=response.getEntities();
+            console.log("ENTITIES",entities);
+            assert(entities && entities.length, "Nothing was returned")
+            done();
+        })
+    })
+    it('should GET entity data from the Usergrid.Response object',function(done){
+        var req=new Usergrid.Request("GET", dogURI+'/'+dogName, {}, null, function(err, response){
+            var entity=response.getEntity();
+            console.log("ENTITY",entity);
+            assert(!err, err);
+            assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
+            assert(entity, "Nothing was returned")
+            done();
+        })
+    })
     it('should PUT to a URI',function(done){
         var req=new Usergrid.Request("PUT", dogURI+'/'+dogName, {}, {favorite:true}, function(err, response){
             assert(!err, err);
@@ -108,6 +128,28 @@ describe('Usergrid Request/Response', function() {
             done();
         })
     })
+    it('should NOT allow an invalid method',function(done){
+        try{
+            var req=new Usergrid.Request("INVALID", dogURI+'/'+dogName, {}, null, function(err, response){
+                assert(true, "Should have thrown an UsergridInvalidHTTPMethodError");
+                done();
+            })
+        }catch(e){
+            assert(e instanceof UsergridInvalidHTTPMethodError, "Error is not and instance of UsergridInvalidHTTPMethodError");
+            done()
+        }
+    })
+    it('should NOT allow an invalid URI',function(done){
+        try{
+            var req=new Usergrid.Request("GET", "://apigee.com", {}, null, function(err, response){
+                assert(true, "Should have thrown an UsergridInvalidURIError");
+                done();
+            })
+        }catch(e){
+            assert(e instanceof UsergridInvalidURIError, "Error is not and instance of UsergridInvalidURIError");
+            done()
+        }
+    })
     it('should return a UsergridError object on an invalid URI',function(done){
         var req=new Usergrid.Request("GET", dogURI+'/'+dogName+'zzzzz', {}, null, function(err, response){
             assert(err, "Should have returned an error");
@@ -117,9 +159,9 @@ describe('Usergrid Request/Response', function() {
         })
     })
 });
-describe('Usergrid', function() {
+describe('Usergrid Client', function() {
 	var client = getClient();
-	describe('Usergrid CRUD', function() {
+	describe('Usergrid CRUD request', function() {
 		before(function(done) {
 			//Make sure our dog doesn't already exist
 			client.request({
@@ -223,7 +265,87 @@ describe('Usergrid', function() {
 			});
 		});
 	});
-	describe('Usergrid Entity', function() {
+    describe('Usergrid convenience methods', function(){
+        it('createEntity',function(done){
+            done();
+        })
+        it('createCollection',function(done){
+            done();
+        })
+        it('createGroup',function(done){
+            done();
+        })
+        it('buildAssetURL',function(done){
+            done();
+        })
+        it('getEntity',function(done){
+            done();
+        })
+        it('restoreEntity',function(done){
+            done();
+        })
+        it('restoreCollection',function(done){
+            done();
+        })
+        it('getFeedForUser',function(done){
+            done();
+        })
+        it('createUserActivity',function(done){
+            done();
+        })
+        it('createUserActivityWithEntity',function(done){
+            done();
+        })
+        it('set',function(done){
+            done();
+        })
+        it('get',function(done){
+            done();
+        })
+        it('setObject',function(done){
+            done();
+        })
+        it('getObject',function(done){
+            done();
+        })
+        it('setToken',function(done){
+            done();
+        })
+        it('getToken',function(done){
+            done();
+        })
+        it('signup',function(done){
+            done();
+        })
+        it('login',function(done){
+            done();
+        })
+        it('reAuthenticateLite',function(done){
+            done();
+        })
+        it('reAuthenticate',function(done){
+            done();
+        })
+        it('loginFacebook',function(done){
+            done();
+        })
+        it('getLoggedInUser',function(done){
+            done();
+        })
+        it('isLoggedIn',function(done){
+            done();
+        })
+        it('logout',function(done){
+            done();
+        })
+        it('buildCurlCall',function(done){
+            done();
+        })
+        it('getDisplayImage',function(done){
+            done();
+        })
+    });
+    describe('Usergrid Entity', function() {
 		var dog;
 		before(function(done) {
 			//Make sure our dog doesn't already exist
