@@ -58,6 +58,24 @@ describe('Ajax', function() {
         })
     })
 });
+describe('UsergridError', function() {
+    var errorResponse={
+        "error":"service_resource_not_found",
+        "timestamp":1392067967144,
+        "duration":0,
+        "exception":"org.usergrid.services.exceptions.ServiceResourceNotFoundException",
+        "error_description":"Service resource not found"
+    };
+    it('should unmarshal a response from Usergrid into a proper Javascript error',function(done){
+        var error = UsergridError.fromResponse(errorResponse);
+        console.log(error, errorResponse);
+        assert(error.name===errorResponse.error, "Error name not set correctly");
+        console.log(error.name,errorResponse.error);
+        assert(error.message===errorResponse.error_description, "Error message not set correctly");
+        console.log(error.message,errorResponse.error_description);
+        done();
+    });
+});
 describe('Usergrid Request/Response', function() {
     var dogName="dog"+Math.floor(Math.random()*10000);
     var dogData=JSON.stringify({type:"dog",name:dogName});
