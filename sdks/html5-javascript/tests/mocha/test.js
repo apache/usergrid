@@ -344,56 +344,201 @@ describe('Usergrid Client', function() {
             assert(dogs._list.length===dogCollection._list.length, "The collections have a different number of entities")
             done();
         })
-        it('getFeedForUser',function(done){
-            done();
+        var activityUser;
+        before(function(done){
+            activityUser=new Usergrid.Entity({client:client,data:{"type":"user",username:"testActivityUser"}});
+            activityUser.fetch(function(err, data){
+                if(err){
+                    activityUser.save(function(err, data){
+                        activityUser.set(data);
+                        done();
+                    });
+                }else{
+                    activityUser.set(data);
+                    done();
+                }
+            })
+//            client.request({
+//                method: 'GET',
+//                endpoint: 'users/testActivityUser'
+//            }, function(err, data) {
+//                if(err){
+//                    client.request({
+//                        method: 'POST',
+//                        endpoint: 'users',
+//                        body: {
+//                            username: 'testActivityUser',
+//                            password: 'secret'
+//                        }
+//                    }, function(err, data) {
+//                        activityUser=data;
+//                        console.log(activityUser);
+//                        done();
+//                    });
+//                }else{
+//                    activityUser=data;
+//                    console.log(activityUser);
+//                    done();
+//                }
+//            });
         })
         it('createUserActivity',function(done){
-            done();
+             var options = {
+               "actor" : {
+                     "displayName" :"Test Activity User",
+                         "uuid" : activityUser.get("uuid"),
+                         "username" : "testActivityUser",
+                         "email" : "usergrid@apigee.com",
+                         "image" : {
+                                 "height" : 80,
+                                 "url" : "http://placekitten.com/80/80",
+                                 "width" : 80
+                         }
+                    },
+                    "verb" : "post",
+                   "content" : "test post for createUserActivity",
+                   "lat" : 48.856614,
+                   "lon" : 2.352222
+                 };
+            client.createUserActivity("testActivityUser", options, function(err, activity){
+                assert(!err, "createUserActivity returned an error");
+                assert(activity, "createUserActivity returned no activity object")
+                done();
+            })
         })
         it('createUserActivityWithEntity',function(done){
-            done();
+                console.log(activityUser.get("username"));
+                client.createUserActivityWithEntity(activityUser, "Another test activity with createUserActivityWithEntity", function(err, activity){
+                    assert(!err, "createUserActivityWithEntity returned an error "+err);
+                    assert(activity, "createUserActivityWithEntity returned no activity object")
+                    done();
+                })
         })
+        it('getFeedForUser',function(done){
+            client.getFeedForUser('testActivityUser', function(err, data, items){
+                console.error(err, JSON.stringify(data.data, null, 4));
+                assert(!err, "getFeedForUser returned an error");
+                assert(data, "getFeedForUser returned no data object")
+                assert(items, "getFeedForUser returned no items array")
+                done();
+            })
+        })
+        /*after(function(done){
+            client.request({
+                method: 'DELETE',
+                endpoint: 'users/testActivityUser'
+            }, function(err, data) {
+                done();
+            });
+
+        })*/
+        var testProperty="____test_item"+Math.floor(Math.random()*10000),
+            testPropertyValue="test"+Math.floor(Math.random()*10000),
+            testPropertyObjectValue={test:testPropertyValue};
         it('set',function(done){
+            client.set(testProperty, testPropertyValue);
             done();
         })
         it('get',function(done){
+            var retrievedValue=client.get(testProperty);
+            assert(retrievedValue===testPropertyValue, "Get is not working properly");
             done();
         })
         it('setObject',function(done){
+            client.set(testProperty, testPropertyObjectValue);
             done();
         })
         it('getObject',function(done){
+            var retrievedValue=client.get(testProperty);
+            assert(retrievedValue==testPropertyObjectValue, "getObject is not working properly");
             done();
         })
-        it('setToken',function(done){
+        /*it('setToken',function(done){
+            client.setToken("dummytoken");
             done();
         })
         it('getToken',function(done){
+            assert(client.getToken()==="dummytoken");
+            done();
+        })*/
+        it('remove property',function(done){
+            client.set(testProperty);
+            assert(client.get(testProperty)===null);
             done();
         })
+        var newUser;
         it('signup',function(done){
-            done();
+            client.signup("newUsergridUser", "Us3rgr1d15Aw3s0m3!", "usergrid@apigee.com", "Another Satisfied Developer", function(err, user){
+                assert(!err, "signup returned an error");
+                assert(user, "signup returned no user object")
+                newUser=user;
+                done();
+            })
         })
         it('login',function(done){
-            done();
+            client.login("newUsergridUser", "Us3rgr1d15Aw3s0m3!", function(err, data, user){
+                assert(!err, "login returned an error");
+                assert(user, "login returned no user object")
+                done();
+            })
         })
-        it('reAuthenticateLite',function(done){
+        /*it('reAuthenticateLite',function(done){
+            client.reAuthenticateLite(function(err){
+                assert(!err, "reAuthenticateLite returned an error");
+                done();
+            })
+        })*/
+        /*it('reAuthenticate',function(done){
+            client.reAuthenticate("usergrid@apigee.com", function(err, data, user, organizations, applications){
+                assert(!err, "reAuthenticate returned an error");
+                done();
+            })
+        })*/
+        /*it('loginFacebook',function(done){
+            assert(true, "Not sure how feasible it is to test this with Mocha")
             done();
-        })
-        it('reAuthenticate',function(done){
-            done();
-        })
-        it('loginFacebook',function(done){
+        })*/
+        it('isLoggedIn',function(done){
+            assert(client.isLoggedIn()===true, "isLoggedIn is not detecting that we have logged in.")
             done();
         })
         it('getLoggedInUser',function(done){
-            done();
+            setTimeout(function(){
+                client.getLoggedInUser(function(err, data, user){
+                    assert(!err, "getLoggedInUser returned an error");
+                    assert(user, "getLoggedInUser returned no user object")
+                    done();
+                })
+            },1000);
         })
-        it('isLoggedIn',function(done){
-            done();
+        before(function(done){
+            //please enjoy this musical interlude.
+            setTimeout(function(){done()},1000);
         })
         it('logout',function(done){
+            client.logout();
+            assert(null===client.getToken(), "we logged out, but the token still remains.")
             done();
+        })
+        it('getLoggedInUser',function(done){
+            client.getLoggedInUser(function(err, data, user){
+                assert(err, "getLoggedInUser should return an error after logout");
+                assert(!user, "getLoggedInUser should not return data after logout")
+                done();
+            })
+        })
+        it('isLoggedIn',function(done){
+            assert(client.isLoggedIn()===false, "isLoggedIn still returns true after logout.")
+            done();
+        })
+        after(function (done) {
+            client.request({
+                method: 'DELETE',
+                endpoint: 'users/newUsergridUser'
+            }, function (err, data) {
+                done();
+            });
+
         })
         it('buildCurlCall',function(done){
             done();

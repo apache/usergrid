@@ -172,9 +172,9 @@ function doCallback(callback, params, context) {
         /*
          Validate our input
          */
-        this.endpoint=endpoint;
+        this.endpoint=endpoint+'?'+encodeParams(query_params);
         this.method = method.toUpperCase();
-        this.query_params = query_params;
+        //this.query_params = query_params;
         this.data = ("object" === typeof data) ? JSON.stringify(data) : data;
 
         if (VALID_REQUEST_METHODS.indexOf(this.method) === -1) {

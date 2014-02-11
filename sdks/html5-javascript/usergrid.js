@@ -1,4 +1,4 @@
-/*! usergrid@0.0.0 2014-02-10 */
+/*! usergrid@0.0.0 2014-02-11 */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
 };
@@ -524,9 +524,9 @@ function doCallback(callback, params, context) {
         /*
          Validate our input
          */
-        this.endpoint = endpoint;
+        this.endpoint = endpoint + "?" + encodeParams(query_params);
         this.method = method.toUpperCase();
-        this.query_params = query_params;
+        //this.query_params = query_params;
         this.data = "object" === typeof data ? JSON.stringify(data) : data;
         if (VALID_REQUEST_METHODS.indexOf(this.method) === -1) {
             throw new UsergridInvalidHTTPMethodError("invalid request method '" + this.method + "'");
@@ -683,8 +683,8 @@ function doCallback(callback, params, context) {
         } else {
             uri = this.URI + "/" + orgName + "/" + appName + "/" + endpoint;
         }
-        if (self.getToken()) {
-            qs.access_token = self.getToken();
+        if (this.getToken()) {
+            qs.access_token = this.getToken();
         }
         var req = new Usergrid.Request(method, uri, qs, body, function(err, response) {
             if ([ "auth_expired_session_token", "auth_missing_credentials", "auth_unverified_oath", "expired_token", "unauthorized", "auth_invalid" ].indexOf(response.error) !== -1) {
@@ -873,12 +873,10 @@ function doCallback(callback, params, context) {
             endpoint: "users/" + username + "/feed"
         };
         this.request(options, function(err, data) {
-            if (typeof callback === "function") {
-                if (err) {
-                    callback(err);
-                } else {
-                    callback(err, data, data.entities);
-                }
+            if (err) {
+                doCallback(callback, [ err ]);
+            } else {
+                doCallback(callback, [ err, data, data.data.entities ]);
             }
         });
     };
@@ -925,9 +923,7 @@ function doCallback(callback, params, context) {
         };
         var entity = new Usergrid.Entity(options);
         entity.save(function(err, data) {
-            if (typeof callback === "function") {
-                callback(err, entity);
-            }
+            doCallback(callback, [ err, entity ]);
         });
     };
     /*
@@ -1073,10 +1069,11 @@ function doCallback(callback, params, context) {
                 grant_type: "password"
             }
         };
-        this.request(options, function(err, data) {
+        self.request(options, function(err, response) {
             var user = {};
-            if (err && self.logging) {
-                console.log("error trying to log user in");
+            var data = response.data;
+            if (err) {
+                if (self.logging) console.log("error trying to log user in");
             } else {
                 var options = {
                     client: self,
@@ -1085,9 +1082,7 @@ function doCallback(callback, params, context) {
                 user = new Usergrid.Entity(options);
                 self.setToken(data.access_token);
             }
-            if (typeof callback === "function") {
-                callback(err, data, user);
-            }
+            doCallback(callback, [ err, data, user ]);
         });
     };
     Usergrid.Client.prototype.reAuthenticateLite = function(callback) {
@@ -1102,11 +1097,9 @@ function doCallback(callback, params, context) {
                 console.log("error trying to re-authenticate user");
             } else {
                 //save the re-authed token and current email/username
-                self.setToken(response.access_token);
+                self.setToken(response.data.access_token);
             }
-            if (typeof callback === "function") {
-                callback(err);
-            }
+            doCallback(callback, [ err ]);
         });
     };
     Usergrid.Client.prototype.reAuthenticate = function(email, callback) {
@@ -1220,7 +1213,8 @@ function doCallback(callback, params, context) {
                 method: "GET",
                 endpoint: "users/me"
             };
-            this.request(options, function(err, data) {
+            this.request(options, function(err, response) {
+                var data = response.data;
                 if (err) {
                     if (self.logging) {
                         console.log("error trying to log user in");
@@ -1235,7 +1229,7 @@ function doCallback(callback, params, context) {
                     };
                     var user = new Usergrid.Entity(options);
                     if (typeof callback === "function") {
-                        callback(err, data, user);
+                        callback(null, data, user);
                     }
                 }
             });
@@ -1250,7 +1244,8 @@ function doCallback(callback, params, context) {
    *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
    */
     Usergrid.Client.prototype.isLoggedIn = function() {
-        return "undefined" !== typeof this.getToken();
+        var token = this.getToken();
+        return "undefined" !== typeof token && token !== null;
     };
     /*
    *  A public method to log out an app user - clears all user fields from client
@@ -1260,7 +1255,7 @@ function doCallback(callback, params, context) {
    *  @return none
    */
     Usergrid.Client.prototype.logout = function() {
-        this.setToken(null);
+        this.setToken();
     };
     /*
    *  A private method to build the curl call to display on the command line
@@ -1429,7 +1424,7 @@ Usergrid.Entity.prototype.getEndpoint = function() {
     var nameProperties = [ "uuid", "name" ];
     if (type === undefined) {
         throw new UsergridError("cannot fetch entity, no entity type specified", "no_type_specified");
-    } else if (type === "users") {
+    } else if (type === "users" || type === "user") {
         nameProperties.unshift("username");
     }
     var names = this.get(nameProperties).filter(function(x) {

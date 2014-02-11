@@ -112,7 +112,7 @@ Usergrid.Entity.prototype.getEndpoint = function () {
     var nameProperties=['uuid', 'name'];
     if (type === undefined) {
         throw new UsergridError('cannot fetch entity, no entity type specified', 'no_type_specified');
-    }else if(type==="users"){
+    }else if(type==="users"||type==="user"){
         nameProperties.unshift('username');
     }
 

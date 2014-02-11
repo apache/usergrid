@@ -62,9 +62,8 @@
     } else {
       uri = this.URI + '/' + orgName + '/' + appName + '/' + endpoint;
     }
-
-    if (self.getToken()) {
-      qs.access_token = self.getToken();
+    if (this.getToken()) {
+      qs.access_token = this.getToken();
       /* //could also use headers for the token
        xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
        xhr.withCredentials = true;
@@ -277,13 +276,11 @@
     };
 
     this.request(options, function(err, data){
-      if(typeof(callback) === "function") {
         if(err) {
-          callback(err);
+            doCallback(callback, [err]);
         } else {
-          callback(err, data, data.entities);
+            doCallback(callback, [err, data, data.data.entities]);
         }
-      }
     });
   };
 
@@ -330,9 +327,7 @@
     }
     var entity = new Usergrid.Entity(options);
     entity.save(function(err, data) {
-      if (typeof(callback) === 'function') {
-        callback(err, entity);
-      }
+        doCallback(callback, [err, entity]);
     });
   };
 
@@ -491,10 +486,11 @@
         grant_type: 'password'
       }
     };
-    this.request(options, function(err, data) {
+    self.request(options, function(err, response) {
       var user = {};
-      if (err && self.logging) {
-        console.log('error trying to log user in');
+        var data=response.data;
+      if (err) {
+        if(self.logging)console.log('error trying to log user in');
       } else {
         var options = {
           client:self,
@@ -503,9 +499,7 @@
         user = new Usergrid.Entity(options);
         self.setToken(data.access_token);
       }
-      if (typeof(callback) === 'function') {
-        callback(err, data, user);
-      }
+      doCallback(callback, [err, data, user]);
     });
   };
 
@@ -523,12 +517,11 @@
       } else {
 
         //save the re-authed token and current email/username
-        self.setToken(response.access_token);
+          self.setToken(response.data.access_token);
 
       }
-      if (typeof(callback) === 'function') {
-        callback(err);
-      }
+        doCallback(callback, [err]);
+
     });
   };
 
@@ -652,7 +645,8 @@
         method:'GET',
         endpoint:'users/me'
       };
-      this.request(options, function(err, data) {
+      this.request(options, function(err, response) {
+          var data=response.data;
         if (err) {
           if (self.logging) {
             console.log('error trying to log user in');
@@ -667,7 +661,7 @@
           };
           var user = new Usergrid.Entity(options);
           if (typeof(callback) === 'function') {
-            callback(err, data, user);
+            callback(null, data, user);
           }
         }
       });
@@ -683,7 +677,8 @@
    *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
    */
   Usergrid.Client.prototype.isLoggedIn = function () {
-    return "undefined" !== typeof this.getToken();
+      var token=this.getToken();
+    return "undefined" !== typeof token && token!==null;
   };
 
   /*
@@ -694,7 +689,7 @@
    *  @return none
    */
   Usergrid.Client.prototype.logout = function () {
-    this.setToken(null);
+    this.setToken();
   };
 
   /*
