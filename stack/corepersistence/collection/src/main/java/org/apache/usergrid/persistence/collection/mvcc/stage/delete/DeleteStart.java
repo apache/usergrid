@@ -106,8 +106,7 @@ public class DeleteStart implements Func1<CollectionIoEvent<Id>, CollectionIoEve
 
 
         //create the mvcc entity for the next stage
-        final MvccEntityImpl nextStage = new MvccEntityImpl( 
-                entityId, version, Optional.<Entity>absent() );
+        final MvccEntityImpl nextStage = new MvccEntityImpl(entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
 
 
         return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );

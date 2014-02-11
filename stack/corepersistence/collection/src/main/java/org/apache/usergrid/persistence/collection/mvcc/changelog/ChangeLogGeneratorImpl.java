@@ -65,7 +65,7 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
             Entity entity = mvccEntity.getEntity().get();
             int compare = UUIDComparator.staticCompare( mvccEntity.getVersion(), minVersion );
 
-            if ( compare == -1 ) { // less than minVersion
+            if ( compare < 0 ) { // less than minVersion
 
                 for ( Field field : entity.getFields() ) {
 

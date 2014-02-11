@@ -32,6 +32,22 @@ import com.google.common.base.Optional;
  */
 public interface MvccEntity {
 
+    /**
+     * The possible Status of the mvccEntity
+     */
+    public enum Status {
+
+        /**
+         * The entity being written represents a complete entity
+         */
+        COMPLETE,
+
+        /**
+         * The entity being written represents a partial entity
+         */
+        PARTIAL;
+    }
+
 
     /**
      * Get the entity for this context.
@@ -50,4 +66,9 @@ public interface MvccEntity {
      * Get the UUID of the entity
      */
     Id getId();
+
+    /**
+     * Get the status of the entity
+     */
+    Status getStatus();
 }

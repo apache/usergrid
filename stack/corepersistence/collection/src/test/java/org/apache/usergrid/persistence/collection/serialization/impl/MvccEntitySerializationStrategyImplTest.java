@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
@@ -147,7 +148,7 @@ public class MvccEntitySerializationStrategyImplTest {
         entity.setField( uuidField );
 
 
-        MvccEntity saved = new MvccEntityImpl( id, version, Optional.of( entity ) );
+        MvccEntity saved = new MvccEntityImpl( id, version, MvccEntity.Status.COMPLETE, Optional.of( entity ) );
 
 
         //persist the entity
@@ -236,7 +237,7 @@ public class MvccEntitySerializationStrategyImplTest {
         EntityUtils.setVersion( entity, version );
 
 
-        MvccEntity saved = new MvccEntityImpl( entityId, version, Optional.of( entity ) );
+        MvccEntity saved = new MvccEntityImpl( entityId, version, MvccEntity.Status.COMPLETE, Optional.of( entity ) );
 
 
         //persist the entity
@@ -297,7 +298,7 @@ public class MvccEntitySerializationStrategyImplTest {
         EntityUtils.setVersion( entityv1, version1 );
 
 
-        MvccEntity saved = new MvccEntityImpl( id, version1, Optional.of( entityv1 ) );
+        MvccEntity saved = new MvccEntityImpl( id, version1, MvccEntity.Status.COMPLETE, Optional.of( entityv1 ) );
 
 
         //persist the entity
@@ -321,7 +322,7 @@ public class MvccEntitySerializationStrategyImplTest {
         EntityUtils.setVersion( entityv1, version2 );
 
 
-        MvccEntity savedV2 = new MvccEntityImpl( id, version2, Optional.of( entityv2 ) );
+        MvccEntity savedV2 = new MvccEntityImpl( id, version2, MvccEntity.Status.COMPLETE, Optional.of( entityv2 ) );
 
         serializationStrategy.write( context, savedV2 ).execute();
 
@@ -339,7 +340,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         final Optional<Entity> empty = Optional.absent();
 
-        MvccEntity clearedV3 = new MvccEntityImpl( id, version3, empty );
+        MvccEntity clearedV3 = new MvccEntityImpl( id, version3, MvccEntity.Status.COMPLETE, empty );
 
         MvccEntity returnedV3 = serializationStrategy.load( context, id, version3 );
 
@@ -383,6 +384,112 @@ public class MvccEntitySerializationStrategyImplTest {
         entities = serializationStrategy.load( context, id, current, 3 );
 
         assertEquals( 0, entities.size() );
+    }
+
+
+    @Test
+    public void writeLoadDeletePartial() throws ConnectionException {
+
+        final Id organizationId = new SimpleId( "organization" );
+        final Id applicationId = new SimpleId( "application" );
+        final String name = "test";
+
+        CollectionScope context = new CollectionScopeImpl( organizationId,  applicationId, name );
+
+
+        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final UUID version = UUIDGenerator.newTimeUUID();
+        final String type = "test";
+
+        final Id id = new SimpleId( entityId, type );
+
+        Entity entity = new Entity( id );
+
+        EntityUtils.setVersion( entity, version );
+
+
+        BooleanField boolField = new BooleanField( "boolean", false );
+        DoubleField doubleField = new DoubleField( "double", 1d );
+        IntegerField intField = new IntegerField( "long", 1 );
+        LongField longField = new LongField( "int", 1l );
+        StringField stringField = new StringField( "name", "test" );
+        UUIDField uuidField = new UUIDField( "uuid", UUIDGenerator.newTimeUUID() );
+
+        entity.setField( boolField );
+        entity.setField( doubleField );
+        entity.setField( intField );
+        entity.setField( longField );
+        entity.setField( stringField );
+        entity.setField( uuidField );
+
+
+        MvccEntity saved = new MvccEntityImpl( id, version, MvccEntity.Status.PARTIAL, Optional.of( entity ) );
+
+
+        //persist the entity
+        serializationStrategy.write( context, saved ).execute();
+
+        //now load it back
+
+        MvccEntity returned = serializationStrategy.load( context, id, version );
+
+        assertEquals( "Mvcc entities are the same", saved, returned );
+
+
+        assertEquals( id, entity.getId() );
+
+
+        Field<Boolean> boolFieldReturned = entity.getField( boolField.getName() );
+
+        assertSame( boolField, boolFieldReturned );
+
+        Field<Double> doubleFieldReturned = entity.getField( doubleField.getName() );
+
+        assertSame( doubleField, doubleFieldReturned );
+
+        Field<Integer> intFieldReturned = entity.getField( intField.getName() );
+
+        assertSame( intField, intFieldReturned );
+
+        Field<Long> longFieldReturned = entity.getField( longField.getName() );
+
+        assertSame( longField, longFieldReturned );
+
+        Field<String> stringFieldReturned = entity.getField( stringField.getName() );
+
+        assertSame( stringField, stringFieldReturned );
+
+        Field<UUID> uuidFieldReturned = entity.getField( uuidField.getName() );
+
+        assertSame( uuidField, uuidFieldReturned );
+
+
+        Set<Field> results = new HashSet<Field>();
+        results.addAll( entity.getFields() );
+
+
+        assertTrue( results.contains( boolField ) );
+        assertTrue( results.contains( doubleField ) );
+        assertTrue( results.contains( intField ) );
+        assertTrue( results.contains( longField ) );
+        assertTrue( results.contains( stringField ) );
+        assertTrue( results.contains( uuidField ) );
+
+        assertEquals( 6, results.size() );
+
+
+        assertEquals( id, entity.getId() );
+        assertEquals( version, entity.getVersion() );
+
+
+        //now delete it
+        serializationStrategy.delete( context, id, version ).execute();
+
+        //now get it, should be gone
+
+        returned = serializationStrategy.load( context, id, version );
+
+        assertNull( returned );
     }
 
 
@@ -474,6 +581,8 @@ public class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
     }
+
+
 
 
 
