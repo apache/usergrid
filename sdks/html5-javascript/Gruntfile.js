@@ -1,10 +1,8 @@
 module.exports = function(grunt) {
 	var files = [
-        "lib/modules/util/Event.js",
         "lib/modules/util/Logger.js",
         "lib/modules/util/Promise.js",
         "lib/modules/util/Ajax.js",
-        "lib/modules/util/Storable.js",
         "lib/Usergrid.js",
 		"lib/modules/Client.js",
 		"lib/modules/Entity.js",
