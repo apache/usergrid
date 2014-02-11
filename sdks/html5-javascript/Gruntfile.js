@@ -68,8 +68,8 @@ module.exports = function(grunt) {
             "tasks": ["default"]
         },
         "blanket_mocha": {
-            "all": tests,
-            //urls: [ 'http://localhost:8000/tests/mocha/index.html' ],
+            //"all": tests,
+            urls: [ 'http://localhost:8000/tests/mocha/index.html' ],
             "options": {
                 "dest": "report/coverage.html",
                 "reporter": "Spec",
@@ -92,6 +92,6 @@ module.exports = function(grunt) {
 	]);
 	grunt.registerTask("test", [
 		"connect:test",
-		"blanket_mocha",
+		"blanket_mocha"
 	]);
 };

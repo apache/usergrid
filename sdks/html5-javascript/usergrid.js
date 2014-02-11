@@ -497,13 +497,8 @@ function doCallback(callback, params, context) {
         if (!params) params = [];
         if (!context) context = this;
         params.push(context);
-        try {
-            returnValue = callback.apply(context, params);
-        } catch (ex) {
-            if (console && console.error) {
-                console.error("Callback error:", ex);
-            }
-        }
+        //try {
+        returnValue = callback.apply(context, params);
     }
     return returnValue;
 }
@@ -738,17 +733,13 @@ function doCallback(callback, params, context) {
         };
         var group = new Usergrid.Group(options);
         group.fetch(function(err, data) {
-            var okToSave = err && "service_resource_not_found" === data.error || "no_name_specified" === data.error || "null_pointer" === data.error || !err && getOnExist;
+            var okToSave = err && [ "service_resource_not_found", "no_name_specified", "null_pointer" ].indexOf(err.name) !== -1 || !err && getOnExist;
             if (okToSave) {
                 group.save(function(err, data) {
-                    if (typeof callback === "function") {
-                        callback(err, group);
-                    }
+                    doCallback(callback, [ err, group, data ]);
                 });
             } else {
-                if (typeof callback === "function") {
-                    callback(err, group);
-                }
+                doCallback(callback, [ null, group, data ]);
             }
         });
     };

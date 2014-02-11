@@ -267,24 +267,81 @@ describe('Usergrid Client', function() {
 	});
     describe('Usergrid convenience methods', function(){
         it('createEntity',function(done){
-            done();
+            client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                assert(!err, "createEntity returned an error")
+                assert(dog, "createEntity did not return a dog")
+                assert(dog.get("name")==='createEntityTestDog', "The dog's name is not 'createEntityTestDog'")
+                done();
+            })
         })
-        it('createCollection',function(done){
-            done();
+        it('createEntity - existing entity',function(done){
+            client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                assert(!err, "createEntity returned an error")
+                assert(dog, "createEntity did not return a dog")
+                assert(dog.get("name")==='createEntityTestDog', "The dog's name is not 'createEntityTestDog'")
+                done();
+            })
         })
+        it('createEntity - get on Exist',function(done){
+            client.createEntity({type:'dog',name:'createEntityTestDog', getOnExist:true}, function(err, dog){
+                assert(!err, "createEntity returned an error")
+                assert(dog, "createEntity did not return a dog")
+                assert(dog.get("uuid")!==null, "The dog's UUID was not returned")
+                done();
+            })
+        })
+        var testGroup;
         it('createGroup',function(done){
+            client.createGroup({path:'dogLovers'},function(err, group){
+                assert(!err, "createGroup returned an error: "+err);
+                assert(group, "createGroup did not return a group");
+                assert(group instanceof Usergrid.Group, "createGroup did not return a Usergrid.Group");
+                testGroup=group;
+                done();
+            })
             done();
         })
         it('buildAssetURL',function(done){
+            var assetURL='https://api.usergrid.com/yourorgname/sandbox/assets/00000000-0000-0000-000000000000/data';
+            assert(assetURL===client.buildAssetURL('00000000-0000-0000-000000000000'), "buildAssetURL doesn't work")
             done();
         })
+        var dogEntity;
         it('getEntity',function(done){
-            done();
+            client.getEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                assert(!err, "createEntity returned an error")
+                assert(dog, "createEntity returned a dog")
+                assert(dog.get("uuid")!==null, "The dog's UUID was not returned")
+                dogEntity=dog;
+                done();
+            })
         })
         it('restoreEntity',function(done){
+            var serializedDog=dogEntity.serialize();
+            var dog=client.restoreEntity(serializedDog);
+            assert(dog, "restoreEntity did not return a dog")
+            assert(dog.get("uuid")===dogEntity.get("uuid"), "The dog's UUID was not the same as the serialized dog")
+            assert(dog.get("type")===dogEntity.get("type"), "The dog's type was not the same as the serialized dog")
+            assert(dog.get("name")===dogEntity.get("name"), "The dog's name was not the same as the serialized dog")
+
             done();
         })
+        var dogCollection;
+        it('createCollection',function(done){
+            client.createCollection({type:'dogs'},function(err, dogs){
+                assert(!err, "createCollection returned an error");
+                assert(dogs, "createCollection did not return a dogs collection");
+                dogCollection=dogs;
+                done();
+            })
+        })
         it('restoreCollection',function(done){
+            var serializedDogs=dogCollection.serialize();
+            var dogs=client.restoreCollection(serializedDogs);
+            console.warn('restoreCollection',dogs, dogCollection);
+            assert(dogs._type===dogCollection._type, "The dog collection type was not the same as the serialized dog collection")
+            assert(dogs._qs==dogCollection._qs, "The query strings do not match")
+            assert(dogs._list.length===dogCollection._list.length, "The collections have a different number of entities")
             done();
         })
         it('getFeedForUser',function(done){
@@ -342,6 +399,12 @@ describe('Usergrid Client', function() {
             done();
         })
         it('getDisplayImage',function(done){
+            done();
+        })
+        after(function(done){
+            dogEntity.destroy();
+            //dogCollection.destroy();
+            //testGroup.destroy();
             done();
         })
     });

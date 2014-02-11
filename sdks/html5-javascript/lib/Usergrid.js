@@ -138,13 +138,13 @@ function doCallback(callback, params, context) {
 		if (!params) params = [];
 		if (!context) context = this;
 		params.push(context);
-		try {
+		//try {
 			returnValue = callback.apply(context, params);
-		} catch (ex) {
+		/*} catch (ex) {
 			if (console && console.error) {
 				console.error("Callback error:", ex);
 			}
-		}
+		}*/
 	}
 	return returnValue;
 }

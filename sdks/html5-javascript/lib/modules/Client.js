@@ -132,17 +132,13 @@
 
     var group = new Usergrid.Group(options);
     group.fetch(function(err, data){
-      var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+      var okToSave = (err && ['service_resource_not_found','no_name_specified','null_pointer'].indexOf(err.name)!==-1) || (!err && getOnExist);
       if (okToSave) {
         group.save(function(err, data){
-          if (typeof(callback) === 'function') {
-            callback(err, group);
-          }
+            doCallback(callback, [err, group, data]);
         });
       } else {
-        if(typeof(callback) === 'function') {
-          callback(err, group);
-        }
+        doCallback(callback, [null, group, data]);
       }
     });
   };
