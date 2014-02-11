@@ -12,6 +12,9 @@ describe('Users ', function () {
     it('should add and then delete', function () {
       var dateString = Date.now().toString();
 
+      browser.wait(function(){
+        return browser.driver.findElement(by.id("new-user-button")).isDisplayed();
+      });
       element(by.id("new-user-button")).isPresent().then(function(){
         element(by.id("new-user-button")).click();
       });
@@ -21,7 +24,7 @@ describe('Users ', function () {
         element(by.id('new-user-username')).clear();
         element(by.id('new-user-username')).sendKeys('test' + dateString);
         element(by.id('new-user-fullname')).sendKeys('Test ' + dateString);
-        element(by.id('new-user-email')).sendKeys('test' + dateString + '@apigee.com');
+        element(by.id('new-user-email')).sendKeys('sfeldman+test' + dateString + '@apigee.com');
         element(by.id('new-user-password')).sendKeys(dateString);
         element(by.id('new-user-re-password')).sendKeys(dateString);
         browser.sleep(1000);

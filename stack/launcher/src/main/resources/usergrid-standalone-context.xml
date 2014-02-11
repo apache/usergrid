@@ -23,7 +23,7 @@
 		</property>
 	</bean>
 
-	<bean id="standaloneServer" class="org.usergrid.launcher.Server"
+	<bean id="standaloneServer" class="org.apache.usergrid.launcher.Server"
 		factory-method="getInstance" init-method="springInit" />
 
 	<import resource="classpath:/usergrid-rest-context.xml" />

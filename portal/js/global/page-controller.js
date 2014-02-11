@@ -20,8 +20,8 @@ AppServices.Controllers.controller('PageCtrl',
                      $routeParams,
                      $q,
                      $route,
-                     $log,
-                     $analytics) {
+                     $log
+                     ) {
 
   var initScopeVariables = function(){
     //$rootScope.urls()... will determine which URL should be used for a given environment
@@ -129,8 +129,9 @@ AppServices.Controllers.controller('PageCtrl',
        ug.set('token', $routeParams.access_token);
        ug.set('email', $routeParams.admin_email);
        ug.set('uuid', $routeParams.uuid);
-       var clean_uri = location.protocol + "//" + location.host + location.pathname;
-       window.history.replaceState({}, document.title, clean_uri);
+       $location.search('access_token', null);
+       $location.search('admin_email', null);
+       $location.search('uuid', null);
      }
 
      $scope.deferredLogin = $q.defer();
@@ -378,7 +379,6 @@ AppServices.Controllers.controller('PageCtrl',
       if(!$scope.showDemoBar){
         $rootScope.demoData = false;
       }
-      $analytics.pageTrack($location.path());
     });
     $scope.$on('applications-received', function (event, applications) {
       $scope.applications = applications;

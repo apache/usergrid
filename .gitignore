@@ -13,7 +13,10 @@ Icon
 .Spotlight-V100
 .Trashes
 /portal/performance/
-
 /portal/node_modules/
+/portal/dist
+/portal/bower_components
+/portal/.idea
+/stack/corepersistence/priamcluster/aws.properties
 #Webstorm artifacts
 .idea/

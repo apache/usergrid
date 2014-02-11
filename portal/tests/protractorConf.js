@@ -63,12 +63,13 @@ exports.config = {
   },
   params: {
     login: {
-      user: 'sfeldman+prod@apigee.com',
-      password: '8dyCcdMoV13x'
+      user: 'sfeldman+apijeeps@apigee.com',
+      password: 'p@ssw0rd1'
     },
-    orgName:'rippela',
-    appName1:'test',
-    appName2:'sandbox'
+    orgName:'apijeeps',
+    appName1:'website',
+    appName2:'mobile',
+    useSso:false
 
   },
   // ----- More information for your tests ----

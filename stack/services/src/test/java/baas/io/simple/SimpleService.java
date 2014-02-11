@@ -3,7 +3,7 @@ package baas.io.simple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.services.AbstractCollectionService;
+import org.apache.usergrid.services.AbstractCollectionService;
 
 
 public class SimpleService extends AbstractCollectionService {
