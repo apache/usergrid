@@ -67,8 +67,7 @@ public class EdgeManagerImpl implements EdgeManager {
     @Inject
     public EdgeManagerImpl( final EdgeWriteStage edgeWriteStage, final Scheduler scheduler,
                             final EdgeMetadataSerialization edgeMetadataSerialization,
-                            final EdgeSerialization edgeSerialization,
-                            @Assisted final OrganizationScope scope ) {
+                            final EdgeSerialization edgeSerialization, @Assisted final OrganizationScope scope ) {
         this.edgeWriteStage = edgeWriteStage;
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
@@ -90,53 +89,71 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public void deleteEdge( final Edge edge ) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        throw new UnsupportedOperationException( "Not yet implemented" );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        Observable<Edge> iterator =  Observable.create( new ObservableIterator<Edge>() {
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
             @Override
             protected Iterator<Edge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
             }
         } );
 
-        return filter(iterator, search.getMaxVersion());
+        return filter( iterator, search.getMaxVersion() );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesToTarget( scope, search );
+            }
+        } );
 
-
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return filter( iterator, search.getMaxVersion() );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
+            }
+        } );
+
+        return filter( iterator, search.getMaxVersion() );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
+            }
+        } );
+
+        return filter( iterator, search.getMaxVersion() );
     }
 
 
     @Override
     public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
 
-       return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
         } );
-
     }
 
 
@@ -173,12 +190,15 @@ public class EdgeManagerImpl implements EdgeManager {
         } );
     }
 
-    private  Observable<Edge> filter(final Observable<Edge> observable, final UUID maxVersion){
-        if(maxVersion == null){
-            return observable;
-        }
 
-        return observable.filter( new Func1<Edge, Boolean>() {
+    /**
+     * If not max version is specified, just return the original observable.  If one is
+     * @param observable
+     * @param maxVersion
+     * @return
+     */
+    private Observable<Edge> filter( final Observable<Edge> observable, final UUID maxVersion ) {
+          return observable.filter( new Func1<Edge, Boolean>() {
             @Override
             public Boolean call( final Edge edge ) {
                 //our edge version needs to be <= max Version
