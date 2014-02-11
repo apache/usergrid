@@ -570,10 +570,9 @@ describe('Usergrid Client', function() {
 				type: 'dogs',
 				name: 'Rocky'
 			}
-			client.createEntity(options, function(err, entity) {
+            dog=new Usergrid.Entity({client:client,data:options});
+            dog.save(function(err, entity) {
 				assert(!err, "dog not created");
-				dog = entity;
-                console.log("AFTER CREATE", dog.get());
 				done();
 			});
 		});
@@ -606,7 +605,6 @@ describe('Usergrid Client', function() {
 			}
 			//set is additive, so previously set properties are not overwritten
 			dog.set(data);
-            console.log("BEFORE SAVE", dog.get());
 			//finally, call save on the object to save it back to the database
 			dog.save(function(err) {
 				assert(!err, "dog not saved");
@@ -630,14 +628,6 @@ describe('Usergrid Client', function() {
 		var client = getClient();
 		var dog, dogs = {};
 
-		function loop(done) {
-			while (dogs.hasNextEntity()) {
-				//get a reference to the dog
-				dog = dogs.getNextEntity();
-				console.log(dog.get('name'));
-			}
-			if (done) done();
-		}
 		before(function(done) {
             console.log("remove existing dogs");
 			//Make sure our dog doesn't already exist
@@ -674,17 +664,15 @@ describe('Usergrid Client', function() {
 		});
 		it('should CREATE a new dogs collection', function(done) {
 			var options = {
+                client:client,
 				type: 'dogs',
 				qs: {
 					ql: 'order by index'
 				}
 			}
-
-			client.createCollection(options, function(err, data) {
-				assert(!err, "could not create dogs collection: " + data.error_description);
-				dogs = data;
-				done();
-			});
+            dogs=new Usergrid.Collection(options);
+			assert(dogs, "could not create dogs collection");
+			done();
 		});
         it('should CREATE dogs in the collection', function(done) {
             this.timeout(10000);
@@ -696,7 +684,7 @@ describe('Usergrid Client', function() {
                     name: 'dog' + dogNum,
                     index: y
                 }
-                client.createEntity(options, function(err, dog) {
+                dogs.addEntity(options, function(err, dog) {
                     console.log(err, dog);
                     assert(!err, "dog not created");
                     if (dogNum === totalDogs) {
@@ -706,7 +694,12 @@ describe('Usergrid Client', function() {
             })
         });
         it('should RETRIEVE dogs from the collection', function(done) {
-            loop(done);
+            while (dogs.hasNextEntity()) {
+                //get a reference to the dog
+                dog = dogs.getNextEntity();
+                console.log(dog.get('name'));
+            }
+            if (done) done();
         });
 		it('should RETRIEVE the next page of dogs from the collection', function(done) {
 			if (dogs.hasNextPage()) {
@@ -717,15 +710,65 @@ describe('Usergrid Client', function() {
 				done();
 			}
 		});
-		it('should RETRIEVE the previous page of dogs from the collection', function(done) {
-			if (dogs.hasPreviousPage()) {
-				dogs.getPreviousPage(function(err) {
-					loop(done);
-				});
-			} else {
-				done();
-			}
-		});
+        it('should RETRIEVE the previous page of dogs from the collection', function(done) {
+            if (dogs.hasPreviousPage()) {
+                dogs.getPreviousPage(function(err) {
+                    loop(done);
+                });
+            } else {
+                done();
+            }
+        });
+        it('should RETRIEVE an entity by UUID.', function(done) {
+            var uuid=dogs.getFirstEntity().get("uuid")
+            dogs.getEntityByUUID(uuid,function(err, data){
+                assert(!err, "getEntityByUUID returned an error.");
+                assert(uuid==data.get("uuid"), "We didn't get the dog we asked for.");
+                done();
+            })
+        });
+        it('should RETRIEVE the first entity from the collection', function() {
+            assert(dogs.getFirstEntity(), "Could not retrieve the first dog");
+        });
+        it('should RETRIEVE the last entity from the collection', function() {
+            assert(dogs.getLastEntity(), "Could not retrieve the last dog");
+        });
+        it('should reset the paging', function() {
+            dogs.resetPaging();
+            assert(!dogs.hasPreviousPage(), "Could not resetPaging");
+        });
+        it('should reset the entity pointer', function() {
+            dogs.resetEntityPointer();
+            assert(!dogs.hasPrevEntity(), "Could not reset the pointer");
+            assert(dogs.hasNextEntity(), "Dog has no more entities");
+            assert(dogs.getNextEntity(), "Could not retrieve the next dog");
+        });
+        it('should RETRIEVE the next entity from the collection', function() {
+            assert(dogs.hasNextEntity(), "Dog has no more entities");
+            assert(dogs.getNextEntity(), "Could not retrieve the next dog");
+        });
+        it('should RETRIEVE the previous entity from the collection', function() {
+            assert(dogs.getNextEntity(), "Could not retrieve the next dog");
+            assert(dogs.hasPrevEntity(), "Dogs has no previous entities");
+            assert(dogs.getPrevEntity(), "Could not retrieve the previous dog");
+        });
+        it('should DELETE the entities from the collection', function(done) {
+            this.timeout(10000);
+            function remove(){
+                if(dogs.hasNextEntity()){
+                    dogs.destroyEntity(dogs.getNextEntity(),function(err, data){
+                        assert(!err, "Could not destroy dog.");
+                        remove();
+                    })
+                }else if(dogs.hasNextPage()){
+                    dogs.getNextPage();
+                    remove();
+                }else{
+                    done();
+                }
+            }
+            remove();
+        });
 	});
 	describe('Usergrid Counters', function() {
 		var counter;

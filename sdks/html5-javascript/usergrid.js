@@ -2115,7 +2115,7 @@ Usergrid.Collection.prototype.getEntityByUUID = function(uuid, callback) {
     for (var key in this._list) {
         var listItem = this._list[key];
         if (listItem.get("uuid") === uuid) {
-            return listItem;
+            return callback(null, listItem);
         }
     }
     //get the entity from the database

@@ -217,12 +217,12 @@ Usergrid.Collection.prototype.destroyEntity = function (entity, callback) {
         callback(err, data);
       }
     } else {
-      //destroy was good, so repopulate the collection
-      self.fetch(callback);
+        //destroy was good, so repopulate the collection
+        self.fetch(callback);
     }
   });
-  //remove entity from the local store
-  this.removeEntity(entity);
+    //remove entity from the local store
+    this.removeEntity(entity);
 };
 
 
@@ -250,7 +250,7 @@ Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
   for (var key in this._list) {
     var listItem = this._list[key];
     if (listItem.get('uuid') === uuid) {
-      return listItem;
+        return callback(null, listItem);
     }
   }
 
