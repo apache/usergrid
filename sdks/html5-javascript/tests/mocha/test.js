@@ -15,7 +15,7 @@ function getClient() {
 	and run any number of additional tests
  */
 function usergridTestHarness(err, data, done, tests, ignoreError) {
-	if (!ignoreError) assert(!err, data.error_description);
+	if (!ignoreError) assert(!err, (err)?err.error_description:"unknown");
 	if (tests) {
 		if ("function" === typeof tests) {
 			tests(err, data);
@@ -186,7 +186,6 @@ describe('Usergrid Client', function() {
 				}
 			}, function(err, data) {
 				usergridTestHarness(err, data, done, [
-
 					function(err, data) {
 						assert(true)
 					}
@@ -246,8 +245,8 @@ describe('Usergrid Client', function() {
 				usergridTestHarness(err, data, done, [
 
 					function(err, data) {
-						assert(!data.entities);
-						console.log(JSON.stringify(data))
+						assert(data.entities.length>=0, "Request should return at least one user");
+						//console.log(JSON.stringify(data))
 					}
 				]);
 			});
@@ -260,13 +259,14 @@ describe('Usergrid Client', function() {
 				usergridTestHarness(err, data, done, [
 
 					function(err, data) {
-						assert(!data.entities)
+                        assert(data.entities.length===0, "Request should return no entities");
 					}
 				]);
 			});
 		});
 	});
     describe('Usergrid convenience methods', function(){
+        before(function(){ client.logout();});
         it('createEntity',function(done){
             client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
                 assert(!err, "createEntity returned an error")
@@ -359,29 +359,6 @@ describe('Usergrid Client', function() {
                     done();
                 }
             })
-//            client.request({
-//                method: 'GET',
-//                endpoint: 'users/testActivityUser'
-//            }, function(err, data) {
-//                if(err){
-//                    client.request({
-//                        method: 'POST',
-//                        endpoint: 'users',
-//                        body: {
-//                            username: 'testActivityUser',
-//                            password: 'secret'
-//                        }
-//                    }, function(err, data) {
-//                        activityUser=data;
-//                        console.log(activityUser);
-//                        done();
-//                    });
-//                }else{
-//                    activityUser=data;
-//                    console.log(activityUser);
-//                    done();
-//                }
-//            });
         })
         it('createUserActivity',function(done){
              var options = {
@@ -424,15 +401,6 @@ describe('Usergrid Client', function() {
                 done();
             })
         })
-        /*after(function(done){
-            client.request({
-                method: 'DELETE',
-                endpoint: 'users/testActivityUser'
-            }, function(err, data) {
-                done();
-            });
-
-        })*/
         var testProperty="____test_item"+Math.floor(Math.random()*10000),
             testPropertyValue="test"+Math.floor(Math.random()*10000),
             testPropertyObjectValue={test:testPropertyValue};
@@ -754,7 +722,7 @@ describe('Usergrid Client', function() {
             assert(dogs.getPrevEntity(), "Could not retrieve the previous dog");
         });
         it('should DELETE the entities from the collection', function(done) {
-            this.timeout(10000);
+            this.timeout(20000);
             function remove(){
                 if(dogs.hasNextEntity()){
                     dogs.destroyEntity(dogs.getNextEntity(),function(err, data){

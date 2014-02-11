@@ -464,22 +464,50 @@ function doCallback(callback, params, context) {
     //TODO more granular handling of statusCodes
     Usergrid.Response = function(err, response) {
         var p = new Promise();
-        this.logger = new global.Logger(name);
-        this.success = true;
-        this.err = err;
-        this.data = {};
-        var data;
+        var data = null;
         try {
             data = JSON.parse(response.responseText);
         } catch (e) {
             //this.logger.error("Error parsing response text: ",this.text);
-            this.logger.error("Caught error ", e.message);
+            //this.logger.error("Caught error ", e.message);
             data = {};
-        } finally {
-            this.data = data;
         }
-        this.status = parseInt(response.status);
-        this.statusGroup = this.status - this.status % 100;
+        Object.keys(data).forEach(function(key) {
+            Object.defineProperty(this, key, {
+                value: data[key],
+                enumerable: true
+            });
+        }.bind(this));
+        Object.defineProperty(this, "logger", {
+            enumerable: false,
+            configurable: false,
+            writable: false,
+            value: new global.Logger(name)
+        });
+        Object.defineProperty(this, "success", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: true
+        });
+        Object.defineProperty(this, "err", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: err
+        });
+        Object.defineProperty(this, "status", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: parseInt(response.status)
+        });
+        Object.defineProperty(this, "statusGroup", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: this.status - this.status % 100
+        });
         switch (this.statusGroup) {
           case 200:
             this.success = true;
@@ -494,18 +522,17 @@ function doCallback(callback, params, context) {
             this.success = false;
             break;
         }
-        var self = this;
         if (this.success) {
             p.done(null, this);
         } else {
-            p.done(UsergridError.fromResponse(this.data), this);
+            p.done(UsergridError.fromResponse(data), this);
         }
         return p;
     };
     Usergrid.Response.prototype.getEntities = function() {
         var entities = [];
-        if (this.success && this.data.entities) {
-            entities = this.data.entities;
+        if (this.success) {
+            entities = this.data ? this.data.entities : this.entities;
         }
         return entities;
     };
@@ -779,7 +806,7 @@ function doCallback(callback, params, context) {
             if (err) {
                 doCallback(callback, [ err ]);
             } else {
-                doCallback(callback, [ err, data, data.data.entities ]);
+                doCallback(callback, [ err, data, data.getEntities() ]);
             }
         });
     };
@@ -972,9 +999,8 @@ function doCallback(callback, params, context) {
                 grant_type: "password"
             }
         };
-        self.request(options, function(err, response) {
+        self.request(options, function(err, data) {
             var user = {};
-            var data = response.data;
             if (err) {
                 if (self.logging) console.log("error trying to log user in");
             } else {
@@ -1116,8 +1142,7 @@ function doCallback(callback, params, context) {
                 method: "GET",
                 endpoint: "users/me"
             };
-            this.request(options, function(err, response) {
-                var data = response.data;
+            this.request(options, function(err, data) {
                 if (err) {
                     if (self.logging) {
                         console.log("error trying to log user in");
@@ -1334,7 +1359,8 @@ Usergrid.Entity.prototype.getEndpoint = function() {
         return "undefined" !== typeof x;
     });
     if (names.length === 0) {
-        throw new UsergridError("Cannot infer an UUID or type from the entity", "no_name_specified");
+        //throw new UsergridError("Cannot infer an UUID or type from the entity", 'no_name_specified');
+        return type;
     } else {
         name = names.shift();
     }
@@ -1350,14 +1376,10 @@ Usergrid.Entity.prototype.getEndpoint = function() {
  *  @return {callback} callback(err, data)
  */
 Usergrid.Entity.prototype.save = function(callback) {
-    var self = this, type = this.get("type"), method = "POST", entityId = this.get("uuid"), data = {}, entityData = this.get(), /*password = this.get('password'),
-    oldpassword = this.get('oldpassword'),
-    newpassword = this.get('newpassword'),*/
-    options = {
+    var self = this, type = this.get("type"), method = "POST", entityId = this.get("uuid"), data = {}, entityData = this.get(), password = this.get("password"), oldpassword = this.get("oldpassword"), newpassword = this.get("newpassword"), options = {
         method: method,
         endpoint: type
     };
-    console.log("SAVE DATA #1", entityId, entityData);
     //update the entity
     if (entityId) {
         options.method = "PUT";
@@ -1369,16 +1391,55 @@ Usergrid.Entity.prototype.save = function(callback) {
     }).forEach(function(key) {
         data[key] = entityData[key];
     });
-    console.log("SAVE DATA #2", data);
     options.body = data;
     //save the entity first
     this._client.request(options, function(err, response) {
-        console.log("SAVE DATA #3", response);
         var entity = response.getEntity();
         if (entity) {
             self.set(entity);
+            self.set("type", /^\//.test(response.path) ? response.path.substring(1) : response.path);
         }
-        doCallback(callback, [ err, self ]);
+        //      doCallback(callback,[err, self]);
+        /*
+        TODO move user logic to its own entity
+       */
+        //clear out pw info if present
+        self.set("password", null);
+        self.set("oldpassword", null);
+        self.set("newpassword", null);
+        if (err && self._client.logging) {
+            console.log("could not save entity");
+            doCallback(callback, [ err, response, self ]);
+        } else if (/^users?/.test(self.get("type")) && oldpassword && newpassword) {
+            //if this is a user, update the password if it has been specified;
+            //Note: we have a ticket in to change PUT calls to /users to accept the password change
+            //      once that is done, we will remove this call and merge it all into one
+            var options = {
+                method: "PUT",
+                endpoint: type + "/" + self.get("uuid") + "/password",
+                body: {
+                    uuid: self.get("uuid"),
+                    username: self.get("username"),
+                    password: password,
+                    oldpassword: oldpassword,
+                    newpassword: newpassword
+                }
+            };
+            self._client.request(options, function(err, data) {
+                if (err && self._client.logging) {
+                    console.log("could not update user");
+                }
+                //remove old and new password fields so they don't end up as part of the entity object
+                self.set({
+                    password: null,
+                    oldpassword: null,
+                    newpassword: null
+                });
+                doCallback(callback, [ err, data, self ]);
+            });
+        } else {
+            doCallback(callback, [ err, response, self ]);
+        }
     });
 };
 
@@ -1392,17 +1453,7 @@ Usergrid.Entity.prototype.save = function(callback) {
  */
 Usergrid.Entity.prototype.fetch = function(callback) {
     var endpoint, self = this;
-    //Check for an entity type, then if a uuid is available, use that, otherwise, use the name
-    //try {
     endpoint = this.getEndpoint();
-    /*} catch (e) {
-     if (self._client.logging) {
-     console.log(e);
-     }
-     return callback(true, {
-     error: e
-     }, self);
-     }*/
     var options = {
         method: "GET",
         endpoint: endpoint
@@ -1412,7 +1463,6 @@ Usergrid.Entity.prototype.fetch = function(callback) {
         if (entity) {
             self.set(entity);
         }
-        console.log("AFTER FETCH", err, self.get(), entity, response);
         doCallback(callback, [ err, entity, self ]);
     });
 };

@@ -207,22 +207,47 @@ function doCallback(callback, params, context) {
     //TODO more granular handling of statusCodes
     Usergrid.Response = function (err, response) {
         var p = new Promise();
-        this.logger = new global.Logger(name);
-        this.success = true;
-        this.err = err;
-        this.data = {};
-        var data;
+        var data=null;
         try {
             data = JSON.parse(response.responseText);
         } catch (e) {
             //this.logger.error("Error parsing response text: ",this.text);
-            this.logger.error("Caught error ", e.message);
+            //this.logger.error("Caught error ", e.message);
             data = {}
-        } finally {
-            this.data = data;
         }
-        this.status = parseInt(response.status);
-        this.statusGroup = (this.status - this.status % 100);
+        Object.keys(data).forEach(function(key){
+            Object.defineProperty(this, key, { value : data[key], enumerable:true });
+        }.bind(this));
+        Object.defineProperty(this, "logger", {
+            enumerable: false,
+            configurable: false,
+            writable: false,
+            value: new global.Logger(name)
+        });
+        Object.defineProperty(this, "success", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: true
+        });
+        Object.defineProperty(this, "err", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: err
+        });
+        Object.defineProperty(this, "status", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: parseInt(response.status)
+        });
+        Object.defineProperty(this, "statusGroup", {
+            enumerable: false,
+            configurable: false,
+            writable: true,
+            value: (this.status - this.status % 100)
+        });
         switch (this.statusGroup) {
             case 200:
                 this.success = true;
@@ -236,18 +261,17 @@ function doCallback(callback, params, context) {
                 this.success = false;
                 break;
         }
-        var self = this;
         if (this.success) {
             p.done(null, this);
         } else {
-            p.done(UsergridError.fromResponse(this.data), this);
+            p.done(UsergridError.fromResponse(data), this);
         }
         return p;
     };
     Usergrid.Response.prototype.getEntities = function () {
         var entities=[]
-        if (this.success && this.data.entities) {
-            entities=this.data.entities;
+        if (this.success) {
+            entities=(this.data)?this.data.entities:this.entities;
         }
         return entities;
     }

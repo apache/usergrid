@@ -279,7 +279,7 @@
         if(err) {
             doCallback(callback, [err]);
         } else {
-            doCallback(callback, [err, data, data.data.entities]);
+            doCallback(callback, [err, data, data.getEntities()]);
         }
     });
   };
@@ -486,9 +486,8 @@
         grant_type: 'password'
       }
     };
-    self.request(options, function(err, response) {
+    self.request(options, function(err, data) {
       var user = {};
-        var data=response.data;
       if (err) {
         if(self.logging)console.log('error trying to log user in');
       } else {
@@ -645,8 +644,7 @@
         method:'GET',
         endpoint:'users/me'
       };
-      this.request(options, function(err, response) {
-          var data=response.data;
+      this.request(options, function(err, data) {
         if (err) {
           if (self.logging) {
             console.log('error trying to log user in');

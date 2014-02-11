@@ -118,7 +118,8 @@ Usergrid.Entity.prototype.getEndpoint = function () {
 
     var names= this.get(nameProperties).filter(function(x){return "undefined"!==typeof x});
     if (names.length===0) {
-        throw new UsergridError("Cannot infer an UUID or type from the entity", 'no_name_specified');
+        //throw new UsergridError("Cannot infer an UUID or type from the entity", 'no_name_specified');
+        return type;
     }else{
         name=names.shift();
     }
@@ -139,14 +140,13 @@ Usergrid.Entity.prototype.save = function (callback) {
     entityId=this.get("uuid"),
     data = {},
     entityData = this.get(),
-    /*password = this.get('password'),
+    password = this.get('password'),
     oldpassword = this.get('oldpassword'),
-    newpassword = this.get('newpassword'),*/
+    newpassword = this.get('newpassword'),
     options={
       method:method,
       endpoint:type
     };
-    console.log("SAVE DATA #1", entityId, entityData);
 
   //update the entity
   if (entityId) {
@@ -160,22 +160,20 @@ Usergrid.Entity.prototype.save = function (callback) {
     .forEach(function(key){
       data[key]= entityData[key];
     });
-    console.log("SAVE DATA #2", data);
     options.body=data;
   //save the entity first
   this._client.request(options, function (err, response) {
-      console.log("SAVE DATA #3", response);
       var entity=response.getEntity();
       if(entity){
           self.set(entity);
+          self.set('type', (/^\//.test(response.path))?response.path.substring(1):response.path);
       }
-      doCallback(callback,[err, self]);
+//      doCallback(callback,[err, self]);
 
       /*
         TODO move user logic to its own entity
        */
 
-    /*
 
      //clear out pw info if present
      self.set('password', null);
@@ -183,50 +181,38 @@ Usergrid.Entity.prototype.save = function (callback) {
      self.set('newpassword', null);
     if (err && self._client.logging) {
       console.log('could not save entity');
-      if (typeof(callback) === 'function') {
-        return callback(err, retdata, self);
-      }
-    } else {
-      if (retdata.entities) {
-        if (retdata.entities.length) {
-          var entity = retdata.entities[0];
-          self.set(entity);
-          var path = retdata.path;
-          //for connections, API returns type
-          while (path.substring(0, 1) === "/") {
-            path = path.substring(1);
-          }
-          self.set('type', path);
-        }
-      }
-      //if this is a user, update the password if it has been specified;
-        var needPasswordChange = ((self.get('type') === 'user' || self.get('type') === 'users') && oldpassword && newpassword);
-      if (needPasswordChange) {
+        doCallback(callback,[err, response, self]);
+    }else if ((/^users?/.test(self.get('type'))) && oldpassword && newpassword) {
+          //if this is a user, update the password if it has been specified;
         //Note: we have a ticket in to change PUT calls to /users to accept the password change
         //      once that is done, we will remove this call and merge it all into one
-        var pwdata = {};
-          pwdata.oldpassword = oldpassword;
-          pwdata.newpassword = newpassword;
         var options = {
           method:'PUT',
-          endpoint:type+'/password',
-          body:pwdata
+          endpoint:type+'/'+self.get("uuid")+'/password',
+          body:{
+              uuid:self.get("uuid"),
+              username:self.get("username"),
+              password:password,
+              oldpassword:oldpassword,
+              newpassword:newpassword
+          }
         }
         self._client.request(options, function (err, data) {
           if (err && self._client.logging) {
             console.log('could not update user');
           }
           //remove old and new password fields so they don't end up as part of the entity object
-          self.set('oldpassword', null);
-          self.set('newpassword', null);
-          if (typeof(callback) === 'function') {
-            callback(err, data, self);
-          }
+          self.set({
+              'password':null,
+              'oldpassword': null,
+              'newpassword': null
+          });
+          doCallback(callback,[err, data, self]);
         });
-      } else if (typeof(callback) === 'function') {
-        callback(err, retdata, self);
+      } else {
+        doCallback(callback,[err, response, self]);
       }
-    }*/
+
   });
 };
 
@@ -240,18 +226,7 @@ Usergrid.Entity.prototype.save = function (callback) {
  */
 Usergrid.Entity.prototype.fetch = function (callback) {
     var endpoint, self = this;
-
-    //Check for an entity type, then if a uuid is available, use that, otherwise, use the name
-    //try {
     endpoint=this.getEndpoint();
-    /*} catch (e) {
-     if (self._client.logging) {
-     console.log(e);
-     }
-     return callback(true, {
-     error: e
-     }, self);
-     }*/
     var options = {
         method: 'GET',
         endpoint: endpoint
@@ -261,7 +236,6 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         if(entity){
             self.set(entity);
         }
-        console.log("AFTER FETCH", err, self.get(), entity, response);
         doCallback(callback,[err, entity, self]);
     });
 };
