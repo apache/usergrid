@@ -163,6 +163,7 @@ describe('Usergrid Client', function() {
 	var client = getClient();
 	describe('Usergrid CRUD request', function() {
 		before(function(done) {
+            this.timeout(10000);
 			//Make sure our dog doesn't already exist
 			client.request({
 				method: 'DELETE',

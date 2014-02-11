@@ -204,7 +204,6 @@ function doCallback(callback, params, context) {
 
         return p;
     };
-    Usergrid.Request.prototype= new UsergridStorable();
     //TODO more granular handling of statusCodes
     Usergrid.Response = function (err, response) {
         var p = new Promise();
