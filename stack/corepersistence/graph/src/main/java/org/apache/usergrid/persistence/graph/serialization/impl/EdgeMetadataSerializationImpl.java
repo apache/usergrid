@@ -134,7 +134,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
-        final long timestamp = CassUtils.getWriteTimestamp( edge.getVersion() );
+        final long timestamp = CassUtils.getTimestamp( edge.getVersion() );
 
 
         //add source->target edge type to meta data
@@ -213,7 +213,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                           final UUID version,
                                           final MultiTennantColumnFamily<OrganizationScope, Id, String> cf ) {
 
-        final long timestamp = CassUtils.getDeleteTimestamp( version );
+        final long timestamp = CassUtils.getTimestamp( version );
 
 
         //write target<--source edge type meta data
@@ -248,7 +248,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         MutationBatch batch = keyspace.prepareMutationBatch();
 
 
-        final long timestamp = CassUtils.getDeleteTimestamp( version );
+        final long timestamp = CassUtils.getTimestamp( version );
 
 
         //write target<--source edge type and id type to meta data
