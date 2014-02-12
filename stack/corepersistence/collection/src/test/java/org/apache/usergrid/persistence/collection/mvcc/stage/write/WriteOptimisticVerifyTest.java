@@ -18,64 +18,77 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 import com.google.inject.Inject;
-import org.junit.Test;
-
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
-import org.apache.usergrid.persistence.model.entity.Entity;
-
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Assert;
 import static org.junit.Assert.assertSame;
 import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
-@UseModules( CollectionModule.class )
+@RunWith( JukitoRunner.class )
+@UseModules( TestCollectionModule.class )
 public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
     @ClassRule
-    public static CassandraRule rule = new CassandraRule();
+    public static CassandraRule cassandraRule = new CassandraRule();
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule = new MigrationManagerRule();
 
     @Inject
     private MvccLogEntrySerializationStrategy logEntryStrat;
 
-    /** Standard flow */
     @Test
     public void testStartStage() throws Exception {
 
         Assert.assertNotNull( logEntryStrat );
 
         final CollectionScope collectionScope = mock( CollectionScope.class );
+        when( collectionScope.getOrganization() )
+                .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
+        when( collectionScope.getOwner() )
+                .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
 
-        // set up the mock to return the entity from the start phase
+        // Set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();
 
         final MvccEntity mvccEntity = fromEntity( entity );
 
-        // run the stage
+        // Run the stage
         WriteOptimisticVerify newStage = new WriteOptimisticVerify( logEntryStrat );
 
-        CollectionIoEvent<MvccEntity>
-            result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
+        CollectionIoEvent<MvccEntity> result;
+        result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
 
         assertSame("Context was correct", collectionScope, result.getEntityCollection()) ;
 
-        // verify the entity is correct
+        // Verify the entity is correct
         MvccEntity entry = result.getEvent();
 
-        // verify uuid and version in both the MvccEntity and the entity itself
-        // assertSame is used on purpose.  We want to make sure the same instance is used, not a copy.
-        // this way the caller's runtime type is retained.
-        assertSame( "id correct", entity.getId(), entry.getId() );
-        assertSame( "version did not not match entityId", entity.getVersion(), entry.getVersion() );
+        // Verify UUID and version in both the MvccEntity and the entity itself. Here assertSame 
+        // is used on purpose as we want to make sure the same instance is used, not a copy.
+        // This way the caller's runtime type is retained.
+        assertSame( "Id correct", entity.getId(), entry.getId() );
+        assertSame( "Version did not not match entityId", entity.getVersion(), entry.getVersion() );
         assertSame( "Entity correct", entity, entry.getEntity().get() );
     }
 

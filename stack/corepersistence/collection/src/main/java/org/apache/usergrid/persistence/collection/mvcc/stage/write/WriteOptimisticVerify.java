@@ -40,7 +40,8 @@ import rx.util.functions.Func1;
  * This phase should execute any optimistic verification on the MvccEntity
  */
 @Singleton
-public class WriteOptimisticVerify implements Func1<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>> {
+public class WriteOptimisticVerify 
+    implements Func1<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteOptimisticVerify.class );
 
@@ -53,8 +54,8 @@ public class WriteOptimisticVerify implements Func1<CollectionIoEvent<MvccEntity
 
 
     @Override
-    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> mvccEntityIoEvent ) {
-        ValidationUtils.verifyMvccEntityWithEntity( mvccEntityIoEvent.getEvent() );
+    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioevent ) {
+        ValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
         // If the version was included on the entity write operation (delete or write) we need
         // to read back the entity log, and ensure that our "new" version is the only version
@@ -62,18 +63,18 @@ public class WriteOptimisticVerify implements Func1<CollectionIoEvent<MvccEntity
         //
         // If not, fail fast, signal to the user their entity is "stale".
 
-        MvccEntity entity = mvccEntityIoEvent.getEvent();
-        CollectionScope collectionScope = mvccEntityIoEvent.getEntityCollection();
+        MvccEntity entity = ioevent.getEvent();
+        CollectionScope collectionScope = ioevent.getEntityCollection();
 
         try {
-            List<MvccLogEntry> versions = logEntryStrat.load( collectionScope, 
-                    entity.getId(), entity.getVersion(), 2 );
+            List<MvccLogEntry> versions = logEntryStrat.load( 
+                collectionScope, entity.getId(), entity.getVersion(), 2 );
 
-            // previous log entry must be committed, otherwise somebody is already writing
+            // Previous log entry must be committed, otherwise somebody is already writing
             if ( versions.size() > 1 
                     && versions.get(1).getStage().ordinal() < Stage.COMMITTED.ordinal() ) {
             
-                // we're not the first writer, rollback and throw-up
+                // We're not the first writer, rollback and throw-up
                 final MvccLogEntry rollbackEntry = 
                         new MvccLogEntryImpl( entity.getId(), entity.getVersion(), Stage.ROLLBACK);
                 logEntryStrat.write( collectionScope, rollbackEntry );
@@ -86,7 +87,7 @@ public class WriteOptimisticVerify implements Func1<CollectionIoEvent<MvccEntity
             throw new CollectionRuntimeException( "Error reading entity log", e );
         }
 
-        //no op, just emit the value
-        return mvccEntityIoEvent;
+        // No op, just emit the value
+        return ioevent;
     }
 }

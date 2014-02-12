@@ -60,6 +60,9 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
             }
         }
 
+        // TODO: what about cleared entities, all fields deleted but entity still there.
+        // i.e. the optional entity will be delete
+
         for ( MvccEntity mvccEntity : mvccEntities ) {
 
             Entity entity = mvccEntity.getEntity().get();
