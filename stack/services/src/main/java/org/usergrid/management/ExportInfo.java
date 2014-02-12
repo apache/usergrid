@@ -69,7 +69,4 @@ public class ExportInfo { //extends Entity something {
     public String getBucket_location () { return bucket_location; }
 
     public String getS3_accessId () { return s3_accessId; }
-
-
-
 }

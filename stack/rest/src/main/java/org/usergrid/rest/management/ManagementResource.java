@@ -17,7 +17,9 @@ package org.usergrid.rest.management;
 
 
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -61,8 +63,10 @@ import org.apache.shiro.codec.Base64;
 
 import com.sun.jersey.api.view.Viewable;
 
+import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -449,39 +453,46 @@ public class ManagementResource extends AbstractContextResource {
 
     @POST
     @Path( "export" )
+   // @RequireAdminUserAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response exportPostJson (@Context UriInfo ui,@HeaderParam( "Authorization" ) String authorization,
+    public Response exportPostJson (@Context UriInfo ui,
+                                   // @QueryParam( "access_token" ) String access_token,
                                     Map<String, Object> json,
-                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback){
+                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback)
+            throws OAuthSystemException {
 
 
         OAuthResponse response = null;
-        String client_id;
-        String client_secret;
+        UUID jobUUID = null;
+        Map<String, String> uuidRet = new HashMap<String, String>(  );
 
         try {
 
         //parse the json into some useful object (the config params)
-        ExportInfo objEx = new ExportInfo(json);
+            ExportInfo objEx = new ExportInfo(json);
+            exportService.schedule(objEx);
+            jobUUID = exportService.getJobUUID();
+            uuidRet.put( "jobUUID", jobUUID.toString() );
 
-        exportService.schedule(objEx);
-       // exportService.doExport( objEx );
+        }
+        catch (NullPointerException e) {
+            OAuthResponse errorMsg = OAuthResponse.errorResponse( SC_BAD_REQUEST )
+                         .setErrorDescription( "Job Not Created" )
+                         .buildJSONMessage();
+
+            return Response.status( errorMsg.getResponseStatus() ).type( jsonMediaType( callback ) )
+                           .entity( wrapWithCallback( errorMsg.getBody(), callback ) ).build();
         }
         catch (Exception e) {
             //TODO:throw descriptive error message and or include on in the response
             //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status( SC_BAD_REQUEST ).build();
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).build();
         }
 
-        //TODO: make schedule or doExport return a response? Or create one.
-        try {
-            response = OAuthResponse.status( SC_OK ).buildJSONMessage();
-        }
-        catch ( OAuthSystemException e ) {
-            e.printStackTrace();
-        }
-        return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
-                       .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+        return Response.status(SC_ACCEPTED).entity(uuidRet).build();
+
+        //Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                 //      .entity( wrapWithCallback( "", callback ) ).build();
     }
 
 

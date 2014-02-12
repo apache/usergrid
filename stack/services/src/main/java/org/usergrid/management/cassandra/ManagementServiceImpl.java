@@ -36,8 +36,6 @@ import org.usergrid.locking.LockManager;
 import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ActivationState;
 import org.usergrid.management.ApplicationInfo;
-import org.usergrid.management.ExportInfo;
-import org.usergrid.management.JobInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
@@ -2906,12 +2904,6 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Object registerAppWithAPM( OrganizationInfo orgInfo, ApplicationInfo appInfo ) throws Exception {
         // TODO Auto-generated method stub
-        return null;
-    }
-
-    public JobInfo processExportData ( ExportInfo exportData ) {
-        //TODO: Generate proper method for having export info translated into jobinfo.
-
         return null;
     }
 }

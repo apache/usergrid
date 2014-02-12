@@ -1,6 +1,7 @@
 package org.usergrid.management.cassandra;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,14 +16,20 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.ServiceITSetup;
 import org.usergrid.ServiceITSetupImpl;
 import org.usergrid.ServiceITSuite;
+import org.usergrid.batch.JobExecution;
 import org.usergrid.cassandra.CassandraResource;
 import org.usergrid.cassandra.ClearShiroSubject;
 import org.usergrid.cassandra.Concurrent;
+import org.usergrid.count.SimpleBatcher;
+import org.usergrid.management.ExportInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.management.export.ExportJob;
+import org.usergrid.management.export.S3Export;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.crypto.command.Md5HashCommand;
@@ -32,17 +39,16 @@ import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-import org.usergrid.count.SimpleBatcher;
-
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 /** @author zznate */
 @Concurrent()
@@ -725,5 +731,82 @@ public class ManagementServiceIT {
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
 
         assertEquals( userId, authedUser.getUuid() );
+    }
+
+    /*Make this test the do export test and verify that it works using a mock method. */
+    //This test really should be called testDoExport as it mocks out sending it to s3.
+    @Test
+    public void testS3Export() throws Exception {
+
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        storage_info.put( "admin_token","insert_token_data_here" );
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
+
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "properties", properties);
+
+
+        ExportInfo exportInfo = new ExportInfo(payload);
+
+
+        S3Export s3Export = mock( S3Export.class );
+
+        setup.getExportService().setS3Export( s3Export );
+        setup.getExportService().doExport( exportInfo );
+
+    }
+
+    @Test
+    public void testExportDoJob() throws Exception {
+
+        //ExportService exportService = mock( ExportService.class );
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        storage_info.put( "admin_token","insert_token_data_here" );
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
+
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "properties", properties);
+
+
+        ExportInfo exportInfo = new ExportInfo(payload);
+
+
+        //ExportJob job = new ExportJob();
+        //ExportInfo exportInfo;
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "ExportInfo", exportInfo ); //this needs to be populated with properties of export info
+
+        JobExecution jobExecution = mock ( JobExecution.class);
+
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        ExportJob job = new ExportJob();
+        S3Export s3Export = mock( S3Export.class );
+        setup.getExportService().setS3Export( s3Export );
+        job.setExportService( setup.getExportService() );
+        job.doJob( jobExecution );
+
     }
 }

@@ -71,4 +71,6 @@
     <property name="sch" ref="schedulerService"/>
   </bean>
 
+  <bean id="s3Export" class="org.usergrid.management.export.S3ExportImpl" />
+
 </beans>

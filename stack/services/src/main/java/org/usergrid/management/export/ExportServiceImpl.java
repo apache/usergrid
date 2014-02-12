@@ -7,7 +7,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,17 +14,9 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.blobstore.domain.BlobBuilder;
-import org.jclouds.blobstore.options.PutOptions;
-import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
-import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.management.ExportInfo;
 import org.usergrid.management.ManagementService;
@@ -37,11 +28,9 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.JobData;
+import org.usergrid.persistence.entities.JobStat;
 
 import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Module;
 
 
 /**
@@ -53,7 +42,6 @@ public class ExportServiceImpl implements ExportService{
 
     private static final Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
     //dependency injection
-    //inject scheduler - needs to be auto wired
     private SchedulerService sch;
 
     //injected the Entity Manager Factory
@@ -62,7 +50,6 @@ public class ExportServiceImpl implements ExportService{
 
     //inject Management Service to access Organization Data
     private ManagementService managementService;
-
 
     //Maximum amount of entities retrieved in a single go.
     public static final int MAX_ENTITY_FETCH = 100;
@@ -76,6 +63,10 @@ public class ExportServiceImpl implements ExportService{
     protected static final String PATH_REPLACEMENT = "/Users/ApigeeCorporation/";
 
     private String filename = PATH_REPLACEMENT;
+
+    private UUID jobUUID;
+
+    private S3Export s3Export;
 
     //TODO: Todd, do I refactor most of the methods out to just leave schedule and doExport much like
     //the exporting toolbase class?
@@ -106,18 +97,22 @@ public class ExportServiceImpl implements ExportService{
         //TODO: parse path and make sure all the things you need actually exist. then throw
         // good error messages when not found.
 
-        //  managementService.getOrganizationByName(  )
         //validate user has access key to org (rather valid user has admin access token)
             //this is token validation
-        //schedule the job
         JobData jobData = new JobData();
 
-        jobData.setProperty( "exportId", "0001" );//TODO: store uuid here, give export job uuid.
         jobData.setProperty( "exportInfo",config );
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
-        sch.createJob( "exportJob",soonestPossible, jobData );
+        JobData retJobData = sch.createJob( "exportJob",soonestPossible, jobData );
+        jobUUID = retJobData.getUuid();
 
-
+        try {
+            JobStat merp = sch.getStatsForJob( "exportJob", retJobData.getUuid() );
+            System.out.println("hi");
+        }
+        catch ( Exception e ) {
+            logger.error( "could not get stats for job" );
+        }
     }
 
 
@@ -127,14 +122,11 @@ public class ExportServiceImpl implements ExportService{
         Map<UUID, String> organizations = getOrgs();
         for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
 
-//            if ( organization.equals( properties.getProperty( "usergrid.test-account.organization" ) ) ) {
-//                // Skip test data from being exported.
-//                continue;
-//            }
-
             exportApplicationsForOrg( organization , config );
         }
     }
+
+
 
     private Map<UUID, String> getOrgs() throws Exception {
         // Loop through the organizations
@@ -196,6 +188,10 @@ public class ExportServiceImpl implements ExportService{
 
     public void setManagementService( final ManagementService managementService ) {
         this.managementService = managementService;
+    }
+
+    public UUID getJobUUID () {
+        return jobUUID;
     }
 
 
@@ -316,7 +312,7 @@ public class ExportServiceImpl implements ExportService{
             // Close writer and file for this application.
             jg.writeEndArray();
             jg.close();
-            copyToS3( appFileName , config );
+            s3Export.copyToS3( appFileName, config );
             //below line doesn't copy very good data anyways.
             //copyToS3( collectionsFilename, config );
         }
@@ -419,56 +415,12 @@ public class ExportServiceImpl implements ExportService{
         return outputFileName;
     }
 
-    private void copyToS3( String fileName , final ExportInfo exportInfo) {
+    @Autowired
+    @Override
+    public void setS3Export (S3Export s3Export) { this.s3Export = s3Export; }
 
-        Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
-        /*won't need any of the properties as I have the export info*/
-        String bucketName = exportInfo.getBucket_location();
-        String accessId = exportInfo.getS3_accessId();
-        String secretKey = exportInfo.getS3_key();
 
-        Properties overrides = new Properties();
-        overrides.setProperty( "s3" + ".identity", accessId );
-        overrides.setProperty( "s3" + ".credential", secretKey );
 
-        final Iterable<? extends Module> MODULES = ImmutableSet
-                .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule
-                        () );
 
-        BlobStoreContext context =
-                ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
-                              .overrides( overrides ).buildView( BlobStoreContext.class );
-
-        // Create Container (the bucket in s3)
-        try {
-            AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
-            // BlobStore (returns false if it already exists)
-            ListenableFuture<Boolean> container = blobStore.createContainerInLocation( null, bucketName );
-            if ( container.get() ) {
-                logger.info( "Created bucket " + bucketName );
-            }
-        }
-        catch ( Exception ex ) {
-            logger.error( "Could not start binary service: {}", ex.getMessage() );
-            throw new RuntimeException( ex );
-        }
-
-        try {
-            File file = new File( fileName );
-            AsyncBlobStore blobStore = context.getAsyncBlobStore();
-            BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( file.getName() ).payload( file ).calculateMD5().contentType( "text/plain" )
-                             .contentLength( file.length() );
-
-            Blob blob = blobBuilder.build();
-
-            ListenableFuture<String> futureETag = blobStore.putBlob( bucketName, blob, PutOptions.Builder.multipart() );
-
-            logger.info( "Uploaded file etag=" + futureETag.get() );
-        }
-        catch ( Exception e ) {
-            logger.error( "Error uploading to blob store", e );
-        }
-    }
 
 }

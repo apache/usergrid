@@ -18,6 +18,7 @@ package org.usergrid.rest.management;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
@@ -545,6 +546,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         storage_info.put( "s3_accessId","insert access id here");
         storage_info.put( "bucket_location","insert bucket name here");
 
+
         properties.put( "storage_provider","s3");
         properties.put( "storage_info",storage_info);
 
@@ -601,4 +603,48 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertEquals( Status.OK, responseStatus );
     }
+//tests that you need to accomplish.
+    //make sure you can call the endpoint
+    //make sure you can return the uuid back to the user
+    //make sure you can mock the s3 testing
+    @Test
+    public void exportUUIDRetTest() throws Exception {
+        Status responseStatus = Status.ACCEPTED;
+        String uuid;
+        UUID jobUUID = null;
+        JsonNode node = null;
+
+
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: make sure to put a valid admin token here.
+        //storage_info.put( "admin_token","insert_token_data_here" );
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
+
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "properties", properties);
+
+        try {
+            node = resource().path( "/management/export" ).queryParam( "access_token", adminAccessToken )
+                             .accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.ACCEPTED, responseStatus );
+        assertNotNull( node.get( "jobUUID" ) );
+    }
+
 }

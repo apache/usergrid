@@ -1,6 +1,8 @@
 package org.usergrid.management.export;
 
 
+import java.util.UUID;
+
 import org.usergrid.management.ExportInfo;
 
 
@@ -22,5 +24,13 @@ public interface ExportService {
      * @param config
      */
     void doExport(ExportInfo config) throws Exception;
+
+    /**
+     * Returns the UUID to the user
+     * @param
+     */
+    UUID getJobUUID();
+
+    void setS3Export(S3Export s3Export);
 
 }

@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ManagementService;
+import org.usergrid.management.export.ExportService;
 import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
@@ -20,6 +21,8 @@ public interface ServiceITSetup extends CoreITSetup {
     TokenService getTokenSvc();
 
     Properties getProps();
+
+    ExportService getExportService();
 
     /**
      * Convenience method to set a property in the Properties object returned by getProps();
