@@ -44,6 +44,8 @@ public class IdRowCompositeSerializer implements CompositeFieldSerializer<Id> {
 
     @Override
     public void toComposite( final CompositeBuilder builder, final Id id ) {
+        //note that this order is important.  Our default behavior is it order by time uuid, NOT by type, so we want our
+        //uuid written BEFORE the string type
         builder.addUUID( id.getUuid() );
         builder.addString( id.getType() );
     }

@@ -1047,7 +1047,7 @@ public class CassandraService {
      * @throws Exception the exception
      */
     public IndexScanner getIdList( Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
-                                   IndexBucketLocator locator, UUID applicationId, String collectionName )
+                                   IndexBucketLocator locator, UUID applicationId, String collectionName, boolean keepFirst )
             throws Exception {
 
         if ( count <= 0 ) {
@@ -1058,9 +1058,12 @@ public class CassandraService {
             start = null;
         }
 
+
+        final boolean skipFirst = start != null && !keepFirst;
+
         IndexScanner scanner =
                 new IndexBucketScanner( this, locator, ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key, start,
-                        finish, reversed, count, collectionName );
+                        finish, reversed, count, skipFirst, collectionName );
 
         return scanner;
     }

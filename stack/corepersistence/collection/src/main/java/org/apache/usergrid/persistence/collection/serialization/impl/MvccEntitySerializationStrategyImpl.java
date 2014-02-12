@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -53,7 +54,11 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
+import com.netflix.astyanax.model.CompositeBuilder;
+import com.netflix.astyanax.model.CompositeParser;
+import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.ObjectSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
@@ -69,7 +74,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER = 
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
             new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
     private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_DATA =
@@ -94,12 +99,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         final UUID colName = entity.getVersion();
         final Id entityId = entity.getId();
 
-        final Optional<Entity> colValue = entity.getEntity();
-
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( colName, SER.toByteBuffer( colValue ) );
+                colMutation.putColumn( colName,
+                        SER.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
             }
         } );
     }
@@ -115,8 +119,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Column<UUID> column;
 
         try {
-            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey
-                    .fromKey( collectionScope, entityId ) )
+            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
                              .getColumn( version ).execute().getResult();
         }
 
@@ -129,7 +132,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         }
 
 
-        return new MvccEntityImpl( entityId, version, getEntity( column, entityId ) );
+        return getEntity( entityId, column );
     }
 
 
@@ -146,8 +149,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         ColumnList<UUID> columns = null;
         try {
             columns =
-                    keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey
-                            .fromKey( collectionScope, entityId ) )
+                    keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
                             .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
@@ -158,7 +160,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
 
         for ( Column<UUID> col : columns ) {
-            results.add( new MvccEntityImpl( entityId, col.getName(), getEntity( col, entityId ) ) );
+            results.add( getEntity( entityId, col ) );
         }
 
         return results;
@@ -176,7 +178,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( version, SER.toByteBuffer( value ) );
+                colMutation.putColumn( version, SER.toByteBuffer(
+                        new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() ) ) );
             }
         } );
     }
@@ -218,24 +221,25 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ));
+        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ) );
 
         return batch;
     }
 
 
-    /**
-     * Set the id into the entity if it exists and return it.
-     */
-    private Optional<Entity> getEntity( final Column<UUID> column, final Id entityId ) {
-        final Optional<Entity> deSerialized = column.getValue( SER );
+    private MvccEntity getEntity( final Id entityId, final Column<UUID> col ) {
+
+        final UUID version = col.getName();
+
+        final EntityWrapper deSerialized = col.getValue( SER );
 
         //Inject the id into it.
-        if ( deSerialized.isPresent() ) {
-            EntityUtils.setId( deSerialized.get(), entityId );
+        if ( deSerialized.entity.isPresent() ) {
+            EntityUtils.setId( deSerialized.entity.get(), entityId );
         }
 
-        return deSerialized;
+
+        return new MvccEntityImpl( entityId, version, deSerialized.status, deSerialized.entity );
     }
 
 
@@ -252,40 +256,108 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     /**
+     * Simple bean wrapper for status and entity
+     */
+    private static class EntityWrapper {
+        private final MvccEntity.Status status;
+        private final Optional<Entity> entity;
+
+
+        private EntityWrapper( final MvccEntity.Status status, final Optional<Entity> entity ) {
+            this.status = status;
+            this.entity = entity;
+        }
+    }
+
+
+    /**
      * TODO: Serializer for the entity. This just uses object serialization, change this to use SMILE before production!
      * We want to retain the Optional wrapper.  It helps us easily mark something as cleaned without removing the column
      * and makes it obvious that the entity could be missing in the api
      */
-    private static class EntitySerializer extends AbstractSerializer<Optional<Entity>> {
+    private static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
+        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
         private static final ObjectSerializer SER = ObjectSerializer.get();
+
+        private static byte[] STATE_COMPLETE = new byte[] { 0 };
+        private static byte[] STATE_DELETED = new byte[] { 1 };
+        private static byte[] STATE_PARTIAL = new byte[] { 2 };
+
+        private static byte[] VERSION = new byte[] { 0 };
+
 
         //the marker for when we're passed a "null" value
         private static final byte[] EMPTY = new byte[] { 0x0 };
 
 
         @Override
-        public ByteBuffer toByteBuffer( final Optional<Entity> obj ) {
+        public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
+
+
+            CompositeBuilder builder = Composites.newCompositeBuilder();
+
+
+            builder.addBytes( VERSION );
+
 
             //mark this version as empty
-            if ( !obj.isPresent() ) {
-                return ByteBuffer.wrap( EMPTY );
+            if ( !wrapper.entity.isPresent() ) {
+                //we're empty
+                builder.addBytes( STATE_DELETED );
+
+                return builder.build();
             }
 
-            return SER.toByteBuffer( obj.get() );
+            //we have an entity
+
+            if ( wrapper.status == MvccEntity.Status.COMPLETE ) {
+                builder.addBytes( STATE_COMPLETE );
+            }
+
+            else {
+                builder.addBytes( STATE_PARTIAL );
+            }
+
+            builder.addBytes( SER.toByteBuffer( wrapper.entity.get() ));
+
+            return builder.build();
         }
 
 
         @Override
-        public Optional<Entity> fromByteBuffer( final ByteBuffer byteBuffer ) {
+        public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
 
-            final ByteBuffer check = byteBuffer.duplicate();
+            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
-            if ( check.remaining() == 1 && check.get() == EMPTY[0] ) {
-                return Optional.absent();
+
+            final byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
+
+            if ( !Arrays.equals( VERSION, version ) ) {
+                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
             }
 
-            return Optional.of( ( Entity ) SER.fromByteBuffer( byteBuffer ) );
+
+            final byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
+
+            /**
+             * It's been deleted, remove it
+             */
+            if ( Arrays.equals( STATE_DELETED, state ) ) {
+                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+            }
+
+            final Entity storedEntity = ( Entity ) parser.read( SER );
+
+            final Optional<Entity> entity = Optional.of( storedEntity );
+
+            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
+                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
+            }
+
+            //it's partial by default
+
+            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
         }
     }
 }

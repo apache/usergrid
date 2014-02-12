@@ -1761,7 +1761,7 @@
                   <version>1.6.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
-                  <version>[3.0,3.1)</version>
+                  <version>[3.0,)</version>
                 </requireMavenVersion>
               </rules>
             </configuration>

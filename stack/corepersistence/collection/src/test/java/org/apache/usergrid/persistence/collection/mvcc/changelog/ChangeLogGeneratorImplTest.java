@@ -23,12 +23,10 @@ import java.util.List;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
-import org.junit.After;
-import org.junit.AfterClass;
+import org.jukito.UseModules;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -39,6 +37,8 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -57,11 +57,18 @@ import rx.Observable;
  * Test basic operation of change log
  */
 @RunWith( JukitoRunner.class )
+@UseModules( TestCollectionModule.class )
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
+
+
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -70,7 +77,9 @@ public class ChangeLogGeneratorImplTest {
     MvccEntitySerializationStrategy mvccEntitySerializationStrategy;
 
     /**
-     * Test that change log creation follows Todd's example. 
+     * Test that change log creation follows Todd's example.
+     * TODO, can we do this without doing serialization I/O on the entities?  This seems out of the scope of the changelog
+     * itself
      */
     @Test
     public void testBasicOperation() throws ConnectionException {

@@ -3,8 +3,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
-import com.netflix.hystrix.HystrixCommand;
-
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -12,8 +10,9 @@ import rx.subscriptions.Subscriptions;
 
 
 /**
- * Converts an iterator to an observable.  Subclasses need to only implement getting the iterator from the data source
- * .
+ * Converts an iterator to an observable.  Subclasses need to only implement getting the iterator from the data source.
+ * This is used in favor of "Observable.just" when the initial fetch of the iterator will require I/O.  This allows
+ * us to wrap the iterator in a deferred invocation to avoid the blocking on construction.
  */
 public abstract class ObservableIterator<T> implements Observable.OnSubscribeFunc<T> {
 

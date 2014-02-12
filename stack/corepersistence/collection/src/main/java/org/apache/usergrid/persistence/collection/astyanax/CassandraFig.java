@@ -24,6 +24,8 @@ import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
+import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
+
 
 /**
  * Cassandra configuration interface.
@@ -50,10 +52,15 @@ public interface CassandraFig extends GuicyFig {
     int getThriftPort();
 
     @Key( "cassandra.connections" )
-    @Default( "20" )
+    @Default( "100" )
     int getConnections();
 
     @Key( "cassandra.timeout" )
     @Default( "5000" )
     int getTimeout();
+
+    @Key("cassandra.discovery")
+    @Default( "RING_DESCRIBE" )
+    String getDiscoveryType();
+
 }

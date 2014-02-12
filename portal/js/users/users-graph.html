@@ -1,0 +1,67 @@
+<div class="content-page" ng-controller="UsersGraphCtrl">
+
+  <div ng:include="'users/users-tabs.html'"></div>
+
+  <div>
+
+    <bsmodal id="followUser"
+             title="Follow User"
+             close="hideModal"
+             closelabel="Cancel"
+             extrabutton="followUserDialog"
+             extrabuttonlabel="Add"
+             ng-cloak>
+      <div class="btn-group">
+        <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
+          <span class="filter-label">{{$parent.user != '' ? $parent.user.username : 'Select a user...'}}</span>
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li ng-repeat="user in $parent.usersTypeaheadValues" class="filterItem"><a ng-click="$parent.$parent.user = user">{{user.username}}</a></li>
+        </ul>
+      </div>
+    </bsmodal>
+
+
+    <div class="button-strip">
+      <button class="btn btn-primary" ng-click="showModal('followUser')">Follow User</button>
+    </div>
+    <br>
+    <h4>Following</h4>
+    <table class="table table-striped">
+      <tbody>
+      <tr class="table-header">
+        <td>Image</td>
+        <td>Username</td>
+        <td>Email</td>
+        <td>UUID</td>
+      </tr>
+      <tr class="zebraRows" ng-repeat="user in selectedUser.following">
+        <td><img style="width:30px;height:30px;" ng-src="{{user._portal_image_icon}}"></td>
+        <td>{{user.username}}</td>
+        <td>{{user.email}}</td>
+        <td>{{user.uuid}}</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <h4>Followers</h4>
+    <table class="table table-striped">
+      <tbody>
+      <tr class="table-header">
+        <td>Image</td>
+        <td>Username</td>
+        <td>Email</td>
+        <td>UUID</td>
+      </tr>
+      <tr class="zebraRows" ng-repeat="user in selectedUser.followers">
+        <td><img style="width:30px;height:30px;" ng-src="{{user._portal_image_icon}}"></td>
+        <td>{{user.username}}</td>
+        <td>{{user.email}}</td>
+        <td>{{user.uuid}}</td>
+      </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>

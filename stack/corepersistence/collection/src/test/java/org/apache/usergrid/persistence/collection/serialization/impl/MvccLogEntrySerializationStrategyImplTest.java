@@ -4,7 +4,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.util.List;
 import java.util.UUID;
 
-import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
@@ -14,8 +13,8 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -36,7 +35,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( CollectionModule.class )
+@UseModules( TestCollectionModule.class )
 public class MvccLogEntrySerializationStrategyImplTest {
 
     @Inject

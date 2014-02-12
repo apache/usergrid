@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.representation.Form;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -370,10 +371,16 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void meTokenPostForm() throws Exception {
-        JsonNode node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
+    public void meTokenPostForm() {
+
+        Form form = new Form();
+        form.add( "grant_type", "password" );
+        form.add( "username", "test@usergrid.com" );
+        form.add( "password", "test");
+
+        JsonNode node = resource().path( "/management/me" )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+                .entity( form, MediaType.APPLICATION_FORM_URLENCODED_TYPE )
                 .post( JsonNode.class );
 
         logNode( node );

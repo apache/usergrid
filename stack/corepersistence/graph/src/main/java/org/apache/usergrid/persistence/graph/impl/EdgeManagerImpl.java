@@ -21,10 +21,9 @@ package org.apache.usergrid.persistence.graph.impl;
 
 
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.hystrix.ReadCommand;
-import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
@@ -33,15 +32,14 @@ import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.stage.GraphIoEvent;
 import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWriteStage;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.netflix.hystrix.Hystrix;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -63,14 +61,18 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
+    private final EdgeSerialization edgeSerialization;
+
 
     @Inject
     public EdgeManagerImpl( final EdgeWriteStage edgeWriteStage, final Scheduler scheduler,
-                            @Assisted final OrganizationScope scope,
-                            final EdgeMetadataSerialization edgeMetadataSerialization ) {
+                            final EdgeMetadataSerialization edgeMetadataSerialization,
+                            final EdgeSerialization edgeSerialization, @Assisted final OrganizationScope scope ) {
         this.edgeWriteStage = edgeWriteStage;
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
+        this.edgeSerialization = edgeSerialization;
+
 
         ValidationUtils.validateOrganizationScope( scope );
 
@@ -81,85 +83,126 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        return WriteCommand.toObservable(new GraphIoEvent<Edge>(scope, edge)).map( edgeWriteStage );
+        return Observable.from( new GraphIoEvent<Edge>( scope, edge ) ).subscribeOn( scheduler ).map( edgeWriteStage );
     }
 
 
     @Override
     public void deleteEdge( final Edge edge ) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        throw new UnsupportedOperationException( "Not yet implemented" );
     }
 
 
     @Override
-    public Observable<Edge> loadSourceEdges( final SearchByEdgeType search ) {
-
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadTargetEdges( final SearchByEdgeType search ) {
-
-
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadSourceEdges( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadTargetEdges( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<String> getSourceEdgeTypes( final SearchEdgeType search ) {
-
-       return Observable.create( new ObservableIterator<String>() {
+    public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
             @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getSourceEdgeTypes( scope, search );
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesFromSource( scope, search );
             }
         } );
 
+        return filter( iterator, search.getMaxVersion() );
     }
 
 
     @Override
-    public Observable<String> getSourceIdTypes( final SearchIdType search ) {
+    public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesToTarget( scope, search );
+            }
+        } );
+
+        return filter( iterator, search.getMaxVersion() );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
+            }
+        } );
+
+        return filter( iterator, search.getMaxVersion() );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
+        Observable<Edge> iterator = Observable.create( new ObservableIterator<Edge>() {
+            @Override
+            protected Iterator<Edge> getIterator() {
+                return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
+            }
+        } );
+
+        return filter( iterator, search.getMaxVersion() );
+    }
+
+
+    @Override
+    public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
+
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getSourceIdTypes( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
         } );
     }
 
 
     @Override
-    public Observable<String> getTargetEdgeTypes( final SearchEdgeType search ) {
-
+    public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getTargetEdgeTypes( scope, search );
+                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
             }
         } );
     }
 
 
     @Override
-    public Observable<String> getTargetIdTypes( final SearchIdType search ) {
+    public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
+
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getTargetIdTypes( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
+            }
+        } );
+    }
+
+
+    @Override
+    public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
+        return Observable.create( new ObservableIterator<String>() {
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
+            }
+        } );
+    }
+
+
+    /**
+     * If not max version is specified, just return the original observable.  If one is
+     * @param observable
+     * @param maxVersion
+     * @return
+     */
+    private Observable<Edge> filter( final Observable<Edge> observable, final UUID maxVersion ) {
+          return observable.filter( new Func1<Edge, Boolean>() {
+            @Override
+            public Boolean call( final Edge edge ) {
+                //our edge version needs to be <= max Version
+                return UUIDComparator.staticCompare( edge.getVersion(), maxVersion ) < 1;
             }
         } );
     }

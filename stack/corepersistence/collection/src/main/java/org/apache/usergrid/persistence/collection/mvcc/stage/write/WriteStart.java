@@ -78,7 +78,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
 
             //create the mvcc entity for the next stage
-            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, entity );
+            //todo, we need to create a complete or partial update here (or sooner)
+            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, MvccEntity.Status.COMPLETE, entity );
 
             return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
         }

@@ -1086,7 +1086,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
         PagingResultsIterator itr =
-                new PagingResultsIterator( getConnectedEntities(headEntity, null, null, Level.REFS) );
+                new PagingResultsIterator( getConnectingEntities( headEntity, null, null, Level.REFS ) );
 
         ConnectionRefImpl connection = null;
 
@@ -1098,13 +1098,11 @@ public class RelationManagerImpl implements RelationManager {
             else if ( itrObj instanceof SimpleEntityRef ) {
                 connection = new ConnectionRefImpl( (SimpleEntityRef) itrObj );
             }
-            else {
-                if ( itrObj instanceof EntityRef ) {
+            else if ( itrObj instanceof EntityRef ) {
                     connection = new ConnectionRefImpl( new SimpleEntityRef((EntityRef) itr.next()));
-                }
-                else if ( itrObj instanceof UUID ) {
+            }
+            else if ( itrObj instanceof UUID ) {
                     connection = new ConnectionRefImpl( new SimpleEntityRef((UUID)itr.next()));
-                }
             }
 
             batchUpdateEntityConnection( batch, true, connection, timestampUuid );
@@ -1386,7 +1384,7 @@ public class RelationManagerImpl implements RelationManager {
 
         IndexScanner scanner =
                 new IndexBucketScanner( cass, indexBucketLocator, ENTITY_INDEX, applicationId, IndexType.CONNECTION,
-                        keyPrefix, range[0], range[1], slice.isReversed(), pageSize, slice.getPropertyName() );
+                        keyPrefix, range[0], range[1], slice.isReversed(), pageSize, slice.hasCursor(), slice.getPropertyName() );
 
         return scanner;
     }
@@ -1407,14 +1405,9 @@ public class RelationManagerImpl implements RelationManager {
 
         Object keyPrefix = key( indexKey, slice.getPropertyName() );
 
-        // we have a cursor, so the first record should be discarded
-        if ( slice.hasCursor() ) {
-            pageSize++;
-        }
-
         IndexScanner scanner =
                 new IndexBucketScanner( cass, indexBucketLocator, ENTITY_INDEX, applicationId, IndexType.COLLECTION,
-                        keyPrefix, range[0], range[1], slice.isReversed(), pageSize, collectionName );
+                        keyPrefix, range[0], range[1], slice.isReversed(), pageSize, slice.hasCursor(), collectionName );
 
         return scanner;
     }
@@ -2135,14 +2128,13 @@ public class RelationManagerImpl implements RelationManager {
                 startId = UUID_PARSER.parse( slice.getCursor() ).getUUID();
             }
 
-            boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
 
             IndexScanner indexScanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
                     key( headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName ), startId, null,
                     queryProcessor.getPageSizeHint( node ), query.isReversed(), indexBucketLocator, applicationId,
-                    collectionName );
+                    collectionName, node.isForceKeepFirst() );
 
-            this.results.push( new SliceIterator( slice, indexScanner, UUID_PARSER, skipFirst ) );
+            this.results.push( new SliceIterator( slice, indexScanner, UUID_PARSER ) );
         }
 
 
@@ -2274,10 +2266,6 @@ public class RelationManagerImpl implements RelationManager {
                 start = slice.getCursor();
             }
 
-            // we'll discard the first match, increase the size
-            if ( start != null ) {
-                size++;
-            }
 
             boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
 
@@ -2323,9 +2311,9 @@ public class RelationManagerImpl implements RelationManager {
 
             IndexScanner connectionScanner =
                     new ConnectedIndexScanner( cass, dictionaryType, applicationId, entityIdToUse, connectionTypes,
-                            start, slice.isReversed(), size );
+                            start, slice.isReversed(), size, skipFirst );
 
-            this.results.push( new SliceIterator( slice, connectionScanner, connectionParser, skipFirst ) );
+            this.results.push( new SliceIterator( slice, connectionScanner, connectionParser ) );
         }
 
 

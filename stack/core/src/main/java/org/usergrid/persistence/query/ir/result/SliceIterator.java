@@ -47,7 +47,6 @@ public class SliceIterator implements ResultIterator {
     private final SliceParser parser;
     private final IndexScanner scanner;
     private final int pageSize;
-    private final boolean skipFirst;
 
     /**
      * Pointer to the uuid set until it's returned
@@ -74,13 +73,11 @@ public class SliceIterator implements ResultIterator {
      * @param scanner The scanner to use to read the cols
      * @param slice The slice used in the scanner
      * @param parser The parser for the scanner results
-     * @param skipFirst True if the first record should be skipped, used with cursors
      */
-    public SliceIterator( QuerySlice slice, IndexScanner scanner, SliceParser parser, boolean skipFirst ) {
+    public SliceIterator( QuerySlice slice, IndexScanner scanner, SliceParser parser ) {
         this.slice = slice;
         this.parser = parser;
         this.scanner = scanner;
-        this.skipFirst = skipFirst;
         this.pageSize = scanner.getPageSize();
         this.cols = new LinkedHashMap<UUID, ScanColumn>( this.pageSize );
         this.parsedCols = new LinkedHashSet<ScanColumn>( this.pageSize );
@@ -121,13 +118,6 @@ public class SliceIterator implements ResultIterator {
         Iterator<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next().iterator();
 
         cols.clear();
-
-        /**
-         * Skip the first value, it's from the previous cursor
-         */
-        if ( skipFirst && pagesLoaded == 0 && results.hasNext() ) {
-            results.next();
-        }
 
         parsedCols.clear();
 

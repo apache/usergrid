@@ -18,16 +18,12 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
-
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.hystrix.ReadCommand;
-import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -43,12 +39,11 @@ import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.Scheduler;
+import rx.util.functions.FuncN;
 
 
 /**
@@ -64,6 +59,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
+    private final Scheduler scheduler;
 
 
     //start stages
@@ -82,7 +78,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
+    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart, final Scheduler scheduler,
                                         final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
@@ -104,6 +100,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         this.uuidService = uuidService;
+        this.scheduler = scheduler;
         this.collectionScope = collectionScope;
     }
 
@@ -142,13 +139,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         //create our observable and start the write
-        Observable<CollectionIoEvent<MvccEntity>> observable = WriteCommand.toObservable(
-                new CollectionIoEvent<Entity>( collectionScope, entity ) ).map( writeStart );
+        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
+        Observable<CollectionIoEvent<MvccEntity>> observable =  Observable.from( writeData ).subscribeOn( scheduler ).map( writeStart );
 
-        //execute all validation stages concurrently.  Needs refactored when this is done.  
-        // https://github.com/Netflix/RxJava/issues/627
-        observable = Concurrent.concurrent(observable, writeVerifyUnique, writeOptimisticVerify);
+        //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
+        observable = Concurrent.concurrent(observable, scheduler, new WaitZip( ), writeVerifyUnique, writeOptimisticVerify);
 
         //return the commit result.
         return observable.map( writeCommit );
@@ -164,9 +160,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        return WriteCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-            .map( deleteStart )
-            .map( deleteCommit );
+
+        return Observable.from(new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler ).map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -177,6 +172,30 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        return ReadCommand.toObservable( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( load );
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler ).map( load );
+    }
+
+
+    /**
+     * Class that validates all results are equal then proceeds
+     * @param <R>
+     */
+    private static class WaitZip<R> implements FuncN<R>{
+
+
+
+        private WaitZip() {
+        }
+
+
+        @Override
+        public R call( final Object... args ) {
+
+            for(int i = 0; i < args.length-1; i ++){
+                assert args[i] == args[i+1];
+            }
+
+            return ( R ) args[0];
+        }
     }
 }

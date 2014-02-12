@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Serialize EntityVersion, entity ID and version, for use a column name in Unique Values Column Family. 
  */
-class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
+public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
 
     private static final Logger LOG = LoggerFactory.getLogger( EntityVersionSerializer.class );
 

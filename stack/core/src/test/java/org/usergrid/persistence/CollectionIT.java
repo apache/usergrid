@@ -579,11 +579,11 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity returned = r.getEntities().get( 0 );
 
-        assertEquals( game2.getUuid(), returned.getUuid() );
+        assertEquals( game1.getUuid(), returned.getUuid() );
 
         returned = r.getEntities().get( 1 );
 
-        assertEquals( game1.getUuid(), returned.getUuid() );
+        assertEquals( game2.getUuid(), returned.getUuid() );
 
         query = Query.fromQL( "select * where( keywords contains 'Random' OR keywords contains 'Game')" );
 
@@ -593,11 +593,11 @@ public class CollectionIT extends AbstractCoreIT {
 
         returned = r.getEntities().get( 0 );
 
-        assertEquals( game2.getUuid(), returned.getUuid() );
+        assertEquals( game1.getUuid(), returned.getUuid() );
 
         returned = r.getEntities().get( 1 );
 
-        assertEquals( game1.getUuid(), returned.getUuid() );
+        assertEquals( game2.getUuid(), returned.getUuid() );
 
         // field order shouldn't matter USERGRID-375
         query = Query.fromQL( "select * where keywords contains 'blah' OR title contains 'blah'" );

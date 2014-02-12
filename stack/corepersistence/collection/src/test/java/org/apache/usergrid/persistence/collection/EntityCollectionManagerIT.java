@@ -17,16 +17,19 @@
  */
 package org.apache.usergrid.persistence.collection;
 
+
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -34,8 +37,6 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.junit.Assert;
 
 import rx.Observable;
 
@@ -46,7 +47,7 @@ import static org.junit.Assert.assertNull;
 
 /** @author tnine */
 @RunWith( JukitoRunner.class )
-@UseModules( CollectionModule.class )
+@UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;

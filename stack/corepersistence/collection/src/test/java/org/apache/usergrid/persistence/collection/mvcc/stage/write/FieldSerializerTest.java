@@ -17,14 +17,18 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
+
+import java.nio.ByteBuffer;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.IntegerField;
+
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
-import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.junit.Assert;
-import org.junit.Test;
 
 public class FieldSerializerTest {
 

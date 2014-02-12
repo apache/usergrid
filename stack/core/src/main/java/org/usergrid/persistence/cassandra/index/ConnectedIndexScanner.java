@@ -34,7 +34,9 @@ import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 public class ConnectedIndexScanner implements IndexScanner {
 
     private final CassandraService cass;
@@ -44,24 +46,35 @@ public class ConnectedIndexScanner implements IndexScanner {
     private final String dictionaryType;
     private final UUID entityId;
     private final Iterator<String> connectionTypes;
+    private final boolean skipFirst;
 
-    /** Pointer to our next start read */
+
+    /**
+     * Pointer to our next start read
+     */
     private ByteBuffer start;
 
-    /** Set to the original value to start scanning from */
+    /**
+     * Set to the original value to start scanning from
+     */
     private ByteBuffer scanStart;
 
-    /** Iterator for our results from the last page load */
+    /**
+     * Iterator for our results from the last page load
+     */
     private LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
 
-    /** True if our last load loaded a full page size. */
+    /**
+     * True if our last load loaded a full page size.
+     */
     private boolean hasMore = true;
 
     private String currentConnectionType;
 
 
     public ConnectedIndexScanner( CassandraService cass, String dictionaryType, UUID applicationId, UUID entityId,
-                                  Iterator<String> connectionTypes, ByteBuffer start, boolean reversed, int pageSize ) {
+                                  Iterator<String> connectionTypes, ByteBuffer start, boolean reversed, int pageSize,
+                                  boolean skipFirst ) {
 
         Assert.notNull( entityId, "Entity id for row key construction must be specified when searching graph indexes" );
         // create our start and end ranges
@@ -74,6 +87,7 @@ public class ConnectedIndexScanner implements IndexScanner {
         this.pageSize = pageSize;
         this.dictionaryType = dictionaryType;
         this.connectionTypes = connectionTypes;
+        this.skipFirst = skipFirst;
 
 
         if ( connectionTypes.hasNext() ) {
@@ -106,14 +120,32 @@ public class ConnectedIndexScanner implements IndexScanner {
             return false;
         }
 
+        boolean skipFirst = this.skipFirst && start == scanStart;
+
+        int totalSelectSize = pageSize + 1;
+
+        //we're discarding the first, so increase our total size by 1 since this value will be inclusive in the seek
+        if ( skipFirst ) {
+            totalSelectSize++;
+        }
+
 
         lastResults = new LinkedHashSet<HColumn<ByteBuffer, ByteBuffer>>();
+
+
+        //cleanup columns for later logic
+        //pointer to the first col we load
+        HColumn<ByteBuffer, ByteBuffer> first = null;
+
+        //pointer to the last column we load
+        HColumn<ByteBuffer, ByteBuffer> last = null;
 
         //go through each connection type until we exhaust the result sets
         while ( currentConnectionType != null ) {
 
             //only load a delta size to get this next page
-            int selectSize = pageSize + 1 - lastResults.size();
+            int selectSize = totalSelectSize - lastResults.size();
+
 
             Object key = key( entityId, dictionaryType, currentConnectionType );
 
@@ -122,16 +154,23 @@ public class ConnectedIndexScanner implements IndexScanner {
                     cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_COMPOSITE_DICTIONARIES, key,
                             start, null, selectSize, reversed );
 
+            final int resultSize = results.size();
+
+            if(resultSize > 0){
+
+                last = results.get( resultSize -1 );
+
+                if(first == null ){
+                    first = results.get( 0 );
+                }
+            }
+
             lastResults.addAll( results );
 
+
             // we loaded a full page, there might be more
-            if ( results.size() == selectSize ) {
+            if ( resultSize == selectSize ) {
                 hasMore = true;
-
-                // set the bytebuffer for the next pass
-                start = results.get( results.size() - 1 ).getName();
-
-                lastResults.remove( lastResults.size() - 1 );
 
                 //we've loaded a full page
                 break;
@@ -152,6 +191,16 @@ public class ConnectedIndexScanner implements IndexScanner {
             }
         }
 
+        //remove the first element, we need to skip it
+        if ( skipFirst && first != null) {
+            lastResults.remove( first  );
+        }
+
+        if ( hasMore && last != null ) {
+            // set the bytebuffer for the next pass
+            start = last.getName();
+            lastResults.remove( last );
+        }
 
         return lastResults != null && lastResults.size() > 0;
     }
@@ -199,7 +248,7 @@ public class ConnectedIndexScanner implements IndexScanner {
      * @see java.util.Iterator#next()
      */
     @Override
-    @Metered(group = "core", name = "IndexBucketScanner_load")
+    @Metered( group = "core", name = "IndexBucketScanner_load" )
     public Set<HColumn<ByteBuffer, ByteBuffer>> next() {
         Set<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 

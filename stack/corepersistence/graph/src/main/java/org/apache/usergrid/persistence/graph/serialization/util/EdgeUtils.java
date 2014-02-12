@@ -22,10 +22,11 @@ package org.apache.usergrid.persistence.graph.serialization.util;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.graph.SearchIdType;
 
 import com.google.common.base.Preconditions;
 
@@ -79,7 +80,7 @@ public class EdgeUtils {
 
         ValidationUtils.verifyIdentity( search.getNode() );
         ValidationUtils.verifyString( search.getType(), "type" );
-        ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "version" );
+        ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "maxVersion" );
 
         //only validate if the value is present
         if(search.last().isPresent()){
@@ -87,6 +88,24 @@ public class EdgeUtils {
         }
 
     }
+
+    /**
+        * Validate the search edge
+        */
+       public static void validateSearchByEdge( final SearchByEdge search ) {
+           Preconditions.checkNotNull( search, "search is required" );
+
+           ValidationUtils.verifyIdentity( search.sourceNode() );
+           ValidationUtils.verifyIdentity( search.targetNode() );
+           ValidationUtils.verifyString( search.getType(), "type" );
+           ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "maxVersion" );
+
+           //only validate if the value is present
+           if(search.last().isPresent()){
+               validateEdge( search.last().get() );
+           }
+
+       }
 
 
     /**

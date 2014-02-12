@@ -1,0 +1,108 @@
+<div class="setup-sdk-content" >
+
+  <bsmodal id="regenerateCredentials"
+           title="Confirmation"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="regenerateCredentialsDialog"
+           extrabuttonlabel="Yes"
+           ng-cloak>
+    Are you sure you want to regenerate the credentials?
+  </bsmodal>
+
+  <section class="row-fluid">
+
+    <div class="span12">
+      <div class="page-filters">
+        <h1 class="title" class="pull-left"><i class="pictogram title">&#128640;</i> Getting Started</h1>
+      </div>
+    </div>
+
+  </section>
+  <section class="row-fluid">
+
+
+
+
+    <div class="span8">
+
+      <h2 class="title">Install the SDK for app {{currentApp}}</h2>
+      <p>Click on a platform icon below to view SDK installation instructions for that platform.</p>
+      <ul class="inline unstyled">
+        <!--<li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ios"><i class="sdk-icon-large-ios"></i></a></li>-->
+        <!--<li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#android"><i class="sdk-icon-large-android"></i></a></li>-->
+        <!--<li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#javascript"><i class="sdk-icon-large-js"></i></a></li>-->
+
+
+        <li ng-click="showSDKDetail('ios')"
+           ><i class="sdk-icon-large-ios"></i></li>
+        <li ng-click="showSDKDetail('android')"
+            ><i class="sdk-icon-large-android"></i></li>
+        <li ng-click="showSDKDetail('javascript')"
+           ><i class="sdk-icon-large-js"></i></li>
+        <li><a target="_blank"
+               ng-click="showSDKDetail('nocontent')"
+               href="http://apigee.com/docs/usergrid/content/sdks-and-examples#nodejs"
+               ><i class="sdk-icon-large-node"></i></a></li>
+        <li><a target="_blank"
+               ng-click="showSDKDetail('nocontent')"
+               href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ruby"
+               ><i class="sdk-icon-large-ruby"></i></a></li>
+        <li><a target="_blank"
+               ng-click="showSDKDetail('nocontent')"
+               href="http://apigee.com/docs/usergrid/content/sdks-and-examples#c"
+               ><i class="sdk-icon-large-net"></i></a></li>
+       </ul>
+
+      <section id="intro-container" class="row-fluid intro-container">
+
+        <div class="sdk-intro">
+        </div>
+
+        <div class="sdk-intro-content">
+
+          <a class="btn normal white pull-right" ng-href="{{sdkLink}}" target="_blank">
+            Download SDK
+          </a>
+          <a class="btn normal white pull-right" ng-href="{{docsLink}}" target="_blank">
+            More Docs
+          </a>
+          <h3 class="title"><i class="pictogram">&#128213;</i>{{contentTitle}}</h3>
+
+          <div ng-include="getIncludeURL()"></div>
+        </div>
+
+      </section>
+    </div>
+
+    <div class="span4 keys-creds">
+      <h2 class="title">Mobile sdk keys</h2>
+      <p>For mobile SDK initialization.</p>
+      <dl class="app-creds">
+        <dt>Org Name</dt>
+        <dd>{{currentOrg}}</dd>
+        <dt>App Name</dt>
+        <dd>{{currentApp}}</dd>
+      </dl>
+      <h2 class="title">Server app credentials</h2>
+      <p>For authenticating from a server side app (i.e. Ruby, .NET, etc.)</p>
+      <dl class="app-creds">
+        <dt>Client ID</dt>
+        <dd>{{clientID}}</dd>
+        <dt>Client Secret</dt>
+        <dd>{{clientSecret}}</dd>
+        <dt>
+           &nbsp;
+        </dt>
+        <dd>&nbsp;</dd>
+
+        <dt>
+          <a class="btn filter-selector" ng-click="showModal('regenerateCredentials')">Regenerate</a>
+        </dt>
+        <dd></dd>
+      </dl>
+
+    </div>
+
+  </section>
+</div>

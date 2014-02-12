@@ -1,0 +1,28 @@
+<div class="content-page" ng-controller="GroupsDetailsCtrl">
+
+  <div>
+      <form name="updateGroupDetailForm" ng-submit="saveSelectedGroup()" novalidate>
+          <div style="float: left; padding-right: 30px;">
+              <h4 class="ui-dform-legend">Group Information</h4>
+              <label for="group-title" class="ui-dform-label">Group Title</label>
+              <input type="text" id="group-title" ng-pattern="titleRegex" ng-attr-title="{{titleRegexDescription}}" required class="ui-dform-text" ng-model="group.title" ug-validate>
+              <br/>
+            <label for="group-path" class="ui-dform-label">Group Path</label>
+            <input type="text" id="group-path" required ng-attr-title="{{pathRegexDescription}}" placeholder="ex: /mydata" ng-pattern="pathRegex" class="ui-dform-text" ng-model="group.path" ug-validate>
+            <br/>
+          </div>
+          <br style="clear:both"/>
+
+          <div style="width:100%;float:left;padding: 20px 0">
+              <input type="submit" value="Save Group" style="margin-right: 15px;" ng-disabled="!updateGroupDetailForm.$valid" class="btn btn-primary" />
+          </div>
+
+          <div class="content-container">
+              <h4>JSON Group Object</h4>
+              <pre>{{json}}</pre>
+          </div>
+      </form>
+  </div>
+
+
+</div>

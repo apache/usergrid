@@ -55,6 +55,7 @@ public class IndexBucketScanner implements IndexScanner {
     private final int pageSize;
     private final String[] indexPath;
     private final IndexType indexType;
+    private final boolean skipFirst;
 
     /** Pointer to our next start read */
     private Object start;
@@ -69,9 +70,10 @@ public class IndexBucketScanner implements IndexScanner {
     private boolean hasMore = true;
 
 
+
     public IndexBucketScanner( CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
                                UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish,
-                               boolean reversed, int pageSize, String... indexPath ) {
+                               boolean reversed, int pageSize, boolean skipFirst, String... indexPath) {
         this.cass = cass;
         this.indexBucketLocator = locator;
         this.applicationId = applicationId;
@@ -80,7 +82,10 @@ public class IndexBucketScanner implements IndexScanner {
         this.start = start;
         this.finish = finish;
         this.reversed = reversed;
-        this.pageSize = pageSize;
+        this.skipFirst = skipFirst;
+
+        //we always add 1 to the page size.  This is because we pop the last column for the next page of results
+        this.pageSize = pageSize+1;
         this.indexPath = indexPath;
         this.indexType = indexType;
         this.scanStart = start;
@@ -121,22 +126,38 @@ public class IndexBucketScanner implements IndexScanner {
 
         //if we skip the first we need to set the load to page size +2, since we'll discard the first
         //and start paging at the next entity, otherwise we'll just load the page size we need
-        int selectSize = pageSize + 1;
+        int selectSize = pageSize;
+
+        //we purposefully use instance equality.  If it's a pointer to the same value, we need to increase by 1
+        //since we'll be skipping the first value
+
+        final boolean firstPageSkipFirst = this.skipFirst &&  start == scanStart;
+
+        if(firstPageSkipFirst){
+            selectSize++;
+        }
 
         TreeSet<HColumn<ByteBuffer, ByteBuffer>> resultsTree = IndexMultiBucketSetLoader
                 .load( cass, columnFamily, applicationId, cassKeys, start, finish, selectSize, reversed );
+
+        //remove the first element, it's from a cursor value and we don't want to retain it
+
 
         // we loaded a full page, there might be more
         if ( resultsTree.size() == selectSize ) {
             hasMore = true;
 
-            // set the bytebuffer for the next pass
-            start = resultsTree.last().getName();
 
-            resultsTree.remove( resultsTree.last() );
+            // set the bytebuffer for the next pass
+            start = resultsTree.pollLast().getName();
         }
         else {
             hasMore = false;
+        }
+
+        //remove the first element since it needs to be skipped AFTER the size check. Otherwise it will fail
+        if ( firstPageSkipFirst ) {
+            resultsTree.pollFirst();
         }
 
         lastResults = resultsTree;

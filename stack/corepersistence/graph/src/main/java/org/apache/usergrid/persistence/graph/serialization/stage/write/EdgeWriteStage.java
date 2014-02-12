@@ -12,7 +12,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.util.functions.Action1;
 import rx.util.functions.Func1;
 
 
