@@ -1,0 +1,29 @@
+<assembly>
+  <id>any</id>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+
+    <fileSet>
+      <outputDirectory>.</outputDirectory>
+      <directory>${project.basedir}/src/main/dist</directory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>./scripts</outputDirectory>
+      <directory>./src/main/groovy</directory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+  </fileSets>
+
+</assembly>
