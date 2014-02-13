@@ -78,8 +78,8 @@ public class ChangeLogGeneratorImplTest {
 
     /**
      * Test that change log creation follows Todd's example.
-     * TODO, can we do this without doing serialization I/O on the entities?  This seems out of the scope of the changelog
-     * itself
+     * TODO, can we do this without doing serialization I/O on the entities?  
+     * This seems out of the scope of the changelog itself
      */
     @Test
     public void testBasicOperation() throws ConnectionException {
