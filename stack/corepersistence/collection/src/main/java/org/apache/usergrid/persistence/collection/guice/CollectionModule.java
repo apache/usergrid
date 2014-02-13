@@ -30,7 +30,6 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteFig;
 import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.rx.RxFig;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -56,8 +55,7 @@ public class CollectionModule extends AbstractModule {
                 RxFig.class, 
                 MigrationManagerFig.class,
                 CassandraFig.class, 
-                SerializationFig.class,
-                WriteFig.class ) );
+                SerializationFig.class ) );
 
         install( new SerializationModule() );
         bind( MvccEntitySerializationStrategy.class ).to( MvccEntitySerializationStrategyImpl.class );

@@ -10,6 +10,35 @@ This repository contains all the code for Apache Usergrid, including the server 
 * the admin portal and the many SDKs. A pure HTML5+JavaScript app allowing you to register developers and let them manage their apps in a multi-tenant cluster. Located under [`/portal`](portal)
 * SDKs for [iOS](sdks/ios), [Android](sdks/android), [HTML5/JavaScript](sdks/html5-javascript), [node.js](sdks/nodejs), [Ruby on Rails](ruby-on-rails), [pure Ruby](sdks/ruby), [PHP](sdks/php), (server-side) [Java](sdks/java) and [.Net / Windows](sdks/dotnet), located in their respective subdirectories under [`/sdks`](sdks).
 
+How to build and run Usergrid locally
+-------------------------------------
+
+It's easy to build and run Usergrid locally. All you need is the Java JDK 1.7 and Maven 3.0.5 installed and on your path. Here's how you do it. First you get the source code like this:
+
+    git clone git@github.com:usergrid/usergrid.git
+
+Next, you change directories into the Java SDK package and build the SDK:
+
+    cd usergrid/sdks/java
+    mvn clean install
+
+Next, you change directory into the stack directory and build the Usergrid WAR and launcher:
+
+    cd ../..
+    cd stack
+    mvn clean install
+
+Finally, you can run Usergrid locally by using the all-in-one launcher, which includes a web server (Grizzly) and the database (Cassandra):
+
+    cd launcher
+    java -jar target/usergrid-launcher-0.0.29-SNAPSHOT.jar
+
+(you might have to substitute 0.0.29-SNAPSHOT with something newer)
+
+You should see the Usergrid launcher UI and from there you can start Usergrid and access the admin console.
+
+If not, subscribe to the [user mailing list](mailto:user-subscribe@usergrid.incubator.apache.org) and we can help you out.
+    
 
 Backwards compatibility
 -----------------------

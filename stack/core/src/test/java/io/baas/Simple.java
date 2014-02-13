@@ -3,8 +3,8 @@ package io.baas;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.clustering.hazelcast.HazelcastTest;
-import org.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.clustering.hazelcast.HazelcastTest;
+import org.apache.usergrid.persistence.TypedEntity;
 
 
 public class Simple extends TypedEntity {

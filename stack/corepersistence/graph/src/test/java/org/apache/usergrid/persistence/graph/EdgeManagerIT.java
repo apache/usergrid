@@ -20,9 +20,10 @@ package org.apache.usergrid.persistence.graph;
 
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
+import org.jukito.All;
+import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
@@ -53,16 +54,14 @@ import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.crea
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-
 @RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@UseModules( { TestGraphModule.class} )
+//@UseModules( { TestGraphModule.class, EdgeManagerIT.InvalidInput.class } )
 public class EdgeManagerIT {
-
 
 
     @ClassRule
@@ -238,16 +237,15 @@ public class EdgeManagerIT {
         final Id sourceId = createId( "source" );
 
 
-
-        Edge edge1 = createEdge( sourceId, "test", createId("target") );
+        Edge edge1 = createEdge( sourceId, "test", createId( "target" ) );
 
         em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", createId("target") );
+        Edge edge2 = createEdge( sourceId, "test", createId( "target" ) );
 
         em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge3 = createEdge( sourceId, "test", createId("target") );
+        Edge edge3 = createEdge( sourceId, "test", createId( "target" ) );
 
         em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );
 
@@ -263,10 +261,10 @@ public class EdgeManagerIT {
         Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
 
 
-         //we have 3 edges, but we specified our first edge as the max, we shouldn't get any more results than the first
+        //we have 3 edges, but we specified our first edge as the max, we shouldn't get any more results than the first
         assertEquals( "Correct edge returned", edge1, returned.next() );
 
-        assertFalse("No more edges", returned.hasNext());
+        assertFalse( "No more edges", returned.hasNext() );
 
         search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), edge2 );
 
@@ -290,15 +288,15 @@ public class EdgeManagerIT {
 
         final Id targetId = createId( "target" );
 
-        Edge edge1 = createEdge( createId("source"), "test", targetId );
+        Edge edge1 = createEdge( createId( "source" ), "test", targetId );
 
         em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge2 = createEdge( createId("source"), "test", targetId );
+        Edge edge2 = createEdge( createId( "source" ), "test", targetId );
 
         em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge3 = createEdge( createId("source"), "test", targetId );
+        Edge edge3 = createEdge( createId( "source" ), "test", targetId );
 
         em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );
 
@@ -318,7 +316,7 @@ public class EdgeManagerIT {
         assertEquals( "Correct edge returned", edge1, returned.next() );
 
 
-        assertFalse("No more edges", returned.hasNext());
+        assertFalse( "No more edges", returned.hasNext() );
 
         search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), edge2 );
 
@@ -537,7 +535,7 @@ public class EdgeManagerIT {
 
         Edge test2TargetEdge = new SimpleEdge( sourceId, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         //get our 2 edge types
@@ -552,7 +550,7 @@ public class EdgeManagerIT {
 
         assertEquals( "Edges correct", "test2", results.next() );
 
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
 
         //now test sub edges
@@ -562,20 +560,20 @@ public class EdgeManagerIT {
         results = edges.toBlockingObservable().getIterator();
 
 
-        assertEquals( "Types correct", targetId1.getType(), results.next());
+        assertEquals( "Types correct", targetId1.getType(), results.next() );
 
-        assertEquals( "Types correct", targetId2.getType() , results.next() );
+        assertEquals( "Types correct", targetId2.getType(), results.next() );
 
-        assertFalse( "No results", results.hasNext());
+        assertFalse( "No results", results.hasNext() );
 
         //now get types for test2
         edges = em.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
-       assertEquals( "Types correct", targetId1.getType(),  results.next( ) );
+        assertEquals( "Types correct", targetId1.getType(), results.next() );
 
-        assertFalse( "No results", results.hasNext());
+        assertFalse( "No results", results.hasNext() );
 
         //now delete our edges, we shouldn't get anything back
         em.deleteEdge( testTargetEdge );
@@ -587,7 +585,7 @@ public class EdgeManagerIT {
 
         results = edges.toBlockingObservable().getIterator();
 
-        assertFalse( "No results", results.hasNext());
+        assertFalse( "No results", results.hasNext() );
     }
 
 
@@ -626,9 +624,9 @@ public class EdgeManagerIT {
 
         assertEquals( "Edges correct", "test", results.next() );
 
-        assertEquals( "Edges correct","test2", results.next());
+        assertEquals( "Edges correct", "test2", results.next() );
 
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
 
         //now test sub edges
@@ -637,12 +635,11 @@ public class EdgeManagerIT {
 
         results = edges.toBlockingObservable().getIterator();
 
-        assertEquals( "Types correct",  sourceId1.getType(), results.next());
+        assertEquals( "Types correct", sourceId1.getType(), results.next() );
 
-        assertEquals( "Types correct", sourceId2.getType(), results.next());
+        assertEquals( "Types correct", sourceId2.getType(), results.next() );
 
-        assertFalse("No more edges", results.hasNext());
-
+        assertFalse( "No more edges", results.hasNext() );
 
 
         //now get types for test2
@@ -653,8 +650,7 @@ public class EdgeManagerIT {
 
         assertEquals( "Types correct", sourceId1.getType(), results.next() );
 
-        assertFalse("No more edges", results.hasNext());
-
+        assertFalse( "No more edges", results.hasNext() );
 
 
         em.deleteEdge( testTargetEdge );
@@ -666,7 +662,7 @@ public class EdgeManagerIT {
 
         results = edges.toBlockingObservable().getIterator();
 
-        assertEquals( "No results",results.hasNext() );
+        assertEquals( "No results", results.hasNext() );
     }
 
 
@@ -706,7 +702,7 @@ public class EdgeManagerIT {
 
         assertEquals( "Edges correct", "test", results.next() );
         assertEquals( "Edges correct", "test2", results.next() );
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
         //now load the next page
 
@@ -719,7 +715,7 @@ public class EdgeManagerIT {
 
 
         assertEquals( "Edges correct", "test2", results.next() );
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
 
         //now test sub edges
@@ -731,7 +727,7 @@ public class EdgeManagerIT {
 
         assertEquals( "Types correct", targetId1.getType(), results.next() );
         assertEquals( "Types correct", targetId2.getType(), results.next() );
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
 
         //now get the next page
@@ -784,7 +780,7 @@ public class EdgeManagerIT {
         assertEquals( "Edges correct", "test", results.next() );
         assertEquals( "Edges correct", "test2", results.next() );
 
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
 
         //now load the next page
@@ -800,7 +796,7 @@ public class EdgeManagerIT {
         assertEquals( "Edges correct", "test2", results.next() );
 
 
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
         //now test sub edges
 
@@ -813,7 +809,7 @@ public class EdgeManagerIT {
 
         assertEquals( "Types correct", sourceId2.getType(), results.next() );
 
-        assertFalse("No more edges", results.hasNext());
+        assertFalse( "No more edges", results.hasNext() );
 
         //now get the next page
 
@@ -829,7 +825,68 @@ public class EdgeManagerIT {
     }
 
 
-    //TODO invalid input testing with Jukito
+    @Test( expected = NullPointerException.class )
+    public void invalidEdgeTypesWrite( @All Edge edge) {
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        em.writeEdge( edge );
+    }
+
+
+    @Test( expected = NullPointerException.class )
+    public void invalidEdgeTypesDelete(@All Edge edge) {
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        em.deleteEdge( edge);
+    }
+
+
+    public static class InvalidInput extends JukitoModule {
+
+        @Override
+        protected void configureTest() {
+            //create all edge types of junk input
+//
+//            final UUID version = UUIDGenerator.newTimeUUID();
+//
+//            Id nullUuid = mock( Id.class );
+//            when( nullUuid.getUuid() ).thenReturn( null );
+//
+//
+//            Id nullType = mock( Id.class );
+//            when( nullType.getType() ).thenReturn( "type" );
+//
+//            Edge[] edges = new Edge[] {
+//                    mockEdge( nullUuid, "test", createId( "target" ), version ),
+//
+//                    mockEdge( nullType, "test", createId( "target" ), version ),
+//
+//                    mockEdge( createId( "source" ), null, createId( "target" ), version ),
+//
+//                    mockEdge( createId( "source" ), "test", nullUuid, version ),
+//
+//                    mockEdge( createId( "source" ), "test", nullType, version ),
+//
+//                    mockEdge( createId( "source" ), "test", createId( "target" ), null )
+//            };
+//
+//
+//            bindManyInstances( Edge.class, edges );
+
+        }
+
+
+        private Edge mockEdge( final Id sourceId, final String type, final Id targetId, final UUID version ) {
+            Edge edge = mock( Edge.class );
+
+            when( edge.getSourceNode() ).thenReturn( sourceId );
+            when( edge.getType() ).thenReturn( type );
+            when( edge.getTargetNode() ).thenReturn( targetId );
+            when( edge.getVersion() ).thenReturn( version );
+
+            return edge;
+        }
+    }
 }
 
 

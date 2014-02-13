@@ -34,18 +34,9 @@ public class CassUtils {
      * @param version
      * @return
      */
-    public static long getDeleteTimestamp(UUID version){
-//     return version.timestamp()+1;
+    public static long getTimestamp( UUID version ){
         return version.timestamp();
     }
 
 
-    /**
-     * Get the write timestamp from a version
-     * @param version
-     * @return
-     */
-    public static long getWriteTimestamp(UUID version){
-        return version.timestamp();
-    }
 }
