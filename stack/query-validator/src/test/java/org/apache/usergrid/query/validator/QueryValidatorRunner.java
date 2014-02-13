@@ -21,11 +21,8 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.CassandraRunner;
 import org.apache.usergrid.cassandra.DataControl;
-import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.standalone.Server;
 import org.apache.usergrid.utils.JsonUtils;
 
 import java.io.IOException;
@@ -35,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.cassandra.transport.Server;
 
 /**
  * @author Sung-ju Jin(realbeast)

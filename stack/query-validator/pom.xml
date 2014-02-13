@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>0.0.16-SNAPSHOT</version>
+        <version>0.0.29-SNAPSHOT</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -97,16 +97,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-count-batcher</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-count-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-test-utils</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -121,11 +111,6 @@
                     <groupId>commons-logging</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-scheduler</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.usergrid</groupId>
@@ -212,22 +197,12 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.7.2</version>
         </dependency>
-            <dependency>
-            <groupId>org.apache.usergrid</groupId>
+        <dependency>
+            <groupId>org.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
             <version>0.0.3</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-standalone</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>commons-logging</artifactId>
-                    <groupId>commons-logging</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
+
 </project>
