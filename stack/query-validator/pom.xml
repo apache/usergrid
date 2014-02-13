@@ -120,6 +120,12 @@
             <classifier>tests</classifier>
         </dependency>
         <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-launcher</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
