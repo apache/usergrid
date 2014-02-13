@@ -200,19 +200,97 @@ class Entity {
   }
 
   public function connect($connection, $entity) {
-    // TODO
-  }
+    $connectee=Entity::get_entity_id($entity);
+    $connecteeType=$entity->get("type");
+    if(!$connectee){
+      return "Error in connect. No UUID specified for connectee";
+    }
 
-  public static function get_entity_id($entity) {
-    // TODO
-  }
+    $connector=Entity::get_entity_id($this);
+    $connectorType=$this->get("type");
+    if(!$connector){
+      return "Error in connect. No UUID specified for connector";
+    }
 
-  public function get_connections($connection) {
-    // TODO
+    $endpoint = $connectorType.'/'.$connector.'/'.$connection.'/'.$connecteeType.'/'.$connectee;
+    $result=$this->client->post($endpoint, array(), array());
+    $error=$result->get_error();
+    if($error){
+      return $result->get_error_message();
+    }else{
+      return $result->get_data();
+    }
   }
 
   public function disconnect($connection, $entity) {
-    // TODO
+    $connectee=Entity::get_entity_id($entity);
+    $connecteeType=$entity->get("type");
+    if(!$connectee){
+      return "Error in disconnect. No UUID specified for connectee";
+    }
+
+    $connector=Entity::get_entity_id($this);
+    $connectorType=$this->get("type");
+    if(!$connector){
+      return "Error in disconnect. No UUID specified for connector";
+    }
+
+    $endpoint = $connectorType.'/'.$connector.'/'.$connection.'/'.$connecteeType.'/'.$connectee;
+
+    $result=$this->client->delete($endpoint, array(), array());
+    $error=$result->get_error();
+    if($error){
+      return $result->get_error_message();
+    }else{
+      return $result->get_data();
+    }
+  }
+
+  public static function get_entity_id($entity) {
+      $id = false;
+      if (Client::is_uuid($entity->get('uuid'))) {
+        $id = $entity->get('uuid');
+      } else {
+        if ($type == 'users') {
+          $id = $entity->get('username');
+        } else if ($entity->get('name')) {
+          $id = $entity->get('name');
+        }
+      }
+      return $id;
+  }
+
+  public function get_connections($connection) {
+    $connectorType = $this->get('type');
+    $connector = Entity::get_entity_id($this);
+    if (!$connector) {
+      return;
+    }
+
+    $endpoint = $connectorType . '/' . $connector . '/' . $connection . '/';
+    $result=$this->client->get($endpoint, array());
+    $this->set($connection,array());
+
+    $length = count($result->entities);
+    for ($i = 0; i < $length; $i++) {
+      if ($result['entities'][i]['type'] == 'user') {
+        $this[$connection][$result['entities'][i]['username']] = $result['entities'][i];
+      } else {
+        $this[$connection][$result['entities'][i]['name']] = $result['entities'][i];
+      }
+    }
+  }
+
+  public function get_connecting($connection) {
+    $connectorType = $this->get('type');
+    $connector = Entity::get_entity_id($this);
+    if (!$connector) {
+      return;
+    }
+
+    $endpoint = $connectorType. '/' . $connector . '/connecting/' . $connection . '/';
+    $result=$this->client->get($endpoint, array());
+    return $result->get_data();
   }
 
 }

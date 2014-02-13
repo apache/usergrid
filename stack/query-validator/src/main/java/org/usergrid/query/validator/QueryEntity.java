@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usergrid.query.validator;
+package org.apache.usergrid.query.validator;
 
-import org.usergrid.persistence.DynamicEntity;
+import org.apache.usergrid.persistence.DynamicEntity;
 
 import java.util.Map;
 

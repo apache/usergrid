@@ -15,16 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usergrid.query.validator;
-
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.JsonNode;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Component;
-import org.usergrid.java.client.Client;
-import org.usergrid.java.client.response.ApiResponse;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.Schema;
+package org.apache.usergrid.query.validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,8 +23,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static org.usergrid.java.client.utils.ObjectUtils.isEmpty;
+import org.apache.commons.lang.StringUtils;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Schema;
+import org.codehaus.jackson.JsonNode;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Component;
+import org.usergrid.java.client.Client;
+import org.usergrid.java.client.response.ApiResponse;
+import org.usergrid.query.validator.QueryEntity;
+import org.usergrid.query.validator.QueryRunner;
 
 /**
  * @author Sungju Jin
@@ -79,23 +79,24 @@ public class ApiServerRunner implements QueryRunner {
     }
 
     public boolean insertDatas() {
-        List<org.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
-        for(org.usergrid.java.client.entities.Entity entity : clientEntities) {
-            ApiResponse response = client.createEntity(entity);
-            if( response == null || !StringUtils.isEmpty(response.getError()) ) {
-                logger.log(Level.SEVERE, response.getErrorDescription());
-                //throw new RuntimeException(response.getErrorDescription());
-            } else {
-                logger.log(Level.INFO, response.toString());
-            }
-        }
-        return true;
+
+       List<org.apache.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
+       for(org.apache.usergrid.java.client.entities.Entity entity : clientEntities) {
+           ApiResponse response = client.createEntity(entity);
+           if( response == null || !StringUtils.isEmpty(response.getError()) ) {
+               logger.log(Level.SEVERE, response.getErrorDescription());
+               //throw new RuntimeException(response.getErrorDescription());
+           } else {
+               logger.log(Level.INFO, response.toString());
+           }
+       }
+       return true;
     }
 
-    private List<org.usergrid.java.client.entities.Entity> getEntitiesForClient(List<Entity> entities) {
-        List<org.usergrid.java.client.entities.Entity> clientEntities = new ArrayList<org.usergrid.java.client.entities.Entity>();
+    private List<org.apache.usergrid.java.client.entities.Entity> getEntitiesForClient(List<Entity> entities) {
+        List<org.apache.usergrid.java.client.entities.Entity> clientEntities = new ArrayList<org.apache.usergrid.java.client.entities.Entity>();
         for(Entity entity : entities) {
-            org.usergrid.java.client.entities.Entity clientEntity = new org.usergrid.java.client.entities.Entity();
+            org.apache.usergrid.java.client.entities.Entity clientEntity = new org.apache.usergrid.java.client.entities.Entity();
             clientEntity.setType(entity.getType());
             Map<String, Object> properties = Schema.getDefaultSchema().getEntityProperties(entity);
             for(String key : properties.keySet()) {
@@ -131,7 +132,7 @@ public class ApiServerRunner implements QueryRunner {
         if( response.getEntities() == null )
             return entities;
 
-        for(org.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
+        for(org.apache.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
             Entity entity = new QueryEntity();
             entity.setUuid(clientEntitity.getUuid());
             entity.setType(clientEntitity.getType());

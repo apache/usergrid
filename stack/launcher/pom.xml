@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.usergrid</groupId>
+    <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.28-SNAPSHOT</version>
+    <version>0.0.29-SNAPSHOT</version>
   </parent>
 
   <artifactId>usergrid-launcher</artifactId>
@@ -87,7 +87,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.usergrid.launcher.JarMain</mainClass>
+              <mainClass>org.apache.usergrid.launcher.JarMain</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
@@ -104,13 +104,13 @@
     <!-- Usergrid Dependencies -->
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-rest</artifactId>
       <version>${project.version}</version>
       <classifier>classes</classifier>
@@ -123,7 +123,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-rest</artifactId>
       <version>${project.version}</version>
       <classifier>compiled-jsp</classifier>

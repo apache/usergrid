@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.usergrid</groupId>
+    <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.28-SNAPSHOT</version>
+    <version>0.0.29-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -102,7 +102,7 @@
                 <exclude>**/StringLiteralTest.java</exclude>
 
                 <!-- excludes all the iterator query integration tests -->
-                <exclude>**/org/usergrid/persistence/query/*IT.java</exclude>
+                <exclude>**/org/apache/usergrid/persistence/query/*IT.java</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -180,7 +180,7 @@
                 <exclude>**/StringLiteralTest.java</exclude>
 
                 <!-- excludes all the iterator query integration tests -->
-                <exclude>**/org/usergrid/persistence/query/*IT.java</exclude>
+                <exclude>**/org/apache/usergrid/persistence/query/*IT.java</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -268,7 +268,7 @@
             </goals>
             <configuration>
               <includes>
-                <include>**/org/usergrid/**</include>
+                <include>**/org/apache/usergrid/**</include>
               </includes>
             </configuration>
           </execution>
@@ -512,7 +512,7 @@
     <!-- Test and Logging Dependencies -->
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -532,7 +532,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-test-utils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

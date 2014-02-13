@@ -41,11 +41,11 @@ you do something like this:
     $ cd usergrid-tools
     $ java -jar usergrid-tools.jar <toolname>
 
-Where "toolname" is the name of the tool that you wish to run (and the name of a Java class in the org.usergrid.tools package). Each tool is different and may or may not have documentation available.
+Where "toolname" is the name of the tool that you wish to run (and the name of a Java class in the org.apache.usergrid.tools package). Each tool is different and may or may not have documentation available.
 
 What Tools are available?
 ---
-This README.md only documents two of the tools, WarehouseExport and WarehouseUpsert. You will have to seek documentation else where or look at the source code (in the org.usergrid.tools package) to understand what other tools are avialable.
+This README.md only documents two of the tools, WarehouseExport and WarehouseUpsert. You will have to seek documentation else where or look at the source code (in the org.apache.usergrid.tools package) to understand what other tools are avialable.
 
 
 Redshift Warehouse Export and Upsert
