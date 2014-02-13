@@ -304,7 +304,7 @@ public class ExportServiceImpl implements ExportService{
                     for ( Entity entity : entities ) {
                         // Export the entity first and later the collections for
                         // this entity.
-                        //jg.writeObject( entity );
+                        jg.writeObject( entity );
                         //echo( entity );
 
                         saveCollectionMembers( jg, em, application.getValue(), entity );
