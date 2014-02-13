@@ -24,11 +24,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.thrift.Cassandra;
-
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.hystrix.CassandraCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -51,6 +48,8 @@ import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
 import rx.Scheduler;
+import rx.util.functions.Func1;
+import rx.util.functions.Func2;
 import rx.util.functions.FuncN;
 
 
@@ -86,8 +85,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart, final Scheduler scheduler,
-                                        final WriteUniqueVerify writeVerifyUnique,
+    public EntityCollectionManagerImpl( final UUIDService uuidService, final WriteStart writeStart,
+                                        final Scheduler scheduler, final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final Load load, final DeleteStart deleteStart,
                                         final DeleteCommit deleteCommit,
@@ -146,11 +145,60 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //create our observable and start the write
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
-        Observable<CollectionIoEvent<MvccEntity>> observable =  Observable.from( writeData ).subscribeOn( scheduler ).map( writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable =
+                Observable.from( writeData ).subscribeOn( scheduler ).map( writeStart ).flatMap(
+                        new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
 
 
-        //execute all validation stages concurrently.  Needs refactored when this is done.  https://github.com/Netflix/RxJava/issues/627
-        observable = Concurrent.concurrent(observable, scheduler, new WaitZip( ), writeVerifyUnique, writeOptimisticVerify);
+                            @Override
+                            public Observable<CollectionIoEvent<MvccEntity>> call(
+                                    final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+
+                                //do the unique and optimistic steps in parallel
+
+                                /**
+                                 *unique function.  Since there can be more than 1 unique value in this entity
+                                 * the unique verification step itself is multiple parallel executions.
+                                 * This is why we use "flatMap" instead of "map", which allows the
+                                 * WriteVerifyUnique stage to execute multiple verification steps in parallel and
+                                 * zip the results
+                                 */
+
+
+                                Observable<CollectionIoEvent<MvccEntity>> unique =
+                                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( scheduler )
+                                                  .flatMap( writeVerifyUnique);
+
+
+                                //optimistic verification
+                                Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( scheduler )
+                                                  .map( writeOptimisticVerify );
+
+
+                                //zip the results
+                                /**
+                                 * TODO: Should the zip only return errors here, and if errors are present, we throw during the zip phase?  I couldn't find "
+                                 */
+
+                               return Observable.zip( unique, optimistic, new Func2<CollectionIoEvent<MvccEntity>,
+                                       CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>>() {
+                                   @Override
+                                   public CollectionIoEvent<MvccEntity> call(
+                                           final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent,
+                                           final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent2 ) {
+
+                                       return mvccEntityCollectionIoEvent;
+                                   }
+                               } );
+                            }
+                        } );
+
+
+//        //execute all validation stages concurrently.  Needs refactored when this is done.  https://github
+//        // .com/Netflix/RxJava/issues/627
+//        observable =
+//                Concurrent.concurrent( observable, scheduler, new WaitZip(), writeVerifyUnique, writeOptimisticVerify );
 
         //return the commit result.
         return observable.map( writeCommit );
@@ -166,7 +214,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
 
-        return Observable.from(new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler ).map( deleteStart ).map( deleteCommit );
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler )
+                         .map( deleteStart ).map( deleteCommit );
     }
 
 
@@ -177,16 +226,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in the load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in the load stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler ).map( load );
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( scheduler )
+                         .map( load );
     }
 
 
     /**
      * Class that validates all results are equal then proceeds
-     * @param <R>
      */
-    private static class WaitZip<R> implements FuncN<R>{
-
+    private static class WaitZip<R> implements FuncN<R> {
 
 
         private WaitZip() {
@@ -196,8 +244,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         @Override
         public R call( final Object... args ) {
 
-            for(int i = 0; i < args.length-1; i ++){
-                assert args[i] == args[i+1];
+            for ( int i = 0; i < args.length - 1; i++ ) {
+                assert args[i] == args[i + 1];
             }
 
             return ( R ) args[0];

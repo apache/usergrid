@@ -18,19 +18,26 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
+
+import rx.Scheduler;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
@@ -38,9 +45,12 @@ import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 
 
-/** 
- * @author tnine 
+/**
+ * TODO: Update the test to correctly test for detecting more than 1 duplicate and exception handling correctly
+ *
+ * @author tnine
  */
+@RunWith( JukitoRunner.class )
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
 
@@ -50,11 +60,27 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
     @Inject
     private UniqueValueSerializationStrategy uniqueValueSerializiationStrategy;
 
-    /** Standard flow */
-    @Test
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
+
+
+    @Inject
+    private Scheduler scheduler;
+
+    @Inject
+    private SerializationFig fig;
+
+
+    /**
+     * Standard flow
+     */
+    @Test( timeout = 5000 )
     public void testStartStage() throws Exception {
 
         final CollectionScope collectionScope = mock( CollectionScope.class );
+
 
         // set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();
@@ -62,12 +88,13 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( null, uniqueValueSerializiationStrategy );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uniqueValueSerializiationStrategy, scheduler, fig );
 
-        CollectionIoEvent<MvccEntity>
-            result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
+        CollectionIoEvent<MvccEntity> result =
+                newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) ).toBlockingObservable()
+                        .last();
 
-        assertSame("Context was correct", collectionScope, result.getEntityCollection()) ;
+        assertSame( "Context was correct", collectionScope, result.getEntityCollection() );
 
         // verify the log entry is correct
         MvccEntity entry = result.getEvent();
@@ -80,11 +107,32 @@ public class WriteUniqueVerifyTest extends AbstractMvccEntityStageTest {
         assertSame( "Entity correct", entity, entry.getEntity().get() );
     }
 
-    @Override
-    protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
-        new WriteUniqueVerify( null, uniqueValueSerializiationStrategy ).call( event );
+
+    @Test
+    public void testNoFields() {
+        final CollectionScope collectionScope = mock( CollectionScope.class );
+
+
+        // set up the mock to return the entity from the start phase
+        final Entity entity = generateEntity();
+
+        final MvccEntity mvccEntity = fromEntity( entity );
+
+        // run the stage
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uniqueValueSerializiationStrategy, scheduler, fig );
+
+        CollectionIoEvent<MvccEntity> result =
+                newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) ).toBlockingObservable()
+                        .last();
+
+        assertSame( "Context was correct", collectionScope, result.getEntityCollection() );
     }
 
+
+    @Override
+    protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
+        new WriteUniqueVerify( uniqueValueSerializiationStrategy, scheduler, fig ).call( event );
+    }
 }
 
 

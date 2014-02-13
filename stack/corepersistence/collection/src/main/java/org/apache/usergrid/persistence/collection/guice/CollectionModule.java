@@ -17,19 +17,18 @@
  */
 package org.apache.usergrid.persistence.collection.guice;
 
-import java.io.IOException;
 
-import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.collection.cassandra.AvailablePortFinder;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
 import org.apache.usergrid.persistence.collection.rx.RxFig;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -37,13 +36,7 @@ import org.apache.usergrid.persistence.collection.serialization.impl.Serializati
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.netflix.config.ConfigurationManager;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteFig;
 
 import rx.Scheduler;
 
@@ -63,8 +56,7 @@ public class CollectionModule extends AbstractModule {
                 RxFig.class, 
                 MigrationManagerFig.class,
                 CassandraFig.class, 
-                SerializationFig.class,
-                WriteFig.class ) );
+                SerializationFig.class ) );
 
         install( new SerializationModule() );
         install( new ServiceModule() );
