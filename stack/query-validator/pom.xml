@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>0.0.28-SNAPSHOT</version>
+        <version>0.0.29-SNAPSHOT</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -99,31 +99,6 @@
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-count-batcher</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>commons-logging</artifactId>
-                    <groupId>commons-logging</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-count-common</artifactId>
-            <version>${project.version}</version>
-            <classifier>classes</classifier>
-            <exclusions>
-                <exclusion>
-                    <artifactId>servlet-api</artifactId>
-                    <groupId>javax.servlet</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-test-utils</artifactId>
             <version>${project.version}</version>
             <classifier>compiled-jsp</classifier>
@@ -138,44 +113,6 @@
         </dependency>
 
         <!-- Apache Dependencies -->
-
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-
-        <!-- SUN, Javax Package, and Other Com Dependencies -->
-
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>jstl</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-        </dependency>
-
-        <!--<dependency>-->
-        <!--&lt;!&ndash; TODO - should not scope be 'test' ? &ndash;&gt;-->
-        <!--<groupId>org.slf4j</groupId>-->
-        <!--<artifactId>jcl-over-slf4j</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-        <!--&lt;!&ndash; TODO - should not scope be 'test' ? &ndash;&gt;-->
-        <!--<groupId>org.slf4j</groupId>-->
-        <!--<artifactId>jul-to-slf4j</artifactId>-->
-        <!--</dependency>-->
-
-        <!-- Testing and Logging Dependencies -->
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
@@ -273,8 +210,6 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <dependency>
             <groupId>org.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
@@ -285,29 +220,13 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.7.2</version>
         </dependency>
-
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <version>${org.springframework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
+            <groupId>org.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
             <version>0.0.3</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>usergrid-standalone</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>commons-logging</artifactId>
-                    <groupId>commons-logging</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
     </dependencies>
+
 </project>

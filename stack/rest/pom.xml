@@ -560,8 +560,6 @@
       <scope>test</scope>
     </dependency>
 
-
-
     <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-java-client</artifactId>
@@ -575,5 +573,7 @@
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
+
   </dependencies>
+
 </project>

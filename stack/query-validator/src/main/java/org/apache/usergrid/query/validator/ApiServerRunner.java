@@ -23,17 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.cassandra.config.Schema;
 import org.apache.commons.lang.StringUtils;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.usergrid.java.client.Client;
+import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.response.ApiResponse;
-import org.usergrid.query.validator.QueryEntity;
-import org.usergrid.query.validator.QueryRunner;
+import static org.usergrid.java.client.utils.ObjectUtils.isEmpty;
+
 
 /**
  * @author Sungju Jin
@@ -79,9 +78,8 @@ public class ApiServerRunner implements QueryRunner {
     }
 
     public boolean insertDatas() {
-
-       List<org.apache.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
-       for(org.apache.usergrid.java.client.entities.Entity entity : clientEntities) {
+       List<org.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
+       for(org.usergrid.java.client.entities.Entity entity : clientEntities) {
            ApiResponse response = client.createEntity(entity);
            if( response == null || !StringUtils.isEmpty(response.getError()) ) {
                logger.log(Level.SEVERE, response.getErrorDescription());
@@ -93,10 +91,10 @@ public class ApiServerRunner implements QueryRunner {
        return true;
     }
 
-    private List<org.apache.usergrid.java.client.entities.Entity> getEntitiesForClient(List<Entity> entities) {
-        List<org.apache.usergrid.java.client.entities.Entity> clientEntities = new ArrayList<org.apache.usergrid.java.client.entities.Entity>();
+    private List<org.usergrid.java.client.entities.Entity> getEntitiesForClient(List<Entity> entities) {
+        List<org.usergrid.java.client.entities.Entity> clientEntities = new ArrayList<org.usergrid.java.client.entities.Entity>();
         for(Entity entity : entities) {
-            org.apache.usergrid.java.client.entities.Entity clientEntity = new org.apache.usergrid.java.client.entities.Entity();
+            org.usergrid.java.client.entities.Entity clientEntity = new org.usergrid.java.client.entities.Entity();
             clientEntity.setType(entity.getType());
             Map<String, Object> properties = Schema.getDefaultSchema().getEntityProperties(entity);
             for(String key : properties.keySet()) {
@@ -132,7 +130,7 @@ public class ApiServerRunner implements QueryRunner {
         if( response.getEntities() == null )
             return entities;
 
-        for(org.apache.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
+        for(org.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
             Entity entity = new QueryEntity();
             entity.setUuid(clientEntitity.getUuid());
             entity.setType(clientEntitity.getType());
