@@ -44,6 +44,19 @@ Usergrid.Collection = function(options, callback) {
 
 
 /*
+ *  method to determine whether or not the passed variable is a Usergrid Collection
+ *
+ *  @method isCollection
+ *  @public
+ *  @params {any} obj - any variable
+ *  @return {boolean} Returns true or false
+ */
+Usergrid.isCollection = function(obj){
+  return (obj && obj instanceof Usergrid.Collection);
+}
+
+
+/*
  *  gets the data from the collection object for serialization
  *
  *  @method serialize
@@ -204,12 +217,12 @@ Usergrid.Collection.prototype.destroyEntity = function (entity, callback) {
         callback(err, data);
       }
     } else {
-      //destroy was good, so repopulate the collection
-      self.fetch(callback);
+        //destroy was good, so repopulate the collection
+        self.fetch(callback);
     }
   });
-  //remove entity from the local store
-  this.removeEntity(entity);
+    //remove entity from the local store
+    this.removeEntity(entity);
 };
 
 
@@ -237,7 +250,7 @@ Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
   for (var key in this._list) {
     var listItem = this._list[key];
     if (listItem.get('uuid') === uuid) {
-      return listItem;
+        return callback(null, listItem);
     }
   }
 
