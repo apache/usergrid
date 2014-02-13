@@ -26,6 +26,7 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.export.ExportJob;
 import org.usergrid.management.export.S3Export;
+import org.usergrid.management.export.S3ExportImpl;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
@@ -761,11 +762,16 @@ public class ManagementServiceIT {
 
         S3Export s3Export = mock( S3Export.class );
 
-        setup.getExportService().setS3Export( s3Export );
-        setup.getExportService().doExport( exportInfo );
-
+        try {
+            setup.getExportService().setS3Export( s3Export );
+            setup.getExportService().doExport( exportInfo );
+        }catch (Exception e) {
+            assert(false);
+        }
+        assert(true);
     }
 
+    //Tests to make sure we can call the job with mock data and it runs.
     @Test
     public void testExportDoJob() throws Exception {
 
@@ -806,7 +812,94 @@ public class ManagementServiceIT {
         S3Export s3Export = mock( S3Export.class );
         setup.getExportService().setS3Export( s3Export );
         job.setExportService( setup.getExportService() );
-        job.doJob( jobExecution );
+        try {
+         job.doJob( jobExecution );
+        }catch ( Exception e) {
+            assert( false );
+        }
+        assert(true);
 
     }
+
+    //tests that with empty job data, the export still runs.
+    @Test
+    public void testExportEmptyJob() throws Exception {
+
+        JobData jobData = new JobData();
+
+        JobExecution jobExecution = mock ( JobExecution.class);
+
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        ExportJob job = new ExportJob();
+        S3Export s3Export = mock( S3Export.class );
+        setup.getExportService().setS3Export( s3Export );
+        job.setExportService( setup.getExportService() );
+        try {
+            job.doJob( jobExecution );
+        }catch ( Exception e) {
+            assert( false );
+        }
+        assert(true);
+
+    }
+
+    @Test
+    public void testNullJobExecution () {
+
+        JobData jobData = new JobData();
+
+        JobExecution jobExecution = mock ( JobExecution.class);
+
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        ExportJob job = new ExportJob();
+        S3Export s3Export = mock( S3Export.class );
+        setup.getExportService().setS3Export( s3Export );
+        job.setExportService( setup.getExportService() );
+        try {
+            job.doJob( jobExecution );
+        }catch ( Exception e) {
+            assert( false );
+        }
+        assert(true);
+
+    }
+
+    @Test
+    public void testS3IntegrationExport() throws Exception {
+
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        storage_info.put( "admin_token","insert_token_data_here" );
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+
+
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "properties", properties);
+
+
+        ExportInfo exportInfo = new ExportInfo(payload);
+
+
+        S3Export s3Export = new S3ExportImpl(); //mock( S3Export.class );
+
+        //when(s3Export.copyToS3( any( InputStream.class),exportInfo ));
+
+        try {
+            setup.getExportService().setS3Export( s3Export );
+            setup.getExportService().doExport( exportInfo );
+        }catch (Exception e) {
+            e.printStackTrace();
+            assert(false);
+        }
+        assert(true);
+    }
+
 }

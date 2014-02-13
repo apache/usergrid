@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +14,8 @@ import java.util.UUID;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,7 @@ import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.management.ExportInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -196,13 +196,21 @@ public class ExportServiceImpl implements ExportService{
     public UUID getJobUUID () {
         return jobUUID;
     }
-
+//write test checking to see what happens if the input stream is closed or wrong.
 //TODO: make multipart streaming functional
     //currently only stores the collection in memory then flushes it.
     private void exportApplicationsForOrg( Map.Entry<UUID, String> organization,final ExportInfo config ) throws Exception {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        //baos.reset();
+        //ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+//        OutputStreamWriter osw = new OutputStreamWriter(oos,"UTF-8");
+//        PrintWriter out = new PrintWriter( osw );
+//
+//        //oos.reset();
+//
+//        Writer wrtJSon = new OutputStreamWriter( oos, "UTF-8" );
 
 
 
@@ -227,7 +235,7 @@ public class ExportServiceImpl implements ExportService{
 
             String appFileName =  prepareOutputFileName( "application", application.getValue() );
 
-            JsonGenerator jg = getJsonGenerator( oos );
+            JsonGenerator jg = getJsonGenerator( baos );
 
             // load the dictionary
 
@@ -266,7 +274,7 @@ public class ExportServiceImpl implements ExportService{
             nsEntity.setMetadata( "collections", collections );
 
             jg.writeStartArray();
-            //jg.writeObject( nsEntity );
+            jg.writeObject( nsEntity );
 
             // Create a GENERATOR for the application collections.
             //JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
@@ -314,19 +322,18 @@ public class ExportServiceImpl implements ExportService{
                 }
             }
 
-            // Close writer for the collections for this application.
-           // collectionsJg.writeEndObject();
-           // collectionsJg.close();
-
             // Close writer and file for this application.
 
            // logger.warn();
             jg.writeEndArray();
             jg.close();
-            oos.flush();
-            oos.close();
 
-            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+            baos.flush();
+            baos.close();
+
+
+            InputStream is = new ByteArrayInputStream( baos.toByteArray());
+            //InputStream is = new ObjectInputStream );
             s3Export.copyToS3( is, config );
             //below line doesn't copy very good data anyways.
         }
@@ -373,10 +380,10 @@ public class ExportServiceImpl implements ExportService{
         }
 
         // Write connections
-        //saveConnections( entity, em, jg );
+        saveConnections( entity, em, jg );
 
         // Write dictionaries
-        //saveDictionaries( entity, em, jg );
+        saveDictionaries( entity, em, jg );
 
         // End the object if it was Started
         jg.writeEndObject();
@@ -386,11 +393,67 @@ public class ExportServiceImpl implements ExportService{
    //     return getJsonGenerator( new File( outputDir, outFile ) );
    // }
 
+    /** Persists the connection for this entity. */
+    private void saveDictionaries( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception {
 
-    protected JsonGenerator getJsonGenerator( ObjectOutputStream oos ) throws IOException {
+        jg.writeFieldName( "dictionaries" );
+        jg.writeStartObject();
+
+        Set<String> dictionaries = em.getDictionaries( entity );
+        for ( String dictionary : dictionaries ) {
+
+            Map<Object, Object> dict = em.getDictionaryAsMap( entity, dictionary );
+
+            // nothing to do
+            if ( dict.isEmpty() ) {
+                continue;
+            }
+
+            jg.writeFieldName( dictionary );
+
+            jg.writeStartObject();
+
+            for ( Map.Entry<Object, Object> entry : dict.entrySet() ) {
+                jg.writeFieldName( entry.getKey().toString() );
+                jg.writeObject( entry.getValue() );
+            }
+
+            jg.writeEndObject();
+        }
+        jg.writeEndObject();
+    }
+
+
+    /** Persists the connection for this entity. */
+    private void saveConnections( Entity entity, EntityManager em, JsonGenerator jg ) throws Exception {
+
+        jg.writeFieldName( "connections" );
+        jg.writeStartObject();
+
+        Set<String> connectionTypes = em.getConnectionTypes( entity );
+        for ( String connectionType : connectionTypes ) {
+
+            jg.writeFieldName( connectionType );
+            jg.writeStartArray();
+
+            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Results.Level.IDS );
+            List<ConnectionRef> connections = results.getConnections();
+
+            for ( ConnectionRef connectionRef : connections ) {
+                jg.writeObject( connectionRef.getConnectedEntity().getUuid() );
+            }
+
+            jg.writeEndArray();
+        }
+        jg.writeEndObject();
+    }
+
+
+    protected JsonGenerator getJsonGenerator(ByteArrayOutputStream out ) throws IOException {
         //TODO:shouldn't the below be UTF-16?
         //PrintWriter out = new PrintWriter( outFile, "UTF-8" );
-        JsonGenerator jg = jsonFactory.createJsonGenerator( oos );
+
+        JsonGenerator jg = jsonFactory.createJsonGenerator( out );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
         jg.setCodec( new ObjectMapper() );
         return jg;
