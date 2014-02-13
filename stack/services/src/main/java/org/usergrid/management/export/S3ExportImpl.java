@@ -1,7 +1,7 @@
 package org.usergrid.management.export;
 
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.jclouds.ContextBuilder;
@@ -27,8 +27,9 @@ import com.google.inject.Module;
  *
  */
 public class S3ExportImpl implements S3Export {
+
     @Override
-    public void copyToS3( String fileName, final ExportInfo exportInfo ) {
+    public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo ) {
 
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
         /*won't need any of the properties as I have the export info*/
@@ -63,11 +64,12 @@ public class S3ExportImpl implements S3Export {
         }
 
         try {
-            File file = new File( fileName );
+
+
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( file.getName() ).payload( file ).calculateMD5().contentType( "text/plain" )
-                             .contentLength( file.length() );
+                    blobStore.blobBuilder( "test.json" ).payload( inputStream ).calculateMD5().contentType( "text/plain" );
+
 
             Blob blob = blobBuilder.build();
 
@@ -78,6 +80,7 @@ public class S3ExportImpl implements S3Export {
         catch ( Exception e ) {
             logger.error( "Error uploading to blob store", e );
         }
+
     }
 
 }

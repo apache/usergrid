@@ -1,9 +1,12 @@
 package org.usergrid.management.export;
 
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -194,8 +197,13 @@ public class ExportServiceImpl implements ExportService{
         return jobUUID;
     }
 
-
+//TODO: make multipart streaming functional
+    //currently only stores the collection in memory then flushes it.
     private void exportApplicationsForOrg( Map.Entry<UUID, String> organization,final ExportInfo config ) throws Exception {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+
 
 
 
@@ -219,7 +227,7 @@ public class ExportServiceImpl implements ExportService{
 
             String appFileName =  prepareOutputFileName( "application", application.getValue() );
 
-            JsonGenerator jg = getJsonGenerator( new File( appFileName ) );
+            JsonGenerator jg = getJsonGenerator( oos );
 
             // load the dictionary
 
@@ -258,16 +266,17 @@ public class ExportServiceImpl implements ExportService{
             nsEntity.setMetadata( "collections", collections );
 
             jg.writeStartArray();
-            jg.writeObject( nsEntity );
+            //jg.writeObject( nsEntity );
 
             // Create a GENERATOR for the application collections.
             //JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
 
-            String collectionsFilename = prepareOutputFileName( "collections","appDummyName" );
-            JsonGenerator collectionsJg = getJsonGenerator( new File( collectionsFilename ) );
+            //String collectionsFilename = prepareOutputFileName( "collections","appDummyName" );
+            //JsonGenerator collectionsJg = getJsonGenerator( oos );
 
-            collectionsJg.writeStartObject();
 
+            //collectionsJg.writeStartObject();
+           // jg.writeStartObject();
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
             //don't need to echo as not a command line tool anymore
             //echo( JsonUtils.mapToFormattedJsonString( metadata ) );
@@ -287,10 +296,10 @@ public class ExportServiceImpl implements ExportService{
                     for ( Entity entity : entities ) {
                         // Export the entity first and later the collections for
                         // this entity.
-                        jg.writeObject( entity );
+                        //jg.writeObject( entity );
                         //echo( entity );
 
-                        saveCollectionMembers( collectionsJg, em, application.getValue(), entity );
+                        saveCollectionMembers( jg, em, application.getValue(), entity );
                     }
 
                     //we're done
@@ -306,15 +315,20 @@ public class ExportServiceImpl implements ExportService{
             }
 
             // Close writer for the collections for this application.
-            collectionsJg.writeEndObject();
-            collectionsJg.close();
+           // collectionsJg.writeEndObject();
+           // collectionsJg.close();
 
             // Close writer and file for this application.
+
+           // logger.warn();
             jg.writeEndArray();
             jg.close();
-            s3Export.copyToS3( appFileName, config );
+            oos.flush();
+            oos.close();
+
+            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+            s3Export.copyToS3( is, config );
             //below line doesn't copy very good data anyways.
-            //copyToS3( collectionsFilename, config );
         }
     }
 
@@ -335,7 +349,7 @@ public class ExportServiceImpl implements ExportService{
             return;
         }
 
-        jg.writeFieldName( entity.getUuid().toString() );
+       // jg.writeFieldName( entity.getUuid().toString() );
         jg.writeStartObject();
 
         for ( String collectionName : collections ) {
@@ -368,15 +382,15 @@ public class ExportServiceImpl implements ExportService{
         jg.writeEndObject();
     }
 
-    protected JsonGenerator getJsonGenerator( String outFile ) throws IOException {
-        return getJsonGenerator( new File( outputDir, outFile ) );
-    }
+   // protected JsonGenerator getJsonGenerator( String outFile ) throws IOException {
+   //     return getJsonGenerator( new File( outputDir, outFile ) );
+   // }
 
 
-    protected JsonGenerator getJsonGenerator( File outFile ) throws IOException {
+    protected JsonGenerator getJsonGenerator( ObjectOutputStream oos ) throws IOException {
         //TODO:shouldn't the below be UTF-16?
-        PrintWriter out = new PrintWriter( outFile, "UTF-8" );
-        JsonGenerator jg = jsonFactory.createJsonGenerator( out );
+        //PrintWriter out = new PrintWriter( outFile, "UTF-8" );
+        JsonGenerator jg = jsonFactory.createJsonGenerator( oos );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
         jg.setCodec( new ObjectMapper() );
         return jg;
