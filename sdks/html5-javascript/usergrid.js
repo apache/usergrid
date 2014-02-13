@@ -1,4 +1,4 @@
-/*! usergrid@0.0.0 2014-02-11 */
+/*! usergrid@0.0.0 2014-02-13 */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
 };
@@ -1084,9 +1084,7 @@ function doCallback(callback, params, context) {
                 self.setObject("organizations", organizations);
                 self.setObject("applications", applications);
             }
-            if (typeof callback === "function") {
-                callback(err, data, user, organizations, applications);
-            }
+            doCallback(callback, [ err, data, user, organizations, applications ], self);
         });
     };
     /*
@@ -1120,9 +1118,7 @@ function doCallback(callback, params, context) {
                 user = new Usergrid.Entity(options);
                 self.setToken(data.access_token);
             }
-            if (typeof callback === "function") {
-                callback(err, data, user);
-            }
+            doCallback(callback, [ err, data, user ], self);
         });
     };
     /*
@@ -1147,18 +1143,14 @@ function doCallback(callback, params, context) {
                     if (self.logging) {
                         console.log("error trying to log user in");
                     }
-                    if (typeof callback === "function") {
-                        callback(err, data, null);
-                    }
+                    doCallback(callback, [ err, data, null ], self);
                 } else {
                     var options = {
                         client: self,
                         data: data.entities[0]
                     };
                     var user = new Usergrid.Entity(options);
-                    if (typeof callback === "function") {
-                        callback(null, data, user);
-                    }
+                    doCallback(callback, [ null, data, user ], self);
                 }
             });
         }
@@ -1356,10 +1348,9 @@ Usergrid.Entity.prototype.getEndpoint = function() {
         nameProperties.unshift("username");
     }
     var names = this.get(nameProperties).filter(function(x) {
-        return "undefined" !== typeof x;
+        return x != null && "undefined" !== typeof x;
     });
     if (names.length === 0) {
-        //throw new UsergridError("Cannot infer an UUID or type from the entity", 'no_name_specified');
         return type;
     } else {
         name = names.shift();
@@ -1488,9 +1479,7 @@ Usergrid.Entity.prototype.destroy = function(callback) {
         if (!err) {
             self.set(null);
         }
-        if (typeof callback === "function") {
-            doCallback(callback, [ err, data ]);
-        }
+        doCallback(callback, [ err, data ]);
     });
 };
 
@@ -1517,7 +1506,7 @@ Usergrid.Entity.prototype.connect = function(connection, entity, callback) {
             if (self._client.logging) {
                 console.log(error);
             }
-            callback(true, error);
+            doCallback(callback, [ true, error ], self);
         }
         return;
     }
@@ -1530,7 +1519,7 @@ Usergrid.Entity.prototype.connect = function(connection, entity, callback) {
             if (self._client.logging) {
                 console.log(error);
             }
-            callback(true, error);
+            doCallback(callback, [ true, error ], self);
         }
         return;
     }
@@ -1543,9 +1532,7 @@ Usergrid.Entity.prototype.connect = function(connection, entity, callback) {
         if (err && self._client.logging) {
             console.log("entity could not be connected");
         }
-        if (typeof callback === "function") {
-            callback(err, data);
-        }
+        doCallback(callback, [ err, data ], self);
     });
 };
 
@@ -1595,7 +1582,7 @@ Usergrid.Entity.prototype.getConnections = function(connection, callback) {
             if (self._client.logging) {
                 console.log(error);
             }
-            callback(true, error);
+            doCallback(callback, [ true, error ], self);
         }
         return;
     }
@@ -1617,9 +1604,7 @@ Usergrid.Entity.prototype.getConnections = function(connection, callback) {
                 self[connection][data.entities[i].name] = data.entities[i];
             }
         }
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1635,9 +1620,7 @@ Usergrid.Entity.prototype.getGroups = function(callback) {
             console.log("entity could not be connected");
         }
         self.groups = data.entities;
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1656,9 +1639,7 @@ Usergrid.Entity.prototype.getActivities = function(callback) {
             data.entities[entity].createdDate = new Date(data.entities[entity].created).toUTCString();
         }
         self.activities = data.entities;
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1679,9 +1660,7 @@ Usergrid.Entity.prototype.getFollowing = function(callback) {
             data.entities[entity]._portal_image_icon = image;
         }
         self.following = data.entities;
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1702,9 +1681,7 @@ Usergrid.Entity.prototype.getFollowers = function(callback) {
             data.entities[entity]._portal_image_icon = image;
         }
         self.followers = data.entities;
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1720,9 +1697,7 @@ Usergrid.Entity.prototype.getRoles = function(callback) {
             console.log("could not get user roles");
         }
         self.roles = data.entities;
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1769,9 +1744,7 @@ Usergrid.Entity.prototype.getPermissions = function(callback) {
             }
         }
         self.permissions = permissions;
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -1798,7 +1771,7 @@ Usergrid.Entity.prototype.disconnect = function(connection, entity, callback) {
             if (self._client.logging) {
                 console.log(error);
             }
-            callback(true, error);
+            doCallback(callback, [ true, error ], self);
         }
         return;
     }
@@ -1811,7 +1784,7 @@ Usergrid.Entity.prototype.disconnect = function(connection, entity, callback) {
             if (self._client.logging) {
                 console.log(error);
             }
-            callback(true, error);
+            doCallback(callback, [ true, error ], self);
         }
         return;
     }
@@ -1824,9 +1797,7 @@ Usergrid.Entity.prototype.disconnect = function(connection, entity, callback) {
         if (err && self._client.logging) {
             console.log("entity could not be disconnected");
         }
-        if (typeof callback === "function") {
-            callback(err, data);
-        }
+        doCallback(callback, [ err, data ], self);
     });
 };
 
@@ -1921,7 +1892,7 @@ Usergrid.Collection.prototype.addCollection = function(collectionName, options, 
                 user._portal_image_icon = image;
             }
             self[collectionName] = collection;
-            callback(err, collection);
+            doCallback(callback, [ err, collection ], self);
         }
     });
 };
@@ -1982,9 +1953,7 @@ Usergrid.Collection.prototype.fetch = function(callback) {
                 }
             }
         }
-        if (typeof callback === "function") {
-            callback(err, data);
-        }
+        doCallback(callback, [ err, data ], self);
     });
 };
 
@@ -2006,9 +1975,7 @@ Usergrid.Collection.prototype.addEntity = function(options, callback) {
             var count = self._list.length;
             self._list[count] = entity;
         }
-        if (typeof callback === "function") {
-            callback(err, entity);
-        }
+        doCallback(callback, [ err, entity ], self);
     });
 };
 
@@ -2033,9 +2000,7 @@ Usergrid.Collection.prototype.destroyEntity = function(entity, callback) {
             if (self._client.logging) {
                 console.log("could not destroy entity");
             }
-            if (typeof callback === "function") {
-                callback(err, data);
-            }
+            doCallback(callback, [ err, data ], self);
         } else {
             //destroy was good, so repopulate the collection
             self.fetch(callback);
@@ -2323,9 +2288,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
             if (self._client.logging) {
                 console.log("error getting group");
             }
-            if (typeof callback === "function") {
-                callback(err, data);
-            }
+            doCallback(callback, [ err, data ], self);
         } else {
             if (data.entities && data.entities.length) {
                 var groupData = data.entities[0];
@@ -2353,9 +2316,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
                             }
                         }
                     }
-                    if (typeof callback === "function") {
-                        callback(err, data, self._list);
-                    }
+                    doCallback(callback, [ err, data, self._list ], self);
                 });
             }
         }
@@ -2371,9 +2332,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
  *  @return {function} callback(err, data);
  */
 Usergrid.Group.prototype.members = function(callback) {
-    if (typeof callback === "function") {
-        callback(null, this._list);
-    }
+    doCallback(callback, [ null, this._list ], this);
 };
 
 /*
@@ -2395,9 +2354,7 @@ Usergrid.Group.prototype.add = function(options, callback) {
     };
     this._client.request(options, function(error, data) {
         if (error) {
-            if (typeof callback === "function") {
-                callback(error, data, data.entities);
-            }
+            doCallback(callback, [ error, data, data.entities ], self);
         } else {
             self.fetch(callback);
         }
@@ -2423,9 +2380,7 @@ Usergrid.Group.prototype.remove = function(options, callback) {
     };
     this._client.request(options, function(error, data) {
         if (error) {
-            if (typeof callback === "function") {
-                callback(error, data);
-            }
+            doCallback(callback, [ error, data ], self);
         } else {
             self.fetch(callback);
         }
@@ -2451,9 +2406,7 @@ Usergrid.Group.prototype.feed = function(callback) {
         if (err && self.logging) {
             console.log("error trying to log user in");
         }
-        if (typeof callback === "function") {
-            callback(err, data, data.entities);
-        }
+        doCallback(callback, [ err, data, data.entities ], self);
     });
 };
 
@@ -2493,9 +2446,7 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback) {
     };
     var entity = new Usergrid.Entity(options);
     entity.save(function(err, data) {
-        if (typeof callback === "function") {
-            callback(err, entity);
-        }
+        doCallback(callback, [ err, entity ]);
     });
 };
 
@@ -2514,9 +2465,7 @@ Usergrid.Counter = function(options, callback) {
     this._data.timestamp = options.timestamp || 0;
     this._data.type = "events";
     this._data.counters = options.counters || {};
-    if (typeof callback === "function") {
-        callback.call(self, false, self);
-    }
+    doCallback(callback, [ false, self ], self);
 };
 
 var COUNTER_RESOLUTIONS = [ "all", "minute", "five_minutes", "half_hour", "hour", "six_day", "day", "week", "month" ];
@@ -2555,13 +2504,9 @@ Usergrid.Counter.prototype.fetch = function(callback) {
 Usergrid.Counter.prototype.increment = function(options, callback) {
     var self = this, name = options.name, value = options.value;
     if (!name) {
-        if (typeof callback === "function") {
-            return callback.call(self, true, "'value' for increment, decrement must be a number");
-        }
+        return doCallback(callback, [ true, "'name' for increment, decrement must be a number" ], self);
     } else if (isNaN(value)) {
-        if (typeof callback === "function") {
-            return callback.call(self, true, "'value' for increment, decrement must be a number");
-        }
+        return doCallback(callback, [ true, "'value' for increment, decrement must be a number" ], self);
     } else {
         self._data.counters[name] = parseInt(value) || 1;
         return self.save(callback);
@@ -2681,9 +2626,7 @@ Usergrid.Counter.prototype.getData = function(options, callback) {
                 self._data.counters[counter.name] = counter.value || counter.values;
             });
         }
-        if (typeof callback === "function") {
-            callback.call(self, err, data);
-        }
+        return doCallback(callback, [ err, data ], self);
     });
 };
 
