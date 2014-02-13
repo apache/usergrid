@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.cassandra.config.Schema;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.usergrid.java.client.Client;
-import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.response.ApiResponse;
 import static org.usergrid.java.client.utils.ObjectUtils.isEmpty;
 

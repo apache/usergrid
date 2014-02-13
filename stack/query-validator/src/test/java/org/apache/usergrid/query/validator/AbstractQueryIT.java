@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usergrid.query.validator;
+package org.apache.usergrid.query.validator;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.BeforeClass;
-import org.usergrid.management.ApplicationInfo;
-import org.usergrid.management.ManagementService;
-import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.UserInfo;
-import org.usergrid.persistence.Entity;
-import org.usergrid.utils.JsonUtils;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.utils.JsonUtils;
 
 import java.io.IOException;
 import java.net.URL;

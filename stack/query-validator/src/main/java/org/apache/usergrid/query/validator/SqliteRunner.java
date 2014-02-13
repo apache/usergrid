@@ -29,9 +29,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.swing.tree.RowMapper;
-import org.usergrid.query.validator.QueryEntity;
-import org.usergrid.query.validator.QueryRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 /**
  * @author Sungju Jin

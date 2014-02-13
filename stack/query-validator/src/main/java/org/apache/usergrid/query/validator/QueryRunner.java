@@ -17,9 +17,9 @@
  */
 package org.apache.usergrid.query.validator;
 
-import org.apache.usergrid.persistence.Entity;
 
 import java.util.List;
+import org.apache.usergrid.persistence.Entity;
 
 /**
  * @author Sungju Jin

@@ -15,18 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usergrid.query.validator;
+package org.apache.usergrid.query.validator;
 
-import org.usergrid.persistence.Entity;
+import org.junit.ClassRule;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.query.validator.users.UserQueryIT;
+import org.apache.usergrid.rest.ITSetup;
 
-import java.util.List;
+@RunWith(Suite.class)
+@Suite.SuiteClasses(
+        {
+                UserQueryIT.class
+        })
+public class QueryITSuite {
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
-/**
- * @author Sungju Jin
- */
-public class DefaultQueryResultsMatcher implements QueryResultsMatcher {
-    @Override
-    public boolean equals(List<Entity> expectedEntities, List<Entity> actuallyEntities) {
-        return expectedEntities.equals(actuallyEntities);
-    }
+    //TODO Detecting current path
+    @ClassRule
+    public static ITSetup serverResource = new ITSetup( cassandraResource, "../rest/src/main/webapp" );
 }

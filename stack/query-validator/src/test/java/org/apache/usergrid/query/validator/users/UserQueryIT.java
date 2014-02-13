@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usergrid.query.validator.users;
+package org.apache.usergrid.query.validator.users;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.usergrid.persistence.Entity;
-import org.usergrid.query.validator.AbstractQueryIT;
-import org.usergrid.query.validator.QueryRequest;
-import org.usergrid.query.validator.QueryResponse;
-import org.usergrid.query.validator.QueryResultsMatcher;
-import org.usergrid.utils.StringUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.query.validator.AbstractQueryIT;
+import org.apache.usergrid.query.validator.QueryRequest;
+import org.apache.usergrid.query.validator.QueryResponse;
+import org.apache.usergrid.query.validator.QueryResultsMatcher;
+import org.apache.usergrid.utils.StringUtils;
 
 import java.util.List;
 
