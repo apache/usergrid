@@ -209,6 +209,14 @@
             <version>0.0.3</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-rest</artifactId>
+            <version>0.0.29-SNAPSHOT</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 
 </project>

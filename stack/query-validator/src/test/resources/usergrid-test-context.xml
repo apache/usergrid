@@ -22,13 +22,13 @@
 
     <import resource="usergrid-rest-context.xml"/>
 
-    <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager">
+    <bean id="traceTagManager" class="org.apache.usergrid.persistence.cassandra.util.TraceTagManager">
         <property name="reportUnattached" value="false"/>
         <property name="traceEnabled" value="false"/>
     </bean>
 
 
-    <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore"/>
+    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore"/>
 
     <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
         <constructor-arg ref="entityManagerFactory"/>
