@@ -17,63 +17,64 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
-import org.junit.Assert;
 import static org.junit.Assert.assertSame;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith( JukitoRunner.class )
 @UseModules( TestCollectionModule.class )
-public class WriteOptimisticVerifyTest {
+public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
-    @ClassRule
-    public static CassandraRule cassandraRule = new CassandraRule();
-
-    @Inject
-    @Rule
-    public MigrationManagerRule migrationManagerRule = new MigrationManagerRule();
-
-    @Inject
-    private MvccLogEntrySerializationStrategy logEntryStrat;
+    @Override
+    protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
+        MvccLogEntrySerializationStrategy logstrat = mock( MvccLogEntrySerializationStrategy.class);
+        new WriteOptimisticVerify( logstrat ).call( event );
+    }
 
     @Test
-    public void testStartStage() throws Exception {
-
-        Assert.assertNotNull( logEntryStrat );
+    public void testNoConflict() throws Exception {
 
         final CollectionScope collectionScope = mock( CollectionScope.class );
         when( collectionScope.getOrganization() )
-                .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
+            .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
         when( collectionScope.getOwner() )
-                .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
+            .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
 
-        // Set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();
-
         final MvccEntity mvccEntity = fromEntity( entity );
 
+        List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
+        logEntries.add( new MvccLogEntryImpl( 
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE ));
+        logEntries.add( new MvccLogEntryImpl( 
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.COMMITTED));
+
+        MvccLogEntrySerializationStrategy noConflictLog = 
+            mock( MvccLogEntrySerializationStrategy.class );
+        when( noConflictLog.load( collectionScope, entity.getId(), entity.getVersion(), 2) )
+            .thenReturn( logEntries );
+
         // Run the stage
-        WriteOptimisticVerify newStage = new WriteOptimisticVerify( logEntryStrat );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
 
         CollectionIoEvent<MvccEntity> result;
         result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -89,6 +90,42 @@ public class WriteOptimisticVerifyTest {
         assertSame( "Id correct", entity.getId(), entry.getId() );
         assertSame( "Version did not not match entityId", entity.getVersion(), entry.getVersion() );
         assertSame( "Entity correct", entity, entry.getEntity().get() );
+    }
+
+    @Test
+    public void testConflict() throws Exception {
+
+        final CollectionScope collectionScope = mock( CollectionScope.class );
+        when( collectionScope.getOrganization() )
+            .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
+        when( collectionScope.getOwner() )
+            .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
+
+        final Entity entity = generateEntity();
+        final MvccEntity mvccEntity = fromEntity( entity );
+
+        List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
+        logEntries.add( new MvccLogEntryImpl( 
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE ));
+        logEntries.add( new MvccLogEntryImpl( 
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE));
+
+        MvccLogEntrySerializationStrategy noConflictLog = 
+            mock( MvccLogEntrySerializationStrategy.class );
+        when( noConflictLog.load( collectionScope, entity.getId(), entity.getVersion(), 2) )
+            .thenReturn( logEntries );
+
+        // Run the stage
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
+
+        CollectionIoEvent<MvccEntity> result;
+        boolean conflictDetected = false;
+        try {
+            result = newStage.call( new CollectionIoEvent<MvccEntity>(collectionScope, mvccEntity));
+        } catch (Exception e) {
+            conflictDetected = true;
+        }
+        assertTrue( conflictDetected );
     }
 }
 
