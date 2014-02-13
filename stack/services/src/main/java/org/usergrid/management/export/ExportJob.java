@@ -39,7 +39,7 @@ public class ExportJob extends OnlyOnceJob {
 
         jobExecution.heartbeat();
 //pass in jobExecution so that you can call the heartbeat in the do export method.
-        exportService.doExport( config );
+        exportService.doExport( config, jobExecution );
 
         logger.info( "executed ExportJob completed normally" );
     }

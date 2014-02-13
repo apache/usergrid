@@ -3,6 +3,7 @@ package org.usergrid.management.export;
 
 import java.util.UUID;
 
+import org.usergrid.batch.JobExecution;
 import org.usergrid.management.ExportInfo;
 
 
@@ -23,7 +24,7 @@ public interface ExportService {
      * Perform the export to the external resource
      * @param config
      */
-    void doExport(ExportInfo config) throws Exception;
+    void doExport(ExportInfo config, JobExecution jobExecution) throws Exception;
 
     /**
      * Returns the UUID to the user
