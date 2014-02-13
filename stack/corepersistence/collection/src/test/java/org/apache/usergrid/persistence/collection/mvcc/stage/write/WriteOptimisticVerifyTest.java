@@ -24,7 +24,6 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
@@ -45,7 +44,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith( JukitoRunner.class )
 @UseModules( TestCollectionModule.class )
-public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
+public class WriteOptimisticVerifyTest {
 
     @ClassRule
     public static CassandraRule cassandraRule = new CassandraRule();
@@ -91,12 +90,6 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         assertSame( "Version did not not match entityId", entity.getVersion(), entry.getVersion() );
         assertSame( "Entity correct", entity, entry.getEntity().get() );
     }
-
-    @Override
-    protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
-        new WriteOptimisticVerify( logEntryStrat ).call( event );
-    }
-
 }
 
 
