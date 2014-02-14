@@ -35,6 +35,5 @@ public class QueryITSuite {
 
     //TODO Detecting current path
     @ClassRule
-    public static ITSetup serverResource = new ITSetup( cassandraResource );
-    //public static ITSetup serverResource = new ITSetup( cassandraResource, "../rest/src/main/webapp" );
+    public static ITSetup serverResource = new ITSetup( cassandraResource, "../rest/src/main/webapp" );
 }
