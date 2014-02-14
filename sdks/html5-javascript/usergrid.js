@@ -1,4 +1,4 @@
-/*! usergrid@0.0.0 2014-02-13 */
+/*! usergrid@0.0.0 2014-02-14 */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
 };
@@ -540,8 +540,7 @@ function doCallback(callback, params, context) {
         var entities = this.getEntities();
         return entities[0];
     };
-    //Usergrid.Entity=function(){};
-    //Usergrid.Collection=function(){};
+    Usergrid.VERSION = Usergrid.USERGRID_SDK_VERSION = "0.10.08";
     global[name] = Usergrid;
     global[name].noConflict = function() {
         if (overwrittenName) {
