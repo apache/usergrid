@@ -17,15 +17,23 @@
  */
 package org.apache.usergrid.query.validator;
 
+import org.junit.ClassRule;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.query.validator.users.UserQueryIT;
+import org.apache.usergrid.rest.ITSetup;
 
-import java.util.List;
-import org.apache.usergrid.persistence.Entity;
+@RunWith(Suite.class)
+@Suite.SuiteClasses(
+        {
+                UserQueryIT.class
+        })
+public class QueryITSuite {
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
-/**
- * @author Sungju Jin
- */
-public interface QueryRunner {
-    public boolean setup();
-    public List<Entity> execute(String query);
-    public List<Entity> execute(String query, int limit);
+    //TODO Detecting current path
+    @ClassRule
+    public static ITSetup serverResource = new ITSetup( cassandraResource, "../rest/src/main/webapp" );
 }

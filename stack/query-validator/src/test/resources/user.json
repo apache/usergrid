@@ -10,14 +10,14 @@
         "name":"zoozooz",
         "username":"zoozooz",
         "address":"서울시 관악구 봉천동",
-        "age":16,
+        "age":76,
         "sex":"male"
     },
     {
         "name":"r2fresh",
         "username":"r2fresh",
         "address":"경기도 고양시 일산",
-        "age":16,
+        "age":36,
         "sex":"male"
     },
     {
@@ -38,14 +38,14 @@
         "name":"izakaya",
         "username":"izakaya",
         "address":"인천광역시 어디어디",
-        "age":16,
+        "age":28,
         "sex":"male"
     },
     {
         "name":"aksagirl",
         "username":"aksagirl",
         "address":"부산광역시 어딘가",
-        "age":16,
+        "age":26,
         "sex":"male"
     },
     {
@@ -67,13 +67,6 @@
         "username":"realbeast",
         "address":"서울시 어디쯤",
         "age":10,
-        "sex":"male"
-    },
-    {
-        "name":"akaia75",
-        "username":"akaia75",
-        "address":"서울시 구로구",
-        "age":13,
         "sex":"male"
     },
     {

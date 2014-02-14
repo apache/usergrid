@@ -17,15 +17,13 @@
  */
 package org.apache.usergrid.query.validator;
 
+import org.apache.usergrid.persistence.Entity;
 
 import java.util.List;
-import org.apache.usergrid.persistence.Entity;
 
 /**
  * @author Sungju Jin
  */
-public interface QueryRunner {
-    public boolean setup();
-    public List<Entity> execute(String query);
-    public List<Entity> execute(String query, int limit);
+public interface QueryResultsMatcher {
+    boolean equals(List<Entity> expectedEntities, List<Entity> actuallyEntities);
 }
