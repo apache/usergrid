@@ -584,9 +584,7 @@
         self.setObject('applications', applications);
 
       }
-      if (typeof(callback) === 'function') {
-        callback(err, data, user, organizations, applications);
-      }
+      doCallback(callback, [err, data, user, organizations, applications], self);
     });
   };
 
@@ -621,9 +619,7 @@
         user = new Usergrid.Entity(options);
         self.setToken(data.access_token);
       }
-      if (typeof(callback) === 'function') {
-        callback(err, data, user);
-      }
+      doCallback(callback, [err, data, user], self);
     });
   };
 
@@ -649,18 +645,14 @@
           if (self.logging) {
             console.log('error trying to log user in');
           }
-          if (typeof(callback) === 'function') {
-            callback(err, data, null);
-          }
+          doCallback(callback, [err, data, null], self);
         } else {
           var options = {
             client:self,
             data:data.entities[0]
           };
           var user = new Usergrid.Entity(options);
-          if (typeof(callback) === 'function') {
-            callback(null, data, user);
-          }
+          doCallback(callback, [null, data, user], self);
         }
       });
     }
