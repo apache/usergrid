@@ -6,7 +6,7 @@
             <param value="%d %p (%t) [%c] - %m%n" name="ConversionPattern"/>
         </layout>
     </appender>
-    <logger name="org.usergrid.tools">
+    <logger name="org.apache.usergrid.tools">
         <level value="info" />
         <appender-ref ref="stdout"/>
     </logger>

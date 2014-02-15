@@ -1,5 +1,5 @@
-from org.usergrid.persistence import EntityRef
-from org.usergrid.services import AbstractService
+from org.apache.usergrid.persistence import EntityRef
+from org.apache.usergrid.services import AbstractService
 from java.util import UUID
 
 class PytestService(AbstractService):

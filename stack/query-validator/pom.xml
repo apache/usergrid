@@ -3,19 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.usergrid</groupId>
+        <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>0.0.28-SNAPSHOT</version>
+        <version>0.0.29-SNAPSHOT</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- This seems to be a safe figure -->
-        <core.it.heapmax>1024m</core.it.heapmax>
-        <core.it.heapmin>1024m</core.it.heapmin>
     </properties>
     <artifactId>usergrid-query-validator</artifactId>
     <name>Usergrid Query Validator</name>
-    <description>Query validator tools for Usergrid.</description>
+    <description>Query validator tools for Usergrid system.</description>
     <packaging>jar</packaging>
 
     <build>
@@ -42,8 +39,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xmx${core.it.heapmax} -Xms${core.it.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                    </argLine>
+                    <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
 
                     <includes>
                         <include>**/*Suite.java</include>
@@ -92,13 +88,13 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-config</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-core</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -110,7 +106,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-rest</artifactId>
             <version>${project.version}</version>
             <classifier>classes</classifier>
@@ -123,14 +119,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-rest</artifactId>
             <version>${project.version}</version>
             <classifier>compiled-jsp</classifier>
         </dependency>
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-rest</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -163,22 +159,8 @@
             <artifactId>spring-webmvc</artifactId>
         </dependency>
 
-        <!--<dependency>-->
-        <!--&lt;!&ndash; TODO - should not scope be 'test' ? &ndash;&gt;-->
-        <!--<groupId>org.slf4j</groupId>-->
-        <!--<artifactId>jcl-over-slf4j</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-        <!--&lt;!&ndash; TODO - should not scope be 'test' ? &ndash;&gt;-->
-        <!--<groupId>org.slf4j</groupId>-->
-        <!--<artifactId>jul-to-slf4j</artifactId>-->
-        <!--</dependency>-->
-
-        <!-- Testing and Logging Dependencies -->
-
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-config</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -186,14 +168,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-test-utils</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -293,4 +275,5 @@
         </dependency>
 
     </dependencies>
+
 </project>

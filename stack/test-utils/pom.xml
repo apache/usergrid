@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.usergrid</groupId>
+    <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.28-SNAPSHOT</version>
+    <version>0.0.29-SNAPSHOT</version>
   </parent>
 
   <artifactId>usergrid-test-utils</artifactId>
@@ -52,13 +52,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <!--<dependency>-->
-    <!--<groupId>org.usergrid</groupId>-->
+    <!--<groupId>org.apache.usergrid</groupId>-->
     <!--<artifactId>usergrid-services</artifactId>-->
     <!--<version>${project.version}</version>-->
     <!--</dependency>-->

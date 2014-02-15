@@ -99,7 +99,7 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
         for ( final Field field : entity.getFields() ) {
 
             //if it's unique, create a function to validate it and add it to the list of concurrent validations
-            if ( !field.isUnique() ) {
+            if ( field.isUnique() ) {
 
                 Observable<FieldUniquenessResult> result =  Observable.from( field ).subscribeOn( scheduler ).map(new Func1<Field,  FieldUniquenessResult>() {
                     @Override

@@ -274,5 +274,21 @@ class Collection {
     }
     return FALSE;
   }
+  public function serialize(){
+    $data = array();
+    $data->type = $this->type;
+    $data->qs = $this->qs;
+    $data->iterator = $this->iterator;
+    $data->previous = $this->previous;
+    $data->next = $this->next;
+    $data->cursor = $this->cursor;
+    $data->list=[];
+    $this->reset_entity_pointer();
+    while ($this->has_next_entity()) {
+        $entity = $this->get_next_entity();
+        array_push($data->list, $entity->get_json())
+    }
+    return json_encode($data);
+  }
 
 }
