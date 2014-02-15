@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata>
   <groupId>com.netflix.astyanax</groupId>
-  <artifactId>astyanax-queue</artifactId>
+  <artifactId>astyanax-entity-mapper</artifactId>
   <version>1.56.49-SNAPSHOT</version>
   <versioning>
-    <versions>
-      <version>1.56.49-SNAPSHOT</version>
-    </versions>
-    <lastUpdated>20140215220904</lastUpdated>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <lastUpdated>20140215220903</lastUpdated>
   </versioning>
 </metadata>

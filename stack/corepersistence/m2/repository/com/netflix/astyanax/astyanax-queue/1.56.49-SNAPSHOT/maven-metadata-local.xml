@@ -4,9 +4,9 @@
   <artifactId>astyanax-queue</artifactId>
   <version>1.56.49-SNAPSHOT</version>
   <versioning>
-    <versions>
-      <version>1.56.49-SNAPSHOT</version>
-    </versions>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
     <lastUpdated>20140215220904</lastUpdated>
   </versioning>
 </metadata>

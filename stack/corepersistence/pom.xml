@@ -14,7 +14,7 @@
 
   <properties>
     <surefire.version>2.16</surefire.version>
-    <astyanax.version>1.56.48</astyanax.version>
+    <astyanax.version>1.56.49-SNAPSHOT</astyanax.version>
     <jukito.version>1.4-UG</jukito.version>
     <guice.version>3.0</guice.version>
     <archaius.version>0.5.12</archaius.version>
