@@ -29,7 +29,7 @@ import com.google.inject.Module;
 public class S3ExportImpl implements S3Export {
 
     @Override
-    public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo ) {
+    public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo, String filename ) {
 
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
         /*won't need any of the properties as I have the export info*/
@@ -60,7 +60,7 @@ public class S3ExportImpl implements S3Export {
         }
         catch ( Exception ex ) {
             logger.error( "Could not start binary service: {}", ex.getMessage() );
-            throw new RuntimeException( ex );
+            //throw new RuntimeException( ex );
         }
 
         try {
@@ -68,7 +68,7 @@ public class S3ExportImpl implements S3Export {
 
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( "test.json" ).payload( inputStream ).calculateMD5().contentType( "text/plain" );
+                    blobStore.blobBuilder( filename ).payload( inputStream ).calculateMD5().contentType( "text/plain" );
 
 
             Blob blob = blobBuilder.build();

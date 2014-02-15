@@ -265,9 +265,16 @@ public class ExportServiceImpl implements ExportService {
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
             long starting_time = System.currentTimeMillis();
 
+            //jg.writeStartObject();
+
+
             // Loop through the collections. This is the only way to loop
             // through the entities in the application (former namespace).
+            //could support queries, just need to implement that in the rest endpoint.
             for ( String collectionName : metadata.keySet() ) {
+
+                //jg.writeFieldName( "EntityInfo" );
+
 
 
                 Query query = new Query();
@@ -282,8 +289,11 @@ public class ExportServiceImpl implements ExportService {
                 while ( entities.size() > 0 ) {
                     jobExecution.heartbeat();
                     for ( Entity entity : entities ) {
+                        jg.writeStartObject();
+                        jg.writeFieldName( "Metadata" );
                         jg.writeObject( entity );
                         saveCollectionMembers( jg, em, application.getValue(), entity );
+                        jg.writeEndObject();
                     }
 
                     //we're done
@@ -295,12 +305,15 @@ public class ExportServiceImpl implements ExportService {
                     query.setCursor( entities.getCursor() );
 
                     entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
+
                 }
+
             }
 
             // Close writer and file for this application.
 
             // logger.warn();
+            //jg.writeEndObject();
             jg.writeEndArray();
             jg.close();
             baos.flush();
@@ -308,7 +321,7 @@ public class ExportServiceImpl implements ExportService {
 
 
             InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            s3Export.copyToS3( is, config );
+            s3Export.copyToS3( is, config , appFileName);
         }
     }
 
@@ -335,9 +348,8 @@ public class ExportServiceImpl implements ExportService {
     private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String application, Entity entity )
             throws Exception {
 
-        long timestamp = System.currentTimeMillis();
-
         Set<String> collections = em.getCollections( entity );
+        //jg.writeStartObject();
 
         // Only create entry for Entities that have collections
         if ( ( collections == null ) || collections.isEmpty() ) {
@@ -350,6 +362,7 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( collectionName );
             jg.writeStartArray();
 
+            //is 100000 an arbitary number?
             Results collectionMembers =
                     em.getCollection( entity, collectionName, null, 100000, Results.Level.IDS, false );
 
@@ -372,7 +385,7 @@ public class ExportServiceImpl implements ExportService {
         saveDictionaries( entity, em, jg );
 
         // End the object if it was Started
-        jg.writeEndObject();
+        //jg.writeEndObject();
     }
 
 
