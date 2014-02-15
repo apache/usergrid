@@ -7,6 +7,12 @@
   <version>1.56.49-SNAPSHOT</version>
   <dependencies>
     <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-recipes</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>com.eaio.uuid</groupId>
       <artifactId>uuid</artifactId>
       <version>3.2</version>
@@ -17,6 +23,12 @@
       <artifactId>commons-codec</artifactId>
       <version>1.5</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-thrift</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -43,12 +55,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-cassandra</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
       <version>1.9.2</version>
@@ -61,15 +67,15 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.stephenc.high-scale-lib</groupId>
-      <artifactId>high-scale-lib</artifactId>
-      <version>1.1.2</version>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-cassandra</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-core</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
+      <groupId>com.github.stephenc.high-scale-lib</groupId>
+      <artifactId>high-scale-lib</artifactId>
+      <version>1.1.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -85,15 +91,15 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-recipes</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.6.4</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-core</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -107,12 +113,6 @@
       <artifactId>jettison</artifactId>
       <version>1.2</version>
       <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-thrift</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

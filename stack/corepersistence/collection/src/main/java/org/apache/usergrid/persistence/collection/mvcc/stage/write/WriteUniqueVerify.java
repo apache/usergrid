@@ -83,7 +83,6 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
 
         // use simple thread pool to verify fields in parallel
 
-        //TODO Dave: We don't want to use custom thread pools and futures here.
         // We want to use concurrent to fork all validations this way they're wrapped by timeouts and
         // Hystrix thread pools for JMX operations.  See the WriteCommand in the EntityCollectionManagerImpl
         // I think it still needs added to the Concurrent utility class

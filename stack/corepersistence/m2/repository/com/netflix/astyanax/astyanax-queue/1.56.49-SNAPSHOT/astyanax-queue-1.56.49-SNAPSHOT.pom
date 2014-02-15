@@ -7,6 +7,12 @@
   <version>1.56.49-SNAPSHOT</version>
   <dependencies>
     <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-recipes</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>com.eaio.uuid</groupId>
       <artifactId>uuid</artifactId>
       <version>3.2</version>
@@ -23,6 +29,12 @@
       <artifactId>junit</artifactId>
       <version>4.8.1</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-thrift</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
@@ -43,15 +55,15 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-cassandra</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
       <version>1.9.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-cassandra</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -61,21 +73,9 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-core</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
       <version>1.0.4.1</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-recipes</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -91,6 +91,12 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>com.netflix.astyanax</groupId>
+      <artifactId>astyanax-core</artifactId>
+      <version>1.56.49-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
       <version>1.9.2</version>
@@ -100,12 +106,6 @@
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
       <version>1.2</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.astyanax</groupId>
-      <artifactId>astyanax-thrift</artifactId>
-      <version>1.56.49-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
