@@ -56,7 +56,7 @@ public interface EdgeSerialization {
 
 
     /**
-     * Search for specific versions of the edge from source->target. Will return all versions
+     * Search for specific versions of the edge from source->target. Will return all versions.
      * @param scope
      * @param search
      * @return

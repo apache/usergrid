@@ -144,24 +144,24 @@ public class EdgeSerializationTest {
         //get our edges out by name
 
         Iterator<Edge> results =
-                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge1 ) );
+                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge2 ) );
 
-        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
         //test getting the next edge
-        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge2 ) );
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge1 ) );
 
         assertFalse( "No results should be returned", results.hasNext() );
 
         //test getting source edges from the target
 
-        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge1 ) );
-        assertEquals( edge2, results.next() );
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge2 ) );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
 
-        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge2 ) );
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge1 ) );
         assertFalse( "No results should be returned", results.hasNext() );
         //test resume by name
     }
@@ -198,33 +198,33 @@ public class EdgeSerializationTest {
 
         Iterator<Edge> results = serialization.getEdgeFromSource( scope, search );
 
+        assertEquals( edgev2, results.next() );
         assertEquals( edgev1, results.next() );
-        assertEquals( edgev2, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-
-        results = serialization.getEdgeToTarget( scope, search );
-
-        assertEquals( edgev1, results.next() );
-        assertEquals( edgev2, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-        //test paging
-        search = createGetByEdge( sourceId, "edge1", targetId, now, edgev1 );
-
-        results = serialization.getEdgeFromSource( scope, search );
-
-        assertEquals( edgev2, results.next() );
         assertFalse( "No results should be returned", results.hasNext() );
 
 
         results = serialization.getEdgeToTarget( scope, search );
 
         assertEquals( edgev2, results.next() );
+        assertEquals( edgev1, results.next() );
         assertFalse( "No results should be returned", results.hasNext() );
 
         //test paging
         search = createGetByEdge( sourceId, "edge1", targetId, now, edgev2 );
+
+        results = serialization.getEdgeFromSource( scope, search );
+
+        assertEquals( edgev1, results.next() );
+        assertFalse( "No results should be returned", results.hasNext() );
+
+
+        results = serialization.getEdgeToTarget( scope, search );
+
+        assertEquals( edgev1, results.next() );
+        assertFalse( "No results should be returned", results.hasNext() );
+
+        //test paging
+        search = createGetByEdge( sourceId, "edge1", targetId, now, edgev1 );
 
         results = serialization.getEdgeFromSource( scope, search );
 

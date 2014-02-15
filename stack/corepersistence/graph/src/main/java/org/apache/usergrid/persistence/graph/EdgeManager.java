@@ -66,7 +66,7 @@ public interface EdgeManager {
      *
      * Delete the edge. Implementation should also delete the incoming (reversed) edge.
      */
-    void deleteEdge( Edge edge );
+    Observable<Edge> deleteEdge( Edge edge );
 
     /**
      * Returns an observable that emits all edges where the specified node is the source node. The edges will match the

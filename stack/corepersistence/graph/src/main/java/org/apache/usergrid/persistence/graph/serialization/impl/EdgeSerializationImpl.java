@@ -78,7 +78,6 @@ import com.netflix.astyanax.util.RangeBuilder;
 public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
-
     //holder to put data into col value
     private static final byte[] HOLDER = new byte[] { 0 };
 
@@ -234,13 +233,18 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
-                super.setRange( builder );
 
-                //set the last value in the range based on the max version
+
+                if ( last.isPresent() ) {
+                    super.setRange( builder );
+                    return;
+                }
+
+                //start seeking at a value < our max version
                 final DirectedEdge last = new DirectedEdge( targetId, maxVersion );
-                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
-                builder.setEnd( colValue );
+                builder.setStart( last, EDGE_SERIALIZER);
             }
+
 
             @Override
             protected RowKey generateRowKey() {
@@ -288,7 +292,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( sourceId, type, edge.id, edge.version );
             }
-
         } );
     }
 
@@ -321,8 +324,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( targetId, type, edge.id, edge.version );
             }
-
-
         } );
     }
 
@@ -337,7 +338,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String type = edgeType.getType();
 
         return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
-
 
 
             @Override
@@ -356,7 +356,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( edge.id, type, targetId, edge.version );
             }
-
         } );
     }
 
@@ -376,12 +375,14 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
-                super.setRange( builder );
+                if(last.isPresent()){
+                    super.setRange( builder );
+                    return;
+                }
 
                 //set the last value in the range based on the max version
-                final DirectedEdge last = new DirectedEdge( sourceId, maxVersion );
-                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
-                builder.setEnd( colValue );
+                final DirectedEdge colValue = new DirectedEdge( sourceId, maxVersion );
+                builder.setStart( colValue, EDGE_SERIALIZER );
             }
 
 
@@ -401,8 +402,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             protected Edge createEdge( final DirectedEdge edge ) {
                 return new SimpleEdge( edge.id, type, targetId, edge.version );
             }
-
-
         } );
     }
 
@@ -487,8 +486,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     /**
      * Helper to generate an edge definition by the type
-     * @param cf
-     * @return
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf, ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
@@ -549,16 +546,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         }
 
 
-        /**
-         * Creates a column value that will include the directed Edge as it's last element.  I.E all edges returned from
-         * the scan will have the node id and a version <= the specified directed edge version
-         */
-        public ByteBuffer createSearchEdgeInclusive( DirectedEdge edge ) {
-            final DynamicComposite colValue =
-                    createComposite( edge, AbstractComposite.ComponentEquality.GREATER_THAN_EQUAL );
-
-            return colValue.serialize();
-        }
 
 
         /**
@@ -570,7 +557,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             ID_COL_SERIALIZER.toComposite( composite, edge.id );
 
             //add our edge
-            composite.addComponent( edge.version, UUID_SERIALIZER, equality );
+            composite.addComponent( edge.version, UUID_SERIALIZER, ColumnTypes.UUID_TYPE_REVERSED, equality );
 
             return composite;
         }
@@ -638,8 +625,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
-     * Searcher to be used when performing the search.  Performs I/O transformation
-     * as well as parsing for the iterator
+     * Searcher to be used when performing the search.  Performs I/O transformation as well as parsing for the iterator
      */
     private static abstract class EdgeSearcher<R> implements ColumnParser<DirectedEdge, Edge> {
 
@@ -661,6 +647,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             //set our start range since it was supplied to us
             if ( last.isPresent() ) {
                 DirectedEdge sourceEdge = getStartColumn( last.get() );
+
 
                 builder.setStart( sourceEdge, EDGE_SERIALIZER );
             }
@@ -690,27 +677,20 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         /**
          * Create a row key for this search to use
-         * @return
          */
         protected abstract R generateRowKey();
 
 
         /**
          * Set the start column to begin searching from.  The last is provided
-         * @param last
-         * @return
          */
         protected abstract DirectedEdge getStartColumn( Edge last );
 
 
         /**
          * Create an edge to return to the user based on the directed edge provided
-         * @param edge
-         * @return
          */
         protected abstract Edge createEdge( DirectedEdge edge );
-
-
     }
 
 
@@ -772,8 +752,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             return new RowKeyType( id, hash );
         }
     }
-
-
 
 
     /**

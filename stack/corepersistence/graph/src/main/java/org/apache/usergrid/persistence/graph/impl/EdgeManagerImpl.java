@@ -23,6 +23,8 @@ package org.apache.usergrid.persistence.graph.impl;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.cassandra.thrift.Mutation;
+
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -36,14 +38,17 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.stage.GraphIoEvent;
 import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWriteStage;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.MutationBatch;
 
 import rx.Observable;
 import rx.Scheduler;
 import rx.util.functions.Func1;
+import rx.util.functions.Func2;
 
 
 /**
@@ -88,7 +93,98 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     @Override
-    public void deleteEdge( final Edge edge ) {
+    public Observable<Edge> deleteEdge( final Edge edge ) {
+        EdgeUtils.validateEdge( edge );
+//
+//
+//        Observable<Edge> observable = Observable.from( edge ).subscribeOn( scheduler );
+//
+//
+//        final SimpleSearchByEdge search =
+//                new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getVersion(),
+//                        null );
+//
+//
+//        final UUID maxVersion = edge.getVersion();
+//
+//        //search on both our source and target types, we need to filter them if there aren't any left
+//        observable.flatMap( new Func1<Edge, Observable<Edge>>() {
+//
+//            @Override
+//            public Observable<Edge> call( final Edge edge ) {
+//
+//                //take the first 2 edges and then count them.  If there are 2 elements, then
+//                //we can't remove the meta data.  If there are 2, we can
+//
+//                Observable<Edge> sourceEdges = Observable.create( new ObservableIterator<Edge>() {
+//                    @Override
+//                    protected Iterator<Edge> getIterator() {
+//                        return edgeSerialization.getEdgeFromSource( scope, search );
+//                    }
+//                } );
+//
+//                Observable<MutationBatch>
+//                        sourceDeletes = filter(sourceEdges, maxVersion).map( new Func1<Edge, MutationBatch>() {
+//                    @Override
+//                    public MutationBatch call( final Edge edge ) {
+//                        return edgeSerialization.deleteEdge( scope, edge );
+//                    }
+//                } );
+//
+//
+//                Observable<Edge> targetEdges = Observable.create( new ObservableIterator<Edge>() {
+//                    @Override
+//                    protected Iterator<Edge> getIterator() {
+//                        return edgeSerialization.getEdgeToTarget( scope, search );
+//                    }
+//                } );
+//
+//                Observable<MutationBatch> targetDeletes = filter(targetEdges, maxVersion).map( new Func1<Edge, MutationBatch> (){
+//
+//
+//                    @Override
+//                    public MutationBatch call( final Edge edge ) {
+//                        return edgeSerialization.deleteEdge( scope, edge );
+//                    }
+//                });
+//
+//                return Observable.zip( sourceDeletes, targetDeletes, new Func2<MutationBatch, MutationBatch, Edge>() {
+//
+//                    private MutationBatch batch;
+//
+//                    @Override
+//                    public Edge call( final MutationBatch mutationBatch, final MutationBatch mutationBatch2 ) {
+//                        if(batch == null){
+//                            batch = mutationBatch;
+//                        }
+//
+//                        batch.mergeShallow( mutationBatch );
+//                        batch.mergeShallow( mutationBatch2 );
+//
+//                        return batch;
+//                    }
+//                });
+//
+//                return Observable.zip( sourceEdges, targetEdges, new Func2<Edge, Edge, Edge>() {
+//                    @Override
+//                    public Edge call( final Edge sourceEdge, final Edge targetEdges ) {
+//
+//                        edgeSerialization.deleteEdge( scope, sourceEdge );
+//                        edgeSerialization.deleteEdge( scope, targetEdges );
+//
+//                        return edge;
+//                    }
+//                } );
+//
+//
+//
+//                return null;
+//
+//
+//            }
+//        } );
+
+
         throw new UnsupportedOperationException( "Not yet implemented" );
     }
 
@@ -193,12 +289,9 @@ public class EdgeManagerImpl implements EdgeManager {
 
     /**
      * If not max version is specified, just return the original observable.  If one is
-     * @param observable
-     * @param maxVersion
-     * @return
      */
     private Observable<Edge> filter( final Observable<Edge> observable, final UUID maxVersion ) {
-          return observable.filter( new Func1<Edge, Boolean>() {
+        return observable.filter( new Func1<Edge, Boolean>() {
             @Override
             public Boolean call( final Edge edge ) {
                 //our edge version needs to be <= max Version
