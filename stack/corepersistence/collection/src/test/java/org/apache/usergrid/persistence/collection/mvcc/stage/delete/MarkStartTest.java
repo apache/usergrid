@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class DeleteStartTest extends AbstractIdStageTest {
+public class MarkStartTest extends AbstractIdStageTest {
 
     @Test
     public void testWrite() {
@@ -56,7 +56,7 @@ public class DeleteStartTest extends AbstractIdStageTest {
 
 
         //run the stage
-        DeleteStart newStage = new DeleteStart( logStrategy, uuidService );
+        MarkStart newStage = new MarkStart( logStrategy, uuidService );
 
         final Id id = TestEntityGenerator.generateId();
 
@@ -92,6 +92,6 @@ public class DeleteStartTest extends AbstractIdStageTest {
 
         UUIDService uuidService = mock( UUIDService.class );
 
-        new DeleteStart( logStrategy, uuidService ).call( event );
+        new MarkStart( logStrategy, uuidService ).call( event );
     }
 }

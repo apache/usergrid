@@ -168,7 +168,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch clear( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
+    public MutationBatch mark( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );

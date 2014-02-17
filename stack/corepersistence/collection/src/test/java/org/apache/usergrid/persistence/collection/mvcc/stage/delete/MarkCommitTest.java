@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
-public class DeleteCommitTest extends AbstractMvccEntityStageTest {
+public class MarkCommitTest extends AbstractMvccEntityStageTest {
 
     /** Standard flow */
     @Test
@@ -117,7 +117,7 @@ public class DeleteCommitTest extends AbstractMvccEntityStageTest {
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
-        new DeleteCommit( logStrategy, mvccEntityStrategy ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy ).call( event );
     }
 
 }

@@ -350,7 +350,7 @@ public class EdgeHasherTest {
 
         assertEquals( "Check the sizes are equal", count, hashed.size() );
 
-        //force a clear
+        //force a mark
         hashed.clear();
     }
 

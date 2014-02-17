@@ -29,8 +29,8 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteCommit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.DeleteStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
@@ -79,8 +79,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     //delete stages
-    private final DeleteStart deleteStart;
-    private final DeleteCommit deleteCommit;
+    private final MarkStart markStart;
+    private final MarkCommit markCommit;
 
 
     @Inject
@@ -92,8 +92,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final WriteOptimisticVerify writeOptimisticVerify,
         final WriteCommit writeCommit, 
         final Load load, 
-        final DeleteStart deleteStart,
-        final DeleteCommit deleteCommit,
+        final MarkStart markStart,
+        final MarkCommit markCommit,
         @Assisted final CollectionScope collectionScope ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
@@ -104,8 +104,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
         this.load = load;
-        this.deleteStart = deleteStart;
-        this.deleteCommit = deleteCommit;
+        this.markStart = markStart;
+        this.markCommit = markCommit;
 
         this.uuidService = uuidService;
         this.scheduler = scheduler;
@@ -209,7 +209,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-            .subscribeOn( scheduler ).map( deleteStart ).map( deleteCommit );
+            .subscribeOn( scheduler ).map( markStart ).map( markCommit );
     }
 
 

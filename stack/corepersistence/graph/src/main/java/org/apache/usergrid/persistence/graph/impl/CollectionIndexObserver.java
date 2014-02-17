@@ -70,7 +70,7 @@ public class CollectionIndexObserver implements PostProcessObserver {
         if(entity.getEntity().isPresent()){
             em.writeEdge( edge );
         }
-        //entity does not exist, it's been removed, clear the edge
+        //entity does not exist, it's been removed, mark the edge
         else{
             em.deleteEdge( edge );
         }

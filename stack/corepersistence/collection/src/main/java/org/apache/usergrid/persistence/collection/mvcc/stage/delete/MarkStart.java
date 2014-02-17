@@ -26,15 +26,19 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -45,69 +49,64 @@ import rx.util.functions.Func1;
 
 
 /**
- * This phase should invoke any finalization, and mark the entity 
- * as committed in the data store before returning
+ * This is the first stage and should be invoked immediately when a write is started.  
+ * It should persist the start of a new write in the data store for 
+ * a checkpoint and recovery
  */
 @Singleton
-public class DeleteCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
+public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent<MvccEntity>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( DeleteCommit.class );
+    private static final Logger LOG = LoggerFactory.getLogger( MarkStart.class );
 
-    private final MvccLogEntrySerializationStrategy logStrat;
-    private final MvccEntitySerializationStrategy entityStrat;
 
+    private final MvccLogEntrySerializationStrategy logStrategy;
+    private final UUIDService uuidService;
+
+
+    /**
+     * Create a new stage with the current context
+     */
     @Inject
-    public DeleteCommit( final MvccLogEntrySerializationStrategy logStrat,
-                         final MvccEntitySerializationStrategy entityStrat ) {
+    public MarkStart( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
 
-        Preconditions.checkNotNull( 
-                logStrat, "logEntrySerializationStrategy is required" );
-        Preconditions.checkNotNull( 
-                entityStrat, "entitySerializationStrategy is required" );
+        Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
+        Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
-        this.logStrat = logStrat;
-        this.entityStrat = entityStrat;
+        this.logStrategy = logStrategy;
+        this.uuidService = uuidService;
     }
 
 
     @Override
-    public Void call( final CollectionIoEvent<MvccEntity> idIoEvent ) {
+    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<Id> entityIoEvent ) {
+        final Id entityId = entityIoEvent.getEvent();
 
-        final MvccEntity entity = idIoEvent.getEvent();
+        ValidationUtils.verifyIdentity( entityId );
 
-        ValidationUtils.verifyMvccEntityOptionalEntity( entity );
-
-        final Id entityId = entity.getId();
-        final UUID version = entity.getVersion();
+        final UUID version = uuidService.newTimeUUID();
 
 
-        final CollectionScope collectionScope = idIoEvent.getEntityCollection();
+        final CollectionScope collectionScope = entityIoEvent.getEntityCollection();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE );
 
-        MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
-
-        //insert a "cleared" value into the versions.  Post processing should actually delete
-        MutationBatch entityMutation = entityStrat.clear( collectionScope, entityId, version );
-
-        //merge the 2 into 1 mutation
-        logMutation.mergeShallow( entityMutation );
+        MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
 
         try {
-            logMutation.execute();
+            write.execute();
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
             throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
         }
 
-        /**
-         * We're done executing.
-         */
 
-        return null;
+        //create the mvcc entity for the next stage
+        final MvccEntityImpl nextStage = new MvccEntityImpl(entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+
+
+        return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
     }
 }
