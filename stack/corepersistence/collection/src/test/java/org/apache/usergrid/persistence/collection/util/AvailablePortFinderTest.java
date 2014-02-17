@@ -48,7 +48,7 @@ public class AvailablePortFinderTest {
     @Test
     public void testGetNextAvailable_int() {
         int result = AvailablePortFinder.getNextAvailable( 2000 );
-        assertTrue( result > 2000 );
+        assertTrue( result >= 2000 );
     }
 
     /**
