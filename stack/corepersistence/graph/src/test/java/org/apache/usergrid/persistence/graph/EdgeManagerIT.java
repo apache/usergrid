@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 
 
 @RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class} )
+@UseModules( { TestGraphModule.class } )
 //@UseModules( { TestGraphModule.class, EdgeManagerIT.InvalidInput.class } )
 public class EdgeManagerIT {
 
@@ -229,6 +229,146 @@ public class EdgeManagerIT {
     }
 
 
+    /**
+     * Tests that if multiple versions of an edge exist, only the distinct edges with a version <= max are returned
+     */
+    @Test
+    public void testWriteReadEdgeTypeVersionSourceDistinct() {
+
+        EdgeManager em = emf.createEdgeManager( scope );
+
+        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+
+
+        Edge edge1 = createEdge( "source", "test", "target" );
+
+        final Id sourceId = edge1.getSourceNode();
+        final Id targetId = edge1.getTargetNode();
+
+
+        em.writeEdge( edge1 ).toBlockingObservable().last();
+
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge2 ).toBlockingObservable().last();
+
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge3 ).toBlockingObservable().last();
+
+
+        //now test retrieving it, we should only get edge3, since it's the latest
+
+        SearchByEdgeType search =
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), null );
+
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge3, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        //now test with an earlier version, we shouldn't get the edge back
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge2.getVersion(), null );
+
+        edges = em.loadEdgesFromSource( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge2, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getVersion(), null );
+
+        edges = em.loadEdgesFromSource( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge1, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), earlyVersion, null );
+
+        edges = em.loadEdgesFromSource( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertFalse( "No more edges", returned.hasNext() );
+    }
+
+
+    @Test
+    public void testWriteReadEdgeTypeVersionTargetDistinct() {
+
+
+        EdgeManager em = emf.createEdgeManager( scope );
+
+        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+
+
+        Edge edge1 = createEdge( "source", "test", "target" );
+
+        final Id sourceId = edge1.getSourceNode();
+        final Id targetId = edge1.getTargetNode();
+
+
+        em.writeEdge( edge1 ).toBlockingObservable().last();
+
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge2 ).toBlockingObservable().last();
+
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge3 ).toBlockingObservable().last();
+
+
+        //now test retrieving it, we should only get edge3, since it's the latest
+
+        SearchByEdgeType search =
+                createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), null );
+
+        Observable<Edge> edges = em.loadEdgesToTarget( search );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge3, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        //now test with an earlier version, we shouldn't get the edge back
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge2.getVersion(), null );
+
+        edges = em.loadEdgesToTarget( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge2, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getVersion(), null );
+
+        edges = em.loadEdgesToTarget( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge1, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), earlyVersion, null );
+
+        edges = em.loadEdgesToTarget( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+         assertFalse( "No more edges", returned.hasNext() );
+    }
+
+
     @Test
     public void testWriteReadEdgeTypePagingSource() {
 
@@ -239,15 +379,15 @@ public class EdgeManagerIT {
 
         Edge edge1 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it
@@ -290,15 +430,15 @@ public class EdgeManagerIT {
 
         Edge edge1 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it
@@ -826,7 +966,7 @@ public class EdgeManagerIT {
 
 
     @Test( expected = NullPointerException.class )
-    public void invalidEdgeTypesWrite( @All Edge edge) {
+    public void invalidEdgeTypesWrite( @All Edge edge ) {
         final EdgeManager em = emf.createEdgeManager( scope );
 
         em.writeEdge( edge );
@@ -834,10 +974,10 @@ public class EdgeManagerIT {
 
 
     @Test( expected = NullPointerException.class )
-    public void invalidEdgeTypesDelete(@All Edge edge) {
+    public void invalidEdgeTypesDelete( @All Edge edge ) {
         final EdgeManager em = emf.createEdgeManager( scope );
 
-        em.deleteEdge( edge);
+        em.deleteEdge( edge );
     }
 
 
@@ -846,32 +986,32 @@ public class EdgeManagerIT {
         @Override
         protected void configureTest() {
             //create all edge types of junk input
-//
-//            final UUID version = UUIDGenerator.newTimeUUID();
-//
-//            Id nullUuid = mock( Id.class );
-//            when( nullUuid.getUuid() ).thenReturn( null );
-//
-//
-//            Id nullType = mock( Id.class );
-//            when( nullType.getType() ).thenReturn( "type" );
-//
-//            Edge[] edges = new Edge[] {
-//                    mockEdge( nullUuid, "test", createId( "target" ), version ),
-//
-//                    mockEdge( nullType, "test", createId( "target" ), version ),
-//
-//                    mockEdge( createId( "source" ), null, createId( "target" ), version ),
-//
-//                    mockEdge( createId( "source" ), "test", nullUuid, version ),
-//
-//                    mockEdge( createId( "source" ), "test", nullType, version ),
-//
-//                    mockEdge( createId( "source" ), "test", createId( "target" ), null )
-//            };
-//
-//
-//            bindManyInstances( Edge.class, edges );
+            //
+            //            final UUID version = UUIDGenerator.newTimeUUID();
+            //
+            //            Id nullUuid = mock( Id.class );
+            //            when( nullUuid.getUuid() ).thenReturn( null );
+            //
+            //
+            //            Id nullType = mock( Id.class );
+            //            when( nullType.getType() ).thenReturn( "type" );
+            //
+            //            Edge[] edges = new Edge[] {
+            //                    mockEdge( nullUuid, "test", createId( "target" ), version ),
+            //
+            //                    mockEdge( nullType, "test", createId( "target" ), version ),
+            //
+            //                    mockEdge( createId( "source" ), null, createId( "target" ), version ),
+            //
+            //                    mockEdge( createId( "source" ), "test", nullUuid, version ),
+            //
+            //                    mockEdge( createId( "source" ), "test", nullType, version ),
+            //
+            //                    mockEdge( createId( "source" ), "test", createId( "target" ), null )
+            //            };
+            //
+            //
+            //            bindManyInstances( Edge.class, edges );
 
         }
 
