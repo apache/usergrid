@@ -121,6 +121,14 @@ public class ExportServiceImpl implements ExportService {
             logger.error( "could not get stats for job" );
         }
     }
+//things I need to learn how to do, how to add states to my job and then set them in my export info such that I can
+    //access them using a uuid.
+    public JobStat getJobStatus( final String uuid) throws Exception {
+        UUID jobId = UUID.fromString( uuid );
+        JobStat jobStat = sch.getStatsForJob( "exportJob", jobId );
+      //  return jobStat.get
+        return jobStat;
+    }
 
 
     @Override

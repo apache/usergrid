@@ -634,7 +634,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         payload.put( "properties", properties);
 
         try {
-            node = resource().path( "/management/export" ).queryParam( "access_token", adminAccessToken )
+            node = resource().path( "/management/export" )
                              .accept( MediaType.APPLICATION_JSON )
                              .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
 
@@ -645,6 +645,70 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertEquals( Status.ACCEPTED, responseStatus );
         assertNotNull( node.get( "jobUUID" ) );
+    }
+/*Make a test with an invalid uuid and a wrong uuid.*/
+    @Test
+    public void exportGetJobStatTest() throws Exception {
+        JsonNode node = null;
+        Status responseStatus = Status.OK;
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        node = resource().path( "/management/export" )
+                         .accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+
+        try {
+            node = resource().path( "/management/export/"+node.get("jobUUID") ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                .get( JsonNode.class );
+        }catch(UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.OK,responseStatus );
+        assertEquals( "PENDING",node.get( "jobStatus" ) );
+
+    }
+
+    @Test
+    public void exportGetWrongUUID() throws Exception {
+        JsonNode node = null;
+        Status responseStatus = Status.BAD_REQUEST;
+
+        try {
+            node = resource().path(
+                "/management/export/123456789" ).accept( MediaType.APPLICATION_JSON ).type(
+                MediaType.APPLICATION_JSON_TYPE )
+                        .get( JsonNode.class );
+        }catch(UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.BAD_REQUEST, responseStatus);
+        assertEquals( "No Such Job", node.get( "jobStatus" ) );
+
+    }
+
+    /*Creates fake payload for testing purposes.*/
+    public HashMap<String,Object> payloadBuilder() {
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: make sure to put a valid admin token here.
+        //storage_info.put( "admin_token","insert_token_data_here" );
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
+
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "properties", properties);
+        return payload;
     }
 
 }

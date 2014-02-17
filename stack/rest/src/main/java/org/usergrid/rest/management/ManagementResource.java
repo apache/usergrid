@@ -453,10 +453,8 @@ public class ManagementResource extends AbstractContextResource {
 
     @POST
     @Path( "export" )
-   // @RequireAdminUserAccess
     @Consumes(MediaType.APPLICATION_JSON)
     public Response exportPostJson (@Context UriInfo ui,
-                                   // @QueryParam( "access_token" ) String access_token,
                                     Map<String, Object> json,
                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback)
             throws OAuthSystemException {
@@ -493,6 +491,19 @@ public class ManagementResource extends AbstractContextResource {
 
         //Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                  //      .entity( wrapWithCallback( "", callback ) ).build();
+    }
+
+    @GET
+    @Path( "export" )
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response exportGetJson (@Context UriInfo ui,
+                                   Map<String, Object> json,
+                                   @QueryParam( "callback" ) @DefaultValue( "" ) String callback) {
+
+
+
+
+        return Response.status(SC_OK).entity(jobStatus).build();
     }
 
 
