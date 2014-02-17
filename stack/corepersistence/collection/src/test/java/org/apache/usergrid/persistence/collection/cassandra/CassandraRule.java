@@ -1,11 +1,10 @@
 package org.apache.usergrid.persistence.collection.cassandra;
 
 
+import org.apache.usergrid.persistence.collection.util.AvailablePortFinder;
 import java.io.File;
 import java.io.IOException;
 
-import org.jukito.JukitoModule;
-import org.jukito.JukitoRunner;
 import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.EnvironResource;
 import org.safehaus.guicyfig.GuicyFigModule;

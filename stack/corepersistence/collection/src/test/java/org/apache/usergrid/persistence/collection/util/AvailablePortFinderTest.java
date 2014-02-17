@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.usergrid.persistence.collection.cassandra;
+package org.apache.usergrid.persistence.collection.util;
 
 import java.util.Set;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class AvailablePortFinderTest {
      */
     @Test
     public void testAvailable() {
-        int port = AvailablePortFinder.getNextAvailable();
+        int port = 2000;
         boolean result = AvailablePortFinder.available( port );
         assertTrue( result );
     }

@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.usergrid.persistence.collection.cassandra;
+package org.apache.usergrid.persistence.collection.util;
 
 
 import java.io.IOException;
@@ -59,7 +59,7 @@ public class AvailablePortFinder {
 
 
     /**
-     * Gets an available port, selected by the system.
+     * Gets an available port, MAY be outside of MIN_PORT_NUMBER to MAX_PORT_NUMBER range. 
      *
      * @throws java.util.NoSuchElementException if there are no ports available
      */
