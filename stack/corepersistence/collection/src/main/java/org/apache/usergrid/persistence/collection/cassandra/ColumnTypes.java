@@ -1,6 +1,7 @@
 package org.apache.usergrid.persistence.collection.cassandra;
 
 
+import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.DynamicCompositeType;
 
 
@@ -18,6 +19,8 @@ public class ColumnTypes {
                         "t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true)," +
                         "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
                         "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>"+UUID_TYPE_REVERSED+ ")";
+
+    public static final String BOOLEAN_TYPE = BooleanType.class.getSimpleName();
 
 
 }

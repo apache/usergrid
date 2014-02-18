@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.graph;
 
 
+import org.apache.usergrid.persistence.model.entity.Id;
+
 import rx.Observable;
 
 
@@ -67,6 +69,16 @@ public interface EdgeManager {
      * Delete the edge. Implementation should also delete the incoming (reversed) edge.
      */
     Observable<Edge> deleteEdge( Edge edge );
+
+    /**
+     * TODO: This needs to mark a node as deleted while async processing occurs, our reads would need to check this filter on read
+     *
+     * Remove the node from the graph.
+     *
+     * @param node
+     * @return
+     */
+    Observable<Id> deleteNode(Id node);
 
     /**
      * Returns an observable that emits all edges where the specified node is the source node. The edges will match the

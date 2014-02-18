@@ -45,8 +45,8 @@ public class MultiTennantColumnFamilyDefinition {
     private final String valueValidationType;
 
 
-    public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String columnComparatorType,
-                                               final String keyValidationType, final String valueValidationType ) {
+    public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String keyValidationType,
+                                               final String columnComparatorType, final String valueValidationType ) {
 
         Preconditions.checkNotNull( columnFamily, "columnFamily is required" );
         Preconditions.checkNotNull( columnComparatorType, "columnComparatorType is required" );

@@ -369,8 +369,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * Helper to generate an edge definition by the type
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf, UTF8Type.class.getSimpleName(),
-                BytesType.class.getSimpleName(), BytesType.class.getSimpleName() );
+        return new MultiTennantColumnFamilyDefinition( cf,
+                BytesType.class.getSimpleName(),UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName() );
     }
 
 

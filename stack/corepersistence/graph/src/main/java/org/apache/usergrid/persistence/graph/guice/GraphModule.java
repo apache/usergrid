@@ -32,8 +32,10 @@ import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -59,6 +61,7 @@ public class GraphModule extends AbstractModule {
 
         bind( EdgeMetadataSerialization.class).to( EdgeMetadataSerializationImpl.class);
         bind( EdgeSerialization.class).to( EdgeSerializationImpl.class );
+        bind( NodeSerialization.class).to( NodeSerializationImpl.class );
 
 
         // create a guice factor for getting our collection manager
@@ -69,9 +72,10 @@ public class GraphModule extends AbstractModule {
 
 
         //do multibindings for migrations
-        Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
-        uriBinder.addBinding().to( EdgeMetadataSerializationImpl.class );
-        uriBinder.addBinding().to( EdgeSerializationImpl.class );
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
+        migrationBinding.addBinding().to( EdgeSerializationImpl.class );
+        migrationBinding.addBinding().to( NodeSerializationImpl.class );
 
 
     }

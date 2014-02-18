@@ -196,8 +196,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( CF_ENTITY_LOG,
+                BytesType.class.getSimpleName(),
                 ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                BytesType.class.getSimpleName(), IntegerType.class.getSimpleName() );
+                IntegerType.class.getSimpleName() );
 
 
         return Collections.singleton( cf );

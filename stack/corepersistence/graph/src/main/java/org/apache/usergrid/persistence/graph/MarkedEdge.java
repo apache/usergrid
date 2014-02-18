@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.graph;
 
 
 /**
- *
+ * An edge.  With the additional info of if it is marked for deletion
  *
  */
 public interface MarkedEdge extends Edge{

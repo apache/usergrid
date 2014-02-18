@@ -88,7 +88,6 @@ public class EdgeManagerImpl implements EdgeManager {
         return Observable.from( edge ).subscribeOn( scheduler ).map( new Func1<Edge, Edge>() {
             @Override
             public Edge call( final Edge edge ) {
-                //TODO mark the write in the write ahead log
                 final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
 
                 final MutationBatch edgeMutation = edgeSerialization.writeEdge( scope, edge );
@@ -115,7 +114,6 @@ public class EdgeManagerImpl implements EdgeManager {
         return Observable.from( edge ).subscribeOn( scheduler ).map( new Func1<Edge, Edge>() {
             @Override
             public Edge call( final Edge edge ) {
-                //TODO Mark the write in the write ahead log
                 final MutationBatch edgeMutation = edgeSerialization.markEdge( scope, edge );
 
                 try {
@@ -130,6 +128,12 @@ public class EdgeManagerImpl implements EdgeManager {
         } );
 
         //TODO, fork the background repair scheduling here
+    }
+
+
+    @Override
+    public Observable<Id> deleteNode( final Id node ) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
@@ -254,10 +258,16 @@ public class EdgeManagerImpl implements EdgeManager {
 
         @Override
         public Boolean call( final MarkedEdge edge ) {
-            //our edge version needs to be <= max Version
+            //our edge needs to not be deleted and have a version that's <= max Version
             return !edge.isDeleted() && UUIDComparator.staticCompare( edge.getVersion(), maxVersion ) < 1;
         }
     }
+
+
+
+
+
+
 
 
     /**

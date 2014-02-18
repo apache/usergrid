@@ -45,14 +45,14 @@ import org.apache.usergrid.persistence.model.field.Field;
 public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializationStrategy, Migration {
 
     // TODO: use "real" field serializer here instead once it is ready
-    private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER = 
+    private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER =
             new CollectionScopedRowKeySerializer<Field>( FieldSerializer.get() );
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
     private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> CF_UNIQUE_VALUES =
-        new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values", 
-                ROW_KEY_SER, 
+        new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values",
+                ROW_KEY_SER,
                 ENTITY_VERSION_SER );
 
     protected final Keyspace keyspace;
@@ -71,13 +71,14 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     @Override
     public java.util.Collection getColumnFamilies() {
 
-        MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( 
-                CF_UNIQUE_VALUES, ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
+        MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition(
+                CF_UNIQUE_VALUES,
                 BytesType.class.getSimpleName(),
+                ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
                 BytesType.class.getSimpleName() );
 
         return Collections.singleton( cf );
-    } 
+    }
 
 
     public MutationBatch write( UniqueValue uniqueValue ) {
@@ -100,7 +101,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
             ttl = timeToLive;
         }
 
-        return doWrite( value.getCollectionScope(), value.getField(), 
+        return doWrite( value.getCollectionScope(), value.getField(),
             new UniqueValueSerializationStrategyImpl.RowOp() {
 
             @Override
@@ -118,7 +119,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         final EntityVersion ev = new EntityVersion( value.getEntityId(), value.getEntityVersion() );
 
-        return doWrite( value.getCollectionScope(), value.getField(), 
+        return doWrite( value.getCollectionScope(), value.getField(),
             new UniqueValueSerializationStrategyImpl.RowOp() {
 
             @Override
@@ -126,9 +127,9 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
                 colMutation.deleteColumn(ev);
             }
         } );
-    } 
+    }
 
-    
+
     /**
      * Do the column update or delete for the given column and row key
      * @param context We need to use this when getting the keyspace
