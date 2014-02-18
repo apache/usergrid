@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
@@ -34,14 +35,14 @@ import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
-import org.apache.usergrid.persistence.graph.serialization.stage.GraphIoEvent;
-import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWriteStage;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -59,18 +60,15 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final Scheduler scheduler;
 
-    private final EdgeWriteStage edgeWriteStage;
-
     private final EdgeMetadataSerialization edgeMetadataSerialization;
+
 
     private final EdgeSerialization edgeSerialization;
 
 
     @Inject
-    public EdgeManagerImpl( final EdgeWriteStage edgeWriteStage, final Scheduler scheduler,
-                            final EdgeMetadataSerialization edgeMetadataSerialization,
+    public EdgeManagerImpl( final Scheduler scheduler, final EdgeMetadataSerialization edgeMetadataSerialization,
                             final EdgeSerialization edgeSerialization, @Assisted final OrganizationScope scope ) {
-        this.edgeWriteStage = edgeWriteStage;
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
@@ -85,120 +83,64 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        return Observable.from( new GraphIoEvent<Edge>( scope, edge ) ).subscribeOn( scheduler ).map( edgeWriteStage );
+        EdgeUtils.validateEdge( edge );
+
+        return Observable.from( edge ).subscribeOn( scheduler ).map( new Func1<Edge, Edge>() {
+            @Override
+            public Edge call( final Edge edge ) {
+                //TODO mark the write in the write ahead log
+                final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
+
+                final MutationBatch edgeMutation = edgeSerialization.writeEdge( scope, edge );
+
+                mutation.mergeShallow( edgeMutation );
+
+                try {
+                    mutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
+
+                return edge;
+            }
+        } );
     }
 
 
     @Override
     public Observable<Edge> deleteEdge( final Edge edge ) {
         EdgeUtils.validateEdge( edge );
-        //
-        //
-        //        Observable<Edge> observable = Observable.from( edge ).subscribeOn( scheduler );
-        //
-        //
-        //        final SimpleSearchByEdge search =
-        //                new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-        // edge.getVersion(),
-        //                        null );
-        //
-        //
-        //        final UUID maxVersion = edge.getVersion();
-        //
-        //        //search on both our source and target types, we need to filter them if there aren't any left
-        //        observable.flatMap( new Func1<Edge, Observable<Edge>>() {
-        //
-        //            @Override
-        //            public Observable<Edge> call( final Edge edge ) {
-        //
-        //                //take the first 2 edges and then count them.  If there are 2 elements, then
-        //                //we can't remove the meta data.  If there are 2, we can
-        //
-        //                Observable<Edge> sourceEdges = Observable.create( new ObservableIterator<Edge>() {
-        //                    @Override
-        //                    protected Iterator<Edge> getIterator() {
-        //                        return edgeSerialization.getEdgeFromSource( scope, search );
-        //                    }
-        //                } );
-        //
-        //                Observable<MutationBatch>
-        //                        sourceDeletes = filter(sourceEdges, maxVersion).map( new Func1<Edge,
-        // MutationBatch>() {
-        //                    @Override
-        //                    public MutationBatch call( final Edge edge ) {
-        //                        return edgeSerialization.deleteEdge( scope, edge );
-        //                    }
-        //                } );
-        //
-        //
-        //                Observable<Edge> targetEdges = Observable.create( new ObservableIterator<Edge>() {
-        //                    @Override
-        //                    protected Iterator<Edge> getIterator() {
-        //                        return edgeSerialization.getEdgeToTarget( scope, search );
-        //                    }
-        //                } );
-        //
-        //                Observable<MutationBatch> targetDeletes = filter(targetEdges,
-        // maxVersion).map( new Func1<Edge, MutationBatch> (){
-        //
-        //
-        //                    @Override
-        //                    public MutationBatch call( final Edge edge ) {
-        //                        return edgeSerialization.deleteEdge( scope, edge );
-        //                    }
-        //                });
-        //
-        //                return Observable.zip( sourceDeletes, targetDeletes, new Func2<MutationBatch,
-        // MutationBatch, Edge>() {
-        //
-        //                    private MutationBatch batch;
-        //
-        //                    @Override
-        //                    public Edge call( final MutationBatch mutationBatch, final MutationBatch mutationBatch2
-        // ) {
-        //                        if(batch == null){
-        //                            batch = mutationBatch;
-        //                        }
-        //
-        //                        batch.mergeShallow( mutationBatch );
-        //                        batch.mergeShallow( mutationBatch2 );
-        //
-        //                        return batch;
-        //                    }
-        //                });
-        //
-        //                return Observable.zip( sourceEdges, targetEdges, new Func2<Edge, Edge, Edge>() {
-        //                    @Override
-        //                    public Edge call( final Edge sourceEdge, final Edge targetEdges ) {
-        //
-        //                        edgeSerialization.deleteEdge( scope, sourceEdge );
-        //                        edgeSerialization.deleteEdge( scope, targetEdges );
-        //
-        //                        return edge;
-        //                    }
-        //                } );
-        //
-        //
-        //
-        //                return null;
-        //
-        //
-        //            }
-        //        } );
 
+        return Observable.from( edge ).subscribeOn( scheduler ).map( new Func1<Edge, Edge>() {
+            @Override
+            public Edge call( final Edge edge ) {
+                //TODO Mark the write in the write ahead log
+                final MutationBatch edgeMutation = edgeSerialization.markEdge( scope, edge );
 
-        throw new UnsupportedOperationException( "Not yet implemented" );
+                try {
+                    edgeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
+
+                return edge;
+            }
+        } );
+
+        //TODO, fork the background repair scheduling here
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        return Observable.create( new ObservableIterator<Edge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
             @Override
-            protected Iterator<Edge> getIterator() {
+            protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
             }
-        } ).filter( new MaxFilter( search.getMaxVersion() ) )
+        } ).filter( new EdgeFilter( search.getMaxVersion() ) )
                 //we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
@@ -206,18 +148,18 @@ public class EdgeManagerImpl implements EdgeManager {
                     public Id call( final Edge edge ) {
                         return edge.getTargetNode();
                     }
-                } );
+                } ).map( mapper );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
-        return Observable.create( new ObservableIterator<Edge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
             @Override
-            protected Iterator<Edge> getIterator() {
+            protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
             }
-        } ).filter( new MaxFilter( search.getMaxVersion() ) )
+        } ).filter( new EdgeFilter( search.getMaxVersion() ) )
                 //we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
@@ -225,29 +167,29 @@ public class EdgeManagerImpl implements EdgeManager {
                     public Id call( final Edge edge ) {
                         return edge.getSourceNode();
                     }
-                } );
+                } ).map( mapper );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        return Observable.create( new ObservableIterator<Edge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
             @Override
-            protected Iterator<Edge> getIterator() {
+            protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
             }
-        } ).filter( new MaxFilter( search.getMaxVersion() ) ).takeFirst();
+        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().map( mapper );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        return Observable.create( new ObservableIterator<Edge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
             @Override
-            protected Iterator<Edge> getIterator() {
+            protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
             }
-        } ).filter( new MaxFilter( search.getMaxVersion() ) ).takeFirst();
+        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().map( mapper );
     }
 
 
@@ -298,22 +240,33 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     /**
-     * Filter the returned values based on the max uuid
+     * Filter the returned values based on the max uuid and if it's been marked for deletion or not
      */
-    private static class MaxFilter implements Func1<Edge, Boolean> {
+    private static class EdgeFilter implements Func1<MarkedEdge, Boolean> {
 
         private final UUID maxVersion;
 
 
-        private MaxFilter( final UUID maxVersion ) {
+        private EdgeFilter( final UUID maxVersion ) {
             this.maxVersion = maxVersion;
         }
 
 
         @Override
-        public Boolean call( final Edge edge ) {
+        public Boolean call( final MarkedEdge edge ) {
             //our edge version needs to be <= max Version
-            return UUIDComparator.staticCompare( edge.getVersion(), maxVersion ) < 1;
+            return !edge.isDeleted() && UUIDComparator.staticCompare( edge.getVersion(), maxVersion ) < 1;
         }
     }
+
+
+    /**
+     * Simple function that maps MarkedEdge to edges
+     */
+    private static final Func1<MarkedEdge, Edge> mapper = new Func1<MarkedEdge, Edge>() {
+        @Override
+        public Edge call( final MarkedEdge markedEdge ) {
+            return markedEdge;
+        }
+    };
 }
