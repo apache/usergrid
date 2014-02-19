@@ -789,40 +789,21 @@ public class ManagementServiceIT {
             f = new File ("test.json");
             f.delete();
         }   catch (Exception e) {
-            //consumed because this checks to see if the file exisits. If it doesn't then don't do anything and carry on.
+            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
 
         S3Export s3Export = new MockS3ExportImpl();
         ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "admin_token","insert_token_data_here" );
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "s3_key","insert key here" );
-        storage_info.put( "s3_accessId","insert access id here");
-        storage_info.put( "bucket_location","insert bucket name here");
-        properties.put( "storage_provider","s3");
-        properties.put( "storage_info",storage_info);
-
-        payload.put( "path", "test-organization/test-app/user");
-        payload.put( "properties", properties);
+        HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo(payload);
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "ExportInfo", exportInfo );
-
-        JobExecution jobExecution = mock ( JobExecution.class);
-
-
-        UUID uuid = UUIDUtils.newTimeUUID();
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
         entity = new Entity[10];
+        //creates entities
         for (int i = 0; i< 10;i++) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
@@ -831,16 +812,25 @@ public class ManagementServiceIT {
             entity[i] = em.create( "user", userProperties );
 
         }
+        //creates connections
         em.createConnection( em.getRef( entity[0].getUuid() ),"Vibrations",em.getRef( entity[1].getUuid() ) );
         em.createConnection( em.getRef( entity[1].getUuid() ),"Vibrations",em.getRef( entity[0].getUuid() ) );
 
-
+        UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
+
+        //create and initialize jobData returned in JobExecution. 
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock ( JobExecution.class);
+        when(jobExecution.getJobData()).thenReturn( jobData );
+
         exportService.doExport( exportInfo, jobExecution  );
 
         JSONParser parser = new JSONParser();
-
-
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse(new FileReader(f));
 
@@ -861,6 +851,8 @@ public class ManagementServiceIT {
         org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject) a.get( 1 );
         org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject) objEnt.get( "connections" );
 
+        assertNotNull( objConnections );
+
         org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get("Vibrations");
 
         assertNotNull( objVibrations );
@@ -879,38 +871,26 @@ public class ManagementServiceIT {
              f = new File ("test.json");
              f.delete();
         }   catch (Exception e) {
-            //consumed because this checks to see if the file exisits. If it doesn't then don't do anything and carry on.
+            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
-
-
 
         S3Export s3Export = new MockS3ExportImpl();
         ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "admin_token","insert_token_data_here" );
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "s3_key","insert key here" );
-        storage_info.put( "s3_accessId","insert access id here");
-        storage_info.put( "bucket_location","insert bucket name here");
-        properties.put( "storage_provider","s3");
-        properties.put( "storage_info",storage_info);
-
-        payload.put( "path", "test-organization/test-app/user");
-        payload.put( "properties", properties);
+        HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo(payload);
 
+        UUID exportUUID = exportService.schedule( exportInfo );
+        exportService.setS3Export( s3Export );
+
         JobData jobData = new JobData();
         jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "ExportInfo", exportInfo );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", exportUUID );
 
         JobExecution jobExecution = mock ( JobExecution.class);
+        when(jobExecution.getJobData()).thenReturn( jobData );
 
-
-        exportService.setS3Export( s3Export );
         exportService.doExport( exportInfo, jobExecution  );
 
         JSONParser parser = new JSONParser();
@@ -1136,6 +1116,28 @@ public class ManagementServiceIT {
             assert(false);
         }
         assert(true);
+    }
+
+    /*Creates fake payload for testing purposes.*/
+    public HashMap<String,Object> payloadBuilder() {
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: make sure to put a valid admin token here.
+        //storage_info.put( "admin_token","insert_token_data_here" );
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "s3_key","insert key here" );
+        storage_info.put( "s3_accessId","insert access id here");
+        storage_info.put( "bucket_location","insert bucket name here");
+
+
+        properties.put( "storage_provider","s3");
+        properties.put( "storage_info",storage_info);
+
+        payload.put( "path", "test-organization/test-app");
+        payload.put( "properties", properties);
+        return payload;
     }
 
 }

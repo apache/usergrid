@@ -1,14 +1,8 @@
 package org.usergrid.persistence.entities;
 
 
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.usergrid.persistence.PathQuery;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityProperty;
 
@@ -17,21 +11,34 @@ import org.usergrid.persistence.annotations.EntityProperty;
  *
  *
  */
+
+/**
+ *
+ *the sch system doesn't make any assumes about the job or how it works.
+ * and so if I need additional information to be persistant.
+ *
+ * The way to save data between queue and storing it.
+ *
+ * in my case, create a export entity. before I schedule the job and it'll have the pending state in it and
+ * all the information I need to run. Then I'll pass the ID of the export info I saved in a collection and i'll put that in the jbo
+ * data.
+ *
+ * persist the state in mechanisum that they can all access.
+ *
+ * I could make it a class and I can make it an entity. That way I can get it in and out.
+ * doesn't get exposed to the user.
+ */
 @XmlRootElement
 public class Export extends TypedEntity {
 
-    public static final String ENTITY_TYPE = "export";
-
-    //Additional states could include CREATED,SCHEDULED,EXPIRED
     public static enum State {
-        PENDING, STARTED, FAILED, COMPLETED,
+        //CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
+        PENDING,STARTED,FAILED,COMPLETED
     }
 
-    /** Map Notifier ID -> Properties data provided */
     @EntityProperty
-    protected Map<String, Object> properties;
+    public State curState;
 
-    /** Time processed */
     @EntityProperty
     protected Long queued;
 
@@ -43,7 +50,12 @@ public class Export extends TypedEntity {
     @EntityProperty
     protected Long finished;
 
-    /** True if notification is canceled */
+
+    /** Time to expire the exportJob */
+    @EntityProperty
+    protected Long expire;
+
+    /** True if exportJob is canceled */
     @EntityProperty
     protected Boolean canceled;
 
@@ -52,85 +64,92 @@ public class Export extends TypedEntity {
     protected String errorMessage;
 
     @EntityProperty
-    protected PathQuery<String> pathQuery;
-
-    /** Contains the Query included with the Path **/
-
-    public Export () {
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(Map<String,Object> properties) {
-        this.properties = properties;
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Long getCompleted() {
-        return finished;
-    }
-
-    public void setCompleted(Long finished) {
-        this.finished = finished;
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Boolean getCanceled() {
-        return canceled;
-    }
-
-    public void setCanceled(Boolean canceled) {
-        this.canceled = canceled;
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public Long getStarted() {
-        return started;
-    }
-
-    public void setStarted(Long started) {
-        this.started = started;
-    }
-
-    @JsonSerialize(include = Inclusion.NON_NULL)
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public void setState(State ignored) {
-        //state is derived from getState, not set.
-    }
-
-    @EntityProperty
     public State getState() {
         if (getErrorMessage() != null) {
             return State.FAILED;
-        } else if (getCompleted() != null) {
+//        } else if (getCanceled() == Boolean.TRUE) {
+//            return State.CANCELED;
+        } else if (getFinished() != null) {
             return State.COMPLETED;
         } else if (getStarted() != null) {
             return State.STARTED;
         }
+//        } else if (isExpired()) {
+//            return State.EXPIRED;
+//        } else if (getQueued() != null) {
+//            return State.SCHEDULED;
+//        }
         return State.PENDING;
     }
-    /* there might need to be queued stuff here.  */
-    /*
-    * Path Query Ignored for first pass*/
 
-    //ask scott why these are ignored
-    @JsonIgnore
-    public PathQuery<String> getPathQuery() {
-        return pathQuery;
+    public Export() {
     }
 
-    public void setPathQuery(PathQuery<String> pathQuery) {
-        this.pathQuery = pathQuery;
+    public boolean isExpired () {
+        return (expire != null && expire > System.currentTimeMillis());
     }
 
+    public Long getStarted() {
+        return started;
+    }
+
+
+    public void setStarted( final Long started ) {
+        this.started = started;
+    }
+
+
+    public Long getFinished() {
+        return finished;
+    }
+
+
+    public void setFinished( final Long finished ) {
+        this.finished = finished;
+    }
+
+
+    public Long getExpire() {
+        return expire;
+    }
+
+
+    public void setExpire( final Long expire ) {
+        this.expire = expire;
+    }
+
+
+    public Boolean getCanceled() {
+        return canceled;
+    }
+
+    //state should moved to a derived state, but it is not there yet.
+    public void setState(State setter) {
+        curState = setter;
+    }
+
+
+    public void setCanceled( final Boolean canceled ) {
+        this.canceled = canceled;
+    }
+
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+
+    public void setErrorMessage( final String errorMessage ) {
+        this.errorMessage = errorMessage;
+    }
+
+
+    public Long getQueued() {
+        return queued;
+    }
+
+
+    public void setQueued( final Long queued ) {
+        this.queued = queued;
+    }
 }

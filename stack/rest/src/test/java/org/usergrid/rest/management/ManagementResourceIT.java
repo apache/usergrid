@@ -657,15 +657,22 @@ public class ManagementResourceIT extends AbstractRestIT {
         node = resource().path( "/management/export" )
                          .accept( MediaType.APPLICATION_JSON )
                          .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        String uuid = String.valueOf( node.get( "jobUUID" ) );
+        uuid = uuid.replaceAll( "\"","" );
+
 
         try {
-            node = resource().path( "/management/export/"+node.get("jobUUID") ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .get( JsonNode.class );
+            node = resource().path( "test-organization/default-app/").queryParam( "access_token",
+                    superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+          //  node = resource().path( "/management/exportStats/"+uuid ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+            //    .get( JsonNode.class );
         }catch(UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
-        assertEquals( Status.OK,responseStatus );
+
+        assertEquals( Status.OK, responseStatus );
         assertEquals( "PENDING",node.get( "jobStatus" ) );
 
     }
@@ -706,7 +713,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         properties.put( "storage_provider","s3");
         properties.put( "storage_info",storage_info);
 
-        payload.put( "path", "test-organization/test-app/user");
+        payload.put( "path", "test-organization/test-app");
         payload.put( "properties", properties);
         return payload;
     }

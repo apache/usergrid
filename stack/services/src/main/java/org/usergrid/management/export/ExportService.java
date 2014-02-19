@@ -17,7 +17,7 @@ public interface ExportService {
      * Schedules the export to execute
      * @param config
      */
-    void schedule(ExportInfo config);
+    UUID schedule(ExportInfo config) throws Exception;
 
 
     /**
@@ -27,10 +27,10 @@ public interface ExportService {
     void doExport(ExportInfo config, JobExecution jobExecution) throws Exception;
 
     /**
-     * Returns the UUID to the user
-     * @param
+     * Returns the current state of the service.
+     * @return
      */
-    UUID getJobUUID();
+    String getState(UUID state) throws Exception;
 
     void setS3Export(S3Export s3Export);
 

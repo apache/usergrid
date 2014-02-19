@@ -15,7 +15,8 @@ import org.usergrid.persistence.entities.JobData;
 
 /**
  *
- *
+ *you could make an enum here, that contains the state info
+ * look at scotts code and emulate that to see wha tyou can return in the json object
  */
 @Component("exportJob")
 public class ExportJob extends OnlyOnceJob {
@@ -38,8 +39,7 @@ public class ExportJob extends OnlyOnceJob {
         ExportInfo config = (ExportInfo) jobData.getProperty( "exportInfo" );
 
         jobExecution.heartbeat();
-//pass in jobExecution so that you can call the heartbeat in the do export method.
-        exportService.doExport( config, jobExecution );
+        exportService.doExport( config,jobExecution );
 
         logger.info( "executed ExportJob completed normally" );
     }

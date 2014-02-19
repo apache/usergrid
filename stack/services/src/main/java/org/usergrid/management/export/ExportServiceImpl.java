@@ -28,23 +28,26 @@ import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.persistence.PagingResultsIterator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.Export;
 import org.usergrid.persistence.entities.JobData;
-import org.usergrid.persistence.entities.JobStat;
 
 import com.google.common.collect.BiMap;
 
 
 /**
- *
+ *The class is a singleton and thust must not have ANY instance variables declared in its scope.
  *
  */
 public class ExportServiceImpl implements ExportService {
 
 
     private static final Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
+    public static final String EXPORT_ID = "exportId";
+    public static final String EXPORT_JOB_NAME = "exportJob";
     //dependency injection
     private SchedulerService sch;
 
@@ -71,8 +74,6 @@ public class ExportServiceImpl implements ExportService {
 
     private String filename = PATH_REPLACEMENT;
 
-    private UUID jobUUID;
-
     private S3Export s3Export;
 
     //TODO: Todd, do I refactor most of the methods out to just leave schedule and doExport much like
@@ -80,12 +81,20 @@ public class ExportServiceImpl implements ExportService {
 
 
     @Override
-    public void schedule( final ExportInfo config ) {
+    public UUID schedule( final ExportInfo config ) throws Exception {
+
+        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+
+        Export export = new Export();
+        export.setState( Export.State.PENDING );
 
         //validate that org exists,then app, then collection.
+
         String pathToBeParsed = config.getPath();
         //split the path so that you can verify that the organization and the app exist.
         String[] pathItems = pathToBeParsed.split( "/" );
+
+
         try {
             managementService.getOrganizationByName( pathItems[0] );
         }
@@ -104,52 +113,83 @@ public class ExportServiceImpl implements ExportService {
         //TODO: parse path and make sure all the things you need actually exist. then throw
         // good error messages when not found.
 
-        //validate user has access key to org (rather valid user has admin access token)
-        //this is token validation
+        //write to the em
+        export = em.create( export );
+
         JobData jobData = new JobData();
-
         jobData.setProperty( "exportInfo", config );
-        long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
-        JobData retJobData = sch.createJob( "exportJob", soonestPossible, jobData );
-        jobUUID = retJobData.getUuid();
+        jobData.setProperty( EXPORT_ID, export.getUuid() );
 
-        try {
-            JobStat merp = sch.getStatsForJob( "exportJob", retJobData.getUuid() );
-            System.out.println( "hi" );
-        }
-        catch ( Exception e ) {
-            logger.error( "could not get stats for job" );
-        }
+        long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
+
+        sch.createJob( EXPORT_JOB_NAME, soonestPossible, jobData );
+
+        return export.getUuid();
+
     }
-//things I need to learn how to do, how to add states to my job and then set them in my export info such that I can
-    //access them using a uuid.
-    public JobStat getJobStatus( final String uuid) throws Exception {
-        UUID jobId = UUID.fromString( uuid );
-        JobStat jobStat = sch.getStatsForJob( "exportJob", jobId );
-      //  return jobStat.get
-        return jobStat;
+
+//should be done
+    /**
+     * get the state of specific export entity
+     * @param uuid
+     * @return String
+     * @throws Exception
+     */
+    @Override
+    public String getState(final UUID uuid) throws Exception {
+
+        EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+
+
+        Export export = rootEm.get( uuid, Export.class );
+
+        if(export == null){
+            return null;
+        }
+
+        return export.getState().toString();
+
     }
 
 
     @Override
-    public void doExport( final ExportInfo config, final JobExecution jobExecution ) throws Exception {
+    public void doExport( final ExportInfo config,final JobExecution jobExecution ) throws Exception {
 
-        Map<UUID, String> organizations = getOrgs();
+        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
+
+        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+
+        Export export = em.get( exportId, Export.class );
+
+
+        //update state and re-write the entity
+        export.setState( Export.State.STARTED );
+
+        em.update( export );
+
+        //needs to pass the org name to getOrgs from path
+        Map<UUID, String> organizations = getOrgs(config);
         for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
 
+            //needs to pass app name, and possibly collection to export
             exportApplicationsForOrg( organization, config, jobExecution );
+
         }
+
+        export.setState( Export.State.COMPLETED );
+
+        em.update( export );
+
     }
 
-
-    private Map<UUID, String> getOrgs() throws Exception {
+    //now we also need somebody to take the export info and look through the path for the specific org.
+    //That way we get a specific org instead of getting all the orgs.
+    private Map<UUID, String> getOrgs(ExportInfo exportInfo) throws Exception {
         // Loop through the organizations
         // TODO:this will come from the orgs in schedule when you do the validations. delete orgId
         UUID orgId = null;
 
         Map<UUID, String> organizationNames = null;
-        // managementService.setup();
-
 
         if ( orgId == null ) {
             organizationNames = managementService.getOrganizations();
@@ -159,10 +199,7 @@ public class ExportServiceImpl implements ExportService {
             OrganizationInfo info = managementService.getOrganizationByUuid( orgId );
 
             if ( info == null ) {
-
-                //logger.error( "Organization info is null!" );
-                //TODO: remove all instances of system.exit in code case that was adapated.
-                System.exit( 1 );
+                logger.error( "Organization info is null!" );
             }
 
             organizationNames = new HashMap<UUID, String>();
@@ -199,16 +236,9 @@ public class ExportServiceImpl implements ExportService {
         return managementService;
     }
 
-
     public void setManagementService( final ManagementService managementService ) {
         this.managementService = managementService;
     }
-
-
-    public UUID getJobUUID() {
-        return jobUUID;
-    }
-
 
     //write test checking to see what happens if the input stream is closed or wrong.
     //TODO: make multipart streaming functional
@@ -288,33 +318,48 @@ public class ExportServiceImpl implements ExportService {
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
                 query.setResultsLevel( Results.Level.ALL_PROPERTIES );
-
+                //paging iterator. Clean this code up using it.
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
+                PagingResultsIterator itr = new PagingResultsIterator( entities );
+//untested
+                for( Object e: itr){
+                    starting_time = checkTimeDelta( starting_time, jobExecution );
+                    Entity entity = ( Entity ) e;
+                    //for ( Entity entity : entities ) {
+                    jg.writeStartObject();
+                    jg.writeFieldName( "Metadata" );
+                    jg.writeObject( entity );
+                    saveCollectionMembers( jg, em, application.getValue(), entity );
+                    jg.writeEndObject();
+                    //}
 
-                starting_time = checkTimeDelta( starting_time, jobExecution );
-
-                while ( entities.size() > 0 ) {
-                    jobExecution.heartbeat();
-                    for ( Entity entity : entities ) {
-                        jg.writeStartObject();
-                        jg.writeFieldName( "Metadata" );
-                        jg.writeObject( entity );
-                        saveCollectionMembers( jg, em, application.getValue(), entity );
-                        jg.writeEndObject();
-                    }
-
-                    //we're done
-                    if ( entities.getCursor() == null ) {
-                        break;
-                    }
-
-
-                    query.setCursor( entities.getCursor() );
-
-                    entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
                 }
+
+
+// working
+//                while ( entities.size() > 0 ) {
+//                    jobExecution.heartbeat();
+//                    for ( Entity entity : entities ) {
+//                        jg.writeStartObject();
+//                        jg.writeFieldName( "Metadata" );
+//                        jg.writeObject( entity );
+//                        saveCollectionMembers( jg, em, application.getValue(), entity );
+//                        jg.writeEndObject();
+//                    }
+//
+//                    //we're done
+//                    if ( entities.getCursor() == null ) {
+//                        break;
+//                    }
+//
+//
+//                    query.setCursor( entities.getCursor() );
+//
+//                    entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
+//
+//                }
 
             }
 

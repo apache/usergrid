@@ -28,6 +28,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -468,8 +469,7 @@ public class ManagementResource extends AbstractContextResource {
 
         //parse the json into some useful object (the config params)
             ExportInfo objEx = new ExportInfo(json);
-            exportService.schedule(objEx);
-            jobUUID = exportService.getJobUUID();
+            jobUUID = exportService.schedule(objEx);
             uuidRet.put( "jobUUID", jobUUID.toString() );
 
         }
@@ -494,16 +494,18 @@ public class ManagementResource extends AbstractContextResource {
     }
 
     @GET
-    @Path( "export" )
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response exportGetJson (@Context UriInfo ui,
-                                   Map<String, Object> json,
-                                   @QueryParam( "callback" ) @DefaultValue( "" ) String callback) {
+    @Path( "export/{jobUUID: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
+    public Response exportGetJson(@Context UriInfo ui,@PathParam( "jobUUID" ) String jobUUIDStr,
+                                  @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception {
+
+//get the info by looking up the job data from the uuid and then call the get state on it
+        //that way you'll find the correct state.
+        //String state = exportService.getState(jobUUIDStr);
 
 
 
-
-        return Response.status(SC_OK).entity(jobStatus).build();
+        return Response.status(SC_OK).entity(state).build();
+        //return Response.status(SC_OK).entity(state).build();
     }
 
 
