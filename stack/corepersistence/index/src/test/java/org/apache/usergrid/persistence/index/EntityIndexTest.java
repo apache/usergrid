@@ -26,7 +26,10 @@ import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.index.impl.EntityIndexImpl;
+import org.apache.usergrid.persistence.index.impl.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.utils.ElasticSearchRule;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -47,6 +50,7 @@ public class EntityIndexTest {
     @Rule
     public ElasticSearchRule elasticSearchRule = new ElasticSearchRule(); 
 
+
     @Test
     public void testIndex() throws IOException {
 
@@ -57,11 +61,40 @@ public class EntityIndexTest {
         String type = scope.getName();
 
         EntityIndex entityIndex = new EntityIndexImpl( client, index );  
+
         indexSampleData( entityIndex, scope );
+
         testQueries( client, index, type );
 
         client.close();
     }
+
+    
+    @Test
+    public void testRemoveIndex() {
+    }
+    
+
+    private void indexSampleData( EntityIndex entityIndex, CollectionScope scope ) throws IOException {
+        
+        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
+        ObjectMapper mapper = new ObjectMapper();
+        List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+
+        for ( Object o : sampleJson ) {
+            Map<String, Object> item = (Map<String, Object>)o;
+            Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
+            entity = EntityUtils.mapToEntity( entity, item );
+            entityIndex.index( entity, scope );
+        }
+    }
+
+    private void testQuery( Client client, String index, String type, QueryBuilder qb, int num ) {
+        SearchResponse sr = client.prepareSearch( index ).setTypes( type )
+            .setQuery( qb ).setFrom( 0 ).setSize( 20 ).execute().actionGet();
+        assertEquals( num, sr.getHits().getTotalHits() );
+    }
+   
 
     private void testQueries( Client client, String index, String type ) {
 
@@ -87,36 +120,4 @@ public class EntityIndexTest {
             QueryBuilders.termQuery( "contact.email", "orrbyers@bittor.com" ), 1 ); 
     }
 
-
-    private void testQuery( Client client, String index, String type, QueryBuilder qb, int num ) {
-        SearchResponse sr = client.prepareSearch( index ).setTypes( type )
-            .setQuery( qb ).setFrom( 0 ).setSize( 20 ).execute().actionGet();
-        assertEquals( num, sr.getHits().getTotalHits() );
-    }
-
-
-    private void indexSampleData( EntityIndex index, CollectionScope scope ) throws IOException {
-        
-        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
-        ObjectMapper mapper = new ObjectMapper();
-        List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
-
-        for ( Object o : sampleJson ) {
-            Map<String, Object> item = (Map<String, Object>)o;
-            String id = item.get( "id" ).toString();
-
-            Entity entity = new Entity();
-
-            // map item to Entity
-
-            index.index( entity, scope );
-
-        }
-    }
-
-    @Test
-    public void testRemoveIndex() {
-
-    }
-    
 }

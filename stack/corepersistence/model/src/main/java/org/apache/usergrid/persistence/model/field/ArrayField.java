@@ -18,6 +18,8 @@
  */
 package org.apache.usergrid.persistence.model.field;
 
+import java.util.List;
+
 /**
  * A marker to signal array handling. Just delegates to list field for easier handling internally
  */
@@ -30,8 +32,8 @@ public class ArrayField<T> extends ListField<T> {
         super( name );
     }
 
-    public ArrayField() {
-        super();
+    public ArrayField( String name, List<T> list ) {
+        super( name, list );
     }
 
     /**

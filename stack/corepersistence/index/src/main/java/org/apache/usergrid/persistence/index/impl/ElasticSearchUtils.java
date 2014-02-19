@@ -54,7 +54,6 @@ public class ElasticSearchUtils {
         }
         for ( String key : data.keySet() ) {
             Object value = data.get( key );
-            logger.info( "value class = " + value.getClass().getName() );
             try {
 
                 if ( value instanceof Map ) {

@@ -101,9 +101,9 @@ public class ElasticSearchUtilsTest {
         
         InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
         ObjectMapper mapper = new ObjectMapper();
-        List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+        List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
 
-        for ( Object o : sampleJson ) {
+        for ( Object o : contacts ) {
             Map<String, Object> item = (Map<String, Object>)o;
             String id = item.get( "id" ).toString();
 

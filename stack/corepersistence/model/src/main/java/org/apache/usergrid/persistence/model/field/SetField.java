@@ -27,14 +27,17 @@ import java.util.Set;
 public class SetField<T> extends AbstractField<Set<T>> {
 
     /**
-     * Contructor that intializes with an empty set for adding to later
+     * Constructor that initializes with an empty set for adding to later
      */
     public SetField( String name ) {
         super( name, new LinkedHashSet<T>() );
     }
 
-    public SetField() {
+    public SetField( String name, Set<T> set ) {
+        super( name, set );
+    }
 
+    public SetField() {
     }
 
     /**
