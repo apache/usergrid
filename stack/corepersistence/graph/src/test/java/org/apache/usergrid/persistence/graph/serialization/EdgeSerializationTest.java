@@ -42,8 +42,8 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(JukitoRunner.class)
+@UseModules({ TestGraphModule.class })
 public class EdgeSerializationTest {
 
     @ClassRule
@@ -543,13 +543,13 @@ public class EdgeSerializationTest {
         MarkedEdge edge = results.next();
 
         assertEquals( edge1, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
 
         edge = results.next();
 
         assertEquals( edge2, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
 
@@ -559,12 +559,12 @@ public class EdgeSerializationTest {
         edge = results.next();
 
         assertEquals( edge1, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         edge = results.next();
 
         assertEquals( edge2, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
 
@@ -576,7 +576,7 @@ public class EdgeSerializationTest {
         edge = results.next();
 
         assertEquals( edge1, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
 
@@ -586,7 +586,7 @@ public class EdgeSerializationTest {
         edge = results.next();
 
         assertEquals( edge2, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
 
@@ -597,7 +597,7 @@ public class EdgeSerializationTest {
         edge = results.next();
 
         assertEquals( edge1, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
 
@@ -607,7 +607,7 @@ public class EdgeSerializationTest {
         edge = results.next();
 
         assertEquals( edge2, edge );
-        assertTrue(edge.isDeleted());
+        assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
 

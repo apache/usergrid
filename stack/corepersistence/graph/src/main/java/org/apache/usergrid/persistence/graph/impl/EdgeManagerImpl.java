@@ -34,9 +34,11 @@ import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
@@ -65,13 +67,16 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final EdgeSerialization edgeSerialization;
 
+    private final NodeSerialization nodeSerialization;
+
 
     @Inject
     public EdgeManagerImpl( final Scheduler scheduler, final EdgeMetadataSerialization edgeMetadataSerialization,
-                            final EdgeSerialization edgeSerialization, @Assisted final OrganizationScope scope ) {
+                            final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization, @Assisted final OrganizationScope scope ) {
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
+        this.nodeSerialization = nodeSerialization;
 
 
         ValidationUtils.validateOrganizationScope( scope );
@@ -133,7 +138,25 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Id> deleteNode( final Id node ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return Observable.from( node ).subscribeOn( scheduler ).map( new Func1<Id, Id>() {
+            @Override
+            public Id call( final Id id ) {
+
+                //mark the node as deleted
+                final UUID deleteTime = UUIDGenerator.newTimeUUID();
+
+                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime);
+
+                try {
+                    nodeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e);
+                }
+
+                return id;
+            }
+        } );
     }
 
 
