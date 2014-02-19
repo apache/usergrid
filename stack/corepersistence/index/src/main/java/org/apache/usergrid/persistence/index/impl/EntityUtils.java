@@ -110,7 +110,7 @@ public class EntityUtils {
 
 
     
-    private static Entity mapToEntity( Map<String, Object> item ) {
+    public static Entity mapToEntity( Map<String, Object> item ) {
         return mapToEntity( null, item );
     }
 
