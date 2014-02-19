@@ -30,5 +30,7 @@ public interface GraphFig extends GuicyFig {
     @Default( "CL_QUORUM" )
     @Key( WRITE_CL )
     String getWriteCL();
+
+
 }
 

@@ -21,12 +21,15 @@ package org.apache.usergrid.persistence.graph.impl;
 
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
@@ -41,6 +44,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
@@ -69,14 +76,18 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final NodeSerialization nodeSerialization;
 
+    private final GraphFig graphFig;
+
 
     @Inject
     public EdgeManagerImpl( final Scheduler scheduler, final EdgeMetadataSerialization edgeMetadataSerialization,
-                            final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization, @Assisted final OrganizationScope scope ) {
+                            final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
+                            final GraphFig graphFig, @Assisted final OrganizationScope scope ) {
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
         this.nodeSerialization = nodeSerialization;
+        this.graphFig = graphFig;
 
 
         ValidationUtils.validateOrganizationScope( scope );
@@ -145,13 +156,13 @@ public class EdgeManagerImpl implements EdgeManager {
                 //mark the node as deleted
                 final UUID deleteTime = UUIDGenerator.newTimeUUID();
 
-                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime);
+                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime );
 
                 try {
                     nodeMutation.execute();
                 }
                 catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e);
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
                 }
 
                 return id;
@@ -167,7 +178,15 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
             }
-        } ).filter( new EdgeFilter( search.getMaxVersion() ) )
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
+            @Override
+            public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
+                return Observable.from( markedEdges ).filter( new EdgeFilter( search.getMaxVersion() ) );
+            }
+        } )
+
+
+                //                .filter( new EdgeFilter( search.getMaxVersion() ) )
                 //we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
@@ -175,7 +194,7 @@ public class EdgeManagerImpl implements EdgeManager {
                     public Id call( final Edge edge ) {
                         return edge.getTargetNode();
                     }
-                } ).map( mapper );
+                } ).cast( Edge.class );
     }
 
 
@@ -194,7 +213,7 @@ public class EdgeManagerImpl implements EdgeManager {
                     public Id call( final Edge edge ) {
                         return edge.getSourceNode();
                     }
-                } ).map( mapper );
+                } ).cast( Edge.class );
     }
 
 
@@ -205,7 +224,7 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
             }
-        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().map( mapper );
+        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().cast( Edge.class );
     }
 
 
@@ -216,7 +235,7 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
             }
-        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().map( mapper );
+        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().cast( Edge.class );
     }
 
 
@@ -269,9 +288,18 @@ public class EdgeManagerImpl implements EdgeManager {
     /**
      * Filter the returned values based on the max uuid and if it's been marked for deletion or not
      */
-    private static class EdgeFilter implements Func1<MarkedEdge, Boolean> {
+    private class EdgeFilter implements Func1<MarkedEdge, Boolean> {
 
         private final UUID maxVersion;
+        private final LoadingCache<Id, Optional<UUID>> markCache =
+                CacheBuilder.newBuilder().maximumSize( graphFig.getScanPageSize()*2 ).build( new CacheLoader<Id, Optional<UUID>>() {
+
+
+                    @Override
+                    public Optional<UUID> load( final Id key ) throws Exception {
+                        return nodeSerialization.getMaxVersion( scope, key );
+                    }
+                } );
 
 
         private EdgeFilter( final UUID maxVersion ) {
@@ -281,25 +309,36 @@ public class EdgeManagerImpl implements EdgeManager {
 
         @Override
         public Boolean call( final MarkedEdge edge ) {
-            //our edge needs to not be deleted and have a version that's <= max Version
-            return !edge.isDeleted() && UUIDComparator.staticCompare( edge.getVersion(), maxVersion ) < 1;
+
+            final UUID edgeVersion = edge.getVersion();
+
+            //our edge needs to not be deleted and have a version that's > max Version
+            if ( edge.isDeleted() || UUIDComparator.staticCompare( edgeVersion, maxVersion ) > 0 ) {
+                return false;
+            }
+
+            try {
+                final Optional<UUID> sourceId = markCache.get( edge.getSourceNode() );
+
+                //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+                // so we need to discard it
+                if ( sourceId.isPresent() && UUIDComparator.staticCompare( edgeVersion, sourceId.get() ) > -1  ) {
+                    return false;
+                }
+
+                final Optional<UUID> targetId = markCache.get( edge.getTargetNode() );
+
+                //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+                // so we need to discard it
+                if ( targetId.isPresent() && UUIDComparator.staticCompare( edgeVersion, targetId.get() ) > -1 ) {
+                    return false;
+                }
+            }
+            catch ( ExecutionException e ) {
+                throw new RuntimeException( "Unable to evaluate edge for filtering", e );
+            }
+
+            return true;
         }
     }
-
-
-
-
-
-
-
-
-    /**
-     * Simple function that maps MarkedEdge to edges
-     */
-    private static final Func1<MarkedEdge, Edge> mapper = new Func1<MarkedEdge, Edge>() {
-        @Override
-        public Edge call( final MarkedEdge markedEdge ) {
-            return markedEdge;
-        }
-    };
 }

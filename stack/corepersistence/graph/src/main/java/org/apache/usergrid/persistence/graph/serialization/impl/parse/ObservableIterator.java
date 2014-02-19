@@ -43,6 +43,8 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribeFun
     }
 
 
+
+
     /**
      * Return the iterator to feed data to
      */
