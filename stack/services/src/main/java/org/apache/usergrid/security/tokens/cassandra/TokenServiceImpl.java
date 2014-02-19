@@ -208,7 +208,7 @@ public class TokenServiceImpl implements TokenService {
 
         if ( duration > maxTokenTtl ) {
             throw new IllegalArgumentException(
-                    String.format( "Your token age cannot be more than the maxium age of %d milliseconds",
+                    String.format( "Your token age cannot be more than the maximum age of %d milliseconds",
                             maxTokenTtl ) );
         }
 
