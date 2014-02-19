@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * A marker to signal array handling. Just delegates to list field for easier handling internally
  */
-public class ArrayField extends ListField {
+public class ArrayField<T> extends ListField<T> {
 
     /**
      * Contructor that intializes with an empty set for adding to later
@@ -37,7 +37,7 @@ public class ArrayField extends ListField {
     /**
      * Add the value to the list
      */
-    public void add( Field field ) {
-        value.add( field );
+    public void add( T listItem ) {
+        value.add( listItem );
     }
 }
