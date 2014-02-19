@@ -41,12 +41,12 @@ import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnParser;
@@ -125,11 +125,11 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     protected final Keyspace keyspace;
-    protected final GraphFig graphFig;
+    protected final CassandraConfig graphFig;
 
 
     @Inject
-    public EdgeSerializationImpl( final Keyspace keyspace, final GraphFig graphFig ) {
+    public EdgeSerializationImpl( final Keyspace keyspace, final CassandraConfig graphFig ) {
         this.keyspace = keyspace;
         this.graphFig = graphFig;
     }
@@ -137,7 +137,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch writeEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL() );;
 
 
         doWrite( scope, edge, new RowOp() {
@@ -156,7 +156,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch markEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL() );;
 
 
         doWrite( scope, edge, new RowOp() {
@@ -175,7 +175,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch deleteEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL());
 
 
         doWrite( scope, edge, new RowOp() {
@@ -487,7 +487,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
         RowQuery<ScopedRowKey<OrganizationScope, R>, DirectedEdge> query =
-                keyspace.prepareQuery( cf ).getKey( rowKey ).autoPaginate( true )
+                keyspace.prepareQuery( cf ).setConsistencyLevel( graphFig.getReadCL() ).getKey( rowKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
 

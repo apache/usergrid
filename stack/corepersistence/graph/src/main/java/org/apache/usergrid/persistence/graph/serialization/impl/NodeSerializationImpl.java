@@ -36,7 +36,7 @@ import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFam
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
-import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -78,11 +78,13 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     protected final Keyspace keyspace;
+    protected final CassandraConfig fig;
 
 
     @Inject
-    public NodeSerializationImpl( final Keyspace keyspace) {
+    public NodeSerializationImpl( final Keyspace keyspace, final CassandraConfig fig ) {
         this.keyspace = keyspace;
+        this.fig = fig;
     }
 
 
@@ -100,7 +102,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         ValidationUtils.verifyIdentity( node );
         ValidationUtils.verifyTimeUuid( version, "version" );
 
-        MutationBatch batch = keyspace.prepareMutationBatch();
+        MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
         batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( version.timestamp() )
              .putColumn( true, version );
@@ -115,7 +117,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         ValidationUtils.verifyIdentity( node );
         ValidationUtils.verifyTimeUuid( version, "version" );
 
-        MutationBatch batch = keyspace.prepareMutationBatch();
+        MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
         batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( version.timestamp() )
              .deleteColumn( true );
@@ -134,7 +136,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
         try {
             Column<Boolean> result =
-                    query.getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( true ).execute().getResult();
+                    query.setConsistencyLevel( fig.getReadCL() ).getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( true ).execute().getResult();
 
             return Optional.of( result.getUUIDValue() );
         }

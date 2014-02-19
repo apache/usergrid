@@ -30,9 +30,11 @@ import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
@@ -64,10 +66,11 @@ public class GraphModule extends AbstractModule {
         bind( NodeSerialization.class).to( NodeSerializationImpl.class );
 
 
+        bind( CassandraConfig.class).to( CassandraConfigImpl.class );
+
         // create a guice factor for getting our collection manager
-        install( new FactoryModuleBuilder()
-                .implement( EdgeManager.class, EdgeManagerImpl.class )
-                .build( EdgeManagerFactory.class ) );
+        install( new FactoryModuleBuilder().implement( EdgeManager.class, EdgeManagerImpl.class )
+                                           .build( EdgeManagerFactory.class ) );
 
 
 
