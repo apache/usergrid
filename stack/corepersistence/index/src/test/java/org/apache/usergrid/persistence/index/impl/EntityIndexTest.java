@@ -15,18 +15,18 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.index.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.index.impl.EntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.EntityUtils;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -84,7 +84,7 @@ public class EntityIndexTest {
         for ( Object o : sampleJson ) {
             Map<String, Object> item = (Map<String, Object>)o;
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityUtils.mapToEntity( entity, item );
+            entity = EntityIndexImpl.mapToEntity( entity, item );
             entityIndex.index( entity, scope );
         }
     }
@@ -118,6 +118,33 @@ public class EntityIndexTest {
         // query of nested object fields supported
         testQuery( client, index, type, 
             QueryBuilders.termQuery( "contact.email", "orrbyers@bittor.com" ), 1 ); 
+    }
+
+
+    /**
+     * Test of mapToEntity method, of class EntityUtils.
+     */
+    @Test
+    public void testMapToEntityRoundTrip() throws IOException {
+
+        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
+        ObjectMapper mapper = new ObjectMapper();
+        List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+
+        for ( Object o : contacts ) {
+
+            Map<String, Object> map1 = (Map<String, Object>)o;
+
+            // convert map to entity
+            Entity entity1 = EntityIndexImpl.mapToEntity( map1 );
+
+            // convert entity back to map
+            Map map2 = EntityIndexImpl.entityToMap( entity1 );
+
+            // the two maps should be the same except for the two new _ug_analyzed properties
+            Map diff = Maps.difference( map1, map2 ).entriesDiffering();
+            assertEquals( 2, diff.size() );
+        }
     }
 
 }

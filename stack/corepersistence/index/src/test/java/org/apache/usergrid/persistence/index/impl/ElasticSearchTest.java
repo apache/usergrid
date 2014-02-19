@@ -18,14 +18,27 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.utils.ElasticSearchRule;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +46,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Elastic search experiments in the form of a test.
@@ -88,4 +102,161 @@ public class ElasticSearchTest {
 
         client.close();
     } 
+
+
+    @Test
+    public void testStringDoubleIndexDynamicMapping() throws IOException {
+
+        Client client = elasticSearchRule.getClient();
+
+        AdminClient admin = client.admin();
+
+        String index = RandomStringUtils.randomAlphanumeric(20).toLowerCase();
+        String type = "testtype";
+        admin.indices().prepareCreate( index ).execute().actionGet();
+
+        // add dynamic string-double index mapping
+        XContentBuilder mxcb = EntityIndexImpl
+            .createDoubleStringIndexMapping( jsonBuilder(), type );
+        PutMappingResponse pmr = admin.indices().preparePutMapping(index)
+            .setType( type ).setSource( mxcb ).execute().actionGet();
+
+        indexSampleData( type, client, index );
+
+        testQuery( client, index, type, 
+            QueryBuilders.termQuery( "name", "Orr Byers" ), 1 );
+
+        // term query is exact match
+        testQuery( client, index, type, 
+            QueryBuilders.termQuery("name", "Byers" ), 0 );
+
+        // match query allows partial match 
+        testQuery( client, index, type, 
+            QueryBuilders.matchQuery( "name_ug_analyzed", "Byers" ), 1 );
+
+        testQuery( client, index, type, 
+            QueryBuilders.termQuery( "company", "Geologix" ), 1 );
+
+        testQuery( client, index, type, 
+            QueryBuilders.termQuery( "gender", "female" ), 3 );
+
+        // query of nested object fields supported
+        testQuery( client, index, type, 
+            QueryBuilders.termQuery( "contact.email", "orrbyers@bittor.com" ), 1 );
+
+        client.close();
+    }
+
+    
+    private void indexSampleData( String type, Client client, String index ) 
+            throws ElasticsearchException, IOException {
+        
+        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
+        ObjectMapper mapper = new ObjectMapper();
+        List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+
+        for ( Object o : contacts ) {
+            Map<String, Object> item = (Map<String, Object>)o;
+            String id = item.get( "id" ).toString();
+
+            XContentBuilder dxcb = ElasticSearchTest
+                .prepareContentForIndexing( jsonBuilder(), type, item );
+
+            IndexResponse ir = client.prepareIndex(index, type, id )
+                .setSource( dxcb ).setRefresh( true ).execute().actionGet();
+        }
+    }
+
+    
+    private void testQuery( Client client, String index, String type, QueryBuilder qb, int num ) {
+        SearchResponse sr = client.prepareSearch( index ).setTypes( type )
+            .setQuery( qb ).setFrom( 0 ).setSize( 20 ).execute().actionGet();
+        assertEquals( num, sr.getHits().getTotalHits() );
+    }
+
+    
+   public static XContentBuilder prepareContentForIndexing( String name, XContentBuilder builder, 
+        String type, Map<String, Object> data ) throws IOException {
+
+        if ( name != null ) {
+            builder = builder.startObject( name );
+        } else {
+            builder = builder.startObject();
+        }
+        for ( String key : data.keySet() ) {
+            Object value = data.get( key );
+            try {
+
+                if ( value instanceof Map ) {
+                    builder = prepareContentForIndexing(
+                        key, builder, type, (Map<String, Object>)data.get(key));
+
+                } else if ( value instanceof List ) {
+                    builder = prepareContentForIndexing(key, builder, type, (List)value);
+
+                } else if ( value instanceof String ) {
+                    builder = builder
+                        .field( key + "_ug_analyzed", value )
+                        .field( key, value );
+
+                } else {
+                    builder = builder
+                        .field( key, value );
+
+                }
+            } catch ( Exception e ) {
+                logger.error( "Error processing {} : {}", key, value, e );
+                throw new RuntimeException(e);
+            }
+        }
+        builder = builder.endObject();
+        return builder;
+    }
+    
+   
+    public static XContentBuilder prepareContentForIndexing( XContentBuilder builder, 
+        String type, Map<String, Object> dataMap ) throws IOException {
+        return prepareContentForIndexing( null, builder, type, dataMap );
+    }
+
+    
+    public static XContentBuilder prepareContentForIndexing( String name, XContentBuilder builder, 
+        String type, List dataList ) throws IOException {
+
+        if ( name != null ) {
+            builder = builder.startArray( name );
+        } else {
+            builder = builder.startArray();
+        }
+        for ( Object o : dataList ) {
+
+            if ( o instanceof Map ) {
+                builder = prepareContentForIndexing( builder, type, (Map<String, Object>)o );
+
+            } else if ( o instanceof List ) {
+                builder = prepareContentForIndexing( builder, type, (List)o);
+
+            } else {
+                builder = builder.value( o );
+
+            }
+        }
+        builder = builder.endArray();
+        return builder;
+    }
+
+
+    public static XContentBuilder prepareContentForIndexing( XContentBuilder builder, 
+        String type, List dataList ) throws IOException {
+        return prepareContentForIndexing( null, builder, type, dataList );
+    }
+
+    void log( GetResponse getResponse ) {
+        logger.info( "-------------------------------------------------------------------------" );
+        logger.info( "id:      " + getResponse.getId() );
+        logger.info( "type:    " + getResponse.getType() );
+        logger.info( "version: " + getResponse.getVersion() );
+        logger.info( "index:   " + getResponse.getIndex() );
+        logger.info( "source:  " + getResponse.getSourceAsString() );
+    }
 }

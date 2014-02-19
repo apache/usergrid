@@ -22,10 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.inject.AbstractModule;
 import org.apache.usergrid.persistence.index.EntityIndex;
 
-/**
- *
- * @author ApigeeCorporation
- */
+
 public class IndexModule extends AbstractModule {
 
     @Override
