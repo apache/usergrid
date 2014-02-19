@@ -107,7 +107,7 @@ public class JobExecutionImpl implements JobExecution, JobRuntime {
 
 
     /**
-     * Mark this execution as failed. Also pass the maxium number of possible failures. Set to JobExecution.FOREVER for
+     * Mark this execution as failed. Also pass the maximum number of possible failures. Set to JobExecution.FOREVER for
      * no limit
      */
     public void failed() {
