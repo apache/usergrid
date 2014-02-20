@@ -20,8 +20,12 @@
 package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -41,12 +45,15 @@ import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
+import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.query.ColumnFamilyQuery;
 import com.netflix.astyanax.serializers.BooleanSerializer;
 
@@ -64,6 +71,11 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
     private static final BooleanSerializer BOOLEAN_SERIALIZER = BooleanSerializer.get();
 
+    /**
+     * Column name is always just "true"
+     */
+    private static final boolean COLUMN_NAME = true;
+
 
     /**
      * Columns are always a byte, and the entire value is contained within a row key.  This is intentional
@@ -75,6 +87,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
     private static final MultiTennantColumnFamily<OrganizationScope, Id, Boolean> GRAPH_DELETE =
             new MultiTennantColumnFamily<OrganizationScope, Id, Boolean>( "Graph_Marked_Nodes",
                     new OrganizationScopedRowKeySerializer<Id>( ROW_SERIALIZER ), BOOLEAN_SERIALIZER );
+
 
 
     protected final Keyspace keyspace;
@@ -105,7 +118,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
         batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( version.timestamp() )
-             .putColumn( true, version );
+             .putColumn( COLUMN_NAME, version );
 
         return batch;
     }
@@ -120,7 +133,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
         batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( version.timestamp() )
-             .deleteColumn( true );
+             .deleteColumn( COLUMN_NAME );
 
         return batch;
     }
@@ -131,12 +144,13 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         ValidationUtils.validateOrganizationScope( scope );
         ValidationUtils.verifyIdentity( node );
 
-        ColumnFamilyQuery<ScopedRowKey<OrganizationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE );
+        ColumnFamilyQuery<ScopedRowKey<OrganizationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel(
+                fig.getReadCL() );
 
 
         try {
             Column<Boolean> result =
-                    query.setConsistencyLevel( fig.getReadCL() ).getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( true ).execute().getResult();
+                    query.getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( COLUMN_NAME ).execute().getResult();
 
             return Optional.of( result.getUUIDValue() );
         }
@@ -147,5 +161,45 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to casandra", e );
         }
+    }
+
+
+    @Override
+    public Map<Id, UUID> getMaxVersions( final OrganizationScope scope, final Collection<Id> nodeIds ) {
+        ValidationUtils.validateOrganizationScope( scope );
+        Preconditions.checkNotNull( nodeIds, "nodeIds cannot be null" );
+
+
+        final ColumnFamilyQuery<ScopedRowKey<OrganizationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
+
+
+        final List<ScopedRowKey<OrganizationScope, Id>> keys = new ArrayList<ScopedRowKey<OrganizationScope, Id>>(nodeIds.size());
+
+        //worst case all are marked
+        final Map<Id, UUID> versions = new HashMap<Id, UUID>(nodeIds.size());
+
+        for(final Id id: nodeIds){
+            keys.add( ScopedRowKey.fromKey( scope, id ) );
+        }
+
+        try {
+            final Rows<ScopedRowKey<OrganizationScope, Id>, Boolean>
+                    results = query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME ) ).execute().getResult();
+
+            for(Row<ScopedRowKey<OrganizationScope, Id>, Boolean> row: results){
+                Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
+
+                if(column != null){
+                    versions.put( row.getKey().getKey(), column.getUUIDValue() );
+                }
+
+
+            }
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to execute multiget for all max versions", e );
+        }
+
+        return versions;
     }
 }

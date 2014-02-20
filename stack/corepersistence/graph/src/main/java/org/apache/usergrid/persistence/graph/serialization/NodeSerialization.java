@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
@@ -61,4 +63,14 @@ public interface NodeSerialization {
      * @return The optional uuid.  If none is present, the node is not currently marked
      */
     Optional<UUID> getMaxVersion(OrganizationScope scope, Id nodeId);
+
+    /**
+     * Return a map with all max versions from the specified nodeIds.  If no max version is present
+     * in the mark, it will not be present in the response
+     *
+     * @param scope The scope to use
+     * @param nodeIds The collection of node Id's to use
+     * @return A map of all marked Id's, with the mark version as the value
+     */
+    Map<Id, UUID> getMaxVersions(OrganizationScope scope, Collection<Id> nodeIds);
 }

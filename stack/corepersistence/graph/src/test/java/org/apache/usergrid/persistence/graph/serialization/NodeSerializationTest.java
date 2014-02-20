@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 import org.jukito.JukitoRunner;
@@ -150,4 +152,30 @@ public class NodeSerializationTest {
 
         assertFalse( returned.isPresent() );
     }
+
+
+    /**
+     * Tests a latent write from a previous version is discarded
+     */
+    @Test
+    public void multiGet() throws ConnectionException {
+
+        final Id nodeId1 = createId( "test" );
+        final Id nodeId2 = createId( "test" );
+        final Id nodeId3 = createId( "test" );
+
+        final UUID version = UUIDGenerator.newTimeUUID();
+
+        serialization.mark( scope, nodeId1, version ).execute();
+        serialization.mark( scope, nodeId2, version ).execute();
+
+        Map<Id, UUID> marks = serialization.getMaxVersions( scope, Arrays.asList( nodeId1, nodeId2, nodeId3 ) );
+
+
+        assertEquals(version, marks.get( nodeId1 ));
+        assertEquals(version, marks.get( nodeId2 ));
+        assertFalse(marks.containsKey( nodeId3 ));
+    }
 }
+
+

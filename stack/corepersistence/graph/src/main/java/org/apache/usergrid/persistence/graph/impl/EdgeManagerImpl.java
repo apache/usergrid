@@ -322,7 +322,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
                 //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
                 // so we need to discard it
-                if ( sourceId.isPresent() && UUIDComparator.staticCompare( edgeVersion, sourceId.get() ) > -1  ) {
+                if ( sourceId.isPresent() && UUIDComparator.staticCompare( edgeVersion, sourceId.get() ) < 1  ) {
                     return false;
                 }
 
@@ -330,7 +330,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
                 //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
                 // so we need to discard it
-                if ( targetId.isPresent() && UUIDComparator.staticCompare( edgeVersion, targetId.get() ) > -1 ) {
+                if ( targetId.isPresent() && UUIDComparator.staticCompare( edgeVersion, targetId.get() ) < 1 ) {
                     return false;
                 }
             }
