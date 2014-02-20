@@ -24,23 +24,26 @@ import java.util.Set;
 /**
  * An object field that represents a set of objects
  */
-public class SetField extends AbstractField<Set<Field>> {
+public class SetField<T> extends AbstractField<Set<T>> {
 
     /**
-     * Contructor that intializes with an empty set for adding to later
+     * Constructor that initializes with an empty set for adding to later
      */
     public SetField( String name ) {
-        super( name, new LinkedHashSet<Field>() );
+        super( name, new LinkedHashSet<T>() );
+    }
+
+    public SetField( String name, Set<T> set ) {
+        super( name, set );
     }
 
     public SetField() {
-
     }
 
     /**
      * Add an entry to the set
      */
-    public void addEntry( Field field ) {
-        value.add( field );
+    public void addEntry( T setItem ) {
+        value.add( setItem );
     }
 }

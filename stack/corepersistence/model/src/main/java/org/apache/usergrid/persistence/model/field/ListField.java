@@ -23,14 +23,19 @@ import java.util.List;
 
 /**
  * An object field that represents a list of objects. This can also be used to represent arrays
+ * @param <T> Type of entity in list, must be primitive or Entity.
  */
-public class ListField extends AbstractField<List<Field>> {
+public class ListField<T> extends AbstractField<List<T>> {
 
     /**
-     * Contructor that intializes with an empty set for adding to later
+     * Constructor that initializes with an empty set for adding to later
      */
     public ListField( String name ) {
-        super( name, new ArrayList<Field>() );
+        super( name, new ArrayList<T>() );
+    }
+
+    public ListField( String name, List list ) {
+        super( name, list );
     }
 
     public ListField() {
@@ -40,7 +45,7 @@ public class ListField extends AbstractField<List<Field>> {
     /**
      * Add the value to the list
      */
-    public void add( Field field ) {
-        value.add( field );
+    public void add( T listItem ) {
+        value.add( listItem );
     }
 }

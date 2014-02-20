@@ -16,30 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.field;
 
-import java.util.List;
+package org.apache.usergrid.persistence.index.impl;
 
-/**
- * A marker to signal array handling. Just delegates to list field for easier handling internally
- */
-public class ArrayField<T> extends ListField<T> {
+import com.google.inject.AbstractModule;
+import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 
-    /**
-     * Contructor that intializes with an empty set for adding to later
-     */
-    public ArrayField( String name ) {
-        super( name );
-    }
 
-    public ArrayField( String name, List<T> list ) {
-        super( name, list );
-    }
+public class IndexModule extends AbstractModule {
 
-    /**
-     * Add the value to the list
-     */
-    public void add( T listItem ) {
-        value.add( listItem );
+    @Override
+    protected void configure() {
+        bind( EntityCollectionIndex.class ).to( EntityCollectionIndexImpl.class );
     }
 }

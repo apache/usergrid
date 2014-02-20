@@ -16,30 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.field;
 
-import java.util.List;
+package org.apache.usergrid.persistence.index;
+
+import org.apache.usergrid.persistence.model.entity.Entity;
+
 
 /**
- * A marker to signal array handling. Just delegates to list field for easier handling internally
+ * Provides indexing of Entities within a scope.
  */
-public class ArrayField<T> extends ListField<T> {
+public interface EntityCollectionIndex {
 
-    /**
-     * Contructor that intializes with an empty set for adding to later
+    /** 
+     * Create index for Entity
+     * @param entity Entity to be indexed.
      */
-    public ArrayField( String name ) {
-        super( name );
-    }
-
-    public ArrayField( String name, List<T> list ) {
-        super( name, list );
-    }
-
+    public void index( Entity entity );
+    
     /**
-     * Add the value to the list
+     * Remove index of entity.
+     * @param entity Entity to be removed from index. 
      */
-    public void add( T listItem ) {
-        value.add( listItem );
-    }
+    public void deindex( Entity entity );
 }
