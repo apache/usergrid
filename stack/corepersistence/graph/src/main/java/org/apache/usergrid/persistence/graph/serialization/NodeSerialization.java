@@ -20,15 +20,13 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -67,4 +65,14 @@ public interface NodeSerialization {
      * @return The optional uuid.  If none is present, the node is not currently marked
      */
     Optional<UUID> getMaxVersion(OrganizationScope scope, Id nodeId);
+
+    /**
+     * Return a map with all max versions from the specified nodeIds.  If no max version is present
+     * in the mark, it will not be present in the response
+     *
+     * @param scope The scope to use
+     * @param edges The collection of edges we need to check against.  Both the source and target Id's will be added
+     * @return A map of all marked Id's, with the mark version as the value
+     */
+    Map<Id, UUID> getMaxVersions(OrganizationScope scope, Collection<? extends Edge> edges);
 }

@@ -37,9 +37,9 @@ import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.StringColumnParser;
@@ -111,12 +111,12 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     protected final Keyspace keyspace;
-    private final GraphFig graphFig;
+    private final CassandraConfig graphFig;
 
 
 
     @Inject
-    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final GraphFig graphFig) {
+    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final CassandraConfig graphFig) {
         this.keyspace = keyspace;
         this.graphFig = graphFig;
     }
