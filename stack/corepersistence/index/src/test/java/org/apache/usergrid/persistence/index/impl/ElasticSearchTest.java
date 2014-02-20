@@ -116,7 +116,7 @@ public class ElasticSearchTest {
         admin.indices().prepareCreate( index ).execute().actionGet();
 
         // add dynamic string-double index mapping
-        XContentBuilder mxcb = EntityIndexImpl
+        XContentBuilder mxcb = EntityCollectionIndexImpl
             .createDoubleStringIndexMapping( jsonBuilder(), type );
         PutMappingResponse pmr = admin.indices().preparePutMapping(index)
             .setType( type ).setSource( mxcb ).execute().actionGet();
@@ -151,7 +151,7 @@ public class ElasticSearchTest {
     private void indexSampleData( String type, Client client, String index ) 
             throws ElasticsearchException, IOException {
         
-        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
+        InputStream is = this.getClass().getResourceAsStream( "/sample-small.json" );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
 

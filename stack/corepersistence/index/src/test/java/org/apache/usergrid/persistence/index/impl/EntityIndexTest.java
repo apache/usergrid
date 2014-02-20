@@ -22,13 +22,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.BooleanField;
+import org.apache.usergrid.persistence.model.field.DoubleField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
+import org.apache.usergrid.persistence.model.field.IntegerField;
+import org.apache.usergrid.persistence.model.field.ListField;
+import org.apache.usergrid.persistence.model.field.LongField;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.utils.ElasticSearchRule;
 import org.elasticsearch.action.search.SearchResponse;
@@ -55,14 +65,15 @@ public class EntityIndexTest {
     public void testIndex() throws IOException {
 
         Client client = elasticSearchRule.getClient();
+
         final CollectionScope scope = mock( CollectionScope.class );
         when( scope.getName() ).thenReturn( "contacts" );
+
         String index = RandomStringUtils.randomAlphanumeric(20 ).toLowerCase();
         String type = scope.getName();
 
-        EntityIndex entityIndex = new EntityIndexImpl( client, index );  
-
-        indexSampleData( entityIndex, scope );
+        EntityCollectionIndex entityIndex = new EntityCollectionIndexImpl( client, index, scope, true );  
+        indexSampleData( entityIndex );
 
         testQueries( client, index, type );
 
@@ -75,17 +86,21 @@ public class EntityIndexTest {
     }
     
 
-    private void indexSampleData( EntityIndex entityIndex, CollectionScope scope ) throws IOException {
+    private void indexSampleData( EntityCollectionIndex entityIndex ) throws IOException {
         
-        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
+        InputStream is = this.getClass().getResourceAsStream( "/sample-small.json" );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
 
         for ( Object o : sampleJson ) {
             Map<String, Object> item = (Map<String, Object>)o;
-            Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityIndexImpl.mapToEntity( entity, item );
-            entityIndex.index( entity, scope );
+
+            Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), entityIndex.getScopeName()));
+            EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
+
+            entity = EntityIndexTest.mapToEntity( entity, item );
+
+            entityIndex.index( entity );
         }
     }
 
@@ -136,15 +151,122 @@ public class EntityIndexTest {
             Map<String, Object> map1 = (Map<String, Object>)o;
 
             // convert map to entity
-            Entity entity1 = EntityIndexImpl.mapToEntity( map1 );
+            Entity entity1 = EntityIndexTest.mapToEntity( map1 );
 
             // convert entity back to map
-            Map map2 = EntityIndexImpl.entityToMap( entity1 );
+            Map map2 = EntityCollectionIndexImpl.entityToMap( entity1 );
 
             // the two maps should be the same except for the two new _ug_analyzed properties
             Map diff = Maps.difference( map1, map2 ).entriesDiffering();
             assertEquals( 2, diff.size() );
         }
+    }
+
+    
+    public static Entity mapToEntity( Map<String, Object> item ) {
+        return mapToEntity( null, item );
+    }
+
+
+    public static Entity mapToEntity( Entity entity, Map<String, Object> map ) {
+
+        if ( entity == null ) {
+            entity = new Entity();
+        }
+
+        if ( map.get( "version_ug_field") != null ) {
+            EntityUtils.setVersion( entity, UUID.fromString( (String)map.get("version_ug_field")));
+        }
+
+        for ( String fieldName : map.keySet() ) {
+
+            Object value = map.get( fieldName );
+
+            if ( value instanceof String ) {
+                entity.setField( new StringField(fieldName, (String)value ));
+
+            } else if ( value instanceof Boolean ) {
+                entity.setField( new BooleanField(fieldName, (Boolean)value ));
+                        
+            } else if ( value instanceof Integer ) {
+                entity.setField( new IntegerField(fieldName, (Integer)value ));
+
+            } else if ( value instanceof Double ) {
+                entity.setField( new DoubleField(fieldName, (Double)value ));
+
+            } else if ( value instanceof Long ) {
+                entity.setField( new LongField(fieldName, (Long)value ));
+
+            } else if ( value instanceof List) {
+                entity.setField( listToListField( fieldName, (List)value ));
+
+            } else if ( value instanceof Map ) {
+                entity.setField( new EntityObjectField( fieldName, 
+                    mapToEntity( (Map<String, Object>)value ))); // recursion
+
+            } else {
+                throw new RuntimeException("Unknown type " + value.getClass().getName());
+            }
+        }
+
+        return entity;
+    }
+
+    
+    private static ListField listToListField( String fieldName, List list ) {
+
+        if (list.isEmpty()) {
+            return new ListField( fieldName );
+        }
+
+        Object sample = list.get(0);
+
+        if ( sample instanceof Map ) {
+            return new ListField<Entity>( fieldName, processListForField( list ));
+
+        } else if ( sample instanceof List ) {
+            return new ListField<List>( fieldName, processListForField( list ));
+            
+        } else if ( sample instanceof String ) {
+            return new ListField<String>( fieldName, (List<String>)list );
+                    
+        } else if ( sample instanceof Boolean ) {
+            return new ListField<Boolean>( fieldName, (List<Boolean>)list );
+                    
+        } else if ( sample instanceof Integer ) {
+            return new ListField<Integer>( fieldName, (List<Integer>)list );
+
+        } else if ( sample instanceof Double ) {
+            return new ListField<Double>( fieldName, (List<Double>)list );
+
+        } else if ( sample instanceof Long ) {
+            return new ListField<Long>( fieldName, (List<Long>)list );
+
+        } else {
+            throw new RuntimeException("Unknown type " + sample.getClass().getName());
+        }
+    }
+
+    
+    private static List processListForField( List list ) {
+        if ( list.isEmpty() ) {
+            return list;
+        }
+        Object sample = list.get(0);
+
+        if ( sample instanceof Map ) {
+            List<Entity> newList = new ArrayList<Entity>();
+            for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
+                newList.add( mapToEntity( map ) );
+            }
+            return newList;
+
+        } else if ( sample instanceof List ) {
+            return processListForField( list ); // recursion
+            
+        } else { 
+            return list;
+        } 
     }
 
 }

@@ -24,8 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
@@ -40,6 +42,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
@@ -47,19 +50,19 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 
-public class EntityIndexImpl implements EntityIndex {
+public class EntityCollectionIndexImpl implements EntityCollectionIndex {
     private final Client client;
     private final String index;
+    private final boolean refresh;
+    private final CollectionScope scope;
 
 
-    public EntityIndexImpl( Client client, String index ) {
+    public EntityCollectionIndexImpl( Client client, String index, CollectionScope scope, boolean refresh ) {
         this.client = client;
         this.index = index;
-    }
-
-   
-    public void index( Entity entity, CollectionScope scope ) {
-
+        this.scope = scope;
+        this.refresh = refresh;
+        
         // if new index then create it 
         AdminClient admin = client.admin();
         if ( !admin.indices().exists( new IndicesExistsRequest( index )).actionGet().isExists() ) {
@@ -71,7 +74,7 @@ public class EntityIndexImpl implements EntityIndex {
             new String[] {index}, scope.getName() )).actionGet().isExists()) {
 
             try {
-                XContentBuilder mxcb = EntityIndexImpl
+                XContentBuilder mxcb = EntityCollectionIndexImpl
                     .createDoubleStringIndexMapping( jsonBuilder(), scope.getName() );
 
                 PutMappingResponse pmr = admin.indices().preparePutMapping(index)
@@ -81,21 +84,44 @@ public class EntityIndexImpl implements EntityIndex {
                 throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex );
             }
         }
+    }
 
-        Map<String, Object> entityAsMap = EntityIndexImpl.entityToMap( entity );
+    
+    public String getScopeName() {
+        return scope.getName();
+    }
+  
 
-        IndexResponse ir = client.prepareIndex(index, scope.getName(), entity.getId().toString() )
-            .setSource( entityAsMap ).setRefresh( true ).execute().actionGet();
+    public void index( Entity entity ) {
+
+        Map<String, Object> entityAsMap = EntityCollectionIndexImpl.entityToMap( entity );
+
+        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), entity.getId().toString() )
+            .setSource( entityAsMap )
+            .setRefresh( refresh );
+
+        // Cannot set version. As far as I can tell ES insists that initial version number is -1 
+        // and that number is incremented by 1 on each update.
+        // irb = irb.setVersion( entity.getVersion().timestamp() );
+        
+        IndexResponse ir = irb.execute().actionGet();
     }
 
 
-    public void deindex( Entity entity, CollectionScope scope ) {
+    public void deindex( Entity entity ) {
     }
 
 
+    /**
+     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each StringField.
+     */
     public static Map entityToMap( Entity entity ) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
+
+        if ( entity.getVersion() != null ) {
+            entityMap.put( "version_ug_field", entity.getVersion().toString() );
+        }
 
         for ( Object f : entity.getFields().toArray() ) {
 
@@ -165,107 +191,7 @@ public class EntityIndexImpl implements EntityIndex {
     }
 
 
-    public static Entity mapToEntity( Map<String, Object> item ) {
-        return mapToEntity( null, item );
-    }
 
-
-    public static Entity mapToEntity( Entity entity, Map<String, Object> map ) {
-
-        if ( entity == null ) {
-            entity = new Entity();
-        }
-
-        for ( String fieldName : map.keySet() ) {
-
-            Object value = map.get( fieldName );
-
-            if ( value instanceof String ) {
-                entity.setField( new StringField(fieldName, (String)value ));
-
-            } else if ( value instanceof Boolean ) {
-                entity.setField( new BooleanField(fieldName, (Boolean)value ));
-                        
-            } else if ( value instanceof Integer ) {
-                entity.setField( new IntegerField(fieldName, (Integer)value ));
-
-            } else if ( value instanceof Double ) {
-                entity.setField( new DoubleField(fieldName, (Double)value ));
-
-            } else if ( value instanceof Long ) {
-                entity.setField( new LongField(fieldName, (Long)value ));
-
-            } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value ));
-
-            } else if ( value instanceof Map ) {
-                entity.setField( new EntityObjectField( fieldName, 
-                    mapToEntity( (Map<String, Object>)value ))); // recursion
-
-            } else {
-                throw new RuntimeException("Unknown type " + value.getClass().getName());
-            }
-        }
-
-        return entity;
-    }
-
-    
-    private static ListField listToListField( String fieldName, List list ) {
-
-        if (list.isEmpty()) {
-            return new ListField( fieldName );
-        }
-
-        Object sample = list.get(0);
-
-        if ( sample instanceof Map ) {
-            return new ListField<Entity>( fieldName, processListForField( list ));
-
-        } else if ( sample instanceof List ) {
-            return new ListField<List>( fieldName, processListForField( list ));
-            
-        } else if ( sample instanceof String ) {
-            return new ListField<String>( fieldName, (List<String>)list );
-                    
-        } else if ( sample instanceof Boolean ) {
-            return new ListField<Boolean>( fieldName, (List<Boolean>)list );
-                    
-        } else if ( sample instanceof Integer ) {
-            return new ListField<Integer>( fieldName, (List<Integer>)list );
-
-        } else if ( sample instanceof Double ) {
-            return new ListField<Double>( fieldName, (List<Double>)list );
-
-        } else if ( sample instanceof Long ) {
-            return new ListField<Long>( fieldName, (List<Long>)list );
-
-        } else {
-            throw new RuntimeException("Unknown type " + sample.getClass().getName());
-        }
-    }
-
-    
-    private static List processListForField( List list ) {
-        if ( list.isEmpty() ) {
-            return list;
-        }
-        Object sample = list.get(0);
-
-        if ( sample instanceof Map ) {
-            List<Entity> newList = new ArrayList<Entity>();
-            for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
-                newList.add( mapToEntity( map ) );
-            }
-            return newList;
-
-        } else if ( sample instanceof List ) {
-            return processListForField( list ); // recursion
-            
-        } else { 
-            return list;
-        } 
-    }
 
 
     /** 
@@ -316,4 +242,5 @@ public class EntityIndexImpl implements EntityIndex {
         
         return builder;
     }
+
 }

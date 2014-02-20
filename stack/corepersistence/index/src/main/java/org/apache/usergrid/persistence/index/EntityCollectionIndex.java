@@ -17,16 +17,31 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index;
 
-import com.google.inject.AbstractModule;
-import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.model.entity.Entity;
 
 
-public class IndexModule extends AbstractModule {
+/**
+ * Provides indexing of Entities within a scope.
+ */
+public interface EntityCollectionIndex {
 
-    @Override
-    protected void configure() {
-        bind( EntityCollectionIndex.class ).to( EntityCollectionIndexImpl.class );
-    }
+    /** 
+     * Create index for Entity
+     * @param entity Entity to be indexed.
+     */
+    public void index( Entity entity );
+    
+    /**
+     * Remove index of entity.
+     * @param entity Entity to be removed from index. 
+     */
+    public void deindex( Entity entity );
+
+    /**
+     * Get name of scope associated with this index interface.
+     * @return Name of scope.
+     */
+    public String getScopeName();
 }
