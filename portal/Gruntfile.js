@@ -317,33 +317,6 @@ module.exports = function (grunt) {
           copy:false
         }
       }
-    },
-    s3: {
-      options: {
-        key: process.env.AWS_KEY || 'noidea',
-        secret: process.env.AWS_SECRET || 'noidea',
-        bucket: 'appservices-deployments',
-        access: 'public-read',
-        headers: {
-          // Two Year cache policy (1000 * 60 * 60 * 24 * 730)
-          "Cache-Control": "max-age=630720000, public",
-          "Expires": new Date(Date.now() + 63072000000).toUTCString()
-        }
-      },
-      dev: {
-        // These options override the defaults
-        options: {
-          encodePaths: false,
-          maxOperations: 20
-        },
-        // Files to be uploaded.
-        upload: [
-          {
-            src: 'dist/appsvc-ui.'+packageJson.version+'.zip',
-            dest: '/production-releases/dist/appsvc-ui.'+packageJson.version+'.zip'
-          }
-        ]
-      }
     }
   });
 
@@ -360,7 +333,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-protractor-runner');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-dom-munger');
-  grunt.loadNpmTasks('grunt-s3');
 
   // Default task(s).
   grunt.registerTask('dev', ['connect:server', 'watch']);
