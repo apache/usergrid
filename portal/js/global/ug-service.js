@@ -1,6 +1,16 @@
 'use strict';
 
-AppServices.Services.factory('ug', function (configuration, $rootScope,utility) {
+AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log) {
+
+  var requestTimes = [],
+    running = false,
+    currentRequests = {};
+  function reportError(data,config){
+
+  };
+  var getAccessToken = function(){
+    return sessionStorage.getItem('accessToken');
+  };
 
   return {
     get:function(prop,isObject){
@@ -263,10 +273,10 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility) 
       var self = this;
       this.usersCollection.addEntity(options, function(err, data){
         if (err) {
-          if (data) {
+          if (typeof data === 'string') {
             $rootScope.$broadcast("alert", "error", "error: " + data);
           } else {
-            $rootScope.$broadcast("alert", "error", "error creating user");
+            $rootScope.$broadcast("alert", "error", "error creating user. the email address might already exist.");
           }
         } else {
           $rootScope.$broadcast('users-create-success', self.usersCollection);
@@ -672,17 +682,19 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility) 
       var provider = 'apple';
 
       var formData = new FormData();
-      formData.append("p12Certificate", file);
+        formData.append("p12Certificate", file);
 
-      formData.append('name', name);
-      formData.append('provider', provider);
-      formData.append('environment', environment);
-      formData.append('certificatePassword', certificatePassword);
-
+        formData.append('name', name);
+        formData.append('provider', provider);
+        formData.append('environment', environment);
+        formData.append('certificatePassword', certificatePassword || "");
+      //var body = {'p12Certificate':file, "name":name,'environment':environment,"provider":provider};
+      //if(certificatePassword){
+        //    body.certificatePassword = certificatePassword;
+      //}
       var options = {
         method:'POST',
         endpoint:'notifiers',
-        body:'{"apiKey":APIkey,"name":name,"provider":"google"}',
         formData:formData
       };
       this.client().request(options, function (err, data) {
@@ -982,6 +994,182 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility) 
           $rootScope.$broadcast('user-leave-org-success', $rootScope.organizations);
         }
       });
+    },
+    /**
+     * Retrieves page data
+     * @param {string} id the name of the single page item to get (a key in the JSON) can be null.
+     * @param {string} url location of the file/endpoint.
+     * @return {Promise} Resolves to JSON.
+     */
+    httpGet: function (id, url) {
+      var items, deferred;
+
+      deferred = $q.defer();
+
+      $http.get((url || configuration.ITEMS_URL)).
+        success(function (data, status, headers, config) {
+          var result;
+          if (id) {
+            angular.forEach(data, function (obj, index) {
+              if (obj.id === id) {
+                result = obj;
+              }
+            });
+          } else {
+            result = data;
+          }
+          deferred.resolve(result);
+        }).
+        error(function (data, status, headers, config) {
+          $log.error(data, status, headers, config);
+          reportError(data,config);
+          deferred.reject(data);
+        });
+
+      return deferred.promise;
+    },
+
+    /**
+     * Retrieves page data via jsonp
+     * @param {string} url the location of the JSON/RESTful endpoint.
+     * @param {string} successCallback function called on success.
+     */
+
+    jsonp: function (objectType,criteriaId,params,successCallback) {
+      if(!params){
+        params = {};
+      }
+      params.demoApp = $rootScope.demoData;
+      params.access_token = getAccessToken();
+      params.callback = 'JSON_CALLBACK';
+      var uri = $rootScope.urls().DATA_URL  + '/' + $rootScope.currentOrg + '/' + $rootScope.currentApp + '/apm/' + objectType + '/' + criteriaId;
+      return this.jsonpRaw(objectType,criteriaId,params,uri,successCallback);
+    },
+
+    jsonpSimple: function (objectType,appId,params) {
+      var uri = $rootScope.urls().DATA_URL  + '/' + $rootScope.currentOrg + '/' + $rootScope.currentApp + '/apm/' + objectType + "/" + appId;
+      return this.jsonpRaw(objectType,appId,params,uri);
+    },
+    calculateAverageRequestTimes: function(){
+      if(!running){
+        var self = this;
+        running = true;
+        setTimeout(function(){
+          running=false;
+          var length = requestTimes.length < 10 ? requestTimes.length  : 10;
+          var sum = requestTimes.slice(0, length).reduce(function(a, b) { return a + b });
+          var avg = sum / length;
+          self.averageRequestTimes = avg/1000;
+          if(self.averageRequestTimes > 5){
+            $rootScope.$broadcast('request-times-slow',self.averageRequestTimes);
+          }
+        },3000);
+      }
+    },
+    jsonpRaw: function (objectType,appId,params,uri,successCallback) {
+      if(typeof successCallback !== 'function'){
+        successCallback = null;
+      }
+      uri = uri || ($rootScope.urls().DATA_URL  + '/' + $rootScope.currentOrg + '/' + $rootScope.currentApp + '/' + objectType);
+
+      if(!params){
+        params = {};
+      }
+
+      var start = new Date().getTime(),
+        self = this;
+
+      params.access_token = getAccessToken();
+      params.callback = 'JSON_CALLBACK';
+
+      var deferred = $q.defer();
+
+      var diff = function(){
+        currentRequests[uri]--;
+        requestTimes.splice(0,0 ,new Date().getTime() - start);
+        self.calculateAverageRequestTimes();
+      };
+
+      successCallback && $rootScope.$broadcast("ajax_loading", objectType);
+      var reqCount = currentRequests[uri] || 0; 
+      if(self.averageRequestTimes > 5 && reqCount>1){
+        setTimeout(function(){
+          deferred.reject(new Error('query in progress'));
+        },50);
+        return deferred;
+      }
+      currentRequests[uri] = (currentRequests[uri] || 0) + 1;
+
+      $http.jsonp(uri,{params:params}).
+        success(function(data, status, headers, config) {
+          diff();
+          if(successCallback){
+            successCallback(data, status, headers, config);
+            $rootScope.$broadcast("ajax_finished", objectType);
+          }
+          deferred.resolve(data);
+        }).
+        error(function(data, status, headers, config) {
+          diff();
+          $log.error("ERROR: Could not get jsonp data. " +uri);
+          reportError(data,config);
+          deferred.reject(data);
+        });
+
+      return deferred.promise;
+    },
+
+    resource: function(params,isArray) {
+      //temporary url for REST endpoints
+
+      return $resource($rootScope.urls().DATA_URL + '/:orgname/:appname/:username/:endpoint',
+        {
+
+        },
+        {
+          get: {
+            method:'JSONP',
+            isArray: isArray,
+            params: params
+          },
+          login: {
+            method:'GET',
+            url: $rootScope.urls().DATA_URL + '/management/token',
+            isArray: false,
+            params: params
+          },
+          save: {
+            url: $rootScope.urls().DATA_URL + '/' + params.orgname + '/' + params.appname,
+            method:'PUT',
+            isArray: false,
+            params: params
+          }
+        });
+    },
+
+    httpPost: function(url,callback,payload,headers){
+
+      var accessToken = getAccessToken();
+
+      if(payload){
+        payload.access_token = accessToken;
+      }else{
+        payload = {access_token:accessToken}
+      }
+
+      if(!headers){
+        headers = {Bearer:accessToken};
+      }
+
+      $http({method: 'POST', url: url, data: payload, headers: headers}).
+        success(function(data, status, headers, config) {
+          callback(data)
+        }).
+        error(function(data, status, headers, config) {
+          reportError(data,config);
+          callback(data)
+        });
+
     }
   }
 });

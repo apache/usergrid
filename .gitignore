@@ -20,3 +20,4 @@ Icon
 /stack/corepersistence/priamcluster/aws.properties
 #Webstorm artifacts
 .idea/
+portal/2.0.**

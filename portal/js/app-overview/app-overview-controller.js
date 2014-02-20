@@ -2,12 +2,11 @@
 
 AppServices.Controllers.controller('AppOverviewCtrl',
     ['ug',
-      'data',
       'charts',
       '$scope',
       '$rootScope',
       '$log',
-      function (ug, data, charts, $scope, $rootScope, $log) {
+      function (ug,  charts, $scope, $rootScope, $log) {
         //util
         var createGradient = function (color1, color2) {
           var perShapeGradient = {
@@ -48,7 +47,7 @@ AppServices.Controllers.controller('AppOverviewCtrl',
           $scope.appOverview = {};
           if (!$rootScope.chartTemplate) {
             //get the chart template for this view... right now it covers all charts...
-            data.get(null, 'js/charts/highcharts.json').then(function (success) {
+            ug.httpGet(null, 'js/charts/highcharts.json').then(function (success) {
               $rootScope.chartTemplate = success;
               $scope.appOverview.chart = angular.copy($rootScope.chartTemplate.pareto);
               $scope.appOverview.chart = charts.convertParetoChart(arr, $scope.appOverview.chart, dataDescription.bar1, '1h', 'NOW');

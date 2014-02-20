@@ -35,11 +35,11 @@ AppServices.Controllers.controller('UsersCtrl', ['ug', '$scope', '$rootScope', '
     $scope.newUserDialog = function (modalId) {
       //todo: put more validate here
       switch(true){
-        case $scope.newUser.password !== $scope.newUser.repassword :
+        case $scope.newUser.newpassword !== $scope.newUser.repassword :
           $rootScope.$broadcast("alert", "error", "Passwords do not match.");
           break;
         default:
-          ug.createUser($scope.newUser.username, $scope.newUser.name, $scope.newUser.email, $scope.newUser.password);
+          ug.createUser($scope.newUser.newusername, $scope.newUser.name, $scope.newUser.email, $scope.newUser.newpassword);
           $scope.hideModal(modalId);
           clearNewUserForm();
           break;

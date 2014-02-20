@@ -62,6 +62,10 @@ describe('Test User Profile', function () {
 
   describe('Test change password',function(){
     it('should change password to some value',function(){
+      if(browser.params.useSso){
+        //this will not work with sso since its an enterprise config.
+        return;
+      }
       browser.driver.get(browser.baseUrl+'/#!/org-overview');
       browser.driver.get(browser.baseUrl+'/#!/profile');
       var email = element(by.model('user.email'));

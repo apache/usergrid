@@ -1,6 +1,6 @@
 var packageJson = require('./package.json');
 var userGrid = require('./config.js');
-
+var  versionPath = packageJson.version;
 var menu = '<ul class="nav nav-list" menu="sideMenu">';
 userGrid.options.menuItems.forEach(function(menuItem){
   menu += '<li class="option '+ (menuItem.active ? 'active' : '') + '" ng-cloak>';
@@ -20,17 +20,18 @@ var mainRefs = "",
     devRefs = ""
     ;
 userGrid.options.scriptReferences.main.forEach(function (current) {
-  mainRefs += "<script src='" + current + "'></script>";
+  mainRefs += "<script src='" + versionPath+'/'+ current + "'></script>";
 });
 userGrid.options.scriptReferences.dev.forEach(function (current) {
-  devRefs += "<script src='" + current + "'></script>";
+  devRefs += "<script src='" + versionPath+'/'+ current + "'></script>";
 });
 
 var cssRefs = "";
 userGrid.options.cssRefs.forEach(function(css){
-  cssRefs += '<link href="'+css.src+'" rel="stylesheet" id="'+css.id+'"/>';
+  cssRefs += '<link href="'+versionPath+'/'+css.src+'" rel="stylesheet" id="'+css.id+'"/>';
 });
 
+console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
 module.exports = function (grunt) {
 
   var distPath = 'dist/'+packageJson.packageName,
@@ -67,8 +68,6 @@ module.exports = function (grunt) {
             'js/libs/angular-1.2.5/angular-sanitize.min.js',
             'js/libs/usergrid.sdk.js',
             'js/libs/MD5.min.js',
-            'bower_components/angularitics/dist/angulartics.min.js',
-            'bower_components/angularitics/dist/angulartics-google-analytics.min.js',
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
             'js/libs/jqueryui/date.min.js'
@@ -147,7 +146,7 @@ module.exports = function (grunt) {
       server: {
         options: {
           target: 'http://localhost:3000/index-debug.html', // target url to open
-          open: 'http://localhost:3000/index-debug.html',
+       //   open: 'http://localhost:3000/index-debug.html',
           port: 3000,
           base: ''
         }
@@ -218,6 +217,18 @@ module.exports = function (grunt) {
           }
         }
       },
+      mars:{
+        options:{
+          args:{
+            baseUrl:'http://appservices.apigee.com/mars/',
+            browser: 'chrome',
+            params:{
+              useSso:true,
+              orgName:'apijeep'
+            }
+          }
+        }
+      },
       firefox: {
         options: {
           args: {
@@ -229,11 +240,16 @@ module.exports = function (grunt) {
       }
     },
     copy:{
+      versioned:{
+        files:[
+          {src:['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'],dest:versionPath,expand:true}
+        ]
+      },
       main:{
         files:[
           // includes files within path
-          {expand: true, src: ['*.html','config.js', '*.ico','js/*.min.js'], dest: distPath, filter: 'isFile'},
-          {expand: true, src: ['sdk/**','css/**','bower_components/**','img/**','js/app-overview/doc-includes/images/**','archive/**','js/libs/**','js/charts/*.json'], dest: distPath}
+          {expand: true, src: ['*.html','config.js', '*.ico'], dest: distPath, filter: 'isFile'},
+          {expand: true, src: [versionPath+'/**','sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath}
 
         ]
       }
@@ -250,13 +266,13 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-        build: ['dist/','js/*.min.js',templateFile]
+        build: ['dist/','js/*.min.js',templateFile,versionPath+'/']//'bower_components/',
     },
     dom_munger: {
       main: {
         options: {
           append:{selector:'body',html:mainRefs},
-          update: {selector:'#main-script',attribute:'src',value:mainFile}
+          update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+mainFile}
 
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
@@ -266,23 +282,33 @@ module.exports = function (grunt) {
       dev: {
         options: {
           append:{selector:'body',html:devRefs},
-          update: {selector:'#main-script',attribute:'src',value:devFile}
+          update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+devFile}
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
         dest: 'index-debug.html'  //update the dist/index.html (the src index.html is copied there)
       },
       menu: {
         options: {
-          append:{selector:'#sideMenu',html:menu}
-        },
-        src: ['index.html','index-debug.html']  //update the dist/index.html (the src index.html is copied there)
-      },
-      css: {
-        options: {
-          append:{selector:'head',html:cssRefs}
+          callback:function($){
+            $('#sideMenu').append(menu);
+            $('head').append(cssRefs);
+            var libs = $('#libScript');
+            for(var key in libs){
+              var elem = libs[key];
+              if(elem.attribs){
+                if (elem.attribs.src) {
+                  elem.attribs.src = versionPath + '/' + elem.attribs.src;
+                }
+                if (elem.attribs.href) {
+                  elem.attribs.href = versionPath + '/' + elem.attribs.href;
+                }
+              }
+            };
+          }
         },
         src: ['index.html','index-debug.html']  //update the dist/index.html (the src index.html is copied there)
       }
+
     },
     bower: {
       install: {
@@ -290,6 +316,33 @@ module.exports = function (grunt) {
           cleanup:false,
           copy:false
         }
+      }
+    },
+    s3: {
+      options: {
+        key: process.env.AWS_KEY || 'noidea',
+        secret: process.env.AWS_SECRET || 'noidea',
+        bucket: 'appservices-deployments',
+        access: 'public-read',
+        headers: {
+          // Two Year cache policy (1000 * 60 * 60 * 24 * 730)
+          "Cache-Control": "max-age=630720000, public",
+          "Expires": new Date(Date.now() + 63072000000).toUTCString()
+        }
+      },
+      dev: {
+        // These options override the defaults
+        options: {
+          encodePaths: false,
+          maxOperations: 20
+        },
+        // Files to be uploaded.
+        upload: [
+          {
+            src: 'dist/appsvc-ui.'+packageJson.version+'.zip',
+            dest: '/production-releases/dist/appsvc-ui.'+packageJson.version+'.zip'
+          }
+        ]
       }
     }
   });
@@ -307,20 +360,23 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-protractor-runner');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-dom-munger');
+  grunt.loadNpmTasks('grunt-s3');
 
   // Default task(s).
   grunt.registerTask('dev', ['connect:server', 'watch']);
 
   grunt.registerTask('validate', ['jshint', 'complexity']);
 
-  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','copy:versioned','karma:unit']);
 
   grunt.registerTask('default', ['build','karma:unit']);
 
-  grunt.registerTask('e2e', ['karma:unit','connect:e2e-phantom','protractor:phantom']);
-  grunt.registerTask('e2e-chrome', ['karma:unit','connect:e2e-chrome','protractor:chrome']);
-  grunt.registerTask('e2e-firefox', ['karma:unit','connect:e2e-firefox','protractor:firefox']);
+  grunt.registerTask('e2e', ['connect:e2e-phantom','protractor:phantom']);
+  grunt.registerTask('e2e-chrome', ['connect:e2e-chrome','protractor:chrome']);
+  grunt.registerTask('e2e-firefox', ['connect:e2e-firefox','protractor:firefox']);
   grunt.registerTask('e2e-prod', ['protractor:prod']);
+  grunt.registerTask('e2e-mars', ['protractor:mars']);
+
 
   grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit','compress']);
 
