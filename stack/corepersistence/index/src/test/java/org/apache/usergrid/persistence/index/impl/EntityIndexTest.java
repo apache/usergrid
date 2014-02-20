@@ -25,12 +25,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.EntitySearchResults;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.BooleanField;
@@ -86,7 +86,8 @@ public class EntityIndexTest {
             Map<String, Object> item = (Map<String, Object>)o;
 
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityIndexTest.mapToEntity( entity, item );
+            entity = EntityIndexTest.mapToEntity( scope.getName(), entity, item );
+            EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
             entityIndex.index( entity );
 
@@ -96,20 +97,26 @@ public class EntityIndexTest {
         logger.info( "Total time to index {} entries {}ms, average {}ms/entry", 
             count, timer.getTime(), timer.getTime() / count );
 
+        // test queries via Java API QueryBuilder
         testQueries( client, index, type );
+
+        // test queries via Lucene syntax
+        testQueries( entityIndex );
 
         client.close();
     }
 
 
     private void testQuery( Client client, String index, String type, QueryBuilder qb, int num ) {
+
         StopWatch timer = new StopWatch();
         timer.start();
         SearchResponse sr = client.prepareSearch( index ).setTypes( type )
-            .setQuery( qb ).setFrom( 0 ).setSize( 20 ).execute().actionGet();
-        assertEquals( num, sr.getHits().getTotalHits() );
+            .setQuery( qb ).setFrom( 0 ).setSize( 999 ).execute().actionGet();
         timer.stop();
-        logger.debug( "Query time {}ms", timer.getTime() );
+
+        assertEquals( num, sr.getHits().getTotalHits() );
+        logger.debug( "Query1 time {}ms", timer.getTime() );
     }
    
 
@@ -137,6 +144,30 @@ public class EntityIndexTest {
             QueryBuilders.termQuery( "contact.email", "nadiabrown@concility.com" ), 1 ); 
     }
 
+   
+    private void testQuery( EntityCollectionIndex entityIndex, String query, int num ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        EntitySearchResults results = entityIndex.simpleQuery( query, 0, 999);
+        timer.stop();
+
+        assertEquals( num, results.count() );
+        logger.debug( "Query2 time {}ms", timer.getTime() );
+    }
+
+
+    private void testQueries( EntityCollectionIndex entityIndex ) {
+
+        testQuery( entityIndex, "name:\"Morgan Pierce\"", 1);
+
+        testQuery( entityIndex, "name:\"Morgan\"", 0);
+
+        testQuery( entityIndex, "name_ug_analyzed:\"Morgan\"", 1);
+
+        testQuery( entityIndex, "gender:female", 433);
+    }
+
     
     @Test
     public void testRemoveIndex() {
@@ -158,7 +189,7 @@ public class EntityIndexTest {
             Map<String, Object> map1 = (Map<String, Object>)o;
 
             // convert map to entity
-            Entity entity1 = EntityIndexTest.mapToEntity( map1 );
+            Entity entity1 = EntityIndexTest.mapToEntity( "testscope", map1 );
 
             // convert entity back to map
             Map map2 = EntityCollectionIndexImpl.entityToMap( entity1 );
@@ -170,19 +201,15 @@ public class EntityIndexTest {
     }
 
     
-    public static Entity mapToEntity( Map<String, Object> item ) {
-        return mapToEntity( null, item );
+    public static Entity mapToEntity( String scope, Map<String, Object> item ) {
+        return mapToEntity( scope, null, item );
     }
 
 
-    public static Entity mapToEntity( Entity entity, Map<String, Object> map ) {
+    public static Entity mapToEntity( String scope, Entity entity, Map<String, Object> map ) {
 
         if ( entity == null ) {
             entity = new Entity();
-        }
-
-        if ( map.get( "version_ug_field") != null ) {
-            EntityUtils.setVersion( entity, UUID.fromString( (String)map.get("version_ug_field")));
         }
 
         for ( String fieldName : map.keySet() ) {
@@ -205,11 +232,11 @@ public class EntityIndexTest {
                 entity.setField( new LongField(fieldName, (Long)value ));
 
             } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value ));
+                entity.setField( listToListField( scope, fieldName, (List)value ));
 
             } else if ( value instanceof Map ) {
                 entity.setField( new EntityObjectField( fieldName, 
-                    mapToEntity( (Map<String, Object>)value ))); // recursion
+                    mapToEntity( scope, (Map<String, Object>)value ))); // recursion
 
             } else {
                 throw new RuntimeException("Unknown type " + value.getClass().getName());
@@ -220,7 +247,7 @@ public class EntityIndexTest {
     }
 
     
-    private static ListField listToListField( String fieldName, List list ) {
+    private static ListField listToListField( String scope, String fieldName, List list ) {
 
         if (list.isEmpty()) {
             return new ListField( fieldName );
@@ -229,10 +256,10 @@ public class EntityIndexTest {
         Object sample = list.get(0);
 
         if ( sample instanceof Map ) {
-            return new ListField<Entity>( fieldName, processListForField( list ));
+            return new ListField<Entity>( fieldName, processListForField( scope, list ));
 
         } else if ( sample instanceof List ) {
-            return new ListField<List>( fieldName, processListForField( list ));
+            return new ListField<List>( fieldName, processListForField( scope, list ));
             
         } else if ( sample instanceof String ) {
             return new ListField<String>( fieldName, (List<String>)list );
@@ -255,7 +282,7 @@ public class EntityIndexTest {
     }
 
     
-    private static List processListForField( List list ) {
+    private static List processListForField( String scope, List list ) {
         if ( list.isEmpty() ) {
             return list;
         }
@@ -264,12 +291,12 @@ public class EntityIndexTest {
         if ( sample instanceof Map ) {
             List<Entity> newList = new ArrayList<Entity>();
             for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
-                newList.add( mapToEntity( map ) );
+                newList.add( mapToEntity( scope, map ) );
             }
             return newList;
 
         } else if ( sample instanceof List ) {
-            return processListForField( list ); // recursion
+            return processListForField( scope, list ); // recursion
             
         } else { 
             return list;

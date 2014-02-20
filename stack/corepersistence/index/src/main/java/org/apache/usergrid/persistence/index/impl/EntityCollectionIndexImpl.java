@@ -24,9 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.EntitySearchResults;
+import org.apache.usergrid.persistence.index.EntitySearchResults.Ref;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -38,10 +42,14 @@ import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 
 
 public class EntityCollectionIndexImpl implements EntityCollectionIndex {
@@ -49,6 +57,8 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
     private final String index;
     private final boolean refresh;
     private final CollectionScope scope;
+
+    public static final String STRING_FIELD_SUFFIX = "_ug_analyzed";
 
 
     public EntityCollectionIndexImpl( Client client, String index, CollectionScope scope, boolean refresh ) {
@@ -85,7 +95,7 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
 
         Map<String, Object> entityAsMap = EntityCollectionIndexImpl.entityToMap( entity );
 
-        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), entity.getId().toString() )
+        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), createIndexId( entity ))
             .setSource( entityAsMap )
             .setRefresh( refresh );
 
@@ -97,7 +107,42 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
     }
 
 
+    private String createIndexId( Entity entity ) {
+        return entity.getId().getUuid().toString() + "|" 
+             + entity.getId().getType() + "|" 
+             + entity.getVersion().toString();
+    }
+
+
     public void deindex( Entity entity ) {
+        String compositeId = entity.getId().toString() + "|" + entity.getVersion().toString();
+        client.prepareDelete( index, scope.getName(), compositeId).execute().actionGet();
+    }
+
+
+    public EntitySearchResults simpleQuery( String query, int from, int size ) {
+
+        QueryStringQueryBuilder builder = new QueryStringQueryBuilder( query );
+
+        SearchResponse sr = client.prepareSearch( index ).setTypes( scope.getName() )
+            .setQuery( builder ).setFrom( from ).setSize( size ).execute().actionGet();
+
+        List<Ref> refs = new ArrayList<Ref>();
+        SearchHits hits = sr.getHits();
+
+        for ( SearchHit hit : hits.getHits() ) {
+
+            String[] idparts = hit.getId().split( "\\|" );
+            String id = idparts[0];
+            String type = idparts[1];
+            String version = idparts[2];
+
+            Ref ref = new Ref( new SimpleId( UUID.fromString(id), type), UUID.fromString(version));
+            refs.add( ref );
+        }
+
+        EntitySearchResults results = new EntitySearchResults( sr.getHits().getTotalHits(), refs );
+        return results;
     }
 
 
@@ -107,10 +152,6 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
     public static Map entityToMap( Entity entity ) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
-
-        if ( entity.getVersion() != null ) {
-            entityMap.put( "version_ug_field", entity.getVersion().toString() );
-        }
 
         for ( Object f : entity.getFields().toArray() ) {
 
@@ -134,7 +175,7 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
             } else if ( f instanceof StringField ) {
                 Field field = (Field)f;
                 entityMap.put( field.getName(), field.getValue() );
-                entityMap.put( field.getName() + "_ug_analyzed", field.getValue() );
+                entityMap.put( field.getName() + STRING_FIELD_SUFFIX, field.getValue() );
 
             } else {
                 Field field = (Field)f;
@@ -180,9 +221,6 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
     }
 
 
-
-
-
     /** 
      * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed, 
      * where the analyzed field is named {name}_ug_analyzed
@@ -204,7 +242,7 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
                         // any string with field name that ends with _ug_analyzed gets analyzed
                         .startObject()
                             .startObject( "template_1" )
-                                .field( "match", "*_ug_analyzed")
+                                .field( "match", "*" + STRING_FIELD_SUFFIX)
                                 .field( "match_mapping_type", "string")
                                 .startObject( "mapping" )
                                     .field( "type", "string" )
@@ -231,5 +269,4 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
         
         return builder;
     }
-
 }

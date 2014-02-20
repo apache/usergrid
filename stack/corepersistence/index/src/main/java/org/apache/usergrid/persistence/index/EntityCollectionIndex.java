@@ -38,4 +38,9 @@ public interface EntityCollectionIndex {
      * @param entity Entity to be removed from index. 
      */
     public void deindex( Entity entity );
+
+    /**
+     * Simple query interface for testing using Lucene query syntax.
+     */
+    public EntitySearchResults simpleQuery( String query, int from, int size );
 }
