@@ -1,8 +1,6 @@
 package org.usergrid.management.export;
 
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,15 +31,23 @@ public class ExportJob extends OnlyOnceJob {
     public void doJob(JobExecution jobExecution) throws Exception {
         logger.info( "execute ExportJob {}", jobExecution );
 
-        JobData jobData = jobExecution.getJobData();
-        UUID exportId = ( UUID ) jobData.getProperty("exportId");
-        //this is probably the state info that todd mentioned
-        ExportInfo config = (ExportInfo) jobData.getProperty( "exportInfo" );
-
-        jobExecution.heartbeat();
-        exportService.doExport( config,jobExecution );
-
-        logger.info( "executed ExportJob completed normally" );
+        ExportInfo config = null;
+            //add check for null jobData.
+            JobData jobData = jobExecution.getJobData();
+            config = (ExportInfo) jobData.getProperty( "exportInfo" );
+            if(jobData == null) {
+                logger.error( "jobData cannot be null" );
+                return;
+            }
+            else if (config == null) {
+                logger.error( "Export information cannot be null" );
+                return;
+            }
+            else {
+                jobExecution.heartbeat();
+                exportService.doExport( config,jobExecution );
+            }
+        logger.info( "executed ExportJob process completed" );
     }
 
     @Override

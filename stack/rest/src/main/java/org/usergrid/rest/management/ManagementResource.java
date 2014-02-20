@@ -17,9 +17,7 @@ package org.usergrid.rest.management;
 
 
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -28,7 +26,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -41,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.usergrid.management.ExportInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -56,7 +52,6 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
@@ -64,10 +59,8 @@ import org.apache.shiro.codec.Base64;
 
 import com.sun.jersey.api.view.Viewable;
 
-import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -449,65 +442,6 @@ public class ManagementResource extends AbstractContextResource {
             return handleViewable( "error", e );
         }
     }
-    //TODO: url encoded form of export
-    //TODO: add authorization.
-
-    @POST
-    @Path( "export" )
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response exportPostJson (@Context UriInfo ui,
-                                    Map<String, Object> json,
-                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback)
-            throws OAuthSystemException {
-
-
-        OAuthResponse response = null;
-        UUID jobUUID = null;
-        Map<String, String> uuidRet = new HashMap<String, String>(  );
-
-        try {
-
-        //parse the json into some useful object (the config params)
-            ExportInfo objEx = new ExportInfo(json);
-            jobUUID = exportService.schedule(objEx);
-            uuidRet.put( "jobUUID", jobUUID.toString() );
-
-        }
-        catch (NullPointerException e) {
-            OAuthResponse errorMsg = OAuthResponse.errorResponse( SC_BAD_REQUEST )
-                         .setErrorDescription( "Job Not Created" )
-                         .buildJSONMessage();
-
-            return Response.status( errorMsg.getResponseStatus() ).type( jsonMediaType( callback ) )
-                           .entity( wrapWithCallback( errorMsg.getBody(), callback ) ).build();
-        }
-        catch (Exception e) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status( SC_INTERNAL_SERVER_ERROR ).build();
-        }
-
-        return Response.status(SC_ACCEPTED).entity(uuidRet).build();
-
-        //Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
-                 //      .entity( wrapWithCallback( "", callback ) ).build();
-    }
-
-    @GET
-    @Path( "export/{jobUUID: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
-    public Response exportGetJson(@Context UriInfo ui,@PathParam( "jobUUID" ) String jobUUIDStr,
-                                  @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception {
-
-//get the info by looking up the job data from the uuid and then call the get state on it
-        //that way you'll find the correct state.
-        //String state = exportService.getState(jobUUIDStr);
-
-
-
-        return Response.status(SC_OK).entity(state).build();
-        //return Response.status(SC_OK).entity(state).build();
-    }
-
 
     String errorMsg = "";
     String responseType;

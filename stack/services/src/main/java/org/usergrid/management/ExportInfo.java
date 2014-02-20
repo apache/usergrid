@@ -1,6 +1,8 @@
 package org.usergrid.management;
 
+
 import java.util.Map;
+import java.util.UUID;
 
 import org.usergrid.persistence.TypedEntity;
 
@@ -19,6 +21,7 @@ public class ExportInfo extends TypedEntity {
     private String admin_token;
     private String s3_key;
     private String bucket_location;
+    private UUID applicationId;
 
     public ExportInfo ( Map<String, Object> exportData) {
         path = (String) exportData.get("path");
@@ -31,9 +34,16 @@ public class ExportInfo extends TypedEntity {
         bucket_location = (String) storage_info.get("bucket_location");
     }
 
+
+    public UUID getApplicationId() {
+        return applicationId;
+    }
+
+
     public String getPath () {
         return path;
     };
+
 
     //Wouldn't get exposed.
     public Map<String, Object> getProperties() {
@@ -54,4 +64,6 @@ public class ExportInfo extends TypedEntity {
     public String getBucket_location () { return bucket_location; }
 
     public String getS3_accessId () { return s3_accessId; }
+
+    public void setApplicationId (UUID appId) { applicationId = appId;}
 }

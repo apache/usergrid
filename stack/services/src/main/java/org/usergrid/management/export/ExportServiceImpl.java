@@ -83,7 +83,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public UUID schedule( final ExportInfo config ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( config.getApplicationId());
 
         Export export = new Export();
         export.setState( Export.State.PENDING );
@@ -115,6 +115,8 @@ public class ExportServiceImpl implements ExportService {
 
         //write to the em
         export = em.create( export );
+        export.setState( Export.State.PENDING );
+        em.update( export );
 
         JobData jobData = new JobData();
         jobData.setProperty( "exportInfo", config );
@@ -127,8 +129,6 @@ public class ExportServiceImpl implements ExportService {
         return export.getUuid();
 
     }
-
-//should be done
     /**
      * get the state of specific export entity
      * @param uuid
@@ -136,9 +136,9 @@ public class ExportServiceImpl implements ExportService {
      * @throws Exception
      */
     @Override
-    public String getState(final UUID uuid) throws Exception {
+    public String getState(final UUID appId, final UUID uuid) throws Exception {
 
-        EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEm = emf.getEntityManager( appId );
 
 
         Export export = rootEm.get( uuid, Export.class );
@@ -157,7 +157,7 @@ public class ExportServiceImpl implements ExportService {
 
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( config.getApplicationId());
 
         Export export = em.get( exportId, Export.class );
 
@@ -177,7 +177,6 @@ public class ExportServiceImpl implements ExportService {
         }
 
         export.setState( Export.State.COMPLETED );
-
         em.update( export );
 
     }
@@ -261,7 +260,7 @@ public class ExportServiceImpl implements ExportService {
             JsonGenerator jg = getJsonGenerator( baos );
 
             // load the dictionary
-
+            //TODO: change the CassService below to only be the applicationId that gets stored in the config.
             EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
 
             Entity appEntity = rootEm.get( application.getKey() );

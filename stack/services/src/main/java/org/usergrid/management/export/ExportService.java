@@ -30,7 +30,7 @@ public interface ExportService {
      * Returns the current state of the service.
      * @return
      */
-    String getState(UUID state) throws Exception;
+    String getState(UUID appId,UUID state) throws Exception;
 
     void setS3Export(S3Export s3Export);
 

@@ -36,6 +36,8 @@ import org.usergrid.management.export.S3ExportImpl;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.persistence.entities.Export;
 import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
@@ -922,46 +924,27 @@ public class ManagementServiceIT {
         f.delete();
     }
 
+    //only handles the DoJob Code , different tests for DoExport
     @Test
     public void testExportDoJob() throws Exception {
 
-        //ExportService exportService = mock( ExportService.class );
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "admin_token","insert_token_data_here" );
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "s3_key","insert key here" );
-        storage_info.put( "s3_accessId","insert access id here");
-        storage_info.put( "bucket_location","insert bucket name here");
-
-
-        properties.put( "storage_provider","s3");
-        properties.put( "storage_info",storage_info);
-
-        payload.put( "path", "test-organization/test-app/user");
-        payload.put( "properties", properties);
-
+        HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo(payload);
+        exportInfo.setApplicationId( applicationId );
 
-
-        //ExportJob job = new ExportJob();
-        //ExportInfo exportInfo;
 
         JobData jobData = new JobData();
         jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "ExportInfo", exportInfo ); //this needs to be populated with properties of export info
+        jobData.setProperty( "exportInfo", exportInfo ); //this needs to be populated with properties of export info
 
         JobExecution jobExecution = mock ( JobExecution.class);
 
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         ExportJob job = new ExportJob();
-        S3Export s3Export = mock( S3Export.class );
-        setup.getExportService().setS3Export( s3Export );
-        job.setExportService( setup.getExportService() );
+        ExportService eS = mock (ExportService.class);
+        job.setExportService( eS );
         try {
          job.doJob( jobExecution );
         }catch ( Exception e) {
@@ -969,6 +952,44 @@ public class ManagementServiceIT {
         }
         assert(true);
 
+    }
+
+    @Test
+    public void testExportDoExport() throws Exception {
+
+        EntityManagerFactory emf = setup.getEmf();
+        EntityManager em = emf.getEntityManager( applicationId );
+        HashMap<String, Object> payload = payloadBuilder();
+        ExportService eS = setup.getExportService();
+
+        JobExecution jobExecution = mock( JobExecution.class);
+
+        ExportInfo exportInfo = new ExportInfo(payload);
+        exportInfo.setApplicationId( applicationId );
+
+        UUID entityExportUUID = eS.schedule( exportInfo );
+
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", entityExportUUID);
+
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        //Exportem.get(entityExport);
+        Export exportEntity = ( Export ) em.get(entityExportUUID);
+        assertNotNull( exportEntity );
+        String derp = exportEntity.getState().name();
+        assertEquals( "PENDING",exportEntity.getState().name());
+        try {
+            eS.doExport( exportInfo,jobExecution );
+        }catch(Exception e) {
+            assert(false);
+        }
+        exportEntity = ( Export ) em.get(entityExportUUID);
+        assertNotNull( exportEntity );
+        assertEquals( "COMPLETED",exportEntity.getState().name() );
     }
 
     //tests that with empty job data, the export still runs.
@@ -1027,7 +1048,6 @@ public class ManagementServiceIT {
         Map<String, Object> storage_info = new HashMap<String, Object>();
         storage_info.put( "admin_token","insert_token_data_here" );
         //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
 
 
         properties.put( "storage_provider","s3");
@@ -1073,7 +1093,6 @@ public class ManagementServiceIT {
         Map<String, Object> storage_info = new HashMap<String, Object>();
         storage_info.put( "admin_token","insert_token_data_here" );
         //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
 
 
 

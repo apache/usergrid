@@ -3,6 +3,7 @@ package org.usergrid.persistence.entities;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityProperty;
 
@@ -20,7 +21,7 @@ public class Export extends TypedEntity {
     }
 
     @EntityProperty
-    public State curState;
+    protected State curState;
 
     @EntityProperty
     protected Long queued;
@@ -45,25 +46,6 @@ public class Export extends TypedEntity {
     /** Error message */
     @EntityProperty
     protected String errorMessage;
-
-    @EntityProperty
-    public State getState() {
-        if (getErrorMessage() != null) {
-            return State.FAILED;
-//        } else if (getCanceled() == Boolean.TRUE) {
-//            return State.CANCELED;
-        } else if (getFinished() != null) {
-            return State.COMPLETED;
-        } else if (getStarted() != null) {
-            return State.STARTED;
-        }
-//        } else if (isExpired()) {
-//            return State.EXPIRED;
-//        } else if (getQueued() != null) {
-//            return State.SCHEDULED;
-//        }
-        return State.PENDING;
-    }
 
     public Export() {
     }
@@ -107,10 +89,14 @@ public class Export extends TypedEntity {
     }
 
     //state should moved to a derived state, but it is not there yet.
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @EntityProperty
     public void setState(State setter) {
         curState = setter;
     }
-
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @EntityProperty
+    public State  getState() { return curState; }
 
     public void setCanceled( final Boolean canceled ) {
         this.canceled = canceled;
