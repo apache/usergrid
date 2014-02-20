@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
@@ -65,74 +66,80 @@ public class EntityIndexTest {
     public void testIndex() throws IOException {
 
         Client client = elasticSearchRule.getClient();
-
         final CollectionScope scope = mock( CollectionScope.class );
         when( scope.getName() ).thenReturn( "contacts" );
-
         String index = RandomStringUtils.randomAlphanumeric(20 ).toLowerCase();
         String type = scope.getName();
 
-        EntityCollectionIndex entityIndex = new EntityCollectionIndexImpl( client, index, scope, true );  
-        indexSampleData( entityIndex );
+        EntityCollectionIndex entityIndex = 
+            new EntityCollectionIndexImpl( client, index, scope, true );  
+
+        InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
+        ObjectMapper mapper = new ObjectMapper();
+        List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+
+        int count = 0;
+        StopWatch timer = new StopWatch();
+        timer.start();
+        for ( Object o : sampleJson ) {
+
+            Map<String, Object> item = (Map<String, Object>)o;
+
+            Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
+            entity = EntityIndexTest.mapToEntity( entity, item );
+
+            entityIndex.index( entity );
+
+            count++;
+        }
+        timer.stop();
+        logger.info( "Total time to index {} entries {}ms, average {}ms/entry", 
+            count, timer.getTime(), timer.getTime() / count );
 
         testQueries( client, index, type );
 
         client.close();
     }
 
-    
-    @Test
-    public void testRemoveIndex() {
-    }
-    
-
-    private void indexSampleData( EntityCollectionIndex entityIndex ) throws IOException {
-        
-        InputStream is = this.getClass().getResourceAsStream( "/sample-small.json" );
-        ObjectMapper mapper = new ObjectMapper();
-        List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
-
-        for ( Object o : sampleJson ) {
-            Map<String, Object> item = (Map<String, Object>)o;
-
-            Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), entityIndex.getScopeName()));
-            EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-
-            entity = EntityIndexTest.mapToEntity( entity, item );
-
-            entityIndex.index( entity );
-        }
-    }
 
     private void testQuery( Client client, String index, String type, QueryBuilder qb, int num ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         SearchResponse sr = client.prepareSearch( index ).setTypes( type )
             .setQuery( qb ).setFrom( 0 ).setSize( 20 ).execute().actionGet();
         assertEquals( num, sr.getHits().getTotalHits() );
+        timer.stop();
+        logger.debug( "Query time {}ms", timer.getTime() );
     }
    
 
     private void testQueries( Client client, String index, String type ) {
 
         testQuery( client, index, type, 
-            QueryBuilders.termQuery( "name", "Orr Byers" ), 1 );
+            QueryBuilders.termQuery( "name", "Morgan Pierce" ), 1 );
 
         // term query is exact match
         testQuery( client, index, type, 
-            QueryBuilders.termQuery("name", "Byers" ), 0 );
+            QueryBuilders.termQuery("name", "Pierce" ), 0 );
 
         // match query allows partial match 
         testQuery( client, index, type, 
-            QueryBuilders.matchQuery( "name_ug_analyzed", "Byers" ), 1 );
+            QueryBuilders.matchQuery( "name_ug_analyzed", "Pierce" ), 2 );
 
         testQuery( client, index, type, 
-            QueryBuilders.termQuery( "company", "Geologix" ), 1 );
+            QueryBuilders.termQuery( "company", "Blurrybus" ), 1 );
 
         testQuery( client, index, type, 
-            QueryBuilders.termQuery( "gender", "female" ), 3 );
+            QueryBuilders.termQuery( "gender", "female" ), 433 );
 
         // query of nested object fields supported
         testQuery( client, index, type, 
-            QueryBuilders.termQuery( "contact.email", "orrbyers@bittor.com" ), 1 ); 
+            QueryBuilders.termQuery( "contact.email", "nadiabrown@concility.com" ), 1 ); 
+    }
+
+    
+    @Test
+    public void testRemoveIndex() {
     }
 
 
@@ -142,7 +149,7 @@ public class EntityIndexTest {
     @Test
     public void testMapToEntityRoundTrip() throws IOException {
 
-        InputStream is = this.getClass().getResourceAsStream( "/sample.json" );
+        InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
 
