@@ -79,11 +79,6 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
             }
         }
     }
-
-    
-    public String getScopeName() {
-        return scope.getName();
-    }
   
 
     public void index( Entity entity ) {

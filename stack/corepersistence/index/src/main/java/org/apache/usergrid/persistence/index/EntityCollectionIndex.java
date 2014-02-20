@@ -38,10 +38,4 @@ public interface EntityCollectionIndex {
      * @param entity Entity to be removed from index. 
      */
     public void deindex( Entity entity );
-
-    /**
-     * Get name of scope associated with this index interface.
-     * @return Name of scope.
-     */
-    public String getScopeName();
 }
