@@ -20,10 +20,12 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
@@ -44,10 +46,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
@@ -178,15 +176,7 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
-            @Override
-            public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
-                return Observable.from( markedEdges ).filter( new EdgeFilter( search.getMaxVersion() ) );
-            }
-        } )
-
-
-                //                .filter( new EdgeFilter( search.getMaxVersion() ) )
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
                 //we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
@@ -205,7 +195,7 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
             }
-        } ).filter( new EdgeFilter( search.getMaxVersion() ) )
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
                 //we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
@@ -224,7 +214,15 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
             }
-        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().cast( Edge.class );
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                         .distinctUntilChanged( new Func1<Edge, Id>() {
+                             @Override
+                             public Id call( final Edge edge ) {
+                                 return edge.getTargetNode();
+                             }
+                         } )
+
+                         .cast( Edge.class );
     }
 
 
@@ -235,7 +233,13 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
             }
-        } ).filter( new EdgeFilter( search.getMaxVersion() ) ).takeFirst().cast( Edge.class );
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                         .distinctUntilChanged( new Func1<Edge, Id>() {
+                             @Override
+                             public Id call( final Edge edge ) {
+                                 return edge.getSourceNode();
+                             }
+                         } ).cast( Edge.class );
     }
 
 
@@ -286,29 +290,63 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     /**
-     * Filter the returned values based on the max uuid and if it's been marked for deletion or not
+     * Helper filter to perform mapping and return an observable of pre-filtered edges
      */
-    private class EdgeFilter implements Func1<MarkedEdge, Boolean> {
+    private class EdgeBufferFilter implements Func1<List<MarkedEdge>, Observable<MarkedEdge>> {
 
         private final UUID maxVersion;
-        private final LoadingCache<Id, Optional<UUID>> markCache =
-                CacheBuilder.newBuilder().maximumSize( graphFig.getScanPageSize()*2 ).build( new CacheLoader<Id, Optional<UUID>>() {
 
 
-                    @Override
-                    public Optional<UUID> load( final Id key ) throws Exception {
-                        return nodeSerialization.getMaxVersion( scope, key );
-                    }
-                } );
-
-
-        private EdgeFilter( final UUID maxVersion ) {
+        private EdgeBufferFilter( final UUID maxVersion ) {
             this.maxVersion = maxVersion;
+        }
+
+
+        /**
+         * Takes a buffered list of marked edges.  It then does a single round trip to fetch marked ids
+         * These are then used in conjunction with the max version filter to filter any edges that should
+         * not be returned
+         * @param markedEdges
+         * @return An observable that emits only edges that can be consumed.  There could be multiple versions
+         * of the same edge so those need de-duped.
+         */
+        @Override
+        public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
+
+
+            Set<Id> toCheck = new HashSet<Id>( markedEdges.size() );
+
+            for ( MarkedEdge edge : markedEdges ) {
+                toCheck.add( edge.getSourceNode() );
+                toCheck.add( edge.getTargetNode() );
+            }
+
+            final Map<Id, UUID> markedVersions = nodeSerialization.getMaxVersions( scope, toCheck );
+            return Observable.from( markedEdges ).subscribeOn( scheduler )
+                             .filter( new EdgeFilter( this.maxVersion, markedVersions ) );
+        }
+    }
+
+
+    /**
+     * Filter the returned values based on the max uuid and if it's been marked for deletion or not
+     */
+    private static class EdgeFilter implements Func1<MarkedEdge, Boolean> {
+
+        private final UUID maxVersion;
+
+        private final Map<Id, UUID> markCache;
+
+
+        private EdgeFilter( final UUID maxVersion, Map<Id, UUID> markCache ) {
+            this.maxVersion = maxVersion;
+            this.markCache = markCache;
         }
 
 
         @Override
         public Boolean call( final MarkedEdge edge ) {
+
 
             final UUID edgeVersion = edge.getVersion();
 
@@ -317,26 +355,23 @@ public class EdgeManagerImpl implements EdgeManager {
                 return false;
             }
 
-            try {
-                final Optional<UUID> sourceId = markCache.get( edge.getSourceNode() );
 
-                //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-                // so we need to discard it
-                if ( sourceId.isPresent() && UUIDComparator.staticCompare( edgeVersion, sourceId.get() ) < 1  ) {
-                    return false;
-                }
+            final UUID sourceVersion = markCache.get( edge.getSourceNode() );
 
-                final Optional<UUID> targetId = markCache.get( edge.getTargetNode() );
-
-                //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
-                // so we need to discard it
-                if ( targetId.isPresent() && UUIDComparator.staticCompare( edgeVersion, targetId.get() ) < 1 ) {
-                    return false;
-                }
+            //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+            // so we need to discard it
+            if ( sourceVersion != null && UUIDComparator.staticCompare( edgeVersion, sourceVersion ) < 1 ) {
+                return false;
             }
-            catch ( ExecutionException e ) {
-                throw new RuntimeException( "Unable to evaluate edge for filtering", e );
+
+            final UUID targetVersion = markCache.get( edge.getTargetNode() );
+
+            //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+            // so we need to discard it
+            if ( targetVersion != null && UUIDComparator.staticCompare( edgeVersion, targetVersion ) < 1 ) {
+                return false;
             }
+
 
             return true;
         }
