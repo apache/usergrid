@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -164,12 +165,13 @@ public class NodeSerializationTest {
         final Id nodeId2 = createId( "test" );
         final Id nodeId3 = createId( "test" );
 
+
         final UUID version = UUIDGenerator.newTimeUUID();
 
         serialization.mark( scope, nodeId1, version ).execute();
         serialization.mark( scope, nodeId2, version ).execute();
 
-        Map<Id, UUID> marks = serialization.getMaxVersions( scope, Arrays.asList( nodeId1, nodeId2, nodeId3 ) );
+        Map<Id, UUID> marks = serialization.getMaxVersions( scope, Arrays.asList(  createEdge( nodeId1, "test", nodeId2 ), createEdge(nodeId2, "test", nodeId3) ) );
 
 
         assertEquals(version, marks.get( nodeId1 ));

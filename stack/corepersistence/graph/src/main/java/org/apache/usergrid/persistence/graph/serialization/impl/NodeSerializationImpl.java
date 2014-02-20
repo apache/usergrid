@@ -40,6 +40,7 @@ import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFam
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -165,7 +166,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Map<Id, UUID> getMaxVersions( final OrganizationScope scope, final Collection<Id> nodeIds ) {
+    public Map<Id, UUID> getMaxVersions( final OrganizationScope scope, final Collection<? extends Edge> nodeIds ) {
         ValidationUtils.validateOrganizationScope( scope );
         Preconditions.checkNotNull( nodeIds, "nodeIds cannot be null" );
 
@@ -178,8 +179,9 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         //worst case all are marked
         final Map<Id, UUID> versions = new HashMap<Id, UUID>(nodeIds.size());
 
-        for(final Id id: nodeIds){
-            keys.add( ScopedRowKey.fromKey( scope, id ) );
+        for(final Edge edge: nodeIds){
+            keys.add( ScopedRowKey.fromKey( scope, edge.getSourceNode() ) );
+            keys.add( ScopedRowKey.fromKey( scope, edge.getTargetNode() ) );
         }
 
         try {

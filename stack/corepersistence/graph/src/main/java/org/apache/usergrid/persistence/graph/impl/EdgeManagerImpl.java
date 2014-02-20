@@ -313,15 +313,7 @@ public class EdgeManagerImpl implements EdgeManager {
         @Override
         public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
 
-
-            Set<Id> toCheck = new HashSet<Id>( markedEdges.size() );
-
-            for ( MarkedEdge edge : markedEdges ) {
-                toCheck.add( edge.getSourceNode() );
-                toCheck.add( edge.getTargetNode() );
-            }
-
-            final Map<Id, UUID> markedVersions = nodeSerialization.getMaxVersions( scope, toCheck );
+            final Map<Id, UUID> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
             return Observable.from( markedEdges ).subscribeOn( scheduler )
                              .filter( new EdgeFilter( this.maxVersion, markedVersions ) );
         }
