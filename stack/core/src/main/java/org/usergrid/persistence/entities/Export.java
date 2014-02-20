@@ -8,25 +8,8 @@ import org.usergrid.persistence.annotations.EntityProperty;
 
 
 /**
+ *Contains state information for an Entity Job
  *
- *
- */
-
-/**
- *
- *the sch system doesn't make any assumes about the job or how it works.
- * and so if I need additional information to be persistant.
- *
- * The way to save data between queue and storing it.
- *
- * in my case, create a export entity. before I schedule the job and it'll have the pending state in it and
- * all the information I need to run. Then I'll pass the ID of the export info I saved in a collection and i'll put that in the jbo
- * data.
- *
- * persist the state in mechanisum that they can all access.
- *
- * I could make it a class and I can make it an entity. That way I can get it in and out.
- * doesn't get exposed to the user.
  */
 @XmlRootElement
 public class Export extends TypedEntity {

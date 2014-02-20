@@ -303,70 +303,31 @@ public class ExportServiceImpl implements ExportService {
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
             long starting_time = System.currentTimeMillis();
 
-            //jg.writeStartObject();
-
-
             // Loop through the collections. This is the only way to loop
             // through the entities in the application (former namespace).
             //could support queries, just need to implement that in the rest endpoint.
             for ( String collectionName : metadata.keySet() ) {
 
-                //jg.writeFieldName( "EntityInfo" );
-
-
-
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
                 query.setResultsLevel( Results.Level.ALL_PROPERTIES );
-                //paging iterator. Clean this code up using it.
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
                 PagingResultsIterator itr = new PagingResultsIterator( entities );
-//untested
+
                 for( Object e: itr){
                     starting_time = checkTimeDelta( starting_time, jobExecution );
                     Entity entity = ( Entity ) e;
-                    //for ( Entity entity : entities ) {
+
                     jg.writeStartObject();
                     jg.writeFieldName( "Metadata" );
                     jg.writeObject( entity );
                     saveCollectionMembers( jg, em, application.getValue(), entity );
                     jg.writeEndObject();
-                    //}
-
-
                 }
-
-
-// working
-//                while ( entities.size() > 0 ) {
-//                    jobExecution.heartbeat();
-//                    for ( Entity entity : entities ) {
-//                        jg.writeStartObject();
-//                        jg.writeFieldName( "Metadata" );
-//                        jg.writeObject( entity );
-//                        saveCollectionMembers( jg, em, application.getValue(), entity );
-//                        jg.writeEndObject();
-//                    }
-//
-//                    //we're done
-//                    if ( entities.getCursor() == null ) {
-//                        break;
-//                    }
-//
-//
-//                    query.setCursor( entities.getCursor() );
-//
-//                    entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
-//
-//                }
-
             }
 
             // Close writer and file for this application.
-
-            // logger.warn();
-            //jg.writeEndObject();
             jg.writeEndArray();
             jg.close();
             baos.flush();

@@ -662,7 +662,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
         try {
-            node = resource().path( "test-organization/default-app/").queryParam( "access_token",
+            node = resource().path( "test-organization/test-app/export"+uuid).queryParam( "access_token",
                     superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
           //  node = resource().path( "/management/exportStats/"+uuid ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
