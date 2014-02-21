@@ -28,6 +28,8 @@ import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver
 import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.graph.consistency.AsyncProcessorImpl;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
@@ -87,11 +89,12 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( NodeSerializationImpl.class );
 
 
+
         /**
          * Graph event bus, will need to be refactored into it's own classes
          */
 
-        final EventBus eventBus = new EventBus("asyncCleanup");
+        final EventBus eventBus = new EventBus("AsyncProcessorBus");
         bind(EventBus.class).toInstance(eventBus);
 
         //auto register every impl on the event bus
@@ -105,6 +108,8 @@ public class GraphModule extends AbstractModule {
                });
            }
         });
+
+        bind(AsyncProcessor.class).to(AsyncProcessorImpl.class);
 
 
     }
