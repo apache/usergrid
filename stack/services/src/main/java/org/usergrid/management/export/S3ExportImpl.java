@@ -60,12 +60,10 @@ public class S3ExportImpl implements S3Export {
         }
         catch ( Exception ex ) {
             logger.error( "Could not start binary service: {}", ex.getMessage() );
-            //throw new RuntimeException( ex );
+            return;
         }
 
         try {
-
-
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
                     blobStore.blobBuilder( filename ).payload( inputStream ).calculateMD5().contentType( "text/plain" );

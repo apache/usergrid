@@ -799,6 +799,7 @@ public class ManagementServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo(payload);
+        exportInfo.setApplicationId( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         //intialize user object to be posted
@@ -881,6 +882,7 @@ public class ManagementServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo(payload);
+        exportInfo.setApplicationId( applicationId );
 
         UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
@@ -985,7 +987,8 @@ public class ManagementServiceIT {
         try {
             eS.doExport( exportInfo,jobExecution );
         }catch(Exception e) {
-            assert(false);
+            throw e;
+            //assert(false);
         }
         exportEntity = ( Export ) em.get(entityExportUUID);
         assertNotNull( exportEntity );
@@ -1012,9 +1015,7 @@ public class ManagementServiceIT {
             assert( false );
         }
         assert(true);
-
     }
-
 
     @Test
     public void testNullJobExecution () {
@@ -1035,7 +1036,6 @@ public class ManagementServiceIT {
             assert( false );
         }
         assert(true);
-
     }
 
     @Ignore

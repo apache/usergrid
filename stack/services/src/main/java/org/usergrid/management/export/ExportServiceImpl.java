@@ -31,7 +31,6 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.PagingResultsIterator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
-import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.Export;
 import org.usergrid.persistence.entities.JobData;
 
@@ -39,8 +38,9 @@ import com.google.common.collect.BiMap;
 
 
 /**
- *The class is a singleton and thust must not have ANY instance variables declared in its scope.
  *
+ *Need to refactor out the mutliple orgs being take , need to factor out the multiple apps
+ * it will just be the one app and the one org and all of it's collections.
  */
 public class ExportServiceImpl implements ExportService {
 
@@ -54,7 +54,6 @@ public class ExportServiceImpl implements ExportService {
     //injected the Entity Manager Factory
     protected EntityManagerFactory emf;
 
-
     //inject Management Service to access Organization Data
     private ManagementService managementService;
 
@@ -66,19 +65,9 @@ public class ExportServiceImpl implements ExportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
-    private String outputDir = "/Users/ApigeeCorportation";
-
     protected long startTime = System.currentTimeMillis();
 
-    protected static final String PATH_REPLACEMENT = "/Users/ApigeeCorporation/";
-
-    private String filename = PATH_REPLACEMENT;
-
     private S3Export s3Export;
-
-    //TODO: Todd, do I refactor most of the methods out to just leave schedule and doExport much like
-    //the exporting toolbase class?
-
 
     @Override
     public UUID schedule( final ExportInfo config ) throws Exception {
@@ -130,8 +119,8 @@ public class ExportServiceImpl implements ExportService {
 
     }
     /**
-     * get the state of specific export entity
-     * @param uuid
+     * Query Entity Manager for specific Export Entity within application
+     * @param appId,uuid
      * @return String
      * @throws Exception
      */
@@ -139,16 +128,12 @@ public class ExportServiceImpl implements ExportService {
     public String getState(final UUID appId, final UUID uuid) throws Exception {
 
         EntityManager rootEm = emf.getEntityManager( appId );
-
-
         Export export = rootEm.get( uuid, Export.class );
 
         if(export == null){
             return null;
         }
-
         return export.getState().toString();
-
     }
 
 
@@ -156,33 +141,56 @@ public class ExportServiceImpl implements ExportService {
     public void doExport( final ExportInfo config,final JobExecution jobExecution ) throws Exception {
 
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-
         EntityManager em = emf.getEntityManager( config.getApplicationId());
-
         Export export = em.get( exportId, Export.class );
 
+        String pathToBeParsed = config.getPath();
+        String[] pathItems = pathToBeParsed.split( "/" );
+        try {
+            managementService.getOrganizationByName( pathItems[0] );
+        }
+        catch ( Exception e ) {
+            logger.error( "Organization doesn't exist" );
+            return;
+        }
 
         //update state and re-write the entity
         export.setState( Export.State.STARTED );
 
         em.update( export );
 
-        //needs to pass the org name to getOrgs from path
-        Map<UUID, String> organizations = getOrgs(config);
-        for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
-
+//        Map<UUID, String> organizationGet = getOrg(pathItems[0]);
+//        if (organizationGet == null) {
+//            logger.error( "couldn't parse your organization" );
+//            return;
+//        }
+        Map<UUID, String> organizationGet = getOrgs(config);
+        for ( Map.Entry<UUID, String> organization : organizationGet.entrySet() ) {
             //needs to pass app name, and possibly collection to export
             exportApplicationsForOrg( organization, config, jobExecution );
-
         }
-
         export.setState( Export.State.COMPLETED );
         em.update( export );
-
     }
 
     //now we also need somebody to take the export info and look through the path for the specific org.
     //That way we get a specific org instead of getting all the orgs.
+//    private Map<UUID, String> getOrg(String orgName) throws Exception {
+//        Map<UUID, String> organizationNames = null;
+//        OrganizationInfo info = managementService.getOrganizationByName( orgName );
+//        managementService.
+//
+//        if ( info == null ) {
+//            logger.error( "Organization info is null!" );
+//            return null;
+//        }
+//
+//        organizationNames = new HashMap<UUID, String>();
+//        organizationNames.put( info.getUuid(), info.getName() );
+//
+//        return organizationNames;
+//    }
+
     private Map<UUID, String> getOrgs(ExportInfo exportInfo) throws Exception {
         // Loop through the organizations
         // TODO:this will come from the orgs in schedule when you do the validations. delete orgId
@@ -261,7 +269,7 @@ public class ExportServiceImpl implements ExportService {
 
             // load the dictionary
             //TODO: change the CassService below to only be the applicationId that gets stored in the config.
-            EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEm = emf.getEntityManager( config.getApplicationId() );
 
             Entity appEntity = rootEm.get( application.getKey() );
 
@@ -489,7 +497,7 @@ public class ExportServiceImpl implements ExportService {
         StringBuilder str = new StringBuilder();
         // str.append(baseOutputFileName);
         // str.append(".");
-        str.append( PATH_REPLACEMENT );
+        str.append( "collections" );
         //str.append( type );
         //str.append( "." );
         str.append( name );
@@ -499,9 +507,6 @@ public class ExportServiceImpl implements ExportService {
 
         String outputFileName = str.toString();
         //TODO:this is , i feel, bad practice so make sure to come back here and fix it up.
-        filename = outputFileName;
-
-        //logger.info( "Creating output filename:" + outputFileName );
 
         return outputFileName;
     }

@@ -539,7 +539,9 @@ public class ManagementResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" ).accept( MediaType.APPLICATION_JSON )
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+                             .queryParam( "access_token", superAdminToken() )
+                             .accept( MediaType.APPLICATION_JSON )
                       .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
