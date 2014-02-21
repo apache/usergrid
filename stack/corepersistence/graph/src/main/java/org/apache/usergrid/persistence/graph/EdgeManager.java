@@ -71,7 +71,7 @@ public interface EdgeManager {
     Observable<Edge> deleteEdge( Edge edge );
 
     /**
-     * TODO: This needs to mark a node as deleted while async processing occurs, our reads would need to check this filter on read
+     * TODO: This needs to mark a node as deleted while consistency processing occurs, our reads would need to check this filter on read
      *
      * Remove the node from the graph.
      *
