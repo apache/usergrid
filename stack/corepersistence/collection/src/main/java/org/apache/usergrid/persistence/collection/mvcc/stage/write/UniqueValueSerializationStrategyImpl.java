@@ -75,7 +75,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
                 CF_UNIQUE_VALUES,
                 BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
-                BytesType.class.getSimpleName() );
+                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Collections.singleton( cf );
     }
