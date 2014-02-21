@@ -513,7 +513,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf,
-                BytesType.class.getSimpleName(), ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName() );
+                BytesType.class.getSimpleName(), ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName() , MultiTennantColumnFamilyDefinition.CacheOption.KEYS);
     }
 
 

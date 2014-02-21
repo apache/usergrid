@@ -39,9 +39,15 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSeri
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 
 
 /**
@@ -79,6 +85,26 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
         migrationBinding.addBinding().to( EdgeSerializationImpl.class );
         migrationBinding.addBinding().to( NodeSerializationImpl.class );
+
+
+        /**
+         * Graph event bus, will need to be refactored into it's own classes
+         */
+
+        final EventBus eventBus = new EventBus("asyncCleanup");
+        bind(EventBus.class).toInstance(eventBus);
+
+        //auto register every impl on the event bus
+        bindListener( Matchers.any(), new TypeListener() {
+           @Override
+           public <I> void hear(@SuppressWarnings("unused") final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
+               typeEncounter.register(new InjectionListener<I>() {
+                   @Override public void afterInjection(final I instance) {
+                       eventBus.register(instance);
+                   }
+               });
+           }
+        });
 
 
     }

@@ -198,7 +198,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( CF_ENTITY_LOG,
                 BytesType.class.getSimpleName(),
                 ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                IntegerType.class.getSimpleName() );
+                IntegerType.class.getSimpleName() , MultiTennantColumnFamilyDefinition.CacheOption.KEYS);
 
 
         return Collections.singleton( cf );
