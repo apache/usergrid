@@ -40,7 +40,7 @@ public interface EntityCollectionIndex {
     public void deindex( Entity entity );
 
     /**
-     * Simple query interface for testing using Lucene query syntax.
+     * Query interface for testing using Usergrid query syntax.
      */
     public EntitySearchResults simpleQuery( String query, int from, int size );
 }

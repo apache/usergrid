@@ -25,8 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-
+import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
@@ -37,9 +36,9 @@ import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import org.apache.commons.lang.StringUtils;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
-import org.apache.usergrid.persistence.query.Results.Level;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.query.Results.Level;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -57,6 +56,7 @@ import static org.apache.usergrid.persistence.utils.ListUtils.first;
 import static org.apache.usergrid.persistence.utils.ListUtils.firstBoolean;
 import static org.apache.usergrid.persistence.utils.ListUtils.firstInteger;
 import static org.apache.usergrid.persistence.utils.ListUtils.firstLong;
+import static org.apache.usergrid.persistence.utils.ListUtils.firstUuid;
 import static org.apache.usergrid.persistence.utils.ListUtils.isEmpty;
 import static org.apache.usergrid.persistence.utils.MapUtils.toMapList;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -77,7 +77,7 @@ public class Query {
     private String type;
     private List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
     private Operand rootOperand;
-    private Id startResult;
+    private UUID startResult;
     private String cursor;
     private int limit = 0;
 
@@ -91,7 +91,6 @@ public class Query {
     private Long startTime;
     private Long finishTime;
     private boolean pad;
-    private CounterResolution resolution = CounterResolution.ALL;
     private List<Id> identifiers;
     private String collection;
     private String ql;
@@ -119,7 +118,6 @@ public class Query {
             reversedSet = q.reversedSet;
             startTime = q.startTime;
             finishTime = q.finishTime;
-            resolution = q.resolution;
             pad = q.pad;
             rootOperand = q.rootOperand;
             identifiers = q.identifiers != null ? new ArrayList<Id>( q.identifiers ) : null;
@@ -149,9 +147,6 @@ public class Query {
         }
 
         ANTLRStringStream in = new ANTLRStringStream( qlt.trim() );
-
-        // TODO
-
         QueryFilterLexer lexer = new QueryFilterLexer( in );
         CommonTokenStream tokens = new CommonTokenStream( lexer );
         QueryFilterParser parser = new QueryFilterParser( tokens );
@@ -199,24 +194,18 @@ public class Query {
             Map<String, List<String>> params ) throws QueryParseException {
 
         Query q = null;
-        CounterResolution resolution = null;
         List<Id> identifiers = null;
 
         String ql = QueryUtils.queryStrFrom( params );
         String type = first( params.get( "type" ) );
         Boolean reversed = firstBoolean( params.get( "reversed" ) );
         String connection = first( params.get( "connection" ) );
-        //Id start = firstId( params.get( "start" ) );
+        UUID start = firstUuid( params.get( "start" ) );
         String cursor = first( params.get( "cursor" ) );
         Integer limit = firstInteger( params.get( "limit" ) );
         List<String> permissions = params.get( "permission" );
         Long startTime = firstLong( params.get( "start_time" ) );
         Long finishTime = firstLong( params.get( "end_time" ) );
-
-        List<String> l = params.get( "resolution" );
-        if ( !isEmpty( l ) ) {
-            resolution = CounterResolution.fromString( l.get( 0 ) );
-        }
 
         Boolean pad = firstBoolean( params.get( "pad" ) );
 
@@ -236,7 +225,7 @@ public class Query {
             q = Query.fromQL( decode( ql ) );
         }
 
-        l = params.get( "filter" );
+        List<String> l = params.get( "filter" );
 
         if ( !isEmpty( l ) ) {
             q = newQueryIfNull( q );
@@ -268,10 +257,10 @@ public class Query {
             q.setPermissions( permissions );
         }
 
-//        if ( start != null ) {
-//            q = newQueryIfNull( q );
-//            q.setStartResult( start );
-//        }
+        if ( start != null ) {
+            q = newQueryIfNull( q );
+            q.setStartResult( start );
+        }
 
         if ( cursor != null ) {
             q = newQueryIfNull( q );
@@ -291,11 +280,6 @@ public class Query {
         if ( finishTime != null ) {
             q = newQueryIfNull( q );
             q.setFinishTime( finishTime );
-        }
-
-        if ( resolution != null ) {
-            q = newQueryIfNull( q );
-            q.setResolution( resolution );
         }
 
         if ( pad != null ) {
@@ -679,18 +663,18 @@ public class Query {
     }
 
 
-    void setStartResult( Id startResult ) {
+    void setStartResult( UUID startResult ) {
         this.startResult = startResult;
     }
 
 
-    public Query withStartResult( Id startResult ) {
+    public Query withStartResult( UUID startResult ) {
         this.startResult = startResult;
         return this;
     }
 
 
-    public Id getStartResult() {
+    public UUID getStartResult() {
         if ( ( startResult == null ) && ( cursor != null ) ) {
             byte[] cursorBytes = decodeBase64( cursor );
             if ( ( cursorBytes != null ) && ( cursorBytes.length == 16 ) ) {
@@ -803,16 +787,6 @@ public class Query {
     }
 
 
-    public void setResolution( CounterResolution resolution ) {
-        this.resolution = resolution;
-    }
-
-
-    public CounterResolution getResolution() {
-        return resolution;
-    }
-
-
     public void addIdentifier( Id id ) {
         if ( identifiers == null ) {
             identifiers = new ArrayList<Id>();
@@ -872,17 +846,6 @@ public class Query {
                 first = false;
             }
         }
-        //      if (!filterPredicates.isEmpty()) {
-        //        s.append(" where ");
-        //        boolean first = true;
-        //        for (FilterPredicate f : filterPredicates) {
-        //          if (!first) {
-        //            s.append(" and ");
-        //          }
-        //          s.append(f.toString());
-        //          first = false;
-        //        }
-        //      }
         return s.toString();
     }
 
@@ -980,69 +943,6 @@ public class Query {
             return propertyName + ( ( direction == Query.SortDirection.DESCENDING ) ? " DESC" : "" );
         }
     }
-
-
-//    public List<Object> getSelectionResults( Results rs ) {
-//
-//        List<Entity> entities = rs.getEntities();
-//        if ( entities == null ) {
-//            return null;
-//        }
-//
-//        if ( !hasSelectSubjects() ) {
-//            return cast( entities );
-//        }
-//
-//        List<Object> results = new ArrayList<Object>();
-//
-//        for ( Entity entity : entities ) {
-//            if ( isMergeSelectResults() ) {
-//                boolean include = false;
-//                Map<String, Object> result = new LinkedHashMap<String, Object>();
-//                Map<String, String> selects = getSelectAssignments();
-//                for ( Map.Entry<String, String> select : selects.entrySet() ) {
-//                    Object obj = JsonUtils.select( entity, select.getValue(), false );
-//                    if ( obj != null ) {
-//                        include = true;
-//                    }
-//                    result.put( select.getKey(), obj );
-//                }
-//                if ( include ) {
-//                    results.add( result );
-//                }
-//            }
-//            else {
-//                boolean include = false;
-//                List<Object> result = new ArrayList<Object>();
-//                Set<String> selects = getSelectSubjects();
-//                for ( String select : selects ) {
-//                    Object obj = JsonUtils.select( entity, select );
-//                    if ( obj != null ) {
-//                        include = true;
-//                    }
-//                    result.add( obj );
-//                }
-//                if ( include ) {
-//                    results.add( result );
-//                }
-//            }
-//        }
-//
-//        if ( results.size() == 0 ) {
-//            return null;
-//        }
-//
-//        return results;
-//    }
-
-
-//    public Object getSelectionResult( Results rs ) {
-//        List<Object> r = getSelectionResults( rs );
-//        if ( ( r != null ) && ( r.size() > 0 ) ) {
-//            return r.get( 0 );
-//        }
-//        return null;
-//    }
 
 
     private static String decode( String input ) {

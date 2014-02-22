@@ -26,25 +26,6 @@ import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.query.ir.OrNode;
-
-import antlr.NoViableAltException;
-import org.apache.usergrid.persistence.query.tree.AndOperand;
-import org.apache.usergrid.persistence.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.query.tree.Equal;
-import org.apache.usergrid.persistence.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.query.tree.LessThan;
-import org.apache.usergrid.persistence.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.query.tree.LongLiteral;
-import org.apache.usergrid.persistence.query.tree.NotOperand;
-import org.apache.usergrid.persistence.query.tree.Operand;
-import org.apache.usergrid.persistence.query.tree.OrOperand;
-import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
-import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
-import org.apache.usergrid.persistence.query.tree.StringLiteral;
-import org.apache.usergrid.persistence.query.tree.UUIDLiteral;
-import org.apache.usergrid.persistence.query.tree.WithinOperand;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
