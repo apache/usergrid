@@ -159,11 +159,6 @@ public class ExportServiceImpl implements ExportService {
 
         em.update( export );
 
-//        Map<UUID, String> organizationGet = getOrg(pathItems[0]);
-//        if (organizationGet == null) {
-//            logger.error( "couldn't parse your organization" );
-//            return;
-//        }
         Map<UUID, String> organizationGet = getOrgs(config);
         for ( Map.Entry<UUID, String> organization : organizationGet.entrySet() ) {
             //needs to pass app name, and possibly collection to export
@@ -172,24 +167,6 @@ public class ExportServiceImpl implements ExportService {
         export.setState( Export.State.COMPLETED );
         em.update( export );
     }
-
-    //now we also need somebody to take the export info and look through the path for the specific org.
-    //That way we get a specific org instead of getting all the orgs.
-//    private Map<UUID, String> getOrg(String orgName) throws Exception {
-//        Map<UUID, String> organizationNames = null;
-//        OrganizationInfo info = managementService.getOrganizationByName( orgName );
-//        managementService.
-//
-//        if ( info == null ) {
-//            logger.error( "Organization info is null!" );
-//            return null;
-//        }
-//
-//        organizationNames = new HashMap<UUID, String>();
-//        organizationNames.put( info.getUuid(), info.getName() );
-//
-//        return organizationNames;
-//    }
 
     private Map<UUID, String> getOrgs(ExportInfo exportInfo) throws Exception {
         // Loop through the organizations
@@ -267,45 +244,9 @@ public class ExportServiceImpl implements ExportService {
 
             JsonGenerator jg = getJsonGenerator( baos );
 
-            // load the dictionary
-            //TODO: change the CassService below to only be the applicationId that gets stored in the config.
-            EntityManager rootEm = emf.getEntityManager( config.getApplicationId() );
-
-            Entity appEntity = rootEm.get( application.getKey() );
-
-            jobExecution.heartbeat();
-            Map<String, Object> dictionaries = new HashMap<String, Object>();
-            for ( String dictionary : rootEm.getDictionaries( appEntity ) ) {
-                Map<Object, Object> dict = rootEm.getDictionaryAsMap( appEntity, dictionary );
-
-                // nothing to do
-                if ( dict.isEmpty() ) {
-                    continue;
-                }
-
-                dictionaries.put( dictionary, dict );
-            }
-            //TODO: resolve problem that look similar to this.
             EntityManager em = emf.getEntityManager( application.getKey() );
 
-            // Get application
-            Entity nsEntity = em.get( application.getKey() );
-
-            Set<String> collections = em.getApplicationCollections();
-
-            // load app counters
-
-            Map<String, Long> entityCounters = em.getApplicationCounters();
-
-            nsEntity.setMetadata( "organization", organization );
-            nsEntity.setMetadata( "dictionaries", dictionaries );
-            // counters for collections
-            nsEntity.setMetadata( "counters", entityCounters );
-            nsEntity.setMetadata( "collections", collections );
-
-            jobExecution.heartbeat();
             jg.writeStartArray();
-            jg.writeObject( nsEntity );
 
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
             long starting_time = System.currentTimeMillis();
@@ -314,6 +255,9 @@ public class ExportServiceImpl implements ExportService {
             // through the entities in the application (former namespace).
             //could support queries, just need to implement that in the rest endpoint.
             for ( String collectionName : metadata.keySet() ) {
+                if(collectionName.equals( "exports" )) {
+                    continue;
+                }
 
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
@@ -339,7 +283,6 @@ public class ExportServiceImpl implements ExportService {
             jg.close();
             baos.flush();
             baos.close();
-
 
             InputStream is = new ByteArrayInputStream( baos.toByteArray() );
             s3Export.copyToS3( is, config , appFileName);
@@ -492,14 +435,7 @@ public class ExportServiceImpl implements ExportService {
      * @return the file name concatenated with the type and the name of the collection
      */
     protected String prepareOutputFileName( String type, String name ) {
-        //name = name.replace( "/", PATH_REPLACEMENT );
-        // Add application and timestamp
         StringBuilder str = new StringBuilder();
-        // str.append(baseOutputFileName);
-        // str.append(".");
-        str.append( "collections" );
-        //str.append( type );
-        //str.append( "." );
         str.append( name );
         str.append( "." );
         str.append( startTime );
