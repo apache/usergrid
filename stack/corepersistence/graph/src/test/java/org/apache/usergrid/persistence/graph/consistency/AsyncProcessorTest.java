@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.consistency;
 
 
 import java.util.Stack;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        AsyncProcessor asyncProcessor = constructProcessor( null, queue );
+        AsyncProcessor asyncProcessor = constructProcessor( queue, null );
 
 
         //mock up the queue
@@ -89,11 +90,6 @@ public class AsyncProcessorTest {
     public void verifyAsyncExecution() throws InterruptedException {
 
         final TestListener listener = new TestListener();
-
-        final EventBus testBus = new EventBus( "test" );
-
-        testBus.register( listener );
-
 
         final TestEvent event = new TestEvent();
 
@@ -114,7 +110,7 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        final AsyncProcessor asyncProcessor = constructProcessor( testBus, queue );
+        final AsyncProcessor asyncProcessor = constructProcessor( queue, listener );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
@@ -141,20 +137,16 @@ public class AsyncProcessorTest {
     }
 
 
-    @Test( timeout = 5000 )
-//    @Test
+//    @Test( timeout = 5000 )
+        @Test
     public void verifyErrorExecution() throws InterruptedException {
 
         final ErrorListener listener = new ErrorListener();
 
-        final EventBus testBus = new EventBus( "test" );
-
-        testBus.register( listener );
-
 
         final TestEvent event = new TestEvent();
 
-        final boolean[] invoked = new boolean[]{false, false};
+        final boolean[] invoked = new boolean[] { false, false };
 
 
         final TimeoutEvent<TestEvent> timeoutEvent = new TimeoutEvent<TestEvent>() {
@@ -173,7 +165,7 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        final AsyncProcessorImpl asyncProcessor = constructProcessor( testBus, queue );
+        final AsyncProcessorImpl asyncProcessor = constructProcessor( queue, listener );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
@@ -199,7 +191,6 @@ public class AsyncProcessorTest {
         } );
 
 
-
         //fire the event
         asyncProcessor.start( timeoutEvent );
 
@@ -211,20 +202,20 @@ public class AsyncProcessorTest {
 
         assertSame( event, firedEvent );
 
-        assertFalse("Queue remove should not be invoked", invoked[0]);
+        assertFalse( "Queue remove should not be invoked", invoked[0] );
 
-        assertTrue("Error listener should be invoked", invoked[1]);
+        assertTrue( "Error listener should be invoked", invoked[1] );
 
-        assertEquals( event, errorEvents[0] );
+        assertEquals( event, errorEvents[0].getEvent() );
     }
 
 
     /**
      * Construct the async processor
      */
-    public AsyncProcessorImpl constructProcessor( EventBus eventBus, TimeoutQueue queue ) {
+    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue , TimeoutEventListener<T> listener) {
 
-        return new AsyncProcessorImpl( eventBus, queue, Schedulers.threadPoolForIO() );
+        return new AsyncProcessorImpl( queue, listener, Schedulers.threadPoolForIO() );
     }
 
 
@@ -233,13 +224,13 @@ public class AsyncProcessorTest {
      */
     public static class TestEvent {
 
-        public boolean equals(Object other){
-            return other == this;
+        public boolean equals( Object other ) {
+            return this == other;
         }
     }
 
 
-    public static class TestListener {
+    public static class TestListener implements TimeoutEventListener<TestEvent> {
 
         public final Stack<TestEvent> events = new Stack<TestEvent>();
 
@@ -248,10 +239,9 @@ public class AsyncProcessorTest {
 
         }
 
-
-        @Subscribe
-        public void fireTestEvent( TestEvent e ) {
-            events.push( e );
+        @Override
+        public void receive( final TestEvent event ) {
+            events.push( event );
         }
     }
 
@@ -259,14 +249,14 @@ public class AsyncProcessorTest {
     /**
      * Throw error after the event is fired
      */
-    public static class ErrorListener  {
+    public static class ErrorListener implements TimeoutEventListener<TestEvent> {
 
         public final Stack<TestEvent> events = new Stack<TestEvent>();
 
 
-        @Subscribe
-        public void fireTestEvent( final TestEvent e ) {
-            events.push( e );
+        @Override
+        public void receive( final TestEvent event ) {
+            events.push( event );
             throw new RuntimeException( "Test Exception thrown.  Failed to process event" );
         }
     }

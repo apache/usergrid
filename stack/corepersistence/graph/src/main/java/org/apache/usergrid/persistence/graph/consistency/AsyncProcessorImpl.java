@@ -21,13 +21,13 @@ import rx.Scheduler;
  * The implementation of asynchronous processing
  */
 @Singleton
-public class AsyncProcessorImpl implements AsyncProcessor {
+public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
     private static final HystrixCommandGroupKey GRAPH_REPAIR = HystrixCommandGroupKey.Factory.asKey( "Graph_Repair" );
 
-    private final EventBus bus;
-    private final TimeoutQueue queue;
+    private final TimeoutQueue<T> queue;
     private final Scheduler scheduler;
+    private final TimeoutEventListener<T> listener;
 
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
@@ -35,21 +35,24 @@ public class AsyncProcessorImpl implements AsyncProcessor {
 
 
     @Inject
-    public AsyncProcessorImpl( final EventBus bus, final TimeoutQueue queue, final Scheduler scheduler ) {
-        this.bus = bus;
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final TimeoutEventListener<T> listener, final Scheduler scheduler ) {
         this.queue = queue;
+        this.listener = listener;
         this.scheduler = scheduler;
     }
 
 
+
     @Override
-    public <T> TimeoutEvent<T> setVerification( final T event, final long timeout ) {
+    public TimeoutEvent<T> setVerification( final T event, final long timeout ) {
         return queue.queue( event, timeout );
     }
 
 
+
+
     @Override
-    public <T> void start( final TimeoutEvent<T> event ) {
+    public void start( final TimeoutEvent<T> event ) {
 
 
         //run this in a timeout command so it doesn't run forever. If it times out, it will simply resume later
@@ -58,7 +61,7 @@ public class AsyncProcessorImpl implements AsyncProcessor {
             @Override
             protected Void run() throws Exception {
                 final T busEvent = event.getEvent();
-                bus.post( busEvent );
+                listener.receive( busEvent );
                 return null;
             }
         }.toObservable( scheduler ).subscribe( new Observer<Void>() {
@@ -81,23 +84,9 @@ public class AsyncProcessorImpl implements AsyncProcessor {
             @Override
             public void onNext( final Void args ) {
                 //nothing to do here
-                System.out.print( "next" );
-                //To change body of implemented methods use File | Settings | File Templates.
             }
         } );
 
-        //                new Action1<Void>() {
-        //                                                   @Override
-        //                                                   public void call( final Void timeoutEvent ) {
-        //
-        //                                                   }
-        //                                               }, new Action1<Throwable>() {
-        //                                                   @Override
-        //                                                   public void call( final Throwable throwable ) {
-        //
-        //                                                   }
-        //                                               }
-        //                                             );
     }
 
 

@@ -94,20 +94,20 @@ public class GraphModule extends AbstractModule {
          * Graph event bus, will need to be refactored into it's own classes
          */
 
-        final EventBus eventBus = new EventBus("AsyncProcessorBus");
-        bind(EventBus.class).toInstance(eventBus);
+//        final EventBus eventBus = new EventBus("AsyncProcessorBus");
+//        bind(EventBus.class).toInstance(eventBus);
 
         //auto register every impl on the event bus
-        bindListener( Matchers.any(), new TypeListener() {
-           @Override
-           public <I> void hear(@SuppressWarnings("unused") final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
-               typeEncounter.register(new InjectionListener<I>() {
-                   @Override public void afterInjection(final I instance) {
-                       eventBus.register(instance);
-                   }
-               });
-           }
-        });
+//        bindListener( Matchers.any(), new TypeListener() {
+//           @Override
+//           public <I> void hear(@SuppressWarnings("unused") final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
+//               typeEncounter.register(new InjectionListener<I>() {
+//                   @Override public void afterInjection(final I instance) {
+//                       eventBus.register(instance);
+//                   }
+//               });
+//           }
+//        });
 
         bind(AsyncProcessor.class).to(AsyncProcessorImpl.class);
 

@@ -6,7 +6,7 @@ package org.apache.usergrid.persistence.graph.consistency;
  *  across multiple environments.
  *
  */
-public interface AsyncProcessor {
+public interface AsyncProcessor<T> {
 
 
     /**
@@ -19,7 +19,7 @@ public interface AsyncProcessor {
      * @param event The event to be scheduled for verification
      * @param timeout  The time in milliseconds we should wait before the event should fire
      */
-    public <T> TimeoutEvent<T> setVerification( T event, long timeout );
+    public TimeoutEvent<T> setVerification( T event, long timeout );
 
 
     /**
@@ -27,9 +27,8 @@ public interface AsyncProcessor {
      * It is up to the implementer to commit the event so that it does not fire again.  This should never throw exceptions.
      *
      * @param event The event to start
-     * @param <T>
      */
-    public <T> void start(TimeoutEvent<T> event);
+    public void start(TimeoutEvent<T> event);
 
 
 
