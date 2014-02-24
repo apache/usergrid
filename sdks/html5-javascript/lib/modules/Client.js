@@ -693,7 +693,7 @@
     *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user            
     *  @return none
     */
-		Usergrid.Client.prototype.destroyToken = function (username, token, revokeAll) {
+		Usergrid.Client.prototype.destroyToken = function (username, token, revokeAll, callback) {
       var options = {
 	        client:self,
 	        method:'PUT',	        
@@ -735,11 +735,11 @@
     *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user        
     *  @return none
     */
-    Usergrid.Client.prototype.logoutAndDestroyToken = function(username, token, revokeAll) {
+    Usergrid.Client.prototype.logoutAndDestroyToken = function(username, token, revokeAll, callback) {
 			if (username == null) {
 				console.log('username required to revoke tokens');
 			} else {
-				this.destroyToken(username,token,revokeAll);
+				this.destroyToken(username, token, revokeAll, callback);
 				if (revokeAll == true || token == this.getToken() || token == null) {
 		    	this.setToken(null);
 		    }
