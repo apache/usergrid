@@ -35,10 +35,7 @@ import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.ElasticSearchRule;
 import org.apache.usergrid.test.EntityMapUtils;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Ignore;
@@ -50,8 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class EntityIndexTest {
-    private static final Logger logger = LoggerFactory.getLogger( EntityIndexTest.class );
+public class EntityCollectionIndexTest {
+    private static final Logger logger = LoggerFactory.getLogger( EntityCollectionIndexTest.class );
 
     @Rule
     public ElasticSearchRule elasticSearchRule = new ElasticSearchRule(); 
@@ -123,6 +120,16 @@ public class EntityIndexTest {
         testQuery( entityIndex, "name_ug_analyzed = 'Morgan'", 1);
 
         testQuery( entityIndex, "gender = 'female'", 433);
+
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39", 1);
+
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39 and age < 41", 1);
+
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 40", 0);
+
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age >= 40", 1);
+
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age <= 40", 1);
     }
 
     
