@@ -1,20 +1,21 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+ * limitations under the License.  For additional information regarding
+ * copyright in this work, please see the NOTICE file in the top level
+ * directory of this distribution.
+ */
 package org.apache.usergrid.persistence.query;
-
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -36,7 +37,9 @@ import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import org.apache.commons.lang.StringUtils;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.impl.EsDslQueryVistor;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.query.Results.Level;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
@@ -50,8 +53,10 @@ import org.apache.usergrid.persistence.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.query.tree.Operand;
 import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
+import org.apache.usergrid.persistence.query.tree.QueryVisitor;
 import static org.apache.usergrid.persistence.utils.ClassUtils.cast;
 import org.apache.usergrid.persistence.utils.JsonUtils;
+import org.apache.usergrid.persistence.utils.ListUtils;
 import static org.apache.usergrid.persistence.utils.ListUtils.first;
 import static org.apache.usergrid.persistence.utils.ListUtils.firstBoolean;
 import static org.apache.usergrid.persistence.utils.ListUtils.firstInteger;
@@ -60,18 +65,16 @@ import static org.apache.usergrid.persistence.utils.ListUtils.firstUuid;
 import static org.apache.usergrid.persistence.utils.ListUtils.isEmpty;
 import static org.apache.usergrid.persistence.utils.MapUtils.toMapList;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class Query {
-
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
 
     public static final int DEFAULT_LIMIT = 10;
-
     public static final int MAX_LIMIT = 1000;
-
     public static final String PROPERTY_Id = "uuid";
 
     private String type;
@@ -94,6 +97,8 @@ public class Query {
     private List<Id> identifiers;
     private String collection;
     private String ql;
+
+    private QueryBuilder queryBuilder ;
 
 
     public Query() {
@@ -126,6 +131,16 @@ public class Query {
     }
 
 
+    public QueryBuilder getQueryBuilder() {
+        return queryBuilder;
+    }
+
+
+    private void setQueryBuilder( QueryBuilder queryBuilder ) {
+        this.queryBuilder = queryBuilder;
+    }
+
+
     public static Query fromQL( String ql ) throws QueryParseException {
         if ( ql == null ) {
             return null;
@@ -146,28 +161,34 @@ public class Query {
             }
         }
 
-        ANTLRStringStream in = new ANTLRStringStream( qlt.trim() );
+        ANTLRStringStream in = new ANTLRStringStream( ql.trim() );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
         CommonTokenStream tokens = new CommonTokenStream( lexer );
         QueryFilterParser parser = new QueryFilterParser( tokens );
+
         try {
             Query q = parser.ql().query;
+            QueryVisitor v = new EsDslQueryVistor();
+            q.getRootOperand().visit( v );
+            q.setQueryBuilder( v.getQueryBuilder() );
             q.setQl( originalQl );
             return q;
-        }
-        catch ( RecognitionException e ) {
-            logger.error( "Unable to parse \"{}\"", ql, e );
 
+        } catch ( RecognitionException e ) {
+            logger.error( "Unable to parse \"{}\"", ql, e );
             int index = e.index;
             int lineNumber = e.line;
             Token token = e.token;
-
             String message = String.format("The query cannot be parsed. "
                     + "The token '%s' at column %d on line %d cannot be parsed", 
                     token.getText(), index, lineNumber );
-
             throw new QueryParseException( message, e );
+
+        } catch ( PersistenceException pe ) { 
+            String message = "Error building ElasticSEarch query string";
+            throw new QueryParseException( message, pe );
         }
+
     }
 
 
@@ -196,7 +217,7 @@ public class Query {
         Query q = null;
         List<Id> identifiers = null;
 
-        String ql = QueryUtils.queryStrFrom( params );
+        String ql = Query.queryStrFrom( params );
         String type = first( params.get( "type" ) );
         Boolean reversed = firstBoolean( params.get( "reversed" ) );
         String connection = first( params.get( "connection" ) );
@@ -995,5 +1016,23 @@ public class Query {
 
     public Level getLevel() {
         return level;
+    }
+
+    
+    public static final String PARAM_QL = "ql";
+    public static final String PARAM_Q = "q";
+    public static final String PARAM_QUERY = "query";
+
+    public static String queryStrFrom( Map<String, List<String>> params ) {
+        if ( params.containsKey( PARAM_QL ) ) {
+            return ListUtils.first( params.get( PARAM_QL ) );
+        }
+        else if ( params.containsKey( PARAM_Q ) ) {
+            return ListUtils.first( params.get( PARAM_Q ) );
+        }
+        else if ( params.containsKey( PARAM_QUERY ) ) {
+            return ListUtils.first( params.get( PARAM_QUERY ) );
+        }
+        return null;
     }
 }
