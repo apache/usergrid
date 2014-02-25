@@ -36,8 +36,7 @@
     "grunt-contrib-clean": "~0.5.0",
     "grunt-dom-munger": "~3.1.0",
     "bower": "~1.2.8",
-    "grunt-bower-task": "~0.3.4",
-    "grunt-s3": "~0.2.0-alpha.3"
+    "grunt-bower-task": "~0.3.4"
   },
   "engines": {
     "node": ">=0.10.21"
