@@ -65,12 +65,12 @@
         <property name="managementService" ref="managementService"/>
     </bean>
 
-  <bean id="exportService" class="org.usergrid.management.export.ExportServiceImpl" >
+  <bean id="exportService" class="org.apache.usergrid.management.export.ExportServiceImpl" >
     <property name="managementService" ref="managementService"/>
     <property name="emf" ref="entityManagerFactory"/>
     <property name="sch" ref="schedulerService"/>
   </bean>
 
-  <bean id="s3Export" class="org.usergrid.management.export.S3ExportImpl" />
+  <bean id="s3Export" class="org.apache.usergrid.management.export.S3ExportImpl" />
 
 </beans>

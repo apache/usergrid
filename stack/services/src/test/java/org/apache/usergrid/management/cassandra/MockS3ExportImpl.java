@@ -1,4 +1,4 @@
-package org.usergrid.management.cassandra;
+package org.apache.usergrid.management.cassandra;
 
 
 import java.io.File;
@@ -10,8 +10,8 @@ import java.io.OutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.management.ExportInfo;
-import org.usergrid.management.export.S3Export;
+import org.apache.usergrid.management.ExportInfo;
+import org.apache.usergrid.management.export.S3Export;
 
 
 /**

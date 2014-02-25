@@ -1,9 +1,9 @@
-package org.usergrid.management.export;
+package org.apache.usergrid.management.export;
 
 
 import java.io.InputStream;
 
-import org.usergrid.management.ExportInfo;
+import org.apache.usergrid.management.ExportInfo;
 
 
 /**

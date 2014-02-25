@@ -1,10 +1,10 @@
-package org.usergrid.management;
+package org.apache.usergrid.management;
 
 
 import java.util.Map;
 import java.util.UUID;
 
-import org.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.TypedEntity;
 
 
 /**

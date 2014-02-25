@@ -1,4 +1,4 @@
-package org.usergrid.management.export;
+package org.apache.usergrid.management.export;
 
 
 import java.io.InputStream;
@@ -15,7 +15,7 @@ import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.management.ExportInfo;
+import org.apache.usergrid.management.ExportInfo;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;

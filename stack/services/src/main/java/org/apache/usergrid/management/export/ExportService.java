@@ -1,10 +1,10 @@
-package org.usergrid.management.export;
+package org.apache.usergrid.management.export;
 
 
 import java.util.UUID;
 
-import org.usergrid.batch.JobExecution;
-import org.usergrid.management.ExportInfo;
+import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.management.ExportInfo;
 
 
 /**

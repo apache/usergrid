@@ -11,6 +11,7 @@ import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
@@ -27,6 +28,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private TokenService tokenService;
     private SignInProviderFactory providerFactory;
     private Properties properties;
+    private ExportService exportService;
 
 
     public ServiceITSetupImpl( CassandraResource cassandraResource ) {
@@ -48,6 +50,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
         providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
         properties = cassandraResource.getBean( PropertiesFactoryBean.class ).getObject();
         smf = cassandraResource.getBean( ServiceManagerFactory.class );
+        exportService = cassandraResource.getBean( ExportService.class );
 
         LOG.info( "Test setup complete..." );
     }
@@ -81,6 +84,9 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     public ManagementService getMgmtSvc() {
         return managementService;
     }
+
+    @Override
+    public ExportService getExportService() { return exportService; }
 
 
     public ServiceManagerFactory getSmf() {
