@@ -744,6 +744,8 @@ public class ManagementServiceIT {
 
         assertEquals( userId, authedUser.getUuid() );
     }
+
+
     //Tests to make sure we can call the job with mock data and it runs.
     @Ignore
     public void testFileConnections() throws Exception {
@@ -752,9 +754,10 @@ public class ManagementServiceIT {
 
 
         try {
-            f = new File ("test.json");
+            f = new File( "test.json" );
             f.delete();
-        }   catch (Exception e) {
+        }
+        catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
 
@@ -762,7 +765,7 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -771,17 +774,16 @@ public class ManagementServiceIT {
         Entity[] entity;
         entity = new Entity[10];
         //creates entities
-        for (int i = 0; i< 10;i++) {
+        for ( int i = 0; i < 10; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test"+i+"@anuff.com");//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
 
             entity[i] = em.create( "user", userProperties );
-
         }
         //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ),"Vibrations",em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ),"Vibrations",em.getRef( entity[0].getUuid() ) );
+        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
+        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
 
         UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
@@ -792,22 +794,22 @@ public class ManagementServiceIT {
         jobData.setProperty( "exportInfo", exportInfo );
         jobData.setProperty( "exportId", exportUUID );
 
-        JobExecution jobExecution = mock ( JobExecution.class);
-        when(jobExecution.getJobData()).thenReturn( jobData );
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        exportService.doExport( exportInfo, jobExecution  );
+        exportService.doExport( exportInfo, jobExecution );
 
         JSONParser parser = new JSONParser();
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse(new FileReader(f));
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
         //assertEquals(13, a.size() );
 
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject) a.get( 0 );
-        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject) objEnt.get( "connections" );
+        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( 0 );
+        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
 
         assertNotNull( objConnections );
 
-        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get("Vibrations");
+        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get( "Vibrations" );
 
         assertNotNull( objVibrations );
 
@@ -821,9 +823,10 @@ public class ManagementServiceIT {
         File f = null;
 
         try {
-            f = new File ("test.json");
+            f = new File( "test.json" );
             f.delete();
-        }   catch (Exception e) {
+        }
+        catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
 
@@ -831,7 +834,7 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
         UUID exportUUID = exportService.schedule( exportInfo );
@@ -842,24 +845,23 @@ public class ManagementServiceIT {
         jobData.setProperty( "exportInfo", exportInfo );
         jobData.setProperty( "exportId", exportUUID );
 
-        JobExecution jobExecution = mock ( JobExecution.class);
-        when(jobExecution.getJobData()).thenReturn( jobData );
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        exportService.doExport( exportInfo, jobExecution  );
+        exportService.doExport( exportInfo, jobExecution );
 
         JSONParser parser = new JSONParser();
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse(new FileReader(f));
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        for (int i = 0; i < a.size();i++ )
-        {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject) a.get( i );
+        for ( int i = 0; i < a.size(); i++ ) {
+            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
             assertNotNull( entityData );
-
         }
         f.delete();
     }
+
 
     @Test
     public void testFileExportOneOrg() throws Exception {
@@ -868,18 +870,21 @@ public class ManagementServiceIT {
 
 
         try {
-            f = new File ("test.json");
+            f = new File( "test.json" );
             f.delete();
-        }   catch (Exception e) {
+        }
+        catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
-        setup.getMgmtSvc().createOwnerAndOrganization( "noExport","junkUserName","junkRealName","ugExport@usergrid.com","123456789" );
+        setup.getMgmtSvc()
+             .createOwnerAndOrganization( "noExport", "junkUserName", "junkRealName", "ugExport@usergrid.com",
+                     "123456789" );
 
         S3Export s3Export = new MockS3ExportImpl();
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
         UUID exportUUID = exportService.schedule( exportInfo );
@@ -890,27 +895,27 @@ public class ManagementServiceIT {
         jobData.setProperty( "exportInfo", exportInfo );
         jobData.setProperty( "exportId", exportUUID );
 
-        JobExecution jobExecution = mock ( JobExecution.class);
-        when(jobExecution.getJobData()).thenReturn( jobData );
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        exportService.doExport( exportInfo, jobExecution  );
+        exportService.doExport( exportInfo, jobExecution );
 
         JSONParser parser = new JSONParser();
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse(new FileReader(f));
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
         //assertEquals( 3 , a.size() );
-        for (int i = 0; i < a.size();i++ )
-        {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject) a.get( i );
+        for ( int i = 0; i < a.size(); i++ ) {
+            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
-            String entityName = ( String) entityData.get( "name" );
+            String entityName = ( String ) entityData.get( "name" );
             // assertNotEquals( "NotEqual","junkRealName",entityName );
             assertFalse( "junkRealName".equals( entityName ) );
-
         }
         f.delete();
     }
+
+
     @Test
     public void testFileExportOneApp() throws Exception {
 
@@ -919,9 +924,10 @@ public class ManagementServiceIT {
         String appName = "testAppNotExported";
 
         try {
-            f = new File ("test.json");
+            f = new File( "test.json" );
             f.delete();
-        }   catch (Exception e) {
+        }
+        catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
         }
 
@@ -934,10 +940,10 @@ public class ManagementServiceIT {
         Entity[] entity;
         entity = new Entity[10];
         //creates entities
-        for (int i = 0; i< 10;i++) {
+        for ( int i = 0; i < 10; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test"+i+"@anuff.com");//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
             entity[i] = em.create( "user", userProperties );
         }
 
@@ -945,7 +951,7 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
         UUID exportUUID = exportService.schedule( exportInfo );
@@ -956,26 +962,26 @@ public class ManagementServiceIT {
         jobData.setProperty( "exportInfo", exportInfo );
         jobData.setProperty( "exportId", exportUUID );
 
-        JobExecution jobExecution = mock ( JobExecution.class);
-        when(jobExecution.getJobData()).thenReturn( jobData );
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        exportService.doExport( exportInfo, jobExecution  );
+        exportService.doExport( exportInfo, jobExecution );
 
         JSONParser parser = new JSONParser();
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse(new FileReader(f));
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
         //assertEquals( 3 , a.size() );
-        for (int i = 0; i < a.size();i++ )
-        {
-            org.json.simple.JSONObject data = ( org.json.simple.JSONObject) a.get( i );
+        for ( int i = 0; i < a.size(); i++ ) {
+            org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
-            String entityName = ( String) entityData.get( "name" );
+            String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
             //assertNotEquals( "NotEquals","junkRealName",entityName );
         }
         f.delete();
     }
+
 
     //only handles the DoJob Code , different tests for DoExport
     @Test
@@ -983,7 +989,7 @@ public class ManagementServiceIT {
 
         HashMap<String, Object> payload = payloadBuilder();
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
 
@@ -991,21 +997,22 @@ public class ManagementServiceIT {
         jobData.setProperty( "jobName", "exportJob" );
         jobData.setProperty( "exportInfo", exportInfo ); //this needs to be populated with properties of export info
 
-        JobExecution jobExecution = mock ( JobExecution.class);
+        JobExecution jobExecution = mock( JobExecution.class );
 
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         ExportJob job = new ExportJob();
-        ExportService eS = mock (ExportService.class);
+        ExportService eS = mock( ExportService.class );
         job.setExportService( eS );
         try {
             job.doJob( jobExecution );
-        }catch ( Exception e) {
-            assert( false );
         }
-        assert(true);
-
+        catch ( Exception e ) {
+            assert ( false );
+        }
+        assert ( true );
     }
+
 
     @Test
     public void testExportDoExport() throws Exception {
@@ -1015,9 +1022,9 @@ public class ManagementServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
         ExportService eS = setup.getExportService();
 
-        JobExecution jobExecution = mock( JobExecution.class);
+        JobExecution jobExecution = mock( JobExecution.class );
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
         UUID entityExportUUID = eS.schedule( exportInfo );
@@ -1026,25 +1033,27 @@ public class ManagementServiceIT {
         JobData jobData = new JobData();
         jobData.setProperty( "jobName", "exportJob" );
         jobData.setProperty( "exportInfo", exportInfo );
-        jobData.setProperty( "exportId", entityExportUUID);
+        jobData.setProperty( "exportId", entityExportUUID );
 
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         //Exportem.get(entityExport);
-        Export exportEntity = ( Export ) em.get(entityExportUUID);
+        Export exportEntity = ( Export ) em.get( entityExportUUID );
         assertNotNull( exportEntity );
         String derp = exportEntity.getState().name();
-        assertEquals( "PENDING",exportEntity.getState().name());
+        assertEquals( "PENDING", exportEntity.getState().name() );
         try {
-            eS.doExport( exportInfo,jobExecution );
-        }catch(Exception e) {
+            eS.doExport( exportInfo, jobExecution );
+        }
+        catch ( Exception e ) {
             throw e;
             //assert(false);
         }
-        exportEntity = ( Export ) em.get(entityExportUUID);
+        exportEntity = ( Export ) em.get( entityExportUUID );
         assertNotNull( exportEntity );
-        assertEquals( "COMPLETED",exportEntity.getState().name() );
+        assertEquals( "COMPLETED", exportEntity.getState().name() );
     }
+
 
     //tests that with empty job data, the export still runs.
     @Test
@@ -1052,7 +1061,7 @@ public class ManagementServiceIT {
 
         JobData jobData = new JobData();
 
-        JobExecution jobExecution = mock ( JobExecution.class);
+        JobExecution jobExecution = mock( JobExecution.class );
 
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
@@ -1062,18 +1071,20 @@ public class ManagementServiceIT {
         job.setExportService( setup.getExportService() );
         try {
             job.doJob( jobExecution );
-        }catch ( Exception e) {
-            assert( false );
         }
-        assert(true);
+        catch ( Exception e ) {
+            assert ( false );
+        }
+        assert ( true );
     }
 
+
     @Test
-    public void testNullJobExecution () {
+    public void testNullJobExecution() {
 
         JobData jobData = new JobData();
 
-        JobExecution jobExecution = mock ( JobExecution.class);
+        JobExecution jobExecution = mock( JobExecution.class );
 
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
@@ -1083,11 +1094,13 @@ public class ManagementServiceIT {
         job.setExportService( setup.getExportService() );
         try {
             job.doJob( jobExecution );
-        }catch ( Exception e) {
-            assert( false );
         }
-        assert(true);
+        catch ( Exception e ) {
+            assert ( false );
+        }
+        assert ( true );
     }
+
 
     @Ignore //For this test please input your s3 credentials into payload builder.
     public void testIntegration100Entities() throws Exception {
@@ -1096,7 +1109,7 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        ExportInfo exportInfo = new ExportInfo(payload);
+        ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -1105,13 +1118,12 @@ public class ManagementServiceIT {
         Entity[] entity;
         entity = new Entity[100];
         //creates entities
-        for (int i = 0; i< 100;i++) {
+        for ( int i = 0; i < 100; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test"+i+"@anuff.com");//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
 
             entity[i] = em.create( "user", userProperties );
-
         }
 
         UUID exportUUID = exportService.schedule( exportInfo );
@@ -1123,29 +1135,28 @@ public class ManagementServiceIT {
         jobData.setProperty( "exportInfo", exportInfo );
         jobData.setProperty( "exportId", exportUUID );
 
-        JobExecution jobExecution = mock ( JobExecution.class);
-        when(jobExecution.getJobData()).thenReturn( jobData );
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        exportService.doExport( exportInfo, jobExecution  );
-
+        exportService.doExport( exportInfo, jobExecution );
     }
 
 
     /*Creates fake payload for testing purposes.*/
-    public HashMap<String,Object> payloadBuilder() {
+    public HashMap<String, Object> payloadBuilder() {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
         //        TODO: always put dummy values here and ignore this test.
-        storage_info.put( "s3_key","insert key here" );
-        storage_info.put( "s3_accessId","insert access id here");
-        storage_info.put( "bucket_location","insert bucket name here");
+        storage_info.put( "s3_key", "insert key here" );
+        storage_info.put( "s3_accessId", "insert access id here" );
+        storage_info.put( "bucket_location", "insert bucket name here" );
 
-        properties.put( "storage_provider","s3");
-        properties.put( "storage_info",storage_info);
+        properties.put( "storage_provider", "s3" );
+        properties.put( "storage_info", storage_info );
 
-        payload.put( "path", "test-organization/test-app");
-        payload.put( "properties", properties);
+        payload.put( "path", "test-organization/test-app" );
+        payload.put( "properties", properties );
         return payload;
     }
 }

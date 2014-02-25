@@ -10,13 +10,13 @@ import java.io.OutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.management.ExportInfo;
 import org.apache.usergrid.management.export.S3Export;
 
 
 /**
- * Writes to file instead of s3.
- *
+ * Streams / reads the information written from the export service to a file named "test.json"
  */
 public class MockS3ExportImpl implements S3Export {
     @Override
@@ -28,8 +28,7 @@ public class MockS3ExportImpl implements S3Export {
         //FileInputStream fis = new PrintWriter( inputStream );
 
         try {
-            outputStream = new FileOutputStream( new File("test.json") );
-
+            outputStream = new FileOutputStream( new File( "test.json" ) );
         }
         catch ( FileNotFoundException e ) {
             e.printStackTrace();
@@ -37,10 +36,9 @@ public class MockS3ExportImpl implements S3Export {
 
 
         try {
-            while ( (read = (inputStream.read( bytes ))) != -1) {
+            while ( ( read = ( inputStream.read( bytes ) ) ) != -1 ) {
                 outputStream.write( bytes, 0, read );
             }
-              
         }
         catch ( IOException e ) {
             e.printStackTrace();

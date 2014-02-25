@@ -10,16 +10,16 @@ import org.apache.usergrid.persistence.annotations.EntityProperty;
 
 
 /**
- *Contains state information for an Entity Job
- *
+ * Contains state information for an Entity Job
  */
 @XmlRootElement
 public class Export extends TypedEntity {
 
     public static enum State {
         //CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
-        PENDING,STARTED,FAILED,COMPLETED
+        PENDING, STARTED, FAILED, COMPLETED
     }
+
 
     @EntityProperty
     protected State curState;
@@ -27,33 +27,46 @@ public class Export extends TypedEntity {
     @EntityProperty
     protected Long queued;
 
-    /** Time send started */
+    /**
+     * Time send started
+     */
     @EntityProperty
     protected Long started;
 
-    /** Time processed */
+    /**
+     * Time processed
+     */
     @EntityProperty
     protected Long finished;
 
 
-    /** Time to expire the exportJob */
+    /**
+     * Time to expire the exportJob
+     */
     @EntityProperty
     protected Long expire;
 
-    /** True if exportJob is canceled */
+    /**
+     * True if exportJob is canceled
+     */
     @EntityProperty
     protected Boolean canceled;
 
-    /** Error message */
+    /**
+     * Error message
+     */
     @EntityProperty
     protected String errorMessage;
+
 
     public Export() {
     }
 
-    public boolean isExpired () {
-        return (expire != null && expire > System.currentTimeMillis());
+
+    public boolean isExpired() {
+        return ( expire != null && expire > System.currentTimeMillis() );
     }
+
 
     public Long getStarted() {
         return started;
@@ -89,15 +102,19 @@ public class Export extends TypedEntity {
         return canceled;
     }
 
+
     //state should moved to a derived state, but it is not there yet.
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @EntityProperty
-    public void setState(State setter) {
+    public void setState( State setter ) {
         curState = setter;
     }
+
+
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @EntityProperty
-    public State  getState() { return curState; }
+    public State getState() { return curState; }
+
 
     public void setCanceled( final Boolean canceled ) {
         this.canceled = canceled;

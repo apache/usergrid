@@ -13,9 +13,8 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 
 /**
- *
- *you could make an enum here, that contains the state info
- * look at scotts code and emulate that to see wha tyou can return in the json object
+ * you could make an enum here, that contains the state info look at scotts code and emulate that to see wha tyou can
+ * return in the json object
  */
 @Component("exportJob")
 public class ExportJob extends OnlyOnceJob {
@@ -24,35 +23,37 @@ public class ExportJob extends OnlyOnceJob {
     @Autowired
     ExportService exportService;
 
+
     public ExportJob() {
-        logger.info("ExportJob created " + this);
+        logger.info( "ExportJob created " + this );
     }
 
+
     @Override
-    public void doJob(JobExecution jobExecution) throws Exception {
+    public void doJob( JobExecution jobExecution ) throws Exception {
         logger.info( "execute ExportJob {}", jobExecution );
 
         ExportInfo config = null;
-            //add check for null jobData.
-            JobData jobData = jobExecution.getJobData();
-            config = (ExportInfo) jobData.getProperty( "exportInfo" );
-            if(jobData == null) {
-                logger.error( "jobData cannot be null" );
-                return;
-            }
-            else if (config == null) {
-                logger.error( "Export information cannot be null" );
-                return;
-            }
-            else {
-                jobExecution.heartbeat();
-                exportService.doExport( config,jobExecution );
-            }
+        JobData jobData = jobExecution.getJobData();
+        config = ( ExportInfo ) jobData.getProperty( "exportInfo" );
+        if ( jobData == null ) {
+            logger.error( "jobData cannot be null" );
+            return;
+        }
+        else if ( config == null ) {
+            logger.error( "Export information cannot be null" );
+            return;
+        }
+        else {
+            jobExecution.heartbeat();
+            exportService.doExport( config, jobExecution );
+        }
         logger.info( "executed ExportJob process completed" );
     }
 
+
     @Override
-    protected long getDelay(JobExecution jobExecution) throws Exception {
+    protected long getDelay( JobExecution jobExecution ) throws Exception {
         //return arbitrary number
         return 100;
     }

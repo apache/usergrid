@@ -41,9 +41,8 @@ import com.google.common.collect.BiMap;
 
 
 /**
- *
- *Need to refactor out the mutliple orgs being take , need to factor out the multiple apps
- * it will just be the one app and the one org and all of it's collections.
+ * Need to refactor out the mutliple orgs being take , need to factor out the multiple apps it will just be the one app
+ * and the one org and all of it's collections.
  */
 public class ExportServiceImpl implements ExportService {
 
@@ -72,10 +71,11 @@ public class ExportServiceImpl implements ExportService {
 
     private S3Export s3Export;
 
+
     @Override
     public UUID schedule( final ExportInfo config ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( config.getApplicationId());
+        EntityManager em = emf.getEntityManager( config.getApplicationId() );
 
         Export export = new Export();
         export.setState( Export.State.PENDING );
@@ -119,21 +119,21 @@ public class ExportServiceImpl implements ExportService {
         sch.createJob( EXPORT_JOB_NAME, soonestPossible, jobData );
 
         return export.getUuid();
-
     }
+
+
     /**
      * Query Entity Manager for specific Export Entity within application
-     * @param appId,uuid
+     *
      * @return String
-     * @throws Exception
      */
     @Override
-    public String getState(final UUID appId, final UUID uuid) throws Exception {
+    public String getState( final UUID appId, final UUID uuid ) throws Exception {
 
         EntityManager rootEm = emf.getEntityManager( appId );
         Export export = rootEm.get( uuid, Export.class );
 
-        if(export == null){
+        if ( export == null ) {
             return null;
         }
         return export.getState().toString();
@@ -141,10 +141,10 @@ public class ExportServiceImpl implements ExportService {
 
 
     @Override
-    public void doExport( final ExportInfo config,final JobExecution jobExecution ) throws Exception {
+    public void doExport( final ExportInfo config, final JobExecution jobExecution ) throws Exception {
 
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager em = emf.getEntityManager( config.getApplicationId());
+        EntityManager em = emf.getEntityManager( config.getApplicationId() );
         Export export = em.get( exportId, Export.class );
 
         String pathToBeParsed = config.getPath();
@@ -162,7 +162,7 @@ public class ExportServiceImpl implements ExportService {
 
         em.update( export );
 
-        Map<UUID, String> organizationGet = getOrgs(config);
+        Map<UUID, String> organizationGet = getOrgs( config );
         for ( Map.Entry<UUID, String> organization : organizationGet.entrySet() ) {
             //needs to pass app name, and possibly collection to export
             exportApplicationsForOrg( organization, config, jobExecution );
@@ -171,7 +171,8 @@ public class ExportServiceImpl implements ExportService {
         em.update( export );
     }
 
-    private Map<UUID, String> getOrgs(ExportInfo exportInfo) throws Exception {
+
+    private Map<UUID, String> getOrgs( ExportInfo exportInfo ) throws Exception {
         // Loop through the organizations
         // TODO:this will come from the orgs in schedule when you do the validations. delete orgId
         UUID orgId = null;
@@ -223,9 +224,11 @@ public class ExportServiceImpl implements ExportService {
         return managementService;
     }
 
+
     public void setManagementService( final ManagementService managementService ) {
         this.managementService = managementService;
     }
+
 
     //write test checking to see what happens if the input stream is closed or wrong.
     //TODO: make multipart streaming functional
@@ -258,7 +261,7 @@ public class ExportServiceImpl implements ExportService {
             // through the entities in the application (former namespace).
             //could support queries, just need to implement that in the rest endpoint.
             for ( String collectionName : metadata.keySet() ) {
-                if(collectionName.equals( "exports" )) {
+                if ( collectionName.equals( "exports" ) ) {
                     continue;
                 }
 
@@ -269,7 +272,7 @@ public class ExportServiceImpl implements ExportService {
 
                 PagingResultsIterator itr = new PagingResultsIterator( entities );
 
-                for( Object e: itr){
+                for ( Object e : itr ) {
                     starting_time = checkTimeDelta( starting_time, jobExecution );
                     Entity entity = ( Entity ) e;
 
@@ -288,7 +291,7 @@ public class ExportServiceImpl implements ExportService {
             baos.close();
 
             InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            s3Export.copyToS3( is, config , appFileName);
+            s3Export.copyToS3( is, config, appFileName );
         }
     }
 

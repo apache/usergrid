@@ -15,6 +15,7 @@ import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.management.ExportInfo;
 
 import com.google.common.collect.ImmutableSet;
@@ -42,8 +43,8 @@ public class S3ExportImpl implements S3Export {
         overrides.setProperty( "s3" + ".credential", secretKey );
 
         final Iterable<? extends Module> MODULES = ImmutableSet
-                .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule
-                        () );
+                .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
+                        new NettyPayloadModule() );
 
         BlobStoreContext context =
                 ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
@@ -78,7 +79,5 @@ public class S3ExportImpl implements S3Export {
         catch ( Exception e ) {
             logger.error( "Error uploading to blob store", e );
         }
-
     }
-
 }
