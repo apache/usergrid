@@ -75,39 +75,18 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public UUID schedule( final ExportInfo config ) throws Exception {
 
+        if(config == null){
+            logger.error( "export information cannot be null" );
+            return null;
+        }
+
         EntityManager em = emf.getEntityManager( config.getApplicationId() );
 
         Export export = new Export();
-        export.setState( Export.State.PENDING );
-
-        //validate that org exists,then app, then collection.
-
-        String pathToBeParsed = config.getPath();
-        //split the path so that you can verify that the organization and the app exist.
-        String[] pathItems = pathToBeParsed.split( "/" );
-
-
-        try {
-            managementService.getOrganizationByName( pathItems[0] );
-        }
-        catch ( Exception e ) {
-            logger.error( "Organization doesn't exist" );
-        }
-
-        try {
-            managementService.getApplicationInfo( pathItems[1] );
-        }
-        catch ( Exception e ) {
-            logger.error( "Application doesn't exist" );
-        }
-
-
-        //TODO: parse path and make sure all the things you need actually exist. then throw
-        // good error messages when not found.
 
         //write to the em
         export = em.create( export );
-        export.setState( Export.State.PENDING );
+        export.setState( Export.State.CREATED );
         em.update( export );
 
         JobData jobData = new JobData();
@@ -117,6 +96,8 @@ public class ExportServiceImpl implements ExportService {
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
         sch.createJob( EXPORT_JOB_NAME, soonestPossible, jobData );
+        export.setState( Export.State.SCHEDULED );
+        em.update( export );
 
         return export.getUuid();
     }
@@ -147,34 +128,25 @@ public class ExportServiceImpl implements ExportService {
         EntityManager em = emf.getEntityManager( config.getApplicationId() );
         Export export = em.get( exportId, Export.class );
 
-        String pathToBeParsed = config.getPath();
-        String[] pathItems = pathToBeParsed.split( "/" );
-        try {
-            managementService.getOrganizationByName( pathItems[0] );
-        }
-        catch ( Exception e ) {
-            logger.error( "Organization doesn't exist" );
-            return;
-        }
-
-        //update state and re-write the entity
         export.setState( Export.State.STARTED );
-
         em.update( export );
 
         Map<UUID, String> organizationGet = getOrgs( config );
         for ( Map.Entry<UUID, String> organization : organizationGet.entrySet() ) {
-            //needs to pass app name, and possibly collection to export
-            exportApplicationsForOrg( organization, config, jobExecution );
+            try {
+                exportApplicationsForOrg( organization, config, jobExecution );
+            }catch(Exception e){
+                export.setState( Export.State.FAILED );
+                return;
+            }
         }
-        export.setState( Export.State.COMPLETED );
+        export.setState( Export.State.FINISHED );
         em.update( export );
     }
 
 
     private Map<UUID, String> getOrgs( ExportInfo exportInfo ) throws Exception {
         // Loop through the organizations
-        // TODO:this will come from the orgs in schedule when you do the validations. delete orgId
         UUID orgId = null;
 
         Map<UUID, String> organizationNames = null;
@@ -183,7 +155,7 @@ public class ExportServiceImpl implements ExportService {
             organizationNames = managementService.getOrganizations();
         }
 
-        else {
+        else {//this case isn't used yet, but might be in the future.
             OrganizationInfo info = managementService.getOrganizationByUuid( orgId );
 
             if ( info == null ) {
@@ -193,7 +165,6 @@ public class ExportServiceImpl implements ExportService {
             organizationNames = new HashMap<UUID, String>();
             organizationNames.put( orgId, info.getName() );
         }
-
 
         return organizationNames;
     }
@@ -235,6 +206,10 @@ public class ExportServiceImpl implements ExportService {
     //currently only stores the collection in memory then flushes it.
     private void exportApplicationsForOrg( Map.Entry<UUID, String> organization, final ExportInfo config,
                                            final JobExecution jobExecution ) throws Exception {
+
+        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
+        EntityManager exportManager = emf.getEntityManager( config.getApplicationId() );
+        Export export = exportManager.get( exportId, Export.class );
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -291,7 +266,12 @@ public class ExportServiceImpl implements ExportService {
             baos.close();
 
             InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            s3Export.copyToS3( is, config, appFileName );
+            try {
+                s3Export.copyToS3( is, config, appFileName );
+            }catch(Exception e){
+                export.setState( Export.State.FAILED );
+                return;
+            }
         }
     }
 
@@ -319,13 +299,11 @@ public class ExportServiceImpl implements ExportService {
             throws Exception {
 
         Set<String> collections = em.getCollections( entity );
-        //jg.writeStartObject();
 
         // Only create entry for Entities that have collections
         if ( ( collections == null ) || collections.isEmpty() ) {
             return;
         }
-
 
         for ( String collectionName : collections ) {
 
@@ -354,8 +332,6 @@ public class ExportServiceImpl implements ExportService {
         // Write dictionaries
         saveDictionaries( entity, em, jg );
 
-        // End the object if it was Started
-        //jg.writeEndObject();
     }
 
 
@@ -448,7 +424,6 @@ public class ExportServiceImpl implements ExportService {
         str.append( ".json" );
 
         String outputFileName = str.toString();
-        //TODO:this is , i feel, bad practice so make sure to come back here and fix it up.
 
         return outputFileName;
     }

@@ -14,10 +14,9 @@ import org.apache.usergrid.persistence.annotations.EntityProperty;
  */
 @XmlRootElement
 public class Export extends TypedEntity {
-
+    //canceled , and expired states aren't used in current iteration.
     public static enum State {
-        //CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
-        PENDING, STARTED, FAILED, COMPLETED
+        CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
     }
 
 

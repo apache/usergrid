@@ -18,13 +18,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.ExportInfo;
-import org.apache.usergrid.management.export.ExportJob;
-import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.management.export.S3Export;
-import org.apache.usergrid.management.export.S3ExportImpl;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.entities.Export;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
@@ -33,11 +26,19 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.count.SimpleBatcher;
+import org.apache.usergrid.management.ExportInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.export.ExportJob;
+import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.export.S3Export;
+import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.AuthPrincipalType;
@@ -48,16 +49,14 @@ import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import org.apache.usergrid.count.SimpleBatcher;
-
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -862,7 +861,6 @@ public class ManagementServiceIT {
         f.delete();
     }
 
-
     @Test
     public void testFileExportOneOrg() throws Exception {
 
@@ -1013,7 +1011,6 @@ public class ManagementServiceIT {
         assert ( true );
     }
 
-
     @Test
     public void testExportDoExport() throws Exception {
 
@@ -1041,19 +1038,18 @@ public class ManagementServiceIT {
         Export exportEntity = ( Export ) em.get( entityExportUUID );
         assertNotNull( exportEntity );
         String derp = exportEntity.getState().name();
-        assertEquals( "PENDING", exportEntity.getState().name() );
+        assertEquals( "SCHEDULED", exportEntity.getState().name() );
         try {
             eS.doExport( exportInfo, jobExecution );
         }
         catch ( Exception e ) {
-            throw e;
-            //assert(false);
+            //throw e;
+            assert(false);
         }
         exportEntity = ( Export ) em.get( entityExportUUID );
         assertNotNull( exportEntity );
-        assertEquals( "COMPLETED", exportEntity.getState().name() );
+        assertEquals( "FINISHED", exportEntity.getState().name() );
     }
-
 
     //tests that with empty job data, the export still runs.
     @Test

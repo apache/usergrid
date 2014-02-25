@@ -645,7 +645,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
         assertEquals( Status.OK, responseStatus );
-        assertEquals( "PENDING", node.asText() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
     }
 
 
