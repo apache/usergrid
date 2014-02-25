@@ -133,7 +133,7 @@ public class ActivitiesService extends GenericCollectionService {
             return;
         }
         em.addToCollection( user, "feed", activity );
-        Results r = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS );
+        Results r = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS, 1000 ); //allow 1000 connections
         List<EntityRef> refs = r.getRefs();
         if ( refs != null ) {
             em.addToCollections( refs, "feed", activity );
