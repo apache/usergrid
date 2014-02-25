@@ -48,6 +48,8 @@ import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
+import org.apache.usergrid.management.cassandra.MockS3ExportImpl;
+
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -2,9 +2,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.usergrid</groupId>
+    <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.28-SNAPSHOT</version>
+    <version>0.0.29-SNAPSHOT</version>
   </parent>
 
   <artifactId>usergrid-rest</artifactId>
@@ -271,9 +271,9 @@
       </plugin>
 
       <plugin>
-        <groupId>org.codehaus.mojo.jspc</groupId>
+        <groupId>org.jasig.mojo.jspc</groupId>
         <artifactId>jspc-maven-plugin</artifactId>
-        <version>2.0-alpha-3</version>
+        <version>2.0.0</version>
         <configuration>
           <includeInProject>false</includeInProject>
           <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
@@ -288,9 +288,9 @@
         </executions>
         <dependencies>
           <dependency>
-            <groupId>org.codehaus.mojo.jspc</groupId>
+            <groupId>org.jasig.mojo.jspc</groupId>
             <artifactId>jspc-compiler-tomcat6</artifactId>
-            <version>2.0-alpha-3</version>
+            <version>2.0.0</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -363,13 +363,13 @@
     <!-- Usergrid Dependencies -->
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
       <version>${project.version}</version>
       <exclusions>
@@ -381,7 +381,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-mongo-emulator</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -465,7 +465,7 @@
     <!-- Testing and Logging Dependencies -->
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -473,14 +473,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-test-utils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -560,8 +560,6 @@
       <scope>test</scope>
     </dependency>
 
-
-
     <dependency>
       <groupId>org.usergrid</groupId>
       <artifactId>usergrid-java-client</artifactId>
@@ -569,11 +567,13 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-services</artifactId>
-      <version>0.0.28-SNAPSHOT</version>
+      <version>0.0.29-SNAPSHOT</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
+
   </dependencies>
+
 </project>

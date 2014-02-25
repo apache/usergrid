@@ -2,6 +2,7 @@ var Usergrid = Usergrid || {};
 
 Usergrid.showNotifcations = true;
 
+
 // used only if hostname does not match a real server name
 Usergrid.overrideUrl = 'https://api.usergrid.com/';
 
@@ -9,13 +10,15 @@ Usergrid.options = {
   client:{
    // apiKey:'123456'
   },
+  showAutoRefresh:true,
+  autoUpdateTimer:61,//seconds
   cssRefs:[],
   "scriptReferences":{
     "dev":[],
     "main": []
   },
   menuItems:[
-    {path:'#!/org-overview', active:true,pic:'&#128193',title:'Org Overview'},
+    {path:'#!/org-overview', active:true,pic:'&#128362;',title:'Org Administration'},
     {path:'#!/getting-started/setup',pic:'&#128640;',title:'Getting Started'},
     {path:'#!/app-overview/summary',pic:'&#59214;',title:'App Overview',
       items:[
@@ -23,7 +26,7 @@ Usergrid.options = {
       ]
     },
     {
-      path:'#!/users',pic: '&#128100;',title:'Users',
+      path:'#!/users',pic:'&#128100;',title:'Users',
       items:[
         {path:'#!/users',pic:'&#128100;',title:'Users'},
         {path:'#!/groups',pic:'&#128101;',title:'Groups'},
@@ -39,14 +42,6 @@ Usergrid.options = {
     {
       path:'#!/activities',pic:'&#59194;',title:'Activities'
     },
-    {
-      path:'#!/configure/default-configs',pic:'&#9874;',title:'Configure',
-      items:[
-        {path:'#!/configure/default-configs',pic:'&#128214;',title:'Default Configs'},
-        {path:'#!/configure/beta-configs',pic:'&#59190;',title:'Beta Testing Configs'},
-        {path:'#!/configure/ab-configs',pic:'&#59146;',title:'A/B Configs'}
-      ]
-    },
     {path:'#!/shell',pic:'&#9000;',title:'Shell'}
   ]
 };
@@ -57,7 +52,7 @@ Usergrid.regex = {
   nameRegex: new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-:+_\[\\](){}/\\ |]{3,60})+$"),
   roleNameRegex: new RegExp("^([0-9a-zA-Z./-]{3,25})+$"),
   emailRegex: new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$"),
-  passwordRegex: new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-:+_\[\\](){}/\\ |]{6,25})+$"),
+  passwordRegex: /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
   pathRegex: new RegExp("^/[a-zA-Z0-9\.\*_~-]+(\/[a-zA-Z0-9\.\*_~-]+)*$"),
   titleRegex: new RegExp("[a-zA-Z0-9.!-?]+[\/]?"),
   urlRegex: new RegExp("^(http?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"),
@@ -70,7 +65,7 @@ Usergrid.regex = {
   nameRegexDescription: "Please enter a valid name. Must be betwee 3 and 60 characters.",
   roleNameRegexDescription: "Role only allows : /, a-z, 0-9, dot, and dash. Must be between 3 and 25 characters.",
   emailRegexDescription: "Please enter a valid email.",
-  passwordRegexDescription: "Please enter a valid password between 6 and 25 characters.",
+  passwordRegexDescription: "Password must contain at least 1 upper and lower case letter, one number or special character and be at least 8 characters.",
   pathRegexDescription: "Path must begin with a slash, path only allows: /, a-z, 0-9, dot, and dash, paths of the format:  /path/ or /path//path are not allowed",
   titleRegexDescription: "Please enter a valid title.",
   urlRegexDescription: "Please enter a valid url",
@@ -80,6 +75,16 @@ Usergrid.regex = {
   collectionNameRegexDescription: "Collection name only allows : a-z A-Z 0-9. Must be between 3-25 characters."
 };
 
+//Performance
+Usergrid.options.scriptReferences.dev.push('bower_components/apigee.performance.ui/dist/js/usergrid-perf-dev.min.js');
+Usergrid.options.scriptReferences.main.push('bower_components/apigee.performance.ui/dist/js/usergrid-perf.min.js');
+Usergrid.options.cssRefs.push({id:'perf-css',src:'bower_components/apigee.performance.ui/dist/css/performance.min.css'});
+//End Performance
+//Push
+Usergrid.options.scriptReferences.dev.push('bower_components/apigee.push.ui/dist/js/usergrid-push-dev.min.js');
+Usergrid.options.scriptReferences.main.push('bower_components/apigee.push.ui/dist/js/usergrid-push.min.js');
+Usergrid.options.cssRefs.push({id:'push-css',src:'bower_components/apigee.push.ui/dist/css/push.min.css'});
+//End Push
 try{
   if(module && module.exports){
     module.exports = Usergrid;

@@ -36,7 +36,7 @@ module.exports = {
     }
 
     browser.wait(function(){
-      return browser.driver.findElement(by.id('current-org-selector')).isDisplayed();
+      return element(by.id('current-org-selector')).isDisplayed();
     });
 
     browser.wait(function () {
@@ -61,6 +61,7 @@ module.exports = {
       browser.wait(function () {
         return browser.driver.getCurrentUrl().then(function (url) {
           var test =  /login/.test(url) || url.indexOf('accounts/sign_in')>0;
+          test && browser.sleep(1000);
           return test;
         });
       });
@@ -68,6 +69,7 @@ module.exports = {
   },
   navigate:function(orgName,appName){
     browser.driver.get(browser.baseUrl+'/#!/org-overview');
+    browser.sleep(1000);
     browser.wait(function () {
       return element.all(by.repeater("(k,v) in organizations")).count().then(function(count){
         var appCount =  count >0;
@@ -75,17 +77,18 @@ module.exports = {
       });
     });
     browser.wait(function(){
-      return element(by.id('current-org-selector')).isDisplayed().then(function(){
-        element(by.id('current-org-selector')).click();
-        return true;
+      return element(by.id('current-org-selector')).isPresent().then(function(present){
+        return present;
       });
     });
+    element(by.id('current-org-selector')).click();
+
     browser.wait(function(){
-      return element(by.id('org-'+orgName+'-selector')).isDisplayed().then(function(){
-        element(by.id('org-'+orgName+'-selector')).click();
-        return true;
+      return element(by.id('org-'+orgName+'-selector')).isPresent().then(function(present){
+        return present;
       });
     });
+    element(by.id('org-'+orgName+'-selector')).click();
 
     browser.wait(function() {
       return element(by.id('org-overview-name')).getText().then(function(text) {
