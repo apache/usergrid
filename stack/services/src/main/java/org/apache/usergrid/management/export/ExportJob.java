@@ -11,9 +11,6 @@ import org.springframework.stereotype.Component;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
 import org.apache.usergrid.management.ExportInfo;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
 
 
@@ -29,15 +26,11 @@ public class ExportJob extends OnlyOnceJob {
     @Autowired
     ExportService exportService;
 
-    @Autowired
-    private EntityManagerFactory emf;
-
-
     public ExportJob() {
         logger.info( "ExportJob created " + this );
     }
 
-//need to add in checking the export state and what happens if it fails. This should then update the export entity with failed state.
+
     @Override
     public void doJob( JobExecution jobExecution ) throws Exception {
         logger.info( "execute ExportJob {}", jobExecution );
@@ -57,17 +50,15 @@ public class ExportJob extends OnlyOnceJob {
             logger.error( "Export information cannot be null" );
             return;
         }
-        EntityManager em = emf.getEntityManager( config.getApplicationId() );
-        Export export = em.get( exportId, Export.class );
 
-            jobExecution.heartbeat();
-            try {
-                exportService.doExport( config, jobExecution );
-            }catch (Exception e) {
-                logger.error( "Export Service failed to complete job" );
-                export.setState( Export.State.FAILED );
-                em.update( export );
-            }
+        jobExecution.heartbeat();
+        try {
+            exportService.doExport( config, jobExecution );
+        }
+        catch ( Exception e ) {
+            logger.error( "Export Service failed to complete job" );
+            return;
+        }
 
         logger.info( "executed ExportJob process completed" );
     }
