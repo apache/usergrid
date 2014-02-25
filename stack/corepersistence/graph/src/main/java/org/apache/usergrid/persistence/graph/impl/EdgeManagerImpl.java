@@ -20,28 +20,36 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.hystrix.ReadCommand;
-import org.apache.usergrid.persistence.collection.hystrix.WriteCommand;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
+import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
-import org.apache.usergrid.persistence.graph.serialization.stage.GraphIoEvent;
-import org.apache.usergrid.persistence.graph.serialization.stage.write.EdgeWriteStage;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.netflix.hystrix.Hystrix;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -59,18 +67,26 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final Scheduler scheduler;
 
-    private final EdgeWriteStage edgeWriteStage;
-
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
 
+    private final EdgeSerialization edgeSerialization;
+
+    private final NodeSerialization nodeSerialization;
+
+    private final GraphFig graphFig;
+
+
     @Inject
-    public EdgeManagerImpl( final EdgeWriteStage edgeWriteStage, final Scheduler scheduler,
-                            @Assisted final OrganizationScope scope,
-                            final EdgeMetadataSerialization edgeMetadataSerialization ) {
-        this.edgeWriteStage = edgeWriteStage;
+    public EdgeManagerImpl( final Scheduler scheduler, final EdgeMetadataSerialization edgeMetadataSerialization,
+                            final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
+                            final GraphFig graphFig, @Assisted final OrganizationScope scope ) {
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
+        this.edgeSerialization = edgeSerialization;
+        this.nodeSerialization = nodeSerialization;
+        this.graphFig = graphFig;
+
 
         ValidationUtils.validateOrganizationScope( scope );
 
@@ -81,86 +97,275 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        return WriteCommand.toObservable(new GraphIoEvent<Edge>(scope, edge)).map( edgeWriteStage );
-    }
+        EdgeUtils.validateEdge( edge );
 
-
-    @Override
-    public void deleteEdge( final Edge edge ) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadSourceEdges( final SearchByEdgeType search ) {
-
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadTargetEdges( final SearchByEdgeType search ) {
-
-
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadSourceEdges( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<Edge> loadTargetEdges( final SearchByIdType search ) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-
-    @Override
-    public Observable<String> getSourceEdgeTypes( final SearchEdgeType search ) {
-
-       return Observable.create( new ObservableIterator<String>() {
+        return Observable.from( edge ).subscribeOn( scheduler ).map( new Func1<Edge, Edge>() {
             @Override
-            protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getSourceEdgeTypes( scope, search );
+            public Edge call( final Edge edge ) {
+                final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
+
+                final MutationBatch edgeMutation = edgeSerialization.writeEdge( scope, edge );
+
+                mutation.mergeShallow( edgeMutation );
+
+                try {
+                    mutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
+
+                return edge;
+            }
+        } );
+    }
+
+
+    @Override
+    public Observable<Edge> deleteEdge( final Edge edge ) {
+        EdgeUtils.validateEdge( edge );
+
+        return Observable.from( edge ).subscribeOn( scheduler ).map( new Func1<Edge, Edge>() {
+            @Override
+            public Edge call( final Edge edge ) {
+                final MutationBatch edgeMutation = edgeSerialization.markEdge( scope, edge );
+
+                try {
+                    edgeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
+
+                return edge;
             }
         } );
 
+        //TODO, fork the background repair scheduling here
     }
 
 
     @Override
-    public Observable<String> getSourceIdTypes( final SearchIdType search ) {
+    public Observable<Id> deleteNode( final Id node ) {
+        return Observable.from( node ).subscribeOn( scheduler ).map( new Func1<Id, Id>() {
+            @Override
+            public Id call( final Id id ) {
+
+                //mark the node as deleted
+                final UUID deleteTime = UUIDGenerator.newTimeUUID();
+
+                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime );
+
+                try {
+                    nodeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
+
+                return id;
+            }
+        } );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return edgeSerialization.getEdgesFromSource( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                //we intentionally use distinct until changed.  This way we won't store all the keys since this
+                //would hog far too much ram.
+                .distinctUntilChanged( new Func1<Edge, Id>() {
+                    @Override
+                    public Id call( final Edge edge ) {
+                        return edge.getTargetNode();
+                    }
+                } ).cast( Edge.class );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return edgeSerialization.getEdgesToTarget( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                //we intentionally use distinct until changed.  This way we won't store all the keys since this
+                //would hog far too much ram.
+                .distinctUntilChanged( new Func1<Edge, Id>() {
+                    @Override
+                    public Id call( final Edge edge ) {
+                        return edge.getSourceNode();
+                    }
+                } ).cast( Edge.class );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                         .distinctUntilChanged( new Func1<Edge, Id>() {
+                             @Override
+                             public Id call( final Edge edge ) {
+                                 return edge.getTargetNode();
+                             }
+                         } )
+
+                         .cast( Edge.class );
+    }
+
+
+    @Override
+    public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                         .distinctUntilChanged( new Func1<Edge, Id>() {
+                             @Override
+                             public Id call( final Edge edge ) {
+                                 return edge.getSourceNode();
+                             }
+                         } ).cast( Edge.class );
+    }
+
+
+    @Override
+    public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
+
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getSourceIdTypes( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
         } );
     }
 
 
     @Override
-    public Observable<String> getTargetEdgeTypes( final SearchEdgeType search ) {
-
+    public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getTargetEdgeTypes( scope, search );
+                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
             }
         } );
     }
 
 
     @Override
-    public Observable<String> getTargetIdTypes( final SearchIdType search ) {
+    public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
+
         return Observable.create( new ObservableIterator<String>() {
             @Override
             protected Iterator<String> getIterator() {
-                return edgeMetadataSerialization.getTargetIdTypes( scope, search );
+                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
             }
         } );
+    }
+
+
+    @Override
+    public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
+        return Observable.create( new ObservableIterator<String>() {
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
+            }
+        } );
+    }
+
+
+    /**
+     * Helper filter to perform mapping and return an observable of pre-filtered edges
+     */
+    private class EdgeBufferFilter implements Func1<List<MarkedEdge>, Observable<MarkedEdge>> {
+
+        private final UUID maxVersion;
+
+
+        private EdgeBufferFilter( final UUID maxVersion ) {
+            this.maxVersion = maxVersion;
+        }
+
+
+        /**
+         * Takes a buffered list of marked edges.  It then does a single round trip to fetch marked ids
+         * These are then used in conjunction with the max version filter to filter any edges that should
+         * not be returned
+         * @param markedEdges
+         * @return An observable that emits only edges that can be consumed.  There could be multiple versions
+         * of the same edge so those need de-duped.
+         */
+        @Override
+        public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
+
+            final Map<Id, UUID> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
+            return Observable.from( markedEdges ).subscribeOn( scheduler )
+                             .filter( new EdgeFilter( this.maxVersion, markedVersions ) );
+        }
+    }
+
+
+    /**
+     * Filter the returned values based on the max uuid and if it's been marked for deletion or not
+     */
+    private static class EdgeFilter implements Func1<MarkedEdge, Boolean> {
+
+        private final UUID maxVersion;
+
+        private final Map<Id, UUID> markCache;
+
+
+        private EdgeFilter( final UUID maxVersion, Map<Id, UUID> markCache ) {
+            this.maxVersion = maxVersion;
+            this.markCache = markCache;
+        }
+
+
+        @Override
+        public Boolean call( final MarkedEdge edge ) {
+
+
+            final UUID edgeVersion = edge.getVersion();
+
+            //our edge needs to not be deleted and have a version that's > max Version
+            if ( edge.isDeleted() || UUIDComparator.staticCompare( edgeVersion, maxVersion ) > 0 ) {
+                return false;
+            }
+
+
+            final UUID sourceVersion = markCache.get( edge.getSourceNode() );
+
+            //the source Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+            // so we need to discard it
+            if ( sourceVersion != null && UUIDComparator.staticCompare( edgeVersion, sourceVersion ) < 1 ) {
+                return false;
+            }
+
+            final UUID targetVersion = markCache.get( edge.getTargetNode() );
+
+            //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
+            // so we need to discard it
+            if ( targetVersion != null && UUIDComparator.staticCompare( edgeVersion, targetVersion ) < 1 ) {
+                return false;
+            }
+
+
+            return true;
+        }
     }
 }

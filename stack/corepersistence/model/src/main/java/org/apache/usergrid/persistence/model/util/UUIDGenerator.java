@@ -13,7 +13,7 @@ import com.fasterxml.uuid.impl.TimeBasedGenerator;
 
 
 /**
- *
+ * TODO replace this with the Astyanax generator libs
  * @author: tnine
  *
  */

@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
@@ -10,8 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -29,12 +28,12 @@ import static org.junit.Assert.assertNull;
 
 
 /**
- * TODO: Refactor this and the async test into 1 common set of assertions with seperate invocations and result
+ * TODO: Refactor this and the consistency test into 1 common set of assertions with seperate invocations and result
  * returns once jukito is finished
  *
  */
 @RunWith( JukitoRunner.class )
-@UseModules( CollectionModule.class )
+@UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerSyncIT {
     @Inject
     private EntityCollectionManagerFactory factory;

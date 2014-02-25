@@ -1,0 +1,71 @@
+<div class="content-page"   ng-controller="OrgCtrl">
+
+
+
+  <bsmodal id="newOrganization"
+           title="Create New Organization"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="addOrganization"
+           extrabuttonlabel="Create"
+           ng-cloak>
+    <fieldset>
+
+      <div class="control-group">
+        <label for="new-user-orgname">Organization Name</label>
+
+        <div class="controls">
+          <input type="text" required title="Name" ug-validate ng-pattern="nameRegex" ng-attr-title="{{nameRegexDescription}}" ng-model="$parent.org.name" name="name" id="new-user-orgname" class="input-xlarge"/>
+
+          <p class="help-block hide"></p>
+        </div>
+      </div>
+
+    </fieldset>
+  </bsmodal>
+
+
+      <div class="row-fluid" >
+      <div class="span3 user-col ">
+
+        <div class="button-toolbar span12">
+
+          <button class="btn btn-primary toolbar" ng-click="showModal('newOrganization')" ng-show="true"><i class="pictogram">&#59136;</i>
+          </button>
+        </div>
+        <ul class="user-list">
+          <li ng-class="selectedOrg.uuid === org.uuid ? 'selected' : ''"
+              ng-repeat="org in orgs" ng-click=" selectOrganization(org)">
+
+            <a href="javaScript:void(0)">{{org.name}}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="span9">
+        <div class="row-fluid" >
+          <h4>Organization Information</h4>
+          <div class="span11" ng-show="selectedOrg">
+            <label  class="ui-dform-label">Applications</label>
+            <table class="table table-striped">
+              <tr ng-repeat="app in selectedOrg.applicationsArray">
+                <td> {{app.name}}</td>
+                <td style="text-align: right">{{app.uuid}}</td>
+              </tr>
+            </table>
+            <br/>
+            <label  class="ui-dform-label">Users</label>
+            <table class="table table-striped">
+              <tr ng-repeat="user in selectedOrg.usersArray">
+                <td> {{user.name}}</td>
+                <td style="text-align: right">{{user.email}}</td>
+              </tr>
+            </table>
+            <form ng-submit="leaveOrganization(selectedOrg)">
+              <input type="submit" name="button-leave-org" id="button-leave-org" title="Can only leave if organization has more than 1 user." ng-disabled="!doesOrgHaveUsers(selectedOrg)" value="Leave Organization" class="btn btn-primary pull-right">
+            </form>
+          </div>
+        </div>
+
+      </div>
+        </div>
+</div>

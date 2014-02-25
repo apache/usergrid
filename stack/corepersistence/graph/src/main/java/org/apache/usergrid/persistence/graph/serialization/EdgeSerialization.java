@@ -24,6 +24,8 @@ import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 
@@ -46,6 +48,14 @@ public interface EdgeSerialization {
 
 
     /**
+     * Mark this edge for deletion
+     * @param scope
+     * @param edge
+     * @return
+     */
+    MutationBatch markEdge( OrganizationScope scope, Edge edge);
+
+    /**
      * Write both the source -->target edge and the target<--- source edge into the mutation
      *
      * @param scope The org scope of the graph
@@ -53,39 +63,55 @@ public interface EdgeSerialization {
      */
     MutationBatch deleteEdge( OrganizationScope scope, Edge edge );
 
+
     /**
-     * Get an iterator of all edges by edge type from source node
+     * Search for specific versions of the edge from source->target. Will return all versions.
+     * @param scope
+     * @param search
+     * @return
+     */
+    Iterator<MarkedEdge> getEdgeFromSource( OrganizationScope scope, SearchByEdge search );
+
+    /**
+     * Get an iterator of all edges by edge type originating from source node
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getTargetEdges( OrganizationScope scope, SearchByEdgeType edgeType );
+    Iterator<MarkedEdge> getEdgesFromSource( OrganizationScope scope, SearchByEdgeType edgeType );
 
 
     /**
-     * Get an iterator of all edges by edge type and target type from source node * @param scope The org scope of the
-     * graph
+     * Get an iterator of all edges by edge type originating from source node.  Also filters by target node id type
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getTargetIdEdges( OrganizationScope scope, SearchByIdType edgeType );
+    Iterator<MarkedEdge> getEdgesFromSourceByTargetType( OrganizationScope scope, SearchByIdType edgeType );
 
     /**
-     * Get an iterator of all edges by edge type from target node * @param scope The org scope of the graph
+     * Get an iterator of all edges by edge type pointing to the target node.  Returns all versions
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getSourceEdges( OrganizationScope scope, SearchByEdgeType edgeType );
+    Iterator<MarkedEdge> getEdgesToTarget( OrganizationScope scope, SearchByEdgeType edgeType );
+
+    /**
+     * Search for specific versions of the edge from source->target. Will return all versions
+     * @param scope
+     * @param search
+     * @return
+     */
+    Iterator<MarkedEdge> getEdgeToTarget( OrganizationScope scope, SearchByEdge search );
 
 
     /**
-     * Get an iterator of all edges by edge type and source type from target node * @param scope The org scope of the
-     * graph
+     * Get an iterator of all edges by edge type pointing to the target node.  Also uses the source id type to limit the
+     * results
      *
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<Edge> getSourceIdEdges( OrganizationScope scope, SearchByIdType edgeType );
+    Iterator<MarkedEdge> getEdgesToTargetBySourceType( OrganizationScope scope, SearchByIdType edgeType );
 }

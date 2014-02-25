@@ -3,8 +3,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnParser;
-
 import com.netflix.astyanax.model.Column;
 
 

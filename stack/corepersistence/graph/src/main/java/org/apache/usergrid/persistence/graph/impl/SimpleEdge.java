@@ -33,10 +33,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class SimpleEdge implements Edge {
 
-    private final Id sourceNode;
-    private final String type;
-    private final Id targetNode;
-    private final UUID version;
+    protected final Id sourceNode;
+    protected final String type;
+    protected final Id targetNode;
+    protected final UUID version;
 
 
     public SimpleEdge( final Id sourceNode, final String type, final Id targetNode, final UUID version ) {
@@ -72,5 +72,62 @@ public class SimpleEdge implements Edge {
 
     public UUID getVersion() {
         return version;
+    }
+
+
+
+    /**
+     * Test if the 2 edges are equal to one another.  Note that this is an edge comparison, not a marked edge comparison
+     * @param o
+     * @return
+     */
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof SimpleEdge ) ) {
+            return false;
+        }
+
+        final Edge that = ( Edge ) o;
+
+
+        if ( !sourceNode.equals( that.getSourceNode() ) ) {
+            return false;
+        }
+        if ( !targetNode.equals( that.getTargetNode() ) ) {
+            return false;
+        }
+        if ( !type.equals( that.getType() ) ) {
+            return false;
+        }
+        if ( !version.equals( that.getVersion() ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = sourceNode.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + targetNode.hashCode();
+        result = 31 * result + version.hashCode();
+        return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "SimpleMarkedEdge{" +
+                "sourceNode=" + sourceNode +
+                ", type='" + type + '\'' +
+                ", targetNode=" + targetNode +
+                ", version=" + version +
+                '}';
     }
 }

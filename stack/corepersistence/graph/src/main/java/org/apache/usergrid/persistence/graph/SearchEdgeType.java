@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;

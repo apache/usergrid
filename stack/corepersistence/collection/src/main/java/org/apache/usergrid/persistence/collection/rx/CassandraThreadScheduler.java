@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.collection.rx;
 
 
@@ -20,15 +38,9 @@ import rx.Scheduler;
 import rx.concurrency.Schedulers;
 
 
-/**
- *
- *
- */
 public class CassandraThreadScheduler implements Provider<Scheduler> {
 
-
     private static final Logger LOG = LoggerFactory.getLogger(CassandraThreadScheduler.class);
-
 
     private final RxFig rxFig;
 
@@ -63,27 +75,29 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
 
 
         /**
-         * Create a threadpool that will reclaim unused threads after 60 seconds.  It uses the max thread count set
-         * here.
-         * It intentionally uses the DynamicProperty, so that when it is updated, the listener updates the pool size
-         * Additional allocation is trivial.  Shrinking the size will require all currently executing threads to run
-         * to completion, without allowing additional tasks to be queued.
-         *
+         * Create a threadpool that will reclaim unused threads after 60 seconds.  
+         * It uses the max thread count set here. It intentionally uses the 
+         * DynamicProperty, so that when it is updated, the listener updates the 
+         * pool size. Additional allocation is trivial.  Shrinking the size 
+         * will require all currently executing threads to run to completion, 
+         * without allowing additional tasks to be queued.
          */
-        final ThreadPoolExecutor pool = new ThreadPoolExecutor( 0, rxFig.getMaxThreadCount(), 60L, TimeUnit.SECONDS,
+        final ThreadPoolExecutor pool = new ThreadPoolExecutor( 
+                0, rxFig.getMaxThreadCount(), 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(), factory, new ThreadPoolExecutor.AbortPolicy() );
 
 
-        //if our max thread count is updated, we want to immediately update the pool.  Per the javadoc
-        //if the size is smaller, existing threads will continue to run until they become idle and time out
+        // if our max thread count is updated, we want to immediately update the pool.  
+        // Per the javadoc if the size is smaller, existing threads will continue to run 
+        // until they become idle and time out
         rxFig.addPropertyChangeListener( new PropertyChangeListener() {
             @Override
             public void propertyChange( final PropertyChangeEvent evt ) {
-            if ( evt.getPropertyName().equals( rxFig.getKeyByMethod( "getMaxThreadCount" ) ) ) {
-                LOG.debug( "Getting update to property: rxFig.getMaxThreadCount() old = {}, new = {} ",
-                        evt.getOldValue(), evt.getNewValue() );
-                pool.setMaximumPoolSize( ( Integer ) evt.getNewValue() );
-            }
+                if ( evt.getPropertyName().equals( rxFig.getKeyByMethod( "getMaxThreadCount" ) ) ) {
+                    LOG.debug( "Getting update to property: rxFig.getMaxThreadCount() old = {}, new = {} ",
+                            evt.getOldValue(), evt.getNewValue() );
+                    pool.setMaximumPoolSize( ( Integer ) evt.getNewValue() );
+                }
             }
         } );
 

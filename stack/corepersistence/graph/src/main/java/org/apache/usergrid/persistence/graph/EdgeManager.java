@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.graph;
 
 
+import org.apache.usergrid.persistence.model.entity.Id;
+
 import rx.Observable;
 
 
@@ -66,7 +68,17 @@ public interface EdgeManager {
      *
      * Delete the edge. Implementation should also delete the incoming (reversed) edge.
      */
-    void deleteEdge( Edge edge );
+    Observable<Edge> deleteEdge( Edge edge );
+
+    /**
+     * TODO: This needs to mark a node as deleted while consistency processing occurs, our reads would need to check this filter on read
+     *
+     * Remove the node from the graph.
+     *
+     * @param node
+     * @return
+     */
+    Observable<Id> deleteNode(Id node);
 
     /**
      * Returns an observable that emits all edges where the specified node is the source node. The edges will match the
@@ -76,7 +88,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadSourceEdges( SearchByEdgeType search );
+    Observable<Edge> loadEdgesFromSource( SearchByEdgeType search );
 
     /**
      * Returns an observable that emits all edges where the specified node is the target node. The edges will match the
@@ -86,7 +98,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadTargetEdges( SearchByEdgeType search );
+    Observable<Edge> loadEdgesToTarget( SearchByEdgeType search );
 
 
     /**
@@ -97,7 +109,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadSourceEdges( SearchByIdType search );
+    Observable<Edge> loadEdgesFromSourceByType( SearchByIdType search );
 
 
     /**
@@ -108,7 +120,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits Edges. The observer will need to unsubscribe when it has completed consumption.
      */
-    Observable<Edge> loadTargetEdges( SearchByIdType search );
+    Observable<Edge> loadEdgesToTargetByType( SearchByIdType search );
 
     /**
      * Get all edge types to this node.  The node provided by search is the target node.
@@ -117,7 +129,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits strings for edge types
      */
-    Observable<String> getSourceEdgeTypes( SearchEdgeType search );
+    Observable<String> getEdgeTypesFromSource( SearchEdgeType search );
 
 
     /**
@@ -127,7 +139,7 @@ public interface EdgeManager {
      *
      * @return An observable of all source id types
      */
-    Observable<String> getSourceIdTypes( SearchIdType search );
+    Observable<String> getIdTypesFromSource( SearchIdType search );
 
 
     /**
@@ -137,7 +149,7 @@ public interface EdgeManager {
      *
      * @return An observable that emits strings for edge types
      */
-    Observable<String> getTargetEdgeTypes( SearchEdgeType search );
+    Observable<String> getEdgeTypesToTarget( SearchEdgeType search );
 
 
     /**
@@ -147,5 +159,5 @@ public interface EdgeManager {
      *
      * @return An observable of all source id types
      */
-    Observable<String> getTargetIdTypes( SearchIdType search );
+    Observable<String> getIdTypesToTarget( SearchIdType search );
 }

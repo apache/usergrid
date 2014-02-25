@@ -7,15 +7,15 @@
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-	<context:component-scan base-package="org.usergrid.services"  />
+	<context:component-scan base-package="org.apache.usergrid.services"  />
 	
 	
 	<import resource="classpath:/usergrid-core-context.xml" />
 
 	<!--  scan for security -->
-	<context:component-scan base-package="org.usergrid.security.crypto"  />
+	<context:component-scan base-package="org.apache.usergrid.security.crypto"  />
 
-	<bean id="realm" class="org.usergrid.security.shiro.Realm">
+	<bean id="realm" class="org.apache.usergrid.security.shiro.Realm">
 		<property name="name" value="realm" />
 	</bean>
 
@@ -35,18 +35,18 @@
 
 	<bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor"/>
 
-	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl">
+	<bean id="tokenService" class="org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl">
         <property name="cassandraService" ref="cassandraService"/>
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
             </bean>
 
-	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" >
+	<bean id="managementService" class="org.apache.usergrid.management.cassandra.ManagementServiceImpl" >
 		<property name="saltProvider" ref="saltProvider"/>
 	</bean>
 	
-	<bean id="saltProvider" class="org.usergrid.security.salt.NoOpSaltProvider" />
+	<bean id="saltProvider" class="org.apache.usergrid.security.salt.NoOpSaltProvider" />
 
-	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
+	<bean id="serviceManagerFactory" class="org.apache.usergrid.services.ServiceManagerFactory">
 		<constructor-arg ref="entityManagerFactory" />
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="schedulerService"/>
@@ -55,12 +55,12 @@
 	</bean>
 
 	<bean id="applicationCreator"
-		class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
+		class="org.apache.usergrid.management.cassandra.ApplicationCreatorImpl">
 		<constructor-arg ref="entityManagerFactory" />
 		<constructor-arg ref="managementService" />
 	</bean>
 
-    <bean id="signInProviderFactory" class="org.usergrid.security.providers.SignInProviderFactory">
+    <bean id="signInProviderFactory" class="org.apache.usergrid.security.providers.SignInProviderFactory">
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
         <property name="managementService" ref="managementService"/>
     </bean>

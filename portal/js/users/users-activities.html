@@ -1,0 +1,39 @@
+<div class="content-page" ng-controller="UsersActivitiesCtrl" >
+
+  <bsmodal id="addActivityToUser"
+           title="Add activity to user"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="addActivityToUserDialog"
+           extrabuttonlabel="Add"
+           ng-cloak>
+      <p>Content: <input id="activityMessage" ng-model="$parent.newActivity.activityToAdd" required name="activityMessage" ug-validate /></p>
+  </bsmodal>
+
+
+  <div ng:include="'users/users-tabs.html'"></div>
+  <br>
+  <div class="button-strip">
+    <button class="btn btn-primary" ng-click="showModal('addActivityToUser')">Add activity to user</button>
+  </div>
+  <div>
+    <table class="table table-striped">
+      <tbody>
+      <tr class="table-header">
+        <td>Date</td>
+        <td>Content</td>
+        <td>Verb</td>
+        <td>UUID</td>
+      </tr>
+      <tr class="zebraRows" ng-repeat="activity in activities">
+        <td>{{activity.createdDate}}</td>
+        <td>{{activity.content}}</td>
+        <td>{{activity.verb}}</td>
+        <td>{{activity.uuid}}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+</div>

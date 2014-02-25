@@ -28,6 +28,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 
+import com.fasterxml.uuid.UUIDComparator;
+
+
 /**
  * A default implementation of {@link ChangeLogGenerator}.
  */
@@ -49,7 +52,8 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
         for ( MvccEntity mvccEntity : mvccEntities ) {
 
             Entity entity = mvccEntity.getEntity().get();
-            int compare = mvccEntity.getVersion().compareTo( minVersion );
+
+            int compare = UUIDComparator.staticCompare( mvccEntity.getVersion(), minVersion );
 
             if ( compare == 0 ) {
                 keeper = entity;
@@ -59,9 +63,9 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
         for ( MvccEntity mvccEntity : mvccEntities ) {
 
             Entity entity = mvccEntity.getEntity().get();
-            int compare = mvccEntity.getVersion().compareTo( minVersion );
+            int compare = UUIDComparator.staticCompare( mvccEntity.getVersion(), minVersion );
 
-            if ( compare == -1 ) { // less than minVersion
+            if ( compare < 0 ) { // less than minVersion
 
                 for ( Field field : entity.getFields() ) {
 

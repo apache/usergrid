@@ -9,9 +9,9 @@
     <relativePath></relativePath>
   </parent>
 
-  <groupId>org.usergrid</groupId>
+  <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.28-SNAPSHOT</version>
+  <version>0.0.29-SNAPSHOT</version>
   <name>Usergrid Parent</name>
   <description>Usergrid Project</description>
   <packaging>pom</packaging>
@@ -108,6 +108,16 @@
     </license>
   </licenses>
 
+  <organization>
+    <name>The Apache Software Foundation</name>
+    <url>http://www.apache.org/</url>
+  </organization>
+
+  <issueManagement>
+    <system>Jira</system>
+    <url>https://issues.apache.org/jira/browse/USERGRID</url>
+  </issueManagement>
+
   <developers>
     <developer>
       <id>eanuff</id>
@@ -136,9 +146,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</connection>
-    <developerConnection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</developerConnection>
-    <url>git@github.com:apigee/usergrid-stack-internal.git</url>
+    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
+    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
+    <url>https://github.com/usergrid/usergrid</url>
   </scm>
 
   <distributionManagement>
@@ -166,6 +176,7 @@
     <module>websocket</module>
     <module>rest</module>
     <module>launcher</module>
+    <module>query-validator</module>
     <module>test-utils</module>
     <module>build-tools</module>
   </modules>
@@ -811,7 +822,8 @@
       <dependency>
         <groupId>net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <version>0.0.8</version>
+        <!-- we'd like to use 0.0.8 but it is not in Maven Central -->
+        <version>0.0.7</version>
       </dependency>
 
       <dependency>
@@ -1280,7 +1292,8 @@
       <dependency>
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
-        <version>1.5</version>
+        <!-- we'd like to use 1.5, but it is not in Maven Central -->
+        <version>1.4</version>
       </dependency>
 
       <dependency>
@@ -1760,7 +1773,7 @@
                   <version>1.6.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
-                  <version>[3.0,3.1)</version>
+                  <version>[3.0,)</version>
                 </requireMavenVersion>
               </rules>
             </configuration>
@@ -1806,11 +1819,12 @@
     </plugins>
   </reporting>
 
-  <repositories>
-    <repository>
-      <id>usergrid-dependencies</id>
-      <name>Usergrid s3 dependencies repository</name>
-      <url>https://usergrid-maven.s3.amazonaws.com/dependencies</url>
-    </repository>
-  </repositories>
+    <repositories>
+        <repository>
+            <id>local-dependencies</id>
+            <name>local-depedendencies</name>
+            <url>file://${project.basedir}/../m2/repository</url>
+        </repository>
+    </repositories>
+
 </project>

@@ -1,0 +1,121 @@
+<div class="org-overview-content">
+
+  <section class="row-fluid">
+
+    <div class="span12">
+      <div class="page-filters">
+        <h1 class="title pull-left"><i class="pictogram title">&#128362;</i>Org Overview</h1>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="row-fluid">
+
+  <div class="span6">
+
+    <h2 class="title">Current Organization </h2>
+    <table class="table table-striped">
+      <tr>
+        <td id="org-overview-name">{{currentOrganization.name}}</td>
+        <td style="text-align: right">{{currentOrganization.uuid}}</td>
+      </tr>
+    </table>
+
+    <bsmodal id="newApplication"
+             title="Create New Application"
+             close="hideModal"
+             closelabel="Cancel"
+             extrabutton="newApplicationDialog"
+             extrabuttonlabel="Create"
+             ng-cloak>
+      <p>New application name: <input ng-model="$parent.newApp.name"  ug-validate required type="text" ng-pattern="appNameRegex" ng-attr-title="{{appNameRegexDescription}}" /></p>
+    </bsmodal>
+
+    <h2 class="title" > Applications
+      <div class="header-button btn-group pull-right">
+        <a class="btn filter-selector" style="{{applicationsSize === 10 ? 'width:290px':''}}"  ng-disabled="!addApplications" ng-click="(addApplications ? showModal('newApplication') : '')">
+          <span class="filter-label">{{!addApplications ? 'You have met your 10 app limit' : 'Add New App'}}</span>
+        </a>
+      </div>
+    </h2>
+
+    <table class="table table-striped">
+      <tr ng-repeat="application in applications">
+        <td>{{application.name}}</td>
+        <td style="text-align: right">{{application.uuid}}</td>
+      </tr>
+    </table>
+
+    <bsmodal id="regenerateCredentials"
+             title="Confirmation"
+             close="hideModal"
+             closelabel="Cancel"
+             extrabutton="regenerateCredentialsDialog"
+             extrabuttonlabel="Yes"
+             ng-cloak>
+      Are you sure you want to regenerate the credentials?
+    </bsmodal>
+
+    <h2 class="title" >Organization API Credentials
+      <div class="header-button btn-group pull-right">
+        <a class="btn filter-selector" ng-click="showModal('regenerateCredentials')">
+          <span class="filter-label">Regenerate Org Credentials</span>
+        </a>
+      </div>
+    </h2>
+
+    <table class="table table-striped">
+      <tr>
+        <td >Client ID</td>
+        <td style="text-align: right" >{{orgAPICredentials.client_id}}</td>
+      </tr>
+      <tr>
+        <td>Client Secret</td>
+        <td style="text-align: right">{{orgAPICredentials.client_secret}}</td>
+      </tr>
+    </table>
+
+    <bsmodal id="newAdministrator"
+             title="Create New Administrator"
+             close="hideModal"
+             closelabel="Cancel"
+             extrabutton="newAdministratorDialog"
+             extrabuttonlabel="Create"
+             ng-cloak>
+      <p>New administrator email: <input id="newAdminInput" ug-validate ng-model="$parent.admin.email" pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}" required type="email" /></p>
+    </bsmodal>
+
+    <h2 class="title" >Organization Administrators
+      <div class="header-button btn-group pull-right">
+        <a class="btn filter-selector" ng-click="showModal('newAdministrator')">
+          <span class="filter-label">Add New Administrator</span>
+        </a>
+      </div>
+    </h2>
+
+    <table class="table table-striped">
+      <tr ng-repeat="administrator in orgAdministrators">
+        <td><img style="width:30px;height:30px;" ng-src="{{administrator.image}}"> {{administrator.name}}</td>
+        <td style="text-align: right">{{administrator.email}}</td>
+      </tr>
+    </table>
+
+
+  </div>
+
+  <div class="span6">
+
+    <h2 class="title">Activities </h2>
+    <table class="table table-striped">
+      <tr ng-repeat="activity in activities">
+        <td>{{activity.title}}</td>
+        <td style="text-align: right">{{activity.date}}</td>
+      </tr>
+    </table>
+
+  </div>
+
+
+  </section>
+</div>

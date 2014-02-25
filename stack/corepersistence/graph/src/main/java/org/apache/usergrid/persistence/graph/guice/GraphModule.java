@@ -19,25 +19,35 @@
 
 package org.apache.usergrid.persistence.graph.guice;
 
+
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyImpl;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 
 
 /**
@@ -52,23 +62,49 @@ public class GraphModule extends AbstractModule {
         //configure collections and our core astyanax framework
         install(new CollectionModule());
 
+        //install our configuration
+        install (new GuicyFigModule( GraphFig.class ));
+
         bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
 
         bind( EdgeMetadataSerialization.class).to( EdgeMetadataSerializationImpl.class);
         bind( EdgeSerialization.class).to( EdgeSerializationImpl.class );
+        bind( NodeSerialization.class).to( NodeSerializationImpl.class );
 
+
+        bind( CassandraConfig.class).to( CassandraConfigImpl.class );
 
         // create a guice factor for getting our collection manager
-        install( new FactoryModuleBuilder()
-                .implement( EdgeManager.class, EdgeManagerImpl.class )
-                .build( EdgeManagerFactory.class ) );
+        install( new FactoryModuleBuilder().implement( EdgeManager.class, EdgeManagerImpl.class )
+                                           .build( EdgeManagerFactory.class ) );
 
 
 
         //do multibindings for migrations
-        Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
-        uriBinder.addBinding().to( EdgeMetadataSerializationImpl.class );
-        uriBinder.addBinding().to( EdgeSerializationImpl.class );
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
+        migrationBinding.addBinding().to( EdgeSerializationImpl.class );
+        migrationBinding.addBinding().to( NodeSerializationImpl.class );
+
+
+        /**
+         * Graph event bus, will need to be refactored into it's own classes
+         */
+
+        final EventBus eventBus = new EventBus("asyncCleanup");
+        bind(EventBus.class).toInstance(eventBus);
+
+        //auto register every impl on the event bus
+        bindListener( Matchers.any(), new TypeListener() {
+           @Override
+           public <I> void hear(@SuppressWarnings("unused") final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
+               typeEncounter.register(new InjectionListener<I>() {
+                   @Override public void afterInjection(final I instance) {
+                       eventBus.register(instance);
+                   }
+               });
+           }
+        });
 
 
     }

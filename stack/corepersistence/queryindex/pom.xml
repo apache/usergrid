@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>queryindex</name>
+    <artifactId>queryindex</artifactId>
+    <description>Module provates indexing and query of Entities via ElasticSearch</description>
+
+    <parent>
+        <artifactId>persistence</artifactId>
+        <groupId>org.apache.usergrid</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <build>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
+
+        <plugins>
+
+            <plugin>
+                <groupId>org.safehaus.chop</groupId>
+                <artifactId>chop-maven-plugin</artifactId>
+                <version>${chop.version}</version>
+
+                <!--
+                NOTE: you should be putting most of these variables into your settings.xml
+                as an automatically activated profile.
+                -->
+
+                <configuration>
+                    <accessKey>${aws.s3.key}</accessKey>
+                    <secretKey>${aws.s3.secret}</secretKey>
+                    <availabilityZone>${availabilityZone}</availabilityZone>
+                    <bucketName>${aws.s3.bucket}</bucketName>
+                    <managerAppUsername>admin</managerAppUsername>
+                    <managerAppPassword>${manager.app.password}</managerAppPassword>
+                    <testPackageBase>org.apache.usergrid</testPackageBase>
+                    <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
+                    <failIfCommitNecessary>false</failIfCommitNecessary>
+                    <amiID>${ami.id}</amiID>
+                    <instanceType>m1.large</instanceType>
+                    <resultsDirectory>${resultsDirectory}</resultsDirectory>
+                    <dumpType>${dumpType}</dumpType>
+                    <coldRestartTomcat>true</coldRestartTomcat>
+                    <awsSecurityGroup>${security.group}</awsSecurityGroup>
+                    <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
+                    <runnerCount>6</runnerCount>
+                    <securityGroupExceptions>
+                        <!--
+                        Add your own IP address as an exception to allow access
+                        but please do this in the settings.xml file .. essentially
+                        all parameters should be in the settings.xml file.
+                        -->
+                        <param>${myip.address}/32:24981</param>
+                        <param>${myip.address}/32:22</param>
+                    </securityGroupExceptions>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <check>
+                        <branchRate>85</branchRate>
+                        <lineRate>85</lineRate>
+                        <haltOnFailure>true</haltOnFailure>
+                        <totalBranchRate>85</totalBranchRate>
+                        <totalLineRate>85</totalLineRate>
+                        <packageLineRate>85</packageLineRate>
+                        <packageBranchRate>85</packageBranchRate>
+                    </check>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>clean</goal>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <!-- major dependencies -->
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>collection</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+
+       <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+            <version>3.5</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
+
+         <dependency>
+            <groupId>org.safehaus.guicyfig</groupId>
+            <artifactId>guicyfig</artifactId>
+            <version>${guicyfig.version}</version>
+        </dependency>
+
+        <!-- Test dependencies  -->
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>collection</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>org.safehaus.chop</groupId>
+            <artifactId>chop-api</artifactId>
+            <version>${chop.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jukito</groupId>
+            <artifactId>jukito</artifactId>
+            <version>${jukito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- common stuff, logging, etc.-->
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons.codec.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons.collections.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+    </dependencies>
+
+</project>

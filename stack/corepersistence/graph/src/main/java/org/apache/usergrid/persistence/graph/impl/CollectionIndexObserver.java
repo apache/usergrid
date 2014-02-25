@@ -64,15 +64,15 @@ public class CollectionIndexObserver implements PostProcessObserver {
          *
          * We're essentially mapping a tree structure in to a graph edge
          */
-        Edge edge = new SimpleEdge(scope.getOwner(), scope.getName(), entity.getId(), entity.getVersion() );
+        Edge edge = new SimpleMarkedEdge( scope.getOwner(), scope.getName(), entity.getId(), entity.getVersion(), false );
 
         //entity exists, write the edge
         if(entity.getEntity().isPresent()){
-            em.writeEdge( edge );
+            em.writeEdge( edge ).toBlockingObservable().last();
         }
-        //entity does not exist, it's been removed, clear the edge
+        //entity does not exist, it's been removed, mark the edge
         else{
-            em.deleteEdge( edge );
+            em.deleteEdge( edge ).toBlockingObservable().last();
         }
     }
 }
