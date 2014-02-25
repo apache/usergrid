@@ -27,6 +27,6 @@ public class IndexModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind( EntityCollectionIndex.class ).to( EntityCollectionIndexImpl.class );
+        bind( EntityCollectionIndex.class ).to( EsEntityCollectionIndex.class );
     }
 }

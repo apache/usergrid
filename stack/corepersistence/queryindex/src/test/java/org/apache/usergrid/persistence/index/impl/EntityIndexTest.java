@@ -28,10 +28,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
-import org.apache.usergrid.persistence.index.EntitySearchResults;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.persistence.query.Query;
+import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.ElasticSearchRule;
 import org.apache.usergrid.test.EntityMapUtils;
 import org.elasticsearch.action.search.SearchResponse;
@@ -40,6 +41,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
@@ -65,7 +67,7 @@ public class EntityIndexTest {
         String type = scope.getName();
 
         EntityCollectionIndex entityIndex = 
-            new EntityCollectionIndexImpl( client, index, scope, true );  
+            new EsEntityCollectionIndex( client, index, scope, true );  
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -90,79 +92,42 @@ public class EntityIndexTest {
         logger.info( "Total time to index {} entries {}ms, average {}ms/entry", 
             count, timer.getTime(), timer.getTime() / count );
 
-        // test queries via Java API QueryBuilder
-        testQueries( client, index, type );
-
-        // test queries via Lucene syntax
         testQueries( entityIndex );
 
         client.close();
     }
-
-
-    private void testQuery( Client client, String index, String type, QueryBuilder qb, int num ) {
+   
+   
+    private void testQuery( EntityCollectionIndex entityIndex, String queryString, int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        SearchResponse sr = client.prepareSearch( index ).setTypes( type )
-            .setQuery( qb ).setFrom( 0 ).setSize( 999 ).execute().actionGet();
+        Query query = Query.fromQL( queryString );
+        query.setLimit( 1000 );
+        Results results = entityIndex.execute( query );
         timer.stop();
 
-        assertEquals( num, sr.getHits().getTotalHits() );
-        logger.debug( "Query1 time {}ms", timer.getTime() );
-    }
-   
-
-    private void testQueries( Client client, String index, String type ) {
-
-        testQuery( client, index, type, 
-            QueryBuilders.termQuery( "name", "Morgan Pierce" ), 1 );
-
-        // term query is exact match
-        testQuery( client, index, type, 
-            QueryBuilders.termQuery("name", "Pierce" ), 0 );
-
-        // match query allows partial match 
-        testQuery( client, index, type, 
-            QueryBuilders.matchQuery( "name_ug_analyzed", "Pierce" ), 2 );
-
-        testQuery( client, index, type, 
-            QueryBuilders.termQuery( "company", "Blurrybus" ), 1 );
-
-        testQuery( client, index, type, 
-            QueryBuilders.termQuery( "gender", "female" ), 433 );
-
-        // query of nested object fields supported
-        testQuery( client, index, type, 
-            QueryBuilders.termQuery( "contact.email", "nadiabrown@concility.com" ), 1 ); 
-    }
-
-   
-    private void testQuery( EntityCollectionIndex entityIndex, String query, int num ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        EntitySearchResults results = entityIndex.simpleQuery( query, 0, 999);
-        timer.stop();
-
-        assertEquals( num, results.count() );
+        assertEquals( num, results.getRefs().size() );
         logger.debug( "Query2 time {}ms", timer.getTime() );
     }
 
 
     private void testQueries( EntityCollectionIndex entityIndex ) {
 
-        testQuery( entityIndex, "name:\"Morgan Pierce\"", 1);
+        testQuery( entityIndex, "name = 'Morgan Pierce'", 1);
 
-        testQuery( entityIndex, "name:\"Morgan\"", 0);
+        testQuery( entityIndex, "name = 'morgan pierce'", 1);
 
-        testQuery( entityIndex, "name_ug_analyzed:\"Morgan\"", 1);
+        testQuery( entityIndex, "name = 'Morgan'", 0);
 
-        testQuery( entityIndex, "gender:female", 433);
+        testQuery( entityIndex, "name_ug_analyzed = 'Morgan'", 1);
+
+        testQuery( entityIndex, "gender = 'female'", 433);
     }
 
     
-    @Test
+    @Test // TODO 
+    @Ignore
     public void testRemoveIndex() {
         fail("Not implemented");
     }

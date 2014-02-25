@@ -42,11 +42,6 @@ public interface EntityCollectionIndex {
     public void deindex( Entity entity );
 
     /**
-     * Execute query in ElasticSearch syntax.
-     */
-    public EntitySearchResults simpleQuery( String query, int from, int size );
-
-    /**
      * Execute query in Usergrid syntax.
      */
     public Results execute( Query query );
