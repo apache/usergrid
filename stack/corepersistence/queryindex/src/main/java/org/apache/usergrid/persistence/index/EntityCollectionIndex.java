@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.query.Query;
+import org.apache.usergrid.persistence.query.Results;
 
 
 /**
@@ -40,7 +42,12 @@ public interface EntityCollectionIndex {
     public void deindex( Entity entity );
 
     /**
-     * Query interface for testing using Usergrid query syntax.
+     * Execute query in ElasticSearch syntax.
      */
     public EntitySearchResults simpleQuery( String query, int from, int size );
+
+    /**
+     * Execute query in Usergrid syntax.
+     */
+    public Results execute( Query query );
 }

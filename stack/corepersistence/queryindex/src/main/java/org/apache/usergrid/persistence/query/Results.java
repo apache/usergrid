@@ -202,6 +202,11 @@ public class Results implements Iterable<Entity> {
     }
 
 
+    public String getCursor() {
+        return null;
+    }
+
+
     public Level getLevel() {
         return level;
     }

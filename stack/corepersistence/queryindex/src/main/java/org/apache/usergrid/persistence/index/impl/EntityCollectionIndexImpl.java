@@ -37,6 +37,8 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.query.Query;
+import org.apache.usergrid.persistence.query.Results;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -117,6 +119,11 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
     public void deindex( Entity entity ) {
         String compositeId = entity.getId().toString() + "|" + entity.getVersion().toString();
         client.prepareDelete( index, scope.getName(), compositeId).execute().actionGet();
+    }
+
+
+    public Results execute( Query query ) {
+        return null;
     }
 
 
@@ -269,4 +276,5 @@ public class EntityCollectionIndexImpl implements EntityCollectionIndex {
         
         return builder;
     }
+
 }

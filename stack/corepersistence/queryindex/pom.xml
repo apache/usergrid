@@ -9,14 +9,6 @@
     <artifactId>queryindex</artifactId>
     <description>Module provates indexing and query of Entities via ElasticSearch</description>
 
-    <properties>
-        <guice.version>3.0</guice.version>
-        <guicyfig.version>3.3</guicyfig.version>
-        <slf4j.version>1.7.2</slf4j.version>
-        <log4j.version>1.2.17</log4j.version>
-        <chop.version>1.0</chop.version>
-    </properties>
-
     <parent>
         <artifactId>persistence</artifactId>
         <groupId>org.apache.usergrid</groupId>
@@ -107,27 +99,7 @@
 
     <dependencies>
 
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>model</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>collection</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.safehaus.chop</groupId>
-            <artifactId>chop-api</artifactId>
-            <version>${chop.version}</version>
-        </dependency>
-
-        <!-- Google Guice Integration Test Injectors -->
+        <!-- major dependencies -->
 
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
@@ -136,15 +108,50 @@
         </dependency>
 
         <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch</artifactId>
-            <version>1.0.0.RC1</version>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>collection</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
         </dependency>
 
         <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+
+       <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+            <version>3.5</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
+
+         <dependency>
             <groupId>org.safehaus.guicyfig</groupId>
             <artifactId>guicyfig</artifactId>
             <version>${guicyfig.version}</version>
+        </dependency>
+
+        <!-- Test dependencies  -->
+
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>collection</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>org.safehaus.chop</groupId>
+            <artifactId>chop-api</artifactId>
+            <version>${chop.version}</version>
         </dependency>
 
         <dependency>
@@ -154,20 +161,33 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- lang utils for setting uuids etc -->
+        <!-- common stuff, logging, etc.-->
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
+            <version>${commons.lang.version}</version>
         </dependency>
 
-        <!-- Google Guice -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons.codec.version}</version>
+            <type>jar</type>
+        </dependency>
 
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons.collections.version}</version>
+            <type>jar</type>
         </dependency>
 
         <dependency>
@@ -186,41 +206,6 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>${log4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.6</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-smile</artifactId>
-            <version>1.9.13</version>
-            <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr-runtime</artifactId>
-            <version>3.5</version>
-            <type>jar</type>
         </dependency>
 
     </dependencies>

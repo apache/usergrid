@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.query.Query.SortDirection;
 import org.apache.usergrid.persistence.query.Query.SortPredicate;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;

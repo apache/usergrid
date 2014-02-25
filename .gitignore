@@ -20,3 +20,5 @@ Icon
 /stack/corepersistence/priamcluster/aws.properties
 #Webstorm artifacts
 .idea/
+/stack/corepersistence/queryindex/nbactions.xml
+/stack/corepersistence/collection/nbactions.xml
