@@ -127,17 +127,24 @@ public class ActivitiesService extends GenericCollectionService {
         if ( activity == null ) {
             return;
         }
+        //add activity
         em.addToCollection( user, "feed", activity );
+        //publish to all connections
         Results results =  em.getConnectingEntities(user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS);
-        PagingResultsIterator itr = new PagingResultsIterator(results);
+        if( results != null ){
+            PagingResultsIterator itr = new PagingResultsIterator(results);
 
-        ConnectedEntityRef c;
-        List<EntityRef> refs = new ArrayList<EntityRef>();
-
-        while ( itr.hasNext() ) {
-            c = (ConnectedEntityRef) itr.next();
-            refs.add(c);
+            List<EntityRef> refs = new ArrayList<EntityRef>();
+            ConnectedEntityRef c;
+            //collect
+            while (itr.hasNext()) {
+                c = (ConnectedEntityRef) itr.next();
+                refs.add(c);
+            }
+            //add to collections
+            if (refs.size() > 0) {
+                em.addToCollections(refs, "feed", activity);
+            }
         }
-        em.addToCollections( refs, "feed", activity );
     }
 }
