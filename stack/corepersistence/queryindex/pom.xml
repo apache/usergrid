@@ -103,12 +103,6 @@
 
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
-            <artifactId>model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>${project.parent.groupId}</groupId>
             <artifactId>collection</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
@@ -125,18 +119,6 @@
             <artifactId>antlr-runtime</artifactId>
             <version>3.5</version>
             <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
-        </dependency>
-
-         <dependency>
-            <groupId>org.safehaus.guicyfig</groupId>
-            <artifactId>guicyfig</artifactId>
-            <version>${guicyfig.version}</version>
         </dependency>
 
         <!-- Test dependencies  -->
@@ -164,12 +146,6 @@
         <!-- common stuff, logging, etc.-->
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons.lang.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${commons.codec.version}</version>
@@ -188,24 +164,6 @@
             <artifactId>commons-collections</artifactId>
             <version>${commons.collections.version}</version>
             <type>jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
 
         <dependency>
