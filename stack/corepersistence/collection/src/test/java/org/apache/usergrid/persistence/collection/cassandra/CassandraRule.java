@@ -34,7 +34,7 @@ public class CassandraRule extends EnvironResource {
 
     private static boolean started = false;
 
-    private CassandraFig cassandraFig;
+    private final CassandraFig cassandraFig;
 
 
     public CassandraRule() {

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.persistence.graph.guice;
 
 
@@ -50,10 +49,6 @@ import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 
 
-/**
- *
- *
- */
 public class GraphModule extends AbstractModule {
 
     @Override
@@ -74,7 +69,7 @@ public class GraphModule extends AbstractModule {
 
         bind( CassandraConfig.class).to( CassandraConfigImpl.class );
 
-        // create a guice factor for getting our collection manager
+        // create a guice factory for getting our collection manager
         install( new FactoryModuleBuilder().implement( EdgeManager.class, EdgeManagerImpl.class )
                                            .build( EdgeManagerFactory.class ) );
 
