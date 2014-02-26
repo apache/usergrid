@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.index.guice.IndexTestModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -32,12 +33,15 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.JsonUtils;
-import org.apache.usergrid.test.AbstractCoreIT;
+import org.apache.usergrid.test.CoreApplication;
+import org.apache.usergrid.test.CoreITSetup;
+import org.apache.usergrid.test.CoreITSetupImpl;
 import org.apache.usergrid.test.EntityManagerFacade;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -46,15 +50,26 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ IndexTestModule.class })
-public class IndexIT extends AbstractCoreIT {
+public class IndexIT {
     
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
+
+    @ClassRule
+    public static CassandraRule cass = new CassandraRule();
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
+    
+    @ClassRule
+    public static CoreITSetup setup = new CoreITSetupImpl();
+
+    @Rule
+    public CoreApplication app = new CoreApplication( setup );
 
     @Inject
     public EntityCollectionManagerFactory factory;
 
-    @ClassRule
-    public static CassandraRule cass = new CassandraRule();
 
     public static final String[] alphabet = {
             "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima",

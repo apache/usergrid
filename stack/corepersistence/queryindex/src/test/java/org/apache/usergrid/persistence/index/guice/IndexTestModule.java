@@ -18,30 +18,10 @@
  */
 package org.apache.usergrid.persistence.index.guice;
 
-import java.io.IOException;
-import com.google.inject.AbstractModule;
-import com.netflix.config.ConfigurationManager;
+import org.apache.usergrid.persistence.collection.guice.TestModule;
 
 
-public abstract class IndexTestModule extends AbstractModule {
-    static {
-
-      /*
-       * --------------------------------------------------------------------
-       * Bootstrap the config for Archaius Configuration Settings.  
-       * We don't want to bootstrap more than once per JVM
-       * --------------------------------------------------------------------
-       */
-
-        try {
-            //load up the properties
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException(
-                    "Cannot do much without properly loading our configuration.", e );
-        }
-    }
+public class IndexTestModule extends TestModule {
 
     @Override
     protected void configure() {
