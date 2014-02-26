@@ -16,16 +16,11 @@
 package org.apache.usergrid.services.users.activities;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Activity;
 import org.apache.usergrid.persistence.entities.Activity.ActivityObject;
 import org.apache.usergrid.persistence.entities.User;
@@ -133,10 +128,16 @@ public class ActivitiesService extends GenericCollectionService {
             return;
         }
         em.addToCollection( user, "feed", activity );
-        Results r = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS, 1000 ); //allow 1000 connections
-        List<EntityRef> refs = r.getRefs();
-        if ( refs != null ) {
-            em.addToCollections( refs, "feed", activity );
+        Results results =  em.getConnectingEntities(user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS);
+        PagingResultsIterator itr = new PagingResultsIterator(results);
+
+        ConnectedEntityRef c;
+        List<EntityRef> refs = new ArrayList<EntityRef>();
+
+        while ( itr.hasNext() ) {
+            c = (ConnectedEntityRef) itr.next();
+            refs.add(c);
         }
+        em.addToCollections( refs, "feed", activity );
     }
 }
