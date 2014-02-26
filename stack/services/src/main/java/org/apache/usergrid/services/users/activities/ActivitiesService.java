@@ -143,6 +143,8 @@ public class ActivitiesService extends GenericCollectionService {
                 refs.add(c);
                 //break out when you get too big
                 if( refs.size() > breaker ){
+                    em.addToCollections(refs, "feed", activity);
+                    refs.clear();
                     break;
                 }
             }
