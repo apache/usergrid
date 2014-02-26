@@ -136,10 +136,15 @@ public class ActivitiesService extends GenericCollectionService {
 
             List<EntityRef> refs = new ArrayList<EntityRef>();
             ConnectedEntityRef c;
+            int breaker = 10000;
             //collect
             while (itr.hasNext()) {
                 c = (ConnectedEntityRef) itr.next();
                 refs.add(c);
+                //break out when you get too big
+                if( refs.size() > breaker ){
+                    break;
+                }
             }
             //add to collections
             if (refs.size() > 0) {
