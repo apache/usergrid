@@ -136,7 +136,7 @@ public class ActivitiesService extends GenericCollectionService {
 
             List<EntityRef> refs = new ArrayList<EntityRef>();
             ConnectedEntityRef c;
-            int breaker = 5;
+            int breaker = 10000;
             //collect
             while (itr.hasNext()) {
                 c = (ConnectedEntityRef) itr.next();
