@@ -16,17 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.index.guice;
 
-package org.apache.usergrid.persistence.index.impl;
-
+import java.io.IOException;
 import com.google.inject.AbstractModule;
-import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import com.netflix.config.ConfigurationManager;
 
 
-public class IndexModule extends AbstractModule {
+public abstract class IndexTestModule extends AbstractModule {
+    static {
+
+      /*
+       * --------------------------------------------------------------------
+       * Bootstrap the config for Archaius Configuration Settings.  
+       * We don't want to bootstrap more than once per JVM
+       * --------------------------------------------------------------------
+       */
+
+        try {
+            //load up the properties
+            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException(
+                    "Cannot do much without properly loading our configuration.", e );
+        }
+    }
 
     @Override
     protected void configure() {
-        bind( EntityCollectionIndex.class ).to( EsEntityCollectionIndex.class );
+        install( new IndexModule() );
     }
 }

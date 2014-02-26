@@ -105,7 +105,7 @@ public class EntityCollectionIndexTest {
         timer.stop();
 
         assertEquals( num, results.getRefs().size() );
-        logger.debug( "Query2 time {}ms", timer.getTime() );
+        logger.debug( "Query time {}ms", timer.getTime() );
     }
 
 

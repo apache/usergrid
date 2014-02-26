@@ -18,6 +18,8 @@
 
 package org.apache.usergrid.persistence.index.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 import org.apache.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.exceptions.NoIndexException;
@@ -33,12 +35,17 @@ import org.apache.usergrid.persistence.query.tree.NotOperand;
 import org.apache.usergrid.persistence.query.tree.OrOperand;
 import org.apache.usergrid.persistence.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.query.tree.WithinOperand;
+import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 
 public class EsDslQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
+    List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
+
     StringBuilder sb = new StringBuilder();
 
     public void visit( AndOperand op ) throws PersistenceException {
@@ -65,12 +72,19 @@ public class EsDslQueryVistor implements QueryVisitor {
     }
 
     public void visit( WithinOperand op ) {
-        sb.append( " within (" );
-        sb.append( op.getLattitude() );
-        sb.append( "," );
-        sb.append( op.getLongitude() );
-        sb.append( ") " );
-    }
+
+        String name = op.getProperty().getValue();
+
+        float lat = op.getLatitude().getFloatValue();
+        float lon = op.getLongitude().getFloatValue();
+        float distance = op.getDistance().getFloatValue();
+
+        // TODO: provide some way to set units for the distance filter 
+        FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
+           .lat( lat ).lon( lon ).distance( distance, DistanceUnit.KILOMETERS );
+
+        filterBuilders.add( fb );
+    } 
 
     public void visit( LessThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();

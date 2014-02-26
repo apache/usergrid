@@ -18,10 +18,14 @@
 
 package org.apache.usergrid.persistence;
 
+import com.google.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.index.guice.IndexTestModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -30,23 +34,33 @@ import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.JsonUtils;
 import org.apache.usergrid.test.AbstractCoreIT;
 import org.apache.usergrid.test.EntityManagerFacade;
+import org.jukito.JukitoRunner;
+import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Ignore
+@RunWith(JukitoRunner.class)
+@UseModules({ IndexTestModule.class })
 public class IndexIT extends AbstractCoreIT {
+    
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
+
+    @Inject
+    public EntityCollectionManagerFactory factory;
+
+    @ClassRule
+    public static CassandraRule cass = new CassandraRule();
 
     public static final String[] alphabet = {
             "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima",
             "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey",
             "X-ray", "Yankee", "Zulu"
     };
-
 
     @Test
     public void testCollectionOrdering() throws Exception {
@@ -55,7 +69,7 @@ public class IndexIT extends AbstractCoreIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( factory, null);
+        EntityManagerFacade em = new EntityManagerFacade( factory, scope);
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -125,7 +139,7 @@ public class IndexIT extends AbstractCoreIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( factory, null);
+        EntityManagerFacade em = new EntityManagerFacade( factory, scope );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -248,7 +262,7 @@ public class IndexIT extends AbstractCoreIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( factory, null);
+        EntityManagerFacade em = new EntityManagerFacade( factory, scope);
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];

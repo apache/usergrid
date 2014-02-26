@@ -17,28 +17,27 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.collection.guice;
+package org.apache.usergrid.persistence.index.guice;
 
-import java.io.IOException;
+import org.apache.usergrid.persistence.index.IndexFig;
 import com.google.inject.AbstractModule;
-import com.netflix.config.ConfigurationManager;
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex;
+import org.safehaus.guicyfig.GuicyFigModule;
 
 
-public abstract class TestModule extends AbstractModule {
-    static {
-      /*
-       * --------------------------------------------------------------------
-       * Bootstrap the config for Archaius Configuration Settings.  We don't want to
-       * bootstrap more than once per JVM
-       * --------------------------------------------------------------------
-       */
+public class IndexModule extends AbstractModule {
 
-        try {
-            //load up the properties
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
-        }
+    @Override
+    protected void configure() {
+
+        // configure collections and our core astyanax framework
+        install(new CollectionModule());
+
+        // install our configuration
+        install (new GuicyFigModule( IndexFig.class ));
+
+        bind( EntityCollectionIndex.class ).to( EsEntityCollectionIndex.class );
     }
 }

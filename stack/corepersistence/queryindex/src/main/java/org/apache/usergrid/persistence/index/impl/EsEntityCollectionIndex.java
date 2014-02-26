@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.ListField;
+import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.query.EntityRef;
@@ -64,7 +65,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     private final CollectionScope scope;
 
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
-
 
     public EsEntityCollectionIndex( Client client, String index, CollectionScope scope, boolean refresh ) {
         this.client = client;
@@ -167,32 +167,37 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
         for ( Object f : entity.getFields().toArray() ) {
+            Field field = (Field)f;
 
             if ( f instanceof ListField || f instanceof ArrayField ) {
-                Field field = (Field)f;
                 List list = (List)field.getValue();
                 entityMap.put( field.getName(), 
                     new ArrayList( processCollectionForMap( list ) ) );
 
             } else if ( f instanceof SetField ) {
-                Field field = (Field)f;
                 Set set = (Set)field.getValue();
                 entityMap.put( field.getName(), 
                     new ArrayList( processCollectionForMap( set ) ) );
 
             } else if ( f instanceof EntityObjectField ) {
-                Field field = (Field)f;
                 Entity ev = (Entity)field.getValue();
                 entityMap.put( field.getName(), entityToMap( ev ) ); // recursion
 
             } else if ( f instanceof StringField ) {
-                Field field = (Field)f;
                 // index in lower case because Usergrid queries are case insensitive
                 entityMap.put( field.getName(), ((String)field.getValue()).toLowerCase() );
                 entityMap.put( field.getName() + ANALYZED_SUFFIX, field.getValue() );
 
+            } else if ( f instanceof LocationField ) {
+                LocationField locField = (LocationField)f;
+                Map<String, Object> locMap = new HashMap<String, Object>();
+
+                // field names lat and lon triggerl ElasticSearch geo location 
+                locMap.put("lat", locField.getValue().getLatitude() );
+                locMap.put("lon", locField.getValue().getLongtitude());
+                entityMap.put( field.getName(), locMap );
+
             } else {
-                Field field = (Field)f;
                 entityMap.put( field.getName(), field.getValue() );
             }
         }

@@ -208,6 +208,13 @@
             <version>${log4j.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-smile</artifactId>
+            <version>${jackson-smile.verson}</version>
+            <type>jar</type>
+        </dependency>
+        
     </dependencies>
 
 </project>

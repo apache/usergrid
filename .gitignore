@@ -22,3 +22,6 @@ Icon
 .idea/
 /stack/corepersistence/queryindex/nbactions.xml
 /stack/corepersistence/collection/nbactions.xml
+/stack/corepersistence/nbactions.xml
+/stack/corepersistence/graph/nbactions.xml
+/stack/corepersistence/model/nbactions.xml

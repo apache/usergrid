@@ -368,7 +368,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( .1f, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -388,7 +388,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( 1, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 

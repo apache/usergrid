@@ -98,7 +98,7 @@ public class Query {
     private String collection;
     private String ql;
 
-    private QueryBuilder queryBuilder ;
+    private QueryBuilder queryBuilder;
 
 
     public Query() {
@@ -188,7 +188,6 @@ public class Query {
             String message = "Error building ElasticSEarch query string";
             throw new QueryParseException( message, pe );
         }
-
     }
 
 

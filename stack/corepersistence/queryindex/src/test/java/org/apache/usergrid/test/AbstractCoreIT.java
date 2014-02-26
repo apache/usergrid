@@ -18,9 +18,6 @@
 package org.apache.usergrid.test;
 
 
-import com.google.inject.Inject;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.utils.JsonUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -32,13 +29,7 @@ public abstract class AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
-    public static CassandraRule cass = new CassandraRule();
-
-    @ClassRule
     public static CoreITSetup setup = new CoreITSetupImpl();
-
-    @Inject
-    public EntityCollectionManagerFactory factory;
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );

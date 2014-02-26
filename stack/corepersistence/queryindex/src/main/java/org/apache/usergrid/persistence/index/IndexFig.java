@@ -16,50 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.astyanax;
-
+package org.apache.usergrid.persistence.index;
 
 import org.safehaus.guicyfig.Default;
-import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 
+public interface IndexFig extends GuicyFig {
 
-/**
- * Cassandra configuration interface.
- */
-@FigSingleton
-public interface CassandraFig extends GuicyFig {
-    @Key( "cassandra.hosts" )
-    String getHosts();
+    public static final String QUERY_LIMIT_DEFAULT = "usergrid.index.query.limit.default";
 
-    @Key( "cassandra.version" )
-    @Default( "1.2" )
-    String getVersion();
-
-    @Key( "cassandra.cluster_name" )
-    @Default( "Usergrid" )
-    String getClusterName();
-
-    @Key( "collections.keyspace" )
-    @Default( "Usergrid_Collections" )
-    String getKeyspaceName();
-
-    @Key( "cassandra.port" )
-    @Default( "9160" )
-    int getThriftPort();
-
-    @Key( "cassandra.connections" )
-    @Default( "100" )
-    int getConnections();
-
-    @Key( "cassandra.timeout" )
-    @Default( "5000" )
-    int getTimeout();
-
-    @Key("cassandra.discovery")
-    @Default( "RING_DESCRIBE" )
-    String getDiscoveryType();
-
+    @Default( "10" )
+    @Key( QUERY_LIMIT_DEFAULT )
+    int getQueryLimitDefault();
 }
