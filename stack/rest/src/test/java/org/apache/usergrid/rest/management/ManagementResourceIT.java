@@ -541,7 +541,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                              .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
@@ -606,7 +606,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                              .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
@@ -628,7 +628,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         HashMap<String, Object> payload = payloadBuilder();
 
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+        node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                          .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                          .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         String uuid = String.valueOf( node.get( "jobUUID" ) );
@@ -673,7 +673,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Status responseStatus = Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export/" + fake )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                              .get( JsonNode.class );
         }

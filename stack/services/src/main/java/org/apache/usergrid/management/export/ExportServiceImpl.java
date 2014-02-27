@@ -75,7 +75,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public UUID schedule( final ExportInfo config ) throws Exception {
 
-        if(config == null){
+        if ( config == null ) {
             logger.error( "export information cannot be null" );
             return null;
         }
@@ -84,18 +84,22 @@ public class ExportServiceImpl implements ExportService {
 
         Export export = new Export();
 
-        //write to the em
+        //update state
         export = em.create( export );
         export.setState( Export.State.CREATED );
         em.update( export );
 
+        //set data to be transferred to exportInfo
         JobData jobData = new JobData();
         jobData.setProperty( "exportInfo", config );
         jobData.setProperty( EXPORT_ID, export.getUuid() );
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
+        //schedule job
         sch.createJob( EXPORT_JOB_NAME, soonestPossible, jobData );
+
+        //update state
         export.setState( Export.State.SCHEDULED );
         em.update( export );
 
@@ -104,14 +108,17 @@ public class ExportServiceImpl implements ExportService {
 
 
     /**
-     * Query Entity Manager for specific Export Entity within application
-     *
+     * Query Entity Manager for the string state of the Export Entity.
+     * This corresponds to the GET /export
      * @return String
      */
     @Override
     public String getState( final UUID appId, final UUID uuid ) throws Exception {
 
+        //get application entity manager
         EntityManager rootEm = emf.getEntityManager( appId );
+
+        //retrieve the export entity.
         Export export = rootEm.get( uuid, Export.class );
 
         if ( export == null ) {
@@ -124,19 +131,26 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void doExport( final ExportInfo config, final JobExecution jobExecution ) throws Exception {
 
+        //get the entity manager for the application, and the entity that this Export corresponds to.
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
         EntityManager em = emf.getEntityManager( config.getApplicationId() );
         Export export = em.get( exportId, Export.class );
 
+        //update the entity state to show that the job has officially started.
         export.setState( Export.State.STARTED );
         em.update( export );
 
+        //retrieves all the organizations. Loops through them and backs up the appplications for each one
         Map<UUID, String> organizationGet = getOrgs( config );
         for ( Map.Entry<UUID, String> organization : organizationGet.entrySet() ) {
             try {
+                //exports all the applications for a single organization
                 exportApplicationsForOrg( organization, config, jobExecution );
-            }catch(Exception e){
+            }
+            catch ( Exception e ) {
+                //if for any reason the backing up fails, then update the entity with a failed state.
                 export.setState( Export.State.FAILED );
+                em.update( export );
                 return;
             }
         }
@@ -145,6 +159,12 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
+    /**
+     * Loops through all the organizations and returns a Map with the corresponding information
+     * @param exportInfo
+     * @return Map<UUID, String>
+     * @throws Exception
+     */
     private Map<UUID, String> getOrgs( ExportInfo exportInfo ) throws Exception {
         // Loop through the organizations
         UUID orgId = null;
@@ -204,13 +224,24 @@ public class ExportServiceImpl implements ExportService {
     //write test checking to see what happens if the input stream is closed or wrong.
     //TODO: make multipart streaming functional
     //currently only stores the collection in memory then flushes it.
+
+
+    /**
+     * Exports all applications for the given organization.
+     * @param organization
+     * @param config
+     * @param jobExecution
+     * @throws Exception
+     */
     private void exportApplicationsForOrg( Map.Entry<UUID, String> organization, final ExportInfo config,
                                            final JobExecution jobExecution ) throws Exception {
 
+        //retrieves export entity
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
         EntityManager exportManager = emf.getEntityManager( config.getApplicationId() );
         Export export = exportManager.get( exportId, Export.class );
 
+        //sets up a output stream for s3 backup.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         logger.info( "" + organization );
@@ -236,26 +267,25 @@ public class ExportServiceImpl implements ExportService {
             // through the entities in the application (former namespace).
             //could support queries, just need to implement that in the rest endpoint.
             for ( String collectionName : metadata.keySet() ) {
-                if ( collectionName.equals( "exports" ) ) {
-                    continue;
-                }
+                //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
+                if ( collectionName.equals( config.getCollection() ) ) {
+                    //Query entity manager for the entities in a collection
+                    Query query = new Query();
+                    query.setLimit( MAX_ENTITY_FETCH );
+                    query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                    Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
-                Query query = new Query();
-                query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Results.Level.ALL_PROPERTIES );
-                Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
-
-                PagingResultsIterator itr = new PagingResultsIterator( entities );
-
-                for ( Object e : itr ) {
-                    starting_time = checkTimeDelta( starting_time, jobExecution );
-                    Entity entity = ( Entity ) e;
-
-                    jg.writeStartObject();
-                    jg.writeFieldName( "Metadata" );
-                    jg.writeObject( entity );
-                    saveCollectionMembers( jg, em, application.getValue(), entity );
-                    jg.writeEndObject();
+                    //pages through the query and backs up all results.
+                    PagingResultsIterator itr = new PagingResultsIterator( entities );
+                    for ( Object e : itr ) {
+                        starting_time = checkTimeDelta( starting_time, jobExecution );
+                        Entity entity = ( Entity ) e;
+                        jg.writeStartObject();
+                        jg.writeFieldName( "Metadata" );
+                        jg.writeObject(entity );
+                        saveCollectionMembers( jg, em, config.getCollection(), entity );
+                        jg.writeEndObject();
+                    }
                 }
             }
 
@@ -265,10 +295,12 @@ public class ExportServiceImpl implements ExportService {
             baos.flush();
             baos.close();
 
+            //sets up the Inputstream for copying the method to s3.
             InputStream is = new ByteArrayInputStream( baos.toByteArray() );
             try {
                 s3Export.copyToS3( is, config, appFileName );
-            }catch(Exception e){
+            }
+            catch ( Exception e ) {
                 export.setState( Export.State.FAILED );
                 return;
             }
@@ -276,6 +308,12 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
+    /**
+     * Regulates how long to wait until the next heartbeat.
+     * @param startingTime
+     * @param jobExecution
+     * @return
+     */
     public long checkTimeDelta( long startingTime, final JobExecution jobExecution ) {
 
         long cur_time = System.currentTimeMillis();
@@ -292,38 +330,40 @@ public class ExportServiceImpl implements ExportService {
      * Serialize and save the collection members of this <code>entity</code>
      *
      * @param em Entity Manager
-     * @param application Application name
+     * @param collection Collection Name
      * @param entity entity
      */
-    private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String application, Entity entity )
+    private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String collection, Entity entity )
             throws Exception {
 
         Set<String> collections = em.getCollections( entity );
 
-        // Only create entry for Entities that have collections
+        // If your application doesn't have any e
         if ( ( collections == null ) || collections.isEmpty() ) {
             return;
         }
 
         for ( String collectionName : collections ) {
 
-            jg.writeFieldName( collectionName );
-            jg.writeStartArray();
+            if ( collectionName.equals( collection ) ) {
+                jg.writeFieldName( collectionName );
+                jg.writeStartArray();
 
-            //is 100000 an arbitary number?
-            Results collectionMembers =
-                    em.getCollection( entity, collectionName, null, 100000, Results.Level.IDS, false );
+                //is 100000 an arbitary number?
+                Results collectionMembers =
+                        em.getCollection( entity, collectionName, null, 100000, Results.Level.IDS, false );
 
-            List<UUID> entityIds = collectionMembers.getIds();
+                List<UUID> entityIds = collectionMembers.getIds();
 
-            if ( ( entityIds != null ) && !entityIds.isEmpty() ) {
-                for ( UUID childEntityUUID : entityIds ) {
-                    jg.writeObject( childEntityUUID.toString() );
+                if ( ( entityIds != null ) && !entityIds.isEmpty() ) {
+                    for ( UUID childEntityUUID : entityIds ) {
+                        jg.writeObject( childEntityUUID.toString() );
+                    }
                 }
-            }
 
-            // End collection array.
-            jg.writeEndArray();
+                // End collection array.
+                jg.writeEndArray();
+            }
         }
 
         // Write connections
@@ -331,7 +371,6 @@ public class ExportServiceImpl implements ExportService {
 
         // Write dictionaries
         saveDictionaries( entity, em, jg );
-
     }
 
 

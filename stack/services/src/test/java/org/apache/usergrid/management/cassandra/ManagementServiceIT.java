@@ -766,6 +766,7 @@ public class ManagementServiceIT {
 
         ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
+        exportInfo.setCollection( "users" );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         //intialize user object to be posted
@@ -835,6 +836,7 @@ public class ManagementServiceIT {
 
         ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
+        exportInfo.setCollection( "users" );
 
         UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
@@ -884,6 +886,7 @@ public class ManagementServiceIT {
 
         ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
+        exportInfo.setCollection( "roles" );
 
         UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
@@ -902,7 +905,7 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        //assertEquals( 3 , a.size() );
+        assertEquals( 3 , a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
@@ -951,6 +954,7 @@ public class ManagementServiceIT {
 
         ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setApplicationId( applicationId );
+        exportInfo.setCollection( "roles" );
 
         UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
@@ -969,7 +973,76 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        //assertEquals( 3 , a.size() );
+        assertEquals( 3 , a.size() );
+        for ( int i = 0; i < a.size(); i++ ) {
+            org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
+            org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
+            String entityName = ( String ) entityData.get( "name" );
+            assertFalse( "junkRealName".equals( entityName ) );
+            //assertNotEquals( "NotEquals","junkRealName",entityName );
+        }
+        f.delete();
+    }
+
+    @Test
+    public void testFileExportOneCollection() throws Exception {
+
+        File f = null;
+//        String orgName = "ed-organization";
+//        String appName = "ed-app";
+
+        try {
+            f = new File( "test.json" );
+            f.delete();
+        }
+        catch ( Exception e ) {
+            //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
+        }
+
+        //UUID appId = setup.getEmf().createApplication( orgName, appName );
+
+
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId);
+        em.createApplicationCollection( "baconators" );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[10];
+        //creates entities
+        for ( int i = 0; i < 10; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            entity[i] = em.create( "baconators", userProperties );
+        }
+
+        S3Export s3Export = new MockS3ExportImpl();
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setApplicationId( applicationId );
+        exportInfo.setCollection( "baconators" );
+
+        UUID exportUUID = exportService.schedule( exportInfo );
+        exportService.setS3Export( s3Export );
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( exportInfo, jobExecution );
+
+        JSONParser parser = new JSONParser();
+
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+
+        assertEquals( 10 , a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );

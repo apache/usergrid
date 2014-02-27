@@ -212,22 +212,24 @@ public class ApplicationResource extends AbstractContextResource {
 
 
     @POST
-    @Path("export")
+    @Path("collection/{collection_name}/export")
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
-    public Response exportPostJson( @Context UriInfo ui, Map<String, Object> json,
+    public Response exportPostJson( @Context UriInfo ui,@PathParam( "collection_name" ) String collection_name ,Map<String, Object> json,
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
 
         OAuthResponse response = null;
         UUID jobUUID = null;
+        String colExport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
         try {
             //parse the json into some useful object (the config params)
             ExportInfo objEx = new ExportInfo( json );
             objEx.setApplicationId( applicationId );
+            objEx.setCollection( colExport );
             jobUUID = exportService.schedule( objEx );
             uuidRet.put( "jobUUID", jobUUID.toString() );
         }
@@ -250,6 +252,7 @@ public class ApplicationResource extends AbstractContextResource {
 
 
     @GET
+    @RequireOrganizationAccess
     @Path("export/{jobUUID: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public Response exportGetJson( @Context UriInfo ui, @PathParam("jobUUID") UUID jobUUIDStr,
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
@@ -269,4 +272,6 @@ public class ApplicationResource extends AbstractContextResource {
 
         return Response.status( SC_OK ).entity( entity.getState() ).build();
     }
+
+
 }

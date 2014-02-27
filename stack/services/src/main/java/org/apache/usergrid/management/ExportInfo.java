@@ -20,7 +20,8 @@ public class ExportInfo extends TypedEntity {
     private String s3_accessId;
     private String s3_key;
     private String bucket_location;
-    private UUID applicationId;
+    private UUID applicationId; //TODO: include application when initializing export info
+    private String collection;  //TODO: include collection when initializing export info
 
 
     public ExportInfo( Map<String, Object> exportData ) {
@@ -33,6 +34,7 @@ public class ExportInfo extends TypedEntity {
         bucket_location = ( String ) storage_info.get( "bucket_location" );
     }
 
+    public String getCollection() { return collection; }
 
     public UUID getApplicationId() {
         return applicationId;
@@ -70,4 +72,6 @@ public class ExportInfo extends TypedEntity {
 
 
     public void setApplicationId( UUID appId ) { applicationId = appId;}
+
+    public void setCollection ( String colName) { collection = colName; }
 }
