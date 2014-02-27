@@ -27,11 +27,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectReader;
 import org.codehaus.jackson.smile.SmileFactory;
+import org.codehaus.jackson.smile.SmileParser;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
@@ -276,12 +275,12 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         }
     }
 
-    public static class SmileSerializer extends AbstractSerializer<EntityWrapper> {
+    public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
         public static final SmileFactory f = new SmileFactory(  );
 
-        public static final org.codehaus.jackson.map.ObjectMapper mapper = new ObjectMapper( f );
-        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();1
+        public static ObjectMapper mapper = new ObjectMapper( f );
+        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
 
 
         private static byte[] STATE_COMPLETE = new byte[] { 0 };
@@ -305,7 +304,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
             builder.addBytes( VERSION );
-
+            f.disable( SmileParser.Feature.REQUIRE_HEADER );
+           // f.enable( SmileGenerator.Feature.WRITE_HEADER );
+            //f.enable( SmileGenerator.Feature.WRITE_END_MARKER );
+            mapper = new ObjectMapper( f );
+            //mapper.enable( SmileGenerator.Feature.WRITE_HEADER );
 
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
@@ -341,52 +344,44 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             return builder.build();
         }
 
-//problem with this code is that I'd have to use offsets, is that really the way we want to go?
         @Override
         public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
-//            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
-//
-//            byte[] version = new byte[0];
-//
-//            try{
-//            version = mapper.readValue(byteBuffer.array(),byte[].class);//parser.read( mapper.reader());
-//            }
-//            catch ( JsonMappingException e ) {
-//                e.printStackTrace();
-//            }
-//            catch ( JsonParseException e ) {
-//                e.printStackTrace();
-//            }
-//            catch ( IOException e ) {
-//                e.printStackTrace();
-//            }
-//
-//            if ( !Arrays.equals( VERSION, version ) ) {
-//                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
-//            }
-//
-//
-//            final byte[] state = mapper.readValue(byteBuffer.array(),)//parser.read( BYTES_ARRAY_SERIALIZER );
-//
-//            /**
-//             * It's been deleted, remove it
-//             */
-//            if ( Arrays.equals( STATE_DELETED, state ) ) {
-//                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
-//            }
-//
-//            final Entity storedEntity = ( Entity ) parser.read( mapper );
-//
-//            final Optional<Entity> entity = Optional.of( storedEntity );
-//
-//            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
-//                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
-//            }
-//
-//            //it's partial by default
-//
-//            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
-            return null;
+            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
+            byte[] b = new byte[byteBuffer.remaining()];
+            byteBuffer.get( b, 0, b.length );
+            //return mapper.readValue(b, Entity.class);
+
+            final byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
+
+            if ( !Arrays.equals( VERSION, version ) ) {
+                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
+            }
+
+            final byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
+
+            /**
+             * It's been deleted, remove it
+             */
+            if ( Arrays.equals( STATE_DELETED, state ) ) {
+                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+            }
+
+            Entity storedEntity = null;//( Entity ) parser.read( mapper );
+            try {
+                storedEntity = mapper.readValue( b , Entity.class );
+            }
+            catch ( IOException e ) {
+                e.printStackTrace();
+            }
+
+            final Optional<Entity> entity = Optional.of( storedEntity );
+
+            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
+                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
+            }
+
+            //it's partial by default
+            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
         }
     }
 
@@ -395,7 +390,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
      * We want to retain the Optional wrapper.  It helps us easily mark something as cleaned without removing the column
      * and makes it obvious that the entity could be missing in the api
      */
-    private static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
+    private static class ObjSerializer extends AbstractSerializer<EntityWrapper> {
 
         private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
         private static final ObjectSerializer SER = ObjectSerializer.get();
