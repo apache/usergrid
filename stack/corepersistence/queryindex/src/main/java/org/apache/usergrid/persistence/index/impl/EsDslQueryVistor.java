@@ -42,11 +42,12 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 
+/**
+ * Visits tree of  parsed Query operands and populates ElasticSearch QueryBuilder that represents the query.
+ */
 public class EsDslQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
-
-    StringBuilder sb = new StringBuilder();
 
     public void visit( AndOperand op ) throws PersistenceException {
         op.getLeft().visit( this );
@@ -68,6 +69,9 @@ public class EsDslQueryVistor implements QueryVisitor {
     public void visit( ContainsOperand op ) throws NoFullTextIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+        if ( value instanceof String ) {
+            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+        }        
         stack.push( QueryBuilders.matchQuery( name, value ));
     }
 
@@ -89,30 +93,45 @@ public class EsDslQueryVistor implements QueryVisitor {
     public void visit( LessThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+        if ( value instanceof String ) {
+            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+        }
         stack.push( QueryBuilders.rangeQuery( name ).lt( value ));
     }
 
     public void visit( LessThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+        if ( value instanceof String ) {
+            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+        }
         stack.push( QueryBuilders.rangeQuery( name ).lte( value ));
     }
 
     public void visit( Equal op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+        if ( value instanceof String ) {
+            value = ((String)value).toLowerCase();
+        }
         stack.push( QueryBuilders.termQuery( name, value ));
     }
 
     public void visit( GreaterThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+        if ( value instanceof String ) {
+            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+        }
         stack.push( QueryBuilders.rangeQuery( name ).gt( value ) );
     }
 
     public void visit( GreaterThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+        if ( value instanceof String ) {
+            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+        }
         stack.push( QueryBuilders.rangeQuery( name ).gte( value ) );
     }
 

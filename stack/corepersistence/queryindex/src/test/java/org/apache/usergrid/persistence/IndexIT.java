@@ -43,6 +43,7 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,6 +86,7 @@ public class IndexIT {
             "X-ray", "Yankee", "Zulu"
     };
 
+    @Ignore // TODO: enable when Cursor support implemented
     @Test
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
@@ -92,6 +94,7 @@ public class IndexIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
+
         EntityManagerFacade em = new EntityManagerFacade( 
             collectionManagerFactory, collectionIndexFactory, scope);
 
@@ -100,7 +103,7 @@ public class IndexIT {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
 
-            em.create( "item", properties );
+            em.create( "items", properties );
         }
 
         int i = 0;
@@ -163,6 +166,7 @@ public class IndexIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
+        
         EntityManagerFacade em = new EntityManagerFacade( 
             collectionManagerFactory, collectionIndexFactory, scope);
 
@@ -170,11 +174,10 @@ public class IndexIT {
             String name = alphabet[i];
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
-
-            em.create( "item", properties );
+            em.create( "items", properties );
         }
 
-        Query query = Query.fromQL( "name < 'delta'" );
+        Query query = Query.fromQL( "name < 'Delta' order by name" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 0;
@@ -184,7 +187,7 @@ public class IndexIT {
         }
         assertEquals( 3, i );
 
-        query = Query.fromQL( "name <= 'delta'" );
+        query = Query.fromQL( "name <= 'delta' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 0;
@@ -194,7 +197,7 @@ public class IndexIT {
         }
         assertEquals( 4, i );
 
-        query = Query.fromQL( "name <= 'foxtrot' and name > 'bravo'" );
+        query = Query.fromQL( "name <= 'foxtrot' and name > 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
@@ -204,7 +207,7 @@ public class IndexIT {
         }
         assertEquals( 6, i );
 
-        query = Query.fromQL( "name < 'foxtrot' and name > 'bravo'" );
+        query = Query.fromQL( "name < 'foxtrot' and name > 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
@@ -214,7 +217,7 @@ public class IndexIT {
         }
         assertEquals( 5, i );
 
-        query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo'" );
+        query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
@@ -224,7 +227,7 @@ public class IndexIT {
         }
         assertEquals( 5, i );
 
-        query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo'" );
+        query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
@@ -297,7 +300,7 @@ public class IndexIT {
             properties.put( "group", i / 3 );
             properties.put( "reverse_name", alphabet[alphabet.length - 1 - i] );
 
-            em.create( "item", properties );
+            em.create( "items", properties );
         }
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
@@ -306,7 +309,7 @@ public class IndexIT {
         int i = 6;
         for ( Entity entity : r.getEntities() ) {
             i--;
-            assertEquals( 1L, entity.getField( "group" ).getValue() );
+            assertEquals( 1, entity.getField( "group" ).getValue() );
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
         }
         assertEquals( 3, i );

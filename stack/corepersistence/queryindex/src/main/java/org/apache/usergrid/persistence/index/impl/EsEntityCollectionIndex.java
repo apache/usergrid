@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -47,13 +49,14 @@ import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsReques
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortOrder;
@@ -68,14 +71,19 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     private final String index;
     private final boolean refresh;
     private final CollectionScope scope;
+    private final EntityCollectionManager manager;
 
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
 
     @Inject
-    public EsEntityCollectionIndex( @Assisted final CollectionScope scope, IndexFig config, EsProvider provider ) {
+    public EsEntityCollectionIndex( @Assisted final CollectionScope scope, 
+            IndexFig config, 
+            EsProvider provider, 
+            EntityCollectionManagerFactory factory ) {
 
-        this.scope = scope;
+        this.manager = factory.createCollectionManager(scope );
         this.client = provider.getClient();
+        this.scope = scope;
         this.index = config.getIndexName();
         this.refresh = config.isForcedRefresh();
         
@@ -106,16 +114,13 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     public void index( Entity entity ) {
 
         Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap( entity );
+        entityAsMap.put("created", entity.getVersion().timestamp() );
 
         IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), createIndexId( entity ))
             .setSource( entityAsMap )
             .setRefresh( refresh );
-
-        // Cannot set version. As far as I can tell ES insists that initial version number is -1 
-        // and that number is incremented by 1 on each update.
-        // irb = irb.setVersion( entity.getVersion().timestamp() );
         
-        IndexResponse ir = irb.execute().actionGet();
+        irb.execute().actionGet();
     }
 
 
@@ -134,21 +139,18 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public Results execute( Query query ) {
 
-        logger.info("-------------------------------------------------------------------------");
-        logger.info( "execute ");
-        logger.info("-------------------------------------------------------------------------");
-
         // TODO add support for cursor
 
+        final QueryBuilder qb;
         if ( query.getQueryBuilder() != null ) {
-            logger.info( "query is: " + query.getQueryBuilder().toString());
+            qb = query.getQueryBuilder();
         } else {
-            logger.info( "query is: " + query.getQl() );
+            qb = QueryBuilders.matchAllQuery();
         }
+        logger.debug("Query: " + qb.toString());
 
         SearchRequestBuilder srb = client.prepareSearch( index ).setTypes( scope.getName() )
-            .setQuery( query.getQueryBuilder() )
-            .setFrom( 0 ).setSize( query.getLimit() );
+            .setQuery( qb ).setFrom( 0 ).setSize( query.getLimit() );
 
         for ( Query.SortPredicate sp : query.getSortPredicates() ) {
             final SortOrder order;
@@ -166,6 +168,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         Results results = new Results();
         List<EntityRef> refs = new ArrayList<EntityRef>();
+        List<Entity> entities = new ArrayList<Entity>();
 
         for ( SearchHit hit : hits.getHits() ) {
 
@@ -177,10 +180,20 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             EntityRef ref = new SimpleEntityRef( 
                 new SimpleId( UUID.fromString(id), type), // entity id
                 UUID.fromString(version));                // etity version
-
             refs.add( ref );
+
+            // TODO: do we always want to fetch entities?
+            Entity entity = manager.load( ref.getId() ).toBlockingObservable().last();
+            if ( entity == null ) {
+                throw new RuntimeException("Entity id [" + ref.getId() + "] not found");
+            }
+            entities.add( entity );
         }
-        results.setRefs( refs );
+        if ( hits.getHits().length == 1 ) {
+            results.setEntity( entities.get( 0 ) );
+        } else {
+            results.setEntities( entities );
+        }
         return results;
     }
 

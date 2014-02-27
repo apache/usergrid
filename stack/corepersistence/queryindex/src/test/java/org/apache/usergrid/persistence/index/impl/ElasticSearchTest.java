@@ -124,7 +124,10 @@ public class ElasticSearchTest {
         indexSampleData( type, client, index );
 
         testQuery( client, index, type, 
-            QueryBuilders.termQuery( "name", "Orr Byers" ), 1 );
+            QueryBuilders.termQuery( "name", "Orr Byers"), 1 );
+
+        testQuery( client, index, type, 
+            QueryBuilders.termQuery( "name", "orr byers" ), 0 );
 
         // term query is exact match
         testQuery( client, index, type, 
@@ -136,6 +139,9 @@ public class ElasticSearchTest {
 
         testQuery( client, index, type, 
             QueryBuilders.termQuery( "company", "Geologix" ), 1 );
+
+        testQuery( client, index, type, 
+            QueryBuilders.rangeQuery("company").gt( "Geologix" ), 2 );
 
         testQuery( client, index, type, 
             QueryBuilders.termQuery( "gender", "female" ), 3 );

@@ -24,29 +24,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.guice.IndexTestModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.test.EntityMapUtils;
-import org.elasticsearch.client.Client;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,17 +61,28 @@ import org.slf4j.LoggerFactory;
 public class EntityCollectionIndexTest {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityCollectionIndexTest.class );
+    
+    @ClassRule
+    public static CassandraRule cass = new CassandraRule();
+
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
         
     @Inject
-    public EntityCollectionIndexFactory collectionIndexFactory;
+    public EntityCollectionIndexFactory collectionIndexFactory;    
+    
+    @Inject
+    public EntityCollectionManagerFactory collectionManagerFactory;
 
     @Test
     public void testIndex() throws IOException {
 
-        final CollectionScope scope = mock( CollectionScope.class );
-        when( scope.getName() ).thenReturn( "contacts" );
-        String index = RandomStringUtils.randomAlphanumeric(20 ).toLowerCase();
-        String type = scope.getName();
+        Id appId = new SimpleId("application");
+        Id orgId = new SimpleId("organization");
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "contacts" );
+
+        EntityCollectionManager entityManager = collectionManagerFactory.createCollectionManager( scope );
 
         EntityCollectionIndex entityIndex = collectionIndexFactory.createCollectionIndex( scope );
 
@@ -84,6 +100,8 @@ public class EntityCollectionIndexTest {
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
             entity = EntityMapUtils.mapToEntity( scope.getName(), entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
+
+           entity = entityManager.write( entity ).toBlockingObservable().last();
 
             entityIndex.index( entity );
 
@@ -106,7 +124,11 @@ public class EntityCollectionIndexTest {
         Results results = entityIndex.execute( query );
         timer.stop();
 
-        assertEquals( num, results.getRefs().size() );
+        if ( num == 1 ) {
+            assertNotNull( results.getEntity() != null );
+        } else {
+            assertEquals( num, results.getEntities().size() );
+        }
         logger.debug( "Query time {}ms", timer.getTime() );
     }
 
@@ -119,7 +141,9 @@ public class EntityCollectionIndexTest {
 
         testQuery( entityIndex, "name = 'Morgan'", 0);
 
-        testQuery( entityIndex, "name_ug_analyzed = 'Morgan'", 1);
+        testQuery( entityIndex, "name" + EsEntityCollectionIndex.ANALYZED_SUFFIX + " = 'Morgan'", 1);
+
+        testQuery( entityIndex, "company > 'GeoLogix'", 564);
 
         testQuery( entityIndex, "gender = 'female'", 433);
 

@@ -33,7 +33,7 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
 
-    @Default( "10" )
+    @Default( "100" )
     @Key( QUERY_LIMIT_DEFAULT )
     int getQueryLimitDefault();
 

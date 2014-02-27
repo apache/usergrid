@@ -277,7 +277,7 @@ public class QueryTest {
             error = qpe.getMessage();
         }
 
-        assertEquals( "The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error );
+        assertTrue( error.startsWith("The query cannot be parsed") );
     }
 
 

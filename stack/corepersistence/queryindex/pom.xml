@@ -97,11 +97,6 @@
         </dependency>
 
         <!-- Cassandra wants ANTLR 3.2 -->
-        <dependency>
-            <artifactId>antlr-runtime</artifactId>
-            <groupId>org.antlr</groupId>
-            <version>3.2</version>
-        </dependency>
 
        <dependency>
             <groupId>org.antlr</groupId>

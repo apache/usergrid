@@ -21,8 +21,8 @@ package org.apache.usergrid.test;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class EntityManagerFacade {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFacade.class );
 
-    private final EntityCollectionManagerSync ecm;
+    private final EntityCollectionManager ecm;
     private final EntityCollectionIndex index;
     private final CollectionScope scope;
     
@@ -48,20 +48,28 @@ public class EntityManagerFacade {
             CollectionScope scope ) {
 
         this.index = indexFactory.createCollectionIndex( scope );
-        this.ecm = collectionFactory.createCollectionManagerSync( scope );
+        this.ecm = collectionFactory.createCollectionManager( scope );
         this.scope = scope;
     }
 
     public Entity create( String type, Map<String, Object> properties ) {
-        if ( type.equals( scope.getName() )) { 
+        if ( !type.equals( scope.getName() )) { 
             throw new RuntimeException("Incorrect type [" + type + "] for scope: " + scope.getName());
         }
-        Entity entity = new Entity( new SimpleId( type ) );
+
+        Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
+        entity = EntityMapUtils.mapToEntity( scope.getName(), entity, properties );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        return ecm.write( entity );
+        entity = ecm.write( entity ).toBlockingObservable().last();
+
+        index.index( entity );
+        return entity;
     }
 
-    public Results searchCollection( Entity user, String collection, Query query ) {
+    public Results searchCollection( Entity user, String type, Query query ) {
+        if ( !type.equals( scope.getName() )) { 
+            throw new RuntimeException("Incorrect type [" + type + "] for scope: " + scope.getName());
+        }
         Results results = index.execute( query );
         return results;
     }
@@ -70,7 +78,7 @@ public class EntityManagerFacade {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
-    public void addToCollection( Entity user, String collection, Entity item ) {
+    public void addToCollection( Entity user, String type, Entity item ) {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
