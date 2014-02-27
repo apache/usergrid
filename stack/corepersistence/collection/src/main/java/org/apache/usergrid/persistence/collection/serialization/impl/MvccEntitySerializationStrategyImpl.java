@@ -18,12 +18,20 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectReader;
+import org.codehaus.jackson.smile.SmileFactory;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
@@ -268,6 +276,119 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         }
     }
 
+    public static class SmileSerializer extends AbstractSerializer<EntityWrapper> {
+
+        public static final SmileFactory f = new SmileFactory(  );
+
+        public static final org.codehaus.jackson.map.ObjectMapper mapper = new ObjectMapper( f );
+        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();1
+
+
+        private static byte[] STATE_COMPLETE = new byte[] { 0 };
+        private static byte[] STATE_DELETED = new byte[] { 1 };
+        private static byte[] STATE_PARTIAL = new byte[] { 2 };
+
+        private static byte[] VERSION = new byte[] { 0 };
+
+
+        //the marker for when we're passed a "null" value
+        private static final byte[] EMPTY = new byte[] { 0x0 };
+
+//TODO:Make sure your exceptions provide descriptive error messages. And to make sure you even needs the descriptions
+        @Override
+        public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
+            if ( wrapper == null ) {
+                return null;
+            }
+
+            CompositeBuilder builder = Composites.newCompositeBuilder();
+
+
+            builder.addBytes( VERSION );
+
+
+            //mark this version as empty
+            if ( !wrapper.entity.isPresent() ) {
+                //we're empty
+                builder.addBytes( STATE_DELETED );
+
+                return builder.build();
+            }
+
+            //we have an entity
+
+            if ( wrapper.status == MvccEntity.Status.COMPLETE ) {
+                builder.addBytes( STATE_COMPLETE );
+            }
+
+            else {
+                builder.addBytes( STATE_PARTIAL );
+            }
+
+            try {
+                builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
+            }
+            catch ( JsonMappingException e ) {
+                e.printStackTrace();
+            }
+            catch ( JsonGenerationException e ) {
+                e.printStackTrace();
+            }
+            catch ( IOException e ) {
+                e.printStackTrace();
+            }
+
+            return builder.build();
+        }
+
+//problem with this code is that I'd have to use offsets, is that really the way we want to go?
+        @Override
+        public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
+//            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
+//
+//            byte[] version = new byte[0];
+//
+//            try{
+//            version = mapper.readValue(byteBuffer.array(),byte[].class);//parser.read( mapper.reader());
+//            }
+//            catch ( JsonMappingException e ) {
+//                e.printStackTrace();
+//            }
+//            catch ( JsonParseException e ) {
+//                e.printStackTrace();
+//            }
+//            catch ( IOException e ) {
+//                e.printStackTrace();
+//            }
+//
+//            if ( !Arrays.equals( VERSION, version ) ) {
+//                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
+//            }
+//
+//
+//            final byte[] state = mapper.readValue(byteBuffer.array(),)//parser.read( BYTES_ARRAY_SERIALIZER );
+//
+//            /**
+//             * It's been deleted, remove it
+//             */
+//            if ( Arrays.equals( STATE_DELETED, state ) ) {
+//                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+//            }
+//
+//            final Entity storedEntity = ( Entity ) parser.read( mapper );
+//
+//            final Optional<Entity> entity = Optional.of( storedEntity );
+//
+//            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
+//                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
+//            }
+//
+//            //it's partial by default
+//
+//            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
+            return null;
+        }
+    }
 
     /**
      * TODO: Serializer for the entity. This just uses object serialization, change this to use SMILE before production!
