@@ -17,16 +17,11 @@
 package org.apache.usergrid.services.users.activities;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Activity;
 import org.apache.usergrid.persistence.entities.Activity.ActivityObject;
 import org.apache.usergrid.persistence.entities.User;
@@ -133,11 +128,30 @@ public class ActivitiesService extends GenericCollectionService {
         if ( activity == null ) {
             return;
         }
+        //add activity
         em.addToCollection( user, "feed", activity );
-        Results r = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS );
-        List<EntityRef> refs = r.getRefs();
-        if ( refs != null ) {
-            em.addToCollections( refs, "feed", activity );
+        //publish to all connections
+        Results results =  em.getConnectingEntities(user.getUuid(), "following", User.ENTITY_TYPE, Results.Level.REFS);
+        if( results != null ){
+            PagingResultsIterator itr = new PagingResultsIterator(results);
+
+            List<EntityRef> refs = new ArrayList<EntityRef>();
+            ConnectedEntityRef c;
+            int breaker = 10000;
+            //collect
+            while (itr.hasNext()) {
+                c = (ConnectedEntityRef) itr.next();
+                refs.add(c);
+                //break out when you get too big
+                if( refs.size() > breaker ){
+                    em.addToCollections(refs, "feed", activity);
+                    refs.clear();
+                }
+            }
+            //add to collections
+            if (refs.size() > 0) {
+                em.addToCollections(refs, "feed", activity);
+            }
         }
     }
 }
