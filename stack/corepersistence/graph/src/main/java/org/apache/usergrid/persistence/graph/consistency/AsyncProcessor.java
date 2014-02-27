@@ -19,16 +19,29 @@ public interface AsyncProcessor<T> {
      * @param event The event to be scheduled for verification
      * @param timeout  The time in milliseconds we should wait before the event should fire
      */
-    public TimeoutEvent<T> setVerification( T event, long timeout );
+    public AsynchonrousEvent<T> setVerification( T event, long timeout );
 
 
     /**
-     * Start processing the event immediately asynchronously.  In the event an exception is thrown, the TimeoutEvent should be re-tried.
+     * Start processing the event immediately asynchronously.  In the event an exception is thrown, the AsynchonrousEvent should be re-tried.
      * It is up to the implementer to commit the event so that it does not fire again.  This should never throw exceptions.
      *
      * @param event The event to start
      */
-    public void start(TimeoutEvent<T> event);
+    public void start(AsynchonrousEvent<T> event);
+
+    /**
+     * Add the error listener to the list of listeners
+     * @param listener
+     */
+    public void addErrorListener( ErrorListener<T> listener );
+
+    /**
+     * Add the listener to this instance
+     * @param listener
+     */
+    public void addListener(AsynchronousEventListener<T> listener);
+
 
 
 

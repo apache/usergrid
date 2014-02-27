@@ -14,9 +14,9 @@ public interface TimeoutQueue<T> {
      *
      * @param event The event to queue
      * @param timeout The timeout to set on the queue element
-     * @return The TimeoutEvent that has been queued
+     * @return The AsynchonrousEvent that has been queued
      */
-    public TimeoutEvent<T> queue( T event, long timeout );
+    public AsynchonrousEvent<T> queue( T event, long timeout );
 
 
     /**
@@ -29,7 +29,7 @@ public interface TimeoutQueue<T> {
      *
      * @return A collection of events.
      */
-    public Collection<TimeoutEvent<T>> take( int maxSize, long timeout );
+    public Collection<AsynchonrousEvent<T>> take( int maxSize, long timeout );
 
 
     /**
@@ -39,5 +39,5 @@ public interface TimeoutQueue<T> {
      *
      * @return True if the element was removed.  False otherwise
      */
-    public boolean remove( TimeoutEvent<T> event );
+    public boolean remove( AsynchonrousEvent<T> event );
 }

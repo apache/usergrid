@@ -37,7 +37,7 @@ public interface EdgeMetadataSerialization {
 
 
     /**
-     * Write both the source--->Target edge and the target <----- source edge into the mutation
+     * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
      */
     MutationBatch writeEdge( OrganizationScope scope, Edge edge );
 

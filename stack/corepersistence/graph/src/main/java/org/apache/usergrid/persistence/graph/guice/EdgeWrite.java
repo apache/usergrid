@@ -16,41 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection;
+
+package org.apache.usergrid.persistence.graph.guice;
 
 
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import rx.Observable;
+import com.google.inject.BindingAnnotation;
 
-
-/**
- *
- *
- * @author: tnine
- *
- */
-public interface EntityCollectionManager {
-
-    /**
-     * Write the entity in the entity collection.
-     *
-     * @param entity The entity to update
-     */
-    public Observable<Entity> write( Entity entity );
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 
-    /**
-     * MarkCommit the entity and remove it's indexes with the given entity id
-     */
-    public Observable<Void> delete( Id entityId );
-
-    /**
-     * Load the entity with the given entity Id
-     */
-    public Observable<Entity> load( Id entityId );
-
-
-    //TODO add partial update
-}
+@BindingAnnotation
+@Target( { FIELD, PARAMETER, METHOD } )
+@Retention( RUNTIME )
+public @interface EdgeWrite {}

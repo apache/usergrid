@@ -19,6 +19,8 @@ public interface GraphFig extends GuicyFig {
 
     public static final String WRITE_CL = "usergrid.graph.write.cl";
 
+    public static final String WRITE_TIMEOUT  = "usergrid.graph.write.timeout";
+
     @Default( "1000" )
     @Key( SCAN_PAGE_SIZE )
     int getScanPageSize();
@@ -30,6 +32,10 @@ public interface GraphFig extends GuicyFig {
     @Default( "CL_QUORUM" )
     @Key( WRITE_CL )
     String getWriteCL();
+
+    @Default("10000")
+    @Key( WRITE_TIMEOUT )
+    long getWriteTimeout();
 
 
 }

@@ -5,13 +5,13 @@ package org.apache.usergrid.persistence.graph.consistency;
  *
  *
  */
-public class SimpleTimeoutEvent<T> implements TimeoutEvent<T> {
+public class SimpleAsynchonrousEvent<T> implements AsynchonrousEvent<T> {
 
     private final T event;
     private final long timeout;
 
 
-    public SimpleTimeoutEvent( final T event, final long timeout ) {
+    public SimpleAsynchonrousEvent( final T event, final long timeout ) {
         this.event = event;
         this.timeout = timeout;
     }

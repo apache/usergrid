@@ -20,11 +20,9 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
@@ -37,6 +35,9 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
+import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.graph.consistency.AsynchonrousEvent;
+import org.apache.usergrid.persistence.graph.consistency.AsynchronousEventListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -50,6 +51,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.graph.guice.*;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -74,13 +76,27 @@ public class EdgeManagerImpl implements EdgeManager {
 
     private final NodeSerialization nodeSerialization;
 
+    private final AsyncProcessor<Edge> edgeWriteAsyncProcessor;
+    private final AsyncProcessor<Edge> edgeDeleteAsyncProcessor;
+    private final AsyncProcessor<Id> nodeDeleteAsyncProcessor;
+
     private final GraphFig graphFig;
 
 
     @Inject
     public EdgeManagerImpl( final Scheduler scheduler, final EdgeMetadataSerialization edgeMetadataSerialization,
                             final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
-                            final GraphFig graphFig, @Assisted final OrganizationScope scope ) {
+                            final GraphFig graphFig,
+                            @EdgeWrite final AsyncProcessor edgeWrite,
+                            @EdgeDelete final AsyncProcessor edgeDelete,
+                            @NodeDelete final AsyncProcessor nodeDelete,
+
+
+                            @Assisted final OrganizationScope scope ) {
+        ValidationUtils.validateOrganizationScope( scope );
+
+
+        this.scope = scope;
         this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
@@ -88,10 +104,34 @@ public class EdgeManagerImpl implements EdgeManager {
         this.graphFig = graphFig;
 
 
-        ValidationUtils.validateOrganizationScope( scope );
+        this.edgeWriteAsyncProcessor = edgeWrite;
 
 
-        this.scope = scope;
+        this.edgeWriteAsyncProcessor.addListener( new AsynchronousEventListener<Edge>() {
+            @Override
+            public void receive( final Edge edge ) {
+                repairEdgeAsync( edge );
+            }
+        } );
+
+
+        this.edgeDeleteAsyncProcessor = edgeDelete;
+
+        this.edgeDeleteAsyncProcessor.addListener( new AsynchronousEventListener<Edge>() {
+            @Override
+            public void receive( final Edge edge ) {
+                deleteEdgeAsync( edge );
+            }
+        } );
+
+        this.nodeDeleteAsyncProcessor = nodeDelete;
+
+        this.nodeDeleteAsyncProcessor.addListener( new AsynchronousEventListener<Id>() {
+            @Override
+            public void receive( final Id event ) {
+                deleteNodeAsync( event );
+            }
+        } );
     }
 
 
@@ -108,12 +148,17 @@ public class EdgeManagerImpl implements EdgeManager {
 
                 mutation.mergeShallow( edgeMutation );
 
+                final AsynchonrousEvent<Edge> event =
+                        edgeWriteAsyncProcessor.setVerification( edge , getTimeout() );
+
                 try {
                     mutation.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( "Unable to connect to cassandra", e );
                 }
+
+                edgeWriteAsyncProcessor.start( event );
 
                 return edge;
             }
@@ -130,12 +175,19 @@ public class EdgeManagerImpl implements EdgeManager {
             public Edge call( final Edge edge ) {
                 final MutationBatch edgeMutation = edgeSerialization.markEdge( scope, edge );
 
+                final AsynchonrousEvent<Edge> event =
+                        edgeDeleteAsyncProcessor.setVerification(  edge , getTimeout() );
+
+
                 try {
                     edgeMutation.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( "Unable to connect to cassandra", e );
                 }
+
+                edgeDeleteAsyncProcessor.start( event );
+
 
                 return edge;
             }
@@ -156,12 +208,18 @@ public class EdgeManagerImpl implements EdgeManager {
 
                 final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime );
 
+                final AsynchonrousEvent<Id> event =
+                        nodeDeleteAsyncProcessor.setVerification(  node , getTimeout() );
+
+
                 try {
                     nodeMutation.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( "Unable to connect to cassandra", e );
                 }
+
+                nodeDeleteAsyncProcessor.start( event );
 
                 return id;
             }
@@ -290,6 +348,14 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     /**
+     * Get our timeout for write consistency
+     */
+    private long getTimeout() {
+        return graphFig.getWriteTimeout() * 2;
+    }
+
+
+    /**
      * Helper filter to perform mapping and return an observable of pre-filtered edges
      */
     private class EdgeBufferFilter implements Func1<List<MarkedEdge>, Observable<MarkedEdge>> {
@@ -303,12 +369,11 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
         /**
-         * Takes a buffered list of marked edges.  It then does a single round trip to fetch marked ids
-         * These are then used in conjunction with the max version filter to filter any edges that should
-         * not be returned
-         * @param markedEdges
-         * @return An observable that emits only edges that can be consumed.  There could be multiple versions
-         * of the same edge so those need de-duped.
+         * Takes a buffered list of marked edges.  It then does a single round trip to fetch marked ids These are then
+         * used in conjunction with the max version filter to filter any edges that should not be returned
+         *
+         * @return An observable that emits only edges that can be consumed.  There could be multiple versions of the
+         *         same edge so those need de-duped.
          */
         @Override
         public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
@@ -368,4 +433,20 @@ public class EdgeManagerImpl implements EdgeManager {
             return true;
         }
     }
+
+
+    public void repairEdgeAsync( Edge write ) {
+
+    }
+
+
+    public void deleteEdgeAsync( Edge delete ) {
+
+    }
+
+
+    public void deleteNodeAsync( Id delete ) {
+
+    }
+
 }

@@ -21,15 +21,11 @@ package org.apache.usergrid.persistence.graph.consistency;
 
 
 import java.util.Stack;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 
 import rx.concurrency.Schedulers;
 
@@ -56,7 +52,7 @@ public class AsyncProcessorTest {
         final TestEvent event = new TestEvent();
 
 
-        final TimeoutEvent<TestEvent> timeoutEvent = new TimeoutEvent<TestEvent>() {
+        final AsynchonrousEvent<TestEvent> asynchonrousEvent = new AsynchonrousEvent<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -76,13 +72,13 @@ public class AsyncProcessorTest {
 
 
         //mock up the queue
-        when( queue.queue( event, timeout ) ).thenReturn( timeoutEvent );
+        when( queue.queue( event, timeout ) ).thenReturn( asynchonrousEvent );
 
 
-        TimeoutEvent<TestEvent> returned = asyncProcessor.setVerification( event, timeout );
+        AsynchonrousEvent<TestEvent> returned = asyncProcessor.setVerification( event, timeout );
 
         //ensure the timeouts are returned from the Queue subsystem
-        assertSame( timeoutEvent, returned );
+        assertSame( asynchonrousEvent, returned );
     }
 
 
@@ -94,7 +90,7 @@ public class AsyncProcessorTest {
         final TestEvent event = new TestEvent();
 
 
-        final TimeoutEvent<TestEvent> timeoutEvent = new TimeoutEvent<TestEvent>() {
+        final AsynchonrousEvent<TestEvent> asynchonrousEvent = new AsynchonrousEvent<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -115,7 +111,7 @@ public class AsyncProcessorTest {
         final CountDownLatch latch = new CountDownLatch( 1 );
 
         //mock up the ack to allow us to block the test until the async confirm fires
-        when( queue.remove( timeoutEvent ) ).thenAnswer( new Answer<Boolean>() {
+        when( queue.remove( asynchonrousEvent ) ).thenAnswer( new Answer<Boolean>() {
             @Override
             public Boolean answer( final InvocationOnMock invocation ) throws Throwable {
                 latch.countDown();
@@ -124,7 +120,7 @@ public class AsyncProcessorTest {
         } );
 
 
-        asyncProcessor.start( timeoutEvent );
+        asyncProcessor.start( asynchonrousEvent );
 
 
         //block until the event is fired.  The correct invocation is implicitly verified by the remove mock
@@ -141,7 +137,7 @@ public class AsyncProcessorTest {
         @Test
     public void verifyErrorExecution() throws InterruptedException {
 
-        final ErrorListener listener = new ErrorListener();
+        final AsynchronousErrorListener listener = new AsynchronousErrorListener();
 
 
         final TestEvent event = new TestEvent();
@@ -149,7 +145,7 @@ public class AsyncProcessorTest {
         final boolean[] invoked = new boolean[] { false, false };
 
 
-        final TimeoutEvent<TestEvent> timeoutEvent = new TimeoutEvent<TestEvent>() {
+        final AsynchonrousEvent<TestEvent> asynchonrousEvent = new AsynchonrousEvent<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -169,20 +165,21 @@ public class AsyncProcessorTest {
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
-        final TimeoutEvent<?>[] errorEvents = { null };
+        final AsynchonrousEvent<?>[] errorEvents = { null };
 
         //countdown the latch so the test can proceed
-        asyncProcessor.addListener( new AsyncProcessorImpl.ErrorListener() {
+        asyncProcessor.addErrorListener( new ErrorListener<TestEvent>() {
             @Override
-            public <T> void onError( final TimeoutEvent<T> event, final Throwable t ) {
+            public void onError( final AsynchonrousEvent<TestEvent> event, final Throwable t ) {
                 errorEvents[0] = event;
                 invoked[1] = true;
                 latch.countDown();
             }
+
         } );
 
         //throw an error if remove is called.  This shouldn't happen
-        when( queue.remove( timeoutEvent ) ).then( new Answer<Boolean>() {
+        when( queue.remove( asynchonrousEvent ) ).then( new Answer<Boolean>() {
             @Override
             public Boolean answer( final InvocationOnMock invocation ) throws Throwable {
                 invoked[0] = true;
@@ -192,7 +189,7 @@ public class AsyncProcessorTest {
 
 
         //fire the event
-        asyncProcessor.start( timeoutEvent );
+        asyncProcessor.start( asynchonrousEvent );
 
 
         //block until the event is fired.  The invocation verification is part of the error listener unlocking
@@ -213,9 +210,12 @@ public class AsyncProcessorTest {
     /**
      * Construct the async processor
      */
-    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue , TimeoutEventListener<T> listener) {
+    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue , AsynchronousEventListener<T> listener) {
 
-        return new AsyncProcessorImpl( queue, listener, Schedulers.threadPoolForIO() );
+        AsyncProcessorImpl<T> processor =  new AsyncProcessorImpl( queue,Schedulers.threadPoolForIO() );
+        processor.addListener( listener );
+
+        return processor;
     }
 
 
@@ -230,7 +230,7 @@ public class AsyncProcessorTest {
     }
 
 
-    public static class TestListener implements TimeoutEventListener<TestEvent> {
+    public static class TestListener implements AsynchronousEventListener<TestEvent> {
 
         public final Stack<TestEvent> events = new Stack<TestEvent>();
 
@@ -249,7 +249,7 @@ public class AsyncProcessorTest {
     /**
      * Throw error after the event is fired
      */
-    public static class ErrorListener implements TimeoutEventListener<TestEvent> {
+    public static class AsynchronousErrorListener implements AsynchronousEventListener<TestEvent> {
 
         public final Stack<TestEvent> events = new Stack<TestEvent>();
 

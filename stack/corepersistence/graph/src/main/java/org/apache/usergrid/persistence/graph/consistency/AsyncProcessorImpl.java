@@ -7,9 +7,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.Assisted;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
@@ -27,24 +27,23 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
     private final TimeoutQueue<T> queue;
     private final Scheduler scheduler;
-    private final TimeoutEventListener<T> listener;
+    private final List<AsynchronousEventListener<T>> listeners = new ArrayList<AsynchronousEventListener<T>>(  );
 
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
-    private List<ErrorListener> listeners = new ArrayList<ErrorListener>();
+    private List<ErrorListener> errorListeners = new ArrayList<ErrorListener>();
 
 
     @Inject
-    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final TimeoutEventListener<T> listener, final Scheduler scheduler ) {
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final Scheduler scheduler ) {
         this.queue = queue;
-        this.listener = listener;
         this.scheduler = scheduler;
     }
 
 
 
     @Override
-    public TimeoutEvent<T> setVerification( final T event, final long timeout ) {
+    public AsynchonrousEvent<T> setVerification( final T event, final long timeout ) {
         return queue.queue( event, timeout );
     }
 
@@ -52,7 +51,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Override
-    public void start( final TimeoutEvent<T> event ) {
+    public void start( final AsynchonrousEvent<T> event ) {
 
 
         //run this in a timeout command so it doesn't run forever. If it times out, it will simply resume later
@@ -60,8 +59,12 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
             @Override
             protected Void run() throws Exception {
-                final T busEvent = event.getEvent();
-                listener.receive( busEvent );
+                final T rootEvent = event.getEvent();
+
+                for(AsynchronousEventListener<T> listener: listeners){
+                    listener.receive( rootEvent );
+                }
+
                 return null;
             }
         }.toObservable( scheduler ).subscribe( new Observer<Void>() {
@@ -75,7 +78,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
             public void onError( final Throwable throwable ) {
                 LOG.error( "Unable to process async event", throwable );
 
-                for ( ErrorListener listener : listeners ) {
+                for ( ErrorListener listener : errorListeners ) {
                     listener.onError( event, throwable );
                 }
             }
@@ -90,19 +93,19 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     }
 
 
-    /**
-     * Add an error listener
-     */
-    public void addListener( ErrorListener listener ) {
+    @Override
+    public void addListener( final AsynchronousEventListener<T> listener ) {
         this.listeners.add( listener );
     }
 
 
     /**
-     * Internal listener for errors, really only used for testing.  Can be used to hook into error state
+     * Add an error listeners
      */
-    public static interface ErrorListener {
-
-        public <T> void onError( TimeoutEvent<T> event, Throwable t );
+    public void addErrorListener( ErrorListener<T> listener ) {
+        this.errorListeners.add( listener );
     }
+
+
+
 }

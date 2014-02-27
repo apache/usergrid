@@ -5,7 +5,7 @@ package org.apache.usergrid.persistence.graph.consistency;
  *
  *
  */
-public interface TimeoutEventListener<T> {
+public interface AsynchronousEventListener<T> {
 
 
     /**
