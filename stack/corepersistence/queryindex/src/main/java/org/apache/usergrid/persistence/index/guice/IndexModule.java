@@ -21,8 +21,10 @@ package org.apache.usergrid.persistence.index.guice;
 
 import org.apache.usergrid.persistence.index.IndexFig;
 import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex;
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -38,6 +40,8 @@ public class IndexModule extends AbstractModule {
         // install our configuration
         install (new GuicyFigModule( IndexFig.class ));
 
-        bind( EntityCollectionIndex.class ).to( EsEntityCollectionIndex.class );
+        install( new FactoryModuleBuilder()
+            .implement( EntityCollectionIndex.class, EsEntityCollectionIndex.class )
+            .build( EntityCollectionIndexFactory.class ) );
     }
 }

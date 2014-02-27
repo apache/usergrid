@@ -26,6 +26,8 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.guice.IndexTestModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -68,7 +70,13 @@ public class IndexIT {
     public CoreApplication app = new CoreApplication( setup );
 
     @Inject
-    public EntityCollectionManagerFactory factory;
+    public EntityCollectionManagerFactory collectionManagerFactory;
+    
+    @Inject
+    public EntityCollectionIndexFactory collectionIndexFactory;
+
+    @Inject 
+    public EntityCollectionIndex index;
 
 
     public static final String[] alphabet = {
@@ -84,7 +92,8 @@ public class IndexIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( factory, scope);
+        EntityManagerFacade em = new EntityManagerFacade( 
+            collectionManagerFactory, collectionIndexFactory, scope);
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -95,7 +104,7 @@ public class IndexIT {
         }
 
         int i = 0;
-
+        
         Query query = Query.fromQL( "order by name" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
         for ( Entity entity : r.getEntities() ) {
@@ -154,7 +163,8 @@ public class IndexIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( factory, scope );
+        EntityManagerFacade em = new EntityManagerFacade( 
+            collectionManagerFactory, collectionIndexFactory, scope);
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -277,7 +287,8 @@ public class IndexIT {
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( factory, scope);
+        EntityManagerFacade em = new EntityManagerFacade( 
+            collectionManagerFactory, collectionIndexFactory, scope);
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];

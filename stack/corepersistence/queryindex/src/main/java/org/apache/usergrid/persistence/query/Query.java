@@ -169,8 +169,12 @@ public class Query {
         try {
             Query q = parser.ql().query;
             QueryVisitor v = new EsDslQueryVistor();
-            q.getRootOperand().visit( v );
-            q.setQueryBuilder( v.getQueryBuilder() );
+
+            if ( q.getRootOperand() != null ) {
+                q.getRootOperand().visit( v );
+                q.setQueryBuilder( v.getQueryBuilder() );
+            }
+
             q.setQl( originalQl );
             return q;
 

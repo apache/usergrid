@@ -25,9 +25,27 @@ import org.safehaus.guicyfig.Key;
 
 public interface IndexFig extends GuicyFig {
 
-    public static final String QUERY_LIMIT_DEFAULT = "usergrid.index.query.limit.default";
+    public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
+
+    public static final String ELASTICSEARCH_INDEXNAME = "elasticsearch.indexname";
+
+    public static final String ELASTICSEARCH_EMBEDDED = "elasticsearch.embedded";
+
+    public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
 
     @Default( "10" )
     @Key( QUERY_LIMIT_DEFAULT )
     int getQueryLimitDefault();
+
+    @Default( "usergrid" )
+    @Key( ELASTICSEARCH_INDEXNAME )
+    String getIndexName();
+
+    @Default( "false" )
+    @Key( ELASTICSEARCH_EMBEDDED )
+    boolean isEmbedded();
+
+    @Default( "false" ) 
+    @Key( ELASTICSEARCH_FORCE_REFRESH )
+    public boolean isForcedRefresh();
 }

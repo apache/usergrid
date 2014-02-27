@@ -24,24 +24,31 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author ApigeeCorporation
- */
+
 public class EntityManagerFacade {
-    private final EntityCollectionManagerFactory factory;
+    private static final Logger logger = LoggerFactory.getLogger( EntityManagerFacade.class );
+
     private final EntityCollectionManagerSync ecm;
+    private final EntityCollectionIndex index;
     private final CollectionScope scope;
     
-    public EntityManagerFacade( EntityCollectionManagerFactory factory, CollectionScope scope ) {
-        this.factory = factory;
-        this.ecm = factory.createCollectionManagerSync( scope );
+    public EntityManagerFacade( 
+            EntityCollectionManagerFactory collectionFactory, 
+            EntityCollectionIndexFactory indexFactory, 
+            CollectionScope scope ) {
+
+        this.index = indexFactory.createCollectionIndex( scope );
+        this.ecm = collectionFactory.createCollectionManagerSync( scope );
         this.scope = scope;
     }
 
@@ -54,6 +61,11 @@ public class EntityManagerFacade {
         return ecm.write( entity );
     }
 
+    public Results searchCollection( Entity user, String collection, Query query ) {
+        Results results = index.execute( query );
+        return results;
+    }
+
     public Entity get( UUID id ) {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
@@ -62,12 +74,7 @@ public class EntityManagerFacade {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
-    public Results searchCollection( Entity user, String collection, Query query ) {
-        throw new UnsupportedOperationException( "Not supported yet." );
-    }
-
     public Entity getApplicationRef() {
-        return null; 
+        return new Entity();
     }
-    
 }

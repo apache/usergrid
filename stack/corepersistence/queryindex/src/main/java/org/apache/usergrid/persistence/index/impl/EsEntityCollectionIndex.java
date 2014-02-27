@@ -17,6 +17,8 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
@@ -45,6 +48,7 @@ import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
@@ -52,6 +56,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,11 +71,13 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
 
-    public EsEntityCollectionIndex( Client client, String index, CollectionScope scope, boolean refresh ) {
-        this.client = client;
-        this.index = index;
+    @Inject
+    public EsEntityCollectionIndex( @Assisted final CollectionScope scope, IndexFig config, EsProvider provider ) {
+
         this.scope = scope;
-        this.refresh = refresh;
+        this.client = provider.getClient();
+        this.index = config.getIndexName();
+        this.refresh = config.isForcedRefresh();
         
         // if new index then create it 
         AdminClient admin = client.admin();
@@ -127,14 +134,33 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public Results execute( Query query ) {
 
+        logger.info("-------------------------------------------------------------------------");
+        logger.info( "execute ");
+        logger.info("-------------------------------------------------------------------------");
+
         // TODO add support for cursor
 
-        logger.info( "query is: " + query.getQueryBuilder().toString());
+        if ( query.getQueryBuilder() != null ) {
+            logger.info( "query is: " + query.getQueryBuilder().toString());
+        } else {
+            logger.info( "query is: " + query.getQl() );
+        }
 
-        SearchResponse sr = client.prepareSearch( index ).setTypes( scope.getName() )
+        SearchRequestBuilder srb = client.prepareSearch( index ).setTypes( scope.getName() )
             .setQuery( query.getQueryBuilder() )
-            .setFrom( 0 ).setSize( query.getLimit() )
-            .execute().actionGet();
+            .setFrom( 0 ).setSize( query.getLimit() );
+
+        for ( Query.SortPredicate sp : query.getSortPredicates() ) {
+            final SortOrder order;
+            if ( sp.getDirection().equals( Query.SortDirection.ASCENDING ) ) { 
+                order = SortOrder.ASC;
+            } else {
+                order = SortOrder.DESC;
+            }
+            srb.addSort( sp.getPropertyName(), order );
+        }
+
+        SearchResponse sr = srb.execute().actionGet();
 
         SearchHits hits = sr.getHits();
 
