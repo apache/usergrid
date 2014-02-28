@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.assistedinject.Assisted;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
@@ -43,7 +42,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Override
-    public AsynchonrousEvent<T> setVerification( final T event, final long timeout ) {
+    public AsynchronousEvent<T> setVerification( final T event, final long timeout ) {
         return queue.queue( event, timeout );
     }
 
@@ -51,7 +50,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Override
-    public void start( final AsynchonrousEvent<T> event ) {
+    public void start( final AsynchronousEvent<T> event ) {
 
 
         //run this in a timeout command so it doesn't run forever. If it times out, it will simply resume later

@@ -23,7 +23,7 @@ public class LocalTimeoutQueue<T> implements TimeoutQueue<T> {
     /**
      * For in memory queueing
      */
-    private final PriorityBlockingQueue<AsynchonrousEvent<T>> queue = new PriorityBlockingQueue<AsynchonrousEvent<T>>( 1000, new TimeoutEventCompatator<T>() );
+    private final PriorityBlockingQueue<AsynchronousEvent<T>> queue = new PriorityBlockingQueue<AsynchronousEvent<T>>( 1000, new TimeoutEventCompatator<T>() );
 
     private final TimeService timeService;
 
@@ -35,9 +35,9 @@ public class LocalTimeoutQueue<T> implements TimeoutQueue<T> {
 
 
     @Override
-    public AsynchonrousEvent<T> queue( final T event, final long timeout ) {
+    public AsynchronousEvent<T> queue( final T event, final long timeout ) {
         final long scheduledTimeout = timeService.getCurrentTime() + timeout;
-        final AsynchonrousEvent<T> queuedEvent = new SimpleAsynchonrousEvent<T>( event, scheduledTimeout );
+        final AsynchronousEvent<T> queuedEvent = new SimpleAsynchronousEvent<T>( event, scheduledTimeout );
 
         queue.add( queuedEvent );
 
@@ -46,16 +46,16 @@ public class LocalTimeoutQueue<T> implements TimeoutQueue<T> {
 
 
     @Override
-    public Collection<AsynchonrousEvent<T>> take( final int maxSize, final long timeout ) {
+    public Collection<AsynchronousEvent<T>> take( final int maxSize, final long timeout ) {
 
         final long now = timeService.getCurrentTime();
         final long newTimeout = now+timeout;
 
-        List<AsynchonrousEvent<T>> results = new ArrayList<AsynchonrousEvent<T>>(maxSize);
+        List<AsynchronousEvent<T>> results = new ArrayList<AsynchronousEvent<T>>(maxSize);
 
         for(int i = 0; i < maxSize; i ++){
 
-            AsynchonrousEvent<T> queuedEvent = queue.peek();
+            AsynchronousEvent<T> queuedEvent = queue.peek();
 
             //nothing to do
             if(queuedEvent == null){
@@ -68,7 +68,7 @@ public class LocalTimeoutQueue<T> implements TimeoutQueue<T> {
                 break;
             }
 
-            final AsynchonrousEvent<T> newEvent =  new SimpleAsynchonrousEvent<T>( queuedEvent.getEvent(), newTimeout );
+            final AsynchronousEvent<T> newEvent =  new SimpleAsynchronousEvent<T>( queuedEvent.getEvent(), newTimeout );
 
             //re schedule a new event to replace this one
             queue.add(newEvent);
@@ -85,16 +85,16 @@ public class LocalTimeoutQueue<T> implements TimeoutQueue<T> {
 
 
     @Override
-    public boolean remove( final AsynchonrousEvent<T> event ) {
+    public boolean remove( final AsynchronousEvent<T> event ) {
         return queue.remove( event );
     }
 
 
-    private static class TimeoutEventCompatator<T> implements Comparator<AsynchonrousEvent<T>> {
+    private static class TimeoutEventCompatator<T> implements Comparator<AsynchronousEvent<T>> {
 
 
         @Override
-        public int compare( final AsynchonrousEvent<T> o1, final AsynchonrousEvent<T> o2 ) {
+        public int compare( final AsynchronousEvent<T> o1, final AsynchronousEvent<T> o2 ) {
             return Long.compare( o1.getTimeout(), o2.getTimeout() );
         }
     }

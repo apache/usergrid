@@ -52,7 +52,7 @@ public class AsyncProcessorTest {
         final TestEvent event = new TestEvent();
 
 
-        final AsynchonrousEvent<TestEvent> asynchonrousEvent = new AsynchonrousEvent<TestEvent>() {
+        final AsynchronousEvent<TestEvent> asynchronousEvent = new AsynchronousEvent<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -72,13 +72,13 @@ public class AsyncProcessorTest {
 
 
         //mock up the queue
-        when( queue.queue( event, timeout ) ).thenReturn( asynchonrousEvent );
+        when( queue.queue( event, timeout ) ).thenReturn( asynchronousEvent );
 
 
-        AsynchonrousEvent<TestEvent> returned = asyncProcessor.setVerification( event, timeout );
+        AsynchronousEvent<TestEvent> returned = asyncProcessor.setVerification( event, timeout );
 
         //ensure the timeouts are returned from the Queue subsystem
-        assertSame( asynchonrousEvent, returned );
+        assertSame( asynchronousEvent, returned );
     }
 
 
@@ -90,7 +90,7 @@ public class AsyncProcessorTest {
         final TestEvent event = new TestEvent();
 
 
-        final AsynchonrousEvent<TestEvent> asynchonrousEvent = new AsynchonrousEvent<TestEvent>() {
+        final AsynchronousEvent<TestEvent> asynchronousEvent = new AsynchronousEvent<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -111,7 +111,7 @@ public class AsyncProcessorTest {
         final CountDownLatch latch = new CountDownLatch( 1 );
 
         //mock up the ack to allow us to block the test until the async confirm fires
-        when( queue.remove( asynchonrousEvent ) ).thenAnswer( new Answer<Boolean>() {
+        when( queue.remove( asynchronousEvent ) ).thenAnswer( new Answer<Boolean>() {
             @Override
             public Boolean answer( final InvocationOnMock invocation ) throws Throwable {
                 latch.countDown();
@@ -120,7 +120,7 @@ public class AsyncProcessorTest {
         } );
 
 
-        asyncProcessor.start( asynchonrousEvent );
+        asyncProcessor.start( asynchronousEvent );
 
 
         //block until the event is fired.  The correct invocation is implicitly verified by the remove mock
@@ -145,7 +145,7 @@ public class AsyncProcessorTest {
         final boolean[] invoked = new boolean[] { false, false };
 
 
-        final AsynchonrousEvent<TestEvent> asynchonrousEvent = new AsynchonrousEvent<TestEvent>() {
+        final AsynchronousEvent<TestEvent> asynchronousEvent = new AsynchronousEvent<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -165,12 +165,12 @@ public class AsyncProcessorTest {
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
-        final AsynchonrousEvent<?>[] errorEvents = { null };
+        final AsynchronousEvent<?>[] errorEvents = { null };
 
         //countdown the latch so the test can proceed
         asyncProcessor.addErrorListener( new ErrorListener<TestEvent>() {
             @Override
-            public void onError( final AsynchonrousEvent<TestEvent> event, final Throwable t ) {
+            public void onError( final AsynchronousEvent<TestEvent> event, final Throwable t ) {
                 errorEvents[0] = event;
                 invoked[1] = true;
                 latch.countDown();
@@ -179,7 +179,7 @@ public class AsyncProcessorTest {
         } );
 
         //throw an error if remove is called.  This shouldn't happen
-        when( queue.remove( asynchonrousEvent ) ).then( new Answer<Boolean>() {
+        when( queue.remove( asynchronousEvent ) ).then( new Answer<Boolean>() {
             @Override
             public Boolean answer( final InvocationOnMock invocation ) throws Throwable {
                 invoked[0] = true;
@@ -189,7 +189,7 @@ public class AsyncProcessorTest {
 
 
         //fire the event
-        asyncProcessor.start( asynchonrousEvent );
+        asyncProcessor.start( asynchronousEvent );
 
 
         //block until the event is fired.  The invocation verification is part of the error listener unlocking
