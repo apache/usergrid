@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +42,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.test.EntityMapUtils;
+import org.apache.usergrid.test.EntityBuilder;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -98,7 +99,7 @@ public class EntityCollectionIndexTest {
             Map<String, Object> item = (Map<String, Object>)o;
 
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityMapUtils.mapToEntity( scope.getName(), entity, item );
+            entity = EntityBuilder.fromMap( scope.getName(), entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
            entity = entityManager.write( entity ).toBlockingObservable().last();
@@ -159,9 +160,33 @@ public class EntityCollectionIndexTest {
     }
 
     
-    @Test // TODO 
+    @Test // TODO test for remove index
     @Ignore
     public void testRemoveIndex() {
         fail("Not implemented");
+    }
+
+       
+    @Test
+    public void testEntityToMap() throws IOException {
+
+        InputStream is = this.getClass().getResourceAsStream( "/sample-small.json" );
+        ObjectMapper mapper = new ObjectMapper();
+        List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+
+        for ( Object o : contacts ) {
+
+            Map<String, Object> map1 = (Map<String, Object>)o;
+
+            // convert map to entity
+            Entity entity1 = EntityBuilder.fromMap( "testscope", map1 );
+
+            // convert entity back to map
+            Map map2 = EsEntityCollectionIndex.entityToMap( entity1 );
+
+            // the two maps should be the same except for six new system properties
+            Map diff = Maps.difference( map1, map2 ).entriesDiffering();
+            assertEquals( 6, diff.size() );
+        }
     }
 }

@@ -22,19 +22,21 @@ import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
-import java.util.logging.Level;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
@@ -46,8 +48,6 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.query.EntityRef;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.persistence.query.SimpleEntityRef;
-import org.apache.usergrid.persistence.query.tree.QueryVisitor;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -59,7 +59,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortOrder;
@@ -94,6 +93,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         AdminClient admin = client.admin();
         if ( !admin.indices().exists( new IndicesExistsRequest( index )).actionGet().isExists() ) {
             admin.indices().prepareCreate( index ).execute().actionGet();
+            logger.debug( "Created new index: " + index );
         }
 
         // if new type then create mapping
@@ -107,10 +107,15 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 PutMappingResponse pmr = admin.indices().preparePutMapping(index)
                     .setType( scope.getName() ).setSource( mxcb ).execute().actionGet();
 
+                logger.debug( "Created new type mapping for scope: " + scope.getName() );
+                logger.debug( "   Scope organization: " + scope.getOrganization());
+                logger.debug( "   Scope owner: " + scope.getOwner() );
+
             } catch ( IOException ex ) {
                 throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex );
             }
         }
+
     }
   
 
@@ -119,15 +124,20 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap( entity );
         entityAsMap.put("created", entity.getVersion().timestamp() );
 
-        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), createIndexId( entity ))
+        String indexId = createIndexId( entity ); 
+
+        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), indexId )
             .setSource( entityAsMap )
             .setRefresh( refresh );
-        
+
         irb.execute().actionGet();
+
+        logger.debug( "Indexed Entity with index id " + indexId );
     }
 
 
     private String createIndexId( Entity entity ) {
+
         return entity.getId().getUuid().toString() + "|" 
              + entity.getId().getType() + "|" 
              + entity.getVersion().toString();
@@ -135,8 +145,11 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
 
     public void deindex( Entity entity ) {
-        String compositeId = entity.getId().toString() + "|" + entity.getVersion().toString();
-        client.prepareDelete( index, scope.getName(), compositeId).execute().actionGet();
+
+        String indexId = createIndexId( entity ); 
+        client.prepareDelete( index, scope.getName(), indexId ).execute().actionGet();
+
+        logger.debug( "Deindexed Entity with index id " + indexId );
     }
 
 
@@ -145,8 +158,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         // TODO add support for cursor
 
         QueryBuilder qb = query.createQueryBuilder();
-
-        logger.debug("Query: " + qb.toString());
+        logger.debug( "Executing query: " + qb.toString() );
 
         SearchRequestBuilder srb = client.prepareSearch( index ).setTypes( scope.getName() )
             .setQuery( qb ).setFrom( 0 ).setSize( query.getLimit() );
@@ -162,11 +174,14 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         }
 
         SearchResponse sr = srb.execute().actionGet();
-
         SearchHits hits = sr.getHits();
+        logger.debug( "   Hit count: " + hits.getTotalHits());
 
         Results results = new Results();
-        List<EntityRef> refs = new ArrayList<EntityRef>();
+
+        // TODO: do we always want to fetch entities? When do we fetch refs or ids?
+
+        // list of entities that will be returned
         List<Entity> entities = new ArrayList<Entity>();
 
         for ( SearchHit hit : hits.getHits() ) {
@@ -176,25 +191,38 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             String type = idparts[1];
             String version = idparts[2];
 
-            EntityRef ref = new SimpleEntityRef( 
-                new SimpleId( UUID.fromString(id), type), // entity id
-                UUID.fromString(version));                // etity version
-            refs.add( ref );
+            Id entityId = new SimpleId( UUID.fromString(id), type);
+            UUID entityVersion = UUID.fromString(version);
 
-            // TODO: do we always want to fetch entities?
-            Entity entity = manager.load( ref.getId() ).toBlockingObservable().last();
+            Entity entity = manager.load( entityId ).toBlockingObservable().last();
             if ( entity == null ) {
-                throw new RuntimeException("Entity id [" + ref.getId() + "] not found");
+                // TODO exception types instead of RuntimeException
+                throw new RuntimeException("Entity id [" + entityId + "] not found"); 
             }
-            entities.add( entity );
+
+            if ( entityVersion.compareTo( entity.getVersion()) == -1 ) {
+                logger.debug("   Stale hit " + hit.getId() ); 
+
+            } else {
+                entities.add( entity );
+            }
         }
-        if ( hits.getHits().length == 1 ) {
+
+        if ( entities.size() == 1 ) {
             results.setEntity( entities.get( 0 ) );
+
         } else {
+            logger.debug( "   Returning " + entities.size() + " entities");
             results.setEntities( entities );
         }
         return results;
     }
+
+    static class EntityRefVersionComparator implements Comparator<EntityRef> {
+        public int compare( EntityRef o1, EntityRef o2 ) {
+            return o1.getVersion().compareTo( o2.getVersion() );
+        }
+    } 
 
 
     /**

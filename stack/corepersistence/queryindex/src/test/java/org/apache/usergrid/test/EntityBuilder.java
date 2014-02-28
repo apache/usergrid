@@ -19,15 +19,9 @@
 
 package org.apache.usergrid.test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Maps;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
@@ -36,48 +30,15 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
 
-/**
- *
- * @author ApigeeCorporation
- */
-public class EntityMapUtils {
-   
-    /**
-     * Test of mapToEntity method, of class EntityUtils.
-     */
-    @Test
-    public void testMapToEntityRoundTrip() throws IOException {
 
-        InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
-        ObjectMapper mapper = new ObjectMapper();
-        List<Object> contacts = mapper.readValue( is, new TypeReference<List<Object>>() {} );
+public class EntityBuilder {
 
-        for ( Object o : contacts ) {
-
-            Map<String, Object> map1 = (Map<String, Object>)o;
-
-            // convert map to entity
-            Entity entity1 = EntityMapUtils.mapToEntity( "testscope", map1 );
-
-            // convert entity back to map
-            Map map2 = EsEntityCollectionIndex.entityToMap( entity1 );
-
-            // the two maps should be the same except for the two new _ug_analyzed properties
-            Map diff = Maps.difference( map1, map2 ).entriesDiffering();
-            assertEquals( 2, diff.size() );
-        }
+    public static Entity fromMap( String scope, Map<String, Object> item ) {
+        return fromMap( scope, null, item );
     }
 
-    
-    public static Entity mapToEntity( String scope, Map<String, Object> item ) {
-        return mapToEntity( scope, null, item );
-    }
-
-
-    public static Entity mapToEntity( String scope, Entity entity, Map<String, Object> map ) {
+    public static Entity fromMap( String scope, Entity entity, Map<String, Object> map ) {
 
         if ( entity == null ) {
             entity = new Entity();
@@ -107,7 +68,7 @@ public class EntityMapUtils {
 
             } else if ( value instanceof Map ) {
                 entity.setField( new EntityObjectField( fieldName, 
-                    mapToEntity( scope, (Map<String, Object>)value ))); // recursion
+                    fromMap( scope, (Map<String, Object>)value ))); // recursion
 
             } else {
                 throw new RuntimeException("Unknown type " + value.getClass().getName());
@@ -162,7 +123,7 @@ public class EntityMapUtils {
         if ( sample instanceof Map ) {
             List<Entity> newList = new ArrayList<Entity>();
             for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
-                newList.add( mapToEntity( scope, map ) );
+                newList.add( fromMap( scope, map ) );
             }
             return newList;
 

@@ -569,7 +569,7 @@ public class Query {
             root = parser.ql().query.getRootOperand();
         }
         catch ( RecognitionException e ) {
-            // todo: should we create a specific Exception for this? checked?
+            // TODO: should we create a specific Exception for this? checked?
             throw new RuntimeException( "Unknown operation: " + filter, e );
         }
 
@@ -746,7 +746,7 @@ public class Query {
 
     public void setLimit( int limit ) {
 
-        //      TODO tnine.  After users have had time to change their query limits,
+        //      tnine.  After users have had time to change their query limits,
         // this needs to be uncommented and enforced.
         //        if(limit > MAX_LIMIT){
         //          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));

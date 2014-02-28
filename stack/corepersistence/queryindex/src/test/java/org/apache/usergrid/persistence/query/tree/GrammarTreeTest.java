@@ -83,8 +83,6 @@ public class GrammarTreeTest {
 
         assertEquals( 5, ( ( LongLiteral ) equal.getLiteral() ).getValue().intValue() );
 
-        // TODO Todd fix this.
-
         queryString = "select * where a lt 5";
 
         in = new ANTLRStringStream( queryString );

@@ -37,6 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+/** 
+ * Implements just enough of the old EntityManager interface to get old tests imported from the
+ * Usergrid 1.0 Core module working against the new Core Persistence index & query system.
+ */
 public class EntityManagerFacade {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFacade.class );
 
@@ -73,7 +77,7 @@ public class EntityManagerFacade {
         typesByCollectionNames.put( collectionName, type );
         
         Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-        entity = EntityMapUtils.mapToEntity( scope.getName(), entity, properties );
+        entity = EntityBuilder.fromMap( scope.getName(), entity, properties );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entity = ecm.write( entity ).toBlockingObservable().last();
 
