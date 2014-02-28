@@ -141,6 +141,7 @@ public class ExportServiceImpl implements ExportService {
         em.update( export );
 
         if ( config.getCollection() == null ) {
+            //exports all the applications for a given organization.
             Map<UUID, String> organizations = getOrgs();
             for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
                 try {
@@ -228,12 +229,6 @@ public class ExportServiceImpl implements ExportService {
     public void setManagementService( final ManagementService managementService ) {
         this.managementService = managementService;
     }
-
-
-    //write test checking to see what happens if the input stream is closed or wrong.
-    //TODO: make multipart streaming functional
-    //currently only stores the collection in memory then flushes it.
-
 
     /**
      * Exports all applications for the given organization.
