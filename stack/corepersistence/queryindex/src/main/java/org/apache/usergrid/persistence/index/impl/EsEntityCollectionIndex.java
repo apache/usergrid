@@ -22,13 +22,10 @@ import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -45,7 +42,6 @@ import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.query.EntityRef;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
@@ -217,12 +213,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         }
         return results;
     }
-
-    static class EntityRefVersionComparator implements Comparator<EntityRef> {
-        public int compare( EntityRef o1, EntityRef o2 ) {
-            return o1.getVersion().compareTo( o2.getVersion() );
-        }
-    } 
 
 
     /**
