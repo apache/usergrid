@@ -92,6 +92,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             logger.debug( "Created new index: " + index );
         }
 
+        // TODO: is it appropriate to use scope name as type name? are scope names unique?
+
         // if new type then create mapping
         if ( !admin.indices().typesExists( new TypesExistsRequest( 
             new String[] {index}, scope.getName() )).actionGet().isExists()) {
@@ -111,7 +113,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex );
             }
         }
-
     }
   
 
@@ -154,7 +155,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         // TODO add support for cursor
 
         QueryBuilder qb = query.createQueryBuilder();
-        logger.debug( "Executing query: " + qb.toString() );
+        logger.debug( "Executing query on type {} query: {} ", scope.getName(), qb.toString() );
 
         SearchRequestBuilder srb = client.prepareSearch( index ).setTypes( scope.getName() )
             .setQuery( qb ).setFrom( 0 ).setSize( query.getLimit() );

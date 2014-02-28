@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.JsonUtils;
+import static org.apache.usergrid.persistence.utils.MapUtils.hashMap;
 import org.apache.usergrid.persistence.utils.UUIDUtils;
 import org.apache.usergrid.test.CoreApplication;
 import org.apache.usergrid.test.CoreITSetup;
@@ -274,70 +275,60 @@ public class CollectionIT {
     }
 
 
-//    @Test
-//    public void userMiddleNameSearch() throws Exception {
-//        UUID applicationId = setup.createApplication( "testOrganization", "testMiddleName" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
-//
-//        String middleName = "middleName" + UUIDUtils.newTimeUUID();
-//
-//        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-//        properties.put( "username", "edanuff" );
-//        properties.put( "email", "ed@anuff.com" );
-//        properties.put( "middlename", middleName );
-//
-//        Entity user = em.create( "user", properties );
-//        assertNotNull( user );
-//
-//        // EntityRef
-//        Query query = new Query();
-//        query.addEqualityFilter( "middlename", middleName );
-//
-//        Results r = em.searchCollection( em.getApplicationRef(), "users", query );
-//
-//        assertTrue( r.size() > 0 );
-//
-//        Entity returned = r.getEntities().get( 0 );
-//
-//        assertEquals( user.getUuid(), returned.getUuid() );
-//    }
-//
-//
-//    @Test
-//    public void userLastNameSearch() throws Exception {
-//        UUID applicationId = setup.createApplication( "testOrganization", "testLastName" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
-//
-//        String lastName = "lastName" + UUIDUtils.newTimeUUID();
-//
-//        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-//        properties.put( "username", "edanuff" );
-//        properties.put( "email", "ed@anuff.com" );
-//        properties.put( "lastname", lastName );
-//
-//        Entity user = em.create( "user", properties );
-//        assertNotNull( user );
-//
-//        // EntityRef
-//        Query query = new Query();
-//        query.addEqualityFilter( "lastname", lastName );
-//
-//        Results r = em.searchCollection( em.getApplicationRef(), "users", query );
-//
-//        assertTrue( r.size() > 0 );
-//
-//        Entity returned = r.getEntities().get( 0 );
-//
-//        assertEquals( user.getUuid(), returned.getUuid() );
-//    }
-//
-//
+    @Test
+    public void userMiddleNameSearch() throws Exception {
+
+        String middleName = "middleName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "username", "edanuff" );
+        properties.put( "email", "ed@anuff.com" );
+        properties.put( "middlename", middleName );
+
+        Entity user = em.create( "user", properties );
+        assertNotNull( user );
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter( "middlename", middleName );
+
+        Results r = em.searchCollection( em.getApplicationRef(), "users", query );
+
+        assertTrue( r.size() > 0 );
+
+        Entity returned = r.getEntities().get( 0 );
+
+        assertEquals( user.getId(), returned.getId() );
+    }
+
+
+    @Test
+    public void userLastNameSearch() throws Exception {
+
+        String lastName = "lastName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "username", "edanuff" );
+        properties.put( "email", "ed@anuff.com" );
+        properties.put( "lastname", lastName );
+
+        Entity user = em.create( "user", properties );
+        assertNotNull( user );
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter( "lastname", lastName );
+
+        Results r = em.searchCollection( em.getApplicationRef(), "users", query );
+
+        assertTrue( r.size() > 0 );
+
+        Entity returned = r.getEntities().get( 0 );
+
+        assertEquals( user.getId(), returned.getId() );
+    }
+
+
 //    @Test
 //    public void testGroups() throws Exception {
 //        UUID applicationId = setup.createApplication( "testOrganization", "testGroups" );
@@ -380,129 +371,109 @@ public class CollectionIT {
 //
 //        em.removeFromCollection( user1, "groups", group );
 //    }
-//
-//
-//    @Test
-//    public void groupNameSearch() throws Exception {
-//        UUID applicationId = setup.createApplication( "testOrganization", "groupNameSearch" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
-//
-//        String groupName = "groupName" + UUIDUtils.newTimeUUID();
-//
-//        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-//        properties.put( "title", "testTitle" );
-//        properties.put( "path", "testPath" );
-//        properties.put( "name", groupName );
-//
-//        Entity group = em.create( "group", properties );
-//        assertNotNull( group );
-//
-//        // EntityRef
-//        Query query = new Query();
-//        query.addEqualityFilter( "name", groupName );
-//
-//        Results r = em.searchCollection( em.getApplicationRef(), "groups", query );
-//
-//        assertTrue( r.size() > 0 );
-//
-//        Entity returned = r.getEntities().get( 0 );
-//
-//        assertEquals( group.getUuid(), returned.getUuid() );
-//    }
-//
-//
-//    @Test
-//    public void groupTitleSearch() throws Exception {
-//        UUID applicationId = setup.createApplication( "testOrganization", "groupTitleSearch" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
-//
-//        String titleName = "groupName" + UUIDUtils.newTimeUUID();
-//
-//        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-//        properties.put( "title", titleName );
-//        properties.put( "path", "testPath" );
-//        properties.put( "name", "testName" );
-//
-//        Entity group = em.create( "group", properties );
-//        assertNotNull( group );
-//
-//        // EntityRef
-//        Query query = new Query();
-//        query.addEqualityFilter( "title", titleName );
-//
-//        Results r = em.searchCollection( em.getApplicationRef(), "groups", query );
-//
-//        assertTrue( r.size() > 0 );
-//
-//        Entity returned = r.getEntities().get( 0 );
-//
-//        assertEquals( group.getUuid(), returned.getUuid() );
-//    }
-//
-//
-//    @Test
-//    public void testSubkeys() throws Exception {
-//
-//        UUID applicationId = setup.createApplication( "testOrganization", "testSubkeys" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
-//
-//        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-//        properties.put( "username", "edanuff" );
-//        properties.put( "email", "ed@anuff.com" );
-//
-//        Entity user = em.create( "user", properties );
-//        assertNotNull( user );
-//
-//        properties = new LinkedHashMap<String, Object>();
-//        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
-//        properties.put( "verb", "tweet" );
-//        properties.put( "content", "I ate a sammich" );
-//
-//        em.addToCollection( user, "activities", em.create( "activity", properties ) );
-//
-//        properties = new LinkedHashMap<String, Object>();
-//        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
-//        properties.put( "verb", "post" );
-//        properties.put( "content", "I wrote a blog post" );
-//
-//        em.addToCollection( user, "activities", em.create( "activity", properties ) );
-//
-//        properties = new LinkedHashMap<String, Object>();
-//        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
-//        properties.put( "verb", "tweet" );
-//        properties.put( "content", "I ate another sammich" );
-//
-//        em.addToCollection( user, "activities", em.create( "activity", properties ) );
-//
-//        properties = new LinkedHashMap<String, Object>();
-//        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
-//        properties.put( "verb", "post" );
-//        properties.put( "content", "I wrote another blog post" );
-//
-//        em.addToCollection( user, "activities", em.create( "activity", properties ) );
-//
-//        Results r = em.searchCollection( user, "activities", Query.searchForProperty( "verb", "post" ) );
-//        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
-//        assertEquals( 2, r.size() );
-//    }
-//
-//
+
+
+    @Test
+    public void groupNameSearch() throws Exception {
+
+        String groupName = "groupName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "title", "testTitle" );
+        properties.put( "path", "testPath" );
+        properties.put( "name", groupName );
+
+        Entity group = em.create( "group", properties );
+        assertNotNull( group );
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter( "name", groupName );
+
+        Results r = em.searchCollection( em.getApplicationRef(), "groups", query );
+
+        assertTrue( r.size() > 0 );
+
+        Entity returned = r.getEntities().get( 0 );
+
+        assertEquals( group.getId(), returned.getId() );
+    }
+
+
+    @Test
+    public void groupTitleSearch() throws Exception {
+
+
+        String titleName = "groupName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "title", titleName );
+        properties.put( "path", "testPath" );
+        properties.put( "name", "testName" );
+
+        Entity group = em.create( "group", properties );
+        assertNotNull( group );
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter( "title", titleName );
+
+        Results r = em.searchCollection( em.getApplicationRef(), "groups", query );
+
+        assertTrue( r.size() > 0 );
+
+        Entity returned = r.getEntities().get( 0 );
+
+        assertEquals( group.getId(), returned.getId() );
+    }
+
+
+    @Test
+    public void testSubkeys() throws Exception {
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "username", "edanuff" );
+        properties.put( "email", "ed@anuff.com" );
+
+        Entity user = em.create( "user", properties );
+        assertNotNull( user );
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
+        properties.put( "verb", "tweet" );
+        properties.put( "content", "I ate a sammich" );
+
+        em.addToCollection( user, "activities", em.create( "activity", properties ) );
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
+        properties.put( "verb", "post" );
+        properties.put( "content", "I wrote a blog post" );
+
+        em.addToCollection( user, "activities", em.create( "activity", properties ) );
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
+        properties.put( "verb", "tweet" );
+        properties.put( "content", "I ate another sammich" );
+
+        em.addToCollection( user, "activities", em.create( "activity", properties ) );
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put( "actor", hashMap( "displayName", "Ed Anuff" ).map( "objectType", "person" ) );
+        properties.put( "verb", "post" );
+        properties.put( "content", "I wrote another blog post" );
+
+        em.addToCollection( user, "activities", em.create( "activity", properties ) );
+
+        Results r = em.searchCollection( user, "activities", Query.searchForProperty( "verb", "post" ) );
+        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        assertEquals( 2, r.size() );
+    }
+
+
 //    @Test
 //    public void emptyQuery() throws Exception {
-//        UUID applicationId = setup.createApplication( "testOrganization", "testEmptyQuery" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
 //
 //        String firstName = "firstName" + UUIDUtils.newTimeUUID();
 //
@@ -530,21 +501,16 @@ public class CollectionIT {
 //
 //        Entity returned = r.getEntities().get( 0 );
 //
-//        assertEquals( user.getUuid(), returned.getUuid() );
+//        assertEquals( user.getId(), returned.getId() );
 //
 //        returned = r.getEntities().get( 1 );
 //
-//        assertEquals( user2.getUuid(), returned.getUuid() );
+//        assertEquals( user2.getId(), returned.getId() );
 //    }
-//
-//
+
+
 //    @Test
 //    public void emptyQueryReverse() throws Exception {
-//        UUID applicationId = setup.createApplication( "testOrganization", "testEmptyQueryReverse" );
-//        assertNotNull( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        assertNotNull( em );
 //
 //        String firstName = "firstName" + UUIDUtils.newTimeUUID();
 //
@@ -573,14 +539,14 @@ public class CollectionIT {
 //
 //        Entity returned = r.getEntities().get( 0 );
 //
-//        assertEquals( user2.getUuid(), returned.getUuid() );
+//        assertEquals( user2.getId(), returned.getId() );
 //
 //        returned = r.getEntities().get( 1 );
 //
-//        assertEquals( user.getUuid(), returned.getUuid() );
+//        assertEquals( user.getId(), returned.getId() );
 //    }
-//
-//
+
+
 //    @Test
 //    public void orQuery() throws Exception {
 //        UUID applicationId = setup.createApplication( "testOrganization", "orQuery" );
