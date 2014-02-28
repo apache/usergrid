@@ -66,6 +66,7 @@ import static org.apache.usergrid.persistence.utils.ListUtils.isEmpty;
 import static org.apache.usergrid.persistence.utils.MapUtils.toMapList;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,8 +99,6 @@ public class Query {
     private String collection;
     private String ql;
 
-    private QueryBuilder queryBuilder;
-
 
     public Query() {
     }
@@ -131,15 +130,26 @@ public class Query {
     }
 
 
-    public QueryBuilder getQueryBuilder() {
+    public QueryBuilder createQueryBuilder() {
+
+        final QueryBuilder queryBuilder;
+
+        if ( getRootOperand() != null ) {
+            QueryVisitor v = new EsDslQueryVistor();
+            try {
+                getRootOperand().visit( v );
+
+            } catch ( PersistenceException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+            queryBuilder = v.getQueryBuilder();
+
+        } else {
+            queryBuilder = QueryBuilders.matchAllQuery();
+        }
+
         return queryBuilder;
     }
-
-
-    private void setQueryBuilder( QueryBuilder queryBuilder ) {
-        this.queryBuilder = queryBuilder;
-    }
-
 
     public static Query fromQL( String ql ) throws QueryParseException {
         if ( ql == null ) {
@@ -168,13 +178,6 @@ public class Query {
 
         try {
             Query q = parser.ql().query;
-            QueryVisitor v = new EsDslQueryVistor();
-
-            if ( q.getRootOperand() != null ) {
-                q.getRootOperand().visit( v );
-                q.setQueryBuilder( v.getQueryBuilder() );
-            }
-
             q.setQl( originalQl );
             return q;
 
@@ -187,10 +190,6 @@ public class Query {
                     + "The token '%s' at column %d on line %d cannot be parsed", 
                     token.getText(), index, lineNumber );
             throw new QueryParseException( message, e );
-
-        } catch ( PersistenceException pe ) { 
-            String message = "Error building ElasticSEarch query string";
-            throw new QueryParseException( message, pe );
         }
     }
 
@@ -559,11 +558,13 @@ public class Query {
 
 
     public Query addFilter( String filter ) {
+
         ANTLRStringStream in = new ANTLRStringStream( filter );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         QueryFilterParser parser = new QueryFilterParser( tokens );
         Operand root = null;
+
         try {
             root = parser.ql().query.getRootOperand();
         }

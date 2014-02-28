@@ -29,8 +29,8 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 
@@ -50,6 +50,9 @@ public class CoreApplication implements Application, TestRule {
         this.setup = setup;
     }
 
+    public void setEntityManager( EntityManagerFacade em ) {
+        this.em = em;
+    }
 
     @Override
     public void putAll( Map<String, Object> properties ) {
@@ -107,10 +110,9 @@ public class CoreApplication implements Application, TestRule {
     }
 
     @Override
-    public Entity get( UUID id ) throws Exception {
+    public Entity get( Id id ) throws Exception {
         return em.get( id );
     }
-
 
     @Override
     public Statement apply( final Statement base, final Description description ) {

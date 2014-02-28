@@ -21,6 +21,7 @@ package org.apache.usergrid.test;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 
@@ -107,7 +108,7 @@ public interface Application extends TestRule {
      *
      * @throws Exception if anything goes wrong accessing the entity
      */
-    Entity get( UUID id ) throws Exception;
+    Entity get( Id id ) throws Exception;
 
     
     /**

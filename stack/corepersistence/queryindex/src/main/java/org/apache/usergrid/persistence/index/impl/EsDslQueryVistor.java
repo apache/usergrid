@@ -136,6 +136,9 @@ public class EsDslQueryVistor implements QueryVisitor {
     }
 
     public QueryBuilder getQueryBuilder() {
+        if ( stack.isEmpty() ) {
+            return null;
+        }
         return stack.pop();
     }
 }

@@ -21,12 +21,9 @@ package org.apache.usergrid.persistence;
 import com.google.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.guice.IndexTestModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -76,10 +73,6 @@ public class IndexIT {
     @Inject
     public EntityCollectionIndexFactory collectionIndexFactory;
 
-    @Inject 
-    public EntityCollectionIndex index;
-
-
     public static final String[] alphabet = {
             "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima",
             "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey",
@@ -93,10 +86,8 @@ public class IndexIT {
 
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-
-        EntityManagerFacade em = new EntityManagerFacade( 
-            collectionManagerFactory, collectionIndexFactory, scope);
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
+            collectionManagerFactory, collectionIndexFactory );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -165,16 +156,14 @@ public class IndexIT {
 
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        
-        EntityManagerFacade em = new EntityManagerFacade( 
-            collectionManagerFactory, collectionIndexFactory, scope);
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
+            collectionManagerFactory, collectionIndexFactory );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
-            em.create( "items", properties );
+            em.create( "item", properties );
         }
 
         Query query = Query.fromQL( "name < 'Delta' order by name" );
@@ -289,9 +278,8 @@ public class IndexIT {
 
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "items" );
-        EntityManagerFacade em = new EntityManagerFacade( 
-            collectionManagerFactory, collectionIndexFactory, scope);
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
+            collectionManagerFactory, collectionIndexFactory );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -300,7 +288,7 @@ public class IndexIT {
             properties.put( "group", i / 3 );
             properties.put( "reverse_name", alphabet[alphabet.length - 1 - i] );
 
-            em.create( "items", properties );
+            em.create( "item", properties );
         }
 
         Query query = Query.fromQL( "group = 1 order by name desc" );

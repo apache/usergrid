@@ -18,15 +18,17 @@
 
 package org.apache.usergrid.test;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
@@ -38,51 +40,90 @@ import org.slf4j.LoggerFactory;
 public class EntityManagerFacade {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFacade.class );
 
-    private final EntityCollectionManager ecm;
-    private final EntityCollectionIndex index;
-    private final CollectionScope scope;
+    private final Id orgId;
+    private final Id appId;
+    private final EntityCollectionManagerFactory ecmf;
+    private final EntityCollectionIndexFactory ecif;
+    private final Map<String, String> typesByCollectionNames = new HashMap<String, String>();
     
     public EntityManagerFacade( 
-            EntityCollectionManagerFactory collectionFactory, 
-            EntityCollectionIndexFactory indexFactory, 
-            CollectionScope scope ) {
+        Id orgId, 
+        Id appId, 
+        EntityCollectionManagerFactory ecmf, 
+        EntityCollectionIndexFactory ecif ) {
 
-        this.index = indexFactory.createCollectionIndex( scope );
-        this.ecm = collectionFactory.createCollectionManager( scope );
-        this.scope = scope;
+        this.appId = appId;
+        this.orgId = orgId;
+        this.ecmf = ecmf;
+        this.ecif = ecif;
     }
 
     public Entity create( String type, Map<String, Object> properties ) {
-        if ( !type.equals( scope.getName() )) { 
-            throw new RuntimeException("Incorrect type [" + type + "] for scope: " + scope.getName());
-        }
 
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
+        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+
+        final String collectionName;
+        if ( type.endsWith("y") ) {
+            collectionName = type.substring( 0, type.length() - 1) + "ies";
+        } else {
+            collectionName = type + "s";
+        }
+        typesByCollectionNames.put( collectionName, type );
+        
         Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
         entity = EntityMapUtils.mapToEntity( scope.getName(), entity, properties );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entity = ecm.write( entity ).toBlockingObservable().last();
 
-        index.index( entity );
+        eci.index( entity );
         return entity;
     }
 
-    public Results searchCollection( Entity user, String type, Query query ) {
-        if ( !type.equals( scope.getName() )) { 
-            throw new RuntimeException("Incorrect type [" + type + "] for scope: " + scope.getName());
-        }
-        Results results = index.execute( query );
+    public Results searchCollection( Entity user, String collectionName, Query query ) {
+
+        String type = typesByCollectionNames.get( collectionName );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+
+        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+        Results results = eci.execute( query );
         return results;
     }
 
-    public Entity get( UUID id ) {
-        throw new UnsupportedOperationException( "Not supported yet." );
+    public Entity get( Id id ) {
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, id.getType() );
+        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
+        return ecm.load( id ).toBlockingObservable().last();
     }
 
-    public void addToCollection( Entity user, String type, Entity item ) {
-        throw new UnsupportedOperationException( "Not supported yet." );
+    public void addToCollection( Entity user, String collectionName, Entity entity ) {
+        // basically a no-op except that can now map Entity type to collection name
+        typesByCollectionNames.put( collectionName, entity.getId().getType() );
     }
 
     public Entity getApplicationRef() {
         return new Entity();
+    }
+
+    public void update( Entity entity ) {
+
+        String type = entity.getId().getType();
+
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
+        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+
+        final String collectionName;
+        if ( type.endsWith("y") ) {
+            collectionName = type.substring( 0, type.length() - 1) + "ies";
+        } else {
+            collectionName = type + "s";
+        }
+        typesByCollectionNames.put( collectionName, type );
+        
+        entity = ecm.write( entity ).toBlockingObservable().last();
+
+        eci.index( entity );
     }
 }

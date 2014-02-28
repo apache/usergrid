@@ -27,9 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -45,6 +47,7 @@ import org.apache.usergrid.persistence.query.EntityRef;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.query.SimpleEntityRef;
+import org.apache.usergrid.persistence.query.tree.QueryVisitor;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -141,12 +144,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         // TODO add support for cursor
 
-        final QueryBuilder qb;
-        if ( query.getQueryBuilder() != null ) {
-            qb = query.getQueryBuilder();
-        } else {
-            qb = QueryBuilders.matchAllQuery();
-        }
+        QueryBuilder qb = query.createQueryBuilder();
+
         logger.debug("Query: " + qb.toString());
 
         SearchRequestBuilder srb = client.prepareSearch( index ).setTypes( scope.getName() )
