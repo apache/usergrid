@@ -228,8 +228,10 @@ public class ApplicationResource extends AbstractContextResource {
         try {
             //parse the json into some useful object (the config params)
             ExportInfo objEx = new ExportInfo( json );
+            objEx.setOrganizationId( organization.getUuid() );
             objEx.setApplicationId( applicationId );
             objEx.setCollection( colExport );
+
             jobUUID = exportService.schedule( objEx );
             uuidRet.put( "jobUUID", jobUUID.toString() );
         }

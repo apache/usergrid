@@ -140,19 +140,15 @@ public class ExportServiceImpl implements ExportService {
         export.setState( Export.State.STARTED );
         em.update( export );
 
-        //retrieves all the organizations. Loops through them and backs up the appplications for each one
-        Map<UUID, String> organizationGet = getOrgs( config );
-        for ( Map.Entry<UUID, String> organization : organizationGet.entrySet() ) {
-            try {
-                //exports all the applications for a single organization
-                exportApplicationsForOrg( organization, config, jobExecution );
-            }
-            catch ( Exception e ) {
-                //if for any reason the backing up fails, then update the entity with a failed state.
-                export.setState( Export.State.FAILED );
-                em.update( export );
-                return;
-            }
+        try {
+            //exports all the applications for a single organization
+            exportApplicationForOrg( config.getOrganizationId(), config, jobExecution );
+        }
+        catch ( Exception e ) {
+            //if for any reason the backing up fails, then update the entity with a failed state.
+            export.setState( Export.State.FAILED );
+            em.update( export );
+            return;
         }
         export.setState( Export.State.FINISHED );
         em.update( export );
@@ -188,7 +184,6 @@ public class ExportServiceImpl implements ExportService {
 
         return organizationNames;
     }
-
 
     public SchedulerService getSch() {
         return sch;
@@ -248,6 +243,79 @@ public class ExportServiceImpl implements ExportService {
 
         // Loop through the applications per organization
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organization.getKey() );
+        for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
+
+            logger.info( application.getValue() + " : " + application.getKey() );
+
+            String appFileName = prepareOutputFileName( "application", application.getValue() );
+
+            JsonGenerator jg = getJsonGenerator( baos );
+
+            EntityManager em = emf.getEntityManager( application.getKey() );
+
+            jg.writeStartArray();
+
+            Map<String, Object> metadata = em.getApplicationCollectionMetadata();
+            long starting_time = System.currentTimeMillis();
+
+            // Loop through the collections. This is the only way to loop
+            // through the entities in the application (former namespace).
+            //could support queries, just need to implement that in the rest endpoint.
+            for ( String collectionName : metadata.keySet() ) {
+                //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
+                if ( collectionName.equals( config.getCollection() ) ) {
+                    //Query entity manager for the entities in a collection
+                    Query query = new Query();
+                    query.setLimit( MAX_ENTITY_FETCH );
+                    query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                    Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
+
+                    //pages through the query and backs up all results.
+                    PagingResultsIterator itr = new PagingResultsIterator( entities );
+                    for ( Object e : itr ) {
+                        starting_time = checkTimeDelta( starting_time, jobExecution );
+                        Entity entity = ( Entity ) e;
+                        jg.writeStartObject();
+                        jg.writeFieldName( "Metadata" );
+                        jg.writeObject(entity );
+                        saveCollectionMembers( jg, em, config.getCollection(), entity );
+                        jg.writeEndObject();
+                    }
+                }
+            }
+
+            // Close writer and file for this application.
+            jg.writeEndArray();
+            jg.close();
+            baos.flush();
+            baos.close();
+
+            //sets up the Inputstream for copying the method to s3.
+            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+            try {
+                s3Export.copyToS3( is, config, appFileName );
+            }
+            catch ( Exception e ) {
+                export.setState( Export.State.FAILED );
+                return;
+            }
+        }
+    }
+
+    //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
+    private void exportApplicationForOrg( UUID organizationUUID, final ExportInfo config,
+                                           final JobExecution jobExecution ) throws Exception {
+
+        //retrieves export entity
+        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
+        EntityManager exportManager = emf.getEntityManager( config.getApplicationId() );
+        Export export = exportManager.get( exportId, Export.class );
+
+        //sets up a output stream for s3 backup.
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        // Loop through the applications per organization
+        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
         for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
 
             logger.info( application.getValue() + " : " + application.getKey() );

@@ -19,6 +19,7 @@ import org.apache.usergrid.management.export.S3Export;
  * Streams / reads the information written from the export service to a file named "test.json"
  */
 public class MockS3ExportImpl implements S3Export {
+    public static String filename;
     @Override
     public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo, String filename ) {
         Logger logger = LoggerFactory.getLogger( MockS3ExportImpl.class );
@@ -28,7 +29,7 @@ public class MockS3ExportImpl implements S3Export {
         //FileInputStream fis = new PrintWriter( inputStream );
 
         try {
-            outputStream = new FileOutputStream( new File( "test.json" ) );
+            outputStream = new FileOutputStream( new File( getFilename() ) );
         }
         catch ( FileNotFoundException e ) {
             e.printStackTrace();
@@ -44,4 +45,12 @@ public class MockS3ExportImpl implements S3Export {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String getFilename () {
+        return filename;
+    }
+
+    @Override
+    public void setFilename (String givenName) { filename = givenName; }
 }

@@ -746,25 +746,29 @@ public class ManagementServiceIT {
 
 
     //Tests to make sure we can call the job with mock data and it runs.
-    @Ignore
+    @Ignore //Connections won't save when run with maven, but on local builds it will.
     public void testFileConnections() throws Exception {
 
         File f = null;
 
 
         try {
-            f = new File( "test.json" );
-            f.delete();
+            f = new File( "testFileConnections.json" );
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
 
+
         S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "testFileConnections.json" );
+
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
         exportInfo.setCollection( "users" );
 
@@ -823,7 +827,7 @@ public class ManagementServiceIT {
         File f = null;
 
         try {
-            f = new File( "test.json" );
+            f = new File( "fileValidity.json" );
             f.delete();
         }
         catch ( Exception e ) {
@@ -831,10 +835,12 @@ public class ManagementServiceIT {
         }
 
         S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "fileValidity.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
         exportInfo.setCollection( "users" );
 
@@ -870,7 +876,7 @@ public class ManagementServiceIT {
 
 
         try {
-            f = new File( "test.json" );
+            f = new File( "exportOneOrg.json" );
             f.delete();
         }
         catch ( Exception e ) {
@@ -881,10 +887,12 @@ public class ManagementServiceIT {
                      "123456789" );
 
         S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename("exportOneOrg.json");
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
         exportInfo.setCollection( "roles" );
 
@@ -925,7 +933,7 @@ public class ManagementServiceIT {
         String appName = "testAppNotExported";
 
         try {
-            f = new File( "test.json" );
+            f = new File( "exportOneApp.json" );
             f.delete();
         }
         catch ( Exception e ) {
@@ -949,10 +957,12 @@ public class ManagementServiceIT {
         }
 
         S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "exportOneApp.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
         exportInfo.setCollection( "roles" );
 
@@ -992,7 +1002,7 @@ public class ManagementServiceIT {
 //        String appName = "ed-app";
 
         try {
-            f = new File( "test.json" );
+            f = new File( "exportOneCollection.json" );
             f.delete();
         }
         catch ( Exception e ) {
@@ -1018,10 +1028,12 @@ public class ManagementServiceIT {
         }
 
         S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "exportOneCollection.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
         exportInfo.setCollection( "baconators" );
 
@@ -1061,6 +1073,7 @@ public class ManagementServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
 
 
@@ -1095,6 +1108,7 @@ public class ManagementServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
 
         ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
 
         UUID entityExportUUID = eS.schedule( exportInfo );

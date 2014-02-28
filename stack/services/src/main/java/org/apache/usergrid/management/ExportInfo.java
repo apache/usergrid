@@ -22,6 +22,7 @@ public class ExportInfo extends TypedEntity {
     private String bucket_location;
     private UUID applicationId; //TODO: include application when initializing export info
     private String collection;  //TODO: include collection when initializing export info
+    private UUID organizationId;
 
 
     public ExportInfo( Map<String, Object> exportData ) {
@@ -40,6 +41,7 @@ public class ExportInfo extends TypedEntity {
         return applicationId;
     }
 
+    public UUID getOrganizationId() { return organizationId; }
 
     public String getPath() {
         return path;
@@ -74,4 +76,6 @@ public class ExportInfo extends TypedEntity {
     public void setApplicationId( UUID appId ) { applicationId = appId;}
 
     public void setCollection ( String colName) { collection = colName; }
+
+    public void setOrganizationId ( UUID orgId ) { organizationId = orgId; }
 }

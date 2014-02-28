@@ -32,6 +32,7 @@ public class S3ExportImpl implements S3Export {
     @Override
     public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo, String filename ) {
 
+
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
         /*won't need any of the properties as I have the export info*/
         String bucketName = exportInfo.getBucket_location();
@@ -80,4 +81,10 @@ public class S3ExportImpl implements S3Export {
             logger.error( "Error uploading to blob store", e );
         }
     }
+
+    @Override
+    public String getFilename () {return "";}
+
+    @Override
+    public void setFilename(String givenName) {;}
 }
