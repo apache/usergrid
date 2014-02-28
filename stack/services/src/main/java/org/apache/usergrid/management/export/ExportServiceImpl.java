@@ -140,15 +140,29 @@ public class ExportServiceImpl implements ExportService {
         export.setState( Export.State.STARTED );
         em.update( export );
 
-        try {
-            //exports all the applications for a single organization
-            exportApplicationForOrg( config.getOrganizationId(), config, jobExecution );
+        if ( config.getCollection() == null ) {
+            Map<UUID, String> organizations = getOrgs();
+            for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
+                try {
+                    exportApplicationsForOrg( organization, config, jobExecution );
+                }catch ( Exception e ) {
+                    export.setState( Export.State.FAILED );
+                    em.update( export );
+                    return;
+                }
+            }
         }
-        catch ( Exception e ) {
-            //if for any reason the backing up fails, then update the entity with a failed state.
-            export.setState( Export.State.FAILED );
-            em.update( export );
-            return;
+        else {
+            try {
+                //exports all the applications for a single organization
+                exportApplicationForOrg( config.getOrganizationId(), config, jobExecution );
+            }
+            catch ( Exception e ) {
+                //if for any reason the backing up fails, then update the entity with a failed state.
+                export.setState( Export.State.FAILED );
+                em.update( export );
+                return;
+            }
         }
         export.setState( Export.State.FINISHED );
         em.update( export );
@@ -161,7 +175,7 @@ public class ExportServiceImpl implements ExportService {
      * @return Map<UUID, String>
      * @throws Exception
      */
-    private Map<UUID, String> getOrgs( ExportInfo exportInfo ) throws Exception {
+    private Map<UUID, String> getOrgs() throws Exception {
         // Loop through the organizations
         UUID orgId = null;
 

@@ -210,6 +210,44 @@ public class ApplicationResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
+    @POST
+    @Path("export")
+    @Consumes(APPLICATION_JSON)
+    @RequireOrganizationAccess
+    public Response exportPostJson( @Context UriInfo ui,Map<String, Object> json,
+                                    @QueryParam("callback") @DefaultValue("") String callback )
+            throws OAuthSystemException {
+
+
+        OAuthResponse response = null;
+        UUID jobUUID = null;
+        Map<String, String> uuidRet = new HashMap<String, String>();
+
+        try {
+            //parse the json into some useful object (the config params)
+            ExportInfo objEx = new ExportInfo( json );
+            objEx.setOrganizationId( organization.getUuid() );
+            objEx.setApplicationId( applicationId );
+
+            jobUUID = exportService.schedule( objEx );
+            uuidRet.put( "jobUUID", jobUUID.toString() );
+        }
+        catch ( NullPointerException e ) {
+            OAuthResponse errorMsg =
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( "Job Not Created" )
+                                 .buildJSONMessage();
+
+            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
+        }
+        catch ( Exception e ) {
+            //TODO:throw descriptive error message and or include on in the response
+            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).build();
+        }
+
+        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+    }
 
     @POST
     @Path("collection/{collection_name}/export")
