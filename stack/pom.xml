@@ -1765,27 +1765,37 @@
             </executions>
             <configuration>
                 <excludes>
-                    <exclude>.idea/**</exclude>
-                    <exclude>.git/**</exclude>
-                    <exclude>m2/**</exclude>
-                    <exclude>.gitignore</exclude>
+
+                    <exclude>**/README.md</exclude>
+                    <exclude>**/CHANGES.txt</exclude>
+
+                    <!-- git and IDE project files -->
+                    <exclude>**/.git/**</exclude>
+                    <exclude>**/.gitignore</exclude>
+                    <exclude>**..idea/**</exclude>
+                    <exclude>**/*.iml</exclude>
+                    <exclude>**/nbactions.xml</exclude>
+                    <exclude>**/nb-configuration.xml</exclude>
                     <exclude>**/.classpath/**</exclude>
                     <exclude>**/.project</exclude>
-                    <exclude>**/*.iml</exclude>
                     <exclude>**/.settings/**</exclude>
-                    <exclude>**/*.asc</exclude>
+
+                    <!-- temporary build files -->
                     <exclude>**/logs/**</exclude>
                     <exclude>**/docs/**</exclude>
-                    <exclude>CHANGES.txt</exclude>
-                    <exclude>cloudbees.xml</exclude>
-                    <exclude>README.md</exclude>
-                    <exclude>**/src/test/resources/**</exclude>
-                    <exclude>**dependency-reduced-pom.xml</exclude>
-                    <exclude>**/src/test/resources/*.txt</exclude>
+                    <exclude>**/tmp/**</exclude>
                     <exclude>**/target/**</exclude>
                     <exclude>**/antlr3/**</exclude>
                     <exclude>**/META-INF/**</exclude>
+                    <exclude>**/dependency-reduced-pom.xml</exclude>
                     <exclude>**/QueryFilter.tokens</exclude>
+
+                    <!-- other -->
+                    <exclude>**/m2/**</exclude>
+                    <exclude>**/*.asc</exclude>
+                    <exclude>**/src/test/resources/**</exclude>
+                    <exclude>**/cloudbees.xml</exclude>
+
                 </excludes>
             </configuration>
 
