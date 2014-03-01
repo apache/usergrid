@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
 
-import org.usergrid.simple.SimpleService;
+import org.apache.usergrid.services.simple.SimpleService;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
