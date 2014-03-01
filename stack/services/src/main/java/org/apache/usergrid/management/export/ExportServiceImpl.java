@@ -80,12 +80,29 @@ public class ExportServiceImpl implements ExportService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( config.getApplicationId() );
+        if ( config.getApplicationId() == null ) {
+            logger.error( "application information from export info could not be found" );
+            return null;
+        }
+
+        EntityManager em = null;
+        try {
+            em = emf.getEntityManager( config.getApplicationId() );
+        }catch (Exception e) {
+            logger.error( "application doesn't exist within the current context" );
+            return null;
+        }
 
         Export export = new Export();
 
         //update state
-        export = em.create( export );
+        try{
+            export = em.create( export );
+        }catch(Exception e) {
+            logger.error( "Export entity creation failed" );
+            return null;
+        }
+
         export.setState( Export.State.CREATED );
         em.update( export );
 

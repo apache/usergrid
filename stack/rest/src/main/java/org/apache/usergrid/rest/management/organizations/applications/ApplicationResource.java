@@ -306,6 +306,7 @@ public class ApplicationResource extends AbstractContextResource {
             entity = smf.getServiceManager( applicationId ).getEntityManager().get( jobUUIDStr, Export.class );
         }
         catch ( Exception e ) {
+            //this might be due to other reasons, but gotta look up what service manager does.
             return Response.status( SC_BAD_REQUEST ).build();
         }
         //validate this user owns it

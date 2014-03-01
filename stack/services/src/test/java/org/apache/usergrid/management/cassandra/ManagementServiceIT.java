@@ -998,8 +998,6 @@ public class ManagementServiceIT {
     public void testFileExportOneCollection() throws Exception {
 
         File f = null;
-//        String orgName = "ed-organization";
-//        String appName = "ed-app";
 
         try {
             f = new File( "exportOneCollection.json" );
@@ -1008,10 +1006,6 @@ public class ManagementServiceIT {
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
         }
-
-        //UUID appId = setup.getEmf().createApplication( orgName, appName );
-
-
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId);
         em.createApplicationCollection( "baconators" );
