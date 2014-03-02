@@ -60,7 +60,7 @@ public class ExportServiceImpl implements ExportService {
     private ManagementService managementService;
 
     //Maximum amount of entities retrieved in a single go.
-    public static final int MAX_ENTITY_FETCH = 100;
+    public static final int MAX_ENTITY_FETCH = 100000;
 
     //Amount of time that has passed before sending another heart beat in millis
     public static final int TIMESTAMP_DELTA = 5000;
@@ -133,13 +133,24 @@ public class ExportServiceImpl implements ExportService {
     public String getState( final UUID appId, final UUID uuid ) throws Exception {
 
         //get application entity manager
+        if(appId == null) {
+            logger.error( "Application context cannot be found." );
+            return "Application context cannot be found.";
+        }
+
+        if(uuid == null) {
+            logger.error( "UUID passed in cannot be null." );
+            return "UUID passed in cannot be null";
+        }
+
         EntityManager rootEm = emf.getEntityManager( appId );
 
         //retrieve the export entity.
         Export export = rootEm.get( uuid, Export.class );
 
         if ( export == null ) {
-            return null;
+            logger.error( "no entity with that uuid was found" );
+            return "No Such Element found";
         }
         return export.getState().toString();
     }
@@ -148,8 +159,16 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void doExport( final ExportInfo config, final JobExecution jobExecution ) throws Exception {
 
+        if (config  == null) {
+            logger.error( "Export Information passed through is null" );
+            return;
+        }
         //get the entity manager for the application, and the entity that this Export corresponds to.
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
+        if(config.getApplicationId() == null) {
+            logger.error( "Export Information application uuid is null" );
+            return;
+        }
         EntityManager em = emf.getEntityManager( config.getApplicationId() );
         Export export = em.get( exportId, Export.class );
 
@@ -160,6 +179,10 @@ public class ExportServiceImpl implements ExportService {
         if ( config.getCollection() == null ) {
             //exports all the applications for a given organization.
             Map<UUID, String> organizations = getOrgs();
+            if(organizations == null){
+                logger.error( "No organizations could be found" );
+                return;
+            }
             for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
                 try {
                     exportApplicationsForOrg( organization, config, jobExecution );
@@ -208,6 +231,7 @@ public class ExportServiceImpl implements ExportService {
 
             if ( info == null ) {
                 logger.error( "Organization info is null!" );
+                return null;
             }
 
             organizationNames = new HashMap<UUID, String>();

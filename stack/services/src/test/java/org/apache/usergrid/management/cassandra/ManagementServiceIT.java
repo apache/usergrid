@@ -746,7 +746,7 @@ public class ManagementServiceIT {
 
 
     //Tests to make sure we can call the job with mock data and it runs.
-    @Ignore //Connections won't save when run with maven, but on local builds it will.
+    @Test //Connections won't save when run with maven, but on local builds it will.
     public void testFileConnections() throws Exception {
 
         File f = null;
@@ -754,7 +754,7 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "testFileConnections.json" );
-            //f.delete();
+            f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -776,9 +776,9 @@ public class ManagementServiceIT {
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
-        entity = new Entity[10];
+        entity = new Entity[2];
         //creates entities
-        for ( int i = 0; i < 10; i++ ) {
+        for ( int i = 0; i < 2; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
@@ -806,7 +806,7 @@ public class ManagementServiceIT {
         JSONParser parser = new JSONParser();
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-        //assertEquals(13, a.size() );
+        assertEquals(2, a.size() );
 
         org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( 0 );
         org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
