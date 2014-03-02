@@ -747,7 +747,7 @@ public class ManagementServiceIT {
 
     //Tests to make sure we can call the job with mock data and it runs.
     @Test //Connections won't save when run with maven, but on local builds it will.
-    public void testFileConnections() throws Exception {
+    public void testConnectionsOnCollectionExport() throws Exception {
 
         File f = null;
 
@@ -820,9 +820,81 @@ public class ManagementServiceIT {
         f.delete();
     }
 
+    @Test //Connections won't save when run with maven, but on local builds it will.
+    public void testConnectionsOnApplicationEndpoint() throws Exception {
 
+        File f = null;
+
+
+        try {
+            f = new File( "testConnectionsOnApplicationEndpoint.json" );
+            f.delete();
+        }
+        catch ( Exception e ) {
+            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
+        }
+
+
+        S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "testConnectionsOnApplicationEndpoint.json" );
+
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
+        exportInfo.setApplicationId( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[2];
+        //creates entities
+        for ( int i = 0; i < 2; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+
+            entity[i] = em.create( "users", userProperties );
+        }
+        //creates connections
+        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
+        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
+
+        UUID exportUUID = exportService.schedule( exportInfo );
+        exportService.setS3Export( s3Export );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( exportInfo, jobExecution );
+
+        JSONParser parser = new JSONParser();
+
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+
+        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( 0 );
+        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
+
+        assertNotNull( objConnections );
+
+        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get( "Vibrations" );
+
+        assertNotNull( objVibrations );
+
+        f.delete();
+    }
+
+//need to add tests for the other endpoint as well.
     @Test
-    public void testFileValidity() throws Exception {
+    public void testValidityOfCollectionExport() throws Exception {
 
         File f = null;
 
@@ -870,7 +942,54 @@ public class ManagementServiceIT {
     }
 
     @Test
-    public void testFileExportOneOrg() throws Exception {
+    public void testValidityOfApplicationExport() throws Exception {
+
+        File f = null;
+
+        try {
+            f = new File( "testValidityOfApplicationExport.json" );
+            f.delete();
+        }
+        catch ( Exception e ) {
+            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
+        }
+
+        S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "testValidityOfApplicationExport.json" );
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
+        exportInfo.setApplicationId( applicationId );
+
+        UUID exportUUID = exportService.schedule( exportInfo );
+        exportService.setS3Export( s3Export );
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( exportInfo, jobExecution );
+
+        JSONParser parser = new JSONParser();
+
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+
+        for ( int i = 0; i < a.size(); i++ ) {
+            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
+            org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
+            assertNotNull( entityData );
+        }
+        f.delete();
+    }
+
+    @Test
+    public void testExportOneOrgCollectionEndpoint() throws Exception {
 
         File f = null;
 
@@ -926,7 +1045,7 @@ public class ManagementServiceIT {
 
 
     @Test
-    public void testFileExportOneApp() throws Exception {
+    public void testExportOneAppOnCollectionEndpoint() throws Exception {
 
         File f = null;
         String orgName = "ed-organization";
@@ -947,11 +1066,11 @@ public class ManagementServiceIT {
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
-        entity = new Entity[10];
+        entity = new Entity[1];
         //creates entities
-        for ( int i = 0; i < 10; i++ ) {
+        for ( int i = 0; i < 1; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "username", "junkRealName");
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
             entity[i] = em.create( "user", userProperties );
         }
@@ -964,7 +1083,7 @@ public class ManagementServiceIT {
         ExportInfo exportInfo = new ExportInfo( payload );
         exportInfo.setOrganizationId( organization.getUuid() );
         exportInfo.setApplicationId( applicationId );
-        exportInfo.setCollection( "roles" );
+        exportInfo.setCollection( "roles" ); // <- this line determines if it is a collection back up or a application backup.
 
         UUID exportUUID = exportService.schedule( exportInfo );
         exportService.setS3Export( s3Export );
@@ -989,13 +1108,79 @@ public class ManagementServiceIT {
             org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
             String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
-            //assertNotEquals( "NotEquals","junkRealName",entityName );
         }
         f.delete();
     }
 
     @Test
-    public void testFileExportOneCollection() throws Exception {
+    public void testExportOneAppOnApplicationEndpoint() throws Exception {
+
+        File f = null;
+        String orgName = "ed-organization";
+        String appName = "testAppNotExported";
+
+        try {
+            f = new File( "exportOneApp.json" );
+            f.delete();
+        }
+        catch ( Exception e ) {
+            //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
+        }
+
+        UUID appId = setup.getEmf().createApplication( orgName, appName );
+
+
+        EntityManager em = setup.getEmf().getEntityManager( appId );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[1];
+        //creates entities
+        for ( int i = 0; i < 1; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "junkRealName");
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            entity[i] = em.create( "users", userProperties );
+        }
+
+        S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "exportOneApp.json" );
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        ExportInfo exportInfo = new ExportInfo( payload );
+        exportInfo.setOrganizationId( organization.getUuid() );
+        exportInfo.setApplicationId( applicationId );
+
+        UUID exportUUID = exportService.schedule( exportInfo );
+        exportService.setS3Export( s3Export );
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", exportInfo );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( exportInfo, jobExecution );
+
+        JSONParser parser = new JSONParser();
+
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+
+        //assertEquals( 3 , a.size() );
+        for ( int i = 0; i < a.size(); i++ ) {
+            org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
+            org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
+            String entityName = ( String ) entityData.get( "name" );
+            assertFalse( "junkRealName".equals( entityName ) );
+        }
+        f.delete();
+    }
+
+    @Test
+    public void testExportOneCollection() throws Exception {
 
         File f = null;
 
@@ -1049,13 +1234,6 @@ public class ManagementServiceIT {
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
         assertEquals( 10 , a.size() );
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
-            String entityName = ( String ) entityData.get( "name" );
-            assertFalse( "junkRealName".equals( entityName ) );
-            //assertNotEquals( "NotEquals","junkRealName",entityName );
-        }
         f.delete();
     }
 
@@ -1092,7 +1270,7 @@ public class ManagementServiceIT {
     }
 
     @Test
-    public void testExportDoExport() throws Exception {
+    public void testExportDoExportOnApplicationEndpoint() throws Exception {
 
         EntityManagerFactory emf = setup.getEmf();
         EntityManager em = emf.getEntityManager( applicationId );
@@ -1180,7 +1358,7 @@ public class ManagementServiceIT {
 
 
     @Ignore //For this test please input your s3 credentials into payload builder.
-    public void testIntegration100Entities() throws Exception {
+    public void testIntegration100EntitiesOn() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
         ExportService exportService = setup.getExportService();
