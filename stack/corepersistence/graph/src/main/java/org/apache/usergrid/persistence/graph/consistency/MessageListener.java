@@ -8,7 +8,7 @@ import rx.Observable;
  *
  *
  */
-public interface AsynchronousEventListener<T, R> {
+public interface MessageListener<T, R> {
 
 
     /**
@@ -17,6 +17,6 @@ public interface AsynchronousEventListener<T, R> {
      * @param event  The input event
      * @return The observable that performs the operations
      */
-    Observable<R> receive(T event);
+    Observable<T> receive(T event);
 
 }

@@ -6,5 +6,5 @@ package org.apache.usergrid.persistence.graph.consistency;
  */
 public interface ErrorListener <T> {
 
-    void onError( AsynchronousEvent<T> event, Throwable t );
+    void onError( AsynchronousMessage<T> event, Throwable t );
 }

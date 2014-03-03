@@ -4,7 +4,7 @@ package org.apache.usergrid.persistence.graph.consistency;
 /**
  * An interface for a timeout event
  */
-public interface AsynchronousEvent<T> {
+public interface AsynchronousMessage<T> {
 
     /**
      * @return The event to fire when our timeout is reached

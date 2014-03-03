@@ -9,11 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
-import rx.Observer;
+import rx.Observable;
 import rx.Scheduler;
+import rx.util.functions.Action0;
+import rx.util.functions.Action1;
+import rx.util.functions.FuncN;
 
 
 /**
@@ -26,7 +28,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
     private final TimeoutQueue<T> queue;
     private final Scheduler scheduler;
-    private final List<AsynchronousEventListener<T>> listeners = new ArrayList<AsynchronousEventListener<T>>(  );
+    private final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
 
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
@@ -40,60 +42,57 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     }
 
 
-
     @Override
-    public AsynchronousEvent<T> setVerification( final T event, final long timeout ) {
+    public AsynchronousMessage<T> setVerification( final T event, final long timeout ) {
         return queue.queue( event, timeout );
     }
 
 
-
-
     @Override
-    public void start( final AsynchronousEvent<T> event ) {
+    public void start( final AsynchronousMessage<T> event ) {
 
 
-        //run this in a timeout command so it doesn't run forever. If it times out, it will simply resume later
-        new HystrixCommand<Void>( GRAPH_REPAIR ) {
+        final T data = event.getEvent();
+        /**
+         * Execute all listeners in parallel
+         */
+        List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
+        for ( MessageListener<T, T> listener : listeners ) {
+            observables.add( listener.receive( data ).subscribeOn( scheduler ) );
+        }
+
+        //run everything in parallel and zip it up
+        Observable.zip( observables, new FuncN<AsynchronousMessage<T>>() {
             @Override
-            protected Void run() throws Exception {
-                final T rootEvent = event.getEvent();
-
-                for(AsynchronousEventListener<T> listener: listeners){
-                    listener.receive( rootEvent );
-                }
-
-                return null;
+            public AsynchronousMessage<T> call( final Object... args ) {
+                return event;
             }
-        }.toObservable( scheduler ).subscribe( new Observer<Void>() {
+        } ).doOnError( new Action1<Throwable>() {
             @Override
-            public void onCompleted() {
-                queue.remove( event );
-            }
-
-
-            @Override
-            public void onError( final Throwable throwable ) {
+            public void call( final Throwable throwable ) {
                 LOG.error( "Unable to process async event", throwable );
 
                 for ( ErrorListener listener : errorListeners ) {
                     listener.onError( event, throwable );
                 }
             }
-
-
+        } ).doOnCompleted( new Action0() {
             @Override
-            public void onNext( final Void args ) {
-                //nothing to do here
+            public void call() {
+                queue.remove( event );
+            }
+        } ).subscribe( new Action1<AsynchronousMessage<T>>() {
+            @Override
+            public void call( final AsynchronousMessage<T> tAsynchronousMessage ) {
+                //To change body of implemented methods use File | Settings | File Templates.
             }
         } );
-
     }
 
 
     @Override
-    public void addListener( final AsynchronousEventListener<T> listener ) {
+    public void addListener( final MessageListener<T, T> listener ) {
         this.listeners.add( listener );
     }
 
@@ -104,7 +103,4 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     public void addErrorListener( ErrorListener<T> listener ) {
         this.errorListeners.add( listener );
     }
-
-
-
 }

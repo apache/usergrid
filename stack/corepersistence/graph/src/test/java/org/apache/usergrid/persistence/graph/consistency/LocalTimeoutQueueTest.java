@@ -34,14 +34,14 @@ public class LocalTimeoutQueueTest {
 
         final TestEvent event = new TestEvent();
 
-        AsynchronousEvent<TestEvent> asynchronousEvent = queue.queue( event, timeout );
+        AsynchronousMessage<TestEvent> asynchronousMessage = queue.queue( event, timeout );
 
-        assertNotNull( asynchronousEvent );
+        assertNotNull( asynchronousMessage );
 
-        assertEquals( event, asynchronousEvent.getEvent() );
-        assertEquals( time + timeout, asynchronousEvent.getTimeout() );
+        assertEquals( event, asynchronousMessage.getEvent() );
+        assertEquals( time + timeout, asynchronousMessage.getTimeout() );
 
-        Collection<AsynchronousEvent<TestEvent>> results = queue.take( 100, timeout );
+        Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
 
         assertEquals( "Time not yet elapsed", 0, results.size() );
 
@@ -55,9 +55,9 @@ public class LocalTimeoutQueueTest {
         assertEquals( "Time elapsed", 1, results.size() );
 
         //validate we get a new timeout event since the old one was re-scheduled
-        Iterator<AsynchronousEvent<TestEvent>> events = results.iterator();
+        Iterator<AsynchronousMessage<TestEvent>> events = results.iterator();
 
-        AsynchronousEvent<TestEvent> message = events.next();
+        AsynchronousMessage<TestEvent> message = events.next();
 
         assertEquals( event, message.getEvent() );
 
@@ -97,18 +97,18 @@ public class LocalTimeoutQueueTest {
 
             final TestEvent event = new TestEvent();
 
-            AsynchronousEvent<TestEvent> asynchronousEvent = queue.queue( event, timeout );
+            AsynchronousMessage<TestEvent> asynchronousMessage = queue.queue( event, timeout );
 
             events.add( event );
 
-            assertNotNull( asynchronousEvent );
+            assertNotNull( asynchronousMessage );
 
-            assertEquals( event, asynchronousEvent.getEvent() );
-            assertEquals( time + timeout, asynchronousEvent.getTimeout() );
+            assertEquals( event, asynchronousMessage.getEvent() );
+            assertEquals( time + timeout, asynchronousMessage.getTimeout() );
         }
 
 
-        Collection<AsynchronousEvent<TestEvent>> results = queue.take( 100, timeout );
+        Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
 
         assertEquals( "Time not yet elapsed", 0, results.size() );
 
@@ -133,11 +133,11 @@ public class LocalTimeoutQueueTest {
             assertEquals( "Time elapsed", 100, results.size() );
 
             //validate we get a new timeout event since the old one was re-scheduled
-            Iterator<AsynchronousEvent<TestEvent>> eventIterator = results.iterator();
+            Iterator<AsynchronousMessage<TestEvent>> eventIterator = results.iterator();
 
             while(eventIterator.hasNext()){
 
-                AsynchronousEvent<TestEvent> message = eventIterator.next();
+                AsynchronousMessage<TestEvent> message = eventIterator.next();
 
                 assertTrue( events.remove( message.getEvent() ) );
 

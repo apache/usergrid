@@ -36,8 +36,8 @@ import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.AsynchronousEvent;
-import org.apache.usergrid.persistence.graph.consistency.AsynchronousEventListener;
+import org.apache.usergrid.persistence.graph.consistency.AsynchronousMessage;
+import org.apache.usergrid.persistence.graph.consistency.MessageListener;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
 import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
@@ -135,7 +135,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
                 mutation.mergeShallow( edgeMutation );
 
-                final AsynchronousEvent<Edge> event = edgeWriteAsyncProcessor.setVerification( edge, getTimeout() );
+                final AsynchronousMessage<Edge> event = edgeWriteAsyncProcessor.setVerification( edge, getTimeout() );
 
                 try {
                     mutation.execute();
@@ -161,7 +161,7 @@ public class EdgeManagerImpl implements EdgeManager {
             public Edge call( final Edge edge ) {
                 final MutationBatch edgeMutation = edgeSerialization.markEdge( scope, edge );
 
-                final AsynchronousEvent<Edge> event = edgeDeleteAsyncProcessor.setVerification( edge, getTimeout() );
+                final AsynchronousMessage<Edge> event = edgeDeleteAsyncProcessor.setVerification( edge, getTimeout() );
 
 
                 try {
@@ -191,7 +191,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
                 final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime );
 
-                final AsynchronousEvent<Id> event = nodeDeleteAsyncProcessor.setVerification( node, getTimeout() );
+                final AsynchronousMessage<Id> event = nodeDeleteAsyncProcessor.setVerification( node, getTimeout() );
 
 
                 try {
@@ -420,10 +420,10 @@ public class EdgeManagerImpl implements EdgeManager {
     /**
      * Construct the asynchronous edge lister for the repair operation.
      */
-    public class EdgeWriteListener implements AsynchronousEventListener<Edge, Integer> {
+    public class EdgeWriteListener implements MessageListener<Edge, Edge> {
 
         @Override
-        public Observable<Integer> receive( final Edge write ) {
+        public Observable<Edge> receive( final Edge write ) {
 
             final UUID maxVersion = write.getVersion();
 
@@ -452,9 +452,9 @@ public class EdgeManagerImpl implements EdgeManager {
                     return UUIDComparator.staticCompare( markedEdge.getVersion(), maxVersion ) < 0;
                 }
                 //buffer the deletes and issue them in a single mutation
-            } ).buffer( graphFig.getScanPageSize() ).map( new Func1<List<MarkedEdge>, Integer>() {
+            } ).buffer( graphFig.getScanPageSize() ).map( new Func1<List<MarkedEdge>, Edge>() {
                 @Override
-                public Integer call( final List<MarkedEdge> markedEdges ) {
+                public Edge call( final List<MarkedEdge> markedEdges ) {
 
                     final int size = markedEdges.size();
 
@@ -473,7 +473,7 @@ public class EdgeManagerImpl implements EdgeManager {
                         throw new RuntimeException( "Unable to issue write to cassandra", e );
                     }
 
-                    return size;
+                    return write;
                 }
             } );
         }
@@ -483,10 +483,10 @@ public class EdgeManagerImpl implements EdgeManager {
     /**
      * Construct the asynchronous delete operation from the listener
      */
-    public class EdgeDeleteListener implements AsynchronousEventListener<Edge, Integer> {
+    public class EdgeDeleteListener implements MessageListener<Edge, Edge> {
 
         @Override
-        public Observable<Integer> receive( final Edge delete ) {
+        public Observable<Edge> receive( final Edge delete ) {
 
             final UUID maxVersion = delete.getVersion();
 
@@ -496,76 +496,57 @@ public class EdgeManagerImpl implements EdgeManager {
 
                     //search by edge type and target type.  If any other edges with this target type exist,
                     // we can't delete it
-                    Observable<Integer> sourceIdType= loadEdgesFromSourceByType(
+                    Observable<MutationBatch> sourceIdType = loadEdgesFromSourceByType(
                             new SimpleSearchByIdType( edge.getSourceNode(), edge.getType(), maxVersion,
-                                    edge.getTargetNode().getType(), null ) ).take( 2 ).count().doOnEach(
-                            new Action1<Integer>() {
+                                    edge.getTargetNode().getType(), null ) ).take( 2 ).count()
+                            .map( new Func1<Integer, MutationBatch>() {
                                 @Override
-                                public void call( final Integer count ) {
+                                public MutationBatch call( final Integer count ) {
                                     //There's nothing to do, we have 2 different edges with the same edge type and
                                     // target type.  Don't delete meta data
                                     if ( count == 2 ) {
-                                        return;
+                                        return null;
                                     }
 
-                                    try {
-                                        edgeMetadataSerialization.removeEdgeTypeFromSource( scope, delete ).execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new RuntimeException( "Unable to execute mutation", e );
-                                    }
+                                    return edgeMetadataSerialization.removeEdgeTypeFromSource( scope, delete );
                                 }
                             } );
 
 
-                    Observable<Integer> targetIdType = loadEdgesToTargetByType(
+                    Observable<MutationBatch> targetIdType = loadEdgesToTargetByType(
                             new SimpleSearchByIdType( edge.getTargetNode(), edge.getType(), maxVersion,
                                     edge.getSourceNode().getType(), null ) ).take( 2 ).count()
-                            .doOnEach( new Action1<Integer>() {
-
-
+                            .map( new Func1<Integer, MutationBatch>() {
                                 @Override
-                                public void call( final Integer count ) {
-
-
+                                public MutationBatch call( final Integer count ) {
                                     //There's nothing to do, we have 2 different edges with the same edge type and
                                     // target type.  Don't delete meta data
                                     if ( count == 2 ) {
-                                        return;
+                                        return null;
                                     }
 
-                                    try {
-                                        edgeMetadataSerialization.removeEdgeTypeToTarget( scope, delete ).execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new RuntimeException( "Unable to execute mutation", e );
-                                    }
+
+                                    return edgeMetadataSerialization.removeEdgeTypeToTarget( scope, delete );
                                 }
                             } );
 
                     //search by edge type and target type.  If any other edges with this target type exist,
                     // we can't delete it
-                    Observable<Integer> sourceType = loadEdgesFromSource(
+                    Observable<MutationBatch> sourceType = loadEdgesFromSource(
                             new SimpleSearchByEdgeType( edge.getSourceNode(), edge.getType(), maxVersion, null ) )
-                            .take( 2 ).count().doOnEach( new Action1<Integer>() {
-
-
+                            .take( 2 ).count().map( new Func1<Integer, MutationBatch>() {
                                 @Override
-                                public void call( final Integer count ) {
+                                public MutationBatch call( final Integer count ) {
 
 
                                     //There's nothing to do, we have 2 different edges with the same edge type and
                                     // target type.  Don't delete meta data
                                     if ( count == 2 ) {
-                                        return;
+                                        return null;
                                     }
 
-                                    try {
-                                        edgeMetadataSerialization.removeEdgeTypeFromSource( scope, delete ).execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new RuntimeException( "Unable to execute mutation", e );
-                                    }
+
+                                    return edgeMetadataSerialization.removeEdgeTypeFromSource( scope, delete );
                                 }
                             } );
 
@@ -625,12 +606,19 @@ public class EdgeManagerImpl implements EdgeManager {
                                 }
                             } );
                 }
-            } ).map( new Func1<MutationBatch, MutationBatch>() {
+            } ).map( new Func1<MutationBatch, Edge>() {
                 @Override
-                public MutationBatch call( final MutationBatch mutationBatch ) {
-                    return mutationBatch;
+                public Edge call( final MutationBatch mutationBatch ) {
+                    try {
+                        mutationBatch.execute();
+                    }
+                    catch ( ConnectionException e ) {
+                        throw new RuntimeException( "Unable to execute mutation", e );
+                    }
+
+                    return delete;
                 }
-            } ).count();
+            } );
         }
     }
 
@@ -638,35 +626,44 @@ public class EdgeManagerImpl implements EdgeManager {
     /**
      * Construct the asynchronous node delete from the q
      */
-    public class NodeDeleteListener implements AsynchronousEventListener<Id, Integer> {
+    public class NodeDeleteListener implements MessageListener<Id, Id> {
 
         @Override
-        public Observable<Integer> receive( final Id node ) {
+        public Observable<Id> receive( final Id node ) {
 
-            final Optional<UUID> mark = nodeSerialization.getMaxVersion( scope, node );
 
-            //Nothing to do, just exist with 0 count
-            if ( !mark.isPresent() ) {
-                return Observable.just( 0 );
-            }
+            return Observable.from( node ).map( new Func1<Id, Optional<UUID>>() {
+                @Override
+                public Optional<UUID> call( final Id id ) {
+                    return nodeSerialization.getMaxVersion( scope, node );
+                }
+            } ).flatMap( new Func1<Optional<UUID>, Observable<Edge>>() {
+                @Override
+                public Observable<Edge> call( final Optional<UUID> uuidOptional ) {
+                    return getEdgeTypesToTarget( new SimpleSearchEdgeType( node, null ) )
+                            .flatMap( new Func1<String, Observable<Edge>>() {
+                                @Override
+                                public Observable<Edge> call( final String edgeType ) {
 
-            final UUID maxVersion = mark.get();
-
-            return getEdgeTypesToTarget( new SimpleSearchEdgeType( node, null ) )
-                    .flatMap( new Func1<String, Observable<Edge>>() {
-                        @Override
-                        public Observable<Edge> call( final String edgeType ) {
-
-                           //for each edge type, we want to search all edges < this version to the node and delete them. We might want to batch this up for efficiency
-                            return loadEdgesToTarget( new SimpleSearchByEdgeType( node, edgeType, maxVersion, null ) )
-                                    .doOnEach( new Action1<Edge>() {
-                                        @Override
-                                        public void call( final Edge edge ) {
-                                            deleteEdge( edge );
-                                        }
-                                    } );
-                        }
-                    } ).count();
+                                    //for each edge type, we want to search all edges < this version to the node and
+                                    // delete them. We might want to batch this up for efficiency
+                                    return loadEdgesToTarget(
+                                            new SimpleSearchByEdgeType( node, edgeType, uuidOptional.get(), null ) )
+                                            .doOnEach( new Action1<Edge>() {
+                                                @Override
+                                                public void call( final Edge edge ) {
+                                                    deleteEdge( edge );
+                                                }
+                                            } );
+                                }
+                            } );
+                }
+            } ).map( new Func1<Edge, Id>() {
+                @Override
+                public Id call( final Edge edge ) {
+                    return node;
+                }
+            } );
         }
     }
 }

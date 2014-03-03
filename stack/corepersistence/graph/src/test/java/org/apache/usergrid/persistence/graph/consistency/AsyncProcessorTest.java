@@ -27,7 +27,9 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import rx.Observable;
 import rx.concurrency.Schedulers;
+import rx.util.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,7 +54,7 @@ public class AsyncProcessorTest {
         final TestEvent event = new TestEvent();
 
 
-        final AsynchronousEvent<TestEvent> asynchronousEvent = new AsynchronousEvent<TestEvent>() {
+        final AsynchronousMessage<TestEvent> asynchronousMessage = new AsynchronousMessage<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -72,13 +74,13 @@ public class AsyncProcessorTest {
 
 
         //mock up the queue
-        when( queue.queue( event, timeout ) ).thenReturn( asynchronousEvent );
+        when( queue.queue( event, timeout ) ).thenReturn( asynchronousMessage );
 
 
-        AsynchronousEvent<TestEvent> returned = asyncProcessor.setVerification( event, timeout );
+        AsynchronousMessage<TestEvent> returned = asyncProcessor.setVerification( event, timeout );
 
         //ensure the timeouts are returned from the Queue subsystem
-        assertSame( asynchronousEvent, returned );
+        assertSame( asynchronousMessage, returned );
     }
 
 
@@ -90,7 +92,7 @@ public class AsyncProcessorTest {
         final TestEvent event = new TestEvent();
 
 
-        final AsynchronousEvent<TestEvent> asynchronousEvent = new AsynchronousEvent<TestEvent>() {
+        final AsynchronousMessage<TestEvent> asynchronousMessage = new AsynchronousMessage<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -111,7 +113,7 @@ public class AsyncProcessorTest {
         final CountDownLatch latch = new CountDownLatch( 1 );
 
         //mock up the ack to allow us to block the test until the async confirm fires
-        when( queue.remove( asynchronousEvent ) ).thenAnswer( new Answer<Boolean>() {
+        when( queue.remove( asynchronousMessage ) ).thenAnswer( new Answer<Boolean>() {
             @Override
             public Boolean answer( final InvocationOnMock invocation ) throws Throwable {
                 latch.countDown();
@@ -120,7 +122,7 @@ public class AsyncProcessorTest {
         } );
 
 
-        asyncProcessor.start( asynchronousEvent );
+        asyncProcessor.start( asynchronousMessage );
 
 
         //block until the event is fired.  The correct invocation is implicitly verified by the remove mock
@@ -145,7 +147,7 @@ public class AsyncProcessorTest {
         final boolean[] invoked = new boolean[] { false, false };
 
 
-        final AsynchronousEvent<TestEvent> asynchronousEvent = new AsynchronousEvent<TestEvent>() {
+        final AsynchronousMessage<TestEvent> asynchronousMessage = new AsynchronousMessage<TestEvent>() {
             @Override
             public TestEvent getEvent() {
                 return event;
@@ -165,12 +167,12 @@ public class AsyncProcessorTest {
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
-        final AsynchronousEvent<?>[] errorEvents = { null };
+        final AsynchronousMessage<?>[] errorEvents = { null };
 
         //countdown the latch so the test can proceed
         asyncProcessor.addErrorListener( new ErrorListener<TestEvent>() {
             @Override
-            public void onError( final AsynchronousEvent<TestEvent> event, final Throwable t ) {
+            public void onError( final AsynchronousMessage<TestEvent> event, final Throwable t ) {
                 errorEvents[0] = event;
                 invoked[1] = true;
                 latch.countDown();
@@ -179,7 +181,7 @@ public class AsyncProcessorTest {
         } );
 
         //throw an error if remove is called.  This shouldn't happen
-        when( queue.remove( asynchronousEvent ) ).then( new Answer<Boolean>() {
+        when( queue.remove( asynchronousMessage ) ).then( new Answer<Boolean>() {
             @Override
             public Boolean answer( final InvocationOnMock invocation ) throws Throwable {
                 invoked[0] = true;
@@ -189,7 +191,7 @@ public class AsyncProcessorTest {
 
 
         //fire the event
-        asyncProcessor.start( asynchronousEvent );
+        asyncProcessor.start( asynchronousMessage );
 
 
         //block until the event is fired.  The invocation verification is part of the error listener unlocking
@@ -210,7 +212,7 @@ public class AsyncProcessorTest {
     /**
      * Construct the async processor
      */
-    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue , AsynchronousEventListener<T> listener) {
+    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue , MessageListener<T, T> listener) {
 
         AsyncProcessorImpl<T> processor =  new AsyncProcessorImpl( queue,Schedulers.threadPoolForIO() );
         processor.addListener( listener );
@@ -230,7 +232,7 @@ public class AsyncProcessorTest {
     }
 
 
-    public static class TestListener implements AsynchronousEventListener<TestEvent> {
+    public static class TestListener implements MessageListener<TestEvent, TestEvent> {
 
         public final Stack<TestEvent> events = new Stack<TestEvent>();
 
@@ -239,9 +241,16 @@ public class AsyncProcessorTest {
 
         }
 
+
         @Override
-        public void receive( final TestEvent event ) {
-            events.push( event );
+        public Observable<TestEvent> receive( final TestEvent event ) {
+
+            return Observable.from( event ).doOnEach(new Action1<TestEvent>() {
+               @Override
+               public void call( final TestEvent testEvent ) {
+                   events.push( testEvent );
+               }
+           });
         }
     }
 
@@ -249,15 +258,22 @@ public class AsyncProcessorTest {
     /**
      * Throw error after the event is fired
      */
-    public static class AsynchronousErrorListener implements AsynchronousEventListener<TestEvent> {
+    public static class AsynchronousErrorListener implements MessageListener<TestEvent, TestEvent> {
 
         public final Stack<TestEvent> events = new Stack<TestEvent>();
 
 
         @Override
-        public void receive( final TestEvent event ) {
-            events.push( event );
-            throw new RuntimeException( "Test Exception thrown.  Failed to process event" );
+        public Observable<TestEvent> receive( final TestEvent event ) {
+            return Observable.from( event ).doOnEach(new Action1<TestEvent>() {
+                          @Override
+                          public void call( final TestEvent testEvent ) {
+                              events.push( testEvent );
+                              throw new RuntimeException( "Test Exception thrown.  Failed to process event" );
+                          }
+                      });
         }
+
+
     }
 }
