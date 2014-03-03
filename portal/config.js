@@ -2,7 +2,6 @@ var Usergrid = Usergrid || {};
 
 Usergrid.showNotifcations = true;
 
-
 // used only if hostname does not match a real server name
 Usergrid.overrideUrl = 'https://api.usergrid.com/';
 
@@ -74,17 +73,6 @@ Usergrid.regex = {
   stateRegexDescription: "Sorry only alphabetical characters or spaces are allowed. Must be between 2-100 characters.",
   collectionNameRegexDescription: "Collection name only allows : a-z A-Z 0-9. Must be between 3-25 characters."
 };
-
-//Performance
-Usergrid.options.scriptReferences.dev.push('bower_components/apigee.performance.ui/dist/js/usergrid-perf-dev.min.js');
-Usergrid.options.scriptReferences.main.push('bower_components/apigee.performance.ui/dist/js/usergrid-perf.min.js');
-Usergrid.options.cssRefs.push({id:'perf-css',src:'bower_components/apigee.performance.ui/dist/css/performance.min.css'});
-//End Performance
-//Push
-Usergrid.options.scriptReferences.dev.push('bower_components/apigee.push.ui/dist/js/usergrid-push-dev.min.js');
-Usergrid.options.scriptReferences.main.push('bower_components/apigee.push.ui/dist/js/usergrid-push.min.js');
-Usergrid.options.cssRefs.push({id:'push-css',src:'bower_components/apigee.push.ui/dist/css/push.min.css'});
-//End Push
 try{
   if(module && module.exports){
     module.exports = Usergrid;
