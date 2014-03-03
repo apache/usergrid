@@ -26,7 +26,7 @@ public class ExportInfo extends TypedEntity {
 
 
     public ExportInfo( Map<String, Object> exportData ) {
-        path = ( String ) exportData.get( "path" );
+        //path = ( String ) exportData.get( "path" );
         properties = ( Map ) exportData.get( "properties" );
         storage_provider = ( String ) properties.get( "storage_provider" );
         storage_info = ( Map ) properties.get( "storage_info" );
