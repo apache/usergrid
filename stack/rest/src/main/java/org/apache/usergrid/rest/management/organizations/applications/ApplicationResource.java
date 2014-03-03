@@ -234,7 +234,7 @@ public class ApplicationResource extends AbstractContextResource {
         }
         catch ( NullPointerException e ) {
             OAuthResponse errorMsg =
-                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( "Job Not Created" )
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( e.getMessage() )
                                  .buildJSONMessage();
 
             return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
@@ -275,7 +275,7 @@ public class ApplicationResource extends AbstractContextResource {
         }
         catch ( NullPointerException e ) {
             OAuthResponse errorMsg =
-                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( "Job Not Created" )
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( e.getMessage())
                                  .buildJSONMessage();
 
             return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
@@ -307,7 +307,14 @@ public class ApplicationResource extends AbstractContextResource {
         }
         catch ( Exception e ) {
             //this might be due to other reasons, but gotta look up what service manager does.
-            return Response.status( SC_BAD_REQUEST ).build();
+
+            OAuthResponse errorMsg =
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( e.getMessage())
+                                 .buildJSONMessage();
+
+            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
+           // return Response.status( SC_BAD_REQUEST ).build();
         }
         //validate this user owns it
 
