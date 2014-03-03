@@ -767,8 +767,8 @@ function doCallback(callback, params, context) {
    */
     Usergrid.Client.prototype.createCollection = function(options, callback) {
         options.client = this;
-        var collection = new Usergrid.Collection(options, function(err, data) {
-            doCallback(callback, [ err, collection, data ]);
+        var collection = new Usergrid.Collection(options, function(err, response, collection) {
+            doCallback(callback, [ err, collection, response ], collection);
         });
     };
     /*
