@@ -750,6 +750,7 @@ public class ManagementServiceIT {
     public void testConnectionsOnCollectionExport() throws Exception {
 
         File f = null;
+        int index = 0;
 
 
         try {
@@ -780,10 +781,10 @@ public class ManagementServiceIT {
         //creates entities
         for ( int i = 0; i < 2; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "username", "meatIsGreat" + i );
+            userProperties.put( "email", "grey" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
 
-            entity[i] = em.create( "user", userProperties );
+            entity[i] = em.create( "users", userProperties );
         }
         //creates connections
         em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
@@ -806,9 +807,19 @@ public class ManagementServiceIT {
         JSONParser parser = new JSONParser();
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-        assertEquals(2, a.size() );
+        //assertEquals(2, a.size() );
 
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( 0 );
+        for(index  = 0; index < a.size(); index++) {
+            JSONObject jObj = ( JSONObject ) a.get( index );
+            JSONObject data = ( JSONObject ) jObj.get( "Metadata" );
+            String uuid = (String) data.get( "uuid" );
+            if ( entity[0].getUuid().toString().equals( uuid )) {
+                break;
+            }
+
+        }
+
+        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( index );
         org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
 
         assertNotNull( objConnections );
@@ -824,6 +835,7 @@ public class ManagementServiceIT {
     public void testConnectionsOnApplicationEndpoint() throws Exception {
 
         File f = null;
+        int index = 0;
 
 
         try {
@@ -880,7 +892,17 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( 0 );
+        for(index  = 0; index < a.size(); index++) {
+            JSONObject jObj = ( JSONObject ) a.get( index );
+            JSONObject data = ( JSONObject ) jObj.get( "Metadata" );
+            String uuid = (String) data.get( "uuid" );
+            if ( entity[0].getUuid().toString().equals( uuid )) {
+                break;
+            }
+
+        }
+
+        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( index );
         org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
 
         assertNotNull( objConnections );
@@ -1049,7 +1071,7 @@ public class ManagementServiceIT {
 
         File f = null;
         String orgName = "ed-organization";
-        String appName = "testAppNotExported";
+        String appName = "testAppCollectionTestNotExported";
 
         try {
             f = new File( "exportOneApp.json" );
@@ -1183,6 +1205,7 @@ public class ManagementServiceIT {
     public void testExportOneCollection() throws Exception {
 
         File f = null;
+        int entitiesToCreate = 10000;
 
         try {
             f = new File( "exportOneCollection.json" );
@@ -1197,9 +1220,9 @@ public class ManagementServiceIT {
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
-        entity = new Entity[10];
+        entity = new Entity[entitiesToCreate];
         //creates entities
-        for ( int i = 0; i < 10; i++ ) {
+        for ( int i = 0; i < entitiesToCreate; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
@@ -1233,7 +1256,7 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        assertEquals( 10 , a.size() );
+        assertEquals( entitiesToCreate , a.size() );
         f.delete();
     }
 
