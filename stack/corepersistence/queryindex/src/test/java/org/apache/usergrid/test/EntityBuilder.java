@@ -26,10 +26,14 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
+import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.ListField;
+import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.field.value.Location;
 
 
 public class EntityBuilder {
@@ -49,28 +53,62 @@ public class EntityBuilder {
             Object value = map.get( fieldName );
 
             if ( value instanceof String ) {
-                entity.setField( new StringField(fieldName, (String)value ));
+                entity.setField( new StringField( fieldName, (String)value ));
 
             } else if ( value instanceof Boolean ) {
-                entity.setField( new BooleanField(fieldName, (Boolean)value ));
+                entity.setField( new BooleanField( fieldName, (Boolean)value ));
                         
             } else if ( value instanceof Integer ) {
-                entity.setField( new IntegerField(fieldName, (Integer)value ));
+                entity.setField( new IntegerField( fieldName, (Integer)value ));
 
             } else if ( value instanceof Double ) {
-                entity.setField( new DoubleField(fieldName, (Double)value ));
+                entity.setField( new DoubleField( fieldName, (Double)value ));
 
+		    } else if ( value instanceof Float ) {
+                entity.setField( new FloatField( fieldName, (Float)value ));
+				
             } else if ( value instanceof Long ) {
-                entity.setField( new LongField(fieldName, (Long)value ));
+                entity.setField( new LongField( fieldName, (Long)value ));
 
             } else if ( value instanceof List) {
                 entity.setField( listToListField( scope, fieldName, (List)value ));
 
             } else if ( value instanceof Map ) {
-                entity.setField( new EntityObjectField( fieldName, 
-                    fromMap( scope, (Map<String, Object>)value ))); // recursion
 
-            } else {
+				Field field = null;
+
+				// is the map really a location element?
+				Map<String, Object> m = (Map<String, Object>)value;
+				if ( m.size() == 2) {
+					Double lat = null;
+					Double lon = null;
+					try {
+						if ( m.get("latitude") != null && m.get("longitude") != null ) {
+							lat = Double.parseDouble( m.get("latitude").toString() );
+							lon = Double.parseDouble( m.get("longitude").toString() );
+
+						} else if ( m.get("lat") != null && m.get("lon") != null ) { 
+							lat = Double.parseDouble( m.get("lat").toString() );
+							lon = Double.parseDouble( m.get("lon").toString() );
+						}
+					} catch ( NumberFormatException ignored ) {}
+
+					if ( lat != null && lon != null ) {
+						field = new LocationField( fieldName, new Location( lat, lon ));
+					}
+				}
+
+				if ( field == null ) { 
+
+					// not a location element, process it as map
+					entity.setField( new EntityObjectField( fieldName, 
+						fromMap( scope, (Map<String, Object>)value ))); // recursion
+
+				} else {
+					entity.setField( field );
+				}
+	
+			} else {
                 throw new RuntimeException("Unknown type " + value.getClass().getName());
             }
         }

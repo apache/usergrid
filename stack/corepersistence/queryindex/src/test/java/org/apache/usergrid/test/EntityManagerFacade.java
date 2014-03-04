@@ -30,7 +30,10 @@ import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.LocationField;
+import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.persistence.query.EntityRef;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.slf4j.Logger;
@@ -88,6 +91,10 @@ public class EntityManagerFacade {
     public Results searchCollection( Entity user, String collectionName, Query query ) {
 
         String type = typesByCollectionNames.get( collectionName );
+		if ( type == null ) {
+			throw new RuntimeException( 
+					"No type found for collection name: " + collectionName);
+		}
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
 
         EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
@@ -130,4 +137,30 @@ public class EntityManagerFacade {
 
         eci.index( entity );
     }
+
+	
+	public void delete( Entity entity ) {
+
+        String type = entity.getId().getType();
+
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
+        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+
+		eci.deindex( entity );
+		ecm.delete( entity.getId() );
+	}
+
+	public void setProperty( EntityRef entityRef, String fieldName, double lat, double lon ) {
+
+        String type = entityRef.getId().getType();
+
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
+        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+
+		Entity entity = ecm.load( entityRef.getId() ).toBlockingObservable().last();
+		entity.setField( new LocationField( fieldName, new Location( lat, lon )));
+	}
+
 }

@@ -65,6 +65,7 @@ import static org.apache.usergrid.persistence.utils.ListUtils.firstUuid;
 import static org.apache.usergrid.persistence.utils.ListUtils.isEmpty;
 import static org.apache.usergrid.persistence.utils.MapUtils.toMapList;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
@@ -132,7 +133,7 @@ public class Query {
 
     public QueryBuilder createQueryBuilder() {
 
-        final QueryBuilder queryBuilder;
+        QueryBuilder queryBuilder = null;
 
         if ( getRootOperand() != null ) {
             QueryVisitor v = new EsDslQueryVistor();
@@ -143,13 +144,33 @@ public class Query {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
             queryBuilder = v.getQueryBuilder();
+        } 
 
-        } else {
+		if ( queryBuilder == null ) {
             queryBuilder = QueryBuilders.matchAllQuery();
-        }
+		}
 
         return queryBuilder;
     }
+
+
+	public FilterBuilder createFilterBuilder() {
+	    FilterBuilder filterBuilder = null;
+
+        if ( getRootOperand() != null ) {
+            QueryVisitor v = new EsDslQueryVistor();
+            try {
+                getRootOperand().visit( v );
+
+            } catch ( PersistenceException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+            filterBuilder = v.getFilterBuilder();
+        } 
+
+        return filterBuilder;	
+	}
+
 
     public static Query fromQL( String ql ) throws QueryParseException {
         if ( ql == null ) {

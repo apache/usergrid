@@ -54,6 +54,7 @@ import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -72,6 +73,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     private final EntityCollectionManager manager;
 
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
+    public static final String GEO_SUFFIX = "_ug_geo";
 
     @Inject
     public EsEntityCollectionIndex( @Assisted final CollectionScope scope, 
@@ -134,16 +136,28 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
 
     private String createIndexId( Entity entity ) {
+        return createIndexId( entity.getId(), entity.getVersion() );
+    }
 
-        return entity.getId().getUuid().toString() + "|" 
-             + entity.getId().getType() + "|" 
-             + entity.getVersion().toString();
+
+	private String createIndexId( Id entityId, UUID version ) {
+        return entityId.getUuid().toString() + "|" 
+             + entityId.getType() + "|" 
+             + version.toString();
     }
 
 
     public void deindex( Entity entity ) {
 
         String indexId = createIndexId( entity ); 
+        client.prepareDelete( index, scope.getName(), indexId ).execute().actionGet();
+
+        logger.debug( "Deindexed Entity with index id " + indexId );
+    }
+
+    public void deindex( Id entityId, UUID version ) {
+
+        String indexId = createIndexId( entityId, version ); 
         client.prepareDelete( index, scope.getName(), indexId ).execute().actionGet();
 
         logger.debug( "Deindexed Entity with index id " + indexId );
@@ -157,8 +171,17 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         QueryBuilder qb = query.createQueryBuilder();
         logger.debug( "Executing query on type {} query: {} ", scope.getName(), qb.toString() );
 
-        SearchRequestBuilder srb = client.prepareSearch( index ).setTypes( scope.getName() )
-            .setQuery( qb ).setFrom( 0 ).setSize( query.getLimit() );
+        SearchRequestBuilder srb = client.prepareSearch( index )
+			.setTypes( scope.getName() )
+			.setQuery( qb );
+
+		FilterBuilder fb = query.createFilterBuilder();
+		if ( fb != null ) {
+        	logger.debug( "   Filter: {} ", fb.toString() );
+			srb = srb.setPostFilter( fb );
+		}
+
+	    srb = srb.setFrom( 0 ).setSize( query.getLimit() );
 
         for ( Query.SortPredicate sp : query.getSortPredicates() ) {
             final SortOrder order;
@@ -172,6 +195,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         SearchResponse sr = srb.execute().actionGet();
         SearchHits hits = sr.getHits();
+        logger.debug( "   Results: " + sr.toString());
         logger.debug( "   Hit count: " + hits.getTotalHits());
 
         Results results = new Results();
@@ -251,8 +275,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
                 // field names lat and lon triggerl ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude() );
-                locMap.put("lon", locField.getValue().getLongtitude());
-                entityMap.put( field.getName(), locMap );
+                locMap.put("lon", locField.getValue().getLongtitude() );
+                entityMap.put( field.getName() + GEO_SUFFIX, locMap );
 
             } else {
                 entityMap.put( field.getName(), field.getValue() );
@@ -335,6 +359,15 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                                 .startObject( "mapping" )
                                     .field( "type", "string" )
                                     .field( "index", "not_analyzed" )
+                                .endObject()
+                            .endObject()
+                        .endObject()
+
+                        .startObject()
+                            .startObject( "template_3" )
+                                .field( "match", "location*" + GEO_SUFFIX)
+                                .startObject( "mapping" )
+                                    .field( "type", "geo_point" )
                                 .endObject()
                             .endObject()
                         .endObject()

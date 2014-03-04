@@ -24,6 +24,8 @@ import java.util.Stack;
 import org.apache.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
+import static org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex.ANALYZED_SUFFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex.GEO_SUFFIX;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -70,7 +72,7 @@ public class EsDslQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+            name += ANALYZED_SUFFIX;
         }        
         stack.push( QueryBuilders.matchQuery( name, value ));
     }
@@ -84,8 +86,8 @@ public class EsDslQueryVistor implements QueryVisitor {
         float distance = op.getDistance().getFloatValue();
 
         // TODO: provide some way to set units for the distance filter 
-        FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
-           .lat( lat ).lon( lon ).distance( distance, DistanceUnit.KILOMETERS );
+        FilterBuilder fb = FilterBuilders.geoDistanceFilter( name + GEO_SUFFIX )
+           .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
 
         filterBuilders.add( fb );
     } 
@@ -94,7 +96,7 @@ public class EsDslQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+            name += ANALYZED_SUFFIX;
         }
         stack.push( QueryBuilders.rangeQuery( name ).lt( value ));
     }
@@ -103,7 +105,7 @@ public class EsDslQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityCollectionIndex.ANALYZED_SUFFIX;
+            name += ANALYZED_SUFFIX;
         }
         stack.push( QueryBuilders.rangeQuery( name ).lte( value ));
     }
@@ -141,4 +143,23 @@ public class EsDslQueryVistor implements QueryVisitor {
         }
         return stack.pop();
     }
+
+	public FilterBuilder getFilterBuilder() {
+
+		if ( filterBuilders.size() >  1 ) {
+
+			FilterBuilder andFilter = null;
+			for ( FilterBuilder fb : filterBuilders ) {
+				if ( andFilter == null ) {
+					andFilter = FilterBuilders.andFilter( fb );
+				} else {	
+					andFilter = FilterBuilders.andFilter( andFilter, fb );
+				}
+			}	
+
+		} else if ( !filterBuilders.isEmpty() ) {
+			return filterBuilders.get(0);
+		}
+		return null;
+	}
 }
