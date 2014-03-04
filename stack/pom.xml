@@ -1772,7 +1772,7 @@
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
                     <exclude>**/.gitignore</exclude>
-                    <exclude>**..idea/**</exclude>
+                    <exclude>**/.idea/**</exclude>
                     <exclude>**/*.iml</exclude>
                     <exclude>**/nbactions.xml</exclude>
                     <exclude>**/nb-configuration.xml</exclude>
