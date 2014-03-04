@@ -148,18 +148,13 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
 
     public void deindex( Entity entity ) {
-
-        String indexId = createIndexId( entity ); 
-        client.prepareDelete( index, scope.getName(), indexId ).execute().actionGet();
-
-        logger.debug( "Deindexed Entity with index id " + indexId );
+		deindex( entity.getId(), entity.getVersion() );
     }
 
     public void deindex( Id entityId, UUID version ) {
-
         String indexId = createIndexId( entityId, version ); 
-        client.prepareDelete( index, scope.getName(), indexId ).execute().actionGet();
-
+        client.prepareDelete( index, scope.getName(), indexId )
+			.setRefresh( refresh ).execute().actionGet();
         logger.debug( "Deindexed Entity with index id " + indexId );
     }
 

@@ -24,7 +24,6 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -81,7 +80,6 @@ public class EntityManagerFacade {
         
         Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
         entity = EntityBuilder.fromMap( scope.getName(), entity, properties );
-        EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entity = ecm.write( entity ).toBlockingObservable().last();
 
         eci.index( entity );
@@ -161,6 +159,9 @@ public class EntityManagerFacade {
 
 		Entity entity = ecm.load( entityRef.getId() ).toBlockingObservable().last();
 		entity.setField( new LocationField( fieldName, new Location( lat, lon )));
+
+        entity = ecm.write(entity).toBlockingObservable().last();
+        eci.index(entity);
 	}
 
 }
