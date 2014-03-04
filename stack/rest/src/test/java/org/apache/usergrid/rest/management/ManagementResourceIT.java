@@ -666,6 +666,35 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( Status.BAD_REQUEST, responseStatus );
     }
 
+    @Test
+    public void exportPostNullPointer() throws Exception {
+        JsonNode node = null;
+        Status responseStatus = Status.OK;
+
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "bucket_location", "insert bucket name here" );
+
+
+        properties.put( "storage_provider", "s3" );
+        properties.put( "storage_info", storage_info );
+
+        payload.put( "path", "test-organization/test-app" );
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( Status.BAD_REQUEST, responseStatus );
+    }
+
 
     @Test
     public void exportGetUnauthorized() throws Exception {

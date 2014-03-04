@@ -233,12 +233,8 @@ public class ApplicationResource extends AbstractContextResource {
             uuidRet.put( "jobUUID", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
-            OAuthResponse errorMsg =
-                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( e.getMessage() )
-                                 .buildJSONMessage();
-
-            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
         catch ( Exception e ) {
             //TODO:throw descriptive error message and or include on in the response
@@ -274,12 +270,8 @@ public class ApplicationResource extends AbstractContextResource {
             uuidRet.put( "jobUUID", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
-            OAuthResponse errorMsg =
-                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( e.getMessage())
-                                 .buildJSONMessage();
-
-            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
         catch ( Exception e ) {
             //TODO:throw descriptive error message and or include on in the response
@@ -305,18 +297,10 @@ public class ApplicationResource extends AbstractContextResource {
         try {
             entity = smf.getServiceManager( applicationId ).getEntityManager().get( jobUUIDStr, Export.class );
         }
-        catch ( Exception e ) {
-            //this might be due to other reasons, but gotta look up what service manager does.
-
-            OAuthResponse errorMsg =
-                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setErrorDescription( e.getMessage())
-                                 .buildJSONMessage();
-
-            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
-           // return Response.status( SC_BAD_REQUEST ).build();
+        catch ( Exception e ) { //this might not be a bad request and needs better error checking
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
-        //validate this user owns it
 
         if ( entity == null ) {
             return Response.status( SC_BAD_REQUEST ).build();

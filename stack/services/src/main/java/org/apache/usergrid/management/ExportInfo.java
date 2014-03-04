@@ -25,8 +25,13 @@ public class ExportInfo extends TypedEntity {
     private UUID organizationId;
 
 
-    public ExportInfo( Map<String, Object> exportData ) {
-        //path = ( String ) exportData.get( "path" );
+    public ExportInfo( Map<String, Object> exportData )  {
+        if(exportData == null) {
+            throw new NullPointerException(  );
+        }
+        if(exportData.get( "properties" ) == null) {
+            throw new NullPointerException(  );
+        }
         properties = ( Map ) exportData.get( "properties" );
         storage_provider = ( String ) properties.get( "storage_provider" );
         storage_info = ( Map ) properties.get( "storage_info" );
@@ -43,9 +48,9 @@ public class ExportInfo extends TypedEntity {
 
     public UUID getOrganizationId() { return organizationId; }
 
-    public String getPath() {
-        return path;
-    }
+   // public String getPath() {
+   //     return path;
+    //}
 
 
     //Wouldn't get exposed.
