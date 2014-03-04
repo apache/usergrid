@@ -55,6 +55,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.SimpleEntityRef;
@@ -1640,23 +1641,27 @@ public class ManagementServiceImpl implements ManagementService {
         if ( organizationId == null ) {
             return null;
         }
-        BiMap<UUID, String> applications = HashBiMap.create();
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
-        if ( !results.isEmpty() ) {
+        final BiMap<UUID, String> applications = HashBiMap.create();
+        final EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        final Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
-            String entityName = null;
 
-            for ( Entity entity : results.getEntities() ) {
-                entityName = entity.getName();
+        String entityName;
 
-                if ( entityName != null ) {
-                    entityName = entityName.toLowerCase();
-                }
+        while ( itr.hasNext() ) {
 
-                applications.put( entity.getUuid(), entityName );
+            final Entity entity = ( Entity ) itr.next();
+
+            entityName = entity.getName();
+
+            if ( entityName != null ) {
+                entityName = entityName.toLowerCase();
             }
+
+            applications.put( entity.getUuid(), entityName );
         }
+
 
         return applications;
     }
