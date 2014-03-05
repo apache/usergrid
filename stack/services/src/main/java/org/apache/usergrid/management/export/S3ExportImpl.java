@@ -2,6 +2,7 @@ package org.apache.usergrid.management.export;
 
 
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
 
 import org.jclouds.ContextBuilder;
@@ -16,8 +17,6 @@ import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.management.ExportInfo;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Module;
@@ -30,14 +29,14 @@ import com.google.inject.Module;
 public class S3ExportImpl implements S3Export {
 
     @Override
-    public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo, String filename ) {
+    public void copyToS3( final InputStream inputStream, final Map<String,Object> exportInfo, String filename ) {
 
 
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
         /*won't need any of the properties as I have the export info*/
-        String bucketName = exportInfo.getBucket_location();
-        String accessId = exportInfo.getS3_accessId();
-        String secretKey = exportInfo.getS3_key();
+        String bucketName = ( String ) exportInfo.get( "bucket_location" );
+        String accessId = ( String ) exportInfo.get( "s3_accessId" );
+        String secretKey = ( String ) exportInfo.get( "s3_key" );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );

@@ -43,7 +43,6 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ExportInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.entities.Export;
@@ -222,14 +221,16 @@ public class ApplicationResource extends AbstractContextResource {
         OAuthResponse response = null;
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
-
+//TODO: do input verification here! make sure json map has all correct values.
         try {
             //parse the json into some useful object (the config params)
-            ExportInfo objEx = new ExportInfo( json );
-            objEx.setOrganizationId( organization.getUuid() );
-            objEx.setApplicationId( applicationId );
+            //ExportInfo objEx = new ExportInfo( json );
+            json.put( "organizationId",organization.getUuid());
+            //objEx.setOrganizationId( organization.getUuid() );
+            json.put( "applicationId",applicationId);
+            //objEx.setApplicationId( applicationId );
 
-            jobUUID = exportService.schedule( objEx );
+            jobUUID = exportService.schedule( json );
             uuidRet.put( "jobUUID", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
@@ -261,13 +262,21 @@ public class ApplicationResource extends AbstractContextResource {
         Map<String, String> uuidRet = new HashMap<String, String>();
 
         try {
+            //checkJsonExportProperties(json);
+            if(json.get( "properties" ) == null){
+                throw new NullPointerException();
+            }
+            //if(json.get( "properties."))
             //parse the json into some useful object (the config params)
-            ExportInfo objEx = new ExportInfo( json );
-            objEx.setOrganizationId( organization.getUuid() );
-            objEx.setApplicationId( applicationId );
-            objEx.setCollection( colExport );
+//            ExportInfo objEx = new ExportInfo( json );
+//            objEx.setOrganizationId( organization.getUuid() );
+//            objEx.setApplicationId( applicationId );
+//            objEx.setCollection( colExport );
+            json.put( "organizationId",organization.getUuid() );
+            json.put( "applicationId", applicationId);
+            json.put( "collectionName", colExport);
 
-            jobUUID = exportService.schedule( objEx );
+            jobUUID = exportService.schedule( json );
             uuidRet.put( "jobUUID", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {

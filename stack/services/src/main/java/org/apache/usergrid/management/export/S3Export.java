@@ -2,8 +2,7 @@ package org.apache.usergrid.management.export;
 
 
 import java.io.InputStream;
-
-import org.apache.usergrid.management.ExportInfo;
+import java.util.Map;
 
 
 /**
@@ -11,7 +10,7 @@ import org.apache.usergrid.management.ExportInfo;
  *
  */
 public interface S3Export {
-    void copyToS3( InputStream inputStream, ExportInfo exportInfo, String filename );
+    void copyToS3( InputStream inputStream, Map<String,Object> exportInfo, String filename );
 
     String getFilename ();
 

@@ -7,11 +7,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.management.ExportInfo;
 import org.apache.usergrid.management.export.S3Export;
 
 
@@ -21,7 +21,7 @@ import org.apache.usergrid.management.export.S3Export;
 public class MockS3ExportImpl implements S3Export {
     public static String filename;
     @Override
-    public void copyToS3( final InputStream inputStream, final ExportInfo exportInfo, String filename ) {
+    public void copyToS3( final InputStream inputStream, final Map<String,Object> exportInfo, String filename ) {
         Logger logger = LoggerFactory.getLogger( MockS3ExportImpl.class );
         int read = 0;
         byte[] bytes = new byte[1024];

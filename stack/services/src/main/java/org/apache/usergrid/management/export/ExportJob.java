@@ -1,7 +1,6 @@
 package org.apache.usergrid.management.export;
 
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
-import org.apache.usergrid.management.ExportInfo;
 import org.apache.usergrid.persistence.entities.JobData;
 
 
@@ -40,22 +38,26 @@ public class ExportJob extends OnlyOnceJob {
         //as long as I have the entity UUID I should be able to find it from anywhere right?
 
 
-        ExportInfo config = null;
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {
             logger.error( "jobData cannot be null" );
             return;
         }
-        Map<String, Object> temp = jobData.getProperties();
-        config = ( ExportInfo ) temp.get("exportInfo");
-        if ( config == null ) {
-            logger.error( "Export information cannot be null" );
-            return;
-        }
+//        Object temp = jobData.getProperty("exportInfo");
+
+
+//        if(temp.get("exportInfo") instanceof ExportInfo)
+//        {
+//            config = ( ExportInfo ) temp.get("exportInfo");
+//        }
+//        if ( config == null ) {
+//            logger.error( "Export information cannot be null" );
+//            return;
+//        }
 
         jobExecution.heartbeat();
         try {
-            exportService.doExport( config, jobExecution );
+            exportService.doExport( jobExecution );
         }
         catch ( Exception e ) {
             logger.error( "Export Service failed to complete job" );
