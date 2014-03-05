@@ -59,8 +59,8 @@ import org.slf4j.LoggerFactory;
 public class GeoIT {
     private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
-    @ClassRule
-    public static ElasticSearchRule es = new ElasticSearchRule();
+//    @ClassRule
+//    public static ElasticSearchRule es = new ElasticSearchRule();
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
