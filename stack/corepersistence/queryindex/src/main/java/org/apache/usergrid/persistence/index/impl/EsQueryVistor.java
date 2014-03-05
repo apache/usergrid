@@ -86,7 +86,6 @@ public class EsQueryVistor implements QueryVisitor {
         float lon = op.getLongitude().getFloatValue();
         float distance = op.getDistance().getFloatValue();
 
-        // TODO: provide some way to set units for the distance filter 
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name + GEO_SUFFIX )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
 

@@ -282,7 +282,7 @@ public class GeoIT {
         }
         while ( results.getCursor() != null );
 
-        // check we got back all 500 entities
+        // check we got back all entities
         assertEquals( numEntities, count );
     }
 
@@ -400,7 +400,7 @@ public class GeoIT {
             collectionManagerFactory, collectionIndexFactory );
         assertNotNull( em );
 
-        int size = 100;
+        int size = 10;
         int min = 50;
         int max = 90;
 

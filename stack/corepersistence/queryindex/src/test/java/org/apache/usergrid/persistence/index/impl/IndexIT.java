@@ -40,7 +40,6 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,7 +78,6 @@ public class IndexIT {
             "X-ray", "Yankee", "Zulu"
     };
 
-    @Ignore // TODO: enable when Cursor support implemented
     @Test
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );

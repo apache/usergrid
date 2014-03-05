@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.query;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 
 import org.junit.Test;
 import org.slf4j.Logger;

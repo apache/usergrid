@@ -38,6 +38,7 @@ import org.apache.commons.lang.StringUtils;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.query.Results.Level;
@@ -253,7 +254,7 @@ public class Query {
         Boolean pad = firstBoolean( params.get( "pad" ) );
 
         for ( Entry<String, List<String>> param : params.entrySet() ) {
-            Id identifier = null; // TODO Identifier.from( param.getKey() );
+            Id identifier = null;
             if ( ( param.getValue() == null ) || ( param.getValue().size() == 0 ) ) {
                 if ( identifier != null ) {
                     if ( identifiers == null ) {
@@ -723,7 +724,7 @@ public class Query {
         if ( ( startResult == null ) && ( cursor != null ) ) {
             byte[] cursorBytes = decodeBase64( cursor );
             if ( ( cursorBytes != null ) && ( cursorBytes.length == 16 ) ) {
-                startResult = null; // TODO uuid( cursorBytes );
+                startResult = null; 
             }
         }
         return startResult;

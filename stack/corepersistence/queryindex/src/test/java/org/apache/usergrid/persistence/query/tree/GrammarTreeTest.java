@@ -26,9 +26,9 @@ import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.junit.Test;
 import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.QueryParseException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

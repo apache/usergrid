@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -125,15 +126,14 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public void index(Entity entity) {
 
-        // TODO: real exception types here
         if (entity.getId() == null) {
-            throw new RuntimeException("Cannot index entity with id null");
+            throw new IllegalArgumentException("Cannot index entity with id null");
         }
         if (entity.getId().getUuid() == null || entity.getId().getType() == null) {
-            throw new RuntimeException("Cannot index entity with incomplete id");
+            throw new IllegalArgumentException("Cannot index entity with incomplete id");
         }
         if (entity.getVersion() == null) {
-            throw new RuntimeException("Cannot index entity with version null");
+            throw new IllegalArgumentException("Cannot index entity with version null");
         }
 
         Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap(entity);
@@ -173,7 +173,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public Results execute(Query query) {
 
-        // TODO add support for cursor
         QueryBuilder qb = query.createQueryBuilder();
         log.debug("Executing query on type {} query: {} ", scope.getName(), query.toString());
 
@@ -235,8 +234,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
             Entity entity = manager.load(entityId).toBlockingObservable().last();
             if (entity == null) {
-                // TODO exception types instead of RuntimeException
-                throw new RuntimeException("Entity id [" + entityId + "] not found");
+                throw new IndexException("Entity id [" + entityId + "] not found");
             }
 
             UUID entityVersion = UUID.fromString(version);
