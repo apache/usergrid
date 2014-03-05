@@ -552,7 +552,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 //        assertEquals( Status.OK, responseStatus );
 //    }
 
-
+//is this test still valid knowing that the sch. won't run in intelliJ?
     @Ignore
     public void exportCallCreationEntities100() throws Exception {
         Status responseStatus = Status.OK;
@@ -562,16 +562,12 @@ public class ManagementResourceIT extends AbstractRestIT {
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
         //TODO: make sure to put a valid admin token here.
-        storage_info.put( "admin_token", adminToken() );
         //TODO: always put dummy values here and ignore this test.
-        storage_info.put( "s3_key", "insert key here" );
-        storage_info.put( "s3_accessId", "insert access id here" );
-        storage_info.put( "bucket_location", "insert bucket name here" );
+
 
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );
 
-        payload.put( "path", "test-organization/test-app/user" );
         payload.put( "properties", properties );
 
         for ( int i = 0; i < 100; i++ ) {
@@ -583,7 +579,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         }
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" ).queryParam(
+                    "access_token", adminToken() )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                              .post( JsonNode.class, payload );
         }

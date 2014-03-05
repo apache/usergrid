@@ -34,9 +34,13 @@ public class S3ExportImpl implements S3Export {
 
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
         /*won't need any of the properties as I have the export info*/
-        String bucketName = ( String ) exportInfo.get( "bucket_location" );
-        String accessId = ( String ) exportInfo.get( "s3_accessId" );
-        String secretKey = ( String ) exportInfo.get( "s3_key" );
+        Map<String,Object> properties = ( Map<String, Object> ) exportInfo.get( "properties" );
+
+        Map<String, Object> storage_info = (Map<String,Object>)properties.get( "storage_info" );
+
+        String bucketName = ( String ) storage_info.get( "bucket_location" );
+        String accessId = ( String ) storage_info.get( "s3_accessId" );
+        String secretKey = ( String ) storage_info.get( "s3_key" );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );

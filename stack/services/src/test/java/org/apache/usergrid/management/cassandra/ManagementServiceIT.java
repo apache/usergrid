@@ -32,6 +32,7 @@ import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportJob;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.management.export.S3Export;
+import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -53,7 +54,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -1385,44 +1385,46 @@ public class ManagementServiceIT {
 //    }
 //
 //
-//    @Ignore //For this test please input your s3 credentials into payload builder.
-//    public void testIntegration100EntitiesOn() throws Exception {
-//
-//        S3Export s3Export = new S3ExportImpl();
-//        ExportService exportService = setup.getExportService();
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setApplicationId( applicationId );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-//        //intialize user object to be posted
-//        Map<String, Object> userProperties = null;
-//        Entity[] entity;
-//        entity = new Entity[100];
-//        //creates entities
-//        for ( int i = 0; i < 100; i++ ) {
-//            userProperties = new LinkedHashMap<String, Object>();
-//            userProperties.put( "username", "billybob" + i );
-//            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-//
-//            entity[i] = em.create( "user", userProperties );
-//        }
-//
-//        UUID exportUUID = exportService.schedule( exportInfo );
-//        exportService.setS3Export( s3Export );
-//
-//        //create and initialize jobData returned in JobExecution.
-//        JobData jobData = new JobData();
-//        jobData.setProperty( "jobName", "exportJob" );
-//        jobData.setProperty( "exportInfo", exportInfo );
-//        jobData.setProperty( "exportId", exportUUID );
-//
-//        JobExecution jobExecution = mock( JobExecution.class );
-//        when( jobExecution.getJobData() ).thenReturn( jobData );
-//
-//        exportService.doExport( exportInfo, jobExecution );
-//    }
+    @Ignore //For this test please input your s3 credentials into payload builder.
+    public void testIntegration100EntitiesOn() throws Exception {
+
+        S3Export s3Export = new S3ExportImpl();
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+       // ExportInfo exportInfo = new ExportInfo( payload );
+        //exportInfo.setApplicationId( applicationId );
+
+        payload.put("applicationId",applicationId);
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[100];
+        //creates entities
+        for ( int i = 0; i < 100; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+
+            entity[i] = em.create( "user", userProperties );
+        }
+
+        UUID exportUUID = exportService.schedule( payload );
+        exportService.setS3Export( s3Export );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+    }
 
 
     /*Creates fake payload for testing purposes.*/
