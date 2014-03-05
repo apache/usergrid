@@ -1,4 +1,4 @@
-/*! usergrid@0.0.0 2014-03-03 */
+/*! usergrid@0.10.8 2014-03-05 */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
 };
@@ -767,8 +767,8 @@ function doCallback(callback, params, context) {
    */
     Usergrid.Client.prototype.createCollection = function(options, callback) {
         options.client = this;
-        var collection = new Usergrid.Collection(options, function(err, response, collection) {
-            doCallback(callback, [ err, collection, response ]);
+        var collection = new Usergrid.Collection(options, function(err, data) {
+            doCallback(callback, [ err, collection, data ]);
         });
     };
     /*
@@ -2834,11 +2834,11 @@ Usergrid.Asset = function(options, callback) {
         return !(required in self._data);
     });
     if (missingData) {
-        return doCallback(callback, [ true, new Usergrid.Error("Invalid asset data: 'name', 'owner', and 'path' are required properties.") ], self);
+        return doCallback(callback, [ true, new UsergridError("Invalid asset data: 'name', 'owner', and 'path' are required properties.") ], self);
     }
     self.save(function(err, data) {
         if (err) {
-            doCallback(callback, [ true, new Usergrid.Error(data) ], self);
+            doCallback(callback, [ true, new UsergridError(data) ], self);
         } else {
             if (data && data.entities && data.entities.length) {
                 self.set(data.entities[0]);
