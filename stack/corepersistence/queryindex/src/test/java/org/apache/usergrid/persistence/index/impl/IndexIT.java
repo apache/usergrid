@@ -54,6 +54,9 @@ public class IndexIT {
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
 
     @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
+    @ClassRule
     public static CassandraRule cass = new CassandraRule();
 
     @Inject
@@ -92,7 +95,7 @@ public class IndexIT {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
 
-            em.create( "items", properties );
+            em.create( "item", properties );
         }
 
         int i = 0;

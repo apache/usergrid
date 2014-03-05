@@ -60,6 +60,9 @@ public class GeoIT {
     private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
     @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
+    @ClassRule
     public static CassandraRule cass = new CassandraRule();
 
     @Inject
@@ -77,6 +80,7 @@ public class GeoIT {
     
     @Inject
     public EntityCollectionIndexFactory collectionIndexFactory;
+
 
     public GeoIT() {
         super();
@@ -237,7 +241,7 @@ public class GeoIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 50;
+        int numEntities = 10;
 
         float minLattitude = -90;
         float maxLattitude = 90;
@@ -400,7 +404,7 @@ public class GeoIT {
             collectionManagerFactory, collectionIndexFactory );
         assertNotNull( em );
 
-        int size = 10;
+        int size = 100;
         int min = 50;
         int max = 90;
 

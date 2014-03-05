@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules(TestIndexModule.class)
-public class EntityCollectionIndexST {
-    private static final Logger log = LoggerFactory.getLogger( EntityCollectionIndexST.class );
+public class EntityCollectionIndexStressTest {
+    private static final Logger log = LoggerFactory.getLogger( EntityCollectionIndexStressTest.class );
         
     @Inject
     public EntityCollectionIndexFactory collectionIndexFactory;    

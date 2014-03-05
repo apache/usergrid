@@ -63,6 +63,9 @@ public class CollectionIT {
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
     @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
+    @ClassRule
     public static CassandraRule cass = new CassandraRule();
 
     @Inject

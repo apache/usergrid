@@ -23,10 +23,14 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.collection.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -34,6 +38,7 @@ import org.elasticsearch.node.NodeBuilder;
  */
 @Singleton
 public class EsProvider {
+    private static final Logger log = LoggerFactory.getLogger( EsProvider.class ); 
 
     private final IndexFig indexFig;
     private Client client;
@@ -44,9 +49,13 @@ public class EsProvider {
     }
 
     public synchronized Client getClient() {
+
         if ( client == null ) {
+
             if ( indexFig.isEmbedded() ) {
-                // unique port and directory names so multiple instances of ES can run concurrently.
+
+                log.info("Starting ElasticSearch");
+
                 int port = AvailablePortFinder.getNextAvailable( 2000 );
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put( "node.http.enabled", true )
@@ -61,8 +70,13 @@ public class EsProvider {
                 Node node = NodeBuilder.nodeBuilder().local( true ).settings( settings ).node();
                 client = node.client();
             
-            } else {
-                throw new UnsupportedOperationException("Non-embedded ElasticSearch not yet supported");
+            } else { // build client that connects to all hosts
+
+                TransportClient tclient = new TransportClient();
+                for ( String host : indexFig.getHosts().split(",") ) {
+                    tclient.addTransportAddress(new InetSocketTransportAddress( host, indexFig.getPort() ));
+                }
+                client = tclient;
             }
         }
         return client;

@@ -133,7 +133,6 @@ public class CoreApplication implements Application, TestRule {
 
 
     protected void after( Description description ) {
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
     }
 
 

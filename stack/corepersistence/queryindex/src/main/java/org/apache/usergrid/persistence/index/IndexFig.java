@@ -25,31 +25,44 @@ import org.safehaus.guicyfig.Key;
 
 public interface IndexFig extends GuicyFig {
 
-    public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
+    public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
+
+    public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
 
     public static final String ELASTICSEARCH_INDEXNAME = "elasticsearch.indexname";
 
     public static final String ELASTICSEARCH_EMBEDDED = "elasticsearch.embedded";
 
-    public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
-
     public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor-timeout.minutes";
 
-    @Default( "100" )
-    @Key( QUERY_LIMIT_DEFAULT )
-    int getQueryLimitDefault();
+    public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
-    @Default( "1" )
-    @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
-    int getQueryCursorTimeout();
+    public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
+
+    
+    @Default( "127.0.0.1" )
+    @Key( ELASTICSEARCH_HOSTS )
+    String getHosts();
+
+    @Default( "9200" )
+    @Key( ELASTICSEARCH_PORT )
+    int getPort();
 
     @Default( "usergrid" )
     @Key( ELASTICSEARCH_INDEXNAME )
     String getIndexName();
+    
+    @Default( "1" )
+    @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
+    int getQueryCursorTimeout();
 
     @Default( "false" )
     @Key( ELASTICSEARCH_EMBEDDED )
     boolean isEmbedded();
+
+    @Default( "100" )
+    @Key( QUERY_LIMIT_DEFAULT )
+    int getQueryLimitDefault();
 
     @Default( "false" ) 
     @Key( ELASTICSEARCH_FORCE_REFRESH )
