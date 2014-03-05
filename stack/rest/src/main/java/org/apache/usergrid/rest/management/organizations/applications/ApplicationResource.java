@@ -243,7 +243,7 @@ public class ApplicationResource extends AbstractContextResource {
                                        .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
 
-        return Response.status( SC_ACCEPTED ).entity( jobUUID ).build();
+        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
     }
 
     @POST
