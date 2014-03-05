@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.utils;
+package org.apache.usergrid.utils;
 
 
 import java.io.UnsupportedEncodingException;

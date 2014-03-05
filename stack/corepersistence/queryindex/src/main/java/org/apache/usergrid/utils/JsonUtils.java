@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.utils;
+package org.apache.usergrid.utils;
 
 
 import java.io.File;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang.StringUtils.substringAfter;
 
-import static org.apache.usergrid.persistence.utils.StringUtils.stringOrSubstringBeforeFirst;
+import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
 public class JsonUtils {

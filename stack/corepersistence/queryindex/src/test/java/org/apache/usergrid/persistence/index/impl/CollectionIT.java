@@ -43,9 +43,9 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.persistence.utils.JsonUtils;
-import static org.apache.usergrid.persistence.utils.MapUtils.hashMap;
-import org.apache.usergrid.persistence.utils.UUIDUtils;
+import org.apache.usergrid.utils.JsonUtils;
+import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 

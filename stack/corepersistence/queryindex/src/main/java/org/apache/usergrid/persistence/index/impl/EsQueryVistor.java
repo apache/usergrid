@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import org.apache.usergrid.persistence.exceptions.NoFullTextIndexException;
-import org.apache.usergrid.persistence.exceptions.NoIndexException;
+import org.apache.usergrid.persistence.index.NoIndexException;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import static org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex.ANALYZED_SUFFIX;
 import static org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex.GEO_SUFFIX;

@@ -15,43 +15,51 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
-package org.apache.usergrid.persistence.query.tree;
-
-
-import org.antlr.runtime.CommonToken;
-import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.index.NoIndexException;
+package org.apache.usergrid.persistence.query;
 
 
-/** @author tnine */
-public class LessThanEqual extends EqualityOperand {
+/**
+ * An exception thrown when a query cannot be parsed
+ *
+ * @author tnine
+ */
+public class QueryParseException extends RuntimeException {
 
     /**
-     * @param property
-     * @param literal
+     *
      */
-    public LessThanEqual( Token t ) {
-        super( t );
+    private static final long serialVersionUID = 1L;
+
+
+    /**
+     *
+     */
+    public QueryParseException() {
+        super();
     }
 
 
     /**
+     * @param arg0
+     * @param arg1
      */
-    public LessThanEqual() {
-        super( new CommonToken( 0, "<=" ) );
+    public QueryParseException( String arg0, Throwable arg1 ) {
+        super( arg0, arg1 );
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
-     * .query.tree.QueryVisitor)
+    /**
+     * @param arg0
      */
-    @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException {
-        visitor.visit( this );
+    public QueryParseException( String arg0 ) {
+        super( arg0 );
+    }
+
+
+    /**
+     * @param arg0
+     */
+    public QueryParseException( Throwable arg0 ) {
+        super( arg0 );
     }
 }

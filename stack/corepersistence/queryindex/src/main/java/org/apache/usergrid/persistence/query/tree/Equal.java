@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.exceptions.NoIndexException;
+import org.apache.usergrid.persistence.index.NoIndexException;
 
 
 /** @author tnine */

@@ -15,43 +15,40 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
-package org.apache.usergrid.persistence.query.tree;
-
-
-import org.antlr.runtime.CommonToken;
-import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.index.NoIndexException;
+package org.apache.usergrid.persistence.query;
 
 
-/** @author tnine */
-public class LessThanEqual extends EqualityOperand {
+/**
+ * An exception thrown when a query encounters a token it doesn't recognize
+ * @author tnine
+ */
+public class QueryTokenException extends RuntimeException {
 
     /**
-     * @param property
-     * @param literal
+     *
      */
-    public LessThanEqual( Token t ) {
-        super( t );
-    }
+    private static final long serialVersionUID = 1L;
+
+
 
 
     /**
+     * @param arg0
      */
-    public LessThanEqual() {
-        super( new CommonToken( 0, "<=" ) );
+    public QueryTokenException( Throwable arg0 ) {
+        super( arg0 );
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
-     * .query.tree.QueryVisitor)
-     */
     @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException {
-        visitor.visit( this );
+    public String getMessage() {
+        //antlr errors or strange.  We have to do this, there's no message
+        return getCause().toString();
+    }
+
+
+    @Override
+    public String getLocalizedMessage() {
+        return getMessage();
     }
 }

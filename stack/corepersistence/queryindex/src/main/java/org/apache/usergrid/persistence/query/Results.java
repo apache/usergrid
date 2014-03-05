@@ -34,7 +34,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import static org.apache.usergrid.persistence.query.SimpleEntityRef.ref;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import static org.apache.usergrid.persistence.utils.ClassUtils.cast;
+import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
 @XmlRootElement

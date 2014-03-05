@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.utils;
+package org.apache.usergrid.utils;
 
 
 import java.util.Arrays;
@@ -24,7 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.usergrid.persistence.utils.ConversionUtils.string;
+import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
 public class StringUtils extends org.apache.commons.lang.StringUtils {

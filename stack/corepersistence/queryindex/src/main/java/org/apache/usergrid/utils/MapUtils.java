@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.utils;
+package org.apache.usergrid.utils;
 
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ import java.util.TreeSet;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
-import static org.apache.usergrid.persistence.utils.ClassUtils.cast;
+import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
 public class MapUtils extends org.apache.commons.collections.MapUtils {

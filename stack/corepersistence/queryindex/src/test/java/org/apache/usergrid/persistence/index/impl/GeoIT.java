@@ -39,7 +39,7 @@ import org.apache.usergrid.persistence.query.EntityRef;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.query.SimpleEntityRef;
-import org.apache.usergrid.persistence.utils.MapUtils;
+import org.apache.usergrid.utils.MapUtils;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
