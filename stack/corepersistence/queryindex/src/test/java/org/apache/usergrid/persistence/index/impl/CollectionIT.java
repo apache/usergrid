@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.index.impl;
 
 
 import com.google.inject.Inject;
@@ -26,7 +26,11 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
-import org.apache.usergrid.persistence.index.guice.IndexTestModule;
+import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.legacy.CoreApplication;
+import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
+import org.apache.usergrid.persistence.index.legacy.CoreITSetupImpl;
+import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,10 +46,6 @@ import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.JsonUtils;
 import static org.apache.usergrid.persistence.utils.MapUtils.hashMap;
 import org.apache.usergrid.persistence.utils.UUIDUtils;
-import org.apache.usergrid.test.CoreApplication;
-import org.apache.usergrid.test.CoreITSetup;
-import org.apache.usergrid.test.CoreITSetupImpl;
-import org.apache.usergrid.test.EntityManagerFacade;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 
@@ -58,7 +58,7 @@ import org.junit.runner.RunWith;
 
 
 @RunWith(JukitoRunner.class)
-@UseModules({ IndexTestModule.class })
+@UseModules({ TestIndexModule.class })
 public class CollectionIT {
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 

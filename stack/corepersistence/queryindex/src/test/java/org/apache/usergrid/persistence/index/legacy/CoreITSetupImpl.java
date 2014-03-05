@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.test;
+package org.apache.usergrid.persistence.index.legacy;
 
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -31,7 +31,6 @@ public class CoreITSetupImpl implements CoreITSetup {
     private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
 
     protected EntityCollectionManagerFactory emf;
-    protected CassandraService cassandraService;
     protected boolean enabled = false;
 
 

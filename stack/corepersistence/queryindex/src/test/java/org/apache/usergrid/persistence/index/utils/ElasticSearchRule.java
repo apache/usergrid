@@ -16,7 +16,7 @@
  * directory of this distribution.
  */
 
-package org.apache.usergrid.persistence.utils;
+package org.apache.usergrid.persistence.index.utils;
 
 import org.apache.usergrid.persistence.collection.util.AvailablePortFinder;
 import org.elasticsearch.client.Client;

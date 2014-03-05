@@ -35,14 +35,14 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
-import org.apache.usergrid.persistence.index.guice.IndexTestModule;
+import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.test.EntityBuilder;
+import org.apache.usergrid.persistence.index.legacy.EntityBuilder;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -58,10 +58,10 @@ import org.slf4j.LoggerFactory;
 
 
 @RunWith(JukitoRunner.class)
-@UseModules({ IndexTestModule.class })
+@UseModules({ TestIndexModule.class })
 public class EntityCollectionIndexTest {
 
-    private static final Logger logger = LoggerFactory.getLogger( EntityCollectionIndexTest.class );
+    private static final Logger log = LoggerFactory.getLogger( EntityCollectionIndexTest.class );
     
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
@@ -102,14 +102,14 @@ public class EntityCollectionIndexTest {
             entity = EntityBuilder.fromMap( scope.getName(), entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
-           entity = entityManager.write( entity ).toBlockingObservable().last();
+            entity = entityManager.write( entity ).toBlockingObservable().last();
 
             entityIndex.index( entity );
 
             count++;
         }
         timer.stop();
-        logger.info( "Total time to index {} entries {}ms, average {}ms/entry", 
+        log.info( "Total time to index {} entries {}ms, average {}ms/entry", 
             count, timer.getTime(), timer.getTime() / count );
 
         testQueries( entityIndex );
@@ -130,7 +130,7 @@ public class EntityCollectionIndexTest {
         } else {
             assertEquals( num, results.getEntities().size() );
         }
-        logger.debug( "Query time {}ms", timer.getTime() );
+        log.debug( "Query time {}ms", timer.getTime() );
     }
 
 

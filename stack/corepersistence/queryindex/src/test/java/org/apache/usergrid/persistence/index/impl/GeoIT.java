@@ -16,7 +16,7 @@
  * directory of this distribution.
  */
 
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -25,9 +25,13 @@ import java.util.Map;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.test.Point;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
-import org.apache.usergrid.persistence.index.guice.IndexTestModule;
+import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.legacy.CoreApplication;
+import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
+import org.apache.usergrid.persistence.index.legacy.CoreITSetupImpl;
+import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
+import org.apache.usergrid.persistence.index.legacy.Point;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -36,10 +40,6 @@ import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.query.SimpleEntityRef;
 import org.apache.usergrid.persistence.utils.MapUtils;
-import org.apache.usergrid.test.CoreApplication;
-import org.apache.usergrid.test.CoreITSetup;
-import org.apache.usergrid.test.CoreITSetupImpl;
-import org.apache.usergrid.test.EntityManagerFacade;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 
 
 @RunWith(JukitoRunner.class)
-@UseModules({ IndexTestModule.class })
+@UseModules({ TestIndexModule.class })
 public class GeoIT {
     private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
@@ -296,7 +296,7 @@ public class GeoIT {
 //
 //        // save objects in a diagonal line from -90 -180 to 90 180
 //
-//        int numEntities = 500;
+//        int numEntities = 10;
 //
 //        for ( int i = 0; i < numEntities; i++ ) {
 //            Map<String, Object> data = new HashMap<String, Object>( 2 );
@@ -310,7 +310,7 @@ public class GeoIT {
 //        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
 //        // just to be save
 //        query.addFilter( "location within 50000000 of 0, 0" );
-//        query.setLimit( 100 );
+//        query.setLimit( 10 );
 //
 //        int count = 0;
 //        Results results;
@@ -332,63 +332,59 @@ public class GeoIT {
 //    }
 
 
-//    @Test
-//    public void testDistanceByLimit() throws Exception {
-//
-//        Id appId = new SimpleId("testGeo");
-//        Id orgId = new SimpleId("testOrganization");
-//        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-//            collectionManagerFactory, collectionIndexFactory );
-//        assertNotNull( em );
-//
-//        // save objects in a diagonal line from -90 -180 to 90 180
-//
-//        int numEntities = 100;
-//
-//        float minLattitude = -90;
-//        float maxLattitude = 90;
-//        float minLongitude = -180;
-//        float maxLongitude = 180;
-//
-//        float lattitudeDelta = ( maxLattitude - minLattitude ) / numEntities;
-//
-//        float longitudeDelta = ( maxLongitude - minLongitude ) / numEntities;
-//
-//        for ( int i = 0; i < numEntities; i++ ) {
-//            float lattitude = minLattitude + lattitudeDelta * i;
-//            float longitude = minLongitude + longitudeDelta * i;
-//
-//            Map<String, Float> location = 
-//                    MapUtils.hashMap( "latitude", lattitude )
-//                            .map( "longitude", longitude );
-//
-//            Map<String, Object> data = new HashMap<String, Object>( 2 );
-//            data.put( "name", String.valueOf( i ) );
-//            data.put( "location", location );
-//
-//            em.create( "store", data );
-//        }
-//
-//        Query query = new Query();
-//        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
-//        // just to be save
-//        query.addFilter( "location within 0 of -90, -180" );
-//        query.setLimit( 100 );
-//
-//        int count = 0;
-//
-//        do {
-//            Results results = em.searchCollection( em.getApplicationRef(), "stores", query );
-//
-//            for ( Entity entity : results.getEntities() ) {
-//                count++;
-//            }
-//        }
-//        while ( query.getCursor() != null );
-//
-//        // check we got back all 500 entities
-//        assertEquals( numEntities, count );
-//    }
+    @Test
+    public void testDistanceByLimit() throws Exception {
+
+        Id appId = new SimpleId("testGeo");
+        Id orgId = new SimpleId("testOrganization");
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
+            collectionManagerFactory, collectionIndexFactory );
+        assertNotNull( em );
+
+        // save objects in a diagonal line from -90 -180 to 90 180
+        int numEntities = 10;
+
+        float minLattitude = -90;
+        float maxLattitude = 90;
+        float minLongitude = -180;
+        float maxLongitude = 180;
+
+        float lattitudeDelta = ( maxLattitude - minLattitude ) / numEntities;
+        float longitudeDelta = ( maxLongitude - minLongitude ) / numEntities;
+
+        for ( int i = 0; i < numEntities; i++ ) {
+            final float latitude = minLattitude + lattitudeDelta * i;
+            final float longitude = minLongitude + longitudeDelta * i;
+
+            Map<String, Object> location = new HashMap<String, Object>() {{
+                put("latitude", latitude);
+                put("longitude", longitude);
+            }}; 
+
+            Map<String, Object> data = new HashMap<String, Object>( 2 );
+            data.put( "name", String.valueOf( i ) );
+            data.put( "location", location );
+
+            em.create( "store", data );
+        }
+
+        // earth's circumference is 40075km; up it to 50,000km, just to be safe.
+        Query query = new Query();
+        query.addFilter( "location within " + (50000 * 1000) + " of -90, -180" );
+        query.setLimit( 100 );
+
+        int count = 0;
+        do {
+            Results results = em.searchCollection( em.getApplicationRef(), "stores", query );
+            for ( Entity entity : results.getEntities() ) {
+                count++;
+            }
+        }
+        while ( query.getCursor() != null );
+
+        // check we got back all entities
+        assertEquals( numEntities, count );
+    }
 
 
 //    @Test
@@ -400,7 +396,7 @@ public class GeoIT {
 //            collectionManagerFactory, collectionIndexFactory );
 //        assertNotNull( em );
 //
-//        int size = 100;
+//        int size = 10;
 //        int min = 50;
 //        int max = 90;
 //
@@ -447,8 +443,8 @@ public class GeoIT {
 //
 //        assertEquals( startDelta - ( size - max ), count );
 //    }
-
-
+//
+//
 //    @Test
 //    public void testDenseSearch() throws Exception {
 //

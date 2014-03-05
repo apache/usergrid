@@ -120,6 +120,17 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public void index( Entity entity ) {
 
+        // TODO: real exception types here
+        if ( entity.getId() == null ) {
+            throw new RuntimeException("Cannot index entity with id null");
+        }
+        if ( entity.getId().getUuid() == null || entity.getId().getType() == null ) {
+            throw new RuntimeException("Cannot index entity with incomplete id");
+        }
+        if ( entity.getVersion() == null ) {
+            throw new RuntimeException("Cannot index entity with version null");
+        }
+
         Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap( entity );
         entityAsMap.put("created", entity.getVersion().timestamp() );
 
@@ -208,7 +219,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             String version = idparts[2];
 
             Id entityId = new SimpleId( UUID.fromString(id), type);
-            UUID entityVersion = UUID.fromString(version);
 
             Entity entity = manager.load( entityId ).toBlockingObservable().last();
             if ( entity == null ) {
@@ -216,6 +226,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 throw new RuntimeException("Entity id [" + entityId + "] not found"); 
             }
 
+            UUID entityVersion = UUID.fromString(version);
             if ( entityVersion.compareTo( entity.getVersion()) == -1 ) {
                 logger.debug("   Stale hit " + hit.getId() ); 
 

@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.usergrid.persistence.utils.ElasticSearchRule;
+import org.apache.usergrid.persistence.index.utils.ElasticSearchRule;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * Elastic search experiments in the form of a test.
  */
 public class ElasticSearchTest {
-    private static final Logger logger = LoggerFactory.getLogger( ElasticSearchTest.class );
+    private static final Logger log = LoggerFactory.getLogger( ElasticSearchTest.class );
 
     @Rule
     public ElasticSearchRule elasticSearchRule = new ElasticSearchRule();
@@ -211,7 +211,7 @@ public class ElasticSearchTest {
 
                 }
             } catch ( Exception e ) {
-                logger.error( "Error processing {} : {}", key, value, e );
+                log.error( "Error processing {} : {}", key, value, e );
                 throw new RuntimeException(e);
             }
         }
@@ -258,11 +258,11 @@ public class ElasticSearchTest {
     }
 
     void log( GetResponse getResponse ) {
-        logger.info( "-------------------------------------------------------------------------" );
-        logger.info( "id:      " + getResponse.getId() );
-        logger.info( "type:    " + getResponse.getType() );
-        logger.info( "version: " + getResponse.getVersion() );
-        logger.info( "index:   " + getResponse.getIndex() );
-        logger.info( "source:  " + getResponse.getSourceAsString() );
+        log.info( "-------------------------------------------------------------------------" );
+        log.info( "id:      " + getResponse.getId() );
+        log.info( "type:    " + getResponse.getType() );
+        log.info( "version: " + getResponse.getVersion() );
+        log.info( "index:   " + getResponse.getIndex() );
+        log.info( "source:  " + getResponse.getSourceAsString() );
     }
 }

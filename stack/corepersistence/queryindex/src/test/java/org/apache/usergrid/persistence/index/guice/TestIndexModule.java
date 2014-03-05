@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.index.guice;
 import org.apache.usergrid.persistence.collection.guice.TestModule;
 
 
-public class IndexTestModule extends TestModule {
+public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {

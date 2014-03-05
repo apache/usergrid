@@ -16,12 +16,16 @@
  * directory of this distribution.
  */
 
-package org.apache.usergrid.test;
+package org.apache.usergrid.persistence.index.legacy;
 
-/**
- *
- * @author ApigeeCorporation
- */
-class CassandraService {
-    
+
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.junit.rules.TestRule;
+
+
+public interface CoreITSetup extends TestRule {
+
+    EntityCollectionManagerFactory getEmf();
+
+    void dump( String name, Object obj );
 }

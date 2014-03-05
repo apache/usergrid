@@ -204,8 +204,13 @@ public class Results implements Iterable<Entity> {
     }
 
 
+    public boolean hasCursor() {
+        return cursor != null;
+    }
+
+
     public String getCursor() {
-        return null;
+        return cursor;
     }
 
 

@@ -16,7 +16,7 @@
  * directory of this distribution.
  */
 
-package org.apache.usergrid.test;
+package org.apache.usergrid.persistence.index.legacy;
 
 
 import java.util.LinkedHashMap;

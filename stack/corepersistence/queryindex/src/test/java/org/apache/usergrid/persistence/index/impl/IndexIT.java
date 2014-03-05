@@ -16,7 +16,7 @@
  * directory of this distribution.
  */
 
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 import java.util.LinkedHashMap;
@@ -25,17 +25,17 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
-import org.apache.usergrid.persistence.index.guice.IndexTestModule;
+import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.legacy.CoreApplication;
+import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
+import org.apache.usergrid.persistence.index.legacy.CoreITSetupImpl;
+import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.apache.usergrid.persistence.utils.JsonUtils;
-import org.apache.usergrid.test.CoreApplication;
-import org.apache.usergrid.test.CoreITSetup;
-import org.apache.usergrid.test.CoreITSetupImpl;
-import org.apache.usergrid.test.EntityManagerFacade;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 
 @RunWith(JukitoRunner.class)
-@UseModules({ IndexTestModule.class })
+@UseModules({ TestIndexModule.class })
 public class IndexIT {
     
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
