@@ -19,8 +19,10 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
@@ -257,7 +259,7 @@ public class GeoIT {
             data.put( "name", String.valueOf( i ) );
             data.put( "location", location );
 
-            em.create( "store", data );
+            em.create( "dog", data );
         }
 
         // earth's circumference is 40075km; up it to 50000km, to be safe
@@ -269,7 +271,7 @@ public class GeoIT {
         Results results;
 
         do {
-            results = em.searchCollection( em.getApplicationRef(), "stores", query );
+            results = em.searchCollection( em.getApplicationRef(), "dogs", query );
 
             for ( Entity entity : results.getEntities() ) {
                 count++;
@@ -296,6 +298,7 @@ public class GeoIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
+        // TODO: use a larger count here
         int numEntities = 10;
 
         for ( int i = 0; i < numEntities; i++ ) {
@@ -366,7 +369,7 @@ public class GeoIT {
             data.put( "name", String.valueOf( i ) );
             data.put( "location", location );
 
-            em.create( "store", data );
+            em.create( "car", data );
         }
 
         // earth's circumference is 40075km; up it to 50,000km, just to be safe.
@@ -376,7 +379,7 @@ public class GeoIT {
 
         int count = 0;
         do {
-            Results results = em.searchCollection( em.getApplicationRef(), "stores", query );
+            Results results = em.searchCollection( em.getApplicationRef(), "cars", query );
             for ( Entity entity : results.getEntities() ) {
                 count++;
             }
@@ -388,64 +391,64 @@ public class GeoIT {
     }
 
 
-//    @Test
-//    public void testGeoWithIntersection() throws Exception {
-//
-//        Id appId = new SimpleId("testGeo");
-//        Id orgId = new SimpleId("testOrganization");
-//        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-//            collectionManagerFactory, collectionIndexFactory );
-//        assertNotNull( em );
-//
-//        int size = 10;
-//        int min = 50;
-//        int max = 90;
-//
-//        List<Entity> created = new ArrayList<Entity>( size );
-//
-//        for ( int i = 0; i < size; i++ ) {
-//
-//            // save all entities in the same location
-//            Map<String, Object> data = new HashMap<String, Object>( 2 );
-//            data.put( "name", String.valueOf( i ) );
-//            data.put( "index", i );
-//            setPos( data, 0, 0 );
-//
-//            Entity e = em.create( "store", data );
-//
-//            created.add( e );
-//        }
-//
-//        int startDelta = size - min;
-//
-//        //    String queryString = String.format("select * where location within 100 of 0,
-//        // 0 and index >= %d and index < %d order by index",min, max);
-//
-//        String queryString = String.format( 
-//                "select * where index >= %d and index < %d order by index", min, max );
-//
-//        Query query = Query.fromQL( queryString );
-//
-//        Results r;
-//        int count = 0;
-//
-//        do {
-//
-//            r = em.searchCollection( em.getApplicationRef(), "stores", query );
-//
-//            for ( Entity e : r.getEntities() ) {
-//                assertEquals( created.get( startDelta + count ), e );
-//                count++;
-//            }
-//
-//            query.setCursor( r.getCursor() );
-//        }
-//        while ( r.hasCursor() );
-//
-//        assertEquals( startDelta - ( size - max ), count );
-//    }
-//
-//
+    @Test
+    public void testGeoWithIntersection() throws Exception {
+
+        Id appId = new SimpleId("testGeo");
+        Id orgId = new SimpleId("testOrganization");
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
+            collectionManagerFactory, collectionIndexFactory );
+        assertNotNull( em );
+
+        int size = 100;
+        int min = 50;
+        int max = 90;
+
+        List<Entity> created = new ArrayList<Entity>( size );
+
+        for ( int i = 0; i < size; i++ ) {
+
+            // save all entities in the same location
+            Map<String, Object> data = new HashMap<String, Object>( 2 );
+            data.put( "name", String.valueOf( i ) );
+            data.put( "index", i );
+            setPos( data, 0, 0 );
+
+            Entity e = em.create( "puppy", data );
+
+            created.add( e );
+        }
+
+        int startDelta = size - min;
+
+        //    String queryString = String.format("select * where location within 100 of 0,
+        // 0 and index >= %d and index < %d order by index",min, max);
+
+        String queryString = String.format( 
+                "select * where index >= %d and index < %d order by index", min, max );
+
+        Query query = Query.fromQL( queryString );
+
+        Results r;
+        int count = 0;
+
+        do {
+
+            r = em.searchCollection( em.getApplicationRef(), "puppies", query );
+
+            for ( Entity e : r.getEntities() ) {
+                assertEquals( created.get( startDelta + count ), e );
+                count++;
+            }
+
+            query.setCursor( r.getCursor() );
+        }
+        while ( r.hasCursor() );
+
+        assertEquals( startDelta - ( size - max ), count );
+    }
+
+
 //    @Test
 //    public void testDenseSearch() throws Exception {
 //
