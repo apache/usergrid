@@ -1,6 +1,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+QueryFilterLexer.java
+QueryFilterParser.java
 
 # Icon must ends with two \r.
 Icon
