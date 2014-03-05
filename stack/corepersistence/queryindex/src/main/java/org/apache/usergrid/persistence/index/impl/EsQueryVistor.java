@@ -45,9 +45,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 
 /**
- * Visits tree of  parsed Query operands and populates ElasticSearch QueryBuilder that represents the query.
+ * Visits tree of  parsed Query operands and populates 
+ * ElasticSearch QueryBuilder that represents the query.
  */
-public class EsDslQueryVistor implements QueryVisitor {
+public class EsQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
 

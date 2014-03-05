@@ -28,6 +28,10 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
+
+/**
+ * Provides access to ElasticSearch client.
+ */
 @Singleton
 public class EsProvider {
 

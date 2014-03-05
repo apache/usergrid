@@ -285,51 +285,50 @@ public class GeoIT {
     }
 
 
-//    @Test
-//    public void testSamePointPaging() throws Exception {
-//
-//        Id appId = new SimpleId("testGeo");
-//        Id orgId = new SimpleId("testOrganization");
-//        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-//            collectionManagerFactory, collectionIndexFactory );
-//        assertNotNull( em );
-//
-//        // save objects in a diagonal line from -90 -180 to 90 180
-//
-//        int numEntities = 10;
-//
-//        for ( int i = 0; i < numEntities; i++ ) {
-//            Map<String, Object> data = new HashMap<String, Object>( 2 );
-//            data.put( "name", String.valueOf( i ) );
-//            setPos( data, 0, 0 );
-//
-//            em.create( "store", data );
-//        }
-//
-//        Query query = new Query();
-//        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
-//        // just to be save
-//        query.addFilter( "location within 50000000 of 0, 0" );
-//        query.setLimit( 10 );
-//
-//        int count = 0;
-//        Results results;
-//
-//        do {
-//            results = em.searchCollection( em.getApplicationRef(), "stores", query );
-//
-//            for ( Entity entity : results.getEntities() ) {
-//                count++;
-//            }
-//
-//            // set for the next "page"
-//            query.setCursor( results.getCursor() );
-//        }
-//        while ( results.getCursor() != null );
-//
-//        // check we got back all 500 entities
-//        assertEquals( numEntities, count );
-//    }
+    @Test
+    public void testSamePointPaging() throws Exception {
+
+        Id appId = new SimpleId("testGeo");
+        Id orgId = new SimpleId("testOrganization");
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
+            collectionManagerFactory, collectionIndexFactory );
+        assertNotNull( em );
+
+        // save objects in a diagonal line from -90 -180 to 90 180
+
+        int numEntities = 10;
+
+        for ( int i = 0; i < numEntities; i++ ) {
+            Map<String, Object> data = new HashMap<String, Object>( 2 );
+            data.put( "name", String.valueOf( i ) );
+            setPos( data, 0, 0 );
+
+            em.create( "store", data );
+        }
+
+        Query query = new Query();
+        // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
+        // just to be save
+        query.addFilter( "location within 50000000 of 0, 0" );
+        query.setLimit( 10 );
+
+        int count = 0;
+        Results results;
+
+        do {
+            results = em.searchCollection( em.getApplicationRef(), "stores", query );
+            for ( Entity entity : results.getEntities() ) {
+                count++;
+            }
+
+            // set for the next "page"
+            query.setCursor( results.getCursor() );
+        }
+        while ( results.getCursor() != null );
+
+        // check we got back all entities
+        assertEquals( numEntities, count );
+    }
 
 
     @Test
@@ -342,6 +341,8 @@ public class GeoIT {
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
+
+        // TODO: use a larger count here
         int numEntities = 10;
 
         float minLattitude = -90;

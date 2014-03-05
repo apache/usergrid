@@ -214,6 +214,11 @@ public class Results implements Iterable<Entity> {
     }
 
 
+    public void setCursor(String cursor) {
+        this.cursor = cursor;
+    }
+
+
     public Level getLevel() {
         return level;
     }

@@ -50,6 +50,7 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -62,13 +63,18 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Implements index using ElasticSearch Java API and Core Persistence Collections.
+ */
 public class EsEntityCollectionIndex implements EntityCollectionIndex {
-    private static final Logger logger = LoggerFactory.getLogger( EsEntityCollectionIndex.class );
+
+    private static final Logger log = LoggerFactory.getLogger(EsEntityCollectionIndex.class);
 
     private final Client client;
     private final String index;
     private final boolean refresh;
+    private final int cursorTimeout;
+
     private final CollectionScope scope;
     private final EntityCollectionManager manager;
 
@@ -76,159 +82,166 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     public static final String GEO_SUFFIX = "_ug_geo";
 
     @Inject
-    public EsEntityCollectionIndex( @Assisted final CollectionScope scope, 
-            IndexFig config, 
-            EsProvider provider, 
-            EntityCollectionManagerFactory factory ) {
+    public EsEntityCollectionIndex(@Assisted final CollectionScope scope,
+            IndexFig config,
+            EsProvider provider,
+            EntityCollectionManagerFactory factory) {
 
-        this.manager = factory.createCollectionManager(scope );
+        this.manager = factory.createCollectionManager(scope);
         this.client = provider.getClient();
         this.scope = scope;
         this.index = config.getIndexName();
         this.refresh = config.isForcedRefresh();
-        
+        this.cursorTimeout = config.getQueryCursorTimeout();
+
         // if new index then create it 
         AdminClient admin = client.admin();
-        if ( !admin.indices().exists( new IndicesExistsRequest( index )).actionGet().isExists() ) {
-            admin.indices().prepareCreate( index ).execute().actionGet();
-            logger.debug( "Created new index: " + index );
+        if (!admin.indices().exists(new IndicesExistsRequest(index)).actionGet().isExists()) {
+            admin.indices().prepareCreate(index).execute().actionGet();
+            log.debug("Created new index: " + index);
         }
 
         // TODO: is it appropriate to use scope name as type name? are scope names unique?
-
         // if new type then create mapping
-        if ( !admin.indices().typesExists( new TypesExistsRequest( 
-            new String[] {index}, scope.getName() )).actionGet().isExists()) {
+        if (!admin.indices().typesExists(new TypesExistsRequest(
+                new String[]{index}, scope.getName())).actionGet().isExists()) {
 
             try {
                 XContentBuilder mxcb = EsEntityCollectionIndex
-                    .createDoubleStringIndexMapping( jsonBuilder(), scope.getName() );
+                        .createDoubleStringIndexMapping(jsonBuilder(), scope.getName());
 
                 PutMappingResponse pmr = admin.indices().preparePutMapping(index)
-                    .setType( scope.getName() ).setSource( mxcb ).execute().actionGet();
+                        .setType(scope.getName()).setSource(mxcb).execute().actionGet();
 
-                logger.debug( "Created new type mapping for scope: " + scope.getName() );
-                logger.debug( "   Scope organization: " + scope.getOrganization());
-                logger.debug( "   Scope owner: " + scope.getOwner() );
+                log.debug("Created new type mapping for scope: " + scope.getName());
+                log.debug("   Scope organization: " + scope.getOrganization());
+                log.debug("   Scope owner: " + scope.getOwner());
 
-            } catch ( IOException ex ) {
-                throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex );
+            } catch (IOException ex) {
+                throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex);
             }
         }
     }
-  
 
-    public void index( Entity entity ) {
+    public void index(Entity entity) {
 
         // TODO: real exception types here
-        if ( entity.getId() == null ) {
+        if (entity.getId() == null) {
             throw new RuntimeException("Cannot index entity with id null");
         }
-        if ( entity.getId().getUuid() == null || entity.getId().getType() == null ) {
+        if (entity.getId().getUuid() == null || entity.getId().getType() == null) {
             throw new RuntimeException("Cannot index entity with incomplete id");
         }
-        if ( entity.getVersion() == null ) {
+        if (entity.getVersion() == null) {
             throw new RuntimeException("Cannot index entity with version null");
         }
 
-        Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap( entity );
-        entityAsMap.put("created", entity.getVersion().timestamp() );
+        Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap(entity);
+        entityAsMap.put("created", entity.getVersion().timestamp());
 
-        String indexId = createIndexId( entity ); 
+        String indexId = createIndexId(entity);
 
-        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), indexId )
-            .setSource( entityAsMap )
-            .setRefresh( refresh );
+        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), indexId)
+                .setSource(entityAsMap)
+                .setRefresh(refresh);
 
         irb.execute().actionGet();
 
-        logger.debug( "Indexed Entity with index id " + indexId );
+        log.debug("Indexed Entity with index id " + indexId);
     }
 
-
-    private String createIndexId( Entity entity ) {
-        return createIndexId( entity.getId(), entity.getVersion() );
+    private String createIndexId(Entity entity) {
+        return createIndexId(entity.getId(), entity.getVersion());
     }
 
-
-	private String createIndexId( Id entityId, UUID version ) {
-        return entityId.getUuid().toString() + "|" 
-             + entityId.getType() + "|" 
-             + version.toString();
+    private String createIndexId(Id entityId, UUID version) {
+        return entityId.getUuid().toString() + "|"
+                + entityId.getType() + "|"
+                + version.toString();
     }
 
-
-    public void deindex( Entity entity ) {
-		deindex( entity.getId(), entity.getVersion() );
+    public void deindex(Entity entity) {
+        deindex(entity.getId(), entity.getVersion());
     }
 
-    public void deindex( Id entityId, UUID version ) {
-        String indexId = createIndexId( entityId, version ); 
-        client.prepareDelete( index, scope.getName(), indexId )
-			.setRefresh( refresh ).execute().actionGet();
-        logger.debug( "Deindexed Entity with index id " + indexId );
+    public void deindex(Id entityId, UUID version) {
+        String indexId = createIndexId(entityId, version);
+        client.prepareDelete(index, scope.getName(), indexId)
+                .setRefresh(refresh).execute().actionGet();
+        log.debug("Deindexed Entity with index id " + indexId);
     }
 
-
-    public Results execute( Query query ) {
+    public Results execute(Query query) {
 
         // TODO add support for cursor
-
         QueryBuilder qb = query.createQueryBuilder();
-        logger.debug( "Executing query on type {} query: {} ", scope.getName(), qb.toString() );
+        log.debug("Executing query on type {} query: {} ", scope.getName(), query.toString());
 
-        SearchRequestBuilder srb = client.prepareSearch( index )
-			.setTypes( scope.getName() )
-			.setQuery( qb );
+        SearchResponse sr;
 
-		FilterBuilder fb = query.createFilterBuilder();
-		if ( fb != null ) {
-        	logger.debug( "   Filter: {} ", fb.toString() );
-			srb = srb.setPostFilter( fb );
-		}
+        if (query.getCursor() == null) {
 
-	    srb = srb.setFrom( 0 ).setSize( query.getLimit() );
+            log.debug("Executing query on type {} query: {} ", scope.getName(), qb.toString());
 
-        for ( Query.SortPredicate sp : query.getSortPredicates() ) {
-            final SortOrder order;
-            if ( sp.getDirection().equals( Query.SortDirection.ASCENDING ) ) { 
-                order = SortOrder.ASC;
-            } else {
-                order = SortOrder.DESC;
+            SearchRequestBuilder srb = client.prepareSearch(index)
+                    .setTypes( scope.getName() )
+                    .setScroll( cursorTimeout + "m" )
+                    .setQuery( qb );
+
+            FilterBuilder fb = query.createFilterBuilder();
+            if (fb != null) {
+                log.debug("   Filter: {} ", fb.toString());
+                srb = srb.setPostFilter(fb);
             }
-            srb.addSort( sp.getPropertyName(), order );
+
+            srb = srb.setFrom(0).setSize(query.getLimit());
+
+            for (Query.SortPredicate sp : query.getSortPredicates()) {
+                final SortOrder order;
+                if (sp.getDirection().equals(Query.SortDirection.ASCENDING)) {
+                    order = SortOrder.ASC;
+                } else {
+                    order = SortOrder.DESC;
+                }
+                srb.addSort(sp.getPropertyName(), order);
+            }
+
+            sr = srb.execute().actionGet();
+
+        } else {
+            log.debug("Executing query on type {} cursor: {} ", scope.getName(), query.getCursor());
+            SearchScrollRequestBuilder ssrb = client.prepareSearchScroll(query.getCursor())
+                    .setScroll( cursorTimeout + "m" );
+            sr = ssrb.execute().actionGet();
         }
 
-        SearchResponse sr = srb.execute().actionGet();
         SearchHits hits = sr.getHits();
-        logger.debug( "   Results: " + sr.toString());
-        logger.debug( "   Hit count: " + hits.getTotalHits());
+        log.debug("   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
         Results results = new Results();
 
         // TODO: do we always want to fetch entities? When do we fetch refs or ids?
-
         // list of entities that will be returned
         List<Entity> entities = new ArrayList<Entity>();
 
-        for ( SearchHit hit : hits.getHits() ) {
+        for (SearchHit hit : hits.getHits()) {
 
-            String[] idparts = hit.getId().split( "\\|" );
+            String[] idparts = hit.getId().split("\\|");
             String id = idparts[0];
             String type = idparts[1];
             String version = idparts[2];
 
-            Id entityId = new SimpleId( UUID.fromString(id), type);
+            Id entityId = new SimpleId(UUID.fromString(id), type);
 
-            Entity entity = manager.load( entityId ).toBlockingObservable().last();
-            if ( entity == null ) {
+            Entity entity = manager.load(entityId).toBlockingObservable().last();
+            if (entity == null) {
                 // TODO exception types instead of RuntimeException
-                throw new RuntimeException("Entity id [" + entityId + "] not found"); 
+                throw new RuntimeException("Entity id [" + entityId + "] not found");
             }
 
             UUID entityVersion = UUID.fromString(version);
-            if ( entityVersion.compareTo( entity.getVersion()) == -1 ) {
-                logger.debug("   Stale hit " + hit.getId() ); 
+            if (entityVersion.compareTo(entity.getVersion()) == -1) {
+                log.debug("   Stale hit " + hit.getId());
 
             } else {
                 entities.add( entity );
@@ -236,144 +249,149 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         }
 
         if ( entities.size() == 1 ) {
-            results.setEntity( entities.get( 0 ) );
+            results.setEntity(entities.get(0));
 
         } else {
-            logger.debug( "   Returning " + entities.size() + " entities");
-            results.setEntities( entities );
+            log.debug("   Returning " + entities.size() + " entities");
+            results.setEntities(entities);
         }
+
+        if ( !entities.isEmpty() ) {
+            results.setCursor(sr.getScrollId());
+            log.debug("   Cursor = " + sr.getScrollId() );
+        }
+
         return results;
     }
 
-
     /**
-     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each StringField.
+     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
+     * StringField.
      */
-    public static Map entityToMap( Entity entity ) {
+    public static Map entityToMap(Entity entity) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
-        for ( Object f : entity.getFields().toArray() ) {
-            Field field = (Field)f;
+        for (Object f : entity.getFields().toArray()) {
+            Field field = (Field) f;
 
-            if ( f instanceof ListField || f instanceof ArrayField ) {
-                List list = (List)field.getValue();
-                entityMap.put( field.getName(), 
-                    new ArrayList( processCollectionForMap( list ) ) );
+            if (f instanceof ListField || f instanceof ArrayField) {
+                List list = (List) field.getValue();
+                entityMap.put(field.getName(),
+                        new ArrayList(processCollectionForMap(list)));
 
-            } else if ( f instanceof SetField ) {
-                Set set = (Set)field.getValue();
-                entityMap.put( field.getName(), 
-                    new ArrayList( processCollectionForMap( set ) ) );
+            } else if (f instanceof SetField) {
+                Set set = (Set) field.getValue();
+                entityMap.put(field.getName(),
+                        new ArrayList(processCollectionForMap(set)));
 
-            } else if ( f instanceof EntityObjectField ) {
-                Entity ev = (Entity)field.getValue();
-                entityMap.put( field.getName(), entityToMap( ev ) ); // recursion
+            } else if (f instanceof EntityObjectField) {
+                Entity ev = (Entity) field.getValue();
+                entityMap.put(field.getName(), entityToMap(ev)); // recursion
 
-            } else if ( f instanceof StringField ) {
+            } else if (f instanceof StringField) {
                 // index in lower case because Usergrid queries are case insensitive
-                entityMap.put( field.getName(), ((String)field.getValue()).toLowerCase() );
-                entityMap.put( field.getName() + ANALYZED_SUFFIX, field.getValue() );
+                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
+                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
 
-            } else if ( f instanceof LocationField ) {
-                LocationField locField = (LocationField)f;
+            } else if (f instanceof LocationField) {
+                LocationField locField = (LocationField) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
                 // field names lat and lon triggerl ElasticSearch geo location 
-                locMap.put("lat", locField.getValue().getLatitude() );
-                locMap.put("lon", locField.getValue().getLongtitude() );
-                entityMap.put( field.getName() + GEO_SUFFIX, locMap );
+                locMap.put("lat", locField.getValue().getLatitude());
+                locMap.put("lon", locField.getValue().getLongtitude());
+                entityMap.put(field.getName() + GEO_SUFFIX, locMap);
 
             } else {
-                entityMap.put( field.getName(), field.getValue() );
+                entityMap.put(field.getName(), field.getValue());
             }
         }
 
         return entityMap;
     }
 
-    
-    private static Collection processCollectionForMap( Collection c ) {
-        if ( c.isEmpty() ) {
+    private static Collection processCollectionForMap(Collection c) {
+        if (c.isEmpty()) {
             return c;
         }
         List processed = new ArrayList();
         Object sample = c.iterator().next();
 
-        if ( sample instanceof Entity ) {
-            for ( Object o : c.toArray() ) {
-                Entity e = (Entity)o;
-                processed.add( entityToMap( e ) );
+        if (sample instanceof Entity) {
+            for (Object o : c.toArray()) {
+                Entity e = (Entity) o;
+                processed.add(entityToMap(e));
             }
 
-        } else if ( sample instanceof List ) {
-            for ( Object o : c.toArray() ) {
-                List list = (List)o;
-                processed.add( processCollectionForMap( list ) ); // recursion;
+        } else if (sample instanceof List) {
+            for (Object o : c.toArray()) {
+                List list = (List) o;
+                processed.add(processCollectionForMap(list)); // recursion;
             }
 
-        } else if ( sample instanceof Set ) {
-            for ( Object o : c.toArray() ) {
-                Set set = (Set)o;
-                processed.add( processCollectionForMap( set ) ); // recursion;
+        } else if (sample instanceof Set) {
+            for (Object o : c.toArray()) {
+                Set set = (Set) o;
+                processed.add(processCollectionForMap(set)); // recursion;
             }
 
         } else {
-            for ( Object o : c.toArray() ) {
-                processed.add( o );
+            for (Object o : c.toArray()) {
+                processed.add(o);
             }
         }
         return processed;
     }
 
-
-    /** 
-     * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed, 
+    /**
+     * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed,
      * where the analyzed field is named {name}_ug_analyzed
-     * 
+     *
      * @param builder Add JSON object to this builder.
-     * @param type    ElasticSearch type of entity.
-     * @return         Content builder with JSON for mapping.
-     * 
+     * @param type ElasticSearch type of entity.
+     * @return Content builder with JSON for mapping.
+     *
      * @throws java.io.IOException On JSON generation error.
      */
-    public static XContentBuilder createDoubleStringIndexMapping( 
-            XContentBuilder builder, String type ) throws IOException {
+    public static XContentBuilder createDoubleStringIndexMapping(
+            XContentBuilder builder, String type) throws IOException {
 
         builder = builder
             .startObject()
-                .startObject( type )
-                    .startArray( "dynamic_templates" )
+                .startObject(type)
+                    .startArray("dynamic_templates")
 
                         // any string with field name that ends with _ug_analyzed gets analyzed
                         .startObject()
-                            .startObject( "template_1" )
-                                .field( "match", "*" + ANALYZED_SUFFIX)
-                                .field( "match_mapping_type", "string")
-                                .startObject( "mapping" )
-                                    .field( "type", "string" )
-                                    .field( "index", "analyzed" )
+                            .startObject("template_1")
+                                .field("match", "*" + ANALYZED_SUFFIX)
+                                .field("match_mapping_type", "string")
+                                .startObject("mapping")
+                                    .field("type", "string")
+                                    .field("index", "analyzed")
                                 .endObject()
                             .endObject()
                         .endObject()
 
                         // all other strings are not analyzed
                         .startObject()
-                            .startObject( "template_2" )
-                                .field( "match", "*")
-                                .field( "match_mapping_type", "string")
-                                .startObject( "mapping" )
-                                    .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
+                            .startObject("template_2")
+                                .field("match", "*")
+                                .field("match_mapping_type", "string")
+                                .startObject("mapping")
+                                    .field("type", "string")
+                                    .field("index", "not_analyzed")
                                 .endObject()
                             .endObject()
                         .endObject()
-
+                
+                        // fields location_ug_geo get geo-indexed
                         .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", "location*" + GEO_SUFFIX)
-                                .startObject( "mapping" )
-                                    .field( "type", "geo_point" )
+                            .startObject("template_3")
+                                .field("match", "location" + GEO_SUFFIX)
+                                .startObject("mapping")
+                                    .field("type", "geo_point")
                                 .endObject()
                             .endObject()
                         .endObject()
@@ -381,7 +399,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                     .endArray()
                 .endObject()
             .endObject();
-        
+
         return builder;
     }
 

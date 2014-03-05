@@ -39,7 +39,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.index.impl.EsDslQueryVistor;
+import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.query.Results.Level;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
@@ -136,7 +136,7 @@ public class Query {
         QueryBuilder queryBuilder = null;
 
         if ( getRootOperand() != null ) {
-            QueryVisitor v = new EsDslQueryVistor();
+            QueryVisitor v = new EsQueryVistor();
             try {
                 getRootOperand().visit( v );
 
@@ -158,7 +158,7 @@ public class Query {
 	    FilterBuilder filterBuilder = null;
 
         if ( getRootOperand() != null ) {
-            QueryVisitor v = new EsDslQueryVistor();
+            QueryVisitor v = new EsQueryVistor();
             try {
                 getRootOperand().visit( v );
 

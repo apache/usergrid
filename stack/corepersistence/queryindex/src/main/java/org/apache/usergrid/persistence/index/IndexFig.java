@@ -33,9 +33,15 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
 
+    public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor-timeout.minutes";
+
     @Default( "100" )
     @Key( QUERY_LIMIT_DEFAULT )
     int getQueryLimitDefault();
+
+    @Default( "1" )
+    @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
+    int getQueryCursorTimeout();
 
     @Default( "usergrid" )
     @Key( ELASTICSEARCH_INDEXNAME )
