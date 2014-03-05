@@ -239,10 +239,11 @@ public class ApplicationResource extends AbstractContextResource {
         catch ( Exception e ) {
             //TODO:throw descriptive error message and or include on in the response
             //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status( SC_INTERNAL_SERVER_ERROR ).build();
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
+                                       .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
 
-        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+        return Response.status( SC_ACCEPTED ).entity( jobUUID ).build();
     }
 
     @POST

@@ -1,6 +1,7 @@
 package org.apache.usergrid.management.export;
 
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -45,7 +46,8 @@ public class ExportJob extends OnlyOnceJob {
             logger.error( "jobData cannot be null" );
             return;
         }
-        config = ( ExportInfo ) jobData.getProperty( "exportInfo" );
+        Map<String, Object> temp = jobData.getProperties();
+        config = ( ExportInfo ) temp.get("exportInfo");
         if ( config == null ) {
             logger.error( "Export information cannot be null" );
             return;

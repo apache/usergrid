@@ -594,9 +594,31 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( Status.OK, responseStatus );
     }
 
+    @Test
+    public void exportApplicationUUIDRetTest() throws Exception {
+        Status responseStatus = Status.ACCEPTED;
+        String uuid;
+        UUID jobUUID = null;
+        JsonNode node = null;
+
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.ACCEPTED, responseStatus );
+        assertNotNull( node.get( "jobUUID" ) );
+    }
 
     @Test
-    public void exportUUIDRetTest() throws Exception {
+    public void exportCollectionUUIDRetTest() throws Exception {
         Status responseStatus = Status.ACCEPTED;
         String uuid;
         UUID jobUUID = null;
@@ -622,7 +644,34 @@ public class ManagementResourceIT extends AbstractRestIT {
     /*Make a test with an invalid uuid and a wrong uuid.*/
     //all tests should be moved to OrganizationResourceIT ( *not* Organizations there is a difference)
     @Test
-    public void exportGetJobStatTest() throws Exception {
+    public void exportGetApplicationJobStatTest() throws Exception {
+        JsonNode node = null;
+        Status responseStatus = Status.OK;
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        String uuid = String.valueOf( node.get( "jobUUID" ) );
+        uuid = uuid.replaceAll( "\"", "" );
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + uuid )
+                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+
+        assertEquals( Status.OK, responseStatus );
+        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
+    }
+
+    @Test
+    public void exportGetCollectionJobStatTest() throws Exception {
         JsonNode node = null;
         Status responseStatus = Status.OK;
 
@@ -667,7 +716,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void exportPostNullPointer() throws Exception {
+    public void exportPostApplicationNullPointer() throws Exception {
         JsonNode node = null;
         Status responseStatus = Status.OK;
 
@@ -695,14 +744,58 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( Status.BAD_REQUEST, responseStatus );
     }
 
+    @Test
+    public void exportPostCollectionNullPointer() throws Exception {
+        JsonNode node = null;
+        Status responseStatus = Status.OK;
+
+        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> storage_info = new HashMap<String, Object>();
+        //TODO: always put dummy values here and ignore this test.
+        //TODO: add a ret for when s3 values are invalid.
+        storage_info.put( "bucket_location", "insert bucket name here" );
+
+
+        properties.put( "storage_provider", "s3" );
+        properties.put( "storage_info", storage_info );
+
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( Status.BAD_REQUEST, responseStatus );
+    }
+
 
     @Test
-    public void exportGetUnauthorized() throws Exception {
+    public void exportGetCollectionUnauthorized() throws Exception {
         JsonNode node = null;
         Status responseStatus = Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
             node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export/" + fake )
+                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                             .get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( Status.UNAUTHORIZED, responseStatus );
+    }
+
+    @Test
+    public void exportGetApplicationUnauthorized() throws Exception {
+        JsonNode node = null;
+        Status responseStatus = Status.OK;
+        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        try {
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                              .get( JsonNode.class );
         }
