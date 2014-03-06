@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.query.tree;
 
 
 import org.apache.usergrid.persistence.exceptions.NoFullTextIndexException;
-import org.apache.usergrid.persistence.index.NoIndexException;
+import org.apache.usergrid.persistence.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
