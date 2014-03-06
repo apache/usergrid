@@ -18,7 +18,7 @@ Here are the important parts of the QueryIndex module:
 
 * __org.apache.usergrid.persistence.index.impl__: provides an implementation using ElasticSearch via its Java API. 
 
-* __Query, Results and EntityRefs__: these classes were "ported" from Usergrid 1.0 to suppirt Usergrid query syntax. We define a grammar and use ANTLR to generate a parser and a lexer.
+* __Query, Results and EntityRefs__: these classes were "ported" from Usergrid 1.0 to support Usergrid query syntax. We define a grammar and use ANTLR to generate a parser and a lexer.
 
 Legacy Tests
 ---
@@ -56,7 +56,7 @@ Issues and work remaining
 	
 * Should we add support for connections aka "edges" via Graph module?
 
-* What things can be done asyncrhonously here? Is there anything we should paralellize?
+* What things can be done asyncrhonously here? Is there anything we should parallelize?
 
 
 
