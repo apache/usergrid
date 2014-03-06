@@ -51,20 +51,25 @@ AppServices.Services = angular.module('appservices.services', []);
 AppServices.Controllers = angular.module('appservices.controllers', []);
 AppServices.Filters = angular.module('appservices.filters', []);
 AppServices.Directives = angular.module('appservices.directives', []);
+AppServices.Performance = angular.module('appservices.performance', []);
+AppServices.Push = angular.module('appservices.push', []);
 
 angular.module('appservices',
     [ 'ngRoute',
       'ngResource',
       'ngSanitize',
       'ui.bootstrap',
+      'angulartics',
+      'angulartics.google.analytics',
       'appservices.filters',
       'appservices.services',
       'appservices.directives',
       'appservices.constants',
       'appservices.controllers',
-
-    ]).config(['$routeProvider', '$locationProvider','$sceDelegateProvider',
-        function ($routeProvider,$locationProvider,$sceDelegateProvider) {
+      'appservices.performance',
+      'appservices.push'
+    ]).config(['$routeProvider', '$locationProvider','$sceDelegateProvider','$analyticsProvider',
+        function ($routeProvider,$locationProvider,$sceDelegateProvider, $analyticsProvider) {
             $routeProvider
                 .when('/org-overview', {templateUrl: 'org-overview/org-overview.html', controller: 'OrgOverviewCtrl'})
                 .when('/login', {templateUrl: 'login/login.html', controller: 'LoginCtrl'})
@@ -77,6 +82,7 @@ angular.module('appservices',
                 .when('/users/profile', {templateUrl: 'users/users-profile.html', controller: 'UsersProfileCtrl'})
                 .when('/users/groups', {templateUrl: 'users/users-groups.html', controller: 'UsersGroupsCtrl'})
                 .when('/users/activities', {templateUrl: 'users/users-activities.html', controller: 'UsersActivitiesCtrl'})
+                .when('/users/feed', {templateUrl: 'users/users-feed.html', controller: 'UsersFeedCtrl'})
                 .when('/users/graph', {templateUrl: 'users/users-graph.html', controller: 'UsersGraphCtrl'})
                 .when('/users/roles', {templateUrl: 'users/users-roles.html', controller: 'UsersRolesCtrl'})
                 .when('/groups', {templateUrl: 'groups/groups.html', controller: 'GroupsCtrl'})
@@ -112,4 +118,8 @@ angular.module('appservices',
                 'https://appservices.apigee.com/**',
                 'https://api.usergrid.com/**'
             ]);
+
+            $analyticsProvider.virtualPageviews(false);
+            $analyticsProvider.firstPageview(false);
+
         }]);

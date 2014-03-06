@@ -3,6 +3,7 @@
   "version": "2.0.12",
   "ignore": [],
   "dependencies": {
+    "angularitics": "~0.8.7",
     "apigee-sdk": "~2.0.8"
   },
   "devDependencies": {},

@@ -27,15 +27,14 @@
     <li class="span5">
       <a ng-if="activeUI"
          class="btn btn-create zero-out pull-right"
-         ng-disabled="!addApplications"
-         ng-click="addApplications ? showModal('newApplication') : ''"
+         ng-click="showModal('newApplication')"
          analytics-on="click"
          analytics-category="App Services"
          analytics-label="Button"
          analytics-event="Add New App"
         >
-        <i class="pictogram">{{addApplications ? '&#8862;' : '&#10060;'}}</i>
-        {{!addApplications ? '10 app limit.' : 'Add New App'}}
+        <i class="pictogram">&#8862;</i>
+        Add New App
       </a>
     </li>
 </ul>

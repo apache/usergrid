@@ -1145,7 +1145,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "<section class=\"row-fluid\">\n" +
     "    <div class=\"span12\">\n" +
     "        <div class=\"page-filters\">\n" +
-    "            <h1 class=\"title pull-left\" id=\"pageTitle\"><i class=\"pictogram title\" style=\"padding-right: 5px;\">{{icon}}</i>{{title}} <a class=\"super-help\" href=\"#\" ng-click=\"showHelp()\"  >(need help?)</a></h1>\n" +
+    "            <h1 class=\"title pull-left\" id=\"pageTitle\"><i class=\"pictogram title\" style=\"padding-right: 5px;\">{{icon}}</i>{{title}} <a class=\"super-help\" href=\"http://community.apigee.com/content/apigee-customer-support\" target=\"_blank\"  >(need help?)</a></h1>\n" +
     "        </div>\n" +
     "    </div>\n" +
     "    <bsmodal id=\"need-help\"\n" +
@@ -1610,6 +1610,18 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    </div>\r" +
     "\n" +
+    "    <div class=\"control-group\" ng-show=\"requiresDeveloperKey\">\r" +
+    "\n" +
+    "      <label class=\"control-label\" for=\"login-developerkey\">Developer Key:</label>\r" +
+    "\n" +
+    "      <div class=\"controls\">\r" +
+    "\n" +
+    "        <input type=\"text\" ng-model=\"login.developerkey\" id=\"login-developerkey\" class=\"\" ng-value=\"login.developerkey\" size=\"20\" ug-validate>\r" +
+    "\n" +
+    "      </div>\r" +
+    "\n" +
+    "    </div>\r" +
+    "\n" +
     "    <div class=\"form-actions\">\r" +
     "\n" +
     "      <div class=\"submit\">\r" +
@@ -1772,15 +1784,14 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    <li class=\"span5\">\n" +
     "      <a ng-if=\"activeUI\"\n" +
     "         class=\"btn btn-create zero-out pull-right\"\n" +
-    "         ng-disabled=\"!addApplications\"\n" +
-    "         ng-click=\"addApplications ? showModal('newApplication') : ''\"\n" +
+    "         ng-click=\"showModal('newApplication')\"\n" +
     "         analytics-on=\"click\"\n" +
     "         analytics-category=\"App Services\"\n" +
     "         analytics-label=\"Button\"\n" +
     "         analytics-event=\"Add New App\"\n" +
     "        >\n" +
-    "        <i class=\"pictogram\">{{addApplications ? '&#8862;' : '&#10060;'}}</i>\n" +
-    "        {{!addApplications ? '10 app limit.' : 'Add New App'}}\n" +
+    "        <i class=\"pictogram\">&#8862;</i>\n" +
+    "        Add New App\n" +
     "      </a>\n" +
     "    </li>\n" +
     "</ul>"
@@ -1833,8 +1844,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    <h2 class=\"title\" > Applications\n" +
     "      <div class=\"header-button btn-group pull-right\">\n" +
-    "        <a class=\"btn filter-selector\" style=\"{{applicationsSize === 10 ? 'width:290px':''}}\"  ng-disabled=\"!addApplications\" ng-click=\"(addApplications ? showModal('newApplication') : '')\">\n" +
-    "          <span class=\"filter-label\">{{!addApplications ? 'You have met your 10 app limit' : 'Add New App'}}</span>\n" +
+    "        <a class=\"btn filter-selector\" style=\"{{applicationsSize === 10 ? 'width:290px':''}}\"  ng-click=\"showModal('newApplication')\">\n" +
+    "          <span class=\"filter-label\">Add New App</span>\n" +
     "        </a>\n" +
     "      </div>\n" +
     "    </h2>\n" +
@@ -2484,6 +2495,37 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   );
 
 
+  $templateCache.put('users/users-feed.html',
+    "<div class=\"content-page\" ng-controller=\"UsersFeedCtrl\" >\n" +
+    "\n" +
+    "    <div ng:include=\"'users/users-tabs.html'\"></div>\n" +
+    "    <br>\n" +
+    "    <div>\n" +
+    "        <table class=\"table table-striped\">\n" +
+    "            <tbody>\n" +
+    "            <tr class=\"table-header\">\n" +
+    "                <td>Date</td>\n" +
+    "                <td>User</td>\n" +
+    "                <td>Content</td>\n" +
+    "                <td>Verb</td>\n" +
+    "                <td>UUID</td>\n" +
+    "            </tr>\n" +
+    "            <tr class=\"zebraRows\" ng-repeat=\"activity in activities\">\n" +
+    "                <td>{{activity.createdDate}}</td>\n" +
+    "                <td>{{activity.actor.displayName}}</td>\n" +
+    "                <td>{{activity.content}}</td>\n" +
+    "                <td>{{activity.verb}}</td>\n" +
+    "                <td>{{activity.uuid}}</td>\n" +
+    "            </tr>\n" +
+    "            </tbody>\n" +
+    "        </table>\n" +
+    "    </div>\n" +
+    "\n" +
+    "\n" +
+    "</div>\n"
+  );
+
+
   $templateCache.put('users/users-graph.html',
     "<div class=\"content-page\" ng-controller=\"UsersGraphCtrl\">\n" +
     "\n" +
@@ -2950,6 +2992,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/profile' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/profile')\"><i class=\"pictogram\">&#59170;</i>Profile</a></li>\n" +
     "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/groups' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/groups')\"><i class=\"pictogram\">&#128101;</i>Groups</a></li>\n" +
     "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/activities' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/activities')\"><i class=\"pictogram\">&#59194;</i>Activities</a></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/feed' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/feed')\"><i class=\"pictogram\">&#128196;</i>Feed</a></li>\n" +
     "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/graph' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/graph')\"><i class=\"pictogram\">&#9729;</i>Graph</a></li>\n" +
     "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/roles' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/roles')\"><i class=\"pictogram\">&#127758;</i>Roles &amp; Permissions</a></li>\n" +
     "        </ul>\n" +

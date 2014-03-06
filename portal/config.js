@@ -1,12 +1,29 @@
 var Usergrid = Usergrid || {};
 
+//Google Analytics
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-4084158-4']);
+try{
+    (function(document) {
+        if(!document){
+            return;
+        }
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })(document || null);
+}catch(e){};
+//End Google Analytics
+
 Usergrid.showNotifcations = true;
+
 
 // used only if hostname does not match a real server name
 Usergrid.overrideUrl = 'https://api.usergrid.com/';
 
 Usergrid.options = {
   client:{
+    requiresDeveloperKey:false
    // apiKey:'123456'
   },
   showAutoRefresh:true,
@@ -74,7 +91,10 @@ Usergrid.regex = {
   collectionNameRegexDescription: "Collection name only allows : a-z A-Z 0-9. Must be between 3-25 characters."
 };
 try{
-  if(module && module.exports){
-    module.exports = Usergrid;
+  if (typeof module !== 'undefined'){
+
+    if(module && module.exports){
+      module.exports = Usergrid;
+  }
   }
 }catch(e){}
