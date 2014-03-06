@@ -221,20 +221,48 @@ public class ApplicationResource extends AbstractContextResource {
         OAuthResponse response = null;
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
+
+        Map<String,Object> properties;
+        Map<String, Object> storage_info;
+
 //TODO: do input verification here! make sure json map has all correct values.
         try {
             //parse the json into some useful object (the config params)
             //ExportInfo objEx = new ExportInfo( json );
-            if(json.get( "properties" ) == null){
-                throw new NullPointerException();
+            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
+                throw new NullPointerException("Could not find 'properties'");
             }
+            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            String storage_provider = ( String ) properties.get( "storage_provider" );
+            if(storage_provider == null) {
+                throw new NullPointerException( "Could not find field 'storage_provider'" );
+            }
+            if(storage_info == null) {
+                throw new NullPointerException( "Could not find field 'storage_info'" );
+            }
+
+
+            String bucketName = ( String ) storage_info.get( "bucket_location" );
+            String accessId = ( String ) storage_info.get( "s3_access_id" );
+            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            if(bucketName == null) {
+                throw new NullPointerException( "Could not find field 'bucketName'" );
+            }
+            if(accessId == null) {
+                throw new NullPointerException( "Could not find field 's3_access_id'" );
+            }
+            if(secretKey == null) {
+                throw new NullPointerException( "Could not find field 's3_key'" );
+            }
+
             json.put( "organizationId",organization.getUuid());
             //objEx.setOrganizationId( organization.getUuid() );
             json.put( "applicationId",applicationId);
             //objEx.setApplicationId( applicationId );
 
             jobUUID = exportService.schedule( json );
-            uuidRet.put( "jobUUID", jobUUID.toString() );
+            uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
@@ -264,23 +292,43 @@ public class ApplicationResource extends AbstractContextResource {
         String colExport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
+        Map<String,Object> properties;
+        Map<String, Object> storage_info;
+
         try {
             //checkJsonExportProperties(json);
-            if(json.get( "properties" ) == null){
-                throw new NullPointerException();
+            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
+                throw new NullPointerException("Could not find 'properties'");
             }
-            //if(json.get( "properties."))
-            //parse the json into some useful object (the config params)
-//            ExportInfo objEx = new ExportInfo( json );
-//            objEx.setOrganizationId( organization.getUuid() );
-//            objEx.setApplicationId( applicationId );
-//            objEx.setCollection( colExport );
+            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            String storage_provider = ( String ) properties.get( "storage_provider" );
+            if(storage_provider == null) {
+                throw new NullPointerException( "Could not find field 'storage_provider'" );
+            }
+            if(storage_info == null) {
+                throw new NullPointerException( "Could not find field 'storage_info'" );
+            }
+
+
+            String bucketName = ( String ) storage_info.get( "bucket_location" );
+            String accessId = ( String ) storage_info.get( "s3_access_id" );
+            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            if(bucketName == null) {
+                throw new NullPointerException( "Could not find field 'bucketName'" );
+            }
+            if(accessId == null) {
+                throw new NullPointerException( "Could not find field 's3_access_id'" );
+            }
+            if(secretKey == null) {
+                throw new NullPointerException( "Could not find field 's3_key'" );
+            }
             json.put( "organizationId",organization.getUuid() );
             json.put( "applicationId", applicationId);
             json.put( "collectionName", colExport);
 
             jobUUID = exportService.schedule( json );
-            uuidRet.put( "jobUUID", jobUUID.toString() );
+            uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
@@ -302,13 +350,13 @@ public class ApplicationResource extends AbstractContextResource {
 
     @GET
     @RequireOrganizationAccess
-    @Path("export/{jobUUID: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public Response exportGetJson( @Context UriInfo ui, @PathParam("jobUUID") UUID jobUUIDStr,
+    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         Export entity;
         try {
-            entity = smf.getServiceManager( applicationId ).getEntityManager().get( jobUUIDStr, Export.class );
+            entity = smf.getServiceManager( applicationId ).getEntityManager().get( exportEntityUUIDStr, Export.class );
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
