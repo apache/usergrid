@@ -56,7 +56,7 @@ Issues and work remaining
 	
 * Should we add support for connections aka "edges" via Graph module?
 
-* What things can be done asyncrhonously here? Is there anything we should paralellize?
+* What things can be done asyncrhonously here? Is there anything we should parallelize?
 
 
 
