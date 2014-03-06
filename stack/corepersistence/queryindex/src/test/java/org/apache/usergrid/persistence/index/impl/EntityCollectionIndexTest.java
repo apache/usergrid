@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.time.StopWatch;
@@ -47,7 +48,6 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -114,6 +114,38 @@ public class EntityCollectionIndexTest {
 
         testQueries( entityIndex );
     }
+
+    
+    @Test 
+    public void testDeindex() {
+
+        Id appId = new SimpleId("AutoSpotterApp");
+        Id orgId = new SimpleId("AutoWorldMagazine");
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
+
+        EntityCollectionIndex entityIndex = collectionIndexFactory.createCollectionIndex( scope );
+        EntityCollectionManager entityManager = collectionManagerFactory.createCollectionManager( scope );
+
+        Map entityMap = new HashMap() {{
+            put("name", "Ferrari 212 Inter");
+            put("introduced", 1952);
+            put("topspeed", 215);
+        }};
+
+        Entity entity = EntityBuilder.fromMap( scope.getName(), entityMap );
+        EntityUtils.setId( entity, new SimpleId( "fastcar" ));
+        entity = entityManager.write( entity ).toBlockingObservable().last();
+        entityIndex.index( entity );
+
+        Results results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
+        assertEquals( 1, results.getEntities().size() );
+
+        entityManager.delete( entity.getId() );
+        entityIndex.deindex( entity );
+
+        results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
+        assertEquals( 0, results.getEntities().size() );
+    }
    
    
     private void testQuery( EntityCollectionIndex entityIndex, String queryString, int num ) {
@@ -157,13 +189,6 @@ public class EntityCollectionIndexTest {
         testQuery( entityIndex, "name = 'Minerva Harrell' and age >= 40", 1);
 
         testQuery( entityIndex, "name = 'Minerva Harrell' and age <= 40", 1);
-    }
-
-    
-    @Test // TODO test for remove index
-    @Ignore
-    public void testRemoveIndex() {
-        fail("Not implemented");
     }
 
        
