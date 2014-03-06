@@ -2,7 +2,7 @@ var Usergrid = Usergrid || {};
 
 //Google Analytics
 var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-4084158-4']);
+_gaq.push(['_setAccount', '{{yourtoken}}']);
 try{
     (function(document) {
         if(!document){
