@@ -227,8 +227,6 @@ public class ApplicationResource extends AbstractContextResource {
 
 //TODO: do input verification here! make sure json map has all correct values.
         try {
-            //parse the json into some useful object (the config params)
-            //ExportInfo objEx = new ExportInfo( json );
             if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
                 throw new NullPointerException("Could not find 'properties'");
             }

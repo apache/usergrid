@@ -1,8 +1,6 @@
 package org.apache.usergrid.management.export;
 
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,26 +32,11 @@ public class ExportJob extends OnlyOnceJob {
     public void doJob( JobExecution jobExecution ) throws Exception {
         logger.info( "execute ExportJob {}", jobExecution );
 
-        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        //as long as I have the entity UUID I should be able to find it from anywhere right?
-
-
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {
             logger.error( "jobData cannot be null" );
             return;
         }
-//        Object temp = jobData.getProperty("exportInfo");
-
-
-//        if(temp.get("exportInfo") instanceof ExportInfo)
-//        {
-//            config = ( ExportInfo ) temp.get("exportInfo");
-//        }
-//        if ( config == null ) {
-//            logger.error( "Export information cannot be null" );
-//            return;
-//        }
 
         jobExecution.heartbeat();
         try {

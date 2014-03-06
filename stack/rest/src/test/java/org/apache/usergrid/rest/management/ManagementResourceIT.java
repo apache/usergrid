@@ -531,26 +531,26 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertEquals( Status.OK, status );
     }
-//
-//
-//    @Test
-//    public void exportCallSuccessful() throws Exception {
-//        Status responseStatus = Status.OK;
-//        JsonNode node = null;
-//
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        try {
-//            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-//                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-//                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals( Status.OK, responseStatus );
-//    }
+
+
+    @Test
+    public void exportCallSuccessful() throws Exception {
+        Status responseStatus = Status.OK;
+        JsonNode node = null;
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( Status.OK, responseStatus );
+    }
 
 //is this test still valid knowing that the sch. won't run in intelliJ?
     @Ignore

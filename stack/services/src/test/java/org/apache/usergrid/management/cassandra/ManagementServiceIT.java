@@ -768,10 +768,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
-//        exportInfo.setCollection( "users" );
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId );
         payload.put("collectionName","users");
@@ -854,9 +850,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
         payload.put("organizationId",organization.getUuid());
         payload.put("applicationId",applicationId);
 
@@ -941,11 +934,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
-//        exportInfo.setCollection( "users" );
-
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
         payload.put( "collectionName","users");
@@ -992,10 +980,6 @@ public class ManagementServiceIT {
         s3Export.setFilename( "testValidityOfApplicationExport.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
-
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
 
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
@@ -1046,11 +1030,6 @@ public class ManagementServiceIT {
         s3Export.setFilename("exportOneOrg.json");
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
-
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
-//        exportInfo.setCollection( "roles" );
 
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
@@ -1121,11 +1100,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
-//        exportInfo.setCollection( "roles" ); // <- this line determines if it is a collection back up or a application backup.
-
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
 
@@ -1192,10 +1166,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
-
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
 
@@ -1259,10 +1229,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
-//        exportInfo.setCollection( "baconators" );
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
         payload.put( "collectionName","baconators");
@@ -1287,17 +1253,11 @@ public class ManagementServiceIT {
         assertEquals( entitiesToCreate , a.size() );
         f.delete();
     }
-//
-//
-//    //only handles the DoJob Code , different tests for DoExport
+
     @Test
     public void testExportDoJob() throws Exception {
 
         HashMap<String, Object> payload = payloadBuilder();
-
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
 
@@ -1332,9 +1292,6 @@ public class ManagementServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
 
-//        ExportInfo exportInfo = new ExportInfo( payload );
-//        exportInfo.setOrganizationId( organization.getUuid() );
-//        exportInfo.setApplicationId( applicationId );
         payload.put("organizationId",organization.getUuid());
         payload.put("applicationId",applicationId);
 
@@ -1418,9 +1375,6 @@ public class ManagementServiceIT {
         S3Export s3Export = new S3ExportImpl();
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
-
-       // ExportInfo exportInfo = new ExportInfo( payload );
-        //exportInfo.setApplicationId( applicationId );
 
         payload.put("applicationId",applicationId);
 
