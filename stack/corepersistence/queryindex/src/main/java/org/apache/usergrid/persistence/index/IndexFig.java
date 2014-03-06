@@ -53,7 +53,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_INDEXNAME )
     String getIndexName();
     
-    @Default( "1" )
+    @Default( "1" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
@@ -61,7 +61,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_EMBEDDED )
     boolean isEmbedded();
 
-    @Default( "100" )
+    @Default( "10" )
     @Key( QUERY_LIMIT_DEFAULT )
     int getQueryLimitDefault();
 

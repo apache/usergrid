@@ -69,7 +69,8 @@ import org.slf4j.LoggerFactory;
  */
 public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
-    private static final Logger log = LoggerFactory.getLogger(EsEntityCollectionIndex.class);
+    private static final Logger log = 
+            LoggerFactory.getLogger(EsEntityCollectionIndex.class);
 
     private final Client client;
 
@@ -102,8 +103,11 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         this.cursorTimeout = config.getQueryCursorTimeout();
 
         // if new index then create it 
+        // TODO: should we allow (optional) authentication here?  Consensus: no.
         AdminClient admin = client.admin();
-        if (!admin.indices().exists(new IndicesExistsRequest(indexName)).actionGet().isExists()) {
+        if (!admin.indices().exists(
+                new IndicesExistsRequest(indexName)).actionGet().isExists()) {
+
             admin.indices().prepareCreate(indexName).execute().actionGet();
             log.debug("Created new index: " + indexName);
         }
@@ -114,10 +118,10 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
             try {
                 XContentBuilder mxcb = EsEntityCollectionIndex
-                        .createDoubleStringIndexMapping(jsonBuilder(), scope.getName());
+                    .createDoubleStringIndexMapping(jsonBuilder(), scope.getName());
 
                 PutMappingResponse pmr = admin.indices().preparePutMapping( indexName )
-                        .setType(scope.getName()).setSource(mxcb).execute().actionGet();
+                    .setType(scope.getName()).setSource(mxcb).execute().actionGet();
 
                 log.debug("Created new type mapping for scope named: " + scope.getName());
                 log.debug("   Scope organization: " + scope.getOrganization());
@@ -125,7 +129,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 log.debug("   Type name: " + typeName );
 
             } catch (IOException ex) {
-                throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex);
+                throw new RuntimeException(
+                    "Error adding mapping for type " + scope.getName(), ex);
             }
         }
     }
@@ -170,7 +175,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         }
 
         Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap(entity);
-        entityAsMap.put("created", entity.getVersion().timestamp());
+        entityAsMap.put("created", entity.getId().getUuid().timestamp());
+        entityAsMap.put("updated", entity.getVersion().timestamp());
 
         String indexId = createIndexId(entity);
 

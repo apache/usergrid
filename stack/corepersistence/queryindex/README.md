@@ -1,7 +1,5 @@
 Core Persistence Query Index Module
 ===
-
----
 This module defines an __EntityCollectionIndex__ interface for indexing, de-indexing and querying Entities within a Collection. Queries are expressed in Usergrid's SQL-like query syntax. 
 
 Implementation
@@ -48,17 +46,36 @@ Issues and work remaining
 
 * What additional tests that should bring in from 1.0?
 
+* Should we add support for connections aka "edges" via Graph module?
+
 * What is a good Chop stress test, just index & query lots of stuff?
 
-* Is it OK to use scope.getName() as ElasticSearch type name? 
+* Is it OK to use scope.getName() as ElasticSearch type name? No.
 	* Are scope names guaranteed to be unique? 
-	* Does a type name need to be a composite like "appId|orgId|scope"?
-	
-* Should we add support for connections aka "edges" via Graph module?
+	* Does a type name need to be a composite like "appId|orgId|scope"? Yes.
 
 * What things can be done asyncrhonously here? Is there anything we should parallelize?
 
+* What should happen when an Entity is de-indexed?
+	* Only one specific version of Entity should be removed from index?
+	* All versions should be deleted?
+	* What API should we expose here? 
 
+* How should we name the index?
+	* root / id / name?
+	* One index per organization?
+	
+* Use Entity validation utils from Collection Module instead of my own checks
+
+* How do you tell query to return Ids, EntityRefs or Entities?
+	* Use multi-get for getting entities
+	* Use three different interfaces for Results. one for Ids, one for EntityRefs and that provides Entities.
+	
+* Get rid of LOAD LEVEL stuff, allow caller to get whatever he wants.
+
+* Should entity get be parallelized? Maybe.
+
+	
 
 __Work remaining:__
 
