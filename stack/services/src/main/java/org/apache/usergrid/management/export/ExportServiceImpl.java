@@ -64,8 +64,6 @@ public class ExportServiceImpl implements ExportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
-    protected long startTime = System.currentTimeMillis();
-
     private S3Export s3Export;
 
 
@@ -579,7 +577,7 @@ public class ExportServiceImpl implements ExportService {
         StringBuilder str = new StringBuilder();
         str.append( name );
         str.append( "." );
-        str.append( startTime );
+        str.append( System.currentTimeMillis() );
         str.append( ".json" );
 
         String outputFileName = str.toString();
