@@ -72,7 +72,10 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     private static final Logger log = LoggerFactory.getLogger(EsEntityCollectionIndex.class);
 
     private final Client client;
-    private final String index;
+
+    private final String indexName;
+    private final String typeName;
+
     private final boolean refresh;
     private final int cursorTimeout;
 
@@ -91,39 +94,69 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         this.manager = factory.createCollectionManager(scope);
         this.client = provider.getClient();
         this.scope = scope;
-        this.index = config.getIndexName();
+
+        this.indexName = config.getIndexName();
+        this.typeName = createTypeName( scope );
+
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
 
         // if new index then create it 
         AdminClient admin = client.admin();
-        if (!admin.indices().exists(new IndicesExistsRequest(index)).actionGet().isExists()) {
-            admin.indices().prepareCreate(index).execute().actionGet();
-            log.debug("Created new index: " + index);
+        if (!admin.indices().exists(new IndicesExistsRequest(indexName)).actionGet().isExists()) {
+            admin.indices().prepareCreate(indexName).execute().actionGet();
+            log.debug("Created new index: " + indexName);
         }
 
-        // TODO: is it appropriate to use scope name as type name? are scope names unique?
         // if new type then create mapping
         if (!admin.indices().typesExists(new TypesExistsRequest(
-                new String[]{index}, scope.getName())).actionGet().isExists()) {
+                new String[]{indexName}, typeName )).actionGet().isExists()) {
 
             try {
                 XContentBuilder mxcb = EsEntityCollectionIndex
                         .createDoubleStringIndexMapping(jsonBuilder(), scope.getName());
 
-                PutMappingResponse pmr = admin.indices().preparePutMapping(index)
+                PutMappingResponse pmr = admin.indices().preparePutMapping( indexName )
                         .setType(scope.getName()).setSource(mxcb).execute().actionGet();
 
-                log.debug("Created new type mapping for scope: " + scope.getName());
+                log.debug("Created new type mapping for scope named: " + scope.getName());
                 log.debug("   Scope organization: " + scope.getOrganization());
                 log.debug("   Scope owner: " + scope.getOwner());
+                log.debug("   Type name: " + typeName );
 
             } catch (IOException ex) {
                 throw new RuntimeException("Error adding mapping for type " + scope.getName(), ex);
             }
         }
     }
+   
+    
+    private String createIndexId(Entity entity) {
+        return createIndexId(entity.getId(), entity.getVersion());
+    }
 
+    
+    private String createIndexId(Id entityId, UUID version) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( entityId.getUuid() ).append("|");
+        sb.append( entityId.getType() ).append("|");
+        sb.append( version.toString() );
+        return sb.toString();
+    }
+
+    
+    public static String createTypeName( CollectionScope scope ) {
+        //return scope.getName();
+        StringBuilder sb = new StringBuilder();
+        sb.append( scope.getName()                   ).append("|");
+        sb.append( scope.getOwner().getUuid()        ).append("|");
+        sb.append( scope.getOwner().getType()        ).append("|");
+        sb.append( scope.getOrganization().getUuid() ).append("|");
+        sb.append( scope.getOrganization().getType() );
+        return sb.toString();
+    }
+
+    
     public void index(Entity entity) {
 
         if (entity.getId() == null) {
@@ -141,7 +174,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         String indexId = createIndexId(entity);
 
-        IndexRequestBuilder irb = client.prepareIndex(index, scope.getName(), indexId)
+        IndexRequestBuilder irb = client.prepareIndex(indexName, typeName, indexId)
                 .setSource(entityAsMap)
                 .setRefresh(refresh);
 
@@ -150,42 +183,33 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         log.debug("Indexed Entity with index id " + indexId);
     }
 
-    private String createIndexId(Entity entity) {
-        return createIndexId(entity.getId(), entity.getVersion());
-    }
-
-    private String createIndexId(Id entityId, UUID version) {
-        return entityId.getUuid().toString() + "|"
-                + entityId.getType() + "|"
-                + version.toString();
-    }
-
     public void deindex(Entity entity) {
         deindex(entity.getId(), entity.getVersion());
     }
 
     public void deindex(Id entityId, UUID version) {
         String indexId = createIndexId(entityId, version);
-        client.prepareDelete(index, scope.getName(), indexId)
-                .setRefresh(refresh).execute().actionGet();
+        client.prepareDelete( indexName, typeName, indexId )
+            .setRefresh( refresh )
+            .execute().actionGet();
         log.debug("Deindexed Entity with index id " + indexId);
     }
 
     public Results execute(Query query) {
 
         QueryBuilder qb = query.createQueryBuilder();
-        log.debug("Executing query on type {} query: {} ", scope.getName(), query.toString());
 
         SearchResponse sr;
 
         if (query.getCursor() == null) {
 
             log.debug("Executing query on type {} query: {} ", scope.getName(), qb.toString());
+            log.debug("   Type name: " + typeName );
 
-            SearchRequestBuilder srb = client.prepareSearch(index)
-                    .setTypes( scope.getName() )
-                    .setScroll( cursorTimeout + "m" )
-                    .setQuery( qb );
+            SearchRequestBuilder srb = client.prepareSearch(indexName)
+                .setTypes( typeName )
+                .setScroll( cursorTimeout + "m" )
+                .setQuery( qb );
 
             FilterBuilder fb = query.createFilterBuilder();
             if (fb != null) {
@@ -209,6 +233,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         } else {
             log.debug("Executing query on type {} cursor: {} ", scope.getName(), query.getCursor());
+
             SearchScrollRequestBuilder ssrb = client.prepareSearchScroll(query.getCursor())
                     .setScroll( cursorTimeout + "m" );
             sr = ssrb.execute().actionGet();

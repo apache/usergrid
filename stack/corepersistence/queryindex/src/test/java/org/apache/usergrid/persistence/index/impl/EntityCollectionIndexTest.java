@@ -174,7 +174,7 @@ public class EntityCollectionIndexTest {
 
         testQuery( entityIndex, "name = 'Morgan'", 0);
 
-        testQuery( entityIndex, "name" + EsEntityCollectionIndex.ANALYZED_SUFFIX + " = 'Morgan'", 1);
+        testQuery( entityIndex, "name contains 'Morgan'", 1);
 
         testQuery( entityIndex, "company > 'GeoLogix'", 564);
 

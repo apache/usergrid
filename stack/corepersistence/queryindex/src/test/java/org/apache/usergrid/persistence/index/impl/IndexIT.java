@@ -47,7 +47,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+@Ignore
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
 public class IndexIT {
@@ -82,13 +82,13 @@ public class IndexIT {
             "X-ray", "Yankee", "Zulu"
     };
 
-    @Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
+    //@Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
     @Test
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
 
         Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("organization");
+        Id orgId = new SimpleId("testCollectionOrdering");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
 
@@ -153,13 +153,13 @@ public class IndexIT {
     }
 
 
-    @Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
+    //@Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
     @Test
     public void testCollectionFilters() throws Exception {
         LOG.info( "testCollectionFilters" );
 
         Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("organization");
+        Id orgId = new SimpleId("testCollectionFilters");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
 
@@ -275,13 +275,13 @@ public class IndexIT {
         assertEquals( entityId, r.getEntity().getId() );
     }
 
-    @Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
+    //@Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
     @Test
     public void testSecondarySorts() throws Exception {
         LOG.info( "testSecondarySorts" );
 
         Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("organization");
+        Id orgId = new SimpleId("testSecondarySorts");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
 

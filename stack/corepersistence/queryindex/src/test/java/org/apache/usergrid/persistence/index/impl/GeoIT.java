@@ -47,6 +47,7 @@ import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+@Ignore
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
 public class GeoIT {

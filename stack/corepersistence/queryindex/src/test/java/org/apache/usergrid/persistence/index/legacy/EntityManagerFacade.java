@@ -77,8 +77,8 @@ public class EntityManagerFacade {
             collectionName = type + "s";
         }
         typesByCollectionNames.put( collectionName, type );
-        
-        Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
+
+        Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), type ));
         entity = EntityBuilder.fromMap( scope.getName(), entity, properties );
         entity = ecm.write( entity ).toBlockingObservable().last();
 

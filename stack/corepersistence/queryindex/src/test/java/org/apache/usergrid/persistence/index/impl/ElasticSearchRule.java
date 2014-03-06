@@ -22,25 +22,27 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
-import org.junit.rules.ExternalResource;
+import org.safehaus.guicyfig.Env;
+import org.safehaus.guicyfig.EnvironResource;
 import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ElasticSearchRule extends ExternalResource {
+public class ElasticSearchRule extends EnvironResource {
     private static final Logger log = LoggerFactory.getLogger( ElasticSearchRule.class ); 
 
     private Client client;
 
     private final IndexFig indexFig;
 
-    private EsProvider esProvider;
-
     public ElasticSearchRule() {
+        super( Env.UNIT );
         Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
         indexFig = injector.getInstance( IndexFig.class );
-        esProvider = injector.getInstance( EsProvider.class );
+
+        log.info("Embedded: " + indexFig.isEmbedded());
+        log.info("Limit: " + indexFig.getQueryLimitDefault());
     }
 
     @Override
@@ -50,10 +52,10 @@ public class ElasticSearchRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
-        client = esProvider.getClient();
+        client = EsProvider.getClient( indexFig );
     }
 
-    public Client getClient() {
+    public synchronized Client getClient() {
         return client;
     }
 }

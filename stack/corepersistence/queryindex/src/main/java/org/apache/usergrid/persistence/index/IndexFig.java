@@ -19,10 +19,12 @@
 package org.apache.usergrid.persistence.index;
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 
+@FigSingleton
 public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
@@ -35,10 +37,9 @@ public interface IndexFig extends GuicyFig {
 
     public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor-timeout.minutes";
 
-    public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
-
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
 
+    public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
     
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
@@ -56,7 +57,7 @@ public interface IndexFig extends GuicyFig {
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
-    @Default( "false" )
+    @Default( "true" )
     @Key( ELASTICSEARCH_EMBEDDED )
     boolean isEmbedded();
 
