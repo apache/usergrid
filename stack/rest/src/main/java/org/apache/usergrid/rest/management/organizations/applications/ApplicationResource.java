@@ -225,6 +225,9 @@ public class ApplicationResource extends AbstractContextResource {
         try {
             //parse the json into some useful object (the config params)
             //ExportInfo objEx = new ExportInfo( json );
+            if(json.get( "properties" ) == null){
+                throw new NullPointerException();
+            }
             json.put( "organizationId",organization.getUuid());
             //objEx.setOrganizationId( organization.getUuid() );
             json.put( "applicationId",applicationId);

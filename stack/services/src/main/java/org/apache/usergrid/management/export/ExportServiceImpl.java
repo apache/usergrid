@@ -388,7 +388,7 @@ public class ExportServiceImpl implements ExportService {
             //could support queries, just need to implement that in the rest endpoint.
             for ( String collectionName : metadata.keySet() ) {
                 //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
-                if ( collectionName.equals( (UUID) config.get("collectionName")) ) {
+                if ( collectionName.equals( (String) config.get("collectionName")) ) {
                     //Query entity manager for the entities in a collection
                     Query query = new Query();
                     query.setLimit( MAX_ENTITY_FETCH );
