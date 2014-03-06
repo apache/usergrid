@@ -51,7 +51,6 @@ AppServices.Services = angular.module('appservices.services', []);
 AppServices.Controllers = angular.module('appservices.controllers', []);
 AppServices.Filters = angular.module('appservices.filters', []);
 AppServices.Directives = angular.module('appservices.directives', []);
-AppServices.Push = angular.module('appservices.push', []);
 
 angular.module('appservices',
     [ 'ngRoute',
@@ -63,8 +62,7 @@ angular.module('appservices',
       'appservices.directives',
       'appservices.constants',
       'appservices.controllers',
-      'appservices.performance',
-      'appservices.push'
+
     ]).config(['$routeProvider', '$locationProvider','$sceDelegateProvider',
         function ($routeProvider,$locationProvider,$sceDelegateProvider) {
             $routeProvider
