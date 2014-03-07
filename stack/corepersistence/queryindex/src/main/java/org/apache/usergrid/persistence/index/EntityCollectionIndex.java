@@ -54,4 +54,9 @@ public interface EntityCollectionIndex {
      * Execute query in Usergrid syntax.
      */
     public Results execute( Query query );
+
+    /**
+     * Force refresh of index.
+     */
+    public void refresh();
 }

@@ -70,10 +70,10 @@ public class IndexIT {
     public CoreApplication app = new CoreApplication( setup );
 
     @Inject
-    public EntityCollectionManagerFactory collectionManagerFactory;
+    public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory collectionIndexFactory;
+    public EntityCollectionIndexFactory cif;
 
     public static final String[] alphabet = {
             "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima",
@@ -87,8 +87,7 @@ public class IndexIT {
 
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("testCollectionOrdering");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -157,8 +156,7 @@ public class IndexIT {
 
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("testCollectionFilters");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -278,8 +276,7 @@ public class IndexIT {
 
         Id appId = new SimpleId("application");
         Id orgId = new SimpleId("testSecondarySorts");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];

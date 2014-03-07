@@ -53,7 +53,7 @@ Issues and work remaining
 	
 __Work remaining:__
 
-- Figure out why some tests are running out of memory and hanging the build
+- Figure out why some GeoIT tests cause subsequent tests to fail 
 
 - Create CHOP-style test cases to stress system
 
@@ -63,4 +63,4 @@ __Work remaining:__
 
 - Use Entity Validation utils from Collection instead of my own checks
 
-- Use mutli-get for fetching entities for results
+- Use muli-get for fetching entities for results

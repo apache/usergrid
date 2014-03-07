@@ -77,10 +77,10 @@ public class GeoIT {
     public CoreApplication app = new CoreApplication( setup );
 
     @Inject
-    public EntityCollectionManagerFactory collectionManagerFactory;
+    public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory collectionIndexFactory;
+    public EntityCollectionIndexFactory cif;
 
 
     public GeoIT() {
@@ -94,8 +94,7 @@ public class GeoIT {
 
         Id appId = new SimpleId("testGeo");
         Id orgId = new SimpleId("testOrganization");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
         assertNotNull( em );
 
 		// Two intersections two blocks apart
@@ -236,13 +235,13 @@ public class GeoIT {
 
         Id appId = new SimpleId("testGeo");
         Id orgId = new SimpleId("testPointPaging");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 500;
+        // TODO: use a larger count here
+        int numEntities = 10;
 
         float minLattitude = -90;
         float maxLattitude = 90;
@@ -299,7 +298,7 @@ public class GeoIT {
         Id appId = new SimpleId("testGeo");
         Id orgId = new SimpleId("testSamePointPaging");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+            cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -339,7 +338,7 @@ public class GeoIT {
         assertEquals( numEntities, count );
     }
 
-
+    
     @Ignore
     @Test
     public void testDistanceByLimit() throws Exception {
@@ -347,7 +346,7 @@ public class GeoIT {
         Id appId = new SimpleId("testGeo");
         Id orgId = new SimpleId("testDistanceByLimit");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+            cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -390,11 +389,13 @@ public class GeoIT {
             for ( Entity entity : results.getEntities() ) {
                 count++;
             }
+            query.setCursor( results.getCursor() );
         }
         while ( query.getCursor() != null );
 
         // check we got back all entities
         assertEquals( numEntities, count );
+
     }
 
 
@@ -404,8 +405,9 @@ public class GeoIT {
 
         Id appId = new SimpleId("testGeo");
         Id orgId = new SimpleId("testGeoWithIntersection");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+
         assertNotNull( em );
 
         int size = 100;
@@ -454,6 +456,7 @@ public class GeoIT {
         while ( r.hasCursor() );
 
         assertEquals( startDelta - ( size - max ), count );
+
     }
 
 

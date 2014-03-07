@@ -79,10 +79,10 @@ public class CollectionIT {
     public CoreApplication app = new CoreApplication( setup );
 
     @Inject
-    public EntityCollectionManagerFactory collectionManagerFactory;
+    public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory collectionIndexFactory;
+    public EntityCollectionIndexFactory cif;
 
     private EntityManagerFacade em;
 
@@ -93,7 +93,7 @@ public class CollectionIT {
         Id orgId = new SimpleId("organization");
 
         em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+            cmf, cif );
 
         app.setEntityManager( em );                
     }

@@ -116,7 +116,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         this.cursorTimeout = config.getQueryCursorTimeout();
 
         // if new index then create it 
-        // TODO: should we allow (optional) authentication here?  Consensus: no.
         AdminClient admin = client.admin();
         if (!admin.indices().exists(
                 new IndicesExistsRequest(indexName)).actionGet().isExists()) {
@@ -473,6 +472,11 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             .endObject();
 
         return builder;
+    }
+
+    @Override
+    public void refresh() {
+        client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
     }
 
 }

@@ -18,13 +18,19 @@
 package org.apache.usergrid.persistence.collection;
 
 import com.google.inject.Inject;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.LocationField;
+import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.field.value.Location;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertNotNull;
@@ -34,13 +40,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 
 
 @RunWith(JukitoRunner.class)
 @UseModules(TestCollectionModule.class)
-public class EntityCollectionManagerST {
-    private static final Logger log = LoggerFactory.getLogger( EntityCollectionManagerST.class );
+public class EntityCollectionManagerStressTest {
+    private static final Logger log = LoggerFactory.getLogger( 
+            EntityCollectionManagerStressTest.class );
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -57,33 +63,42 @@ public class EntityCollectionManagerST {
 
         CollectionScope context = new CollectionScopeImpl(
                 new SimpleId("organization"), new SimpleId("test"), "test");
-
+        
         EntityCollectionManager manager = factory.createCollectionManager(context);
 
         int limit = 10000;
 
         StopWatch timer = new StopWatch();
         timer.start();
-
+        Set<Id> ids = new HashSet<Id>();
         for (int i = 0; i < limit; i++) {
 
             Entity newEntity = new Entity(new SimpleId("test"));
-            Observable<Entity> observable = manager.write(newEntity);
-            Entity returned = observable.toBlockingObservable().lastOrDefault(null);
+            newEntity.setField(new StringField("name", String.valueOf(i)));
+            newEntity.setField(new LocationField("location", new Location(120,40)));
+
+            Entity returned = manager.write(newEntity).toBlockingObservable().last();
+
             assertNotNull("Returned has a id", returned.getId());
             assertNotNull("Returned has a version", returned.getVersion());
 
-            Entity fetched = manager.load( returned.getId() ).toBlockingObservable().last();
-            assertNotNull("Returned has a id", fetched.getId());
-            assertNotNull("Returned has a version", fetched.getVersion());
+            ids.add(returned.getId());
 
             if ( i % 1000 == 0 ) {
                 log.info("   Wrote: " + i);
             }
         }
-
         timer.stop();
-        log.info( "Total time to write {} entries {}ms, average {}ms/entry", 
-            limit, timer.getTime(), timer.getTime() / limit );
+        log.info( "Total time to write {} entries {}ms", limit, timer.getTime());
+        timer.reset();
+
+        timer.start();
+        for ( Id id : ids ) {
+            Entity entity = manager.load( id ).toBlockingObservable().last();
+            assertNotNull("Returned has a id", entity.getId());
+            assertNotNull("Returned has a version", entity.getVersion());
+        }
+        timer.stop();
+        log.info( "Total time to read {} entries {}ms", limit, timer.getTime());
     }
 }
