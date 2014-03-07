@@ -40,14 +40,13 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Ignore
+
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
 public class IndexIT {
@@ -82,7 +81,6 @@ public class IndexIT {
             "X-ray", "Yankee", "Zulu"
     };
 
-    //@Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
     @Test
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
@@ -153,7 +151,6 @@ public class IndexIT {
     }
 
 
-    //@Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
     @Test
     public void testCollectionFilters() throws Exception {
         LOG.info( "testCollectionFilters" );
@@ -265,7 +262,7 @@ public class IndexIT {
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
 
-        long created = r.getEntity().getVersion().timestamp();
+        long created = r.getEntity().getId().getUuid().timestamp();
         Id entityId = r.getEntity().getId();
 
         query = Query.fromQL( "created = " + created );
@@ -275,7 +272,6 @@ public class IndexIT {
         assertEquals( entityId, r.getEntity().getId() );
     }
 
-    //@Ignore // TODO: diagnose why this sometimes hangs and causes all subsequent tests to fail.
     @Test
     public void testSecondarySorts() throws Exception {
         LOG.info( "testSecondarySorts" );

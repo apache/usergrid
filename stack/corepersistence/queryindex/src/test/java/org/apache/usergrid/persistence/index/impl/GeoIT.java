@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Ignore
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
 public class GeoIT {
@@ -236,14 +235,14 @@ public class GeoIT {
     public void testPointPaging() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
+        Id orgId = new SimpleId("testPointPaging");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 10;
+        int numEntities = 500;
 
         float minLattitude = -90;
         float maxLattitude = 90;
@@ -293,11 +292,12 @@ public class GeoIT {
     }
 
 
+    @Ignore
     @Test
     public void testSamePointPaging() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
+        Id orgId = new SimpleId("testSamePointPaging");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
         assertNotNull( em );
@@ -340,11 +340,12 @@ public class GeoIT {
     }
 
 
+    @Ignore
     @Test
     public void testDistanceByLimit() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
+        Id orgId = new SimpleId("testDistanceByLimit");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
         assertNotNull( em );
@@ -397,11 +398,12 @@ public class GeoIT {
     }
 
 
+    @Ignore
     @Test
     public void testGeoWithIntersection() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
+        Id orgId = new SimpleId("testGeoWithIntersection");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
             collectionManagerFactory, collectionIndexFactory );
         assertNotNull( em );
@@ -534,7 +536,7 @@ public class GeoIT {
 //    }
 
 
-    public Map<String, Object> getLocation( double latitude, double longitude ) throws Exception {
+    private Map<String, Object> getLocation( double latitude, double longitude ) throws Exception {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );
@@ -542,16 +544,16 @@ public class GeoIT {
     }
 
 
-    public void updatePos( EntityManagerFacade em, EntityRef ref, double lat, double lon) throws Exception {
+    private void updatePos( EntityManagerFacade em, EntityRef ref, double lat, double lon) throws Exception {
         em.setProperty( ref, "location", lat, lon );
 	}
 
-    public void updatePos( EntityManagerFacade em, Entity e, double lat, double lon) throws Exception {
+    private void updatePos( EntityManagerFacade em, Entity e, double lat, double lon) throws Exception {
         em.setProperty( new SimpleEntityRef( e.getId(), e.getVersion()), "location", lat, lon );
     }
 
 
-    public void setPos( Map<String, Object> data, double latitude, double longitude ) {
+    private void setPos( Map<String, Object> data, double latitude, double longitude ) {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );

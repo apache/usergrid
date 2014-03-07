@@ -48,6 +48,8 @@ Issues and work remaining
 
 * Better to have index for all, or one per organization?
 
+* For each index, how many shards? The default five is good enough?
+    * The number of shards = the maximum number of nodes possible
 	
 __Work remaining:__
 

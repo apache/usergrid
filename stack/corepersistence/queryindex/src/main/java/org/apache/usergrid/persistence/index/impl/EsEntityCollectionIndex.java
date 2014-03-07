@@ -17,6 +17,7 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -47,6 +50,7 @@ import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -83,14 +87,17 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     private final CollectionScope scope;
     private final EntityCollectionManager manager;
 
+    private final AtomicLong indexedCount = new AtomicLong(0L);
+    private final AtomicDouble averageIndexTime = new AtomicDouble(0);
+
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
 
-    public static final String ID_SEPARATOR = "|";
-    public static final String ID_SEPARATOR_SPLITTER = "\\|";
+    public static final String DOC_ID_SEPARATOR = "|";
+    public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
 
     // These are not allowed in document type names: _ . , | #
-    public static final String TYPE_SEPARATOR = "^";
+    public static final String DOC_TYPE_SEPARATOR = "^";
 
     @Inject
     public EsEntityCollectionIndex(@Assisted final CollectionScope scope,
@@ -124,12 +131,23 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
             try {
                 XContentBuilder mxcb = EsEntityCollectionIndex
-                    .createDoubleStringIndexMapping(jsonBuilder(), scope.getName());
+                    .createDoubleStringIndexMapping(jsonBuilder(), typeName);
 
                 PutMappingResponse pmr = admin.indices().preparePutMapping( indexName )
-                    .setType(scope.getName()).setSource(mxcb).execute().actionGet();
+                    .setType( typeName ).setSource(mxcb).execute().actionGet();
 
-                log.debug("Created new type mapping for scope named: " + scope.getName());
+                if (!admin.indices().typesExists(new TypesExistsRequest(
+                    new String[] { indexName }, typeName )).actionGet().isExists()) {
+                    throw new RuntimeException("Type does not exist in index: " + typeName);
+                }
+
+                GetMappingsResponse gmr = admin.indices().prepareGetMappings( indexName )
+                    .addTypes( typeName ).execute().actionGet();
+                if ( gmr.getMappings().isEmpty() ) {
+                    throw new RuntimeException("Zero mappings exist for type: " + typeName);
+                }
+
+                log.debug("Created new type mapping for scope: " + scope.getName());
                 log.debug("   Scope organization: " + scope.getOrganization());
                 log.debug("   Scope owner: " + scope.getOwner());
                 log.debug("   Type name: " + typeName );
@@ -148,8 +166,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     
     private String createIndexId(Id entityId, UUID version) {
-        String sep = ID_SEPARATOR;
         StringBuilder sb = new StringBuilder();
+        String sep = DOC_ID_SEPARATOR;
         sb.append( entityId.getUuid() ).append(sep);
         sb.append( entityId.getType() ).append(sep);
         sb.append( version.toString() );
@@ -158,8 +176,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     
     public static String createTypeName( CollectionScope scope ) {
-        String sep = TYPE_SEPARATOR;
         StringBuilder sb = new StringBuilder();
+        String sep = DOC_TYPE_SEPARATOR;
         sb.append( scope.getName()                   ).append(sep);
         sb.append( scope.getOwner().getUuid()        ).append(sep);
         sb.append( scope.getOwner().getType()        ).append(sep);
@@ -170,6 +188,12 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     
     public void index(Entity entity) {
+
+        StopWatch timer = null;
+        if ( log.isDebugEnabled() ) {
+            timer = new StopWatch();
+            timer.start();
+        }
 
         if (entity.getId() == null) {
             throw new IllegalArgumentException("Cannot index entity with id null");
@@ -193,7 +217,19 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         irb.execute().actionGet();
 
-        log.debug("Indexed Entity with index id " + indexId);
+        //log.debug("Indexed Entity with index id " + indexId);
+
+        if ( log.isDebugEnabled() ) {
+            timer.stop();
+            double average = averageIndexTime.get();
+            if ( !averageIndexTime.compareAndSet( 0, timer.getTime() ) ) {
+                averageIndexTime.compareAndSet( average, (average + timer.getTime()) / 2.0 );
+            }
+            long count = indexedCount.addAndGet(1);
+            if ( count % 1000 == 0 ) {
+               log.debug("Indexed {} entities, average time {}ms", count, averageIndexTime.get() ); 
+            }
+        }
     }
 
     public void deindex(Entity entity) {
@@ -263,7 +299,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         for (SearchHit hit : hits.getHits()) {
 
-            String[] idparts = hit.getId().split( ID_SEPARATOR_SPLITTER );
+            String[] idparts = hit.getId().split( DOC_ID_SEPARATOR_SPLITTER );
             String id = idparts[0];
             String type = idparts[1];
             String version = idparts[2];
