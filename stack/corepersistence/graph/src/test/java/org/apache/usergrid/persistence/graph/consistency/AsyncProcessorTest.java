@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.graph.consistency;
 
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
 
@@ -29,7 +31,7 @@ import org.mockito.stubbing.Answer;
 
 import rx.Observable;
 import rx.concurrency.Schedulers;
-import rx.util.functions.Action1;
+import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -70,7 +72,7 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        AsyncProcessor asyncProcessor = constructProcessor( queue, null );
+        AsyncProcessor asyncProcessor = constructProcessor( queue );
 
 
         //mock up the queue
@@ -88,6 +90,8 @@ public class AsyncProcessorTest {
     public void verifyAsyncExecution() throws InterruptedException {
 
         final TestListener listener = new TestListener();
+
+
 
         final TestEvent event = new TestEvent();
 
@@ -108,9 +112,17 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        final AsyncProcessor asyncProcessor = constructProcessor( queue, listener );
+        final AsyncProcessor asyncProcessor = constructProcessor( queue );
 
-        final CountDownLatch latch = new CountDownLatch( 1 );
+        asyncProcessor.addListener( listener );
+
+
+        final CountDownLatch latch = new CountDownLatch( 2 );
+
+        final TestCompleteListener completeListener = new TestCompleteListener(latch);
+
+        asyncProcessor.addCompleteListener( completeListener );
+
 
         //mock up the ack to allow us to block the test until the async confirm fires
         when( queue.remove( asynchronousMessage ) ).thenAnswer( new Answer<Boolean>() {
@@ -132,11 +144,15 @@ public class AsyncProcessorTest {
         final TestEvent firedEvent = listener.events.peek();
 
         assertSame( event, firedEvent );
+
+        final TestEvent completeEvent = completeListener.events.peek();
+
+        assertSame(event, completeEvent);
     }
 
 
-//    @Test( timeout = 5000 )
-        @Test
+    //    @Test( timeout = 5000 )
+    @Test
     public void verifyErrorExecution() throws InterruptedException {
 
         final AsynchronousErrorListener listener = new AsynchronousErrorListener();
@@ -163,7 +179,9 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        final AsyncProcessorImpl asyncProcessor = constructProcessor( queue, listener );
+        final AsyncProcessorImpl asyncProcessor = constructProcessor( queue );
+
+        asyncProcessor.addListener( listener );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
@@ -177,7 +195,6 @@ public class AsyncProcessorTest {
                 invoked[1] = true;
                 latch.countDown();
             }
-
         } );
 
         //throw an error if remove is called.  This shouldn't happen
@@ -209,13 +226,56 @@ public class AsyncProcessorTest {
     }
 
 
+    @Test
+    public void verifyTimeout() {
+
+
+        final long timeout = 500;
+        final TestEvent event = new TestEvent();
+
+
+        final AsynchronousMessage<TestEvent> asynchronousMessage = new AsynchronousMessage<TestEvent>() {
+            @Override
+            public TestEvent getEvent() {
+                return event;
+            }
+
+
+            @Override
+            public long getTimeout() {
+                return timeout;
+            }
+        };
+
+        final TimeoutQueue queue = mock( TimeoutQueue.class );
+
+
+        when(queue.take( 1, 10000l )).thenReturn( Collections.singletonList(asynchronousMessage ));
+
+        AsyncProcessor<TestEvent> processor = constructProcessor( queue );
+
+
+        Collection<AsynchronousMessage<TestEvent>> timeouts =  processor.getTimeouts( 1, 10000l );
+
+        assertEquals(1, timeouts.size());
+
+        AsynchronousMessage<TestEvent> returned = timeouts.iterator().next();
+
+        assertSame(asynchronousMessage, returned);
+
+
+
+    }
+
+
+
     /**
      * Construct the async processor
      */
-    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue , MessageListener<T, T> listener) {
+    public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue ) {
 
-        AsyncProcessorImpl<T> processor =  new AsyncProcessorImpl( queue,Schedulers.threadPoolForIO() );
-        processor.addListener( listener );
+        AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue, Schedulers.threadPoolForIO() );
+
 
         return processor;
     }
@@ -245,12 +305,29 @@ public class AsyncProcessorTest {
         @Override
         public Observable<TestEvent> receive( final TestEvent event ) {
 
-            return Observable.from( event ).doOnEach(new Action1<TestEvent>() {
-               @Override
-               public void call( final TestEvent testEvent ) {
-                   events.push( testEvent );
-               }
-           });
+            return Observable.from( event ).doOnEach( new Action1<TestEvent>() {
+                @Override
+                public void call( final TestEvent testEvent ) {
+                    events.push( testEvent );
+                }
+            } );
+        }
+    }
+
+
+    public static class TestCompleteListener implements CompleteListener<TestEvent> {
+
+        private final CountDownLatch latch;
+        private final Stack<TestEvent> events = new Stack<TestEvent>();
+
+
+        public TestCompleteListener( final CountDownLatch latch ) {this.latch = latch;}
+
+
+        @Override
+        public void onComplete( final AsynchronousMessage<TestEvent> event ) {
+            events.push( event.getEvent() );
+            latch.countDown();
         }
     }
 
@@ -265,15 +342,13 @@ public class AsyncProcessorTest {
 
         @Override
         public Observable<TestEvent> receive( final TestEvent event ) {
-            return Observable.from( event ).doOnEach(new Action1<TestEvent>() {
-                          @Override
-                          public void call( final TestEvent testEvent ) {
-                              events.push( testEvent );
-                              throw new RuntimeException( "Test Exception thrown.  Failed to process event" );
-                          }
-                      });
+            return Observable.from( event ).doOnEach( new Action1<TestEvent>() {
+                @Override
+                public void call( final TestEvent testEvent ) {
+                    events.push( testEvent );
+                    throw new RuntimeException( "Test Exception thrown.  Failed to process event" );
+                }
+            } );
         }
-
-
     }
 }

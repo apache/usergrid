@@ -38,9 +38,9 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.concurrency.Schedulers;
-import rx.util.functions.Func1;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -82,7 +82,7 @@ public class ParallelTest {
         //        final Scheduler scheduler = Schedulers.threadPoolForComputation();
 
         //use the I/O scheduler to allow enough thread, otherwise our pool will be the same size as the # of cores
-        final Scheduler scheduler = Schedulers.threadPoolForIO();
+        final Scheduler scheduler = Schedulers.io();
 
         //set our size equal
         ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, size );

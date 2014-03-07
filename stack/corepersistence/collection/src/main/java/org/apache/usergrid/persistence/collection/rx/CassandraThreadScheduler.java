@@ -35,7 +35,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import rx.Scheduler;
-import rx.concurrency.Schedulers;
+import rx.schedulers.Schedulers;
 
 
 public class CassandraThreadScheduler implements Provider<Scheduler> {

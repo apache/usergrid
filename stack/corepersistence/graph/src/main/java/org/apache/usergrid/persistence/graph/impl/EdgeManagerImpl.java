@@ -56,7 +56,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.util.functions.Func1;
+import rx.functions.Func1;
 
 
 /**

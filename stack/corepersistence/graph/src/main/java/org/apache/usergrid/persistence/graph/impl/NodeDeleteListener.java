@@ -20,9 +20,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
+import rx.Notification;
 import rx.Observable;
-import rx.util.functions.Action1;
-import rx.util.functions.Func1;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 
 /**
@@ -75,6 +76,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
                                 // delete them. We might want to batch this up for efficiency
                                 return loadEdgesToTarget( scope,
                                         new SimpleSearchByEdgeType( node, edgeType, uuidOptional.get(), null ) )
+
                                         .doOnEach( new Action1<MarkedEdge>() {
                                             @Override
                                             public void call( final MarkedEdge markedEdge ) {

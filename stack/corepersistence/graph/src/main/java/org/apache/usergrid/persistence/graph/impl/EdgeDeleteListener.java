@@ -23,9 +23,9 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.util.functions.Action1;
-import rx.util.functions.Func1;
-import rx.util.functions.Func5;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.functions.Func5;
 
 
 /**

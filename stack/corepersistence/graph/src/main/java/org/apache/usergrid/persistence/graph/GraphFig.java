@@ -15,6 +15,11 @@ public interface GraphFig extends GuicyFig {
 
     public static final String SCAN_PAGE_SIZE = "usergrid.graph.scan.page.size";
 
+
+    public static final String TIMEOUT_SIZE = "usergrid.graph.timeout.page.size";
+
+    public static final String TIMEOUT_TASK_TIME = "usergrid.graph.timeout.task.time";
+
     public static final String READ_CL = "usergrid.graph.read.cl";
 
     public static final String WRITE_CL = "usergrid.graph.write.cl";
@@ -36,6 +41,15 @@ public interface GraphFig extends GuicyFig {
     @Default("10000")
     @Key( WRITE_TIMEOUT )
     long getWriteTimeout();
+
+    @Default( "100" )
+    @Key( TIMEOUT_SIZE )
+    int getTimeoutReadSize();
+
+    @Default("500")
+    @Key( TIMEOUT_TASK_TIME )
+    long getTaskLoopTime();
+
 
 
 }

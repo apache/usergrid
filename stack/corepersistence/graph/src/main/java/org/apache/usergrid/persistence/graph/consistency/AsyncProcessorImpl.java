@@ -2,45 +2,59 @@ package org.apache.usergrid.persistence.graph.consistency;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.graph.GraphFig;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.util.functions.Action0;
-import rx.util.functions.Action1;
-import rx.util.functions.FuncN;
+import rx.functions.Action0;
+import rx.functions.Action1;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 
 /**
- * The implementation of asynchronous processing.
- * This is intentionally kept as a 1 processor to 1 event type mapping
+ * The implementation of asynchronous processing. This is intentionally kept as a 1 processor to 1 event type mapping
  * This way reflection is not used, event dispatching is easier, and has compile time checking
  */
 @Singleton
 public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
-    private static final HystrixCommandGroupKey GRAPH_REPAIR = HystrixCommandGroupKey.Factory.asKey( "Graph_Repair" );
-
-    private final TimeoutQueue<T> queue;
-    private final Scheduler scheduler;
-    private final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
+    /**
+     * TODO, run this with hystrix
+     */
 
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
-    private List<ErrorListener> errorListeners = new ArrayList<ErrorListener>();
+    protected final TimeoutQueue<T> queue;
+    protected final Scheduler scheduler;
+    protected final GraphFig graphFig;
+    protected final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
+
+
+    protected List<ErrorListener<T>> errorListeners = new ArrayList<ErrorListener<T>>();
+    protected List<CompleteListener<T>> completeListeners = new ArrayList<CompleteListener<T>>();
 
 
     @Inject
-    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final Scheduler scheduler ) {
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final Scheduler scheduler, final GraphFig graphFig ) {
         this.queue = queue;
         this.scheduler = scheduler;
+        this.graphFig = graphFig;
+
+        //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
+        //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
+        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>(this, graphFig), graphFig.getTaskLoopTime(),  graphFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
     }
 
 
@@ -52,8 +66,6 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
     @Override
     public void start( final AsynchronousMessage<T> event ) {
-
-
         final T data = event.getEvent();
         /**
          * Execute all listeners in parallel
@@ -83,6 +95,10 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
             @Override
             public void call() {
                 queue.remove( event );
+
+                for ( CompleteListener<T> listener : completeListeners ) {
+                    listener.onComplete( event );
+                }
             }
         } ).subscribe( new Action1<AsynchronousMessage<T>>() {
             @Override
@@ -90,6 +106,12 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
                 //To change body of implemented methods use File | Settings | File Templates.
             }
         } );
+    }
+
+
+    @Override
+    public Collection<AsynchronousMessage<T>> getTimeouts( final int maxCount, final long timeout ) {
+        return queue.take( maxCount, timeout );
     }
 
 
@@ -105,4 +127,12 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     public void addErrorListener( ErrorListener<T> listener ) {
         this.errorListeners.add( listener );
     }
+
+
+    @Override
+    public void addCompleteListener( final CompleteListener<T> listener ) {
+        this.completeListeners.add( listener );
+    }
+
+
 }

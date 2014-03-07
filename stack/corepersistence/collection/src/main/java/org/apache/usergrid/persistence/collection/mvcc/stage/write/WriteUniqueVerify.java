@@ -40,8 +40,8 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.util.functions.Func1;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.FuncN;
 
 
 /**
@@ -166,6 +166,7 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
                 return ioevent;
             }
         };
+
 
 
         return Observable.zip( fields, zipFunction );

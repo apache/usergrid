@@ -24,7 +24,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
-import rx.concurrency.Schedulers;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -69,6 +69,6 @@ public class CassandraCommand<R> extends HystrixCommand<R> {
      */
     private static <R> Observable<R> toObservable( R readValue ) {
         //create a new command and ensure it's observed on the correct thread scheduler
-        return new CassandraCommand<R>( readValue ).toObservable( Schedulers.threadPoolForIO() );
+        return new CassandraCommand<R>( readValue ).toObservable( Schedulers.io() );
     }
 }

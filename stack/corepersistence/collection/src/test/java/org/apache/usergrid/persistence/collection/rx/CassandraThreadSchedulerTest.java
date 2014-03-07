@@ -18,6 +18,7 @@ import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import com.google.inject.Inject;
 
 import rx.Scheduler;
+import rx.functions.Action1;
 import rx.util.functions.Action0;
 
 import static org.junit.Assert.assertTrue;
@@ -63,13 +64,11 @@ public class CassandraThreadSchedulerTest {
         //schedule and we should fail
 
         try {
-
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
-                    //no op
-                }
-            } );
+            rxScheduler.schedule( new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
+                            }
+                            });
 
             fail( "This should have thrown an exception" );
         }
@@ -127,9 +126,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -158,9 +157,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -215,9 +214,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -244,9 +243,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -295,9 +294,10 @@ public class CassandraThreadSchedulerTest {
         final CountDownLatch latch = new CountDownLatch( totalCount );
 
         for ( int i = 0; i < totalCount; i++ ) {
-            final Action0 action = new Action0() {
-                @Override
-                public void call() {
+
+            final Action1<Scheduler.Inner> action = new  Action1<Scheduler.Inner>() {
+                                       @Override
+                                       public void call( final Scheduler.Inner inner ) {
                     try {
                         final String threadName = Thread.currentThread().getName();
 
