@@ -86,6 +86,12 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
 
+    public static final String ID_SEPARATOR = "|";
+    public static final String ID_SEPARATOR_SPLITTER = "\\|";
+
+    // These are not allowed in document type names: _ . , | #
+    public static final String TYPE_SEPARATOR = "^";
+
     @Inject
     public EsEntityCollectionIndex(@Assisted final CollectionScope scope,
             IndexFig config,
@@ -142,21 +148,22 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     
     private String createIndexId(Id entityId, UUID version) {
+        String sep = ID_SEPARATOR;
         StringBuilder sb = new StringBuilder();
-        sb.append( entityId.getUuid() ).append("|");
-        sb.append( entityId.getType() ).append("|");
+        sb.append( entityId.getUuid() ).append(sep);
+        sb.append( entityId.getType() ).append(sep);
         sb.append( version.toString() );
         return sb.toString();
     }
 
     
     public static String createTypeName( CollectionScope scope ) {
-        //return scope.getName();
+        String sep = TYPE_SEPARATOR;
         StringBuilder sb = new StringBuilder();
-        sb.append( scope.getName()                   ).append("|");
-        sb.append( scope.getOwner().getUuid()        ).append("|");
-        sb.append( scope.getOwner().getType()        ).append("|");
-        sb.append( scope.getOrganization().getUuid() ).append("|");
+        sb.append( scope.getName()                   ).append(sep);
+        sb.append( scope.getOwner().getUuid()        ).append(sep);
+        sb.append( scope.getOwner().getType()        ).append(sep);
+        sb.append( scope.getOrganization().getUuid() ).append(sep);
         sb.append( scope.getOrganization().getType() );
         return sb.toString();
     }
@@ -256,7 +263,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         for (SearchHit hit : hits.getHits()) {
 
-            String[] idparts = hit.getId().split("\\|");
+            String[] idparts = hit.getId().split( ID_SEPARATOR_SPLITTER );
             String id = idparts[0];
             String type = idparts[1];
             String version = idparts[2];

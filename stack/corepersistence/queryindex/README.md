@@ -41,56 +41,24 @@ Issues and work remaining
 ---
 
 * We have to set a Query Cursor Timeout, is that a problem?
+    * No, but how does it work. Does timeout reset on each query?
 
 * We need to set a Refresh Frequency, how do we design around that?
+    * To be determined...
 
-* What additional tests that should bring in from 1.0?
-
-* Should we add support for connections aka "edges" via Graph module?
-
-* What is a good Chop stress test, just index & query lots of stuff?
-
-* Is it OK to use scope.getName() as ElasticSearch type name? No.
-	* Are scope names guaranteed to be unique? 
-	* Does a type name need to be a composite like "appId|orgId|scope"? Yes.
-
-* What things can be done asyncrhonously here? Is there anything we should parallelize?
-
-* What should happen when an Entity is de-indexed?
-	* Only one specific version of Entity should be removed from index?
-	* All versions should be deleted?
-	* What API should we expose here? 
-
-* How should we name the index?
-	* root / id / name?
-	* One index per organization?
-	
-* Use Entity validation utils from Collection Module instead of my own checks
-
-* How do you tell query to return Ids, EntityRefs or Entities?
-	* Use multi-get for getting entities
-	* Use three different interfaces for Results. one for Ids, one for EntityRefs and that provides Entities.
-	
-* Get rid of LOAD LEVEL stuff, allow caller to get whatever he wants.
-
-* Should entity get be parallelized? Maybe.
+* Better to have index for all, or one per organization?
 
 	
-
 __Work remaining:__
-
-- Figure out the above issues
 
 - Figure out why some tests are running out of memory and hanging the build
 
 - Create CHOP-style test cases to stress system
 
+- Bring in tests from org.apache.usergrid.persistence.query
 
+- Get rid of Load Level stuff in Results, allow caller to get anything
 
+- Use Entity Validation utils from Collection instead of my own checks
 
-
-
-
-
-
-
+- Use mutli-get for fetching entities for results
