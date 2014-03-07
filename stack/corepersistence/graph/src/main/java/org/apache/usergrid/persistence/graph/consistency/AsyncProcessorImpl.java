@@ -19,7 +19,9 @@ import rx.util.functions.FuncN;
 
 
 /**
- * The implementation of asynchronous processing
+ * The implementation of asynchronous processing.
+ * This is intentionally kept as a 1 processor to 1 event type mapping
+ * This way reflection is not used, event dispatching is easier, and has compile time checking
  */
 @Singleton
 public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
@@ -84,7 +86,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
             }
         } ).subscribe( new Action1<AsynchronousMessage<T>>() {
             @Override
-            public void call( final AsynchronousMessage<T> tAsynchronousMessage ) {
+            public void call( final AsynchronousMessage<T> asynchronousMessage ) {
                 //To change body of implemented methods use File | Settings | File Templates.
             }
         } );

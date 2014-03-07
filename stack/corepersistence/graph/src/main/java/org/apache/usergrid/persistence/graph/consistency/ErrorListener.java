@@ -6,5 +6,10 @@ package org.apache.usergrid.persistence.graph.consistency;
  */
 public interface ErrorListener <T> {
 
+    /**
+     * Invoked when an error occurs during asynchronous processing
+     * @param event
+     * @param t
+     */
     void onError( AsynchronousMessage<T> event, Throwable t );
 }

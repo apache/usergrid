@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.graph.consistency;
 
 
+import org.apache.usergrid.persistence.collection.OrganizationScope;
+
 import rx.Observable;
 
 
@@ -17,6 +19,6 @@ public interface MessageListener<T, R> {
      * @param event  The input event
      * @return The observable that performs the operations
      */
-    Observable<T> receive(T event);
+    Observable<T> receive(final T event);
 
 }

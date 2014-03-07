@@ -2,8 +2,7 @@ package org.apache.usergrid.persistence.graph.consistency;
 
 
 /**
- *  Used to fork lazy repair and other types of operations.  This can be implemented
- *  across multiple environments.
+ *  Used to fork lazy repair and other types of operations.
  *
  */
 public interface AsyncProcessor<T> {
