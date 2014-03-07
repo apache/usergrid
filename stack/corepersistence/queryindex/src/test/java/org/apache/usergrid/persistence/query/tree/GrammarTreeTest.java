@@ -26,9 +26,9 @@ import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.junit.Test;
 import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -82,8 +82,6 @@ public class GrammarTreeTest {
         assertEquals( "a", equal.getProperty().getValue() );
 
         assertEquals( 5, ( ( LongLiteral ) equal.getLiteral() ).getValue().intValue() );
-
-        // TODO Todd fix this.
 
         queryString = "select * where a lt 5";
 
@@ -368,7 +366,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( .1f, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -388,7 +386,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( 1, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -564,8 +562,7 @@ public class GrammarTreeTest {
             error = qpe.getMessage();
         }
 
-        assertEquals( "The query cannot be parsed. The token '<EOF>' " + "at column 13 on line 1 cannot be parsed",
-                error );
+        assertTrue( error.startsWith("The query cannot be parsed") );
     }
 
     @Test

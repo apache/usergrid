@@ -22,13 +22,13 @@ package org.apache.usergrid.persistence.query;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.query.Query.SortDirection;
 import org.apache.usergrid.persistence.query.Query.SortPredicate;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -90,7 +90,7 @@ public class QueryTest {
 
         assertEquals( "loc", op.getProperty().getValue() );
         assertEquals( .05f, op.getDistance().getFloatValue(), 0 );
-        assertEquals( 5f, op.getLattitude().getFloatValue(), 0 );
+        assertEquals( 5f, op.getLatitude().getFloatValue(), 0 );
         assertEquals( 6f, op.getLongitude().getFloatValue(), 0 );
 
         and = ( AndOperand ) and.getLeft();
@@ -277,7 +277,7 @@ public class QueryTest {
             error = qpe.getMessage();
         }
 
-        assertEquals( "The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error );
+        assertTrue( error.startsWith("The query cannot be parsed") );
     }
 
 

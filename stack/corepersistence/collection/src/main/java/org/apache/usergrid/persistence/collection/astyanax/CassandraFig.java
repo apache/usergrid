@@ -24,7 +24,6 @@ import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
-import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
 
 
 /**

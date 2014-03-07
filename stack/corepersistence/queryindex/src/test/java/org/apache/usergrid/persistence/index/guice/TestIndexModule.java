@@ -16,17 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.guice;
+package org.apache.usergrid.persistence.index.guice;
 
 import org.apache.usergrid.persistence.collection.guice.TestModule;
 
-/**
- * Wrapper for configuring our guice test env
- */
-public class TestGraphModule extends TestModule {
+
+public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
-        install(new GraphModule());
+        install( new IndexModule() );
     }
 }

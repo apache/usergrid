@@ -39,7 +39,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.index.impl.EsDslQueryVistor;
+import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.query.Results.Level;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
@@ -54,18 +54,20 @@ import org.apache.usergrid.persistence.query.tree.Operand;
 import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
 import org.apache.usergrid.persistence.query.tree.QueryVisitor;
-import static org.apache.usergrid.persistence.utils.ClassUtils.cast;
-import org.apache.usergrid.persistence.utils.JsonUtils;
-import org.apache.usergrid.persistence.utils.ListUtils;
-import static org.apache.usergrid.persistence.utils.ListUtils.first;
-import static org.apache.usergrid.persistence.utils.ListUtils.firstBoolean;
-import static org.apache.usergrid.persistence.utils.ListUtils.firstInteger;
-import static org.apache.usergrid.persistence.utils.ListUtils.firstLong;
-import static org.apache.usergrid.persistence.utils.ListUtils.firstUuid;
-import static org.apache.usergrid.persistence.utils.ListUtils.isEmpty;
-import static org.apache.usergrid.persistence.utils.MapUtils.toMapList;
+import static org.apache.usergrid.utils.ClassUtils.cast;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.ListUtils;
+import static org.apache.usergrid.utils.ListUtils.first;
+import static org.apache.usergrid.utils.ListUtils.firstBoolean;
+import static org.apache.usergrid.utils.ListUtils.firstInteger;
+import static org.apache.usergrid.utils.ListUtils.firstLong;
+import static org.apache.usergrid.utils.ListUtils.firstUuid;
+import static org.apache.usergrid.utils.ListUtils.isEmpty;
+import static org.apache.usergrid.utils.MapUtils.toMapList;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,8 +100,6 @@ public class Query {
     private String collection;
     private String ql;
 
-    private QueryBuilder queryBuilder ;
-
 
     public Query() {
     }
@@ -131,14 +131,45 @@ public class Query {
     }
 
 
-    public QueryBuilder getQueryBuilder() {
+    public QueryBuilder createQueryBuilder() {
+
+        QueryBuilder queryBuilder = null;
+
+        if ( getRootOperand() != null ) {
+            QueryVisitor v = new EsQueryVistor();
+            try {
+                getRootOperand().visit( v );
+
+            } catch ( PersistenceException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+            queryBuilder = v.getQueryBuilder();
+        } 
+
+		if ( queryBuilder == null ) {
+            queryBuilder = QueryBuilders.matchAllQuery();
+		}
+
         return queryBuilder;
     }
 
 
-    private void setQueryBuilder( QueryBuilder queryBuilder ) {
-        this.queryBuilder = queryBuilder;
-    }
+	public FilterBuilder createFilterBuilder() {
+	    FilterBuilder filterBuilder = null;
+
+        if ( getRootOperand() != null ) {
+            QueryVisitor v = new EsQueryVistor();
+            try {
+                getRootOperand().visit( v );
+
+            } catch ( PersistenceException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+            filterBuilder = v.getFilterBuilder();
+        } 
+
+        return filterBuilder;	
+	}
 
 
     public static Query fromQL( String ql ) throws QueryParseException {
@@ -168,9 +199,6 @@ public class Query {
 
         try {
             Query q = parser.ql().query;
-            QueryVisitor v = new EsDslQueryVistor();
-            q.getRootOperand().visit( v );
-            q.setQueryBuilder( v.getQueryBuilder() );
             q.setQl( originalQl );
             return q;
 
@@ -183,12 +211,7 @@ public class Query {
                     + "The token '%s' at column %d on line %d cannot be parsed", 
                     token.getText(), index, lineNumber );
             throw new QueryParseException( message, e );
-
-        } catch ( PersistenceException pe ) { 
-            String message = "Error building ElasticSEarch query string";
-            throw new QueryParseException( message, pe );
         }
-
     }
 
 
@@ -231,7 +254,7 @@ public class Query {
         Boolean pad = firstBoolean( params.get( "pad" ) );
 
         for ( Entry<String, List<String>> param : params.entrySet() ) {
-            Id identifier = null; // TODO Identifier.from( param.getKey() );
+            Id identifier = null;
             if ( ( param.getValue() == null ) || ( param.getValue().size() == 0 ) ) {
                 if ( identifier != null ) {
                     if ( identifiers == null ) {
@@ -556,16 +579,18 @@ public class Query {
 
 
     public Query addFilter( String filter ) {
+
         ANTLRStringStream in = new ANTLRStringStream( filter );
         QueryFilterLexer lexer = new QueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         QueryFilterParser parser = new QueryFilterParser( tokens );
         Operand root = null;
+
         try {
             root = parser.ql().query.getRootOperand();
         }
         catch ( RecognitionException e ) {
-            // todo: should we create a specific Exception for this? checked?
+            // TODO: should we create a specific Exception for this? checked?
             throw new RuntimeException( "Unknown operation: " + filter, e );
         }
 
@@ -699,7 +724,7 @@ public class Query {
         if ( ( startResult == null ) && ( cursor != null ) ) {
             byte[] cursorBytes = decodeBase64( cursor );
             if ( ( cursorBytes != null ) && ( cursorBytes.length == 16 ) ) {
-                startResult = null; // TODO uuid( cursorBytes );
+                startResult = null; 
             }
         }
         return startResult;
@@ -742,7 +767,7 @@ public class Query {
 
     public void setLimit( int limit ) {
 
-        //      TODO tnine.  After users have had time to change their query limits,
+        //      tnine.  After users have had time to change their query limits,
         // this needs to be uncommented and enforced.
         //        if(limit > MAX_LIMIT){
         //          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));
