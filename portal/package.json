@@ -1,0 +1,44 @@
+{
+  "name": "apigee-usergrid",
+  "version": "2.0.34",
+  "packageName": "appsvc-ui",
+  "description": "full apigee portal",
+  "main": "./scripts/web-server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apigee/usergrid-portal-internal.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.11",
+    "grunt-contrib-cssmin": "~0.7.0",
+    "grunt-contrib-uglify": "~0.2.7",
+    "grunt-angular-templates": "~0.4.7",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-connect": "~0.5.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "karma-script-launcher": "~0.1.0",
+    "karma-chrome-launcher": "~0.1.1",
+    "karma-html2js-preprocessor": "~0.1.0",
+    "karma-firefox-launcher": "~0.1.2",
+    "karma-jasmine": "~0.1.3",
+    "karma-coffee-preprocessor": "~0.1.1",
+    "requirejs": "~2.1.9",
+    "karma-requirejs": "~0.2.0",
+    "karma-phantomjs-launcher": "~0.1.1",
+    "karma": "~0.10.8",
+    "grunt-karma": "~0.6.2",
+    "protractor": "~0.18.1",
+    "grunt-protractor-runner": "~0.2.0",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-compress": "~0.5.3",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-dom-munger": "~3.1.0",
+    "bower": "~1.2.8",
+    "grunt-bower-task": "~0.3.4"
+  },
+  "engines": {
+    "node": ">=0.10.21"
+  }
+}

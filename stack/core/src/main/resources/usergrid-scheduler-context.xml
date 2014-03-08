@@ -1,3 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context"
@@ -6,7 +23,7 @@
 
 	<import resource="classpath:/usergrid-core-context.xml" />
 
-	<bean id="jobSchedulerBackgroundService" class="org.usergrid.batch.service.JobSchedulerService">
+	<bean id="jobSchedulerBackgroundService" class="org.apache.usergrid.batch.service.JobSchedulerService">
 		<property name="jobFactory" ref="jobFactory" />
 		<property name="jobAccessor" ref="schedulerService" />
 		<property name="workerSize" value="${usergrid.scheduler.job.workers}" />
@@ -14,17 +31,17 @@
 		<property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
 	</bean>
 
-	<bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">
+	<bean id="schedulerService" class="org.apache.usergrid.batch.service.SchedulerServiceImpl">
 		<property name="jobTimeout" value="${usergrid.scheduler.job.timeout}" />
 		<property name="jobQueueName" value="${usergrid.scheduler.job.queueName}" />
 	</bean>
 
 
-	<bean id="jobFactory" class="org.usergrid.batch.UsergridJobFactory" />
+	<bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
 
 
 	<!-- scan all job classes -->
-	<context:component-scan base-package="org.usergrid.batch.job" />
+	<context:component-scan base-package="org.apache.usergrid.batch.job" />
 	<context:annotation-config />
 	
 	<!-- other beans -->

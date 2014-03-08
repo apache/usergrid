@@ -12,3 +12,19 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+/portal/performance/
+/portal/node_modules/
+/portal/dist
+/portal/bower_components
+/portal/.idea
+/stack/corepersistence/priamcluster/aws.properties
+#Webstorm artifacts
+.idea/
+portal/2.0.**
+stack/corepersistence/collection/nbactions.xml
+stack/corepersistence/graph/nbactions.xml
+stack/corepersistence/model/nbactions.xml
+stack/corepersistence/nbactions.xml
+stack/corepersistence/queryindex/nbactions.xml
+stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
+stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java

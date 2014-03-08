@@ -1,0 +1,30 @@
+<div class="app-overview-content" >
+  <section class="row-fluid">
+
+      <page-title title=" Summary" icon="&#128241;"></page-title>
+  <section class="row-fluid">
+      <h2 class="title" id="app-overview-title">{{currentApp}}</h2>
+  </section>
+  <section class="row-fluid">
+
+    <div class="span6">
+      <chart id="appOverview"
+             chartdata="appOverview.chart"
+             type="column"></chart>
+    </div>
+
+    <div class="span6">
+      <table class="table table-striped">
+        <tr class="table-header">
+          <td>Path</td>
+          <td>Title</td>
+        </tr>
+        <tr class="zebraRows" ng-repeat="(k,v) in collections">
+          <td>{{v.title}}</td>
+          <td>{{v.count}}</td>
+        </tr>
+      </table>
+    </div>
+
+  </section>
+</div>

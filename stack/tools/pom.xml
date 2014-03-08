@@ -1,18 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.usergrid</groupId>
+    <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.28-SNAPSHOT</version>
+    <version>0.0.29-SNAPSHOT</version>
   </parent>
 
   <artifactId>usergrid-tools</artifactId>
   <name>Usergrid Tools</name>
   <description>Command line tools for Usergrid system.</description>
   <packaging>jar</packaging>
-  <version>0.0.28-SNAPSHOT</version>
+  <version>0.0.29-SNAPSHOT</version>
 
   <reporting>
     <plugins>
@@ -52,7 +68,7 @@
             <storage-config>${basedir}/src/test/conf</storage-config>
           </systemPropertyVariables>
           <forkMode>always</forkMode>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
         </configuration>
       </plugin>
 
@@ -81,7 +97,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.usergrid.tools.Command</mainClass>
+              <mainClass>org.apache.usergrid.tools.Command</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
@@ -119,19 +135,19 @@
     <!-- Usergrid Dependencies -->
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-services</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-rest</artifactId>
       <version>${project.version}</version>
       <classifier>classes</classifier>
@@ -193,6 +209,10 @@
       <version>9.1-901.jdbc4</version>
     </dependency>
 
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+    </dependency>
     <!-- Testing and Logging Dependencies -->
 
     <dependency>
@@ -202,7 +222,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.usergrid</groupId>
+      <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
@@ -22,22 +38,22 @@
 
 	<import resource="classpath:/usergrid-services-context.xml" />
 
-    <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+    <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
     </bean>
     <!-- The default schema manager -->
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->
-    <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+    <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>
         <constructor-arg ref="cassandraCluster"/>
     </bean>
 
-    <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore">
+    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
 
-    <!--<bean id="binaryStore" class="org.usergrid.services.assets.data.S3BinaryStore">-->
+    <!--<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.S3BinaryStore">-->
         <!--<constructor-arg name="accessId" value="xx" />-->
         <!--<constructor-arg name="secretKey" value="xx" />-->
         <!--<constructor-arg name="bucketName" value="xx" />-->

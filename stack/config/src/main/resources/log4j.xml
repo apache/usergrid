@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
     <appender class="org.apache.log4j.ConsoleAppender" name="stdout">
@@ -23,31 +39,31 @@
         <level value="error"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.BATCH">
+    <logger name="org.apache.usergrid.persistence.cassandra.BATCH">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.ConnectionRefImpl">
+    <logger name="org.apache.usergrid.persistence.cassandra.ConnectionRefImpl">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.DaoUtils">
+    <logger name="org.apache.usergrid.persistence.cassandra.DaoUtils">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.DB">
+    <logger name="org.apache.usergrid.persistence.cassandra.DB">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
+    <logger name="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.persistence.cassandra.EntityManagerImpl">
+    <logger name="org.apache.usergrid.persistence.cassandra.EntityManagerImpl">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
-    <logger name="org.usergrid.rest.security.AllowAjaxFilter">
+    <logger name="org.apache.usergrid.rest.security.AllowAjaxFilter">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>

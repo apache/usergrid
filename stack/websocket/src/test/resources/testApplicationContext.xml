@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context"
@@ -11,7 +27,7 @@
 	http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.1.xsd
 	http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-	<context:component-scan base-package="org.usergrid.persistence" />
+	<context:component-scan base-package="org.apache.usergrid.persistence" />
 	<context:annotation-config />
 
 	<bean id="properties"
@@ -53,7 +69,7 @@
 		<entry key="password" value="${cassandra.password}" />
 	</util:map>
 
-	<bean id="realm" class="org.usergrid.security.shiro.Realm">
+	<bean id="realm" class="org.apache.usergrid.security.shiro.Realm">
 		<property name="name" value="realm" />
 	</bean>
 
@@ -86,11 +102,11 @@
 		<constructor-arg ref="cassandraCredentials" />
 	</bean>
 
-	<!-- bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" /> -->
-	<bean name="lockManager" class="org.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
+	<!-- bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" /> -->
+	<bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
 
 	<bean id="cassandraService"
-		class="org.usergrid.persistence.cassandra.CassandraService" init-method="init">
+		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init">
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
@@ -98,23 +114,23 @@
 	</bean>
 
 	<bean id="entityManagerFactory"
-		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
+		class="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
 	</bean>
 
 	<bean id="queueManagerFactory"
-		class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
+		class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
 	</bean>
 
-	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
+	<bean id="serviceManagerFactory" class="org.apache.usergrid.services.ServiceManagerFactory">
 		<constructor-arg>
 			<ref bean="entityManagerFactory" />
 		</constructor-arg>
 	</bean>
 
-	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+	<bean id="tokenService" class="org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
 
-	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
+	<bean id="managementService" class="org.apache.usergrid.management.cassandra.ManagementServiceImpl" />
 
 </beans>
