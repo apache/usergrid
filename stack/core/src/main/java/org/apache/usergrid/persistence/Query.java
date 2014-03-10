@@ -37,6 +37,9 @@ import org.antlr.runtime.TokenRewriteStream;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
@@ -51,8 +54,6 @@ import org.apache.usergrid.persistence.query.tree.Operand;
 import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
 import org.apache.usergrid.utils.JsonUtils;
-
-import org.apache.commons.lang.StringUtils;
 
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.lang.StringUtils.isBlank;

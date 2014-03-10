@@ -1789,12 +1789,15 @@
                     <exclude>**/META-INF/**</exclude>
                     <exclude>**/dependency-reduced-pom.xml</exclude>
                     <exclude>**/QueryFilter.tokens</exclude>
+                    <exclude>**/QueryFilterLexer.java</exclude>
+                    <exclude>**/QueryFilterParser.java</exclude>
 
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
+                    <exclude>**/aws.properties</exclude>
 
                 </excludes>
             </configuration>

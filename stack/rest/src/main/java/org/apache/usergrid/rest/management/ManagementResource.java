@@ -38,6 +38,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import org.apache.amber.oauth2.common.error.OAuthError;
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.codec.Base64;
+
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -48,13 +56,6 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-
-import org.apache.amber.oauth2.common.error.OAuthError;
-import org.apache.amber.oauth2.common.exception.OAuthProblemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.codec.Base64;
 
 import com.sun.jersey.api.view.Viewable;
 
