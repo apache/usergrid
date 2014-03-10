@@ -68,8 +68,6 @@ module.exports = function (grunt) {
             'js/libs/angular-1.2.5/angular-sanitize.min.js',
             'js/libs/usergrid.sdk.js',
             'js/libs/MD5.min.js',
-            'bower_components/angularitics/dist/angulartics.min.js',
-            'bower_components/angularitics/dist/angulartics-google-analytics.min.js',
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
             'js/libs/jqueryui/date.min.js'
