@@ -33,6 +33,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -104,6 +105,8 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             IndexFig config,
             EsProvider provider,
             EntityCollectionManagerFactory factory) {
+
+        ValidationUtils.validateCollectionScope( scope );
 
         this.manager = factory.createCollectionManager(scope);
         this.client = provider.getClient();
@@ -188,20 +191,12 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     
     public void index(Entity entity) {
 
+        ValidationUtils.verifyEntityWrite(entity);
+
         StopWatch timer = null;
         if ( log.isDebugEnabled() ) {
             timer = new StopWatch();
             timer.start();
-        }
-
-        if (entity.getId() == null) {
-            throw new IllegalArgumentException("Cannot index entity with id null");
-        }
-        if (entity.getId().getUuid() == null || entity.getId().getType() == null) {
-            throw new IllegalArgumentException("Cannot index entity with incomplete id");
-        }
-        if (entity.getVersion() == null) {
-            throw new IllegalArgumentException("Cannot index entity with version null");
         }
 
         Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap(entity);
@@ -232,14 +227,19 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     }
 
     public void deindex(Entity entity) {
+
         deindex(entity.getId(), entity.getVersion());
+
     }
 
     public void deindex(Id entityId, UUID version) {
+
         String indexId = createIndexId(entityId, version);
+
         client.prepareDelete( indexName, typeName, indexId )
             .setRefresh( refresh )
             .execute().actionGet();
+
         log.debug("Deindexed Entity with index id " + indexId);
     }
 
