@@ -11,7 +11,7 @@ AppServices.Controllers.controller('PageCtrl',
     '$q',
     '$route',
     '$log',
-    '$analytics', function (
+     function (
                      ug,
                      utility,
                      $scope,

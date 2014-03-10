@@ -1,6 +1,6 @@
 'use strict';
 
-AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log, $analytics,$location) {
+AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log,$location) {
 
   var requestTimes = [],
     running = false,
@@ -8,9 +8,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
 
   function reportError(data,config){
     try {
-      $analytics.eventTrack('error', {
-        category: 'App Services', label: data + ':' + config.url + ':' + (sessionStorage['apigee_uuid'] || 'na')
-      });
+    
     } catch (e) {
       console.log(e)
     }
