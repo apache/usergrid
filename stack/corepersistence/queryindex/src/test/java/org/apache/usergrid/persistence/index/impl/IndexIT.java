@@ -267,14 +267,14 @@ public class IndexIT {
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
 
-        long created = r.getEntity().getId().getUuid().timestamp();
-        Id entityId = r.getEntity().getId();
+        long created = r.getEntities().get(0).getId().getUuid().timestamp();
+        Id entityId = r.getEntities().get(0).getId();
 
         query = Query.fromQL( "created = " + created );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
-        assertEquals( entityId, r.getEntity().getId() );
+        assertEquals( entityId, r.getEntities().get(0).getId() );
     }
 
     @Test

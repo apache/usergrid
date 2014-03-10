@@ -41,7 +41,6 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.query.Results.Level;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -79,7 +78,7 @@ public class Query {
 
     public static final int DEFAULT_LIMIT = 10;
     public static final int MAX_LIMIT = 1000;
-    public static final String PROPERTY_Id = "uuid";
+    public static final String PROPERTY_ID = "id";
 
     private String type;
     private List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
@@ -90,7 +89,6 @@ public class Query {
 
     private Map<String, String> selectAssignments = new LinkedHashMap<String, String>();
     private boolean mergeSelectResults = false;
-    private Level level = Level.ALL_PROPERTIES;
     private String connection;
     private List<String> permissions;
     private boolean reversed;
@@ -118,7 +116,6 @@ public class Query {
             selectAssignments = q.selectAssignments != null 
                     ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
             mergeSelectResults = q.mergeSelectResults;
-            level = q.level;
             connection = q.connection;
             permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
             reversed = q.reversed;
@@ -385,48 +382,6 @@ public class Query {
             }
         }
         sortPredicates.add( sort );
-        return this;
-    }
-
-
-    @JsonIgnore
-    boolean isIdsOnly() {
-        if ( ( selectAssignments.size() == 1 ) && selectAssignments.containsKey( PROPERTY_Id ) ) {
-            level = Level.IDS;
-            return true;
-        }
-        return false;
-    }
-
-
-    private void setIdsOnly( boolean idsOnly ) {
-        if ( idsOnly ) {
-            selectAssignments = new LinkedHashMap<String, String>();
-            selectAssignments.put( PROPERTY_Id, PROPERTY_Id );
-            level = Level.IDS;
-        }
-        else if ( isIdsOnly() ) {
-            selectAssignments = new LinkedHashMap<String, String>();
-            level = Level.ALL_PROPERTIES;
-        }
-    }
-
-
-    public Level getResultsLevel() {
-        isIdsOnly();
-        return level;
-    }
-
-
-    public void setResultsLevel( Level level ) {
-        setIdsOnly( level == Level.IDS );
-        this.level = level;
-    }
-
-
-    public Query withResultsLevel( Level level ) {
-        setIdsOnly( level == Level.IDS );
-        this.level = level;
         return this;
     }
 
@@ -1038,11 +993,6 @@ public class Query {
 
     public String getType() {
         return type;
-    }
-
-
-    public Level getLevel() {
-        return level;
     }
 
     

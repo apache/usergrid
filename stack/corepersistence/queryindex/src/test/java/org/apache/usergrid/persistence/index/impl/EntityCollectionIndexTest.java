@@ -163,7 +163,7 @@ public class EntityCollectionIndexTest {
         timer.stop();
 
         if ( num == 1 ) {
-            assertNotNull( results.getEntity() != null );
+            assertNotNull( results.getEntities().get(0) != null );
         } else {
             assertEquals( num, results.getEntities().size() );
         }

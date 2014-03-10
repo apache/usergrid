@@ -290,11 +290,9 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         SearchHits hits = searchResponse.getHits();
         log.debug("   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
-        Results results = new Results();
-
         // TODO: do we always want to fetch entities? When do we fetch refs or ids?
         // list of entities that will be returned
-        List<Entity> entities = new ArrayList<Entity>();
+        List<Id> ids = new ArrayList<Id>();
 
         for (SearchHit hit : hits.getHits()) {
 
@@ -315,19 +313,13 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 log.debug("   Stale hit " + hit.getId());
 
             } else {
-                entities.add( entity );
+                ids.add( entityId );
             }
         }
 
-        if ( entities.size() == 1 ) {
-            results.setEntity(entities.get(0));
+        Results results = new Results( manager, query, ids );
 
-        } else {
-            log.debug("   Returning " + entities.size() + " entities");
-            results.setEntities(entities);
-        }
-
-        if ( entities.size() == query.getLimit() ) {
+        if ( ids.size() == query.getLimit() ) {
             results.setCursor(searchResponse.getScrollId());
             log.debug("   Cursor = " + searchResponse.getScrollId() );
         }
