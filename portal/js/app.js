@@ -68,8 +68,8 @@ angular.module('appservices',
       'appservices.controllers',
       'appservices.performance',
       'appservices.push'
-    ]).config(['$routeProvider', '$locationProvider','$sceDelegateProvider','$analyticsProvider',
-        function ($routeProvider,$locationProvider,$sceDelegateProvider, $analyticsProvider) {
+    ]).config(['$routeProvider', '$locationProvider','$sceDelegateProvider',
+        function ($routeProvider,$locationProvider,$sceDelegateProvider) {
             $routeProvider
                 .when('/org-overview', {templateUrl: 'org-overview/org-overview.html', controller: 'OrgOverviewCtrl'})
                 .when('/login', {templateUrl: 'login/login.html', controller: 'LoginCtrl'})
@@ -118,8 +118,5 @@ angular.module('appservices',
                 'https://appservices.apigee.com/**',
                 'https://api.usergrid.com/**'
             ]);
-
-            $analyticsProvider.virtualPageviews(false);
-            $analyticsProvider.firstPageview(false);
 
         }]);

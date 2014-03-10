@@ -20,8 +20,7 @@ AppServices.Controllers.controller('PageCtrl',
                      $routeParams,
                      $q,
                      $route,
-                     $log,
-                     $analytics) {
+                     $log) {
 
   var initScopeVariables = function(){
     //$rootScope.urls()... will determine which URL should be used for a given environment
@@ -353,7 +352,6 @@ AppServices.Controllers.controller('PageCtrl',
       $rootScope.$broadcast('alert', 'info', 'We are experiencing performance issues on our server.  Please click Get Help for support if this continues.');
     });
 
-    var lastPage = "";
     //verify on every route change
     $scope.$on('$routeChangeSuccess', function () {
       //todo possibly do a date check here for token expiry
@@ -363,12 +361,6 @@ AppServices.Controllers.controller('PageCtrl',
       if(!$scope.showDemoBar){
         $rootScope.demoData = false;
       }
-      setTimeout(function(){
-         lastPage = ""; //remove the double load event
-        },50);
-      var path = window.location.pathname.replace("index-debug.html","");
-      lastPage === "" && $analytics.pageTrack((path+$location.path()).replace("//","/"));
-      lastPage = $location.path();
     });
     $scope.$on('applications-received', function (event, applications) {
       $scope.applications = applications;
