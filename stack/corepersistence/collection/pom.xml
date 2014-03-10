@@ -201,14 +201,14 @@
       <version>${log4j.version}</version>
     </dependency>
 
-    <!--Remove custom build once this patch is complete
+    <!-- Re-add once this is done
     https://github.com/Netflix/Hystrix/pull/209-->
 
-    <dependency>
-      <groupId>com.netflix.hystrix</groupId>
-      <artifactId>hystrix-core</artifactId>
-      <version>1.3.14-SNAPSHOT</version>
-    </dependency>
+    <!--<dependency>-->
+        <!--<groupId>com.netflix.hystrix</groupId>-->
+        <!--<artifactId>hystrix-core</artifactId>-->
+        <!--<version>1.3.13</version>-->
+    <!--</dependency>-->
 
   </dependencies>
 </project>
