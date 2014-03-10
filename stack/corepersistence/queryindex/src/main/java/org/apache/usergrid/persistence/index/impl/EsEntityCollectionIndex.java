@@ -247,7 +247,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
         QueryBuilder qb = query.createQueryBuilder();
 
-        SearchResponse sr;
+        SearchResponse searchResponse;
 
         if (query.getCursor() == null) {
 
@@ -277,17 +277,17 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 srb.addSort(sp.getPropertyName(), order);
             }
 
-            sr = srb.execute().actionGet();
+            searchResponse = srb.execute().actionGet();
 
         } else {
             log.debug("Executing query on type {} cursor: {} ", scope.getName(), query.getCursor());
 
             SearchScrollRequestBuilder ssrb = client.prepareSearchScroll(query.getCursor())
                     .setScroll( cursorTimeout + "m" );
-            sr = ssrb.execute().actionGet();
+            searchResponse = ssrb.execute().actionGet();
         }
 
-        SearchHits hits = sr.getHits();
+        SearchHits hits = searchResponse.getHits();
         log.debug("   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
         Results results = new Results();
@@ -327,9 +327,9 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             results.setEntities(entities);
         }
 
-        if ( !entities.isEmpty() ) {
-            results.setCursor(sr.getScrollId());
-            log.debug("   Cursor = " + sr.getScrollId() );
+        if ( entities.size() == query.getLimit() ) {
+            results.setCursor(searchResponse.getScrollId());
+            log.debug("   Cursor = " + searchResponse.getScrollId() );
         }
 
         return results;

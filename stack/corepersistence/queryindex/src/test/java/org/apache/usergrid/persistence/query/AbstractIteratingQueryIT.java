@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
@@ -79,11 +80,10 @@ public abstract class AbstractIteratingQueryIT {
 
     @Before
     public void setup() {
-        Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("organization");
+        Id appId = new SimpleId( getClass().getName() );
+        Id orgId = new SimpleId( RandomStringUtils.randomAlphabetic(6));
 
         em = new EntityManagerFacade( orgId, appId, cmf, cif );
-
         app.setEntityManager( em );                
     }
 
@@ -1238,7 +1238,7 @@ public abstract class AbstractIteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-            entity.put( "boolean", !(i % 100 == 0));
+            entity.put( "boolean", !(i % 2 == 0));
             entity.put( "index", i);
 
             io.writeEntity( entity );

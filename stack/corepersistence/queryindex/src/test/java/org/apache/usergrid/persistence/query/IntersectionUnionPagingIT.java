@@ -119,6 +119,8 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
             LOG.info("Writing entity with id '{}'", saved.getId());
         }
 
+        app.getEm().refreshIndex();
+
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
