@@ -1,19 +1,19 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.usergrid.management.cassandra;
 
 
@@ -55,6 +55,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.SimpleEntityRef;
@@ -1657,23 +1658,27 @@ public class ManagementServiceImpl implements ManagementService {
         if ( organizationId == null ) {
             return null;
         }
-        BiMap<UUID, String> applications = HashBiMap.create();
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
-        if ( !results.isEmpty() ) {
+        final BiMap<UUID, String> applications = HashBiMap.create();
+        final EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        final Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
-            String entityName = null;
 
-            for ( Entity entity : results.getEntities() ) {
-                entityName = entity.getName();
+        String entityName;
 
-                if ( entityName != null ) {
-                    entityName = entityName.toLowerCase();
-                }
+        while ( itr.hasNext() ) {
 
-                applications.put( entity.getUuid(), entityName );
+            final Entity entity = ( Entity ) itr.next();
+
+            entityName = entity.getName();
+
+            if ( entityName != null ) {
+                entityName = entityName.toLowerCase();
             }
+
+            applications.put( entity.getUuid(), entityName );
         }
+
 
         return applications;
     }

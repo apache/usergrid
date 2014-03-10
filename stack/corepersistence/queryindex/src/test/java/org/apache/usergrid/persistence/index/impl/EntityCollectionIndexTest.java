@@ -49,7 +49,6 @@ import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,10 +70,10 @@ public class EntityCollectionIndexTest {
     public MigrationManagerRule migrationManagerRule;
         
     @Inject
-    public EntityCollectionIndexFactory collectionIndexFactory;    
+    public EntityCollectionIndexFactory cif;    
     
     @Inject
-    public EntityCollectionManagerFactory collectionManagerFactory;
+    public EntityCollectionManagerFactory cmf;
 
     @Test
     public void testIndex() throws IOException {
@@ -83,9 +82,9 @@ public class EntityCollectionIndexTest {
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "contacts" );
 
-        EntityCollectionManager entityManager = collectionManagerFactory.createCollectionManager( scope );
+        EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
-        EntityCollectionIndex entityIndex = collectionIndexFactory.createCollectionIndex( scope );
+        EntityCollectionIndex entityIndex = cif.createCollectionIndex( scope );
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -112,6 +111,8 @@ public class EntityCollectionIndexTest {
         log.info( "Total time to index {} entries {}ms, average {}ms/entry", 
             count, timer.getTime(), timer.getTime() / count );
 
+        entityIndex.refresh();
+
         testQueries( entityIndex );
     }
 
@@ -123,8 +124,8 @@ public class EntityCollectionIndexTest {
         Id orgId = new SimpleId("AutoWorldMagazine");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
 
-        EntityCollectionIndex entityIndex = collectionIndexFactory.createCollectionIndex( scope );
-        EntityCollectionManager entityManager = collectionManagerFactory.createCollectionManager( scope );
+        EntityCollectionIndex entityIndex = cif.createCollectionIndex( scope );
+        EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
         Map entityMap = new HashMap() {{
             put("name", "Ferrari 212 Inter");
@@ -137,11 +138,15 @@ public class EntityCollectionIndexTest {
         entity = entityManager.write( entity ).toBlockingObservable().last();
         entityIndex.index( entity );
 
+        entityIndex.refresh();
+
         Results results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
         assertEquals( 1, results.getEntities().size() );
 
         entityManager.delete( entity.getId() );
         entityIndex.deindex( entity );
+
+        entityIndex.refresh();
 
         results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
         assertEquals( 0, results.getEntities().size() );
@@ -158,7 +163,7 @@ public class EntityCollectionIndexTest {
         timer.stop();
 
         if ( num == 1 ) {
-            assertNotNull( results.getEntity() != null );
+            assertNotNull( results.getEntities().get(0) != null );
         } else {
             assertEquals( num, results.getEntities().size() );
         }

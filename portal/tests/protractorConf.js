@@ -17,10 +17,10 @@ exports.config = {
   // The location of the selenium standalone server .jar file, relative
   // to the location of this config. If no other method of starting selenium
   // is found, this will default to protractor/selenium/selenium-server...
-  seleniumServerJar: './selenium/selenium-server-standalone-2.37.0.jar',
+  seleniumServerJar: null,//'./selenium/selenium-server-standalone-2.37.0.jar',
   // The port to start the selenium server on, or null if the server should
   // find its own unused port.
-  seleniumPort: null,
+  seleniumPort: 3010,//3010,
   // Chromedriver location is used to help the selenium standalone server
   // find chromedriver. This will be passed to the selenium jar as
   // the system property webdriver.chrome.driver. If null, selenium will
@@ -37,8 +37,11 @@ exports.config = {
   // The address of a running selenium server. If specified, Protractor will
   // connect to an already running instance of selenium. This usually looks like
   // seleniumAddress: 'http://localhost:4444/wd/hub'
-  seleniumAddress: null,
-
+  seleniumAddress:  'http://localhost:4444/wd/hub',
+  // If sauceUser and sauceKey are specified, seleniumServerJar will be ignored.
+  // The tests will be run remotely using SauceLabs.
+ // sauceUser: 'safeldm',
+ // sauceKey: 'a3388a50-0ddb-4f90-8f81-4baa5bc839e1',
   // The timeout for each script run on the browser. This should be longer
   // than the maximum time your application needs to stabilize between tasks.
   allScriptsTimeout: 30000,
@@ -58,13 +61,13 @@ exports.config = {
   // https://code.google.com/p/selenium/source/browse/javascript/webdriver/capabilities.js
   capabilities: {
     'browserName': 'chrome'
-  //  'browserName': 'chrome'
+  //  'browserName': 'firefox'
   //  'browserName': 'phantomjs'
   },
   params: {
     login: {
       user: 'sfeldman+apijeeps@apigee.com',
-      password: 'p@ssw0rd1'
+      password: 'P@ssw0rd1'
     },
     orgName:'apijeeps',
     appName1:'website',

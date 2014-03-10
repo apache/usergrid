@@ -41,7 +41,7 @@ public class EsProvider {
     private static final Logger log = LoggerFactory.getLogger( EsProvider.class ); 
 
     private final IndexFig indexFig;
-    private Client client;
+    private static Client client;
 
     @Inject
     public EsProvider( IndexFig fig ) {
@@ -57,41 +57,45 @@ public class EsProvider {
 
     public static synchronized Client getClient( IndexFig fig ) {
 
-        Client newClient = null;
+        if ( client == null ) {
 
-        if ( fig.isEmbedded() ) {
+            Client newClient = null;
 
-            log.info("--------------------------------");
-            log.info("Starting embedded ElasticSearch");
-            log.info("--------------------------------");
+            if ( fig.isEmbedded() ) {
 
-            int port = AvailablePortFinder.getNextAvailable( 2000 );
-            Settings settings = ImmutableSettings.settingsBuilder()
-                    .put( "node.http.enabled", true )
-                    .put( "transport.tcp.port", port )
-                    .put( "path.logs", "target/elasticsearch/logs_" + port )
-                    .put( "path.data", "target/elasticsearch/data_" + port )
-                    .put( "gateway.type", "none" )
-                    .put( "index.store.type", "memory" )
-                    .put( "index.number_of_shards", 1 )
-                    .put( "index.number_of_replicas", 1 ).build();
+                log.info("--------------------------------");
+                log.info("Starting embedded ElasticSearch");
+                log.info("--------------------------------");
 
-            Node node = NodeBuilder.nodeBuilder().local( true ).settings( settings ).node();
-            newClient = node.client();
-        
-        } else { // build client that connects to all hosts
+                int port = AvailablePortFinder.getNextAvailable( 2000 );
+                Settings settings = ImmutableSettings.settingsBuilder()
+                        .put( "node.http.enabled", true )
+                        .put( "transport.tcp.port", port )
+                        .put( "path.logs", "target/elasticsearch/logs_" + port )
+                        .put( "path.data", "target/elasticsearch/data_" + port )
+                        .put( "gateway.type", "none" )
+                        .put( "index.store.type", "memory" )
+                        .put( "index.number_of_shards", 1 )
+                        .put( "index.number_of_replicas", 1 ).build();
 
-            log.info("--------------------------------");
-            log.info("Creating ElasticSearch client");
-            log.info("--------------------------------");
+                Node node = NodeBuilder.nodeBuilder().local( true ).settings( settings ).node();
+                newClient = node.client();
+            
+            } else { // build client that connects to all hosts
 
-            TransportClient transportClient = new TransportClient();
-            for ( String host : fig.getHosts().split(",") ) {
-                transportClient.addTransportAddress(
-                        new InetSocketTransportAddress( host, fig.getPort() ));
+                log.info("--------------------------------");
+                log.info("Creating ElasticSearch client");
+                log.info("--------------------------------");
+
+                TransportClient transportClient = new TransportClient();
+                for ( String host : fig.getHosts().split(",") ) {
+                    transportClient.addTransportAddress(
+                            new InetSocketTransportAddress( host, fig.getPort() ));
+                }
+                newClient = transportClient;
             }
-            newClient = transportClient;
+            client = newClient;
         }
-        return newClient;
+        return client;
     }
 }

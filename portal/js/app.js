@@ -51,75 +51,65 @@ AppServices.Services = angular.module('appservices.services', []);
 AppServices.Controllers = angular.module('appservices.controllers', []);
 AppServices.Filters = angular.module('appservices.filters', []);
 AppServices.Directives = angular.module('appservices.directives', []);
-AppServices.Performance = angular.module('appservices.performance', []);
-AppServices.Push = angular.module('appservices.push', []);
 
 angular.module('appservices',
     [ 'ngRoute',
       'ngResource',
       'ngSanitize',
       'ui.bootstrap',
-      'angulartics',
-      'angulartics.google.analytics',
       'appservices.filters',
       'appservices.services',
       'appservices.directives',
       'appservices.constants',
       'appservices.controllers',
-      'appservices.performance',
-      'appservices.push'
-    ]).config(['$routeProvider',
-                                          '$locationProvider',
-                                          '$sceDelegateProvider','$analyticsProvider', function ($routeProvider,
-                                                                            $locationProvider,
-                                                                            $sceDelegateProvider, $analyticsProvider) {
-    $routeProvider
-      .when('/org-overview', {templateUrl: 'org-overview/org-overview.html', controller: 'OrgOverviewCtrl'})
-      .when('/login', {templateUrl: 'login/login.html', controller: 'LoginCtrl'})
-      .when('/login/loading', {templateUrl: 'login/loading.html', controller: 'LoginCtrl'})
-      .when('/app-overview/summary', {templateUrl: 'app-overview/app-overview.html', controller: 'AppOverviewCtrl'})
-      .when('/getting-started/setup', {templateUrl: 'app-overview/getting-started.html', controller: 'GettingStartedCtrl'})
-      .when('/forgot-password', {templateUrl: 'login/forgot-password.html', controller: 'ForgotPasswordCtrl'})
-      .when('/register', {templateUrl: 'login/register.html', controller: 'RegisterCtrl'})
-      .when('/users', {templateUrl: 'users/users.html', controller: 'UsersCtrl'})
-      .when('/users/profile', {templateUrl: 'users/users-profile.html', controller: 'UsersProfileCtrl'})
-      .when('/users/groups', {templateUrl: 'users/users-groups.html', controller: 'UsersGroupsCtrl'})
-      .when('/users/activities', {templateUrl: 'users/users-activities.html', controller: 'UsersActivitiesCtrl'})
-      .when('/users/graph', {templateUrl: 'users/users-graph.html', controller: 'UsersGraphCtrl'})
-      .when('/users/roles', {templateUrl: 'users/users-roles.html', controller: 'UsersRolesCtrl'})
-      .when('/groups', {templateUrl: 'groups/groups.html', controller: 'GroupsCtrl'})
-      .when('/groups/details', {templateUrl: 'groups/groups-details.html', controller: 'GroupsDetailsCtrl'})
-      .when('/groups/members', {templateUrl: 'groups/groups-members.html', controller: 'GroupsMembersCtrl'})
-      .when('/groups/activities', {templateUrl: 'groups/groups-activities.html', controller: 'GroupsActivitiesCtrl'})
-      .when('/groups/roles', {templateUrl: 'groups/groups-roles.html', controller: 'GroupsRolesCtrl'})
-      .when('/roles', {templateUrl: 'roles/roles.html', controller: 'RolesCtrl'})
-      .when('/roles/settings', {templateUrl: 'roles/roles-settings.html', controller: 'RolesSettingsCtrl'})
-      .when('/roles/users', {templateUrl: 'roles/roles-users.html', controller: 'RolesUsersCtrl'})
-      .when('/roles/groups', {templateUrl: 'roles/roles-groups.html', controller: 'RolesGroupsCtrl'})
-      .when('/data', {templateUrl: 'data/data.html', controller: 'DataCtrl'})
-      .when('/data/entity', {templateUrl: 'data/entity.html', controller: 'EntityCtrl'})
-      .when('/data/shell', {templateUrl: 'data/shell.html', controller: 'ShellCtrl'})
-      .when('/profile/organizations', {templateUrl: 'profile/organizations.html', controller: 'OrgCtrl'})
-      .when('/profile/profile', {templateUrl: 'profile/profile.html', controller: 'ProfileCtrl'})
-      .when('/profile', {templateUrl: 'profile/account.html', controller: 'AccountCtrl'})
-      .when('/activities', {templateUrl: 'activities/activities.html', controller: 'ActivitiesCtrl'})
-      .when('/shell', {templateUrl: 'shell/shell.html', controller: 'ShellCtrl'})
-      .when('/logout',{templateUrl: 'login/logout.html',controller:'LogoutCtrl'})
-      .otherwise({redirectTo: '/org-overview'});
 
-    $locationProvider
-      .html5Mode(false)
-      .hashPrefix('!');
+    ]).config(['$routeProvider', '$locationProvider','$sceDelegateProvider',
+        function ($routeProvider,$locationProvider,$sceDelegateProvider) {
+            $routeProvider
+                .when('/org-overview', {templateUrl: 'org-overview/org-overview.html', controller: 'OrgOverviewCtrl'})
+                .when('/login', {templateUrl: 'login/login.html', controller: 'LoginCtrl'})
+                .when('/login/loading', {templateUrl: 'login/loading.html', controller: 'LoginCtrl'})
+                .when('/app-overview/summary', {templateUrl: 'app-overview/app-overview.html', controller: 'AppOverviewCtrl'})
+                .when('/getting-started/setup', {templateUrl: 'app-overview/getting-started.html', controller: 'GettingStartedCtrl'})
+                .when('/forgot-password', {templateUrl: 'login/forgot-password.html', controller: 'ForgotPasswordCtrl'})
+                .when('/register', {templateUrl: 'login/register.html', controller: 'RegisterCtrl'})
+                .when('/users', {templateUrl: 'users/users.html', controller: 'UsersCtrl'})
+                .when('/users/profile', {templateUrl: 'users/users-profile.html', controller: 'UsersProfileCtrl'})
+                .when('/users/groups', {templateUrl: 'users/users-groups.html', controller: 'UsersGroupsCtrl'})
+                .when('/users/activities', {templateUrl: 'users/users-activities.html', controller: 'UsersActivitiesCtrl'})
+                .when('/users/graph', {templateUrl: 'users/users-graph.html', controller: 'UsersGraphCtrl'})
+                .when('/users/roles', {templateUrl: 'users/users-roles.html', controller: 'UsersRolesCtrl'})
+                .when('/groups', {templateUrl: 'groups/groups.html', controller: 'GroupsCtrl'})
+                .when('/groups/details', {templateUrl: 'groups/groups-details.html', controller: 'GroupsDetailsCtrl'})
+                .when('/groups/members', {templateUrl: 'groups/groups-members.html', controller: 'GroupsMembersCtrl'})
+                .when('/groups/activities', {templateUrl: 'groups/groups-activities.html', controller: 'GroupsActivitiesCtrl'})
+                .when('/groups/roles', {templateUrl: 'groups/groups-roles.html', controller: 'GroupsRolesCtrl'})
+                .when('/roles', {templateUrl: 'roles/roles.html', controller: 'RolesCtrl'})
+                .when('/roles/settings', {templateUrl: 'roles/roles-settings.html', controller: 'RolesSettingsCtrl'})
+                .when('/roles/users', {templateUrl: 'roles/roles-users.html', controller: 'RolesUsersCtrl'})
+                .when('/roles/groups', {templateUrl: 'roles/roles-groups.html', controller: 'RolesGroupsCtrl'})
+                .when('/data', {templateUrl: 'data/data.html', controller: 'DataCtrl'})
+                .when('/data/entity', {templateUrl: 'data/entity.html', controller: 'EntityCtrl'})
+                .when('/data/shell', {templateUrl: 'data/shell.html', controller: 'ShellCtrl'})
+                .when('/profile/organizations', {templateUrl: 'profile/organizations.html', controller: 'OrgCtrl'})
+                .when('/profile/profile', {templateUrl: 'profile/profile.html', controller: 'ProfileCtrl'})
+                .when('/profile', {templateUrl: 'profile/account.html', controller: 'AccountCtrl'})
+                .when('/activities', {templateUrl: 'activities/activities.html', controller: 'ActivitiesCtrl'})
+                .when('/shell', {templateUrl: 'shell/shell.html', controller: 'ShellCtrl'})
+                .when('/logout', {templateUrl: 'login/logout.html', controller: 'LogoutCtrl'})
+                .otherwise({redirectTo: '/org-overview'});
 
-    $sceDelegateProvider.resourceUrlWhitelist([
-      // Allow same origin resource loads.
-      'self',
-      // Allow loading from our assets domain.  Notice the difference between * and **.
-      'http://apigee-internal-prod.jupiter.apigee.net/**',
-      'http://apigee-internal-prod.mars.apigee.net/**',
-      'https://appservices.apigee.com/**',
-      'https://api.usergrid.com/**'
-    ]);
+            $locationProvider
+                .html5Mode(false)
+                .hashPrefix('!');
 
-      $analyticsProvider.virtualPageviews(false);
-  }]);
+            $sceDelegateProvider.resourceUrlWhitelist([
+                // Allow same origin resource loads.
+                'self',
+                // Allow loading from our assets domain.  Notice the difference between * and **.
+                'http://apigee-internal-prod.jupiter.apigee.net/**',
+                'http://apigee-internal-prod.mars.apigee.net/**',
+                'https://appservices.apigee.com/**',
+                'https://api.usergrid.com/**'
+            ]);
+        }]);

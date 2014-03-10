@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.usergrid.persistence;
 
 
@@ -36,6 +37,9 @@ import org.antlr.runtime.TokenRewriteStream;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
@@ -50,8 +54,6 @@ import org.apache.usergrid.persistence.query.tree.Operand;
 import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
 import org.apache.usergrid.utils.JsonUtils;
-
-import org.apache.commons.lang.StringUtils;
 
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.lang.StringUtils.isBlank;

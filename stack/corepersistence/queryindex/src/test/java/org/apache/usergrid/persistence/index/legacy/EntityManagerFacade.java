@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.LocationField;
+import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.EntityRef;
@@ -51,6 +52,9 @@ public class EntityManagerFacade {
     private final EntityCollectionManagerFactory ecmf;
     private final EntityCollectionIndexFactory ecif;
     private final Map<String, String> typesByCollectionNames = new HashMap<String, String>();
+
+    private final Map<CollectionScope, EntityCollectionManager> managers = new HashMap<>();
+    private final Map<CollectionScope, EntityCollectionIndex> indexes = new HashMap<>();
     
     public EntityManagerFacade( 
         Id orgId, 
@@ -64,11 +68,29 @@ public class EntityManagerFacade {
         this.ecif = ecif;
     }
 
+    private EntityCollectionIndex getIndex( CollectionScope scope ) { 
+        EntityCollectionIndex eci = indexes.get( scope );
+        if ( eci == null ) {
+            eci = ecif.createCollectionIndex( scope );
+            indexes.put( scope, eci );
+        }
+        return eci;
+    }
+
+    private EntityCollectionManager getManager( CollectionScope scope ) { 
+        EntityCollectionManager ecm = managers.get( scope );
+        if ( ecm == null ) {
+            ecm = ecmf.createCollectionManager( scope );
+            managers.put( scope, ecm);
+        }
+        return ecm;
+    }
+
     public Entity create( String type, Map<String, Object> properties ) {
 
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
-        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+        EntityCollectionManager ecm = getManager( scope );
+        EntityCollectionIndex eci = getIndex( scope );
 
         final String collectionName;
         if ( type.endsWith("y") ) {
@@ -80,6 +102,8 @@ public class EntityManagerFacade {
 
         Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), type ));
         entity = EntityBuilder.fromMap( scope.getName(), entity, properties );
+        entity.setField(new LongField("created", entity.getId().getUuid().timestamp()) );
+        entity.setField(new LongField("modified", entity.getId().getUuid().timestamp()) );
         entity = ecm.write( entity ).toBlockingObservable().last();
 
         eci.index( entity );
@@ -95,14 +119,14 @@ public class EntityManagerFacade {
 		}
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
 
-        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+        EntityCollectionIndex eci = getIndex( scope );
         Results results = eci.execute( query );
         return results;
     }
 
     public Entity get( Id id ) {
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, id.getType() );
-        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
+        EntityCollectionManager ecm = getManager( scope );
         return ecm.load( id ).toBlockingObservable().last();
     }
 
@@ -120,8 +144,8 @@ public class EntityManagerFacade {
         String type = entity.getId().getType();
 
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
-        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+        EntityCollectionManager ecm = getManager( scope );
+        EntityCollectionIndex eci = getIndex( scope );
 
         final String collectionName;
         if ( type.endsWith("y") ) {
@@ -142,20 +166,21 @@ public class EntityManagerFacade {
         String type = entity.getId().getType();
 
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
-        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+        EntityCollectionManager ecm = getManager( scope );
+        EntityCollectionIndex eci = getIndex( scope );
 
 		eci.deindex( entity );
 		ecm.delete( entity.getId() );
 	}
+
 
 	public void setProperty( EntityRef entityRef, String fieldName, double lat, double lon ) {
 
         String type = entityRef.getId().getType();
 
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
-        EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-        EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+        EntityCollectionManager ecm = getManager( scope );
+        EntityCollectionIndex eci = getIndex( scope );
 
 		Entity entity = ecm.load( entityRef.getId() ).toBlockingObservable().last();
 		entity.setField( new LocationField( fieldName, new Location( lat, lon )));
@@ -163,5 +188,13 @@ public class EntityManagerFacade {
         entity = ecm.write(entity).toBlockingObservable().last();
         eci.index(entity);
 	}
+
+
+    public void refreshIndex() {
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "dummy" );
+        EntityCollectionManager ecm = getManager( scope );
+        EntityCollectionIndex eci = getIndex( scope );
+		eci.refresh();
+    }
 
 }

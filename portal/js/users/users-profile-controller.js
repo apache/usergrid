@@ -4,7 +4,7 @@ AppServices.Controllers.controller('UsersProfileCtrl', ['ug', '$scope', '$rootSc
   function (ug, $scope, $rootScope, $location) {
 
     $scope.user = $rootScope.selectedUser._data.clone();
-    $scope.user.json = $scope.user.json || $rootScope.selectedUser._json;
+    $scope.user.json = $scope.user.json || $scope.user.stringifyJSON();
     $scope.profileSelected = 'active';
 
     if (!$rootScope.selectedUser) {

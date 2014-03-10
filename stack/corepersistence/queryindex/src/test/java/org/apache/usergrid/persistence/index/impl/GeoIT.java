@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Ignore
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
 public class GeoIT {
@@ -78,10 +77,10 @@ public class GeoIT {
     public CoreApplication app = new CoreApplication( setup );
 
     @Inject
-    public EntityCollectionManagerFactory collectionManagerFactory;
+    public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory collectionIndexFactory;
+    public EntityCollectionIndexFactory cif;
 
 
     public GeoIT() {
@@ -95,8 +94,7 @@ public class GeoIT {
 
         Id appId = new SimpleId("testGeo");
         Id orgId = new SimpleId("testOrganization");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
         assertNotNull( em );
 
 		// Two intersections two blocks apart
@@ -120,6 +118,8 @@ public class GeoIT {
         assertNotNull( user );
 		LOG.info( user.toString() );
 
+        em.refreshIndex();
+
 		// Folsom and 7th more than 100 meters from Folson and Bryant
 		Query q = Query.fromQL("location within 100 of " 
 			+ folsomAnd7th.getLat() + "," + folsomAnd7th.getLon() + " limit 100");
@@ -136,6 +136,8 @@ public class GeoIT {
         updatePos( em, new SimpleEntityRef( user.getId(), user.getVersion() ), 
 			paloalto.getLat(), paloalto.getLon() );
 
+        em.refreshIndex();
+
 		// user no longer within 200m of that San Francico intersection  
 		q = Query.fromQL("location within 200 of " + folsomAndBryant.getLat() 
 				+ "," + folsomAndBryant.getLon() + " limit 100");
@@ -144,6 +146,8 @@ public class GeoIT {
 
 		// move user to the other SF intersection
         updatePos( em, user, folsomAnd7th.getLat(), folsomAnd7th.getLon() );
+
+        em.refreshIndex();
 
 		// now they are close to Folsom and Bryant
 		q = Query.fromQL("location within 1000 of " 
@@ -169,6 +173,8 @@ public class GeoIT {
         Entity user2 = em.create( "user", properties2 );
         assertNotNull( user2 );
         
+        em.refreshIndex();
+
 		q = Query.fromQL("location within 10000 of " 
 				+ folsomAndBryant.getLat() + "," + folsomAndBryant.getLon() + " limit 100");
 		results = em.searchCollection(null, "users", q);
@@ -218,6 +224,8 @@ public class GeoIT {
         Entity restaurant = em.create( "restaurant", properties );
         assertNotNull( restaurant );
 
+        em.refreshIndex();
+
 		// TODO: update with new Core Persistence graph API
 
 //        em.createConnection( user, "likes", restaurant );
@@ -236,13 +244,13 @@ public class GeoIT {
     public void testPointPaging() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        Id orgId = new SimpleId("testPointPaging");
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
+        // TODO: use a larger count here
         int numEntities = 10;
 
         float minLattitude = -90;
@@ -267,6 +275,8 @@ public class GeoIT {
 
             em.create( "dog", data );
         }
+
+        em.refreshIndex();
 
         // earth's circumference is 40075km; up it to 50000km, to be safe
         Query query = new Query();
@@ -297,9 +307,9 @@ public class GeoIT {
     public void testSamePointPaging() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
+        Id orgId = new SimpleId("testSamePointPaging");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+            cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -314,6 +324,8 @@ public class GeoIT {
 
             em.create( "store", data );
         }
+
+        em.refreshIndex();
 
         Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
@@ -339,14 +351,14 @@ public class GeoIT {
         assertEquals( numEntities, count );
     }
 
-
+    
     @Test
     public void testDistanceByLimit() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
+        Id orgId = new SimpleId("testDistanceByLimit");
         EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+            cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -378,6 +390,8 @@ public class GeoIT {
             em.create( "car", data );
         }
 
+        em.refreshIndex();
+
         // earth's circumference is 40075km; up it to 50,000km, just to be safe.
         Query query = new Query();
         query.addFilter( "location within " + (50000 * 1000) + " of -90, -180" );
@@ -389,11 +403,13 @@ public class GeoIT {
             for ( Entity entity : results.getEntities() ) {
                 count++;
             }
+            query.setCursor( results.getCursor() );
         }
         while ( query.getCursor() != null );
 
         // check we got back all entities
         assertEquals( numEntities, count );
+
     }
 
 
@@ -401,9 +417,10 @@ public class GeoIT {
     public void testGeoWithIntersection() throws Exception {
 
         Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            collectionManagerFactory, collectionIndexFactory );
+        Id orgId = new SimpleId("testGeoWithIntersection");
+
+        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+
         assertNotNull( em );
 
         int size = 100;
@@ -424,6 +441,8 @@ public class GeoIT {
 
             created.add( e );
         }
+
+        em.refreshIndex();
 
         int startDelta = size - min;
 
@@ -452,6 +471,7 @@ public class GeoIT {
         while ( r.hasCursor() );
 
         assertEquals( startDelta - ( size - max ), count );
+
     }
 
 
@@ -534,7 +554,7 @@ public class GeoIT {
 //    }
 
 
-    public Map<String, Object> getLocation( double latitude, double longitude ) throws Exception {
+    private Map<String, Object> getLocation( double latitude, double longitude ) throws Exception {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );
@@ -542,16 +562,16 @@ public class GeoIT {
     }
 
 
-    public void updatePos( EntityManagerFacade em, EntityRef ref, double lat, double lon) throws Exception {
+    private void updatePos( EntityManagerFacade em, EntityRef ref, double lat, double lon) throws Exception {
         em.setProperty( ref, "location", lat, lon );
 	}
 
-    public void updatePos( EntityManagerFacade em, Entity e, double lat, double lon) throws Exception {
+    private void updatePos( EntityManagerFacade em, Entity e, double lat, double lon) throws Exception {
         em.setProperty( new SimpleEntityRef( e.getId(), e.getVersion()), "location", lat, lon );
     }
 
 
-    public void setPos( Map<String, Object> data, double latitude, double longitude ) {
+    private void setPos( Map<String, Object> data, double latitude, double longitude ) {
         Map<String, Object> latlong = new LinkedHashMap<String, Object>();
         latlong.put( "latitude", latitude );
         latlong.put( "longitude", longitude );
