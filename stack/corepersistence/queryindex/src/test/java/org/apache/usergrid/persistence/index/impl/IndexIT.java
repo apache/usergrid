@@ -40,6 +40,7 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -96,6 +97,8 @@ public class IndexIT {
 
             em.create( "item", properties );
         }
+        
+        em.refreshIndex();
 
         int i = 0;
         
@@ -164,6 +167,8 @@ public class IndexIT {
             properties.put( "name", name );
             em.create( "item", properties );
         }
+
+        em.refreshIndex();
 
         Query query = Query.fromQL( "name < 'Delta' order by name" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
@@ -287,6 +292,8 @@ public class IndexIT {
 
             em.create( "item", properties );
         }
+
+        em.refreshIndex();
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );

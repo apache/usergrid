@@ -54,6 +54,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 
@@ -157,6 +158,8 @@ public class CollectionIT {
         activity3 = app.get( activity3.getId() );
         app.addToCollection( user, "activities", activity3 );
 
+        em.refreshIndex();
+
         // empty query
         Query query = new Query();
         Results r = app.searchCollection( user, "activities", query );
@@ -238,6 +241,8 @@ public class CollectionIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
+        em.refreshIndex();
+
         // EntityRef
         Query query = new Query();
         query.addEqualityFilter( "firstname", firstName );
@@ -256,6 +261,8 @@ public class CollectionIT {
         user.setField( new StringField("firstname", newFirstName) );
 
         em.update( user );
+
+        em.refreshIndex();
 
         // search with the old username, should be no results
         query = new Query();
@@ -293,6 +300,8 @@ public class CollectionIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
+        em.refreshIndex();
+
         // EntityRef
         Query query = new Query();
         query.addEqualityFilter( "middlename", middleName );
@@ -319,6 +328,8 @@ public class CollectionIT {
 
         Entity user = em.create( "user", properties );
         assertNotNull( user );
+
+        em.refreshIndex();
 
         // EntityRef
         Query query = new Query();
@@ -391,6 +402,8 @@ public class CollectionIT {
         Entity group = em.create( "group", properties );
         assertNotNull( group );
 
+        em.refreshIndex();
+
         // EntityRef
         Query query = new Query();
         query.addEqualityFilter( "name", groupName );
@@ -418,6 +431,8 @@ public class CollectionIT {
 
         Entity group = em.create( "group", properties );
         assertNotNull( group );
+
+        em.refreshIndex();
 
         // EntityRef
         Query query = new Query();
@@ -470,6 +485,8 @@ public class CollectionIT {
         properties.put( "content", "I wrote another blog post" );
 
         em.addToCollection( user, "activities", em.create( "activity", properties ) );
+
+        em.refreshIndex();
 
         Results r = em.searchCollection( user, "activities", Query.searchForProperty( "verb", "post" ) );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );

@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.LocationField;
+import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.EntityRef;
@@ -101,6 +102,8 @@ public class EntityManagerFacade {
 
         Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), type ));
         entity = EntityBuilder.fromMap( scope.getName(), entity, properties );
+        entity.setField(new LongField("created", entity.getId().getUuid().timestamp()) );
+        entity.setField(new LongField("modified", entity.getId().getUuid().timestamp()) );
         entity = ecm.write( entity ).toBlockingObservable().last();
 
         eci.index( entity );

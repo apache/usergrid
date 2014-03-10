@@ -118,6 +118,8 @@ public class GeoIT {
         assertNotNull( user );
 		LOG.info( user.toString() );
 
+        em.refreshIndex();
+
 		// Folsom and 7th more than 100 meters from Folson and Bryant
 		Query q = Query.fromQL("location within 100 of " 
 			+ folsomAnd7th.getLat() + "," + folsomAnd7th.getLon() + " limit 100");
@@ -134,6 +136,8 @@ public class GeoIT {
         updatePos( em, new SimpleEntityRef( user.getId(), user.getVersion() ), 
 			paloalto.getLat(), paloalto.getLon() );
 
+        em.refreshIndex();
+
 		// user no longer within 200m of that San Francico intersection  
 		q = Query.fromQL("location within 200 of " + folsomAndBryant.getLat() 
 				+ "," + folsomAndBryant.getLon() + " limit 100");
@@ -142,6 +146,8 @@ public class GeoIT {
 
 		// move user to the other SF intersection
         updatePos( em, user, folsomAnd7th.getLat(), folsomAnd7th.getLon() );
+
+        em.refreshIndex();
 
 		// now they are close to Folsom and Bryant
 		q = Query.fromQL("location within 1000 of " 
@@ -167,6 +173,8 @@ public class GeoIT {
         Entity user2 = em.create( "user", properties2 );
         assertNotNull( user2 );
         
+        em.refreshIndex();
+
 		q = Query.fromQL("location within 10000 of " 
 				+ folsomAndBryant.getLat() + "," + folsomAndBryant.getLon() + " limit 100");
 		results = em.searchCollection(null, "users", q);
@@ -215,6 +223,8 @@ public class GeoIT {
 
         Entity restaurant = em.create( "restaurant", properties );
         assertNotNull( restaurant );
+
+        em.refreshIndex();
 
 		// TODO: update with new Core Persistence graph API
 
@@ -266,6 +276,8 @@ public class GeoIT {
             em.create( "dog", data );
         }
 
+        em.refreshIndex();
+
         // earth's circumference is 40075km; up it to 50000km, to be safe
         Query query = new Query();
         query.addFilter( "location within 50000000 of -90, -180" );
@@ -291,7 +303,6 @@ public class GeoIT {
     }
 
 
-    @Ignore
     @Test
     public void testSamePointPaging() throws Exception {
 
@@ -313,6 +324,8 @@ public class GeoIT {
 
             em.create( "store", data );
         }
+
+        em.refreshIndex();
 
         Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
@@ -339,7 +352,6 @@ public class GeoIT {
     }
 
     
-    @Ignore
     @Test
     public void testDistanceByLimit() throws Exception {
 
@@ -378,6 +390,8 @@ public class GeoIT {
             em.create( "car", data );
         }
 
+        em.refreshIndex();
+
         // earth's circumference is 40075km; up it to 50,000km, just to be safe.
         Query query = new Query();
         query.addFilter( "location within " + (50000 * 1000) + " of -90, -180" );
@@ -399,7 +413,6 @@ public class GeoIT {
     }
 
 
-    @Ignore
     @Test
     public void testGeoWithIntersection() throws Exception {
 
@@ -428,6 +441,8 @@ public class GeoIT {
 
             created.add( e );
         }
+
+        em.refreshIndex();
 
         int startDelta = size - min;
 

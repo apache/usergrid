@@ -74,7 +74,7 @@ public class EntityCollectionIndexStressTest {
         Id orgId = new SimpleId("organization");
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "characters" );
 
-        int limit = 10000;
+        int limit = 2000;
         StopWatch timer = new StopWatch();
         timer.start();
 

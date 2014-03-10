@@ -75,6 +75,8 @@ import org.slf4j.LoggerFactory;
 public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
 
+    public static final int PAGE_SIZE = 1000;
+
     public static final int DEFAULT_LIMIT = 10;
     public static final int MAX_LIMIT = 1000;
     public static final String PROPERTY_Id = "uuid";

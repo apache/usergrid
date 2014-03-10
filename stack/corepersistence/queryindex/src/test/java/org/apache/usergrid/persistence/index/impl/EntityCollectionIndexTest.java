@@ -111,6 +111,8 @@ public class EntityCollectionIndexTest {
         log.info( "Total time to index {} entries {}ms, average {}ms/entry", 
             count, timer.getTime(), timer.getTime() / count );
 
+        entityIndex.refresh();
+
         testQueries( entityIndex );
     }
 
@@ -136,11 +138,15 @@ public class EntityCollectionIndexTest {
         entity = entityManager.write( entity ).toBlockingObservable().last();
         entityIndex.index( entity );
 
+        entityIndex.refresh();
+
         Results results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
         assertEquals( 1, results.getEntities().size() );
 
         entityManager.delete( entity.getId() );
         entityIndex.deindex( entity );
+
+        entityIndex.refresh();
 
         results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
         assertEquals( 0, results.getEntities().size() );
