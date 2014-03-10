@@ -1,7 +1,7 @@
 'use strict'
 
 AppServices.Controllers.controller('PageCtrl',
-  [ 'data',
+  [
     'ug',
     'utility',
     '$scope',
@@ -10,8 +10,7 @@ AppServices.Controllers.controller('PageCtrl',
     '$routeParams',
     '$q',
     '$route',
-    '$log',
-    '$analytics', function (data,
+    '$log', function (
                      ug,
                      utility,
                      $scope,
@@ -38,6 +37,7 @@ AppServices.Controllers.controller('PageCtrl',
     $rootScope.sdkActive = false;
     $rootScope.demoData = false;
     $scope.queryStringApplied = false;
+    $rootScope.autoUpdateTimer = Usergrid.config ? Usergrid.config.autoUpdateTimer : 61;
     $rootScope.loaded = $rootScope.activeUI = false;
     for (var key in Usergrid.regex) {
       $scope[key] = Usergrid.regex[key];
@@ -134,10 +134,9 @@ AppServices.Controllers.controller('PageCtrl',
        $location.search('uuid', null);
      }
 
-     $scope.deferredLogin = $q.defer();
      //use a promise so we can update afterwards in other UI areas
      //next try to quick login
-     ug.checkAuthentication();
+     ug.checkAuthentication(true);
   };
 
 
@@ -264,6 +263,18 @@ AppServices.Controllers.controller('PageCtrl',
       return list &&  (list.some(function(item){return item.checked;}));
     };
 
+    $scope.sendHelp = function (modalId) {
+      ug.jsonpRaw('apigeeuihelpemail', '', {useremail: $rootScope.userEmail}).then(
+        function () {
+          $rootScope.$broadcast('alert', 'success', 'Email sent. Our team will be in touch with you shortly.');
+        },
+        function () {
+          $rootScope.$broadcast('alert', 'error', 'Problem Sending Email. Try sending an email to mobile@apigee.com.');
+        }
+      );
+      $scope.hideModal(modalId);
+    };
+
     $scope.$on('users-typeahead-received', function(event, users) {
       $scope.usersTypeaheadValues = users;
       if(!$scope.$$phase) {
@@ -284,6 +295,8 @@ AppServices.Controllers.controller('PageCtrl',
     });
 
     $scope.$on('checkAuthentication-success', function () {
+      sessionStorage.setItem('authenticateAttempts', 0);
+
       //all is well - repopulate objects
       $scope.loaded = true;
       $rootScope.activeUI = true;
@@ -300,10 +313,8 @@ AppServices.Controllers.controller('PageCtrl',
         }, 1000)
       }
 
-      $scope.deferredLogin && $scope.deferredLogin.resolve();
       $rootScope.$broadcast('app-initialized');
 
-      //boolean defines is top level ui menus/buttons should be active/shown
     });
 
     $scope.$on('checkAuthentication-error', function (args,err, missingData,email) {
@@ -325,6 +336,7 @@ AppServices.Controllers.controller('PageCtrl',
     });
 
     $scope.$on('reAuthenticate-success', function (args,err, data, user, organizations, applications) {
+      sessionStorage.setItem('authenticateAttempts', 0);
 
       //the user is authenticated
       $rootScope.$broadcast('loginSuccesful', user, organizations, applications);
@@ -336,10 +348,17 @@ AppServices.Controllers.controller('PageCtrl',
       })
     });
 
+    var authenticateAttempts = parseInt( sessionStorage.getItem('authenticateAttempts')  || 0);
     $scope.$on('reAuthenticate-error', function () {
       //user is not authenticated, send to SSO if enabled
       if ($scope.use_sso) {
         //go to sso
+        if(authenticateAttempts++>5){
+          $rootScope.$broadcast('alert', 'error', 'There is an issue with authentication. Please contact support.');
+          return;
+        }
+        console.error('Failed to login via sso '+authenticateAttempts);
+        sessionStorage.setItem('authenticateAttempts', authenticateAttempts);
         window.location = $rootScope.urls().LOGIN_URL + '?callback=' +  encodeURIComponent($location.absUrl().split('?')[0]);
       } else {
         //go to login page
@@ -369,6 +388,9 @@ AppServices.Controllers.controller('PageCtrl',
     $scope.$on('app-settings-received',function(evt,data){
     });
 
+    $scope.$on('request-times-slow', function (evt, averageRequestTimes) {
+      $rootScope.$broadcast('alert', 'info', 'We are experiencing performance issues on our server.  Please click Get Help for support if this continues.');
+    });
 
     //verify on every route change
     $scope.$on('$routeChangeSuccess', function () {

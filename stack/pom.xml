@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -178,6 +194,7 @@
     <module>launcher</module>
     <module>query-validator</module>
     <module>test-utils</module>
+    <module>query-validator</module>
     <module>build-tools</module>
   </modules>
 
@@ -1733,6 +1750,60 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>sonar-maven-plugin</artifactId>
       </plugin>
+
+
+        <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>0.10</version>
+            <executions>
+                <execution>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <excludes>
+
+                    <exclude>**/README.md</exclude>
+                    <exclude>**/CHANGES.txt</exclude>
+
+                    <!-- git and IDE project files -->
+                    <exclude>**/.git/**</exclude>
+                    <exclude>**/.gitignore</exclude>
+                    <exclude>**/.idea/**</exclude>
+                    <exclude>**/*.iml</exclude>
+                    <exclude>**/nbactions.xml</exclude>
+                    <exclude>**/nb-configuration.xml</exclude>
+                    <exclude>**/.classpath/**</exclude>
+                    <exclude>**/.project</exclude>
+                    <exclude>**/.settings/**</exclude>
+
+                    <!-- temporary build files -->
+                    <exclude>**/logs/**</exclude>
+                    <exclude>**/docs/**</exclude>
+                    <exclude>**/tmp/**</exclude>
+                    <exclude>**/target/**</exclude>
+                    <exclude>**/antlr3/**</exclude>
+                    <exclude>**/META-INF/**</exclude>
+                    <exclude>**/dependency-reduced-pom.xml</exclude>
+                    <exclude>**/QueryFilter.tokens</exclude>
+                    <exclude>**/QueryFilterLexer.java</exclude>
+                    <exclude>**/QueryFilterParser.java</exclude>
+
+                    <!-- other -->
+                    <exclude>**/m2/**</exclude>
+                    <exclude>**/*.asc</exclude>
+                    <exclude>**/src/test/resources/**</exclude>
+                    <exclude>**/cloudbees.xml</exclude>
+                    <exclude>**/aws.properties</exclude>
+
+                </excludes>
+            </configuration>
+
+        </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -2,12 +2,11 @@
 
 AppServices.Controllers.controller('GettingStartedCtrl',
     ['ug',
-      'data',
       '$scope',
       '$rootScope',
       '$location',
       '$timeout',
-      '$anchorScroll', function (ug, data, $scope, $rootScope, $location, $timeout, $anchorScroll) {
+      '$anchorScroll', function (ug, $scope, $rootScope, $location, $timeout, $anchorScroll) {
 
 
       $scope.collections = [];
@@ -17,7 +16,7 @@ AppServices.Controllers.controller('GettingStartedCtrl',
       $scope.clientID = '';
       $scope.clientSecret = '';
       var getKeys = function () {
-        return data.jsonp_raw('credentials', '', {});
+        return ug.jsonpRaw('credentials', '', {});
       }
 
       $scope.regenerateCredentialsDialog = function (modalId) {

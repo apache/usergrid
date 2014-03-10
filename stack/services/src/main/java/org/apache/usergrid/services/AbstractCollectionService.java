@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.usergrid.services;
 
 
@@ -294,6 +295,9 @@ public class AbstractCollectionService extends AbstractService {
         EntityRef ref = em.getAlias( getEntityType(), name );
         Entity entity;
         if ( ref == null ) {
+            // null entity ref means we tried to put a non-existing entity
+            // before we create a new entity for it, we should check for permission
+            checkPermissionsForCollection(context);
             Map<String, Object> properties = context.getPayload().getProperties();
             if ( !properties.containsKey( "name" ) || !( ( String ) properties.get( "name" ) ).trim().equalsIgnoreCase(
                     name ) ) {

@@ -101,7 +101,7 @@ Usergrid.Collection.prototype.addCollection = function (collectionName, options,
       }
 
       self[collectionName] = collection;
-      callback(err, collection);
+      doCallback(callback, [err, collection], self);
     }
   });
 };
@@ -161,9 +161,7 @@ Usergrid.Collection.prototype.fetch = function (callback) {
         }
       }
     }
-    if (typeof(callback) === 'function') {
-      callback(err, data);
-    }
+    doCallback(callback, [err, data], self);
   });
 };
 
@@ -186,9 +184,7 @@ Usergrid.Collection.prototype.addEntity = function (options, callback) {
       var count = self._list.length;
       self._list[count] = entity;
     }
-    if (typeof(callback) === 'function') {
-      callback(err, entity);
-    }
+    doCallback(callback, [err, entity], self);    
   });
 };
 
@@ -213,9 +209,7 @@ Usergrid.Collection.prototype.destroyEntity = function (entity, callback) {
       if (self._client.logging) {
         console.log('could not destroy entity');
       }
-      if (typeof(callback) === 'function') {
-        callback(err, data);
-      }
+      doCallback(callback, [err, data], self);
     } else {
         //destroy was good, so repopulate the collection
         self.fetch(callback);

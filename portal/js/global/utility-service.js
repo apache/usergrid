@@ -15,10 +15,10 @@ AppServices.Services.factory('utility', function (configuration, $q, $http, $res
         if (email.length) {
           return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size ;
         } else {
-          return 'https://apigee.com/usergrid/images/user_profile.png';
+          return 'https://apigee.com/usergrid/img/user_profile.png';
         }
       } catch(e) {
-        return 'https://apigee.com/usergrid/images/user_profile.png';
+        return 'https://apigee.com/usergrid/img/user_profile.png';
       }
     },
     get_qs_params: function() {

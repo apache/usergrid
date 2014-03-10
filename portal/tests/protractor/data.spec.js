@@ -13,9 +13,14 @@ describe('Test Data', function () {
 
       var entityName = 'test_e2e';
       var dateString = Date.now().toString();
-
-      element(by.id("new-collection-link")).isPresent().then(function(){
+      browser.wait(function(){
+        return element(by.id("new-collection-link")).isDisplayed();
+      });
+      element(by.id("new-collection-link")).isDisplayed().then(function(){
         element(by.id("new-collection-link")).click();
+      });
+      browser.wait(function(){
+        return element(by.id("new-collection-name")).isDisplayed();
       });
       element(by.id('new-collection-name')).isDisplayed().then(function () {
         //fill in data
