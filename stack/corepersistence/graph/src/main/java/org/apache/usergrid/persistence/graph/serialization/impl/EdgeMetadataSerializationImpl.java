@@ -175,27 +175,55 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public MutationBatch removeEdgeTypeFromSource( final OrganizationScope scope, final Edge edge ) {
-        return removeEdgeType( scope, edge.getSourceNode(), edge.getType(), edge.getVersion(), CF_SOURCE_EDGE_TYPES );
+        return removeEdgeTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() );
+    }
+
+
+    @Override
+    public MutationBatch removeEdgeTypeFromSource( final OrganizationScope scope, final Id sourceNode,
+                                                   final String type, final UUID version ) {
+        return removeEdgeType( scope, sourceNode, type, version, CF_SOURCE_EDGE_TYPES );
     }
 
 
     @Override
     public MutationBatch removeIdTypeFromSource( final OrganizationScope scope, final Edge edge ) {
-        return removeIdType( scope, edge.getSourceNode(), edge.getTargetNode(), edge.getType(), edge.getVersion(),
-                CF_SOURCE_EDGE_ID_TYPES );
+        return removeIdTypeFromSource( scope, edge.getSourceNode(), edge.getType(),  edge.getTargetNode().getType(),
+                edge.getVersion() );
+    }
+
+
+    @Override
+    public MutationBatch removeIdTypeFromSource( final OrganizationScope scope, final Id sourceNode, final String type,
+                                                 final String idType, final UUID version ) {
+        return removeIdType( scope, sourceNode, idType, type, version,
+                        CF_SOURCE_EDGE_ID_TYPES );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeToTarget( final OrganizationScope scope, final Edge edge ) {
-        return removeEdgeType( scope, edge.getTargetNode(), edge.getType(), edge.getVersion(), CF_TARGET_EDGE_TYPES );
+        return removeEdgeTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() );
     }
 
+
+    @Override
+    public MutationBatch removeEdgeTypeToTarget( final OrganizationScope scope, final Id targetNode, final String type,
+                                                 final UUID version ) {
+        return removeEdgeType( scope, targetNode,type, version, CF_TARGET_EDGE_TYPES );
+    }
 
 
     @Override
     public MutationBatch removeIdTypeToTarget( final OrganizationScope scope, final Edge edge ) {
-        return removeIdType( scope, edge.getTargetNode(), edge.getSourceNode(), edge.getType(), edge.getVersion(),
+        return removeIdTypeToTarget(scope, edge.getTargetNode(), edge.getType(),  edge.getSourceNode().getType(), edge.getVersion());
+    }
+
+
+    @Override
+    public MutationBatch removeIdTypeToTarget( final OrganizationScope scope, final Id targetNode, final String type,
+                                               final String idType, final UUID version ) {
+        return removeIdType( scope, targetNode, idType,type, version,
                 CF_TARGET_EDGE_ID_TYPES );
     }
 
@@ -234,14 +262,14 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      *
      * @param scope The scope to use
      * @param rowId The id to use in the row key
-     * @param colId The id type to use in the column
+     * @param idType The id type to use in the column
      * @param edgeType The edge type to use in the column
      * @param version The version to use on the column
      * @param cf The column family to use
      *
      * @return A populated mutation with the remove operations
      */
-    private MutationBatch removeIdType( final OrganizationScope scope, final Id rowId, final Id colId,
+    private MutationBatch removeIdType( final OrganizationScope scope, final Id rowId, final String idType,
                                         final String edgeType, final UUID version,
                                         final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> cf ) {
 
@@ -256,7 +284,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( rowId, edgeType ) );
 
 
-        batch.withRow( cf, rowKey ).setTimestamp( timestamp ).deleteColumn( colId.getType() );
+        batch.withRow( cf, rowKey ).setTimestamp( timestamp ).deleteColumn( idType );
 
         return batch;
     }

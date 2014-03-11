@@ -109,15 +109,17 @@ public class NodeDeleteListenerTest {
 
         Id targetNode = edge.getTargetNode();
 
+        UUID version = UUIDGenerator.newTimeUUID();
 
-        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, sourceNode );
+
+        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, version, sourceNode );
 
         EdgeEvent<Id> event = deleteListener.receive( deleteEvent ).toBlockingObservable().lastOrDefault( null );
 
         assertNull( "Mark was not set, no delete should be executed", event );
 
 
-        deleteEvent = new EdgeEvent<Id>( scope, targetNode );
+        deleteEvent = new EdgeEvent<Id>( scope, version, targetNode );
 
         event = deleteListener.receive( deleteEvent ).toBlockingObservable().lastOrDefault( null );
 
@@ -152,7 +154,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, sourceNode, deleteVersion ).execute();
 
-        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, sourceNode );
+        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, deleteVersion, sourceNode );
 
 
         EdgeEvent<Id> event = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
