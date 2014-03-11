@@ -38,7 +38,7 @@ public interface EntityCollectionManagerSync {
 
 
     /**
-     * DeleteCommit the entity and remove it's indexes with the given entity id
+     * MarkCommit the entity and remove it's indexes with the given entity id
      */
     public void delete( Id entityId );
 

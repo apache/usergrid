@@ -104,12 +104,12 @@ Usergrid.Client.prototype.request = function (options, callback) {
     uri += "?" + encoded_params;
   }
   //stringify the body object
-  body = JSON.stringify(body);
+  body = options.formData ? null : JSON.stringify(body);
   //so far so good, so run the query
   var xhr = new XMLHttpRequest();
   xhr.open(method, uri, true);
   //add content type = json if there is a json payload
-  if (body) {
+  if (!options.formData) {
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
   }
@@ -192,7 +192,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
     this.buildCurlCall(curlOptions);
   }
   this._start = new Date().getTime();
-  xhr.send(body);
+  xhr.send(options.formData || body);
 };
 
 Usergrid.Client.prototype.keys = function(o) {
@@ -1055,7 +1055,7 @@ Usergrid.Client.prototype.getDisplayImage = function (email, picture, size) {
     if (email.length) {
       return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size;
     } else {
-      return 'https://apigee.com/usergrid/img/user_profile.png';;
+      return 'https://apigee.com/usergrid/img/user_profile.png';
     }
   } catch(e) {
     return 'https://apigee.com/usergrid/img/user_profile.png';

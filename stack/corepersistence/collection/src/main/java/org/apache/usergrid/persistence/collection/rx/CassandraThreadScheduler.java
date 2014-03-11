@@ -65,7 +65,7 @@ public class CassandraThreadScheduler implements Provider<Scheduler> {
 
                final String threadName = "RxCassandraIOThreadPool-" + counter.incrementAndGet();
 
-                LOG.info( "Allocating new IO thread with name {}", threadName );
+                LOG.debug( "Allocating new IO thread with name {}", threadName );
 
                 Thread t = new Thread( r, threadName );
                 t.setDaemon( true );

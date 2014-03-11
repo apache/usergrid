@@ -279,9 +279,8 @@ function doCallback(callback, params, context) {
         var entities=this.getEntities();
         return entities[0];
     }
+    Usergrid.VERSION = Usergrid.USERGRID_SDK_VERSION = '0.10.08';
 
-    //Usergrid.Entity=function(){};
-		//Usergrid.Collection=function(){};
 	global[name] =  Usergrid;
 	global[name].noConflict = function() {
 		if(overwrittenName){

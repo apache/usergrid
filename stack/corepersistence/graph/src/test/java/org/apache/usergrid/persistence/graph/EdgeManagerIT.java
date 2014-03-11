@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.jukito.All;
-import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
@@ -36,7 +35,6 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -58,8 +56,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class} )
+@RunWith(JukitoRunner.class)
+@UseModules({ TestGraphModule.class })
 //@UseModules( { TestGraphModule.class, EdgeManagerIT.InvalidInput.class } )
 public class EdgeManagerIT {
 
@@ -229,6 +227,146 @@ public class EdgeManagerIT {
     }
 
 
+    /**
+     * Tests that if multiple versions of an edge exist, only the distinct edges with a version <= max are returned
+     */
+    @Test
+    public void testWriteReadEdgeTypeVersionSourceDistinct() {
+
+        EdgeManager em = emf.createEdgeManager( scope );
+
+        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+
+
+        Edge edge1 = createEdge( "source", "test", "target" );
+
+        final Id sourceId = edge1.getSourceNode();
+        final Id targetId = edge1.getTargetNode();
+
+
+        em.writeEdge( edge1 ).toBlockingObservable().last();
+
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge2 ).toBlockingObservable().last();
+
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge3 ).toBlockingObservable().last();
+
+
+        //now test retrieving it, we should only get edge3, since it's the latest
+
+        SearchByEdgeType search =
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), null );
+
+        Observable<Edge> edges = em.loadEdgesFromSource( search );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge3, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        //now test with an earlier version, we shouldn't get the edge back
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge2.getVersion(), null );
+
+        edges = em.loadEdgesFromSource( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge2, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getVersion(), null );
+
+        edges = em.loadEdgesFromSource( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge1, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), earlyVersion, null );
+
+        edges = em.loadEdgesFromSource( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertFalse( "No more edges", returned.hasNext() );
+    }
+
+
+    @Test
+    public void testWriteReadEdgeTypeVersionTargetDistinct() {
+
+
+        EdgeManager em = emf.createEdgeManager( scope );
+
+        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+
+
+        Edge edge1 = createEdge( "source", "test", "target" );
+
+        final Id sourceId = edge1.getSourceNode();
+        final Id targetId = edge1.getTargetNode();
+
+
+        em.writeEdge( edge1 ).toBlockingObservable().last();
+
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge2 ).toBlockingObservable().last();
+
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
+
+        em.writeEdge( edge3 ).toBlockingObservable().last();
+
+
+        //now test retrieving it, we should only get edge3, since it's the latest
+
+        SearchByEdgeType search =
+                createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), null );
+
+        Observable<Edge> edges = em.loadEdgesToTarget( search );
+
+        //implicitly blows up if more than 1 is returned from "single"
+        Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge3, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        //now test with an earlier version, we shouldn't get the edge back
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge2.getVersion(), null );
+
+        edges = em.loadEdgesToTarget( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge2, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getVersion(), null );
+
+        edges = em.loadEdgesToTarget( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertEquals( "Correct edge returned", edge1, returned.next() );
+        assertFalse( "No more edges", returned.hasNext() );
+
+
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), earlyVersion, null );
+
+        edges = em.loadEdgesToTarget( search );
+
+        returned = edges.toBlockingObservable().getIterator();
+
+        assertFalse( "No more edges", returned.hasNext() );
+    }
+
+
     @Test
     public void testWriteReadEdgeTypePagingSource() {
 
@@ -239,15 +377,15 @@ public class EdgeManagerIT {
 
         Edge edge1 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it
@@ -290,15 +428,15 @@ public class EdgeManagerIT {
 
         Edge edge1 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge3 ).toBlockingObservable().singleOrDefault( null );
+        em.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it
@@ -437,7 +575,7 @@ public class EdgeManagerIT {
 
 
         //now delete it
-        em.deleteEdge( edge );
+        em.deleteEdge( edge ).toBlockingObservable().last();
 
         //now test retrieval, should be null
         edges = em.loadEdgesFromSource( search );
@@ -493,7 +631,7 @@ public class EdgeManagerIT {
 
 
         //now delete it
-        em.deleteEdge( edge );
+        em.deleteEdge( edge ).toBlockingObservable().last();
 
         //now test retrieval, should be null
         edges = em.loadEdgesToTarget( search );
@@ -524,16 +662,16 @@ public class EdgeManagerIT {
         Id targetId1 = new SimpleId( "target" );
         Id targetId2 = new SimpleId( "target2" );
 
-        Edge testTargetEdge = new SimpleEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
-        Edge testTarget2Edge = new SimpleEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge testTarget2Edge = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge test2TargetEdge = new SimpleEdge( sourceId, "test2", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -574,18 +712,6 @@ public class EdgeManagerIT {
         assertEquals( "Types correct", targetId1.getType(), results.next() );
 
         assertFalse( "No results", results.hasNext() );
-
-        //now delete our edges, we shouldn't get anything back
-        em.deleteEdge( testTargetEdge );
-        em.deleteEdge( testTarget2Edge );
-        em.deleteEdge( test2TargetEdge );
-
-
-        edges = em.getEdgeTypesToTarget( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
-
-        results = edges.toBlockingObservable().getIterator();
-
-        assertFalse( "No results", results.hasNext() );
     }
 
 
@@ -599,16 +725,16 @@ public class EdgeManagerIT {
         Id targetId1 = new SimpleId( "target" );
 
 
-        Edge testTargetEdge = new SimpleEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
-        Edge testTarget2Edge = new SimpleEdge( sourceId2, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTarget2Edge = createEdge( sourceId2, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge test2TargetEdge = new SimpleEdge( sourceId1, "test2", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -651,18 +777,6 @@ public class EdgeManagerIT {
         assertEquals( "Types correct", sourceId1.getType(), results.next() );
 
         assertFalse( "No more edges", results.hasNext() );
-
-
-        em.deleteEdge( testTargetEdge );
-        em.deleteEdge( testTarget2Edge );
-        em.deleteEdge( test2TargetEdge );
-
-
-        edges = em.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
-
-        results = edges.toBlockingObservable().getIterator();
-
-        assertEquals( "No results", results.hasNext() );
     }
 
 
@@ -676,17 +790,17 @@ public class EdgeManagerIT {
         Id targetId2 = new SimpleId( "target2" );
 
 
-        Edge testTargetEdge = new SimpleEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge testTargetEdge2 = new SimpleEdge( sourceId1, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge2 = createEdge( sourceId1, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge test2TargetEdge = new SimpleEdge( sourceId1, "test2", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId2, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -754,16 +868,16 @@ public class EdgeManagerIT {
         Id targetId = new SimpleId( "target" );
 
 
-        Edge testTargetEdge = new SimpleEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge testTargetEdge2 = new SimpleEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge test2TargetEdge = new SimpleEdge( sourceId2, "test2", targetId, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId2, "test2", targetId, UUIDGenerator.newTimeUUID() );
 
         em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -825,68 +939,527 @@ public class EdgeManagerIT {
     }
 
 
-    @Test( expected = NullPointerException.class )
-    public void invalidEdgeTypesWrite( @All Edge edge) {
+    @Test
+    public void testMarkSourceEdges() {
+
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        Id sourceId = new SimpleId( "source" );
+        Id targetId1 = new SimpleId( "target" );
+        Id targetId2 = new SimpleId( "target2" );
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+
+        Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+
+
+        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+
+
+        //get our 2 edges
+        Observable<Edge> edges = em.loadEdgesFromSource(
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
+
+
+        Iterator<Edge> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge1 ).toBlockingObservable().last();
+
+
+        edges = em.loadEdgesFromSource(
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge2 ).toBlockingObservable().last();
+
+        edges = em.loadEdgesFromSource(
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+    }
+
+
+    @Test
+    public void testMarkTargetEdges() {
+
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        Id sourceId1 = new SimpleId( "source" );
+        Id sourceId2 = new SimpleId( "source2" );
+        Id targetId = new SimpleId( "target" );
+
+        Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge1 ).toBlockingObservable().last();
+
+        Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge2 ).toBlockingObservable().last();
+
+
+        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+
+
+        //get our 2 edges
+        Observable<Edge> edges =
+                em.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
+
+
+        Iterator<Edge> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge1 ).toBlockingObservable().last();
+
+
+        edges = em.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge2 ).toBlockingObservable().last();
+
+        edges = em.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+    }
+
+
+    @Test
+    public void testMarkSourceEdgesType() {
+
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        Id sourceId = new SimpleId( "source" );
+        Id targetId1 = new SimpleId( "target" );
+        Id targetId2 = new SimpleId( "target2" );
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+
+        Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+
+
+        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+
+
+        //get our 2 edges
+        Observable<Edge> edges = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) );
+
+
+        Iterator<Edge> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge1 ).toBlockingObservable().last();
+
+
+        edges = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) );
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        edges = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId2.getType(), null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge2 ).toBlockingObservable().last();
+
+
+        edges = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId2.getType(), null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //now delete one of the edges
+
+    }
+
+
+    @Test
+    public void testMarkTargetEdgesType() {
+
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        Id sourceId1 = new SimpleId( "source" );
+        Id sourceId2 = new SimpleId( "source2" );
+        Id targetId = new SimpleId( "target" );
+
+        Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge1 ).toBlockingObservable().last();
+
+        Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge2 ).toBlockingObservable().last();
+
+
+        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+
+        //get our 2 edges
+        Observable<Edge> edges = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) );
+
+
+        Iterator<Edge> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge1 ).toBlockingObservable().last();
+
+
+        edges = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( edge1.getSourceNode(), edge1.getType(), maxVersion, sourceId1.getType(),
+                        null ) );
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        edges = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId2.getType(), null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+
+        em.deleteEdge( edge2 ).toBlockingObservable().last();
+
+
+        edges = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId2.getType(), null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //now delete one of the edges
+
+    }
+
+
+    @Test
+    public void markSourceNode() {
+
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        Id sourceId = new SimpleId( "source" );
+        Id targetId1 = new SimpleId( "target" );
+        Id targetId2 = new SimpleId( "target2" );
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+
+        Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+
+
+        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+
+        Iterator<Edge> results =
+                em.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
+                  .toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edge found", edge1, results.next() );
+
+        assertEquals( "Edge found", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+        results = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge2.getType(), maxVersion, targetId2.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //mark the source node
+        em.deleteNode( sourceId ).toBlockingObservable().last();
+
+
+        //now re-read, nothing should be there since they're marked
+
+        results = em.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
+                    .toBlockingObservable().getIterator();
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+        results = em.loadEdgesFromSourceByType(
+                createSearchByEdgeAndId( sourceId, edge2.getType(), maxVersion, targetId2.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+
+
+    @Test
+    public void markTargetNode() {
+
+        final EdgeManager em = emf.createEdgeManager( scope );
+
+        Id sourceId1 = new SimpleId( "source" );
+        Id sourceId2 = new SimpleId( "source2" );
+        Id targetId = new SimpleId( "target" );
+
+        Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+
+        Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+
+        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+
+
+        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+
+        Iterator<Edge> results =
+                em.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
+                  .toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edge found", edge1, results.next() );
+
+        assertEquals( "Edge found", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge1, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+        results = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", edge2, results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //mark the source node
+        em.deleteNode( targetId ).toBlockingObservable().last();
+
+
+        //now re-read, nothing should be there since they're marked
+
+        results = em.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
+                    .toBlockingObservable().getIterator();
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        //get our 2 edges
+        results = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+
+        //now delete one of the edges
+        results = em.loadEdgesToTargetByType(
+                createSearchByEdgeAndId( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) )
+                    .toBlockingObservable().getIterator();
+
+
+        assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+
+    @Test(expected = NullPointerException.class)
+    public void invalidEdgeTypesWrite( @All Edge edge ) {
         final EdgeManager em = emf.createEdgeManager( scope );
 
         em.writeEdge( edge );
     }
 
 
-    @Test( expected = NullPointerException.class )
-    public void invalidEdgeTypesDelete(@All Edge edge) {
+    @Test(expected = NullPointerException.class)
+    public void invalidEdgeTypesDelete( @All Edge edge ) {
         final EdgeManager em = emf.createEdgeManager( scope );
 
-        em.deleteEdge( edge);
+        em.deleteEdge( edge );
     }
 
-
-    public static class InvalidInput extends JukitoModule {
-
-        @Override
-        protected void configureTest() {
-            //create all edge types of junk input
-//
-//            final UUID version = UUIDGenerator.newTimeUUID();
-//
-//            Id nullUuid = mock( Id.class );
-//            when( nullUuid.getUuid() ).thenReturn( null );
-//
-//
-//            Id nullType = mock( Id.class );
-//            when( nullType.getType() ).thenReturn( "type" );
-//
-//            Edge[] edges = new Edge[] {
-//                    mockEdge( nullUuid, "test", createId( "target" ), version ),
-//
-//                    mockEdge( nullType, "test", createId( "target" ), version ),
-//
-//                    mockEdge( createId( "source" ), null, createId( "target" ), version ),
-//
-//                    mockEdge( createId( "source" ), "test", nullUuid, version ),
-//
-//                    mockEdge( createId( "source" ), "test", nullType, version ),
-//
-//                    mockEdge( createId( "source" ), "test", createId( "target" ), null )
-//            };
-//
-//
-//            bindManyInstances( Edge.class, edges );
-
-        }
-
-
-        private Edge mockEdge( final Id sourceId, final String type, final Id targetId, final UUID version ) {
-            Edge edge = mock( Edge.class );
-
-            when( edge.getSourceNode() ).thenReturn( sourceId );
-            when( edge.getType() ).thenReturn( type );
-            when( edge.getTargetNode() ).thenReturn( targetId );
-            when( edge.getVersion() ).thenReturn( version );
-
-            return edge;
-        }
-    }
+    //
+    //    public static class InvalidInput extends JukitoModule {
+    //
+    //        @Override
+    //        protected void configureTest() {
+    //create all edge types of junk input
+    //
+    //            final UUID version = UUIDGenerator.newTimeUUID();
+    //
+    //            Id nullUuid = mock( Id.class );
+    //            when( nullUuid.getUuid() ).thenReturn( null );
+    //
+    //
+    //            Id nullType = mock( Id.class );
+    //            when( nullType.getType() ).thenReturn( "type" );
+    //
+    //            Edge[] edges = new Edge[] {
+    //                    mockEdge( nullUuid, "test", createId( "target" ), version ),
+    //
+    //                    mockEdge( nullType, "test", createId( "target" ), version ),
+    //
+    //                    mockEdge( createId( "source" ), null, createId( "target" ), version ),
+    //
+    //                    mockEdge( createId( "source" ), "test", nullUuid, version ),
+    //
+    //                    mockEdge( createId( "source" ), "test", nullType, version ),
+    //
+    //                    mockEdge( createId( "source" ), "test", createId( "target" ), null )
+    //            };
+    //
+    //
+    //            bindManyInstances( Edge.class, edges );
+    //
+    //        }
+    //
+    //
+    //        private Edge mockEdge( final Id sourceId, final String type, final Id targetId, final UUID version ) {
+    //            Edge edge = mock( Edge.class );
+    //
+    //            when( edge.getSourceNode() ).thenReturn( sourceId );
+    //            when( edge.getType() ).thenReturn( type );
+    //            when( edge.getTargetNode() ).thenReturn( targetId );
+    //            when( edge.getVersion() ).thenReturn( version );
+    //
+    //            return edge;
+    //        }
+    //    }
 }
 
 

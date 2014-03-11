@@ -16,8 +16,8 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
-import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -42,8 +42,8 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(JukitoRunner.class)
+@UseModules({ TestGraphModule.class })
 public class EdgeSerializationTest {
 
     @ClassRule
@@ -96,7 +96,7 @@ public class EdgeSerializationTest {
 
         //get our edges out by name
 
-        Iterator<Edge> results =
+        Iterator<MarkedEdge> results =
                 serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge1", now, null ) );
 
         assertEquals( edge1, results.next() );
@@ -143,25 +143,25 @@ public class EdgeSerializationTest {
 
         //get our edges out by name
 
-        Iterator<Edge> results =
-                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge1 ) );
+        Iterator<MarkedEdge> results =
+                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge2 ) );
 
-        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
         //test getting the next edge
-        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge2 ) );
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge1 ) );
 
         assertFalse( "No results should be returned", results.hasNext() );
 
         //test getting source edges from the target
 
-        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge1 ) );
-        assertEquals( edge2, results.next() );
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge2 ) );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
 
-        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge2 ) );
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, edge1 ) );
         assertFalse( "No results should be returned", results.hasNext() );
         //test resume by name
     }
@@ -181,8 +181,8 @@ public class EdgeSerializationTest {
 
         final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
-        assertTrue( "Edge version 1 has lower time uuid", UUIDComparator
-                        .staticCompare( edgev1.getVersion(),  edgev2.getVersion() ) < 0 );
+        assertTrue( "Edge version 1 has lower time uuid",
+                UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
 
         //create edge type 2 to ensure we don't get it in results
         final Edge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
@@ -196,35 +196,35 @@ public class EdgeSerializationTest {
 
         SearchByEdge search = createGetByEdge( sourceId, "edge1", targetId, now, null );
 
-        Iterator<Edge> results = serialization.getEdgeFromSource( scope, search );
+        Iterator<MarkedEdge> results = serialization.getEdgeFromSource( scope, search );
 
+        assertEquals( edgev2, results.next() );
         assertEquals( edgev1, results.next() );
-        assertEquals( edgev2, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-
-        results = serialization.getEdgeToTarget( scope, search );
-
-        assertEquals( edgev1, results.next() );
-        assertEquals( edgev2, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-        //test paging
-        search = createGetByEdge( sourceId, "edge1", targetId, now, edgev1 );
-
-        results = serialization.getEdgeFromSource( scope, search );
-
-        assertEquals( edgev2, results.next() );
         assertFalse( "No results should be returned", results.hasNext() );
 
 
         results = serialization.getEdgeToTarget( scope, search );
 
         assertEquals( edgev2, results.next() );
+        assertEquals( edgev1, results.next() );
         assertFalse( "No results should be returned", results.hasNext() );
 
         //test paging
         search = createGetByEdge( sourceId, "edge1", targetId, now, edgev2 );
+
+        results = serialization.getEdgeFromSource( scope, search );
+
+        assertEquals( edgev1, results.next() );
+        assertFalse( "No results should be returned", results.hasNext() );
+
+
+        results = serialization.getEdgeToTarget( scope, search );
+
+        assertEquals( edgev1, results.next() );
+        assertFalse( "No results should be returned", results.hasNext() );
+
+        //test paging
+        search = createGetByEdge( sourceId, "edge1", targetId, now, edgev1 );
 
         results = serialization.getEdgeFromSource( scope, search );
 
@@ -279,7 +279,7 @@ public class EdgeSerializationTest {
 
         //get our edges out by name
 
-        Iterator<Edge> results = serialization.getEdgesFromSourceByTargetType( scope,
+        Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
 
         assertEquals( edge1, results.next() );
@@ -330,7 +330,7 @@ public class EdgeSerializationTest {
 
         //get our edges out by name
 
-        Iterator<Edge> results = serialization.getEdgesFromSourceByTargetType( scope,
+        Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
 
         assertEquals( edge1, results.next() );
@@ -384,7 +384,7 @@ public class EdgeSerializationTest {
         UUID now = UUIDGenerator.newTimeUUID();
 
         //get our edges out by name
-        Iterator<Edge> results = serialization.getEdgesFromSourceByTargetType( scope,
+        Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
 
         assertEquals( edge1, results.next() );
@@ -465,4 +465,153 @@ public class EdgeSerializationTest {
 
         assertFalse( results.hasNext() );
     }
+
+
+    /**
+     * Test paging by resuming the search from the edge
+     */
+    @Test
+    public void mark() throws ConnectionException {
+        final Edge edge1 = createEdge( "source", "edge", "target" );
+
+        final Id sourceId = edge1.getSourceNode();
+        final Id targetId1 = edge1.getTargetNode();
+
+
+        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+
+        final Id targetId2 = edge2.getTargetNode();
+
+        serialization.writeEdge( scope, edge1 ).execute();
+        serialization.writeEdge( scope, edge2 ).execute();
+
+
+        UUID now = UUIDGenerator.newTimeUUID();
+
+        //get our edges out by name
+        Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
+                createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
+
+        assertEquals( edge1, results.next() );
+        assertEquals( edge2, results.next() );
+        assertFalse( results.hasNext() );
+
+        //get them out by type
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
+
+        assertEquals( edge1, results.next() );
+        assertEquals( edge2, results.next() );
+        assertFalse( results.hasNext() );
+
+
+        //validate we get from target
+        results = serialization.getEdgesToTargetBySourceType( scope,
+                createSearchByEdgeAndId( targetId1, "edge", now, sourceId.getType(), null ) );
+
+        assertEquals( edge1, results.next() );
+        assertFalse( results.hasNext() );
+
+        results = serialization.getEdgesToTargetBySourceType( scope,
+                createSearchByEdgeAndId( targetId2, "edge", now, sourceId.getType(), null ) );
+
+        assertEquals( edge2, results.next() );
+        assertFalse( results.hasNext() );
+
+
+        //validate we get from target
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId1, "edge", now, null ) );
+
+        assertEquals( edge1, results.next() );
+        assertFalse( results.hasNext() );
+
+
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId2, "edge", now, null ) );
+
+        assertEquals( edge2, results.next() );
+        assertFalse( results.hasNext() );
+
+        //now we've validated everything exists, lets blitz the data and ensure it's removed
+
+        serialization.markEdge( scope, edge1 ).execute();
+        serialization.markEdge( scope, edge2 ).execute();
+
+
+        results = serialization.getEdgesFromSourceByTargetType( scope,
+                createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
+
+
+        MarkedEdge edge = results.next();
+
+        assertEquals( edge1, edge );
+        assertTrue( edge.isDeleted() );
+
+
+        edge = results.next();
+
+        assertEquals( edge2, edge );
+        assertTrue( edge.isDeleted() );
+
+        assertFalse( results.hasNext() );
+
+        //get them out by type
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
+
+        edge = results.next();
+
+        assertEquals( edge1, edge );
+        assertTrue( edge.isDeleted() );
+
+        edge = results.next();
+
+        assertEquals( edge2, edge );
+        assertTrue( edge.isDeleted() );
+
+        assertFalse( results.hasNext() );
+
+
+        //validate we get from target
+        results = serialization.getEdgesToTargetBySourceType( scope,
+                createSearchByEdgeAndId( targetId1, "edge", now, sourceId.getType(), null ) );
+
+        edge = results.next();
+
+        assertEquals( edge1, edge );
+        assertTrue( edge.isDeleted() );
+
+        assertFalse( results.hasNext() );
+
+        results = serialization.getEdgesToTargetBySourceType( scope,
+                createSearchByEdgeAndId( targetId2, "edge", now, sourceId.getType(), null ) );
+
+        edge = results.next();
+
+        assertEquals( edge2, edge );
+        assertTrue( edge.isDeleted() );
+
+        assertFalse( results.hasNext() );
+
+
+        //validate we get from target
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId1, "edge", now, null ) );
+
+        edge = results.next();
+
+        assertEquals( edge1, edge );
+        assertTrue( edge.isDeleted() );
+
+        assertFalse( results.hasNext() );
+
+
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId2, "edge", now, null ) );
+
+        edge = results.next();
+
+        assertEquals( edge2, edge );
+        assertTrue( edge.isDeleted() );
+
+        assertFalse( results.hasNext() );
+
+        //now we've validated everything exists
+    }
+
 }

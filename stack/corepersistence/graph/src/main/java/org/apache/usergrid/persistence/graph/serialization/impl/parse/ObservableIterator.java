@@ -26,7 +26,8 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribeFun
             Iterator<T> itr = getIterator();
 
 
-            while ( itr.hasNext() ) {
+            //TODO T.N. when > 0.17 comes out, we need to implement the check with each loop as described here https://github.com/Netflix/RxJava/issues/802
+            while ( itr.hasNext()) {
                 observer.onNext( itr.next() );
             }
 
@@ -40,6 +41,8 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribeFun
 
         return Subscriptions.empty();
     }
+
+
 
 
     /**

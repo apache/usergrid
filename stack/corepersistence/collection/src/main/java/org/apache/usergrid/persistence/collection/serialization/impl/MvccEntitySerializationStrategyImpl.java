@@ -168,7 +168,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     @Override
-    public MutationBatch clear( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
+    public MutationBatch mark( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -207,8 +207,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         MultiTennantColumnFamilyDefinition cf = new MultiTennantColumnFamilyDefinition( CF_ENTITY_DATA,
-                ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                BytesType.class.getSimpleName(), BytesType.class.getSimpleName() );
+                BytesType.class.getSimpleName(), ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")", BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
 
         return Collections.singleton( cf );

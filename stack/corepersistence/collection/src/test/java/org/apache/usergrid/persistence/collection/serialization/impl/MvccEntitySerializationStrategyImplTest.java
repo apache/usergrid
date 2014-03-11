@@ -29,7 +29,6 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
@@ -256,9 +255,9 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( entityId, returned.getEntity().get().getId() );
 
 
-        //now clear it
+        //now mark it
 
-        serializationStrategy.clear( context, entityId, version ).execute();
+        serializationStrategy.mark( context, entityId, version ).execute();
 
         returned = serializationStrategy.load( context, entityId, version );
 
@@ -331,11 +330,11 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( "Mvcc entities are the same", savedV2, returnedV2 );
 
 
-        //now clear it at v3
+        //now mark it at v3
 
         UUID version3 = UUIDGenerator.newTimeUUID();
 
-        serializationStrategy.clear( context, id, version3 ).execute();
+        serializationStrategy.mark( context, id, version3 ).execute();
 
 
         final Optional<Entity> empty = Optional.absent();

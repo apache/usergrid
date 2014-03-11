@@ -13,9 +13,7 @@ Usergrid.Counter = function(options, callback) {
   this._data.timestamp = options.timestamp||0;
   this._data.type = "events";
   this._data.counters=options.counters||{};
-  if(typeof(callback) === 'function') {
-    callback.call(self, false, self);
-  }
+  doCallback(callback, [false, self], self);
   //this.save(callback);
 };
 var COUNTER_RESOLUTIONS=[
@@ -57,13 +55,9 @@ Usergrid.Counter.prototype.increment=function(options, callback){
     name=options.name,
     value=options.value;
   if(!name){
-    if(typeof(callback) === 'function') {
-      return callback.call(self, true, "'value' for increment, decrement must be a number");
-    }
+    return doCallback(callback, [true, "'name' for increment, decrement must be a number"], self);
   }else if(isNaN(value)){
-    if(typeof(callback) === 'function') {
-      return callback.call(self, true, "'value' for increment, decrement must be a number");
-    }
+    return doCallback(callback, [true, "'value' for increment, decrement must be a number"], self);
   }else{
     self._data.counters[name]=(parseInt(value))||1;
     return self.save(callback);
@@ -179,8 +173,6 @@ Usergrid.Counter.prototype.getData=function(options, callback){
         self._data.counters[counter.name]=counter.value||counter.values;
       })
     }
-    if(typeof(callback) === 'function') {
-      callback.call(self, err, data);
-    }
+    return doCallback(callback, [err, data], self);
   })
 };

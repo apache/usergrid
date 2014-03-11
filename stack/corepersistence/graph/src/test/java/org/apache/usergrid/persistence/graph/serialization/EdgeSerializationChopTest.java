@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -109,7 +110,8 @@ public class EdgeSerializationChopTest {
 
         //get our edges out by name
 
-        Iterator<Edge> results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
+        Iterator<MarkedEdge>
+                results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
 
         boolean found = false;
 

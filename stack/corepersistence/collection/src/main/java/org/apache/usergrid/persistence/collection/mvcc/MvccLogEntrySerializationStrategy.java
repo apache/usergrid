@@ -70,7 +70,7 @@ public interface MvccLogEntrySerializationStrategy {
             throws ConnectionException;
 
     /**
-     * DeleteCommit the stage from the context with the given entityId and version
+     * MarkCommit the stage from the context with the given entityId and version
      *
      * @param context The context that contains the entity
      * @param entityId The entity id to delete

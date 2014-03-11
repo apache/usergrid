@@ -94,7 +94,7 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         //The version exists, but does not have entity data
         if ( !targetVersion.isPresent() ) {
 
-            //TODO, a lazy async repair/cleanup here?
+            //TODO, a lazy consistency repair/cleanup here?
 
             return null;
         }

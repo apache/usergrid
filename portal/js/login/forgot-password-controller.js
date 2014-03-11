@@ -1,12 +1,13 @@
 'use strict'
 
+
 AppServices.Controllers.controller('ForgotPasswordCtrl',
   ['ug',
-    'data',
     '$scope',
     '$rootScope',
     '$location',
-    'utility', function (ug, data, $scope, $rootScope, $location) {
+    '$sce',
+    'utility', function (ug,  $scope, $rootScope, $location,$sce) {
     $rootScope.activeUI &&   $location.path('/');
-    $scope.forgotPWiframeURL = $scope.apiUrl + '/management/users/resetpw';
+    $scope.forgotPWiframeURL = $sce.trustAsResourceUrl( $scope.apiUrl + '/management/users/resetpw');
   }]);

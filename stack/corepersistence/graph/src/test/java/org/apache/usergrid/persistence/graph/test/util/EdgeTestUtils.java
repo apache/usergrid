@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
@@ -70,7 +70,7 @@ public class EdgeTestUtils {
      * Create an edge with the specified params
      */
     public static Edge createEdge( final Id sourceId, final String edgeType, final Id targetId, final UUID version ) {
-        return new SimpleEdge( sourceId, edgeType, targetId, version );
+        return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, false );
     }
 
 

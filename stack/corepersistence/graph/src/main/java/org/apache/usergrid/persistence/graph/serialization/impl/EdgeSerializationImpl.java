@@ -41,11 +41,12 @@ import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnParser;
@@ -77,10 +78,6 @@ import com.netflix.astyanax.util.RangeBuilder;
 @Singleton
 public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
-
-
-    //holder to put data into col value
-    private static final byte[] HOLDER = new byte[] { 0 };
 
     //Row key with no type
     private static final RowSerializer ROW_SERIALIZER = new RowSerializer();
@@ -128,11 +125,11 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     protected final Keyspace keyspace;
-    protected final GraphFig graphFig;
+    protected final CassandraConfig graphFig;
 
 
     @Inject
-    public EdgeSerializationImpl( final Keyspace keyspace, final GraphFig graphFig ) {
+    public EdgeSerializationImpl( final Keyspace keyspace, final CassandraConfig graphFig ) {
         this.keyspace = keyspace;
         this.graphFig = graphFig;
     }
@@ -140,7 +137,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch writeEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL() );;
 
 
         doWrite( scope, edge, new RowOp() {
@@ -148,7 +145,26 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             public void doWrite( final MultiTennantColumnFamily columnFamily, final Object rowKey,
                                  final DirectedEdge edge ) {
 
-                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, HOLDER );
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, false );
+            }
+        } );
+
+
+        return batch;
+    }
+
+
+    @Override
+    public MutationBatch markEdge( final OrganizationScope scope, final Edge edge ) {
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL() );;
+
+
+        doWrite( scope, edge, new RowOp() {
+            @Override
+            public void doWrite( final MultiTennantColumnFamily columnFamily, final Object rowKey,
+                                 final DirectedEdge edge ) {
+
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, true );
             }
         } );
 
@@ -159,7 +175,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch deleteEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL());
 
 
         doWrite( scope, edge, new RowOp() {
@@ -176,6 +192,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     }
 
 
+    /**
+     * Write the edges internally
+     * @param scope  The scope to encapsulate
+     * @param edge The edge to write
+     * @param op The row operation to invoke
+     */
     private void doWrite( final OrganizationScope scope, final Edge edge, final RowOp op ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateEdge( edge );
@@ -220,7 +242,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     @Override
-    public Iterator<Edge> getEdgeFromSource( final OrganizationScope scope, final SearchByEdge search ) {
+    public Iterator<MarkedEdge> getEdgeFromSource( final OrganizationScope scope, final SearchByEdge search ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdge( search );
 
@@ -234,13 +256,18 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
-                super.setRange( builder );
 
-                //set the last value in the range based on the max version
+
+                if ( last.isPresent() ) {
+                    super.setRange( builder );
+                    return;
+                }
+
+                //start seeking at a value < our max version
                 final DirectedEdge last = new DirectedEdge( targetId, maxVersion );
-                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
-                builder.setEnd( colValue );
+                builder.setStart( last, EDGE_SERIALIZER );
             }
+
 
             @Override
             protected RowKey generateRowKey() {
@@ -255,15 +282,15 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            protected Edge createEdge( final DirectedEdge edge ) {
-                return new SimpleEdge( sourceId, type, edge.id, edge.version );
+            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
+                return new SimpleMarkedEdge( sourceId, type, edge.id, edge.version, marked );
             }
         } );
     }
 
 
     @Override
-    public Iterator<Edge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
+    public Iterator<MarkedEdge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
 
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdgeType( edgeType );
@@ -285,17 +312,16 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            protected Edge createEdge( final DirectedEdge edge ) {
-                return new SimpleEdge( sourceId, type, edge.id, edge.version );
+            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
+                return new SimpleMarkedEdge( sourceId, type, edge.id, edge.version, marked );
             }
-
         } );
     }
 
 
     @Override
-    public Iterator<Edge> getEdgesFromSourceByTargetType( final OrganizationScope scope,
-                                                          final SearchByIdType edgeType ) {
+    public Iterator<MarkedEdge> getEdgesFromSourceByTargetType( final OrganizationScope scope,
+                                                                final SearchByIdType edgeType ) {
 
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdgeType( edgeType );
@@ -318,17 +344,15 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            protected Edge createEdge( final DirectedEdge edge ) {
-                return new SimpleEdge( targetId, type, edge.id, edge.version );
+            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
+                return new SimpleMarkedEdge( targetId, type, edge.id, edge.version, marked );
             }
-
-
         } );
     }
 
 
     @Override
-    public Iterator<Edge> getEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
+    public Iterator<MarkedEdge> getEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
 
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdgeType( edgeType );
@@ -337,7 +361,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String type = edgeType.getType();
 
         return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
-
 
 
             @Override
@@ -353,16 +376,15 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            protected Edge createEdge( final DirectedEdge edge ) {
-                return new SimpleEdge( edge.id, type, targetId, edge.version );
+            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
+                return new SimpleMarkedEdge( edge.id, type, targetId, edge.version, marked );
             }
-
         } );
     }
 
 
     @Override
-    public Iterator<Edge> getEdgeToTarget( final OrganizationScope scope, final SearchByEdge search ) {
+    public Iterator<MarkedEdge> getEdgeToTarget( final OrganizationScope scope, final SearchByEdge search ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdge( search );
 
@@ -376,12 +398,14 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void setRange( final RangeBuilder builder ) {
-                super.setRange( builder );
+                if ( last.isPresent() ) {
+                    super.setRange( builder );
+                    return;
+                }
 
                 //set the last value in the range based on the max version
-                final DirectedEdge last = new DirectedEdge( sourceId, maxVersion );
-                final ByteBuffer colValue = EDGE_SERIALIZER.createSearchEdgeInclusive( last );
-                builder.setEnd( colValue );
+                final DirectedEdge colValue = new DirectedEdge( sourceId, maxVersion );
+                builder.setStart( colValue, EDGE_SERIALIZER );
             }
 
 
@@ -398,17 +422,16 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            protected Edge createEdge( final DirectedEdge edge ) {
-                return new SimpleEdge( edge.id, type, targetId, edge.version );
+            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
+                return new SimpleMarkedEdge( edge.id, type, targetId, edge.version, marked );
             }
-
-
         } );
     }
 
 
     @Override
-    public Iterator<Edge> getEdgesToTargetBySourceType( final OrganizationScope scope, final SearchByIdType edgeType ) {
+    public Iterator<MarkedEdge> getEdgesToTargetBySourceType( final OrganizationScope scope,
+                                                              final SearchByIdType edgeType ) {
 
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdgeType( edgeType );
@@ -431,8 +454,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             @Override
-            protected Edge createEdge( final DirectedEdge edge ) {
-                return new SimpleEdge( edge.id, type, targetId, edge.version );
+            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
+                return new SimpleMarkedEdge( edge.id, type, targetId, edge.version, marked );
             }
         } );
     }
@@ -446,8 +469,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      *
      * @return An iterator of all Edge instance that match the criteria
      */
-    private <R> Iterator<Edge> getEdges( MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> cf,
-                                         final EdgeSearcher<R> searcher ) {
+    private <R> Iterator<MarkedEdge> getEdges( MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> cf,
+                                               final EdgeSearcher<R> searcher ) {
 
 
         /**
@@ -464,12 +487,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
         RowQuery<ScopedRowKey<OrganizationScope, R>, DirectedEdge> query =
-                keyspace.prepareQuery( cf ).getKey( rowKey ).autoPaginate( true )
+                keyspace.prepareQuery( cf ).setConsistencyLevel( graphFig.getReadCL() ).getKey( rowKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
 
         try {
-            return new ColumnNameIterator<DirectedEdge, Edge>( query.execute().getResult().iterator(), searcher,
+            return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query.execute().getResult().iterator(), searcher,
                     searcher.hasPage() );
         }
         catch ( ConnectionException e ) {
@@ -487,12 +510,10 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     /**
      * Helper to generate an edge definition by the type
-     * @param cf
-     * @return
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf, ColumnTypes.DYNAMIC_COMPOSITE_TYPE,
-                BytesType.class.getSimpleName(), BytesType.class.getSimpleName() );
+        return new MultiTennantColumnFamilyDefinition( cf,
+                BytesType.class.getSimpleName(), ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName() , MultiTennantColumnFamilyDefinition.CacheOption.KEYS);
     }
 
 
@@ -550,18 +571,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
         /**
-         * Creates a column value that will include the directed Edge as it's last element.  I.E all edges returned from
-         * the scan will have the node id and a version <= the specified directed edge version
-         */
-        public ByteBuffer createSearchEdgeInclusive( DirectedEdge edge ) {
-            final DynamicComposite colValue =
-                    createComposite( edge, AbstractComposite.ComponentEquality.GREATER_THAN_EQUAL );
-
-            return colValue.serialize();
-        }
-
-
-        /**
          * Create the dynamic composite for this directed edge
          */
         private DynamicComposite createComposite( DirectedEdge edge, AbstractComposite.ComponentEquality equality ) {
@@ -570,7 +579,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             ID_COL_SERIALIZER.toComposite( composite, edge.id );
 
             //add our edge
-            composite.addComponent( edge.version, UUID_SERIALIZER, equality );
+            composite.addComponent( edge.version, UUID_SERIALIZER, ColumnTypes.UUID_TYPE_REVERSED, equality );
 
             return composite;
         }
@@ -638,10 +647,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
-     * Searcher to be used when performing the search.  Performs I/O transformation
-     * as well as parsing for the iterator
+     * Searcher to be used when performing the search.  Performs I/O transformation as well as parsing for the iterator
      */
-    private static abstract class EdgeSearcher<R> implements ColumnParser<DirectedEdge, Edge> {
+    private static abstract class EdgeSearcher<R> implements ColumnParser<DirectedEdge, MarkedEdge> {
 
         protected final Optional<Edge> last;
         protected final OrganizationScope scope;
@@ -662,6 +670,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             if ( last.isPresent() ) {
                 DirectedEdge sourceEdge = getStartColumn( last.get() );
 
+
                 builder.setStart( sourceEdge, EDGE_SERIALIZER );
             }
         }
@@ -681,36 +690,32 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
         @Override
-        public Edge parseColumn( final Column<DirectedEdge> column ) {
+        public MarkedEdge parseColumn( final Column<DirectedEdge> column ) {
             final DirectedEdge edge = column.getName();
 
-            return createEdge( edge );
+            return createEdge( edge, column.getBooleanValue() );
         }
 
 
         /**
          * Create a row key for this search to use
-         * @return
          */
         protected abstract R generateRowKey();
 
 
         /**
          * Set the start column to begin searching from.  The last is provided
-         * @param last
-         * @return
          */
         protected abstract DirectedEdge getStartColumn( Edge last );
 
 
         /**
          * Create an edge to return to the user based on the directed edge provided
-         * @param edge
-         * @return
+         *
+         * @param edge The edge in the column name
+         * @param marked The marked flag in the column value
          */
-        protected abstract Edge createEdge( DirectedEdge edge );
-
-
+        protected abstract MarkedEdge createEdge( DirectedEdge edge, boolean marked );
     }
 
 
@@ -772,8 +777,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             return new RowKeyType( id, hash );
         }
     }
-
-
 
 
     /**

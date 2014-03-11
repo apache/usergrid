@@ -24,7 +24,7 @@ AppServices.Controllers.controller('RolesCtrl', ['ug', '$scope', '$rootScope', '
     ug.getRoles();
 
     $scope.newRoleDialog = function(modalId){
-      if ($scope.rolename) {
+      if ($scope.newRole.name) {
         ug.createRole($scope.newRole.name,$scope.newRole.title);
         //add new role here
         $rootScope.$broadcast('alert', 'success', 'Role created successfully.');

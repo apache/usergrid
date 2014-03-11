@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.persistence.graph.guice;
 
 
@@ -30,20 +29,26 @@ import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 
 
-/**
- *
- *
- */
 public class GraphModule extends AbstractModule {
 
     @Override
@@ -59,19 +64,42 @@ public class GraphModule extends AbstractModule {
 
         bind( EdgeMetadataSerialization.class).to( EdgeMetadataSerializationImpl.class);
         bind( EdgeSerialization.class).to( EdgeSerializationImpl.class );
+        bind( NodeSerialization.class).to( NodeSerializationImpl.class );
 
 
-        // create a guice factor for getting our collection manager
-        install( new FactoryModuleBuilder()
-                .implement( EdgeManager.class, EdgeManagerImpl.class )
-                .build( EdgeManagerFactory.class ) );
+        bind( CassandraConfig.class).to( CassandraConfigImpl.class );
+
+        // create a guice factory for getting our collection manager
+        install( new FactoryModuleBuilder().implement( EdgeManager.class, EdgeManagerImpl.class )
+                                           .build( EdgeManagerFactory.class ) );
 
 
 
         //do multibindings for migrations
-        Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
-        uriBinder.addBinding().to( EdgeMetadataSerializationImpl.class );
-        uriBinder.addBinding().to( EdgeSerializationImpl.class );
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
+        migrationBinding.addBinding().to( EdgeSerializationImpl.class );
+        migrationBinding.addBinding().to( NodeSerializationImpl.class );
+
+
+        /**
+         * Graph event bus, will need to be refactored into it's own classes
+         */
+
+        final EventBus eventBus = new EventBus("asyncCleanup");
+        bind(EventBus.class).toInstance(eventBus);
+
+        //auto register every impl on the event bus
+        bindListener( Matchers.any(), new TypeListener() {
+           @Override
+           public <I> void hear(@SuppressWarnings("unused") final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
+               typeEncounter.register(new InjectionListener<I>() {
+                   @Override public void afterInjection(final I instance) {
+                       eventBus.register(instance);
+                   }
+               });
+           }
+        });
 
 
     }
