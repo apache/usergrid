@@ -23,7 +23,7 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -78,13 +78,13 @@ public class WriteOptimisticVerify
                 final MvccLogEntry rollbackEntry = 
                         new MvccLogEntryImpl( entity.getId(), entity.getVersion(), Stage.ROLLBACK);
                 logEntryStrat.write( collectionScope, rollbackEntry );
-                throw new CollectionRuntimeException("Change conflict, not first writer");
+                throw new WriteOptimisticVerifyException("Change conflict, not first writer");
             }
 
 
         } catch ( ConnectionException e ) {
             LOG.error( "Error reading entity log", e );
-            throw new CollectionRuntimeException( "Error reading entity log", e );
+            throw new WriteOptimisticVerifyException( "Error reading entity log", e );
         }
 
         // No op, just emit the value

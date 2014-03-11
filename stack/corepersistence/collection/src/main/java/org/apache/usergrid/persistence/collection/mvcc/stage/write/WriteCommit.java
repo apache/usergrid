@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -39,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.exception.WriteCommitException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -46,7 +46,8 @@ import rx.util.functions.Func1;
 
 
 /**
- * This phase should invoke any finalization, and mark the entity as committed in the data store before returning
+ * This phase should invoke any finalization, and mark the entity as committed in the 
+ * data store before returning
  */
 @Singleton
 public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity> {
@@ -68,7 +69,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
         Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entryStrat, "MvccEntitySerializationStrategy is required" );
-        Preconditions.checkNotNull( uniqueValueStrat, "UniqueValueSerializationStrategy is required" );
+        Preconditions.checkNotNull( uniqueValueStrat, "UniqueValueSerializationStrategy is required");
 
         this.logEntryStrat = logStrat;
         this.entityStrat = entryStrat;
@@ -118,7 +119,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
+            throw new WriteCommitException( "Failed to execute write asynchronously ", e );
         }
 
         return entity.getEntity().get();

@@ -24,7 +24,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -37,6 +36,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -101,7 +101,8 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
             //if it's unique, create a function to validate it and add it to the list of concurrent validations
             if ( field.isUnique() ) {
 
-                Observable<FieldUniquenessResult> result =  Observable.from( field ).subscribeOn( scheduler ).map(new Func1<Field,  FieldUniquenessResult>() {
+                Observable<FieldUniquenessResult> result =  
+                        Observable.from( field ).subscribeOn( scheduler ).map(new Func1<Field,  FieldUniquenessResult>() {
                     @Override
                     public FieldUniquenessResult call(Field field ) {
 
@@ -116,8 +117,8 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
                             mb.execute();
                         }
                         catch ( ConnectionException ex ) {
-                            throw new CollectionRuntimeException( "Error writing unique value " + field.toString(),
-                                    ex );
+                            throw new WriteUniqueVerifyException( 
+                                "Error writing unique value " + field.toString(), ex );
                         }
 
                         // does the database value match what we wrote?
@@ -126,7 +127,7 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
                             loaded = uniqueValueStrat.load( ioevent.getEntityCollection(), field );
                         }
                         catch ( ConnectionException ex ) {
-                            throw new CollectionRuntimeException( ex );
+                            throw new WriteUniqueVerifyException( "Error verifying write", ex );
                         }
 
                         return new FieldUniquenessResult( field, loaded.equals( written ) );
@@ -149,16 +150,14 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
             @Override
             public CollectionIoEvent<MvccEntity> call( final Object... args ) {
 
-
-
                 for ( Object resultObj : args ) {
 
                     FieldUniquenessResult result = ( FieldUniquenessResult ) resultObj;
 
                     if ( !result.isUnique() ) {
                         Field field = result.getField();
-                        throw new CollectionRuntimeException(
-                                "Duplicate field value " + field.getName() + " = " + field.getValue().toString() );
+                        throw new WriteUniqueVerifyException(
+                            "Duplicate field value " + field.getName() + " = " + field.getValue().toString() );
                     }
                 }
 
@@ -166,7 +165,6 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
                 return ioevent;
             }
         };
-
 
         return Observable.zip( fields, zipFunction );
 
