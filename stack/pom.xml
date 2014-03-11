@@ -1308,8 +1308,8 @@
       <dependency>
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
-        <!-- we'd like to use 1.5, but it is not in Maven Central -->
-        <version>1.4</version>
+        <!-- from local-depedendencies -->
+        <version>1.5.4</version>
       </dependency>
 
       <dependency>
