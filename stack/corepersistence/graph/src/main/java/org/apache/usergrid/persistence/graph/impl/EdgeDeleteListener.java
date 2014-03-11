@@ -79,7 +79,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                                 new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
                                         edge.getVersion(), null ) );
                     }
-                } ).doOnEach( new Action1<MarkedEdge>() {
+                } ).doOnNext( new Action1<MarkedEdge>() {
                     @Override
                     public void call( final MarkedEdge markedEdge ) {
                         final MutationBatch delete = edgeSerialization.deleteEdge( scope, markedEdge );
@@ -93,7 +93,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                 Observable<Integer> sourceIdType = edgeManager.loadEdgesFromSourceByType(
                         new SimpleSearchByIdType( edge.getSourceNode(), edge.getType(), maxVersion,
                                 edge.getTargetNode().getType(), null ) ).take( 2 ).count()
-                                                              .doOnEach( new Action1<Integer>() {
+                                                              .doOnNext( new Action1<Integer>() {
                                                                   @Override
                                                                   public void call( final Integer count ) {
                                                                       //There's nothing to do,
@@ -114,7 +114,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                 Observable<Integer> targetIdType = edgeManager.loadEdgesToTargetByType(
                         new SimpleSearchByIdType( edge.getTargetNode(), edge.getType(), maxVersion,
                                 edge.getSourceNode().getType(), null ) ).take( 2 ).count()
-                                                              .doOnEach( new Action1<Integer>() {
+                                                              .doOnNext( new Action1<Integer>() {
                                                                   @Override
                                                                   public void call( final Integer count ) {
                                                                       //There's nothing to do,
@@ -136,7 +136,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                 // we can't delete it
                 Observable<Integer> sourceType = edgeManager.loadEdgesFromSource(
                         new SimpleSearchByEdgeType( edge.getSourceNode(), edge.getType(), maxVersion, null ) ).take( 2 )
-                                                            .count().doOnEach( new Action1<Integer>() {
+                                                            .count().doOnNext( new Action1<Integer>() {
                             @Override
                             public void call( final Integer count ) {
                                 //There's nothing to do,
@@ -146,6 +146,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                                 if ( count == 1 ) {
                                     final MutationBatch delete =
                                             edgeMetadataSerialization.removeEdgeTypeFromSource( scope, edge );
+                                    batch.mergeShallow( delete );
                                 }
                             }
                         } );
@@ -153,7 +154,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
                 Observable<Integer> targetType = edgeManager.loadEdgesToTarget(
                         new SimpleSearchByEdgeType( edge.getTargetNode(), edge.getType(), maxVersion, null ) ).take( 2 )
-                                                            .count().doOnEach( new Action1<Integer>() {
+                                                            .count().doOnNext( new Action1<Integer>() {
                             @Override
                             public void call( final Integer count ) {
                                 //There's nothing to do,
@@ -163,6 +164,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                                 if ( count == 1 ) {
                                     final MutationBatch delete =
                                             edgeMetadataSerialization.removeEdgeTypeToTarget( scope, edge );
+                                    batch.mergeShallow( delete );
                                 }
                             }
                         } );

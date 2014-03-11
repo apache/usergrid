@@ -32,7 +32,7 @@ public class TimeoutTask<T> implements Action1<Scheduler.Inner> {
          * We purposefully loop through a tight loop.  If we have anything to process, we need to do so
          * Once we run out of items to process, this thread will sleep and the timer will fire
          */
-        while(!inner.isUnsubscribed()) {
+        while(!inner.isUnsubscribed() && graphFig.getTimeoutReadSize() > 0) {
 
             Iterator<AsynchronousMessage<T>> timeouts = getTimeouts();
 

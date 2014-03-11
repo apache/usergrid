@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.graph.consistency;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -103,7 +102,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
         } ).subscribe( new Action1<AsynchronousMessage<T>>() {
             @Override
             public void call( final AsynchronousMessage<T> asynchronousMessage ) {
-                //To change body of implemented methods use File | Settings | File Templates.
+             //no op
             }
         } );
     }

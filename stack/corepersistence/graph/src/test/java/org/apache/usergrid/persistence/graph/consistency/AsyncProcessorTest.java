@@ -29,9 +29,11 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import org.apache.usergrid.persistence.graph.GraphFig;
+
 import rx.Observable;
-import rx.concurrency.Schedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -274,7 +276,11 @@ public class AsyncProcessorTest {
      */
     public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue ) {
 
-        AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue, Schedulers.threadPoolForIO() );
+        GraphFig fig = mock(GraphFig.class);
+
+        when(fig.getScanPageSize()).thenReturn( 0 );
+
+        AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue, Schedulers.io(), fig );
 
 
         return processor;
@@ -305,7 +311,7 @@ public class AsyncProcessorTest {
         @Override
         public Observable<TestEvent> receive( final TestEvent event ) {
 
-            return Observable.from( event ).doOnEach( new Action1<TestEvent>() {
+            return Observable.from( event ).doOnNext( new Action1<TestEvent>() {
                 @Override
                 public void call( final TestEvent testEvent ) {
                     events.push( testEvent );
@@ -342,7 +348,7 @@ public class AsyncProcessorTest {
 
         @Override
         public Observable<TestEvent> receive( final TestEvent event ) {
-            return Observable.from( event ).doOnEach( new Action1<TestEvent>() {
+            return Observable.from( event ).doOnNext( new Action1<TestEvent>() {
                 @Override
                 public void call( final TestEvent testEvent ) {
                     events.push( testEvent );
