@@ -1,12 +1,17 @@
 'use strict';
 
-AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log) {
+AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log,$location) {
 
   var requestTimes = [],
     running = false,
     currentRequests = {};
-  function reportError(data,config){
 
+  function reportError(data,config){
+    try {
+    
+    } catch (e) {
+      console.log(e)
+    }
   };
   var getAccessToken = function(){
     return sessionStorage.getItem('accessToken');
@@ -19,6 +24,55 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     set:function(prop,value){
       this.client().set(prop,value);
 
+    },
+    getUrls: function(){
+      var host = $location.host();
+      var qs = $location.search();
+      var BASE_URL = '';
+      var DATA_URL = '';
+      var use_sso = false;
+      switch (true) {
+        case host === 'appservices.apigee.com' && location.pathname.indexOf('/dit') >= 0 :
+          //DIT
+          BASE_URL = 'https://accounts.jupiter.apigee.net';
+          DATA_URL = 'http://apigee-internal-prod.jupiter.apigee.net';
+          use_sso = true;
+          break;
+        case host === 'appservices.apigee.com' && location.pathname.indexOf('/mars') >= 0  :
+          //staging
+          BASE_URL = 'https://accounts.mars.apigee.net';
+          DATA_URL = 'http://apigee-internal-prod.mars.apigee.net';
+          use_sso = true;
+          break;
+        case host === 'appservices.apigee.com' :
+          //enterprise portals
+          DATA_URL = Usergrid.overrideUrl;
+          break;
+        case host === 'apigee.com' :
+          //prod
+          BASE_URL = 'https://accounts.apigee.com';
+          DATA_URL = 'https://api.usergrid.com';
+          use_sso = true;
+          break;
+        case host === 'usergrid.dev':
+          //development
+          DATA_URL = 'https://api.usergrid.com';
+          break;
+        default :
+          DATA_URL = Usergrid.overrideUrl;
+          break;
+      }
+      //override with querystring
+      DATA_URL = qs.api_url || DATA_URL;
+      DATA_URL = DATA_URL.lastIndexOf('/') === DATA_URL.length - 1 ? DATA_URL.substring(0,DATA_URL.length-1) : DATA_URL;
+      return {
+        DATA_URL: DATA_URL,
+        LOGIN_URL: BASE_URL + '/accounts/sign_in',
+        PROFILE_URL: BASE_URL + '/accounts/my_account',
+        LOGOUT_URL: BASE_URL + '/accounts/sign_out',
+        apiUrl: DATA_URL,
+        use_sso:use_sso
+      };
     },
     orgLogin:function(username,password){
       var self = this;
@@ -34,7 +88,6 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         }
       });
     },
-
     checkAuthentication:function(force){
       var ug = this;
       var client = ug.client();
@@ -50,7 +103,6 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
               for (key in  $rootScope.applications) {
                 if ($rootScope.applications.hasOwnProperty(key)) size++;
               }
-              $rootScope.addApplications = size < 10;
               $rootScope.$broadcast('checkAuthentication-success', client.getObject('organizations'), client.getObject('applications'), client.get('orgName'), client.get('appName'), client.get('email'));
             });
           },
@@ -125,6 +177,9 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
           $rootScope.urls().DATA_URL
       );
       return this._client;
+    },
+    setClientProperty:function(key,value){
+      this.client().set(key, value);
     },
     getTopCollections: function () {
       var options = {
@@ -442,7 +497,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     getIndexes: function (path) {
       var options = {
         method:'GET',
-        endpoint: path + '/indexes'
+        endpoint: path.split('/').concat('indexes').filter(function(bit){return bit && bit.length}).join('/') 
       }
       this.client().request(options, function (err, data) {
         if (err) {
@@ -914,8 +969,9 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
           $rootScope.$broadcast('app-activities-received',data.entities);
         });
     },
-    getEntityActivities: function(entity){
-        var endpoint = entity.get('type') + '/' + entity.get('uuid') + '/activities' ;
+    getEntityActivities: function(entity, isFeed){
+        var route = isFeed ? 'feed' : 'activities'
+        var endpoint = entity.get('type') + '/' + entity.get('uuid') + '/'+route ;
         var options = {
           method:'GET',
           endpoint:endpoint,
@@ -923,12 +979,12 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         };
         this.client().request(options, function (err, data) {
           if(err){
-            $rootScope.$broadcast(entity.get('type')+'-activities-error',data);
+            $rootScope.$broadcast(entity.get('type')+'-'+route+'-error',data);
           }
           data.entities.forEach(function(entityInstance) {
             entityInstance.createdDate = (new Date( entityInstance.created)).toUTCString();
           });
-          $rootScope.$broadcast(entity.get('type')+'-activities-received',data.entities);
+          $rootScope.$broadcast(entity.get('type')+'-'+route+'-received',data.entities);
         });
     },
     addUserActivity:function(user,content){
