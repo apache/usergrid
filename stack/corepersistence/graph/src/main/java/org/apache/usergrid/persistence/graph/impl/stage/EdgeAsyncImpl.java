@@ -38,7 +38,6 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -83,7 +82,7 @@ public class EdgeAsyncImpl implements EdgeAsync {
 
     @Override
     public Observable<Integer> cleanSources( final OrganizationScope scope, final Id sourceId, final String edgeType,
-                                       final UUID version ) {
+                                             final UUID version ) {
 
 
         return null;  //To change body of implemented methods use File | Settings | File Templates.
@@ -100,107 +99,114 @@ public class EdgeAsyncImpl implements EdgeAsync {
         Preconditions.checkNotNull( version, "version is required" );
 
 
+        Observable<Integer> deleteCounts =
+                loadEdgeIdsToTarget( scope, new SimpleSearchIdType( targetId, edgeType, null ) )
+                        .buffer( graphFig.getRepairConcurrentSize() )
+                                //buffer them into concurrent groups based on the concurrent repair size
+                        .flatMap( new Func1<List<String>, Observable<Integer>>() {
 
-        return loadEdgeIdsToTarget( scope, new SimpleSearchIdType( targetId, edgeType, null ) )
-                .buffer( graphFig.getRepairConcurrentSize() )
-                        //buffer them into concurrent groups based on the concurrent repair size
-                .flatMap( new Func1<List<String>, Observable<Integer>>() {
-
-                    @Override
-                    public Observable<Integer> call( final List<String> types ) {
-
-
-                        final MutationBatch batch = keyspace.prepareMutationBatch();
-
-                        final List<Observable<Integer>> checks = new ArrayList<Observable<Integer>>( types.size() );
-
-                        //for each id type, check if the exist in parallel to increase processing speed
-                        for ( final String sourceIdType : types ) {
-
-                            final SearchByIdType searchData =   new SimpleSearchByIdType( targetId, edgeType, version, sourceIdType, null );
-
-                            Observable<Integer> search = getEdgesToTargetBySourceType( scope, searchData
-                                    )
-                                    .distinctUntilChanged( new Func1<MarkedEdge, Id>() {
-
-                                        //get distinct by source node
-                                        @Override
-                                        public Id call( final MarkedEdge markedEdge ) {
-                                            return markedEdge.getSourceNode();
-                                        }
-                                    } ).take( 1 ).count().doOnNext( new Action1<Integer>() {
-
-                                        @Override
-                                        public void call( final Integer count ) {
-                                            /**
-                                             * we only want to delete if no edges are in this class. If there are
-                                             * still edges
-                                             * we must retain the information in order to keep our index structure
-                                             * correct for edge
-                                             * iteration
-                                             **/
-                                            if ( count != 0 ) {
-                                                return;
-                                            }
-
-
-                                            batch.mergeShallow( edgeMetadataSerialization
-                                                    .removeIdTypeToTarget( scope, targetId, edgeType, sourceIdType,
-                                                            version ) );
-                                        }
-                                    } );
-
-                            checks.add( search );
-                        }
-
-
-                        /**
-                         * Sum up the total number of edges we had, then execute the mutation if we have anything to do
-                         */
-                        return MathObservable.sumInteger(Observable.merge( checks )).doOnNext( new Action1<Integer>() {
                             @Override
-                            public void call( final Integer count ) {
+                            public Observable<Integer> call( final List<String> types ) {
 
-                                if(batch.isEmpty()){
-                                    return;
+
+                                final MutationBatch batch = keyspace.prepareMutationBatch();
+
+                                final List<Observable<Integer>> checks =
+                                        new ArrayList<Observable<Integer>>( types.size() );
+
+                                //for each id type, check if the exist in parallel to increase processing speed
+                                for ( final String sourceIdType : types ) {
+
+                                    final SearchByIdType searchData =
+                                            new SimpleSearchByIdType( targetId, edgeType, version, sourceIdType, null );
+
+                                    Observable<Integer> search = getEdgesToTargetBySourceType( scope, searchData )
+                                            .distinctUntilChanged( new Func1<MarkedEdge, Id>() {
+
+                                                //get distinct by source node
+                                                @Override
+                                                public Id call( final MarkedEdge markedEdge ) {
+                                                    return markedEdge.getSourceNode();
+                                                }
+                                            } ).take( 1 ).count().doOnNext( new Action1<Integer>() {
+
+                                                @Override
+                                                public void call( final Integer count ) {
+                                                    /**
+                                                     * we only want to delete if no edges are in this class. If there
+                                                     * are
+                                                     * still edges
+                                                     * we must retain the information in order to keep our index
+                                                     * structure
+                                                     * correct for edge
+                                                     * iteration
+                                                     **/
+                                                    if ( count != 0 ) {
+                                                        return;
+                                                    }
+
+
+                                                    batch.mergeShallow( edgeMetadataSerialization
+                                                            .removeIdTypeToTarget( scope, targetId, edgeType,
+                                                                    sourceIdType, version ) );
+                                                }
+                                            } );
+
+                                    checks.add( search );
                                 }
 
-                                try {
-                                    batch.execute();
-                                }
-                                catch ( ConnectionException e ) {
-                                    throw new RuntimeException( "Unable to execute mutation", e );
-                                }
+
+                                /**
+                                 * Sum up the total number of edges we had, then execute the mutation if we have
+                                 * anything to do
+                                 */
+                                return MathObservable.sumInteger( Observable.merge( checks ) )
+                                                     .doOnNext( new Action1<Integer>() {
+                                                         @Override
+                                                         public void call( final Integer count ) {
+
+                                                             if ( batch.isEmpty() ) {
+                                                                 return;
+                                                             }
+
+                                                             try {
+                                                                 batch.execute();
+                                                             }
+                                                             catch ( ConnectionException e ) {
+                                                                 throw new RuntimeException(
+                                                                         "Unable to execute mutation", e );
+                                                             }
+                                                         }
+                                                     } );
                             }
-                        } );
+                        } )
+                                //if we get no edges, emit a 0 so the caller knows nothing was deleted
+                        .defaultIfEmpty( 0 );
 
-                    }
 
-                } )
-                .map( new Func1<Integer, Integer>() {
-                    @Override
-                    public Integer call( final Integer subTypes ) {
+        //sum up everything emitted by sub types.  If there's no edges existing for all sub types,
+        // then we can safely remove them
+        return MathObservable.sumInteger( deleteCounts ).map( new Func1<Integer, Integer>() {
+            @Override
+            public Integer call( final Integer subTypes ) {
 
-                        /**
-                         * We can only execute deleting this type if no sub types were deleted
-                         */
-                        if(subTypes != 0){
-                            return subTypes;
-                        }
+                /**
+                 * We can only execute deleting this type if no sub types were deleted
+                 */
+                if ( subTypes != 0 ) {
+                    return subTypes;
+                }
 
-                        try {
-                            edgeMetadataSerialization.removeEdgeTypeToTarget( scope, targetId, edgeType, version )
-                                                         .execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to execute mutation" );
-                        }
+                try {
+                    edgeMetadataSerialization.removeEdgeTypeToTarget( scope, targetId, edgeType, version ).execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to execute mutation" );
+                }
 
-                        return subTypes;
-                    }
-                } )
-                //if we get no edges, emit a 0 so the caller knows nothing was deleted
-                .defaultIfEmpty( 0 );
+                return subTypes;
+            }
+        } );
     }
 
 
