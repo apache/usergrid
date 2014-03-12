@@ -15,6 +15,8 @@ public interface GraphFig extends GuicyFig {
 
     public static final String SCAN_PAGE_SIZE = "usergrid.graph.scan.page.size";
 
+    public static final String REPAIR_CONCURRENT_SIZE = "usergrid.graph.repair.concurrent.size";
+
 
     public static final String TIMEOUT_SIZE = "usergrid.graph.timeout.page.size";
 
@@ -49,6 +51,10 @@ public interface GraphFig extends GuicyFig {
     @Default("500")
     @Key( TIMEOUT_TASK_TIME )
     long getTaskLoopTime();
+
+    @Default("10")
+    @Key(REPAIR_CONCURRENT_SIZE)
+    int getRepairConcurrentSize();
 
 
 

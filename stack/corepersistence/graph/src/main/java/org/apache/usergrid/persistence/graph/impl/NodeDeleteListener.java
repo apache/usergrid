@@ -40,10 +40,10 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
 
 
     private final NodeSerialization nodeSerialization;
-//    private final EdgeSerialization edgeSerialization;
-//    private final EdgeMetadataSerialization edgeMetadataSerialization;
+    private final EdgeSerialization edgeSerialization;
+    private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final GraphFig graphFig;
-//    private final Keyspace keyspace;
+    private final Keyspace keyspace;
 
     private final Scheduler scheduler;
     private final EdgeManagerFactory edgeManagerFactory;
@@ -61,10 +61,10 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
 
 
         this.nodeSerialization = nodeSerialization;
-//        this.edgeSerialization = edgeSerialization;
-//        this.edgeMetadataSerialization = edgeMetadataSerialization;
+        this.edgeSerialization = edgeSerialization;
+        this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.graphFig = graphFig;
-//        this.keyspace = keyspace;
+        this.keyspace = keyspace;
         this.scheduler = scheduler;
         this.edgeManagerFactory = edgeManagerFactory;
 

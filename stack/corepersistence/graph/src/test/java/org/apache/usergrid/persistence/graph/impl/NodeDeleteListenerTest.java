@@ -186,6 +186,7 @@ public class NodeDeleteListenerTest {
 
         assertFalse( types.hasNext() );
 
+
         //no types to target
 
         types = edgeMetadataSerialization.getEdgeTypesToTarget( scope, createSearchEdge( targetNode, null ) );
