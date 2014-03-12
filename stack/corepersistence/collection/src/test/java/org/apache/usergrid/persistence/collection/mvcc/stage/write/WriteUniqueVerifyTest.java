@@ -14,22 +14,6 @@
  * limitations under the License.  For additional information regarding
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
- *//*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  The ASF licenses this file to You
- * under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.  For additional information regarding
- * copyright in this work, please see the NOTICE file in the top level
- * directory of this distribution.
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
@@ -60,11 +44,6 @@ import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 
 
-/**
- * TODO: Update the test to correctly test for detecting more than 1 duplicate and exception handling correctly
- *
- * @author tnine
- */
 @RunWith( JukitoRunner.class )
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyTest {
@@ -96,7 +75,6 @@ public class WriteUniqueVerifyTest {
 
         final CollectionScope collectionScope = mock( CollectionScope.class );
 
-
         // set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();
 
@@ -126,7 +104,6 @@ public class WriteUniqueVerifyTest {
     @Test
     public void testNoFields() {
         final CollectionScope collectionScope = mock( CollectionScope.class );
-
 
         // set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();

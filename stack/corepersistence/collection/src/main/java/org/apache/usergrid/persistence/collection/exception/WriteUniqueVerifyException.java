@@ -17,13 +17,20 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
+import java.util.Map;
+import org.apache.usergrid.persistence.model.field.Field;
+
+
+/**
+ * Indicates that one or more unique field checks failed.
+ */
 public class WriteUniqueVerifyException extends CollectionRuntimeException {
-    public WriteUniqueVerifyException() {
-    }
+    private Map<String, Field> violations;
 
-
-    public WriteUniqueVerifyException( final String message ) {
-        super( message );
+    
+    public WriteUniqueVerifyException( Map<String, Field> violations ) {
+        super( "Error: one or more duplicate fields detected");
+        this.violations = violations;
     }
 
 
@@ -40,5 +47,12 @@ public class WriteUniqueVerifyException extends CollectionRuntimeException {
     public WriteUniqueVerifyException( final String message, final Throwable cause, final boolean enableSuppression,
                                        final boolean writableStackTrace ) {
         super( message, cause, enableSuppression, writableStackTrace );
+    }
+
+    /**
+     * Get map of Fields in violation, keyed by field name.
+     */
+    public Map<String, Field> getVioliations() {
+        return violations;
     }
 }

@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.EntityRef;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
+import org.apache.usergrid.persistence.collection.util.EntityBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

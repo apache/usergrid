@@ -17,9 +17,13 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.netflix.astyanax.MutationBatch;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -32,13 +36,17 @@ import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGe
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import rx.Scheduler;
 
 
 @UseModules( TestCollectionModule.class )
@@ -46,8 +54,14 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
+
         MvccLogEntrySerializationStrategy logstrat = mock( MvccLogEntrySerializationStrategy.class);
-        new WriteOptimisticVerify( logstrat ).call( event );
+
+        UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
+        Injector injector = Guice.createInjector( new TestCollectionModule() );
+        Scheduler scheduler = injector.getInstance( Scheduler.class );
+
+        new WriteOptimisticVerify( logstrat, uvstrat, scheduler ).call( event );
     }
 
     @Test
@@ -60,6 +74,9 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
 
         final Entity entity = generateEntity();
+        entity.setField(new StringField("name", "FOO", true));
+        entity.setField(new StringField("identifier", "BAR", true));
+
         final MvccEntity mvccEntity = fromEntity( entity );
 
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
@@ -70,11 +87,16 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         MvccLogEntrySerializationStrategy noConflictLog = 
             mock( MvccLogEntrySerializationStrategy.class );
+
         when( noConflictLog.load( collectionScope, entity.getId(), entity.getVersion(), 2) )
             .thenReturn( logEntries );
 
+        UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
+        Injector injector = Guice.createInjector( new TestCollectionModule() );
+        Scheduler scheduler = injector.getInstance( Scheduler.class );
+
         // Run the stage
-        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog, uvstrat, scheduler );
 
         CollectionIoEvent<MvccEntity> result;
         result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -95,38 +117,66 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
     @Test
     public void testConflict() throws Exception {
 
-        final CollectionScope collectionScope = mock( CollectionScope.class );
-        when( collectionScope.getOrganization() )
+        final CollectionScope scope = mock( CollectionScope.class );
+        when( scope.getOrganization() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
-        when( collectionScope.getOwner() )
+        when( scope.getOwner() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
 
+        // there is an entity
         final Entity entity = generateEntity();
-        final MvccEntity mvccEntity = fromEntity( entity );
+        entity.setField(new StringField("name", "FOO", true));
+        entity.setField(new StringField("identifier", "BAR", true));
 
+        // log that one operation is active on entity
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
         logEntries.add( new MvccLogEntryImpl( 
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE ));
+
+        // log another operation as active on entity
         logEntries.add( new MvccLogEntryImpl( 
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE));
 
-        MvccLogEntrySerializationStrategy noConflictLog = 
+        // mock up the log
+        MvccLogEntrySerializationStrategy conflictLog = 
             mock( MvccLogEntrySerializationStrategy.class );
-        when( noConflictLog.load( collectionScope, entity.getId(), entity.getVersion(), 2) )
+        when( conflictLog.load( scope, entity.getId(), entity.getVersion(), 2) )
             .thenReturn( logEntries );
 
-        // Run the stage
-        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
+        // mock up unique values interface
+        UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
+        UniqueValue uv1 = new UniqueValueImpl(
+            scope, entity.getField("name"), entity.getId(), entity.getVersion());
+        UniqueValue uv2 = new UniqueValueImpl(
+            scope, entity.getField("identifier"), entity.getId(), entity.getVersion());
+        MutationBatch mb = mock( MutationBatch.class );
+        when( uvstrat.delete(uv1) ).thenReturn(mb);
+        when( uvstrat.delete(uv2) ).thenReturn(mb);
 
-        CollectionIoEvent<MvccEntity> result;
+        // use a real scheduler
+        Injector injector = Guice.createInjector( new TestCollectionModule() );
+        Scheduler scheduler = injector.getInstance( Scheduler.class );
+
+        // Run the stage, conflict should be detected
+        final MvccEntity mvccEntity = fromEntity( entity );
         boolean conflictDetected = false;
+
+        WriteOptimisticVerify newStage = 
+            new WriteOptimisticVerify( conflictLog, uvstrat, scheduler );
+
         try {
-            result = newStage.call( new CollectionIoEvent<MvccEntity>(collectionScope, mvccEntity));
-        } catch (Exception e) {
+            newStage.call( new CollectionIoEvent<MvccEntity>(scope, mvccEntity));
+
+        } catch (WriteOptimisticVerifyException e) {
             conflictDetected = true;
         }
         assertTrue( conflictDetected );
+
+        // check that unique values were deleted
+        verify( uvstrat, times(1) ).delete( uv1 );
+        verify( uvstrat, times(1) ).delete( uv2 );
     }
+
 }
 
 
