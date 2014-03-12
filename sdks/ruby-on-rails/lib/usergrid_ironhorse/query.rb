@@ -333,6 +333,12 @@ module Usergrid
       def method_missing(method_name, *args)
 
         method = method_name.to_s
+
+        if method.end_with? '!'
+          method.chop!
+          error_on_empty = true
+        end
+
         if method.start_with? 'find_all_by_'
           attribs = method.gsub /^find_all_by_/, ''
         elsif method.start_with? 'find_by_'
@@ -348,11 +354,6 @@ module Usergrid
           attribs = method.gsub /^find_last_by_/, ''
         else
           super
-        end
-
-        if method.end_with? '!'
-          method.chop!
-          error_on_empty = true
         end
 
         attribs = attribs.split '_and_'
@@ -892,7 +893,7 @@ module Usergrid
         return if loaded?
         begin
           @response = run_query
-          @records = @response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
+            @records = @response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
         rescue RestClient::ResourceNotFound
           @records = []
         end
