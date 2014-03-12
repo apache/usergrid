@@ -96,11 +96,9 @@ public class WriteOptimisticVerify
                 log.debug("Conflict writing entity id {} version {}", 
                     entity.getId().toString(), entity.getVersion().toString());
             
-                // We're not the first writer, set ROLLBACK, cleanup and throw exception
+                // We're not the first writer, cleanup and throw exception
 
-                final MvccLogEntry rollbackEntry = 
-                    new MvccLogEntryImpl( entity.getId(), entity.getVersion(), Stage.ROLLBACK);
-                logEntryStrat.write( collectionScope, rollbackEntry );
+                logEntryStrat.delete( collectionScope, entity.getId(), entity.getVersion() );
 
                 // Delete all unique values of entity, and do it concurrently 
 
