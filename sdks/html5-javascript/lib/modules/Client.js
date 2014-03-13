@@ -12,7 +12,9 @@
     if (options.appName) {
       this.set('appName', options.appName);
     }
-
+    if(options.qs){
+      this.setObject('default_qs', options.qs);
+    }
     //other options
     this.buildCurl = options.buildCurl || false;
     this.logging = options.logging || false;
@@ -48,6 +50,7 @@
     var mQuery = options.mQuery || false; //is this a query to the management endpoint?
     var orgName = this.get('orgName');
     var appName = this.get('appName');
+    var default_qs=this.get('default_qs');
     var uri;
       var logoutCallback=function(){
           if (typeof(this.logoutCallback) === 'function') {
@@ -68,6 +71,9 @@
        xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
        xhr.withCredentials = true;
        */
+    }
+    if(default_qs){
+      qs=propCopy(qs, default_qs);
     }
       var req = new Usergrid.Request(method, uri, qs, body, function (err, response) {
           if ([
@@ -238,7 +244,7 @@
    */
   Usergrid.Client.prototype.createCollection = function (options, callback) {
     options.client = this;
-    var collection = new Usergrid.Collection(options, function(err, data) {
+    new Usergrid.Collection(options, function(err, data, collection) {
         doCallback(callback, [err, collection, data]);
     });
   };
