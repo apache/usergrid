@@ -1,6 +1,5 @@
 'use strict'
 
-
 AppServices.Controllers.controller('ForgotPasswordCtrl',
   ['ug',
     '$scope',

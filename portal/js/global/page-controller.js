@@ -10,7 +10,8 @@ AppServices.Controllers.controller('PageCtrl',
     '$routeParams',
     '$q',
     '$route',
-    '$log', function (
+    '$log',
+     function (
                      ug,
                      utility,
                      $scope,
@@ -19,8 +20,7 @@ AppServices.Controllers.controller('PageCtrl',
                      $routeParams,
                      $q,
                      $route,
-                     $log
-                     ) {
+                     $log) {
 
   var initScopeVariables = function(){
     //$rootScope.urls()... will determine which URL should be used for a given environment
@@ -38,6 +38,7 @@ AppServices.Controllers.controller('PageCtrl',
     $rootScope.demoData = false;
     $scope.queryStringApplied = false;
     $rootScope.autoUpdateTimer = Usergrid.config ? Usergrid.config.autoUpdateTimer : 61;
+    $rootScope.requiresDeveloperKey = Usergrid.config ? Usergrid.config.client.requiresDeveloperKey : false;
     $rootScope.loaded = $rootScope.activeUI = false;
     for (var key in Usergrid.regex) {
       $scope[key] = Usergrid.regex[key];
@@ -59,52 +60,11 @@ AppServices.Controllers.controller('PageCtrl',
   initScopeVariables();
 
   $rootScope.urls = function(){
-    var BASE_URL = '';
-    var DATA_URL = '';
-    var qs = $location.search();
-
-    switch(true){
-      case $location.host() === 'appservices.apigee.com' && location.pathname.indexOf('/dit') >= 0 :
-        //DIT
-        BASE_URL = 'https://accounts.jupiter.apigee.net';
-        DATA_URL = 'http://apigee-internal-prod.jupiter.apigee.net';
-        $scope.use_sso = true;
-        break;
-      case $location.host() === 'appservices.apigee.com' && location.pathname.indexOf('/mars') >= 0  :
-        //staging
-        BASE_URL = 'https://accounts.mars.apigee.net';
-        DATA_URL = 'http://apigee-internal-prod.mars.apigee.net';
-        $scope.use_sso = true;
-        break;
-      case $location.host() === 'appservices.apigee.com' :
-        //enterprise portals
-        DATA_URL = Usergrid.overrideUrl;
-        break;
-      case $location.host() === 'apigee.com' :
-        //prod
-        BASE_URL = 'https://accounts.apigee.com';
-        DATA_URL = 'https://api.usergrid.com';
-        $scope.use_sso = true;
-        break;
-      case $location.host() === 'usergrid.dev':
-        //development
-        DATA_URL = 'https://api.usergrid.com';
-        break;
-      default :
-        DATA_URL = Usergrid.overrideUrl;
-        break;
-    }
-    //override with querystring
-    DATA_URL =  qs.api_url || DATA_URL;
-    $scope.apiUrl = DATA_URL = DATA_URL.lastIndexOf('/') === DATA_URL.length - 1 ? DATA_URL.substring(0,DATA_URL.length-1) : DATA_URL;
-
-    return {
-      DATA_URL: DATA_URL,
-      LOGIN_URL: BASE_URL + '/accounts/sign_in',
-      PROFILE_URL: BASE_URL + '/accounts/my_account',
-      LOGOUT_URL: BASE_URL + '/accounts/sign_out'
-    }
-  }
+    var urls = ug.getUrls()
+    $scope.apiUrl = urls.apiUrl;
+    $scope.use_sso = urls.use_sso;
+    return urls;
+  };
 
   //used in users
   $rootScope.gotoPage = function(path){
