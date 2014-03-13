@@ -50,7 +50,7 @@
     var mQuery = options.mQuery || false; //is this a query to the management endpoint?
     var orgName = this.get('orgName');
     var appName = this.get('appName');
-    var default_qs=this.get('default_qs');
+    var default_qs=this.getObject('default_qs');
     var uri;
       var logoutCallback=function(){
           if (typeof(this.logoutCallback) === 'function') {

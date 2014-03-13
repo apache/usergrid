@@ -186,6 +186,31 @@ describe('Usergrid', function(){
                 method: 'GET',
                 endpoint: 'users'
             };
+            it('should persist default query parameters', function(done) {
+                //create new client with default params
+                var client=new Usergrid.Client({
+                    orgName: 'yourorgname',
+                    appName: 'sandbox',
+                    logging: false, //optional - turn on logging, off by default
+                    buildCurl: true, //optional - turn on curl commands, off by default
+                    qs:{
+                        test1:'test1',
+                        test2:'test2'
+                    }
+                });
+                var default_qs=client.getObject('default_qs');
+                assert(default_qs.test1==='test1', "the default query parameters were not persisted");
+                assert(default_qs.test2==='test2', "the default query parameters were not persisted");
+                client.request({
+                    method: 'GET',
+                    endpoint: 'users'
+                }, function(err, data) {
+                    //console.log(err, data);
+                    assert(data.params.test2[0]==='test2', "the default query parameters were not sent to the backend");
+                    assert(data.params.test1[0]==='test1', "the default query parameters were not sent to the backend");
+                    done();
+                });
+            });
             it('should CREATE a new user', function(done) {
                 client.request({
                     method: 'POST',
