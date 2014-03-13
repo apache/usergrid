@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
@@ -56,7 +57,7 @@ import rx.util.functions.FuncN;
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
@@ -68,6 +69,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteUniqueVerify writeVerifyUnique;
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
+    private final RollbackAction rollback;
 
     //load stages
     private final Load load;
@@ -86,6 +88,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final WriteUniqueVerify writeVerifyUnique,
         final WriteOptimisticVerify writeOptimisticVerify,
         final WriteCommit writeCommit, 
+        final RollbackAction rollback,
         final Load load, 
         final MarkStart markStart,
         final MarkCommit markCommit,
@@ -98,6 +101,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeVerifyUnique = writeVerifyUnique;
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
+        this.rollback = rollback;
         this.load = load;
         this.markStart = markStart;
         this.markCommit = markCommit;
@@ -141,7 +145,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable =
-            Observable.from( writeData ).subscribeOn( scheduler ).map( writeStart ).flatMap(
+            Observable.from( writeData )
+                    .subscribeOn( scheduler )
+                    .map( writeStart )
+                    .flatMap(
                 new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
 
                     @Override
@@ -156,7 +163,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                         // WriteVerifyUnique stage to execute multiple verification steps in 
                         // parallel and zip the results
 
-
                         Observable<CollectionIoEvent<MvccEntity>> unique =
                             Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( scheduler )
                                 .flatMap( writeVerifyUnique);
@@ -167,13 +173,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                             Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( scheduler )
                                 .map( writeOptimisticVerify );
 
-
                         // zip the results
                         // TODO: Should the zip only return errors here, and if errors are present, 
                         // we throw during the zip phase?  I couldn't find "
 
                         return Observable.zip( unique, optimistic, new Func2<CollectionIoEvent<MvccEntity>,
                                 CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>>() {
+
                             @Override
                             public CollectionIoEvent<MvccEntity> call(
                                 final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent,
@@ -181,18 +187,17 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                             return mvccEntityCollectionIoEvent;
                            }
-                       } );
+                        });
                     }
-                } );
-
+                });
 
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
         // observable = Concurrent.concurrent( observable, scheduler, new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        //return the commit result.
-        return observable.map( writeCommit );
+        // return the commit result.
+        return observable.map(writeCommit); // TODO: .doOnError( rollback );
     }
 
 

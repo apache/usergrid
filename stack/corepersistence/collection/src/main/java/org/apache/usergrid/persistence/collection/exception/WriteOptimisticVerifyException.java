@@ -17,28 +17,30 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.model.entity.Entity;
+
 public class WriteOptimisticVerifyException extends CollectionRuntimeException {
-    public WriteOptimisticVerifyException() {
+
+
+    public WriteOptimisticVerifyException( Entity entity, CollectionScope scope, final String message ) {
+        super( entity, scope, message );
     }
 
 
-    public WriteOptimisticVerifyException( final String message ) {
-        super( message );
+    public WriteOptimisticVerifyException( Entity entity, CollectionScope scope, final String message, final Throwable cause ) {
+        super( entity, scope, message, cause );
     }
 
 
-    public WriteOptimisticVerifyException( final String message, final Throwable cause ) {
-        super( message, cause );
+    public WriteOptimisticVerifyException( Entity entity, CollectionScope scope, final Throwable cause ) {
+        super( entity, scope, cause );
     }
 
 
-    public WriteOptimisticVerifyException( final Throwable cause ) {
-        super( cause );
-    }
-
-
-    public WriteOptimisticVerifyException( final String message, final Throwable cause, final boolean enableSuppression,
-                                       final boolean writableStackTrace ) {
-        super( message, cause, enableSuppression, writableStackTrace );
+    public WriteOptimisticVerifyException( Entity entity, CollectionScope scope, 
+            final String message, final Throwable cause, final boolean enableSuppression,
+            final boolean writableStackTrace ) {
+        super( entity, scope, message, cause, enableSuppression, writableStackTrace );
     }
 }

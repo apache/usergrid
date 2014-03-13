@@ -73,7 +73,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             }
             catch ( ConnectionException e ) {
                 LOG.error( "Failed to execute write ", e );
-                throw new WriteStartException( "Failed to execute write ", e );
+                throw new WriteStartException( entity, collectionScope, 
+                        "Failed to execute write ", e );
             }
 
 

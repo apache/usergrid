@@ -17,28 +17,29 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.model.entity.Entity;
+
 public class WriteStartException extends CollectionRuntimeException {
-    public WriteStartException() {
+
+
+    public WriteStartException( Entity entity, CollectionScope scope, final String message ) {
+        super( entity, scope, message );
     }
 
 
-    public WriteStartException( final String message ) {
-        super( message );
+    public WriteStartException( Entity entity, CollectionScope scope, final String message, final Throwable cause ) {
+        super( entity, scope, message, cause );
     }
 
 
-    public WriteStartException( final String message, final Throwable cause ) {
-        super( message, cause );
+    public WriteStartException( Entity entity, CollectionScope scope, final Throwable cause ) {
+        super( entity, scope, cause );
     }
 
 
-    public WriteStartException( final Throwable cause ) {
-        super( cause );
-    }
-
-
-    public WriteStartException( final String message, final Throwable cause, final boolean enableSuppression,
+    public WriteStartException( Entity entity, CollectionScope scope, final String message, final Throwable cause, final boolean enableSuppression,
                                        final boolean writableStackTrace ) {
-        super( message, cause, enableSuppression, writableStackTrace );
+        super( entity, scope, message, cause, enableSuppression, writableStackTrace );
     }
 }

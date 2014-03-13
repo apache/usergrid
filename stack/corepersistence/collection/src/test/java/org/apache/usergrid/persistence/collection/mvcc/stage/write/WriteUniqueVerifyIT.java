@@ -89,9 +89,7 @@ public class WriteUniqueVerifyIT {
             // verify two unique value violations
             assertEquals( 2, e.getVioliations().size() );
         }
-
     }
-
 }
 
 

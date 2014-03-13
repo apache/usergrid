@@ -128,7 +128,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             return null;
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -153,7 +153,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                             .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 

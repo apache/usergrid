@@ -80,32 +80,27 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
     @Override
     public Entity call( final CollectionIoEvent<MvccEntity> ioEvent ) {
 
-        final MvccEntity entity = ioEvent.getEvent();
+        final MvccEntity mvccEntity = ioEvent.getEvent();
+        ValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
 
-
-        ValidationUtils.verifyMvccEntityWithEntity( entity );
-
-        final Id entityId = entity.getId();
-        final UUID version = entity.getVersion();
-
+        final Id entityId = mvccEntity.getId();
+        final UUID version = mvccEntity.getVersion();
         final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
-
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED );
-
         MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );
 
         // now get our actual insert into the entity data
-        MutationBatch entityMutation = entityStrat.write( collectionScope, entity );
+        MutationBatch entityMutation = entityStrat.write( collectionScope, mvccEntity );
 
         // merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
 
         // re-write the unique values but this time with no TTL
-        for ( Field field : entity.getEntity().get().getFields() ) {
+        for ( Field field : mvccEntity.getEntity().get().getFields() ) {
             if ( field.isUnique() ) {
                 UniqueValue written  = new UniqueValueImpl( 
-                        ioEvent.getEntityCollection(), field, entity.getId(), entity.getVersion());
+                        ioEvent.getEntityCollection(), field, mvccEntity.getId(), mvccEntity.getVersion());
                 MutationBatch mb = uniqueValueStrat.write( written );
 
                 // merge into our existing mutation batch
@@ -119,9 +114,10 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new WriteCommitException( "Failed to execute write asynchronously ", e );
+            throw new WriteCommitException( mvccEntity.getEntity().get(), collectionScope, 
+                "Failed to execute write asynchronously ", e );
         }
 
-        return entity.getEntity().get();
+        return mvccEntity.getEntity().get();
     }
 }

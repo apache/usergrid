@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSy
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
@@ -71,5 +72,7 @@ public class CollectionModule extends AbstractModule {
                 .build( EntityCollectionManagerFactory.class ) );
 
         bind( Scheduler.class ).toProvider( CassandraThreadScheduler.class );
+
+        bind( RollbackAction.class );
     }
 }

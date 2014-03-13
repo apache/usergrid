@@ -101,7 +101,8 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
+            throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, 
+                    "Failed to execute write asynchronously ", e );
         }
 
         /**

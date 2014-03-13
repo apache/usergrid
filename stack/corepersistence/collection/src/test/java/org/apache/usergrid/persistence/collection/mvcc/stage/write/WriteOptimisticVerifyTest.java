@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -46,11 +47,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Scheduler;
 
 
 @UseModules( TestCollectionModule.class )
 public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
+
+    private static final Logger log = LoggerFactory.getLogger(WriteOptimisticVerifyTest.class);
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
@@ -168,6 +173,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
             newStage.call( new CollectionIoEvent<MvccEntity>(scope, mvccEntity));
 
         } catch (WriteOptimisticVerifyException e) {
+            log.info("Error", e);
             conflictDetected = true;
         }
         assertTrue( conflictDetected );

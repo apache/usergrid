@@ -122,7 +122,8 @@ public class WriteUniqueVerify implements
                         }
                         catch ( ConnectionException ex ) {
                             throw new WriteUniqueVerifyException( 
-                                "Error writing unique value " + field.toString(), ex );
+                                entity, ioevent.getEntityCollection(), 
+                                    "Error writing unique value " + field.toString(), ex );
                         }
 
                         // does the database value match what we wrote?
@@ -131,7 +132,8 @@ public class WriteUniqueVerify implements
                             loaded = uniqueValueStrat.load( ioevent.getEntityCollection(), field );
                         }
                         catch ( ConnectionException ex ) {
-                            throw new WriteUniqueVerifyException( "Error verifying write", ex );
+                            throw new WriteUniqueVerifyException( entity, ioevent.getEntityCollection(), 
+                                    "Error verifying write", ex );
                         }
 
                         return new FieldUniquenessResult( field, loaded.equals( written ) );
@@ -167,7 +169,8 @@ public class WriteUniqueVerify implements
                 }
 
                 if ( !uniquenessVioloations.isEmpty() ) {
-                    throw new WriteUniqueVerifyException( uniquenessVioloations );
+                    throw new WriteUniqueVerifyException( 
+                        entity, ioevent.getEntityCollection(), uniquenessVioloations );
                 }
                     
                 //return the original event
