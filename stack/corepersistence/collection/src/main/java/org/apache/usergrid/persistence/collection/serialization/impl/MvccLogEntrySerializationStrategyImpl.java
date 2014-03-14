@@ -228,8 +228,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final long timestamp = version.timestamp();
 
-
-        LOG.error( "Writing version with timestamp '{}'", timestamp );
+        LOG.debug( "Writing version with timestamp '{}'", timestamp );
 
         op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ) );
 

@@ -61,10 +61,10 @@ public class WithinOperand extends Operand {
 
 
     /**
-     * @param lattitude
+     * @param Latitude
      */
-    public void setLattitude( float lattitude ) {
-        setChild( 2, new FloatLiteral( lattitude ) );
+    public void setLatitude( float Latitude ) {
+        setChild( 2, new FloatLiteral( Latitude ) );
     }
 
 
@@ -97,7 +97,7 @@ public class WithinOperand extends Operand {
     /**
      * @return
      */
-    public NumericLiteral getLattitude() {
+    public NumericLiteral getLatitude() {
         return ( NumericLiteral ) this.children.get( 2 );
     }
 

@@ -1,32 +1,34 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+ * limitations under the License.  For additional information regarding
+ * copyright in this work, please see the NOTICE file in the top level
+ * directory of this distribution.
+ */
+
 package org.apache.usergrid.persistence.query;
 
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.query.Query.SortDirection;
 import org.apache.usergrid.persistence.query.Query.SortPredicate;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.query.tree.Equal;
@@ -88,7 +90,7 @@ public class QueryTest {
 
         assertEquals( "loc", op.getProperty().getValue() );
         assertEquals( .05f, op.getDistance().getFloatValue(), 0 );
-        assertEquals( 5f, op.getLattitude().getFloatValue(), 0 );
+        assertEquals( 5f, op.getLatitude().getFloatValue(), 0 );
         assertEquals( 6f, op.getLongitude().getFloatValue(), 0 );
 
         and = ( AndOperand ) and.getLeft();
@@ -275,7 +277,7 @@ public class QueryTest {
             error = qpe.getMessage();
         }
 
-        assertEquals( "The query cannot be parsed. The token '<EOF>' at column 13 on line 1 cannot be parsed", error );
+        assertTrue( error.startsWith("The query cannot be parsed") );
     }
 
 

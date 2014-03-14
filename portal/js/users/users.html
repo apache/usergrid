@@ -1,15 +1,6 @@
 <div class="content-page">
 
-  <section class="row-fluid">
-
-    <div class="span12">
-      <div class="page-filters">
-        <h1 class="title pull-left"><i class="pictogram title">&#128100;</i> Users</h1>
-      </div>
-    </div>
-
-  </section>
-
+  <page-title title=" Users" icon="&#128100;"></page-title>
   <bsmodal id="newUser"
            title="Create New User"
            close="hideModal"
@@ -23,7 +14,7 @@
         <label for="new-user-username">Username</label>
 
         <div class="controls">
-          <input type="text" required ng-model="$parent.newUser.username" ng-pattern="usernameRegex" ng-attr-title="{{usernameRegexDescription}}"  name="username" id="new-user-username" class="input-xlarge" ug-validate/>
+          <input type="text" required ng-model="$parent.newUser.newusername" ng-pattern="usernameRegex" ng-attr-title="{{usernameRegexDescription}}"  name="username" id="new-user-username" class="input-xlarge" ug-validate/>
           <p class="help-block hide"></p>
         </div>
       </div>
@@ -49,7 +40,7 @@
         <label for="new-user-password">Password</label>
 
         <div class="controls">
-          <input type="password" required ng-pattern="passwordRegex"  ng-attr-title="{{passwordRegexDescription}}" ng-model="$parent.newUser.password" name="password" id="new-user-password" ug-validate
+          <input type="password" required ng-pattern="passwordRegex"  ng-attr-title="{{passwordRegexDescription}}" ng-model="$parent.newUser.newpassword" name="password" id="new-user-password" ug-validate
                  class="input-xlarge"/>
 
           <p class="help-block hide"></p>

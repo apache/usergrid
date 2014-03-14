@@ -1,18 +1,21 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+ * limitations under the License.  For additional information regarding
+ * copyright in this work, please see the NOTICE file in the top level
+ * directory of this distribution.
+ */
+
 package org.apache.usergrid.persistence.query.tree;
 
 
@@ -23,28 +26,9 @@ import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
+import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.junit.Test;
 import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.query.ir.OrNode;
-
-import antlr.NoViableAltException;
-import org.apache.usergrid.persistence.query.tree.AndOperand;
-import org.apache.usergrid.persistence.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.query.tree.Equal;
-import org.apache.usergrid.persistence.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.query.tree.LessThan;
-import org.apache.usergrid.persistence.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.query.tree.LongLiteral;
-import org.apache.usergrid.persistence.query.tree.NotOperand;
-import org.apache.usergrid.persistence.query.tree.Operand;
-import org.apache.usergrid.persistence.query.tree.OrOperand;
-import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
-import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
-import org.apache.usergrid.persistence.query.tree.StringLiteral;
-import org.apache.usergrid.persistence.query.tree.UUIDLiteral;
-import org.apache.usergrid.persistence.query.tree.WithinOperand;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -98,8 +82,6 @@ public class GrammarTreeTest {
         assertEquals( "a", equal.getProperty().getValue() );
 
         assertEquals( 5, ( ( LongLiteral ) equal.getLiteral() ).getValue().intValue() );
-
-        // TODO Todd fix this.
 
         queryString = "select * where a lt 5";
 
@@ -384,7 +366,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( .1f, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -404,7 +386,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( 1, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -580,8 +562,7 @@ public class GrammarTreeTest {
             error = qpe.getMessage();
         }
 
-        assertEquals( "The query cannot be parsed. The token '<EOF>' " + "at column 13 on line 1 cannot be parsed",
-                error );
+        assertTrue( error.startsWith("The query cannot be parsed") );
     }
 
     @Test

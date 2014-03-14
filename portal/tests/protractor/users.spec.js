@@ -11,12 +11,16 @@ describe('Users ', function () {
   describe('add and delete', function () {
     it('should add and then delete', function () {
       var dateString = Date.now().toString();
+      browser.driver.get(browser.baseUrl + '/#!/users');
 
       browser.wait(function(){
-        return browser.driver.findElement(by.id("new-user-button")).isDisplayed();
+        return element(by.id("new-user-button")).isDisplayed();
       });
-      element(by.id("new-user-button")).isPresent().then(function(){
+      element(by.id("new-user-button")).isDisplayed().then(function(){
         element(by.id("new-user-button")).click();
+      });
+      browser.wait(function(){
+        return element(by.id("new-user-username")).isDisplayed();
       });
       element(by.id('new-user-username')).isDisplayed().then(function () {
         //fill in data
@@ -25,25 +29,24 @@ describe('Users ', function () {
         element(by.id('new-user-username')).sendKeys('test' + dateString);
         element(by.id('new-user-fullname')).sendKeys('Test ' + dateString);
         element(by.id('new-user-email')).sendKeys('sfeldman+test' + dateString + '@apigee.com');
-        element(by.id('new-user-password')).sendKeys(dateString);
-        element(by.id('new-user-re-password')).sendKeys(dateString);
+        element(by.id('new-user-password')).sendKeys('P@ssw0rd1');
+        element(by.id('new-user-re-password')).sendKeys('P@ssw0rd1');
         browser.sleep(1000);
         element(by.id('dialogButton-users')).submit();
       });
 
-      var deleteCheckbox = element(by.id('user-' + 'test' + dateString + '-checkbox'));
       browser.wait(function () {
-        return deleteCheckbox.isPresent();
+        return element(by.id('user-' + 'test' + dateString + '-checkbox')).isPresent();
       });
-      deleteCheckbox.isPresent().then(function () {
-        deleteCheckbox.click();
+      element(by.id('user-' + 'test' + dateString + '-checkbox')).isPresent().then(function () {
+        element(by.id('user-' + 'test' + dateString + '-checkbox')).click();
         browser.sleep(1000);
         element(by.id('delete-user-button')).click();
         element(by.id('dialogButton-deleteusers')).submit();
       });
       //need to wait for the element not to be there.
       browser.wait(function(){
-        return deleteCheckbox.isPresent().then(function (present) {
+        return element(by.id('user-' + 'test' + dateString + '-checkbox')).isPresent().then(function (present) {
           return !present;
         });
       });
