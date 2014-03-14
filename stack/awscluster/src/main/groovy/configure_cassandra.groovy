@@ -37,7 +37,7 @@ seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
       parameters:
           - seeds: "${seeds}"
-auto_bootstrap: true
+auto_bootstrap: false 
 initial_token:
 hinted_handoff_enabled: true
 hinted_handoff_throttle_in_kb: 1024
