@@ -10,15 +10,8 @@
     Are you sure you want to regenerate the credentials?
   </bsmodal>
 
-  <section class="row-fluid">
+    <page-title icon="&#128640;" title="Getting Started"></page-title>
 
-    <div class="span12">
-      <div class="page-filters">
-        <h1 class="title" class="pull-left"><i class="pictogram title">&#128640;</i> Getting Started</h1>
-      </div>
-    </div>
-
-  </section>
   <section class="row-fluid">
 
 
@@ -35,23 +28,41 @@
 
 
         <li ng-click="showSDKDetail('ios')"
-           ><i class="sdk-icon-large-ios"></i></li>
+            analytics-on="click"
+            analytics-label="App Services"
+            analytics-category="Getting Started"
+            analytics-event="iOS SDK"><i class="sdk-icon-large-ios"></i></li>
         <li ng-click="showSDKDetail('android')"
-            ><i class="sdk-icon-large-android"></i></li>
+            analytics-on="click"
+            analytics-label="App Services"
+            analytics-category="Getting Started"
+            analytics-event="Android SDK"><i class="sdk-icon-large-android"></i></li>
         <li ng-click="showSDKDetail('javascript')"
-           ><i class="sdk-icon-large-js"></i></li>
+            analytics-on="click"
+            analytics-label="App Services"
+            analytics-category="Getting Started"
+            analytics-event="JS SDK"><i class="sdk-icon-large-js"></i></li>
         <li><a target="_blank"
                ng-click="showSDKDetail('nocontent')"
                href="http://apigee.com/docs/usergrid/content/sdks-and-examples#nodejs"
-               ><i class="sdk-icon-large-node"></i></a></li>
+               analytics-on="click"
+               analytics-label="App Services"
+               analytics-category="Getting Started"
+               analytics-event="Node SDK"><i class="sdk-icon-large-node"></i></a></li>
         <li><a target="_blank"
                ng-click="showSDKDetail('nocontent')"
                href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ruby"
-               ><i class="sdk-icon-large-ruby"></i></a></li>
+               analytics-on="click"
+               analytics-label="App Services"
+               analytics-category="Getting Started"
+               analytics-event="Ruby SDK"><i class="sdk-icon-large-ruby"></i></a></li>
         <li><a target="_blank"
                ng-click="showSDKDetail('nocontent')"
                href="http://apigee.com/docs/usergrid/content/sdks-and-examples#c"
-               ><i class="sdk-icon-large-net"></i></a></li>
+               analytics-on="click"
+               analytics-label="App Services"
+               analytics-category="Getting Started"
+               analytics-event="DotNet SDK"><i class="sdk-icon-large-net"></i></a></li>
        </ul>
 
       <section id="intro-container" class="row-fluid intro-container">

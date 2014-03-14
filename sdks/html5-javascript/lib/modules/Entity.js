@@ -116,9 +116,8 @@ Usergrid.Entity.prototype.getEndpoint = function () {
         nameProperties.unshift('username');
     }
 
-    var names= this.get(nameProperties).filter(function(x){return "undefined"!==typeof x});
+    var names= this.get(nameProperties).filter(function(x){return x != null && "undefined"!==typeof x});
     if (names.length===0) {
-        //throw new UsergridError("Cannot infer an UUID or type from the entity", 'no_name_specified');
         return type;
     }else{
         name=names.shift();
@@ -262,9 +261,7 @@ Usergrid.Entity.prototype.destroy = function (callback) {
     if (!err) {
       self.set(null);
     }
-    if (typeof(callback) === 'function') {
-      doCallback(callback,[err, data]);
-    }
+    doCallback(callback,[err, data]);
   });
 };
 
@@ -293,7 +290,7 @@ Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
       if (self._client.logging) {
         console.log(error);
       }
-      callback(true, error);
+      doCallback(callback, [true, error], self);
     }
     return;
   }
@@ -307,7 +304,7 @@ Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
       if (self._client.logging) {
         console.log(error);
       }
-      callback(true, error);
+      doCallback(callback, [true, error], self);
     }
     return;
   }
@@ -321,9 +318,7 @@ Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
     if (err && self._client.logging) {
       console.log('entity could not be connected');
     }
-    if (typeof(callback) === 'function') {
-      callback(err, data);
-    }
+    doCallback(callback, [err, data], self);
   });
 };
 
@@ -375,7 +370,7 @@ Usergrid.Entity.prototype.getConnections = function (connection, callback) {
       if (self._client.logging) {
         console.log(error);
       }
-      callback(true, error);
+      doCallback(callback, [true, error], self);
     }
     return;
   }
@@ -401,9 +396,7 @@ Usergrid.Entity.prototype.getConnections = function (connection, callback) {
       }
     }
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 
 };
@@ -424,9 +417,7 @@ Usergrid.Entity.prototype.getGroups = function (callback) {
 
     self.groups = data.entities;
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 
 };
@@ -451,9 +442,7 @@ Usergrid.Entity.prototype.getActivities = function (callback) {
 
     self.activities = data.entities;
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 
 };
@@ -480,9 +469,7 @@ Usergrid.Entity.prototype.getFollowing = function (callback) {
 
     self.following = data.entities;
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 
 };
@@ -510,9 +497,7 @@ Usergrid.Entity.prototype.getFollowers = function (callback) {
 
     self.followers = data.entities;
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 
 };
@@ -533,9 +518,8 @@ Usergrid.Entity.prototype.getRoles = function (callback) {
 
     self.roles = data.entities;
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
+
   });
 
 };
@@ -592,9 +576,7 @@ Usergrid.Entity.prototype.getPermissions = function (callback) {
 
     self.permissions = permissions;
 
-    if (typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 
 };
@@ -624,7 +606,8 @@ Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
       if (self._client.logging) {
         console.log(error);
       }
-      callback(true, error);
+      doCallback(callback, [true, error], self);
+
     }
     return;
   }
@@ -638,7 +621,7 @@ Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
       if (self._client.logging) {
         console.log(error);
       }
-      callback(true, error);
+      doCallback(callback, [true, error], self);
     }
     return;
   }
@@ -652,8 +635,6 @@ Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
     if (err && self._client.logging) {
       console.log('entity could not be disconnected');
     }
-    if (typeof(callback) === 'function') {
-      callback(err, data);
-    }
+    doCallback(callback, [err, data], self);
   });
 };

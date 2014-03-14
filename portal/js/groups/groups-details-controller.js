@@ -5,7 +5,7 @@ AppServices.Controllers.controller('GroupsDetailsCtrl', ['ug', '$scope', '$rootS
 
     var selectedGroup = $rootScope.selectedGroup.clone();
     $scope.detailsSelected = 'active';
-    $scope.json = selectedGroup._json;
+    $scope.json = selectedGroup._json || selectedGroup._data.stringifyJSON();
     $scope.group = selectedGroup._data;
     $scope.group.path =  $scope.group.path.indexOf('/')!=0 ? '/'+$scope.group.path : $scope.group.path;
     $scope.group.title = $scope.group.title;

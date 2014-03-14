@@ -19,7 +19,11 @@
 
 package org.apache.usergrid.persistence.index;
 
+import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.query.Query;
+import org.apache.usergrid.persistence.query.Results;
 
 
 /**
@@ -40,7 +44,19 @@ public interface EntityCollectionIndex {
     public void deindex( Entity entity );
 
     /**
-     * Simple query interface for testing using Lucene query syntax.
+     * Remove index of specific entity version.
+     * @param entity Entity to be removed from index. 
      */
-    public EntitySearchResults simpleQuery( String query, int from, int size );
+    public void deindex( Id entity, UUID version );
+
+
+    /**
+     * Execute query in Usergrid syntax.
+     */
+    public Results execute( Query query );
+
+    /**
+     * Force refresh of index.
+     */
+    public void refresh();
 }

@@ -48,9 +48,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
       if(self._client.logging) {
         console.log('error getting group');
       }
-      if(typeof(callback) === 'function') {
-        callback(err, data);
-      }
+      doCallback(callback, [err, data], self);
     } else {
       if(data.entities && data.entities.length) {
         var groupData = data.entities[0];
@@ -79,9 +77,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
               }
             }
           }
-          if(typeof(callback) === 'function') {
-            callback(err, data, self._list);
-          }
+          doCallback(callback, [err, data, self._list], self);
         });
       }
     }
@@ -97,9 +93,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
  *  @return {function} callback(err, data);
  */
 Usergrid.Group.prototype.members = function(callback) {
-  if(typeof(callback) === 'function') {
-    callback(null, this._list);
-  }
+  doCallback(callback, [null, this._list], this);
 };
 
 /*
@@ -122,9 +116,7 @@ Usergrid.Group.prototype.add = function(options, callback) {
 
   this._client.request(options, function(error, data){
     if(error) {
-      if(typeof(callback) === 'function') {
-        callback(error, data, data.entities);
-      }
+      doCallback(callback, [error, data, data.entities], self);
     } else {
       self.fetch(callback);
     }
@@ -152,9 +144,7 @@ Usergrid.Group.prototype.remove = function(options, callback) {
 
   this._client.request(options, function(error, data){
     if(error) {
-      if(typeof(callback) === 'function') {
-        callback(error, data);
-      }
+      doCallback(callback, [error, data], self);
     } else {
       self.fetch(callback);
     }
@@ -183,9 +173,7 @@ Usergrid.Group.prototype.feed = function(callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     }
-    if(typeof(callback) === 'function') {
-      callback(err, data, data.entities);
-    }
+    doCallback(callback, [err, data, data.entities], self);
   });
 }
 
@@ -226,8 +214,6 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback){
 
   var entity = new Usergrid.Entity(options);
   entity.save(function(err, data) {
-    if (typeof(callback) === 'function') {
-      callback(err, entity);
-    }
+    doCallback(callback, [err, entity]);
   });
 };

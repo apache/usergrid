@@ -8,12 +8,12 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <link href="js/libs/bootstrap/custom/css/bootstrap.css" rel="stylesheet"/>
-  <link href="css/dash.min.css" rel="stylesheet"/>
+  <link id="libScript" href="js/libs/bootstrap/custom/css/bootstrap.min.css" rel="stylesheet"/>
+  <link id="libScript" href="css/dash.min.css" rel="stylesheet"/>
 
   <!--styles for jquery ui calendar component-->
-  <link rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-1.8.9.custom.css"/>
-  <link rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-timepicker.css"/>
+  <link id="libScript" rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-1.8.9.custom.css"/>
+  <link id="libScript" rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-timepicker.css"/>
 </head>
 <body ng-controller="PageCtrl" >
 <!-- Google Tag Manager -->
@@ -25,7 +25,7 @@
     '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-N52333');</script>
 <!-- End Google Tag Manager -->
-<header>
+<header ng-cloak >
   <nav class="navbar navbar-static-top">
     <div class="container-fluid">
       <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -41,7 +41,7 @@
       <div class="nav-collapse collapse"  ng-show="loaded">
 
         <div class="navbar-text pull-right" ng-if="activeUI">
-          <span class="navbar-text" id="userEmail" >{{userEmail || 'anonymous'}}</span> |
+          <span class="navbar-text" id="userEmail" >{{userEmail}}</span> |
           <span ng-controller="LoginCtrl"><a id="logout-link" ng-click="logout()" title="logout"><i class="pictogram">&#59201</i></a></span>
           <span ><a ng-click="profile()" title="profile"><i class="pictogram">&#59170</i></a></span> |
           <span><a href="archive/" target="_blank">Legacy Portal</a></span>
@@ -51,7 +51,7 @@
     </div>
   </nav>
 </header>
-<section class="side-menu"   ng-show="activeUI">
+<section class="side-menu" ng-cloak   ng-show="activeUI">
   <div class="sidebar-nav">
     <div class="nav-collapse collapse">
 
@@ -63,7 +63,7 @@
   </div>
 </section>
 
-<section class="main-content"   ng-show="loaded">
+<section class="main-content" ng-cloak  ng-show="loaded">
   <div class="container-fluid">
     <div class="row-fluid">
       <div class="span12">
@@ -116,15 +116,13 @@
     </div>
   </div>
 </section>
-<script src="config.js"></script>
-
-<script src="js/libs/usergrid-libs.min.js"></script>
-<script src="js/libs/bootstrap/custom/js/bootstrap.min.js"></script>
+<script id="libScript" src="js/libs/usergrid-libs.min.js"></script>
+<script id="libScript" src="js/libs/bootstrap/custom/js/bootstrap.min.js"></script>
 <!--todo - remove this. temporarily including jquery ui for calendar in push-->
-<script src="js/libs/jqueryui/jquery.ui.timepicker.min.js" type="text/javascript"></script>
+<script id="libScript" src="js/libs/jqueryui/jquery.ui.timepicker.min.js" type="text/javascript"></script>
 <!-- In dev use: <script src="js/libs/angular-1.1.5.js"></script> -->
 <!--<script type="text/javascript" src="js/libs/angular-ui-ng-grid/ng-grid-2.0.2.debug.js"></script>-->
-
+<script src="config.js"></script>
 <script id="main-script" src="js/usergrid.min.js"></script>
 
 </body>
