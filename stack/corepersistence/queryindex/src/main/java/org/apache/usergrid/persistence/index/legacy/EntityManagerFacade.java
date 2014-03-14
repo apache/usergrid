@@ -18,6 +18,7 @@
 
 package org.apache.usergrid.persistence.index.legacy;
 
+import org.apache.usergrid.utils.EntityBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
