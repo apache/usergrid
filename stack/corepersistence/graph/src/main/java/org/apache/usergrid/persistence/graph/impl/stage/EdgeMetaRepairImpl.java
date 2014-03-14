@@ -1,0 +1,331 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.usergrid.persistence.graph.impl.stage;
+
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import rx.Observable;
+import rx.Scheduler;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.observables.MathObservable;
+
+
+/**
+ * Implementation of the cleanup of edge meta data
+ */
+@Singleton
+public class EdgeMetaRepairImpl implements EdgeMetaRepair {
+
+
+    private final EdgeMetadataSerialization edgeMetadataSerialization;
+    private final EdgeSerialization edgeSerialization;
+    private final Keyspace keyspace;
+    private final GraphFig graphFig;
+    private final Scheduler scheduler;
+
+
+    @Inject
+    public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
+                               final EdgeSerialization edgeSerialization, final Keyspace keyspace,
+                               final GraphFig graphFig, final Scheduler scheduler ) {
+        this.edgeMetadataSerialization = edgeMetadataSerialization;
+        this.edgeSerialization = edgeSerialization;
+        this.keyspace = keyspace;
+        this.graphFig = graphFig;
+        this.scheduler = scheduler;
+    }
+
+
+    @Override
+    public Observable<Integer> repairSources( final OrganizationScope scope, final Id sourceId, final String edgeType,
+                                              final UUID version ) {
+
+
+        return clearTypes( scope, sourceId, edgeType, version, source );
+    }
+
+
+    @Override
+    public Observable<Integer> repairTargets( final OrganizationScope scope, final Id targetId, final String edgeType,
+                                              final UUID version ) {
+        return clearTypes( scope, targetId, edgeType, version, target );
+    }
+
+
+    private Observable<Integer> clearTypes( final OrganizationScope scope, final Id node, final String edgeType,
+                                            final UUID version, final CleanSerialization serialization ) {
+
+        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.verifyIdentity( node );
+        Preconditions.checkNotNull( edgeType, "edge type is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+
+
+        Observable<Integer> deleteCounts = serialization.loadEdgeSubTypes( scope, node, edgeType, version )
+                .buffer( graphFig.getRepairConcurrentSize() )
+                        //buffer them into concurrent groups based on the concurrent repair size
+                .flatMap( new Func1<List<String>, Observable<Integer>>() {
+
+                    @Override
+                    public Observable<Integer> call( final List<String> types ) {
+
+
+                        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+                        final List<Observable<Integer>> checks = new ArrayList<Observable<Integer>>( types.size() );
+
+                        //for each id type, check if the exist in parallel to increase processing speed
+                        for ( final String sourceIdType : types ) {
+
+                            Observable<Integer> search =
+                                    serialization.loadEdges( scope, node, edgeType, sourceIdType, version )
+                                                 .distinctUntilChanged( new Func1<MarkedEdge, Id>() {
+
+                                                     //get distinct by source node
+                                                     @Override
+                                                     public Id call( final MarkedEdge markedEdge ) {
+                                                         return markedEdge.getSourceNode();
+                                                     }
+                                                 } ).take( 1 ).count().doOnNext( new Action1<Integer>() {
+
+                                        @Override
+                                        public void call( final Integer count ) {
+                                            /**
+                                             * we only want to delete if no edges are in this class. If there
+                                             * are
+                                             * still edges
+                                             * we must retain the information in order to keep our index
+                                             * structure
+                                             * correct for edge
+                                             * iteration
+                                             **/
+                                            if ( count != 0 ) {
+                                                return;
+                                            }
+
+                                            batch.mergeShallow( serialization
+                                                    .removeEdgeSubType( scope, node, edgeType, sourceIdType,
+                                                            version ) );
+                                        }
+                                    } );
+
+                            checks.add( search );
+                        }
+
+
+                        /**
+                         * Sum up the total number of edges we had, then execute the mutation if we have
+                         * anything to do
+                         */
+                        return MathObservable.sumInteger( Observable.merge( checks ) )
+                                             .doOnNext( new Action1<Integer>() {
+                                                 @Override
+                                                 public void call( final Integer count ) {
+
+                                                     if ( batch.isEmpty() ) {
+                                                         return;
+                                                     }
+
+                                                     try {
+                                                         batch.execute();
+                                                     }
+                                                     catch ( ConnectionException e ) {
+                                                         throw new RuntimeException( "Unable to execute mutation", e );
+                                                     }
+                                                 }
+                                             } );
+                    }
+                } )
+                        //if we get no edges, emit a 0 so the caller knows we can delete the type
+                .defaultIfEmpty( 0 );
+
+
+        //sum up everything emitted by sub types.  If there's no edges existing for all sub types,
+        // then we can safely remove them
+        return MathObservable.sumInteger( deleteCounts ).last().doOnNext( new Action1<Integer>() {
+
+            @Override
+            public void call( final Integer subTypes ) {
+
+                /**
+                 * We can only execute deleting this type if no sub types were deleted
+                 */
+                if ( subTypes != 0 ) {
+                    return;
+                }
+
+                try {
+
+                    serialization.removeEdgeType( scope, node, edgeType, version ).execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to execute mutation" );
+                }
+
+            }
+        } );
+    }
+
+
+    /**
+     * Simple edge serialization
+     */
+    private static interface CleanSerialization {
+
+        /**
+         * Load all subtypes for the edge with a version <= the provided version
+         */
+        Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId, final String type,
+                                             final UUID version );
+
+
+        /**
+         * Load an observable with edges from the details provided
+         */
+        Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
+                                          final String subType, final UUID version );
+
+        /**
+         * Remove the sub type specified
+         */
+        MutationBatch removeEdgeSubType( final OrganizationScope scope, final Id nodeId, final String edgeType,
+                                         final String subType, final UUID version );
+
+        /**
+         * Remove the edge type
+         */
+        MutationBatch removeEdgeType( final OrganizationScope scope, final Id nodeId, final String type,
+                                      final UUID version );
+    }
+
+
+    /**
+     * Target serialization i/o for cleaning target edges
+     */
+    private final CleanSerialization target = new CleanSerialization() {
+
+        @Override
+        public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
+                                                    final String edgeType, final UUID version ) {
+            return Observable.create( new ObservableIterator<String>() {
+                @Override
+                protected Iterator<String> getIterator() {
+                    return edgeMetadataSerialization
+                            .getIdTypesToTarget( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
+                }
+            } ).subscribeOn( scheduler );
+        }
+
+
+        @Override
+        public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
+                                                 final String subType, final UUID version ) {
+            return Observable.create( new ObservableIterator<MarkedEdge>() {
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return edgeSerialization.getEdgesToTargetBySourceType( scope,
+                            new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
+                }
+            } ).subscribeOn( scheduler );
+        }
+
+
+        @Override
+        public MutationBatch removeEdgeSubType( final OrganizationScope scope, final Id nodeId, final String type,
+                                                final String subType, final UUID version ) {
+            return edgeMetadataSerialization.removeIdTypeToTarget( scope, nodeId, type, subType, version );
+        }
+
+
+        @Override
+        public MutationBatch removeEdgeType( final OrganizationScope scope, final Id nodeId, final String type,
+                                             final UUID version ) {
+            return edgeMetadataSerialization.removeEdgeTypeToTarget( scope, nodeId, type, version );
+        }
+    };
+
+    /**
+     * Target serialization i/o for cleaning target edges
+     */
+    private final CleanSerialization source = new CleanSerialization() {
+
+        @Override
+        public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
+                                                    final String edgeType, final UUID version ) {
+            return Observable.create( new ObservableIterator<String>() {
+                @Override
+                protected Iterator<String> getIterator() {
+                    return edgeMetadataSerialization
+                            .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
+                }
+            } ).subscribeOn( scheduler );
+        }
+
+
+        @Override
+        public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
+                                                 final String subType, final UUID version ) {
+            return Observable.create( new ObservableIterator<MarkedEdge>() {
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return edgeSerialization.getEdgesFromSourceByTargetType( scope,
+                            new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
+                }
+            } ).subscribeOn( scheduler );
+        }
+
+
+        @Override
+        public MutationBatch removeEdgeSubType( final OrganizationScope scope, final Id nodeId, final String type,
+                                                final String subType, final UUID version ) {
+            return edgeMetadataSerialization.removeIdTypeFromSource( scope, nodeId, type, subType, version );
+        }
+
+
+        @Override
+        public MutationBatch removeEdgeType( final OrganizationScope scope, final Id nodeId, final String type,
+                                             final UUID version ) {
+            return edgeMetadataSerialization.removeEdgeTypeFromSource( scope, nodeId, type, version );
+        }
+    };
+}

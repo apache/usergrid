@@ -23,40 +23,40 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.netflix.astyanax.MutationBatch;
 
 import rx.Observable;
 
 
 /**
- * Creates a mutation which will remove obsolete
- *
+ * Audits edge meta data and removes them if they're obscelete
  */
-public interface EdgeAsync {
+public interface EdgeMetaRepair {
 
     /**
      * Validate that the source types can be cleaned for the given info
+     *
      * @param scope The scope to use
      * @param sourceId The source Id to use
      * @param edgeType The edge type
      * @param version The max version to clean
-     * @return The mutation with the operations
+     *
+     * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
+     *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> cleanSources(OrganizationScope scope, Id sourceId, String edgeType, UUID version);
+    public Observable<Integer> repairSources( OrganizationScope scope, Id sourceId, String edgeType, UUID version );
 
 
     /**
-     *
      * Remove all source id types that are empty, as well as the edge type if there are no more edges for it
+     *
      * @param scope The scope to use
      * @param targetId The target Id to use
      * @param edgeType The edge type
      * @param version The max version to clean
-     * @return  The mutation with the operations
+     *
+     * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
+     *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> clearTargets( OrganizationScope scope, Id targetId, String edgeType, UUID version );
-
+    public Observable<Integer> repairTargets( OrganizationScope scope, Id targetId, String edgeType, UUID version );
 }

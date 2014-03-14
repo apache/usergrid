@@ -34,8 +34,10 @@ import org.apache.usergrid.persistence.graph.consistency.LocalTimeoutQueue;
 import org.apache.usergrid.persistence.graph.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeAsync;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeAsyncImpl;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepairImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -45,16 +47,9 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSeri
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.spi.InjectionListener;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 
 
 /**
@@ -108,8 +103,10 @@ public class GraphModule extends AbstractModule {
         bind(AsyncProcessor.class).annotatedWith( EdgeWrite.class ).to( AsyncProcessorImpl.class );
         bind(AsyncProcessor.class).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
 
-        //Edge stages
-        bind( EdgeAsync.class).to( EdgeAsyncImpl.class );
+        //Repair/cleanup classes
+        bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
+
+        bind( EdgeWriteRepair.class).to( EdgeWriteRepairImpl.class );
     }
 
 
