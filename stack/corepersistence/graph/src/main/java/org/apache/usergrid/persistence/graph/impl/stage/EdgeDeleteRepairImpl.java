@@ -42,12 +42,12 @@ import rx.functions.Func1;
  * SimpleRepair operation
  */
 @Singleton
-public class EdgeWriteRepairImpl extends AbstractEdgeRepair implements EdgeWriteRepair {
+public class EdgeDeleteRepairImpl extends AbstractEdgeRepair implements EdgeDeleteRepair {
 
 
     @Inject
-    public EdgeWriteRepairImpl( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
-                                final Keyspace keyspace, final Scheduler scheduler ) {
+    public EdgeDeleteRepairImpl( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
+                                 final Keyspace keyspace, final Scheduler scheduler ) {
         super( edgeSerialization, graphFig, keyspace, scheduler );
     }
 
@@ -69,7 +69,7 @@ public class EdgeWriteRepairImpl extends AbstractEdgeRepair implements EdgeWrite
              */
             @Override
             public Boolean call( final MarkedEdge markedEdge ) {
-                return UUIDComparator.staticCompare( markedEdge.getVersion(), maxVersion ) < 0;
+                return UUIDComparator.staticCompare( markedEdge.getVersion(), maxVersion ) < 1;
             }
         };
     }

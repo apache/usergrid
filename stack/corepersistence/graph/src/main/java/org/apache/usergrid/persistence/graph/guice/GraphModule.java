@@ -34,6 +34,8 @@ import org.apache.usergrid.persistence.graph.consistency.LocalTimeoutQueue;
 import org.apache.usergrid.persistence.graph.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepair;
@@ -107,6 +109,8 @@ public class GraphModule extends AbstractModule {
         bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
 
         bind( EdgeWriteRepair.class).to( EdgeWriteRepairImpl.class );
+
+        bind( EdgeDeleteRepair.class).to( EdgeDeleteRepairImpl.class );
     }
 
 

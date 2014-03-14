@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
  */
 @RunWith( JukitoRunner.class )
 @UseModules( { TestGraphModule.class } )
-public class EdgeWriteRepairTest {
+public class EdgeDeleteRepairTest {
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
@@ -75,7 +75,7 @@ public class EdgeWriteRepairTest {
     protected EdgeSerialization edgeSerialization;
 
     @Inject
-    protected EdgeWriteRepair edgeWriteRepair;
+    protected EdgeDeleteRepair edgeDeleteRepair;
 
 
     protected OrganizationScope scope;
@@ -101,7 +101,7 @@ public class EdgeWriteRepairTest {
     public void noEdges() {
         Edge edge = createEdge( "source", "test", "target" );
 
-        Iterator<MarkedEdge> edges = edgeWriteRepair.repair( scope, edge ).toBlockingObservable().getIterator();
+        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge ).toBlockingObservable().getIterator();
 
         assertFalse( "No edges cleaned", edges.hasNext() );
     }
@@ -133,18 +133,18 @@ public class EdgeWriteRepairTest {
         }
 
 
-        int keepIndex = size / 2;
+        int deleteIndex = size / 2;
 
-        Edge keep = versions.get( keepIndex );
+        Edge keep = versions.get( deleteIndex );
 
-        Iterable<MarkedEdge> edges = edgeWriteRepair.repair( scope, keep ).toBlockingObservable().toIterable();
+        Iterable<MarkedEdge> edges = edgeDeleteRepair.repair( scope, keep ).toBlockingObservable().toIterable();
 
 
         int index = 0;
 
         for ( MarkedEdge edge : edges ) {
 
-            final Edge removed = versions.get( keepIndex - index -1 );
+            final Edge removed = versions.get( deleteIndex - index );
 
             assertEquals( "Removed matches saved index", removed, edge );
 
@@ -159,14 +159,16 @@ public class EdgeWriteRepairTest {
 
         for(MarkedEdge edge: new IterableWrapper<MarkedEdge>( iterator )){
 
-            final Edge saved = versions.get( size - index -1 );
+            final Edge saved = versions.get( size - index - 1);
 
             assertEquals(saved, edge);
 
             index++;
         }
 
-        assertEquals("Kept edge version was the minimum", keepIndex, index);
+        final int keptCount = size-deleteIndex;
+
+        assertEquals("Kept edge version was the minimum", keptCount, index+1);
     }
 
 
