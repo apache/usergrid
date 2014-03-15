@@ -69,6 +69,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Implements index using ElasticSearch Java API and Core Persistence Collections.
  */
@@ -361,7 +362,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 LocationField locField = (LocationField) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
-                // field names lat and lon triggerl ElasticSearch geo location 
+                // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
                 entityMap.put(field.getName() + GEO_SUFFIX, locMap);

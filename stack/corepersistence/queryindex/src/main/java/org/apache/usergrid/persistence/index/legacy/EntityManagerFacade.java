@@ -15,7 +15,6 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
 package org.apache.usergrid.persistence.index.legacy;
 
 import org.apache.usergrid.utils.EntityBuilder;
