@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.model.entity;
 
 import java.util.UUID;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 
@@ -33,6 +35,7 @@ public class Entity extends EntityObject {
     /**
      * The id.  We should never serialize this
      */
+    @JsonIgnore
     private transient Id id;
 
     /**

@@ -29,8 +29,6 @@ import java.util.UUID;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.smile.SmileFactory;
-import org.codehaus.jackson.smile.SmileParser;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
@@ -277,9 +275,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
-        public static final SmileFactory f = new SmileFactory(  );
+        //public static final SmileFactory f = new SmileFactory(  );
 
-        public static ObjectMapper mapper = new ObjectMapper( f );
+        public static ObjectMapper mapper = new ObjectMapper(  );
         private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
 
 
@@ -292,6 +290,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         //the marker for when we're passed a "null" value
         private static final byte[] EMPTY = new byte[] { 0x0 };
+        String helper;
 
 //TODO:Make sure your exceptions provide descriptive error messages. And to make sure you even needs the descriptions
         @Override
@@ -304,11 +303,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
             builder.addBytes( VERSION );
-            f.disable( SmileParser.Feature.REQUIRE_HEADER );
-           // f.enable( SmileGenerator.Feature.WRITE_HEADER );
-            //f.enable( SmileGenerator.Feature.WRITE_END_MARKER );
-            mapper = new ObjectMapper( f );
-            //mapper.enable( SmileGenerator.Feature.WRITE_HEADER );
+           // f.disable( SmileParser.Feature.REQUIRE_HEADER );
+
+           // mapper = new ObjectMapper( f );
 
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
@@ -330,6 +327,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             try {
                 builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
+                helper = mapper.writeValueAsString( wrapper.entity.get() );
             }
             catch ( JsonMappingException e ) {
                 e.printStackTrace();
@@ -348,16 +346,29 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
             CompositeParser parser = Composites.newCompositeParser( byteBuffer );
             byte[] b = new byte[byteBuffer.remaining()];
-            byteBuffer.get( b, 0, b.length );
+
+            //byteBuffer.get( b, 0, b.length );
             //return mapper.readValue(b, Entity.class);
 
-            final byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
+            byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
+//            try {
+//                version = mapper.readValue( byteBuffer.array(),0,1, byte[].class);
+//            }
+//            catch ( IOException e ) {
+//                e.printStackTrace();
+//            }
 
             if ( !Arrays.equals( VERSION, version ) ) {
                 throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
             }
 
-            final byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
+            byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
+//            try {
+//                state = mapper.readValue( byteBuffer.array(),1,2, new TypeReference<Byte>() {});
+//            }
+//            catch ( IOException e ) {
+//                e.printStackTrace();
+//            }
 
             /**
              * It's been deleted, remove it
@@ -366,13 +377,17 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
-            Entity storedEntity = null;//( Entity ) parser.read( mapper );
+            Object storedObject = null;
+            Entity storedEntity = null;
+            String derper = null;
+            byteBuffer.position( 9 );
             try {
-                storedEntity = mapper.readValue( b , Entity.class );
+                storedObject = mapper.readValue( helper,Object.class);
             }
             catch ( IOException e ) {
                 e.printStackTrace();
             }
+            storedEntity = convertToEntity(storedObject);
 
             final Optional<Entity> entity = Optional.of( storedEntity );
 
@@ -382,6 +397,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             //it's partial by default
             return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
+        }
+
+        private Entity convertToEntity( final Object storedObject ) {
+            Entity storedEntity = null;
+            return null;
         }
     }
 

@@ -40,6 +40,11 @@
             <version>${commons.lang.version}</version>
             <scope>test</scope>
         </dependency>
+      <dependency>
+        <groupId>com.facebook.giraph.hive</groupId>
+        <artifactId>hive-io-exp-cmdline</artifactId>
+        <version>0.8-SNAPSHOT</version>
+      </dependency>
 
     </dependencies>
 
