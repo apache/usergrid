@@ -19,8 +19,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_dependency 'usergrid_iron', '0.9.1'
-  gem.add_dependency 'activemodel'
-  gem.add_dependency 'activerecord'
+  gem.add_dependency 'activemodel', '~> 3.2'
+  gem.add_dependency 'activerecord', '~> 3.2'
   gem.add_dependency 'i18n'
 
   gem.add_development_dependency 'rake'

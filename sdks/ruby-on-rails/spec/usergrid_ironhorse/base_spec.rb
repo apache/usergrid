@@ -57,12 +57,14 @@ describe Usergrid::Ironhorse::Base do
     end
 
     it 'be created and destroyed' do
-      foo = Foo.create name: 'foo2'
+      foo = Foo.create name: 'foo man'
       foo.persisted?.should be_true
-      foo.name.should eq 'foo2'
+      foo.name.should eq 'foo man'
+      foo = Foo.find_by_name 'foo man'
+      foo.should_not be_nil
       foo.destroy.should be_true
       foo.persisted?.should be_false
-      foo = Foo.find_by_name 'foo2'
+      foo = Foo.find_by_name 'foo man'
       foo.should be_nil
     end
 
