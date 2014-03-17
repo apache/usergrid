@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -377,12 +378,12 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
-            Object storedObject = null;
+            LinkedHashMap storedObject = null;
             Entity storedEntity = null;
             String derper = null;
-            byteBuffer.position( 9 );
+            byteBuffer.position( 0 );
             try {
-                storedObject = mapper.readValue( helper,Object.class);
+                storedEntity = mapper.readValue( helper,Entity.class);
             }
             catch ( IOException e ) {
                 e.printStackTrace();
