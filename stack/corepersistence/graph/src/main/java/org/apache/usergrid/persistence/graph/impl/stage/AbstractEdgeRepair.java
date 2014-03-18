@@ -24,6 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -50,6 +53,9 @@ import rx.functions.Func1;
  */
 @Singleton
 public abstract class AbstractEdgeRepair  {
+
+
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEdgeRepair.class);
 
     protected final EdgeSerialization edgeSerialization;
     protected final GraphFig graphFig;
@@ -87,6 +93,7 @@ public abstract class AbstractEdgeRepair  {
                                  final MutationBatch batch = keyspace.prepareMutationBatch();
 
                                  for ( MarkedEdge edge : markedEdges ) {
+                                     LOG.debug( "Deleting edge {}" , edge );
                                      final MutationBatch delete = edgeSerialization.deleteEdge( scope, edge );
 
                                      batch.mergeShallow( delete );

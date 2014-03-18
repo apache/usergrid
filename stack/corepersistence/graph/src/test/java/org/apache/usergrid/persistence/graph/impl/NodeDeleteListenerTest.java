@@ -114,16 +114,16 @@ public class NodeDeleteListenerTest {
 
         EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, version, sourceNode );
 
-        EdgeEvent<Id> event = deleteListener.receive( deleteEvent ).toBlockingObservable().lastOrDefault( null );
+        int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
 
-        assertNull( "Mark was not set, no delete should be executed", event );
+        assertEquals( "Mark was not set, no delete should be executed", 0, count );
 
 
         deleteEvent = new EdgeEvent<Id>( scope, version, targetNode );
 
-        event = deleteListener.receive( deleteEvent ).toBlockingObservable().lastOrDefault( null );
+        count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
 
-        assertNull( "Mark was not set, no delete should be executed", event );
+        assertEquals( "Mark was not set, no delete should be executed", 0, count );
     }
 
 
@@ -157,9 +157,9 @@ public class NodeDeleteListenerTest {
         EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, deleteVersion, sourceNode );
 
 
-        EdgeEvent<Id> event = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
+        int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
 
-        assertEquals( deleteEvent, event );
+        assertEquals( 1, count);
 
         //now verify we can't get any of the info back
 

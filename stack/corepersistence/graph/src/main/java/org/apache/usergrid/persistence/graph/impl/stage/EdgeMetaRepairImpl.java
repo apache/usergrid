@@ -25,6 +25,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -45,6 +48,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
+import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.MathObservable;
@@ -57,6 +61,7 @@ import rx.observables.MathObservable;
 public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
+    private static final Logger LOG = LoggerFactory.getLogger( EdgeMetaRepairImpl.class );
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeSerialization edgeSerialization;
     private final Keyspace keyspace;
@@ -115,39 +120,39 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                         final List<Observable<Integer>> checks = new ArrayList<Observable<Integer>>( types.size() );
 
                         //for each id type, check if the exist in parallel to increase processing speed
-                        for ( final String sourceIdType : types ) {
+                        for ( final String subType : types ) {
+
+                            LOG.debug( "Checking for edges with nodeId {}, type {}, and subtype {}", node, edgeType, subType );
 
                             Observable<Integer> search =
-                                    serialization.loadEdges( scope, node, edgeType, sourceIdType, version )
-                                                 .distinctUntilChanged( new Func1<MarkedEdge, Id>() {
+                                    serialization.loadEdges( scope, node, edgeType, subType, version ).take( 1 ).count()
+                                                 .doOnNext( new Action1<Integer>() {
 
-                                                     //get distinct by source node
                                                      @Override
-                                                     public Id call( final MarkedEdge markedEdge ) {
-                                                         return markedEdge.getSourceNode();
+                                                     public void call( final Integer count ) {
+                                                         /**
+                                                          * we only want to delete if no edges are in this class. If
+                                                          * there
+                                                          * are
+                                                          * still edges
+                                                          * we must retain the information in order to keep our index
+                                                          * structure
+                                                          * correct for edge
+                                                          * iteration
+                                                          **/
+                                                         if ( count != 0 ) {
+                                                             LOG.debug( "Found edge with nodeId {}, type {}, and subtype {}. Not removing subtype. ", node, edgeType, subType );
+                                                             return;
+                                                         }
+
+
+
+                                                         LOG.debug( "No edges with nodeId {}, type {}, and subtype {}. Removing", node, edgeType, subType );
+                                                         batch.mergeShallow( serialization
+                                                                 .removeEdgeSubType( scope, node, edgeType, subType,
+                                                                         version ) );
                                                      }
-                                                 } ).take( 1 ).count().doOnNext( new Action1<Integer>() {
-
-                                        @Override
-                                        public void call( final Integer count ) {
-                                            /**
-                                             * we only want to delete if no edges are in this class. If there
-                                             * are
-                                             * still edges
-                                             * we must retain the information in order to keep our index
-                                             * structure
-                                             * correct for edge
-                                             * iteration
-                                             **/
-                                            if ( count != 0 ) {
-                                                return;
-                                            }
-
-                                            batch.mergeShallow( serialization
-                                                    .removeEdgeSubType( scope, node, edgeType, sourceIdType,
-                                                            version ) );
-                                        }
-                                    } );
+                                                 } );
 
                             checks.add( search );
                         }
@@ -162,9 +167,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                  @Override
                                                  public void call( final Integer count ) {
 
-                                                     if ( batch.isEmpty() ) {
-                                                         return;
-                                                     }
+
+                                                     LOG.debug( "Executing batch for subtype deletion with type {}.  Mutation has {} rows to mutate ", edgeType, batch.getRowCount() );
 
                                                      try {
                                                          batch.execute();
@@ -182,26 +186,27 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
         //sum up everything emitted by sub types.  If there's no edges existing for all sub types,
         // then we can safely remove them
-        return MathObservable.sumInteger( deleteCounts ).last().doOnNext( new Action1<Integer>() {
+        return MathObservable.sumInteger( deleteCounts ).lastOrDefault( 0 ).doOnNext( new Action1<Integer>() {
 
             @Override
-            public void call( final Integer subTypes ) {
+            public void call( final Integer subTypeUsedCount ) {
 
                 /**
                  * We can only execute deleting this type if no sub types were deleted
                  */
-                if ( subTypes != 0 ) {
+                if ( subTypeUsedCount != 0 ) {
+                    LOG.debug( "Type {} has {} subtypes in use as of version {}.  Not deleting type.", edgeType, subTypeUsedCount, version );
                     return;
                 }
 
                 try {
 
+                    LOG.debug( "Type {} has no subtypes in use as of version {}.  Deleting type.", edgeType, version );
                     serialization.removeEdgeType( scope, node, edgeType, version ).execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( "Unable to execute mutation" );
                 }
-
             }
         } );
     }

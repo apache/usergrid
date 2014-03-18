@@ -2,18 +2,21 @@ package org.apache.usergrid.persistence.graph.impl;
 
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
-import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.MessageListener;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -22,58 +25,61 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
-import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.observables.MathObservable;
 
 
 /**
  * Construct the asynchronous node delete from the q
  */
-public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEvent<Id>> {
+public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Integer> {
 
+
+    private static final Logger LOG = LoggerFactory.getLogger( NodeDeleteListener.class );
 
     private final NodeSerialization nodeSerialization;
     private final EdgeSerialization edgeSerialization;
     private final EdgeMetadataSerialization edgeMetadataSerialization;
-    private final GraphFig graphFig;
-    private final Keyspace keyspace;
+    private final EdgeDeleteRepair edgeDeleteRepair;
+    private final EdgeMetaRepair edgeMetaRepair;
 
     private final Scheduler scheduler;
-    private final EdgeManagerFactory edgeManagerFactory;
 
 
     /**
      * Wire the serialization dependencies
      */
     @Inject
-    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization,
-                               final EdgeMetadataSerialization edgeMetadataSerialization, final GraphFig graphFig,
-                               final Keyspace keyspace, final Scheduler scheduler,
-                               final EdgeManagerFactory edgeManagerFactory,
-                               @NodeDelete final AsyncProcessor nodeDelete ) {
+    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization,final Scheduler scheduler,
+                               @NodeDelete final AsyncProcessor nodeDelete,
+                               final EdgeMetadataSerialization edgeMetadataSerialization, final EdgeDeleteRepair
+            edgeDeleteRepair,
+                               final EdgeMetaRepair edgeMetaRepair ) {
 
 
         this.nodeSerialization = nodeSerialization;
         this.edgeSerialization = edgeSerialization;
-        this.edgeMetadataSerialization = edgeMetadataSerialization;
-        this.graphFig = graphFig;
-        this.keyspace = keyspace;
         this.scheduler = scheduler;
-        this.edgeManagerFactory = edgeManagerFactory;
+        this.edgeMetadataSerialization = edgeMetadataSerialization;
+        this.edgeDeleteRepair = edgeDeleteRepair;
+        this.edgeMetaRepair = edgeMetaRepair;
 
         nodeDelete.addListener( this );
     }
 
 
+    /**
+     * Removes this node from the graph.
+     * @param edgeEvent The edge event that was fired.
+     * @return An observable that emits the total number of edges that have been removed with this node both as the target and source
+     */
     @Override
-    public Observable<EdgeEvent<Id>> receive( final EdgeEvent<Id> edgeEvent ) {
+    public Observable<Integer> receive( final EdgeEvent<Id> edgeEvent ) {
 
         final Id node = edgeEvent.getData();
         final OrganizationScope scope = edgeEvent.getOrganizationScope();
@@ -87,16 +93,20 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
             }
         } ) //only continue if it's present.  Otherwise stop
                 .takeWhile( new Func1<Optional<UUID>, Boolean>() {
+
                     @Override
                     public Boolean call( final Optional<UUID> uuidOptional ) {
+
+                        LOG.debug( "Node with id {} has max version of {}", node, uuidOptional.orNull() );
+
                         return uuidOptional.isPresent();
                     }
                 } )
 
                         //delete source and targets in parallel and merge them into a single observable
-                .flatMap( new Func1<Optional<UUID>, Observable<List<MarkedEdge>>>() {
+                .flatMap( new Func1<Optional<UUID>, Observable<MarkedEdge>>() {
                     @Override
-                    public Observable<List<MarkedEdge>> call( final Optional<UUID> uuidOptional ) {
+                    public Observable<MarkedEdge> call( final Optional<UUID> uuidOptional ) {
 
                         //get all edges pointing to the target node and buffer then into groups for deletion
                         Observable<MarkedEdge> targetEdges =
@@ -105,10 +115,17 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
                                             @Override
                                             public Observable<MarkedEdge> call( final String edgeType ) {
                                                 return loadEdgesToTarget( scope,
-                                                        new SimpleSearchByEdgeType( node, edgeType, uuidOptional.get(),
+                                                        new SimpleSearchByEdgeType( node, edgeType, version,
                                                                 null ) );
                                             }
-                                        } );
+                                        } )
+                                        //filter "old" edges, since we'll be deleting them in 1 shot
+                                        .distinctUntilChanged( new Func1<Edge, Id>() {
+                                    @Override
+                                    public Id call( final Edge edge ) {
+                                        return edge.getSourceNode();
+                                    }
+                                } );
 
 
                         //get all edges pointing to the source node and buffer them into groups for deletion
@@ -118,124 +135,66 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
                                             @Override
                                             public Observable<MarkedEdge> call( final String edgeType ) {
                                                 return loadEdgesFromSource( scope,
-                                                        new SimpleSearchByEdgeType( node, edgeType, uuidOptional.get(),
+                                                        new SimpleSearchByEdgeType( node, edgeType, version,
                                                                 null ) );
                                             }
-                                        } );
+                                        } )
+                                        //filter "old" edges, since we'll be deleting them in 1 shot
+                                        .distinctUntilChanged( new Func1<Edge, Id>() {
+                                    @Override
+                                    public Id call( final Edge edge ) {
+                                        return edge.getTargetNode();
+                                    }
+                                } );
 
 
                         //each time an edge is emitted, delete it via batch mutation since we'll already be buffered
-                        return Observable.merge( targetEdges, sourceEdges ).buffer( graphFig.getScanPageSize() )
-                                         .doOnNext( new Action1<List<MarkedEdge>>() {
-                                             @Override
-                                             public void call( final List<MarkedEdge> markedEdges ) {
-                                                 MutationBatch batch = keyspace.prepareMutationBatch();
-
-
-                                                 for ( MarkedEdge marked : markedEdges ) {
-                                                     batch.mergeShallow(
-                                                             edgeSerialization.deleteEdge( scope, marked ) );
-                                                 }
-
-                                                 try {
-                                                     batch.execute();
-                                                 }
-                                                 catch ( ConnectionException e ) {
-                                                     throw new RuntimeException( "Unable to execute mutation" );
-                                                 }
-                                             }
-                                         } );
+                        return Observable.merge( targetEdges, sourceEdges );
                     }
-                } ).last().flatMap( new Func1<List<MarkedEdge>, Observable<String>>() {
+                } ).flatMap( new Func1<MarkedEdge, Observable<MarkedEdge>>() {
                     @Override
-                    public Observable<String> call( final List<MarkedEdge> markedEdges ) {
+                    public Observable<MarkedEdge> call( final MarkedEdge edge ) {
 
-                        //delete all meta for edges to this node
-                        Observable<String> targets =
-                                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null ) )
-                                        .doOnNext( new Action1<String>() {
-                                            @Override
-                                            public void call( final String type ) {
-
-                                                final MutationBatch batch = keyspace.prepareMutationBatch();
-
-                                                final Iterator<String> types = edgeMetadataSerialization
-                                                        .getIdTypesToTarget( scope,
-                                                                new SimpleSearchIdType( node, type, null ) );
-
-                                                while ( types.hasNext() ) {
-                                                    batch.mergeShallow( edgeMetadataSerialization
-                                                            .removeIdTypeToTarget( scope, node, type, types.next(),
-                                                                    version ) );
-                                                }
-
-                                                batch.mergeShallow( edgeMetadataSerialization
-                                                        .removeEdgeTypeToTarget( scope, node, type, version ) );
-
-                                                try {
-                                                    batch.execute();
-                                                }
-                                                catch ( ConnectionException e ) {
-                                                    throw new RuntimeException( "Unable to execute cassandra call" );
-                                                }
-                                            }
-                                        } );
-
-                        //delete all meta for edges from this node
-                        Observable<String> sources =
-                                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null ) )
-                                        .doOnNext( new Action1<String>() {
-                                            @Override
-                                            public void call( final String type ) {
-
-                                                final MutationBatch batch = keyspace.prepareMutationBatch();
-
-                                                final Iterator<String> types = edgeMetadataSerialization
-                                                        .getIdTypesFromSource( scope,
-                                                                new SimpleSearchIdType( node, type, null ) );
-
-                                                while ( types.hasNext() ) {
-                                                    batch.mergeShallow( edgeMetadataSerialization
-                                                            .removeIdTypeFromSource( scope, node, type, types.next(),
-                                                                    version ) );
-                                                }
-
-                                                batch.mergeShallow( edgeMetadataSerialization
-                                                        .removeEdgeTypeFromSource( scope, node, type, version ) );
-
-                                                try {
-                                                    batch.execute();
-                                                }
-                                                catch ( ConnectionException e ) {
-                                                    throw new RuntimeException( "Unable to execute cassandra call" );
-                                                }
-                                            }
-                                        } );
+                        LOG.debug( "Deleting edge {}", edge );
+                        return edgeDeleteRepair.repair( scope, edge );
 
 
-                        //no op, just zip them up  so we can do our action on our last
-                        return Observable.merge( targets, sources )
-                                //when we're done emitting, merge them
-                                .doOnCompleted( new Action0() {
-                                    @Override
-                                    public void call() {
-                                        try {
-                                            nodeSerialization.delete( scope, node, edgeEvent.getVersion() ).execute();
-                                        }
-                                        catch ( ConnectionException e ) {
-                                            throw new RuntimeException( "Unable to execute mutation" );
-                                        }
-                                    }
-                                } );
                     }
-                } )
-                        //when we're completed, we need to delete our id from types, then remove our mark
-
-                        //return our event to the caller
-                .map( new Func1<String, EdgeEvent<Id>>() {
+                } ).flatMap( new Func1<MarkedEdge, Observable<MarkedEdge>>() {
                     @Override
-                    public EdgeEvent<Id> call( final String mark ) {
-                        return edgeEvent;
+                    public Observable<MarkedEdge> call( final MarkedEdge edge ) {
+
+
+                        //delete both the source and target meta data in parallel.
+                        Observable<Integer> sourceMetaRepaired =
+                                edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), version );
+
+                        Observable<Integer>  targetMetaRepaired = edgeMetaRepair.repairTargets( scope,
+                                edge.getTargetNode(), edge.getType(), version );
+
+                        //sum up the number of subtypes we retain
+                        return Observable.merge(sourceMetaRepaired, targetMetaRepaired ).last().map( new Func1
+                                <Integer, MarkedEdge>() {
+                            @Override
+                            public MarkedEdge call( final Integer integer ) {
+
+                                LOG.debug( "Retained {} subtypes for edge {}", integer, edge );
+
+                                return edge;
+                            }
+                        } );
+                    }
+                } ).count()
+                //if nothing is ever emitted, emit 0 so that we know no operations took place. Finally remove the target node in the mark
+                .defaultIfEmpty( 0 ).doOnCompleted( new Action0() {
+                    @Override
+                    public void call() {
+                        try {
+                            nodeSerialization.delete( scope, node, version ).execute();
+                        }
+                        catch ( ConnectionException e ) {
+                            throw new RuntimeException("Unable to delete marked graph node " + node, e);
+                        }
                     }
                 } );
     }
@@ -297,39 +256,4 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, EdgeEv
     }
 
 
-    private class Delete implements Action1<List<MarkedEdge>> {
-
-        private final OrganizationScope scope;
-
-
-        private Delete( final OrganizationScope scope ) {
-            this.scope = scope;
-        }
-
-
-        @Override
-        public void call( final List<MarkedEdge> markedEdges ) {
-
-            //do nothing
-            if ( markedEdges.size() == 0 ) {
-                return;
-            }
-
-            Iterator<MarkedEdge> marked = markedEdges.iterator();
-
-            MutationBatch batch = edgeSerialization.deleteEdge( scope, marked.next() );
-
-            while ( marked.hasNext() ) {
-                final MutationBatch newDelete = edgeSerialization.deleteEdge( scope, marked.next() );
-                batch.mergeShallow( newDelete );
-            }
-
-            try {
-                batch.execute();
-            }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to execute batch mutation", e );
-            }
-        }
-    }
 }

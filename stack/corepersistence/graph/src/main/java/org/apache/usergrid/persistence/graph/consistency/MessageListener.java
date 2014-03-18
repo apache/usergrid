@@ -19,6 +19,6 @@ public interface MessageListener<T, R> {
      * @param event  The input event
      * @return The observable that performs the operations
      */
-    Observable<T> receive(final T event);
+    Observable<R> receive(final T event);
 
 }
