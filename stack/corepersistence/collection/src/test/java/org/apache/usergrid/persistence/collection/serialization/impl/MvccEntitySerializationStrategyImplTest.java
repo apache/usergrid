@@ -322,7 +322,7 @@ public class MvccEntitySerializationStrategyImplTest {
         //YES THIS SHOULD BE DOING WHA TI THOUGHT< BUT ITSN:T
         Field<Boolean> boolFieldReturned = returned.getEntity().get().getField( boolField.getName() );
 
-        assertSame( boolField, boolFieldReturned );
+        assertEquals( boolField, boolFieldReturned );
 
         Set<Field> results = new HashSet<Field>();
         results.addAll( entity.getFields() );

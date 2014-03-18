@@ -23,13 +23,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.smile.SmileFactory;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
@@ -64,8 +64,8 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
-import com.netflix.astyanax.serializers.ObjectSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
@@ -79,6 +79,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private static final EntitySerializer SER = new EntitySerializer();
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+    private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
+
+    private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
+
 
     private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
             new CollectionScopedRowKeySerializer<Id>( ID_SER );
@@ -276,11 +281,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
     public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
-        //public static final SmileFactory f = new SmileFactory(  );
+        public static final SmileFactory f = new SmileFactory(  );
 
         public static ObjectMapper mapper = new ObjectMapper(  );
-        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
-
 
         private static byte[] STATE_COMPLETE = new byte[] { 0 };
         private static byte[] STATE_DELETED = new byte[] { 1 };
@@ -293,7 +296,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         private static final byte[] EMPTY = new byte[] { 0x0 };
         String helper;
 
-//TODO:Make sure your exceptions provide descriptive error messages. And to make sure you even needs the descriptions
+//TODO:Make sure your exceptions provide descriptive error messages.
         @Override
         public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
             if ( wrapper == null ) {
@@ -302,11 +305,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             CompositeBuilder builder = Composites.newCompositeBuilder();
 
-
             builder.addBytes( VERSION );
-           // f.disable( SmileParser.Feature.REQUIRE_HEADER );
-
-           // mapper = new ObjectMapper( f );
 
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
@@ -328,7 +327,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             try {
                 builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
-                helper = mapper.writeValueAsString( wrapper.entity.get() );
             }
             catch ( JsonMappingException e ) {
                 e.printStackTrace();
@@ -345,31 +343,15 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         @Override
         public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
-            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
-            byte[] b = new byte[byteBuffer.remaining()];
-
-            //byteBuffer.get( b, 0, b.length );
-            //return mapper.readValue(b, Entity.class);
+           CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
             byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
-//            try {
-//                version = mapper.readValue( byteBuffer.array(),0,1, byte[].class);
-//            }
-//            catch ( IOException e ) {
-//                e.printStackTrace();
-//            }
 
             if ( !Arrays.equals( VERSION, version ) ) {
                 throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
             }
 
             byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
-//            try {
-//                state = mapper.readValue( byteBuffer.array(),1,2, new TypeReference<Byte>() {});
-//            }
-//            catch ( IOException e ) {
-//                e.printStackTrace();
-//            }
 
             /**
              * It's been deleted, remove it
@@ -378,17 +360,21 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
-            LinkedHashMap storedObject = null;
             Entity storedEntity = null;
-            String derper = null;
-            byteBuffer.position( 0 );
+
+            ByteBuffer jsonBytes = parser.read(  BUFFER_SERIALIZER );
+
             try {
-                storedEntity = mapper.readValue( helper,Entity.class);
+
+                byte[] array = jsonBytes.array();
+                int start = jsonBytes.arrayOffset();
+                int length = jsonBytes.remaining();
+
+                storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( IOException e ) {
                 e.printStackTrace();
             }
-            storedEntity = convertToEntity(storedObject);
 
             final Optional<Entity> entity = Optional.of( storedEntity );
 
@@ -397,102 +383,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             }
 
             //it's partial by default
-            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
-        }
-
-        private Entity convertToEntity( final Object storedObject ) {
-            Entity storedEntity = null;
-            return null;
-        }
-    }
-
-    /**
-     * TODO: Serializer for the entity. This just uses object serialization, change this to use SMILE before production!
-     * We want to retain the Optional wrapper.  It helps us easily mark something as cleaned without removing the column
-     * and makes it obvious that the entity could be missing in the api
-     */
-    private static class ObjSerializer extends AbstractSerializer<EntityWrapper> {
-
-        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
-        private static final ObjectSerializer SER = ObjectSerializer.get();
-
-        private static byte[] STATE_COMPLETE = new byte[] { 0 };
-        private static byte[] STATE_DELETED = new byte[] { 1 };
-        private static byte[] STATE_PARTIAL = new byte[] { 2 };
-
-        private static byte[] VERSION = new byte[] { 0 };
-
-
-        //the marker for when we're passed a "null" value
-        private static final byte[] EMPTY = new byte[] { 0x0 };
-
-
-        @Override
-        public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
-
-
-            CompositeBuilder builder = Composites.newCompositeBuilder();
-
-
-            builder.addBytes( VERSION );
-
-
-            //mark this version as empty
-            if ( !wrapper.entity.isPresent() ) {
-                //we're empty
-                builder.addBytes( STATE_DELETED );
-
-                return builder.build();
-            }
-
-            //we have an entity
-
-            if ( wrapper.status == MvccEntity.Status.COMPLETE ) {
-                builder.addBytes( STATE_COMPLETE );
-            }
-
-            else {
-                builder.addBytes( STATE_PARTIAL );
-            }
-
-            builder.addBytes( SER.toByteBuffer( wrapper.entity.get() ));
-
-            return builder.build();
-        }
-
-
-        @Override
-        public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
-
-            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
-
-
-            final byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
-
-            if ( !Arrays.equals( VERSION, version ) ) {
-                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
-            }
-
-
-            final byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
-
-            /**
-             * It's been deleted, remove it
-             */
-            if ( Arrays.equals( STATE_DELETED, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
-            }
-
-            final Entity storedEntity = ( Entity ) parser.read( SER );
-
-            final Optional<Entity> entity = Optional.of( storedEntity );
-
-            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
-            }
-
-            //it's partial by default
-
             return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
         }
     }

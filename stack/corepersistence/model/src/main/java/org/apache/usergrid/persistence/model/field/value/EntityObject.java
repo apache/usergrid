@@ -19,9 +19,15 @@
 package org.apache.usergrid.persistence.model.field.value;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.codehaus.jackson.annotate.JsonAnyGetter;
+import org.codehaus.jackson.annotate.JsonAnySetter;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -33,11 +39,13 @@ public class EntityObject implements Serializable {
     /**
      * Fields the users can set
      */
+    @JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
     private final Map<String, Field> fields = new HashMap<String, Field>();
 
     /**
      * Add the field, return the old one if it existed
      */
+    @JsonIgnore
     public <T extends java.lang.Object> Field<T> setField( Field<T> value ) {
         return fields.put( value.getName(), value );
     }
@@ -45,10 +53,26 @@ public class EntityObject implements Serializable {
     /**
      * Get the field by name the user has set into the entity
      */
+    @JsonIgnore
     public <T extends java.lang.Object> Field<T> getField( String name ) {
         return fields.get( name );
     }
 
+    @JsonAnySetter
+    public void setFields(ArrayList al) {
+        if(al.size() == 0)
+            return;
+
+        for(int i = 0; i < al.size(); i++) {
+            Field fd = ( Field ) al.get( i );
+            fields.put( fd.getName(), fd);
+        }
+    }
+
+    @JsonAnyGetter
+    public void getFields( String name) {
+        fields.get( name );
+    }
     /**
      * Get all fields in the entity
      */
