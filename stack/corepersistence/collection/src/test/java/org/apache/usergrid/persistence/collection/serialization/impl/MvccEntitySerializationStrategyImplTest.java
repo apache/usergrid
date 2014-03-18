@@ -294,13 +294,9 @@ public class MvccEntitySerializationStrategyImplTest {
 
         EntityUtils.setVersion( entity, version );
 
-
         BooleanField boolField = new BooleanField( "boolean", false );
 
-
         entity.setField( boolField );
-
-
 
         MvccEntity saved = new MvccEntityImpl( id, version, MvccEntity.Status.COMPLETE, Optional.of( entity ) );
 
@@ -331,7 +327,6 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
         assertEquals( 1, results.size() );
-
 
         assertEquals( id, entity.getId() );
         assertEquals( version, entity.getVersion() );

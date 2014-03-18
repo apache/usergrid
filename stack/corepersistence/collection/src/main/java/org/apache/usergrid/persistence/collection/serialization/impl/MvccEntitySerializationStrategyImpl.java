@@ -26,11 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.smile.SmileFactory;
-
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
@@ -49,6 +44,10 @@ import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -67,6 +66,11 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
+
+//import org.codehaus.jackson.JsonGenerationException;
+//import org.codehaus.jackson.map.JsonMappingException;
+//import org.codehaus.jackson.map.ObjectMapper;
+//import org.codehaus.jackson.smile.SmileFactory;
 
 
 /**
@@ -306,7 +310,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             CompositeBuilder builder = Composites.newCompositeBuilder();
 
             builder.addBytes( VERSION );
-
+            //mapper.enableDefaultTyping();
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
                 //we're empty
