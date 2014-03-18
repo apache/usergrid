@@ -192,7 +192,6 @@
     <module>websocket</module>
     <module>rest</module>
     <module>launcher</module>
-    <module>query-validator</module>
     <module>test-utils</module>
     <module>query-validator</module>
     <module>build-tools</module>
