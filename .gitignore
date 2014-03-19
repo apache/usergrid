@@ -21,3 +21,10 @@ Icon
 #Webstorm artifacts
 .idea/
 portal/2.0.**
+stack/corepersistence/collection/nbactions.xml
+stack/corepersistence/graph/nbactions.xml
+stack/corepersistence/model/nbactions.xml
+stack/corepersistence/nbactions.xml
+stack/corepersistence/queryindex/nbactions.xml
+stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
+stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
