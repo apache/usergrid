@@ -1271,11 +1271,11 @@ public class ManagementServiceIT {
         f.delete();
     }
 
-    @Test
+    @Ignore("file created won't be deleted when running tests")
     public void testExportOneOrganization() throws Exception {
 
         //File f = new File( "exportOneOrganization.json" );
-        int entitiesToCreate = 10;
+        int entitiesToCreate = 123;
         File f = null;
 
         try {
@@ -1287,7 +1287,7 @@ public class ManagementServiceIT {
         }
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId);
-        em.createApplicationCollection( "baconators" );
+        em.createApplicationCollection( "newOrg" );
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
@@ -1297,7 +1297,7 @@ public class ManagementServiceIT {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-            entity[i] = em.create( "baconators", userProperties );
+            entity[i] = em.create( "newOrg", userProperties );
         }
 
         S3Export s3Export = new MockS3ExportImpl();
@@ -1305,13 +1305,15 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        payload.put( "organizationId",organization.getUuid() );
-        payload.put( "applicationId",applicationId);
+//        payload.put( "organizationId",organization.getUuid() );
+//        payload.put( "applicationId",applicationId);
 
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
+        OrganizationInfo orgMade = null;
+        ApplicationInfo appMade = null;
         for(int i = 0; i < 100; i++) {
-            OrganizationInfo orgMade =setup.getMgmtSvc().createOrganization( "superboss"+i,adminUser,true );
-            ApplicationInfo appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
+            orgMade =setup.getMgmtSvc().createOrganization( "superboss"+i,adminUser,true );
+            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
             customMaker.createApplicationCollection( "superappCol"+i );
@@ -1320,13 +1322,15 @@ public class ManagementServiceIT {
             Entity[] entNotCopied;
             entNotCopied = new Entity[entitiesToCreate];
             //creates entities
-            for ( int index = 0; index < 10; index++ ) {
+            for ( int index = 0; index < 20; index++ ) {
                 entityLevelProperties = new LinkedHashMap<String, Object>();
                 entityLevelProperties.put( "username", "bobso" + index );
                 entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
                 entNotCopied[index] = customMaker.create( "superappCol", entityLevelProperties );
             }
         }
+        payload.put( "organizationId",orgMade.getUuid());
+        payload.put( "applicationId",appMade.getId());
 
         UUID exportUUID = exportService.schedule( payload );
         exportService.setS3Export( s3Export );
@@ -1346,7 +1350,7 @@ public class ManagementServiceIT {
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
         /*plus 3 for the default roles*/
-        assertEquals( entitiesToCreate+3 , a.size() );
+        assertEquals( 23 , a.size() );
         f.delete();
     }
 
