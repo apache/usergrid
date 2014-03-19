@@ -1517,7 +1517,7 @@ public class ManagementServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
-        Thread.sleep(1000);
+        while (!exportService.getState( applicationId,exportUUID ).equals("FINISHED"));
 
         AWSCredentials myCredentials = new BasicAWSCredentials(
                 System.getProperty( "accessKey" ), System.getProperty("secretKey"));
@@ -1592,6 +1592,7 @@ public class ManagementServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
+        while (!exportService.getState( applicationId,exportUUID ).equals("FINISHED"));
 
         AWSCredentials myCredentials = new BasicAWSCredentials(
                 System.getProperty( "accessKey" ), System.getProperty("secretKey"));
