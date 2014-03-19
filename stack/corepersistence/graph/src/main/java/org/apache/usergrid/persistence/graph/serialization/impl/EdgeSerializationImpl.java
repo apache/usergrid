@@ -491,13 +491,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                         .withColumnRange( rangeBuilder.build() );
 
 
-        try {
-            return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query.execute().getResult().iterator(), searcher,
+        return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query, searcher,
                     searcher.hasPage() );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+
     }
 
 

@@ -335,13 +335,9 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
-        try {
-            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER,
+        return new ColumnNameIterator<String, String>( query, PARSER,
                     search.getLast().isPresent() );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+
     }
 
 
@@ -376,13 +372,10 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
 
-        try {
-            return new ColumnNameIterator<String, String>( query.execute().getResult().iterator(), PARSER,
+
+       return new ColumnNameIterator<String, String>( query, PARSER,
                     search.getLast().isPresent() );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+
     }
 
 

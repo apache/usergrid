@@ -206,15 +206,15 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                //we intentionally use distinct until changed.  This way we won't store all the keys since this
+        } )//we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
                     @Override
                     public Id call( final Edge edge ) {
                         return edge.getTargetNode();
                     }
-                } ).cast( Edge.class );
+                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                .cast( Edge.class );
     }
 
 
@@ -225,7 +225,7 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
             }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+        } )
                 //we intentionally use distinct until changed.  This way we won't store all the keys since this
                 //would hog far too much ram.
                 .distinctUntilChanged( new Func1<Edge, Id>() {
@@ -233,7 +233,8 @@ public class EdgeManagerImpl implements EdgeManager {
                     public Id call( final Edge edge ) {
                         return edge.getSourceNode();
                     }
-                } ).cast( Edge.class );
+                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                .cast( Edge.class );
     }
 
 
@@ -244,13 +245,12 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
             }
+        } ).distinctUntilChanged( new Func1<Edge, Id>() {
+            @Override
+            public Id call( final Edge edge ) {
+                return edge.getTargetNode();
+            }
         } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                         .distinctUntilChanged( new Func1<Edge, Id>() {
-                             @Override
-                             public Id call( final Edge edge ) {
-                                 return edge.getTargetNode();
-                             }
-                         } )
 
                          .cast( Edge.class );
     }
@@ -263,13 +263,13 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
             }
+        } ).distinctUntilChanged( new Func1<Edge, Id>() {
+            @Override
+            public Id call( final Edge edge ) {
+                return edge.getSourceNode();
+            }
         } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                         .distinctUntilChanged( new Func1<Edge, Id>() {
-                             @Override
-                             public Id call( final Edge edge ) {
-                                 return edge.getSourceNode();
-                             }
-                         } ).cast( Edge.class );
+                         .cast( Edge.class );
     }
 
 
