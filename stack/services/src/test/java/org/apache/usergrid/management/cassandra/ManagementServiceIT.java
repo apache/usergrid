@@ -1508,6 +1508,66 @@ public class ManagementServiceIT {
         exportService.doExport( jobExecution );
     }
 
+    @Ignore //For this test please input your s3 credentials into payload builder.
+    public void testIntegration100EntitiesOnOneOrg() throws Exception {
+
+        S3Export s3Export = new S3ExportImpl();
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put("organizationId",organization.getUuid());
+        payload.put("applicationId",applicationId);
+
+        OrganizationInfo orgMade = null;
+        ApplicationInfo appMade = null;
+        for(int i = 0; i < 100; i++) {
+            orgMade =setup.getMgmtSvc().createOrganization( "superboss"+i,adminUser,true );
+            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
+
+            EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
+            customMaker.createApplicationCollection( "superappCol"+i );
+            //intialize user object to be posted
+            Map<String, Object> entityLevelProperties = null;
+            Entity[] entNotCopied;
+            entNotCopied = new Entity[20];
+            //creates entities
+            for ( int index = 0; index < 20; index++ ) {
+                entityLevelProperties = new LinkedHashMap<String, Object>();
+                entityLevelProperties.put( "username", "bobso" + index );
+                entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
+                entNotCopied[index] = customMaker.create( "superappCol", entityLevelProperties );
+            }
+        }
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[100];
+        //creates entities
+        for ( int i = 0; i < 100; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "email", "test" + i + "@anuff.com" );
+
+            entity[i] = em.create( "user", userProperties );
+        }
+
+        UUID exportUUID = exportService.schedule( payload );
+        exportService.setS3Export( s3Export );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+    }
+
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
         HashMap<String, Object> payload = new HashMap<String, Object>();
@@ -1515,7 +1575,7 @@ public class ManagementServiceIT {
         Map<String, Object> storage_info = new HashMap<String, Object>();
         //        TODO: always put dummy values here and ignore this test.
         storage_info.put( "s3_key", "insert key here" );
-        storage_info.put( "s3_accessId", "insert access id here" );
+        storage_info.put( "s3_access_id", "insert access id here" );
         storage_info.put( "bucket_location", "insert bucket name here" );
 
         properties.put( "storage_provider", "s3" );
