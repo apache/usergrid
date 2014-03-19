@@ -31,13 +31,13 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
 
-    public static final String ELASTICSEARCH_INDEXNAME = "elasticsearch.indexname";
+    public static final String ELASTICSEARCH_INDEXNAME = "elasticsearch.index_name";
 
     public static final String ELASTICSEARCH_EMBEDDED = "elasticsearch.embedded";
 
-    public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor-timeout.minutes";
+    public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor_timeout.minutes";
 
-    public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force-refresh";
+    public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
     
@@ -57,7 +57,7 @@ public interface IndexFig extends GuicyFig {
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
-    @Default( "true" )
+    @Default( "false" )
     @Key( ELASTICSEARCH_EMBEDDED )
     boolean isEmbedded();
 

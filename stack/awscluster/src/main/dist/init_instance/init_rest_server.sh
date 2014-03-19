@@ -6,18 +6,9 @@ hostname `cat /etc/hostname`
 echo "US/Eastern" > /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
-# Build environment for scripts
-. /etc/profile.d/aws-credentials.sh
-. /etc/profile.d/usergrid-env.sh
-
-cd /usr/share/usergrid/init_instance
-./create_raid0.sh
-
-# Install the easy stuff
-PKGS="ntp unzip groovy tomcat7 curl"
+PKGS="openjdk-7-jdk tomcat7 s3cmd ntp unzip groovy"
 apt-get update
 apt-get -y install ${PKGS}
-/etc/init.d/tomcat7 stop
 
 # Install AWS Java SDK and get it into the Groovy classpath
 curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > /tmp/aws-sdk-java.zip
@@ -30,25 +21,21 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
-cd /usr/share/usergrid/init_instance
-./install_oraclejdk.sh 
+# Build environment for Groovy scripts
+. /etc/profile.d/aws-credentials.sh
+. /etc/profile.d/usergrid-env.sh
 
-# Install and stop Cassandra 
-cd /usr/share/usergrid/init_instance
-./install_cassandra.sh
-
-# Install and start ElasticSearch
-cd /usr/share/usergrid/init_instance
-./install_elasticsearch.sh
-/etc/init.d/elasticsearch start
-
-# Starting Tomcat starts Priam which starts Priam
-/etc/init.d/tomcat7 restart
-
-# Priam consistently craps out on first run
-# making this ugly kludge necessary
-sleep 90
-/etc/init.d/tomcat7 restart
-
+# Wait for enough Cassandra nodes then deploy and restart Tomcat 
 cd /usr/share/usergrid/scripts
+groovy wait_for_cassandra.groovy
+
+mkdir -p /usr/share/tomcat7/lib 
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
+
+rm -rf /var/lib/tomcat7/webapps/*
+cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
+groovy configure_portal_new.groovy > /var/lib/tomcat7/webapps/portal/config.js 
+
+# Go
+/etc/init.d/tomcat7 restart
 groovy tag_instance.groovy
