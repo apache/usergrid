@@ -44,9 +44,12 @@ import com.google.inject.Module;
  */
 public class S3ExportImpl implements S3Export {
 
+    String fn;
+
     @Override
     public void copyToS3( final InputStream inputStream, final Map<String,Object> exportInfo, String filename ) {
 
+        fn = filename;
 
         Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
         /*won't need any of the properties as I have the export info*/
@@ -87,12 +90,13 @@ public class S3ExportImpl implements S3Export {
         try {
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( filename ).payload( inputStream ).calculateMD5().contentType( "text/plain" );
+                    blobStore.blobBuilder( fn ).payload( inputStream ).calculateMD5().contentType( "text/plain" );
 
 
             Blob blob = blobBuilder.build();
 
             ListenableFuture<String> futureETag = blobStore.putBlob( bucketName, blob, PutOptions.Builder.multipart() );
+
 
             logger.info( "Uploaded file etag=" + futureETag.get() );
         }
@@ -102,8 +106,8 @@ public class S3ExportImpl implements S3Export {
     }
 
     @Override
-    public String getFilename () {return "";}
+    public String getFilename () {return fn;}
 
     @Override
-    public void setFilename(String givenName) {;}
+    public void setFilename(String givenName) {fn = givenName;}
 }

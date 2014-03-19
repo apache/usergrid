@@ -65,6 +65,13 @@ import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
@@ -1473,6 +1480,9 @@ public class ManagementServiceIT {
     @Test //For this test please input your s3 credentials into payload builder.
     public void testIntegration100EntitiesOn() throws Exception {
 
+        //s3client.putObject(new PutObjectRequest(bucketName, keyName, file));
+
+
         S3Export s3Export = new S3ExportImpl();
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
@@ -1507,9 +1517,24 @@ public class ManagementServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
+        Thread.sleep(1000);
+
+        AWSCredentials myCredentials = new BasicAWSCredentials(
+                System.getProperty( "accessKey" ), System.getProperty("secretKey"));
+        AmazonS3 s3client = new AmazonS3Client(myCredentials);
+        S3Object sd = null;
+        try {
+            sd = s3client.getObject( new GetObjectRequest( System.getProperty( "bucketName" ),
+                s3Export.getFilename()) );
+        }catch(Exception e) {
+            assert(false);
+        }
+        assertNotNull( sd );
+
     }
 
-    @Test //For this test please input your s3 credentials into payload builder.
+    //@Ignore("I'd have to add some overhead such that I loop through all files or keep track of them all ")
+    @Test
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1567,6 +1592,18 @@ public class ManagementServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
+
+        AWSCredentials myCredentials = new BasicAWSCredentials(
+                System.getProperty( "accessKey" ), System.getProperty("secretKey"));
+        AmazonS3 s3client = new AmazonS3Client(myCredentials);
+        S3Object sd = null;
+        try {
+            sd = s3client.getObject( new GetObjectRequest( System.getProperty( "bucketName" ),
+                    s3Export.getFilename()) );
+        }catch(Exception e) {
+            assert(false);
+        }
+        assertNotNull( sd );
     }
 
     /*Creates fake payload for testing purposes.*/
