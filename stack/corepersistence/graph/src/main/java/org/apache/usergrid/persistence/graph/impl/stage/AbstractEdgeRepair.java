@@ -20,10 +20,8 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,10 +34,7 @@ import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
-import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.uuid.UUIDComparator;
-import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -49,7 +44,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Func1;
-import rx.functions.Func2;
 
 
 /**
@@ -131,7 +125,7 @@ public abstract class AbstractEdgeRepair  {
      */
     private Observable<MarkedEdge> getEdgeVersionsFromSource( final OrganizationScope scope, final Edge edge ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 
@@ -148,7 +142,7 @@ public abstract class AbstractEdgeRepair  {
      */
     private Observable<MarkedEdge> getEdgeVersionsToTarget( final OrganizationScope scope, final Edge edge ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 

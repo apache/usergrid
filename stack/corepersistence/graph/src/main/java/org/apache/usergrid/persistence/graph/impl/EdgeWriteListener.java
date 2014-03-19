@@ -52,7 +52,7 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
         final OrganizationScope scope = write.getOrganizationScope();
         final UUID maxVersion = edge.getVersion();
 
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 

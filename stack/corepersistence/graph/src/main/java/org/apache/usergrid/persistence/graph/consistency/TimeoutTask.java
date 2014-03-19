@@ -56,6 +56,6 @@ public class TimeoutTask<T> implements Action1<Scheduler.Inner> {
      * @return
      */
     private Iterator<AsynchronousMessage<T>> getTimeouts() {
-        return processor.getTimeouts( graphFig.getTimeoutReadSize(), graphFig.getWriteTimeout() * 2 ).iterator();
+        return processor.getTimeouts( graphFig.getTimeoutReadSize(), graphFig.getRepairTimeout() * 2 ).iterator();
     }
 }

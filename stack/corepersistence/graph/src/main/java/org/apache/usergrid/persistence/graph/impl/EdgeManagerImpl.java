@@ -201,7 +201,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
@@ -220,7 +220,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
@@ -240,7 +240,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
@@ -258,7 +258,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
@@ -276,7 +276,7 @@ public class EdgeManagerImpl implements EdgeManager {
     @Override
     public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
@@ -287,7 +287,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
-        return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
@@ -299,7 +299,7 @@ public class EdgeManagerImpl implements EdgeManager {
     @Override
     public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
@@ -310,7 +310,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
     @Override
     public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
-        return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
@@ -323,7 +323,7 @@ public class EdgeManagerImpl implements EdgeManager {
      * Get our timeout for write consistency
      */
     private long getTimeout() {
-        return graphFig.getWriteTimeout() * 2;
+        return graphFig.getRepairTimeout() * 2;
     }
 
 

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
@@ -31,7 +32,6 @@ import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
 import rx.functions.Func1;
-import rx.observables.MathObservable;
 
 
 /**
@@ -47,6 +47,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeDeleteRepair edgeDeleteRepair;
     private final EdgeMetaRepair edgeMetaRepair;
+    private final GraphFig graphFig;
 
     private final Scheduler scheduler;
 
@@ -55,11 +56,11 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      * Wire the serialization dependencies
      */
     @Inject
-    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization,final Scheduler scheduler,
-                               @NodeDelete final AsyncProcessor nodeDelete,
-                               final EdgeMetadataSerialization edgeMetadataSerialization, final EdgeDeleteRepair
-            edgeDeleteRepair,
-                               final EdgeMetaRepair edgeMetaRepair ) {
+    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization,
+                               final Scheduler scheduler, @NodeDelete final AsyncProcessor nodeDelete,
+                               final EdgeMetadataSerialization edgeMetadataSerialization,
+                               final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair,
+                               final GraphFig graphFig ) {
 
 
         this.nodeSerialization = nodeSerialization;
@@ -68,6 +69,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeDeleteRepair = edgeDeleteRepair;
         this.edgeMetaRepair = edgeMetaRepair;
+        this.graphFig = graphFig;
 
         nodeDelete.addListener( this );
     }
@@ -208,7 +210,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<String> getEdgesTypesToTarget( final OrganizationScope scope, final SearchEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
@@ -222,7 +224,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<String> getEdgesTypesFromSource( final OrganizationScope scope, final SearchEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<String>() {
+        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
@@ -236,7 +238,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<MarkedEdge> loadEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
@@ -250,7 +252,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<MarkedEdge> loadEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );

@@ -48,7 +48,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.MathObservable;
@@ -252,7 +251,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>() {
+            return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
@@ -265,7 +264,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>() {
+            return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesToTargetBySourceType( scope,
@@ -297,7 +296,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>() {
+            return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
@@ -310,7 +309,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>() {
+            return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesFromSourceByTargetType( scope,
