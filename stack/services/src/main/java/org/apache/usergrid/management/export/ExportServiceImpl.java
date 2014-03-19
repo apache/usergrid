@@ -191,6 +191,8 @@ public class ExportServiceImpl implements ExportService {
 
             if(config.get( "organizationId" ) == null){
                 logger.error( "No organization could be found" );
+                export.setState( Export.State.FAILED );
+                em.update( export );
                 return;
             }
            exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );

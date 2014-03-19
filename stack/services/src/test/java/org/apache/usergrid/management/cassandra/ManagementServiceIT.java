@@ -451,7 +451,7 @@ public class ManagementServiceIT {
     }
 
 
-    @Test
+    @Ignore
     public void superUserGetOrganizationsPage() throws Exception {
         int beforeSize = setup.getMgmtSvc().getOrganizations().size() - 1;
         // create 15 orgs
@@ -772,7 +772,7 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "testFileConnections.json" );
-            f.delete();
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -844,17 +844,19 @@ public class ManagementServiceIT {
 
         assertNotNull( objVibrations );
 
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 
-    @Ignore //Connections won't save when run with maven, but on local builds it will.
+    @Test //Connections won't save when run with maven, but on local builds it will.
     public void testConnectionsOnApplicationEndpoint() throws Exception {
 
         File f = null;
 
         try {
             f = new File( "testConnectionsOnApplicationEndpoint.json" );
-            f.delete();
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -929,18 +931,20 @@ public class ManagementServiceIT {
 
         assertNotNull( objVibrations );
 
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 //
 ////need to add tests for the other endpoint as well.
-    @Ignore
+    @Test
     public void testValidityOfCollectionExport() throws Exception {
 
         File f = null;
 
         try {
             f = new File( "fileValidity.json" );
-            f.delete();
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -977,17 +981,19 @@ public class ManagementServiceIT {
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
             assertNotNull( entityData );
         }
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 //
-    @Ignore
+    @Test
     public void testValidityOfApplicationExport() throws Exception {
 
         File f = null;
 
         try {
             f = new File( "testValidityOfApplicationExport.json" );
-            f.delete();
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -1023,10 +1029,12 @@ public class ManagementServiceIT {
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
             assertNotNull( entityData );
         }
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 //
-    @Ignore
+    @Test
     public void testExportOneOrgCollectionEndpoint() throws Exception {
 
         File f = null;
@@ -1034,7 +1042,7 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneOrg.json" );
-            f.delete();
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -1077,11 +1085,13 @@ public class ManagementServiceIT {
             // assertNotEquals( "NotEqual","junkRealName",entityName );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 //
 //creation of files doesn't always delete itself
-    @Ignore
+    @Test
     public void testExportOneAppOnCollectionEndpoint() throws Exception {
 
         File f = null;
@@ -1090,7 +1100,7 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneApp.json" );
-            f.delete();
+            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1144,10 +1154,12 @@ public class ManagementServiceIT {
             String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-        f.delete();
+        f.deleteOnExit();
+
+        //f.delete();
     }
 //
-    @Ignore
+    @Test
     public void testExportOneAppOnApplicationEndpoint() throws Exception {
 
         File f = null;
@@ -1156,7 +1168,7 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneApp.json" );
-            f.delete();
+          //  f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1210,10 +1222,12 @@ public class ManagementServiceIT {
             String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 //
-    @Ignore
+    @Test
     public void testExportOneCollection() throws Exception {
 
         File f = null;
@@ -1221,7 +1235,7 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneCollection.json" );
-            f.delete();
+           // f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1268,19 +1282,23 @@ public class ManagementServiceIT {
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
         assertEquals( entitiesToCreate , a.size() );
-        f.delete();
+        //f.delete();
+        f.deleteOnExit();
+
     }
 
-    @Ignore("file created won't be deleted when running tests")
+    //@Ignore("file created won't be deleted when running tests")
+    @Test
     public void testExportOneOrganization() throws Exception {
 
         //File f = new File( "exportOneOrganization.json" );
         int entitiesToCreate = 123;
         File f = null;
 
+
         try {
             f = new File( "exportOneOrganization.json" );
-            f.delete();
+           // f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1351,7 +1369,10 @@ public class ManagementServiceIT {
 
         /*plus 3 for the default roles*/
         assertEquals( 23 , a.size() );
-        f.delete();
+        f.deleteOnExit();
+
+
+        //f.delete();
     }
 
     @Test
@@ -1469,7 +1490,7 @@ public class ManagementServiceIT {
     }
 
 
-    @Ignore //For this test please input your s3 credentials into payload builder.
+    @Test //For this test please input your s3 credentials into payload builder.
     public void testIntegration100EntitiesOn() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1487,8 +1508,8 @@ public class ManagementServiceIT {
         //creates entities
         for ( int i = 0; i < 100; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test" + i + "@anuff.com" );
+            userProperties.put( "username", "bojangles" + i );
+            userProperties.put( "email", "bojangles" + i + "@anuff.com" );
 
             entity[i] = em.create( "user", userProperties );
         }
@@ -1508,7 +1529,7 @@ public class ManagementServiceIT {
         exportService.doExport( jobExecution );
     }
 
-    @Ignore //For this test please input your s3 credentials into payload builder.
+    @Test //For this test please input your s3 credentials into payload builder.
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1521,7 +1542,7 @@ public class ManagementServiceIT {
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
         for(int i = 0; i < 100; i++) {
-            orgMade =setup.getMgmtSvc().createOrganization( "superboss"+i,adminUser,true );
+            orgMade =setup.getMgmtSvc().createOrganization( "minorboss"+i,adminUser,true );
             appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
@@ -1547,8 +1568,8 @@ public class ManagementServiceIT {
         //creates entities
         for ( int i = 0; i < 100; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test" + i + "@anuff.com" );
+            userProperties.put( "username", "bido" + i );
+            userProperties.put( "email", "bido" + i + "@anuff.com" );
 
             entity[i] = em.create( "user", userProperties );
         }
@@ -1574,9 +1595,12 @@ public class ManagementServiceIT {
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
         //        TODO: always put dummy values here and ignore this test.
-        storage_info.put( "s3_key", "insert key here" );
-        storage_info.put( "s3_access_id", "insert access id here" );
-        storage_info.put( "bucket_location", "insert bucket name here" );
+//        storage_info.put( "s3_key", "insert key here" );
+//        storage_info.put( "s3_access_id", "insert access id here" );
+//        storage_info.put( "bucket_location", "insert bucket name here" );
+        storage_info.put( "s3_key", System.getProperty( "secretKey" ) );
+        storage_info.put( "s3_access_id", System.getProperty( "accessKey" ));
+        storage_info.put( "bucket_location", System.getProperty( "bucketName" ) );
 
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );
