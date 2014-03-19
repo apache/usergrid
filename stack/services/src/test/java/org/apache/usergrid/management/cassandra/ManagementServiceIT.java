@@ -1275,7 +1275,7 @@ public class ManagementServiceIT {
     public void testExportOneOrganization() throws Exception {
 
         //File f = new File( "exportOneOrganization.json" );
-        int entitiesToCreate = 10000;
+        int entitiesToCreate = 10;
         File f = null;
 
         try {
@@ -1307,7 +1307,6 @@ public class ManagementServiceIT {
 
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
-        payload.put( "collectionName","baconators");
 
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
         for(int i = 0; i < 100; i++) {
@@ -1323,9 +1322,9 @@ public class ManagementServiceIT {
             //creates entities
             for ( int index = 0; index < 10; index++ ) {
                 entityLevelProperties = new LinkedHashMap<String, Object>();
-                entityLevelProperties.put( "username", "bobso" + i );
-                entityLevelProperties.put( "email", "derp" + i + "@anuff.com" );
-                entNotCopied[i] = customMaker.create( "superappCol", entityLevelProperties );
+                entityLevelProperties.put( "username", "bobso" + index );
+                entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
+                entNotCopied[index] = customMaker.create( "superappCol", entityLevelProperties );
             }
         }
 
@@ -1346,7 +1345,8 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        assertEquals( entitiesToCreate , a.size() );
+        /*plus 3 for the default roles*/
+        assertEquals( entitiesToCreate+3 , a.size() );
         f.delete();
     }
 
