@@ -32,10 +32,14 @@ import rx.Observable;
  */
 public interface EdgeDeleteRepair {
 
+
     /**
-     * Repair this edge.  Remove previous entries including this one
-     * @param scope
-     * @param edge
+     * Repair this edge.  Remove previous entries
+     * @param scope The scope to use
+     * @param edge The last edge to retain.  All versions  <= this edge's version  will be deleted
+     *
+     * @return An observable that emits every version of the edge we delete.  Note that it may emit duplicates
+     * since this is a streaming API.
      */
     public Observable<MarkedEdge> repair( OrganizationScope scope, Edge edge );
 }

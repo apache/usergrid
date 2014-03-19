@@ -20,8 +20,10 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -34,8 +36,10 @@ import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;
+import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -45,6 +49,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 
 /**
@@ -85,8 +90,9 @@ public abstract class AbstractEdgeRepair  {
         Observable<MarkedEdge> targetEdges = getEdgeVersionsToTarget( scope, edge );
 
 
+
         //merge source and target then deal with the distinct values
-        return Observable.merge( sourceEdges, targetEdges ).filter(getFilter(maxVersion)).distinctUntilChanged().buffer( graphFig.getScanPageSize() )
+        return Observable.merge( sourceEdges, targetEdges ).filter( getFilter( maxVersion ) ).distinctUntilChanged().buffer( graphFig.getScanPageSize() )
                          .flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
                              @Override
                              public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
@@ -129,9 +135,7 @@ public abstract class AbstractEdgeRepair  {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 
-                final SimpleSearchByEdge search =
-                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                                edge.getVersion(), null );
+                final SimpleSearchByEdge search = getSearchByEdge(edge);
 
                 return edgeSerialization.getEdgeFromSource( scope, search );
             }
@@ -148,12 +152,21 @@ public abstract class AbstractEdgeRepair  {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 
-                final SimpleSearchByEdge search =
-                        new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                                edge.getVersion(), null );
+                final SimpleSearchByEdge search = getSearchByEdge(edge);
 
                 return edgeSerialization.getEdgeToTarget( scope, search );
             }
         } ).subscribeOn( scheduler );
+    }
+
+
+    /**
+     * Construct the search params for the edge
+     * @param edge
+     * @return
+     */
+    private SimpleSearchByEdge getSearchByEdge(final Edge edge){
+        return new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
+                                        edge.getVersion(), null );
     }
 }

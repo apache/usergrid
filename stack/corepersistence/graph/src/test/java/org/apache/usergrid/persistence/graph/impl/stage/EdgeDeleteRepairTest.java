@@ -21,8 +21,10 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
@@ -31,6 +33,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
@@ -43,6 +47,8 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -50,6 +56,7 @@ import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.crea
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +68,8 @@ import static org.mockito.Mockito.when;
 @RunWith( JukitoRunner.class )
 @UseModules( { TestGraphModule.class } )
 public class EdgeDeleteRepairTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger( EdgeDeleteRepairTest.class );
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
@@ -108,19 +117,22 @@ public class EdgeDeleteRepairTest {
 
 
     /**
-     * Test repairing with no edges
-     * TODO: TN.  There appears to be a race condition here with ordering.  Not sure if this is intentional as part of the impl
-     * or if it's an issue
+     * Test repairing with no edges TODO: TN.  There appears to be a race condition here with ordering.  Not sure if
+     * this is intentional as part of the impl or if it's an issue
      */
     @Test
     public void versionTest() throws ConnectionException {
-        final int size = 10;
+        final int size = 3;
 
         final List<Edge> versions = new ArrayList<Edge>( size );
 
         final Id sourceId = createId( "source" );
         final Id targetId = createId( "target" );
         final String edgeType = "edge";
+
+        Set<Edge> deletedEdges = new HashSet<Edge>();
+        int deleteIndex = size / 2;
+
 
         for ( int i = 0; i < size; i++ ) {
             final Edge edge = createEdge( sourceId, edgeType, targetId );
@@ -129,46 +141,62 @@ public class EdgeDeleteRepairTest {
 
             edgeSerialization.writeEdge( scope, edge ).execute();
 
-            System.out.println(String.format("[%d] %s", i, edge));
+            LOG.info( "Writing edge at index [{}] {}", i, edge );
+
+            if ( i <= deleteIndex ) {
+                deletedEdges.add( edge );
+            }
         }
 
-
-        int deleteIndex = size / 2;
 
         Edge keep = versions.get( deleteIndex );
 
         Iterable<MarkedEdge> edges = edgeDeleteRepair.repair( scope, keep ).toBlockingObservable().toIterable();
 
 
-        int index = 0;
+        Multiset<Edge> deletedStream = HashMultiset.create();
 
         for ( MarkedEdge edge : edges ) {
 
-            final Edge removed = versions.get( deleteIndex - index );
+            LOG.info( "Returned edge {} for repair", edge );
 
-            assertEquals( "Removed matches saved index", removed, edge );
 
-            index++;
+            final boolean shouldBeDeleted = deletedEdges.contains( edge );
+
+            assertTrue( "Removed matches saved index", shouldBeDeleted );
+
+            deletedStream.add( edge );
         }
+
+        deletedEdges.removeAll( deletedStream.elementSet() );
+
+        assertEquals( 0, deletedEdges.size() );
+
 
         //now verify we get all the versions we expect back
         Iterator<MarkedEdge> iterator = edgeSerialization.getEdgeFromSource( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
 
-        index = 0;
+        int count = 0;
 
-        for(MarkedEdge edge: new IterableWrapper<MarkedEdge>( iterator )){
+        for ( MarkedEdge edge : new IterableWrapper<MarkedEdge>( iterator ) ) {
 
-            final Edge saved = versions.get( size - index - 1);
+            LOG.info( "Returned edge {} to verify", edge );
 
-            assertEquals(saved, edge);
+            final int index = size - count - 1;
 
-            index++;
+            LOG.info( "Checking for correct version at index {}", index );
+
+            final Edge saved = versions.get( index );
+
+            assertEquals( "Retained edge correct", saved, edge );
+
+            count++;
         }
 
-        final int keptCount = size-deleteIndex;
+        final int keptCount = size - deleteIndex;
 
-        assertEquals("Kept edge version was the minimum", keptCount, index+1);
+        assertEquals( "Kept edge version was the minimum", keptCount, count + 1 );
     }
 
 

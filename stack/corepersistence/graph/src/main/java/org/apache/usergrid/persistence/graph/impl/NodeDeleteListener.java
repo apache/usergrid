@@ -149,12 +149,13 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
 
                         //each time an edge is emitted, delete it via batch mutation since we'll already be buffered
-                        return Observable.merge( targetEdges, sourceEdges );
+                        return Observable.concat( targetEdges, sourceEdges );
                     }
                 } ).flatMap( new Func1<MarkedEdge, Observable<MarkedEdge>>() {
                     @Override
                     public Observable<MarkedEdge> call( final MarkedEdge edge ) {
 
+                        //delete the newest edge <= the version on the node delete
                         LOG.debug( "Deleting edge {}", edge );
                         return edgeDeleteRepair.repair( scope, edge );
 
@@ -165,7 +166,9 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                     public Observable<MarkedEdge> call( final MarkedEdge edge ) {
 
 
-                        //delete both the source and target meta data in parallel.
+
+                        //delete both the source and target meta data in parallel for the edge we deleted in the previous step
+                        //if nothing else is using them
                         Observable<Integer> sourceMetaRepaired =
                                 edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), version );
 
@@ -173,7 +176,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                 edge.getTargetNode(), edge.getType(), version );
 
                         //sum up the number of subtypes we retain
-                        return Observable.merge(sourceMetaRepaired, targetMetaRepaired ).last().map( new Func1
+                        return Observable.concat(sourceMetaRepaired, targetMetaRepaired ).last().map( new Func1
                                 <Integer, MarkedEdge>() {
                             @Override
                             public MarkedEdge call( final Integer integer ) {
