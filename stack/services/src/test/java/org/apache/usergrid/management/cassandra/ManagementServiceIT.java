@@ -772,7 +772,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "testFileConnections.json" );
-            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -844,7 +843,6 @@ public class ManagementServiceIT {
 
         assertNotNull( objVibrations );
 
-        //f.delete();
         f.deleteOnExit();
 
     }
@@ -856,7 +854,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "testConnectionsOnApplicationEndpoint.json" );
-            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -931,7 +928,6 @@ public class ManagementServiceIT {
 
         assertNotNull( objVibrations );
 
-        //f.delete();
         f.deleteOnExit();
 
     }
@@ -944,7 +940,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "fileValidity.json" );
-            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -981,7 +976,6 @@ public class ManagementServiceIT {
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
             assertNotNull( entityData );
         }
-        //f.delete();
         f.deleteOnExit();
 
     }
@@ -993,7 +987,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "testValidityOfApplicationExport.json" );
-            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -1029,7 +1022,6 @@ public class ManagementServiceIT {
             org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
             assertNotNull( entityData );
         }
-        //f.delete();
         f.deleteOnExit();
 
     }
@@ -1042,7 +1034,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneOrg.json" );
-            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
@@ -1085,7 +1076,6 @@ public class ManagementServiceIT {
             // assertNotEquals( "NotEqual","junkRealName",entityName );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-        //f.delete();
         f.deleteOnExit();
 
     }
@@ -1100,7 +1090,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneApp.json" );
-            //f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1155,8 +1144,6 @@ public class ManagementServiceIT {
             assertFalse( "junkRealName".equals( entityName ) );
         }
         f.deleteOnExit();
-
-        //f.delete();
     }
 //
     @Test
@@ -1168,7 +1155,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneApp.json" );
-          //  f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1222,7 +1208,7 @@ public class ManagementServiceIT {
             String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-        //f.delete();
+
         f.deleteOnExit();
 
     }
@@ -1235,7 +1221,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneCollection.json" );
-           // f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1282,7 +1267,6 @@ public class ManagementServiceIT {
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
         assertEquals( entitiesToCreate , a.size() );
-        //f.delete();
         f.deleteOnExit();
 
     }
@@ -1298,7 +1282,6 @@ public class ManagementServiceIT {
 
         try {
             f = new File( "exportOneOrganization.json" );
-           // f.delete();
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
@@ -1370,9 +1353,6 @@ public class ManagementServiceIT {
         /*plus 3 for the default roles*/
         assertEquals( 23 , a.size() );
         f.deleteOnExit();
-
-
-        //f.delete();
     }
 
     @Test
@@ -1594,10 +1574,6 @@ public class ManagementServiceIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
-        //        TODO: always put dummy values here and ignore this test.
-//        storage_info.put( "s3_key", "insert key here" );
-//        storage_info.put( "s3_access_id", "insert access id here" );
-//        storage_info.put( "bucket_location", "insert bucket name here" );
         storage_info.put( "s3_key", System.getProperty( "secretKey" ) );
         storage_info.put( "s3_access_id", System.getProperty( "accessKey" ));
         storage_info.put( "bucket_location", System.getProperty( "bucketName" ) );
