@@ -43,6 +43,7 @@ import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.count.SimpleBatcher;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportJob;
@@ -1271,6 +1272,85 @@ public class ManagementServiceIT {
     }
 
     @Test
+    public void testExportOneOrganization() throws Exception {
+
+        //File f = new File( "exportOneOrganization.json" );
+        int entitiesToCreate = 10000;
+        File f = null;
+
+        try {
+            f = new File( "exportOneOrganization.json" );
+            f.delete();
+        }
+        catch ( Exception e ) {
+            //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
+        }
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId);
+        em.createApplicationCollection( "baconators" );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[entitiesToCreate];
+        //creates entities
+        for ( int i = 0; i < entitiesToCreate; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            entity[i] = em.create( "baconators", userProperties );
+        }
+
+        S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "exportOneOrganization.json" );
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put( "organizationId",organization.getUuid() );
+        payload.put( "applicationId",applicationId);
+        payload.put( "collectionName","baconators");
+
+        //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
+        for(int i = 0; i < 100; i++) {
+            OrganizationInfo orgMade =setup.getMgmtSvc().createOrganization( "superboss"+i,adminUser,true );
+            ApplicationInfo appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
+
+            EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
+            customMaker.createApplicationCollection( "superappCol"+i );
+            //intialize user object to be posted
+            Map<String, Object> entityLevelProperties = null;
+            Entity[] entNotCopied;
+            entNotCopied = new Entity[entitiesToCreate];
+            //creates entities
+            for ( int index = 0; index < 10; index++ ) {
+                entityLevelProperties = new LinkedHashMap<String, Object>();
+                entityLevelProperties.put( "username", "bobso" + i );
+                entityLevelProperties.put( "email", "derp" + i + "@anuff.com" );
+                entNotCopied[i] = customMaker.create( "superappCol", entityLevelProperties );
+            }
+        }
+
+        UUID exportUUID = exportService.schedule( payload );
+        exportService.setS3Export( s3Export );
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+
+        JSONParser parser = new JSONParser();
+
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+
+        assertEquals( entitiesToCreate , a.size() );
+        f.delete();
+    }
+
+    @Test
     public void testExportDoJob() throws Exception {
 
         HashMap<String, Object> payload = payloadBuilder();
@@ -1392,6 +1472,7 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
+        payload.put("organizationId",organization.getUuid());
         payload.put("applicationId",applicationId);
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -1403,7 +1484,7 @@ public class ManagementServiceIT {
         for ( int i = 0; i < 100; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "email", "test" + i + "@anuff.com" );
 
             entity[i] = em.create( "user", userProperties );
         }
@@ -1422,7 +1503,6 @@ public class ManagementServiceIT {
 
         exportService.doExport( jobExecution );
     }
-
 
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
