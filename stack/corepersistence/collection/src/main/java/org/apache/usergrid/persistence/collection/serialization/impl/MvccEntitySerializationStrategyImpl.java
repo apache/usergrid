@@ -373,7 +373,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 byte[] array = jsonBytes.array();
                 int start = jsonBytes.arrayOffset();
                 int length = jsonBytes.remaining();
-
+                //Object derp = mapper.readValue( array,start,length,Object.class);
                 storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( IOException e ) {

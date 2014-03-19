@@ -21,12 +21,12 @@ package org.apache.usergrid.persistence.model.entity;
 
 import java.util.UUID;
 
-//import org.codehaus.jackson.annotate.JsonIgnore;
-
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
+
+//import org.codehaus.jackson.annotate.JsonIgnore;
 
 
 /**

@@ -20,27 +20,29 @@ package org.apache.usergrid.utils;
 import java.io.File;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.exceptions.JsonReadException;
-import org.apache.usergrid.persistence.exceptions.JsonWriteException;
-//import org.apache.usergrid.persistence.Entity;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.io.JsonStringEncoder;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.smile.SmileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.commons.lang.StringUtils.substringAfter;
+import org.apache.usergrid.persistence.exceptions.JsonReadException;
+import org.apache.usergrid.persistence.exceptions.JsonWriteException;
 
-import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+
+//import org.apache.usergrid.persistence.Entity;
+//import org.codehaus.jackson.JsonNode;
+//import org.codehaus.jackson.io.JsonStringEncoder;
+//import org.codehaus.jackson.map.ObjectMapper;
+//import org.codehaus.jackson.map.SerializationConfig.Feature;
+//import org.codehaus.jackson.smile.SmileFactory;
+//import com.fasterxml.jackson.
 
 
 public class JsonUtils {
@@ -57,7 +59,7 @@ public class JsonUtils {
 
 
     static {
-        indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
+        indentObjectMapper.getSerializationConfig().with( SerializationFeature.INDENT_OUTPUT );//set( SerializationConfig.Feature.INDENT_OUTPUT, true );
     }
 
 

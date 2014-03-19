@@ -64,6 +64,10 @@ public class EntityObject implements Serializable {
             return;
 
         for(int i = 0; i < al.size(); i++) {
+            String str = al.get( i ).toString();
+            if(str.contains( "version" )){
+                continue;
+            }
             Field fd = ( Field ) al.get( i );
             fields.put( fd.getName(), fd);
         }
