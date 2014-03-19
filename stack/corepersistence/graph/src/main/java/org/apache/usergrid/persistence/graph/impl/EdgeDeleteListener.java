@@ -76,7 +76,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
 
                 //go through every version of this edge <= the current version and remove it
-                Observable<MarkedEdge> edges = Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+                Observable<MarkedEdge> edges = Observable.create( new ObservableIterator<MarkedEdge>( ) {
                     @Override
                     protected Iterator<MarkedEdge> getIterator() {
                         return edgeSerialization.getEdgeToTarget( scope,

@@ -210,7 +210,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<String> getEdgesTypesToTarget( final OrganizationScope scope, final SearchEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
+        return Observable.create( new ObservableIterator<String>(  ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
@@ -224,7 +224,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<String> getEdgesTypesFromSource( final OrganizationScope scope, final SearchEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
+        return Observable.create( new ObservableIterator<String>(  ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
@@ -238,7 +238,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<MarkedEdge> loadEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
@@ -252,7 +252,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      */
     private Observable<MarkedEdge> loadEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType search ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );

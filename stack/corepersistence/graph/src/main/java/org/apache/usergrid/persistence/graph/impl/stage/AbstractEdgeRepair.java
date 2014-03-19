@@ -125,7 +125,7 @@ public abstract class AbstractEdgeRepair  {
      */
     private Observable<MarkedEdge> getEdgeVersionsFromSource( final OrganizationScope scope, final Edge edge ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 
@@ -142,7 +142,7 @@ public abstract class AbstractEdgeRepair  {
      */
     private Observable<MarkedEdge> getEdgeVersionsToTarget( final OrganizationScope scope, final Edge edge ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 

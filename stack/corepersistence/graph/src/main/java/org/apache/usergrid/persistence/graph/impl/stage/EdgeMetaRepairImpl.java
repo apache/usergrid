@@ -251,7 +251,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
+            return Observable.create( new ObservableIterator<String>( ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
@@ -264,7 +264,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+            return Observable.create( new ObservableIterator<MarkedEdge>( ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesToTargetBySourceType( scope,
@@ -296,7 +296,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>( graphFig.getReadTimeout() ) {
+            return Observable.create( new ObservableIterator<String>( ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
@@ -309,7 +309,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>( graphFig.getReadTimeout() ) {
+            return Observable.create( new ObservableIterator<MarkedEdge>( ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesFromSourceByTargetType( scope,
