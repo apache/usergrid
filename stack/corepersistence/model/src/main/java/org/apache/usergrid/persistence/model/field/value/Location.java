@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Geographic point. Should be used when we want to store geo information
  */
-//@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public class Location implements Serializable {
 
     private double latitude;

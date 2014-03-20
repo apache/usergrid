@@ -29,11 +29,13 @@ import org.apache.usergrid.persistence.model.field.Field;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Simple wrapper for holding nested objects
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityObject implements Serializable {
 
     /**

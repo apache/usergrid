@@ -26,7 +26,6 @@ import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
-//import org.codehaus.jackson.annotate.JsonIgnore;
 
 
 /**
@@ -81,11 +80,9 @@ public class Entity extends EntityObject {
         return id;
     }
 
-
     public UUID getVersion() {
         return version;
     }
-
 
     /**
      * Equality is based both on id and version.  If an entity

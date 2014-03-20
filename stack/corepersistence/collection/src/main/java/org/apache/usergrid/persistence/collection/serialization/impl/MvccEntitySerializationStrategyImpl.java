@@ -298,7 +298,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         //the marker for when we're passed a "null" value
         private static final byte[] EMPTY = new byte[] { 0x0 };
-        String helper;
 
 //TODO:Make sure your exceptions provide descriptive error messages.
         @Override
@@ -310,7 +309,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             CompositeBuilder builder = Composites.newCompositeBuilder();
 
             builder.addBytes( VERSION );
-            //mapper.enableDefaultTyping();
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
                 //we're empty
@@ -373,7 +371,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 byte[] array = jsonBytes.array();
                 int start = jsonBytes.arrayOffset();
                 int length = jsonBytes.remaining();
-                //Object derp = mapper.readValue( array,start,length,Object.class);
                 storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( IOException e ) {
