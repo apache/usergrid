@@ -77,7 +77,7 @@ public class CorePerformanceIT {
 
     @Ignore
     @Test
-    public void loadAndReadData( String[] args ) throws IOException, InterruptedException {
+    public void loadAndReadData() throws IOException, InterruptedException {
 
         ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
         Injector injector = Guice.createInjector( new TestIndexModule() );
