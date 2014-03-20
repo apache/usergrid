@@ -504,7 +504,7 @@ An asset is created in the same manner as any Usergrid entity
 				// Success - the asset was created properly
 			}
 		});
-###Adding data
+##Adding data
 
 You can upload data to your asset from a File input or by retrieving it via another request.
 **Note:** Due to security concerns, you cannot browse and select a file programmatically from the local filesystem via javascript
