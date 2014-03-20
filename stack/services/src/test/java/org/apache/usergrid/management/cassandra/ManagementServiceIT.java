@@ -1554,7 +1554,7 @@ public class ManagementServiceIT {
 
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             ListenableFuture<Blob> futureETag = blobStore.getBlob( bucketName,s3Export.getFilename() );
-            bo = futureETag.get( 1, TimeUnit.SECONDS );
+            bo = futureETag.get( 3, TimeUnit.SECONDS );
         }catch(Exception e) {
             assert(false);
         }
@@ -1644,7 +1644,7 @@ public class ManagementServiceIT {
 
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             ListenableFuture<Blob> futureETag = blobStore.getBlob( bucketName,s3Export.getFilename() );
-            bo = futureETag.get( 1, TimeUnit.SECONDS );
+            bo = futureETag.get( 3, TimeUnit.SECONDS );
         }catch(Exception e) {
             assert(false);
         }
