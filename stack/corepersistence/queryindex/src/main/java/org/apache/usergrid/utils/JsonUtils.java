@@ -33,7 +33,6 @@ import org.apache.usergrid.persistence.exceptions.JsonWriteException;
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 //import org.apache.usergrid.persistence.Entity;
@@ -56,12 +55,6 @@ public class JsonUtils {
     static ObjectMapper smileMapper = new ObjectMapper( smile );
 
     private static ObjectMapper indentObjectMapper = new ObjectMapper();
-
-
-    static {
-        indentObjectMapper.getSerializationConfig().with( SerializationFeature.INDENT_OUTPUT );//set( SerializationConfig.Feature.INDENT_OUTPUT, true );
-    }
-
 
     /** Converts object to JSON string, throws runtime exception JsonWriteException on failure. */
     public static String mapToJsonString( Object obj ) {
