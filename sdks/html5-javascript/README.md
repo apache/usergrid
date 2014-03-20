@@ -8,7 +8,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 		<!-- Don't forget to include the SDK -->
 		<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.8.js"></script>
 		<!-- If you prefer a local copy, you can find the file at the root the SDK’s github repo
-		     github.com/apigee/usergrid-javascript-sdk -->
+			 github.com/apigee/usergrid-javascript-sdk -->
 
 		<script type="text/javascript">
 
@@ -29,15 +29,15 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 			client.createCollection(options, function (err, collection) {
 				books = collection;
-    			if (err) {
-    				alert("Couldn't get the list of books.");
-    			} else {
-    				while(books.hasNextEntity()) {
-    					var book = books.getNextEntity();
-    					alert(book.get("title")); // Output the title of the book
-    				}
-    			}
-    		});
+				if (err) {
+					alert("Couldn't get the list of books.");
+				} else {
+					while(books.hasNextEntity()) {
+						var book = books.getNextEntity();
+						alert(book.get("title")); // Output the title of the book
+					}
+				}
+			});
 
 			// Uncomment the next 4 lines if you want to write data
 
@@ -69,7 +69,7 @@ Or just open github issues.
 
 
 ##Overview
-This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is located here:
+This open source SDK simplifies writing JavaScript / HTML5 applications that connect to Usergrid. The repo is located here:
 
 <https://github.com/usergrid/usergrid/tree/master/sdks/html5-javascript>
 
@@ -80,13 +80,13 @@ You can download this package here:
 
 The Javascript SDK is in the sdks/html5-javascript folder.
 
-To find out more about Apigee App Services, see:
+To find out more about Usergrid, see:
 
-<http://developers.apigee.com>
+<http://usergrid.incubator.apache.org>
 
-To view the Apigee App Services documentation, see:
+To view the Usergrid documentation, see:
 
-<http://apigee.com/docs/app_services>
+<http://usergrid.incubator.apache.org/docs/>
 
 
 ##Node.js
@@ -478,7 +478,83 @@ You can also limit the results returned such that only the fields you specify ar
 
 You can find more information on custom queries here:
 
-<http://apigee.com/docs/usergrid/content/queries-and-parameters>
+<http://usergrid.incubator.apache.org/docs/query-language/>
+
+##Assets
+Assets are used to model binary resources. This can be used by your application to store images and other file types.
+
+####Creating an asset
+
+An asset is created in the same manner as any Usergrid entity
+
+	var imageName='test_image.jpg';
+	var options = {
+		type:'asset',
+		name:imageName,
+		path: '/uploads/'+imageName,
+		owner:user.get("uuid")
+	};
+	
+	var asset=new Usergrid.Asset(
+		{client:client, data:options},
+		function(err, asset){
+			if (err) { 
+			   // Error - there was a problem creating the asset
+			} else { 
+				// Success - the asset was created properly
+			}
+		});
+###Adding data
+
+You can upload data to your asset from a File input or by retrieving it via another request.
+**Note:** Due to security concerns, you cannot browse and select a file programmatically from the local filesystem via javascript
+
+On your page, you would have an input element:
+
+	<input type="file" id="upload"/>
+
+Once a file is selected, read the data and upload it to the asset.
+
+	var files = document.getElementById('upload').files;
+	if(files.length===0){
+		  //No files have been selected
+	}else{
+		//take the first file off the front of the array
+		var file=files.unshift();
+		asset.upload(file, function(err, asset){
+			if (err) { 
+			  // Error - there was a problem uploading the data
+			} else { 
+			  // Success - the data was uploaded successfully
+			} 
+		})
+	}
+
+To retrieve the data and display it via HTML
+
+	asset.download(function(err, file){
+		if (err) { 
+			// Error - there was a problem retrieving the data
+		} else { 
+			// Success - the entity was found
+			// and retrieved by the Apigee API
+
+			// Create an image tag to hold our downloaded image data
+			var img = document.createElement("img");
+			// Create a FileReader to feed the image
+			// into our newly-created element
+			var reader = new FileReader();
+			reader.onload = (function(aImg) { 
+					return function(e) {
+						aImg.src = e.target.result;
+					}; 
+				})(img);
+			reader.readAsDataURL(file);
+			// Append the img element to our page
+			document.body.appendChild(img);
+		} 
+	})
+
 
 
 ##Modeling users with the entity object
@@ -613,7 +689,7 @@ This creates a one-way connection between marty and einstein, where marty "likes
 
 Complete documentation on the entity relationships API can be found here:
 
-<http://apigee.com/docs/usergrid/content/entity-relationships>
+<http://usergrid.incubator.apache.org/docs/relationships/>
 
 For example, say we have a new dog named einstein:
 
@@ -812,10 +888,11 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed).
 
 ##More information
+For more information on Usergrid, visit <http://usergrid.incubator.apache.org/>.
 For more information on Apigee App Services, visit <http://developers.apigee.com>.
 
 ## Copyright
-Copyright 2013 Apigee Corporation
+Copyright 2014 Apigee Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
