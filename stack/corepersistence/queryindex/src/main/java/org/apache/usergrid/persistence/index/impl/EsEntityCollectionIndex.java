@@ -124,13 +124,17 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
 
-        // if new index then create it 
         AdminClient admin = client.admin();
-        if (!admin.indices().exists(
-                new IndicesExistsRequest(indexName)).actionGet().isExists()) {
-
+        try {
             admin.indices().prepareCreate(indexName).execute().actionGet();
             log.debug("Created new index: " + indexName);
+
+        } catch (Exception e) {
+            if ( log.isDebugEnabled() ) {
+                log.debug("Exception creating index, already exists?", e);
+            } else {
+                log.info(e.getMessage());
+            }
         }
 
         // if new type then create mapping

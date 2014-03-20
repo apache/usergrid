@@ -17,9 +17,6 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.netflix.config.ConfigurationManager;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -27,7 +24,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.commons.lang3.math.NumberUtils;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -44,10 +48,10 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.netflix.config.ConfigurationManager;
 
 
 /**
@@ -107,19 +111,16 @@ public class CorePerformanceIT {
 
         for ( int i=0; i<orgCount; i++ ) {
 
-            String orgName = "org-${i}-${time}";
+            String orgName = "org-" + i + "-" + time;
             final Id orgId = new SimpleId(orgName);
 
             for ( int j=0; j<appCount; j++ ) {
 
-                String appName = "app-${j}-${time}";
+                String appName = "app-" + j + "-" + time;
                 final Id appId = new SimpleId(appName);
 
                 CollectionScope scope = new CollectionScopeImpl( orgId, appId, "reviews" );
                 scopes.add( scope );
-
-//                def scopeFile = new File("/home/ubuntu/scopes.txt")
-//                scopeFile.append("Created ${orgId}, ${appId}\n")
 
                 Thread t = new Thread( new DataLoader( scope ));
                 t.start();
@@ -181,7 +182,7 @@ public class CorePerformanceIT {
                 results.getEntities(); // cause retrieval from Cassanda;
                 count += results.size();
 
-                log.info("Read ${count} reviews in ${orgId} ${appId}");
+                log.info("Read {} reviews in {} / {} ", count, orgId, appId );
             }
         }
     }
@@ -212,6 +213,9 @@ public class CorePerformanceIT {
             Entity current = new Entity(
                 new SimpleId(UUIDGenerator.newTimeUUID(), "review")); 
 
+            Id orgId = scope.getOrganization();
+            Id appId = scope.getOwner();
+
             int count = 0;
             try {
                 while ( (s = br.readLine()) != null && count < maxEntities ) {
@@ -225,7 +229,7 @@ public class CorePerformanceIT {
                             eci.index( current );
                             
                             if ( maxEntities < 20 ) {
-                                log.info("Index written for ${current.getId()}");
+                                log.info("Index written for {}", current.getId());
                                 log.info("---");
                             }
                             
@@ -235,7 +239,7 @@ public class CorePerformanceIT {
                             
                             count++;
                             if (count % 100000 == 0) {
-                                log.info("Indexed ${count} reviews in ${orgId} ${appId}");
+                                log.info("Indexed {} reviews in {} / {} ", count, orgId, appId );
                             }
                             continue;
                         }
@@ -245,7 +249,7 @@ public class CorePerformanceIT {
                         String value = s.substring( s.indexOf(":") + 1 ).trim();
                         
                         if ( maxEntities < 20 ) {
-                            log.info("Indexing ${name} = ${value}");
+                            log.info("Indexing {} = {}", name, value);
                         }
                         
                         if ( NumberUtils.isNumber(value) && value.contains(".")) {
@@ -298,7 +302,7 @@ public class CorePerformanceIT {
     public static void query( EntityCollectionIndex eci, String query ) {;
         Query q = Query.fromQL(query) ;
         Results results = eci.execute( q );
-        log.info("${q.getQl()}: ${results.getIds().size()}");
+        log.info("size = {} returned from query {}",results.size(), q.getQl() );
     }
 
 }
