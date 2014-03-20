@@ -23,8 +23,17 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import org.jclouds.ContextBuilder;
+import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
+import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.netty.config.NettyPayloadModule;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
@@ -65,12 +74,9 @@ import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.inject.Module;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
@@ -82,6 +88,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+//import com.amazonaws.auth.AWSCredentials;
+//import com.amazonaws.auth.BasicAWSCredentials;
+//import com.amazonaws.services.s3.AmazonS3;
+//import com.amazonaws.services.s3.AmazonS3Client;
+//import com.amazonaws.services.s3.model.GetObjectRequest;
+//import com.amazonaws.services.s3.model.S3Object;
 
 
 
@@ -1519,18 +1532,34 @@ public class ManagementServiceIT {
         exportService.doExport( jobExecution );
         while (!exportService.getState( applicationId,exportUUID ).equals("FINISHED"));
 
-        AWSCredentials myCredentials = new BasicAWSCredentials(
-                System.getProperty( "accessKey" ), System.getProperty("secretKey"));
-        AmazonS3 s3client = new AmazonS3Client(myCredentials);
-        S3Object sd = null;
+        String bucketName = System.getProperty( "bucketName" );
+        String accessId = System.getProperty( "accessKey" );
+        String secretKey =  System.getProperty("secretKey");
+
+        Properties overrides = new Properties();
+        overrides.setProperty( "s3" + ".identity", accessId );
+        overrides.setProperty( "s3" + ".credential", secretKey );
+
+        Blob bo = null;
+
         try {
-            sd = s3client.getObject( new GetObjectRequest( System.getProperty( "bucketName" ),
-                s3Export.getFilename()) );
+            final Iterable<? extends Module> MODULES = ImmutableSet
+                    .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule
+                            () );
+
+            BlobStoreContext context =
+                    ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
+                                  .overrides( overrides ).buildView( BlobStoreContext.class );
+
+
+            AsyncBlobStore blobStore = context.getAsyncBlobStore();
+            ListenableFuture<Blob> futureETag = blobStore.getBlob( bucketName,s3Export.getFilename() );
+            bo = futureETag.get( 1, TimeUnit.SECONDS );
         }catch(Exception e) {
             assert(false);
         }
-        assertNotNull( sd );
 
+        assertNotNull( bo );
     }
 
     //@Ignore("I'd have to add some overhead such that I loop through all files or keep track of them all ")
@@ -1594,17 +1623,33 @@ public class ManagementServiceIT {
         exportService.doExport( jobExecution );
         while (!exportService.getState( applicationId,exportUUID ).equals("FINISHED"));
 
-        AWSCredentials myCredentials = new BasicAWSCredentials(
-                System.getProperty( "accessKey" ), System.getProperty("secretKey"));
-        AmazonS3 s3client = new AmazonS3Client(myCredentials);
-        S3Object sd = null;
+        String bucketName = System.getProperty( "bucketName" );
+        String accessId = System.getProperty( "accessKey" );
+        String secretKey =  System.getProperty("secretKey");
+
+        Properties overrides = new Properties();
+        overrides.setProperty( "s3" + ".identity", accessId );
+        overrides.setProperty( "s3" + ".credential", secretKey );
+        Blob bo = null;
+
         try {
-            sd = s3client.getObject( new GetObjectRequest( System.getProperty( "bucketName" ),
-                    s3Export.getFilename()) );
+            final Iterable<? extends Module> MODULES = ImmutableSet
+                    .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule
+                            () );
+
+            BlobStoreContext context =
+                    ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
+                                  .overrides( overrides ).buildView( BlobStoreContext.class );
+
+
+            AsyncBlobStore blobStore = context.getAsyncBlobStore();
+            ListenableFuture<Blob> futureETag = blobStore.getBlob( bucketName,s3Export.getFilename() );
+            bo = futureETag.get( 1, TimeUnit.SECONDS );
         }catch(Exception e) {
             assert(false);
         }
-        assertNotNull( sd );
+
+        assertNotNull( bo );
     }
 
     /*Creates fake payload for testing purposes.*/
