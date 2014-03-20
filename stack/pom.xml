@@ -1842,6 +1842,9 @@
                     <exclude>**/cloudbees.xml</exclude>
                     <exclude>**/aws.properties</exclude>
 
+                    <!-- TODO: need to add headers to many files in corepersistence -->
+                    <exclude>**/corepersistence/**</exclude>
+
                 </excludes>
             </configuration>
 
