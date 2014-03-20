@@ -6,7 +6,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 <html>
 	<head>
 		<!-- Don't forget to include the SDK -->
-		<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.5.js"></script>
+		<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.8.js"></script>
 		<!-- If you prefer a local copy, you can find the file at the root the SDK’s github repo
 		     github.com/apigee/usergrid-javascript-sdk -->
 
@@ -27,7 +27,8 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 			var books;
 
-			client.createCollection(options, function (err, books) {
+			client.createCollection(options, function (err, collection) {
+				books = collection;
     			if (err) {
     				alert("Couldn't get the list of books.");
     			} else {
@@ -52,11 +53,11 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 ##Version
 
-Current Version: **0.10.7**
+Current Version: **0.10.8**
 
 See change log:
 
-<https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
+<https://github.com/usergrid/usergrid/blob/master/sdks/html5-javascript/changelog.md>
 
 ##Comments / questions
 For help using this SDK, reach out on the Usergrid google group:
@@ -70,13 +71,14 @@ Or just open github issues.
 ##Overview
 This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is located here:
 
-<https://github.com/apigee/usergrid-javascript-sdk>
+<https://github.com/usergrid/usergrid/tree/master/sdks/html5-javascript>
 
 You can download this package here:
 
-* Download as a zip file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.zip>
-* Download as a tar.gz file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.tar.gz>
+* Download as a zip file: <https://github.com/usergrid/usergrid/archive/master.zip>
+* Download as a tar.gz file: <https://github.com/usergrid/usergrid/archive/master.tar.gz>
 
+The Javascript SDK is in the sdks/html5-javascript folder.
 
 To find out more about Apigee App Services, see:
 
@@ -94,19 +96,17 @@ Want to use Node.js? No problem - use the Usergrid Node Module:
 
 or on github:
 
-<https://github.com/apigee/usergrid-node-module>
+<https://github.com/usergrid/usergrid/tree/master/sdks/nodejs>
 
 The syntax for this Javascript SDK and the Usergrid Node module are almost exactly the same so you can easily transition between them.
 
 
 ##About the samples
-This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
+This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid).
 
-<http://apigee.github.io/usergrid-javascript-sdk>
+**Note:** All the sample code in this file is pulled directly from the "test" example, so you can rest-assured that it will work! You can find it here:
 
-**Note:** All the sample code in this file is pulled directly from the "test" example, so you can rest-assured that it will work! You can run them yourself here:
-
-<http://apigee.github.io/usergrid-javascript-sdk/examples/test/test.html>
+<https://github.com/usergrid/usergrid/blob/master/sdks/html5-javascript/examples/test/test.html>
 
 
 ##Installing
@@ -189,7 +189,7 @@ Once your object is created, you can update properties on it by using the `set` 
 		state:'hungry'
 	}
 
-	// Set is additive, so previously set properties are not overwritten
+	// Set is additive, so previously set properties are not overwritten unless a property with the same name exists in the data object
 	dog.set(data);
 
 	// And save back to the database
