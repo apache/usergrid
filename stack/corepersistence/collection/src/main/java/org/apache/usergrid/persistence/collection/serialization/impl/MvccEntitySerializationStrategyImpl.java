@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,8 +43,6 @@ import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
@@ -293,7 +290,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         //the marker for when we're passed a "null" value
         private static final byte[] EMPTY = new byte[] { 0x0 };
 
-//TODO:Make sure your exceptions provide descriptive error messages.
         @Override
         public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
             if ( wrapper == null ) {
@@ -324,14 +320,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             try {
                 builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
             }
-            catch ( JsonMappingException e ) {
-                e.printStackTrace();
-            }
-            catch ( JsonGenerationException e ) {
-                e.printStackTrace();
-            }
-            catch ( IOException e ) {
-                e.printStackTrace();
+            catch ( Exception e ) {
+                throw new CollectionRuntimeException(e.getMessage());
             }
 
             return builder.build();
@@ -365,10 +355,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 byte[] array = jsonBytes.array();
                 int start = jsonBytes.arrayOffset();
                 int length = jsonBytes.remaining();
+
                 storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
-            catch ( IOException e ) {
-                e.printStackTrace();
+            catch ( Exception e ) {
+                throw new CollectionRuntimeException(e.getMessage());
             }
 
             final Optional<Entity> entity = Optional.of( storedEntity );

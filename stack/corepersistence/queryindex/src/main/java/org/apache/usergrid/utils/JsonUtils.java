@@ -35,15 +35,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
-//import org.apache.usergrid.persistence.Entity;
-//import org.codehaus.jackson.JsonNode;
-//import org.codehaus.jackson.io.JsonStringEncoder;
-//import org.codehaus.jackson.map.ObjectMapper;
-//import org.codehaus.jackson.map.SerializationConfig.Feature;
-//import org.codehaus.jackson.smile.SmileFactory;
-//import com.fasterxml.jackson.
-
-
 public class JsonUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger( JsonUtils.class );
