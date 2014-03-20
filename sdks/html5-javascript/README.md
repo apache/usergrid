@@ -6,9 +6,9 @@ Detailed instructions follow but if you just want a quick example of how to get 
 <html>
 	<head>
 		<!-- Don't forget to include the SDK -->
-		<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.8.js"></script>
-		<!-- If you prefer a local copy, you can find the file at the root the SDK’s github repo
-			 github.com/apigee/usergrid-javascript-sdk -->
+		<script src="/path/to/usergrid.js"></script>
+		<!-- You can find the file in the Usergrid github repo
+			 https://github.com/usergrid/usergrid/blob/master/sdks/html5-javascript/usergrid.js -->
 
 		<script type="text/javascript">
 
