@@ -479,6 +479,69 @@ You can also limit the results returned such that only the fields you specify ar
 You can find more information on custom queries here:
 
 <http://usergrid.incubator.apache.org/docs/query-language/>
+##Counters
+Counters can be used by an application to create custom statistics, such as how many times an a file has been downloaded or how many instances of an application are in use.
+
+###Create the counter instance
+
+**Note:** The count is not altered upon instantiation
+
+	var counter = new Usergrid.Counter({
+			client: client,
+			data: {
+				category: 'usage',
+				//a timestamp of '0' defaults to the current time
+				timestamp: 0,
+				counters: {
+					running_instances: 0,
+					total_instances: 0
+				}
+			}
+		}, function(err, data) {
+			if (err) { 
+			   // Error - there was a problem creating the counter
+			} else { 
+				// Success - the counter was created properly
+			}
+		});
+
+###Updating counters
+
+When an application starts, we want to increment the 'running_instances' and 'total_instances' counters.
+
+	// add 1 running instance
+	counter.increment({
+			name: 'running_instances',
+			value: 1
+		}, function(err, data) {
+			// ...
+		});
+
+	// add 1 total instance
+	counter.increment({
+			name: 'total_instances',
+			value: 1
+		}, function(err, data) {
+			// ...
+		});
+
+When the application exits, we want to decrement 'running_instances'
+
+	// subtract 1 total instance
+	counter.decrement({
+			name: 'total_instances',
+			value: 1
+		}, function(err, data) {
+			// ...
+		});
+
+Once you have completed your testing, you can reset these values to 0.
+
+	counter.reset({
+			name: 'total_instances'
+		}, function(err, data) {
+			// ...
+		});
 
 ##Assets
 Assets are used to model binary resources. This can be used by your application to store images and other file types.
