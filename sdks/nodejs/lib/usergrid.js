@@ -1073,7 +1073,7 @@ var AUTH_NONE = 'NONE';
         if (self._client.logging) {
           console.log(error);
         }
-        callback(true, error);
+        return callback(true, error);
       }
     }
     type += '/' + this.get('uuid');
