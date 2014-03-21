@@ -132,19 +132,19 @@ Usergrid.Entity.prototype.getEndpoint = function () {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-Usergrid.Entity.prototype.save = function (callback) {
+Usergrid.Entity.prototype.save = function(callback) {
   var self = this,
     type = this.get('type'),
     method = 'POST',
-    entityId=this.get("uuid"),
+    entityId = this.get("uuid"),
     data = {},
     entityData = this.get(),
     password = this.get('password'),
     oldpassword = this.get('oldpassword'),
     newpassword = this.get('newpassword'),
-    options={
-      method:method,
-      endpoint:type
+    options = {
+      method: method,
+      endpoint: type
     };
 
   //update the entity
@@ -155,62 +155,64 @@ Usergrid.Entity.prototype.save = function (callback) {
 
   //remove system-specific properties
   Object.keys(entityData)
-      .filter(function(key){return (ENTITY_SYSTEM_PROPERTIES.indexOf(key)===-1)})
-    .forEach(function(key){
-      data[key]= entityData[key];
+    .filter(function(key) {
+      return (ENTITY_SYSTEM_PROPERTIES.indexOf(key) === -1)
+    })
+    .forEach(function(key) {
+      data[key] = entityData[key];
     });
-    options.body=data;
+  options.body = data;
   //save the entity first
-  this._client.request(options, function (err, response) {
-      var entity=response.getEntity();
-      if(entity){
-          self.set(entity);
-          self.set('type', (/^\//.test(response.path))?response.path.substring(1):response.path);
-      }
-//      doCallback(callback,[err, self]);
+  this._client.request(options, function(err, response) {
+    var entity = response.getEntity();
+    if (entity) {
+      self.set(entity);
+      self.set('type', (/^\//.test(response.path)) ? response.path.substring(1) : response.path);
+    }
+    //      doCallback(callback,[err, self]);
 
-      /*
+    /*
         TODO move user logic to its own entity
        */
 
 
-     //clear out pw info if present
-     self.set('password', null);
-     self.set('oldpassword', null);
-     self.set('newpassword', null);
+    //clear out pw info if present
+    self.set('password', null);
+    self.set('oldpassword', null);
+    self.set('newpassword', null);
     if (err && self._client.logging) {
       console.log('could not save entity');
-        doCallback(callback,[err, response, self]);
-    }else if ((/^users?/.test(self.get('type'))) && oldpassword && newpassword) {
-          //if this is a user, update the password if it has been specified;
-        //Note: we have a ticket in to change PUT calls to /users to accept the password change
-        //      once that is done, we will remove this call and merge it all into one
-        var options = {
-          method:'PUT',
-          endpoint:type+'/'+self.get("uuid")+'/password',
-          body:{
-              uuid:self.get("uuid"),
-              username:self.get("username"),
-              password:password,
-              oldpassword:oldpassword,
-              newpassword:newpassword
-          }
+      doCallback(callback, [err, response, self]);
+    } else if ((/^users?/.test(self.get('type'))) && oldpassword && newpassword) {
+      //if this is a user, update the password if it has been specified;
+      //Note: we have a ticket in to change PUT calls to /users to accept the password change
+      //      once that is done, we will remove this call and merge it all into one
+      var options = {
+        method: 'PUT',
+        endpoint: type + '/' + self.get("uuid") + '/password',
+        body: {
+          uuid: self.get("uuid"),
+          username: self.get("username"),
+          password: password,
+          oldpassword: oldpassword,
+          newpassword: newpassword
         }
-        self._client.request(options, function (err, data) {
-          if (err && self._client.logging) {
-            console.log('could not update user');
-          }
-          //remove old and new password fields so they don't end up as part of the entity object
-          self.set({
-              'password':null,
-              'oldpassword': null,
-              'newpassword': null
-          });
-          doCallback(callback,[err, data, self]);
-        });
-      } else {
-        doCallback(callback,[err, response, self]);
       }
+      self._client.request(options, function(err, data) {
+        if (err && self._client.logging) {
+          console.log('could not update user');
+        }
+        //remove old and new password fields so they don't end up as part of the entity object
+        self.set({
+          'password': null,
+          'oldpassword': null,
+          'newpassword': null
+        });
+        doCallback(callback, [err, data, self]);
+      });
+    } else {
+      doCallback(callback, [err, response, self]);
+    }
 
   });
 };
