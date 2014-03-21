@@ -1,6 +1,6 @@
 {
   "name": "usergrid",
-  "version": "0.10.8",
+  "version": "0.11.0",
   "description": "Detailed instructions follow but if you just want a quick example of how to get started with this SDK, here’s a minimal HTML5 file that shows you how to include & initialize the SDK, as well as how to read & write data from Usergrid with it.",
   "main": "usergrid.js",
   "directories": {

@@ -53,7 +53,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 ##Version
 
-Current Version: **0.10.8**
+Current Version: **0.11.0**
 
 See change log:
 

@@ -1,4 +1,7 @@
 ##Change log
+###0.11.0
+- Removed 'getOnExist' flag from createEntity and createGroup. Handling of duplicate entity errors is now the responsibility of the client.
+
 ###0.10.8
 - Added support for Events and Counters
 - Added support for Folders and Assets
