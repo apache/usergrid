@@ -1490,7 +1490,7 @@ public class ManagementServiceIT {
     }
 
 
-    @Test //For this test please input your s3 credentials into payload builder.
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     public void testIntegration100EntitiesOn() throws Exception {
 
         //s3client.putObject(new PutObjectRequest(bucketName, keyName, file));
@@ -1562,8 +1562,7 @@ public class ManagementServiceIT {
         assertNotNull( bo );
     }
 
-    //@Ignore("I'd have to add some overhead such that I loop through all files or keep track of them all ")
-    @Test
+    @Ignore
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
