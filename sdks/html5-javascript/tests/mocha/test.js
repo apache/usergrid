@@ -318,14 +318,6 @@ describe('Usergrid', function(){
                     done();
                 })
             })
-            it('createEntity - get on Exist',function(done){
-                client.createEntity({type:'dog',name:'createEntityTestDog', getOnExist:true}, function(err, dog){
-                    assert(!err, "createEntity returned an error")
-                    assert(dog, "createEntity did not return a dog")
-                    assert(dog.get("uuid")!==null, "The dog's UUID was not returned")
-                    done();
-                })
-            })
             var testGroup;
             it('createGroup',function(done){
                 client.createGroup({path:'dogLovers'},function(err, group){
