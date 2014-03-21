@@ -1,4 +1,10 @@
 ##Change log
+###0.10.8
+- Added support for Events and Counters
+- Added support for Folders and Assets
+- Improved asynchronous call support
+- Improved callback handling
+- Numerous bug fixes
 
 ###0.10.7
 - Bug fixes
