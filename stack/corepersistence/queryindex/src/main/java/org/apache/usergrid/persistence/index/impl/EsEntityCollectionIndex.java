@@ -49,7 +49,6 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -68,6 +67,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Implements index using ElasticSearch Java API and Core Persistence Collections.
@@ -118,13 +118,17 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
 
-        // if new index then create it 
         AdminClient admin = client.admin();
-        if (!admin.indices().exists(
-                new IndicesExistsRequest(indexName)).actionGet().isExists()) {
-
+        try {
             admin.indices().prepareCreate(indexName).execute().actionGet();
             log.debug("Created new index: " + indexName);
+
+        } catch (Exception e) {
+            if ( log.isDebugEnabled() ) {
+                log.debug("Exception creating index, already exists?", e);
+            } else {
+                log.info(e.getMessage());
+            }
         }
 
         // if new type then create mapping
@@ -361,7 +365,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 LocationField locField = (LocationField) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
-                // field names lat and lon triggerl ElasticSearch geo location 
+                // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
                 entityMap.put(field.getName() + GEO_SUFFIX, locMap);

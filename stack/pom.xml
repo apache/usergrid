@@ -192,7 +192,6 @@
     <module>websocket</module>
     <module>rest</module>
     <module>launcher</module>
-    <module>query-validator</module>
     <module>test-utils</module>
     <module>query-validator</module>
     <module>build-tools</module>
@@ -1799,6 +1798,9 @@
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
                     <exclude>**/aws.properties</exclude>
+
+                    <!-- TODO: need to add headers to many files in corepersistence -->
+                    <exclude>**/corepersistence/**</exclude>
 
                 </excludes>
             </configuration>
