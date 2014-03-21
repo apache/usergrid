@@ -1162,17 +1162,7 @@ var AUTH_NONE = 'NONE';
   *
   */
   Usergrid.Entity.prototype.getEntityId = function (entity) {
-    var id = false;
-    if (isUUID(entity.get('uuid'))) {
-      id = entity.get('uuid');
-    } else {
-      if (type === 'users') {
-        id = entity.get('username');
-      } else if (entity.get('name')) {
-        id = entity.get('name');
-      }
-    }
-    return id;
+    return entity.get('uuid') || entity.get('username') || entity.get('name') || false;
   }
 
   /*
