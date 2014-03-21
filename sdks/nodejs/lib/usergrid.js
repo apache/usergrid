@@ -1171,12 +1171,14 @@ var AUTH_NONE = 'NONE';
   *  @method getConnections
   *  @public
   *  @param {string} connection
-  *  @param {object} entity
+  *  @param {opts} options (actually, just options.qs for now)
   *  @param {function} callback
   *  @return {callback} callback(err, data, connections)
   *
   */
-  Usergrid.Entity.prototype.getConnections = function (connection, callback) {
+  Usergrid.Entity.prototype.getConnections = function (connection, opts, callback) {
+
+    if (_.isFunction(opts)) { callback = opts; opts = undefined; }
 
     var self = this;
 
@@ -1199,9 +1201,10 @@ var AUTH_NONE = 'NONE';
       method:'GET',
       endpoint:endpoint
     };
+    if (opts && opts.qs) { options.qs = opts.qs; }
     this._client.request(options, function (err, data) {
       if (err && self._client.logging) {
-        console.log('entity could not be connected');
+        console.log('entity connections could not be retrieved');
       }
 
       self[connection] = {};
@@ -1212,7 +1215,7 @@ var AUTH_NONE = 'NONE';
         if (data.entities[i].type === 'user'){
           self[connection][data.entities[i].username] = data.entities[i];
         } else {
-          self[connection][data.entities[i].name] = data.entities[i]
+          self[connection][data.entities[i].name] = data.entities[i];
         }
       }
 
