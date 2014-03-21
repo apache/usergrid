@@ -73,7 +73,7 @@ var AUTH_NONE = 'NONE';
   *  @param {function} callback
   *  @return {callback} callback(err, data)
   */
-  Usergrid.Client.prototype.request = function (options, callback) {
+  Usergrid.client.prototype.request = function (options, callback) {
     var self = this;
     var method = options.method || 'GET';
     var endpoint = options.endpoint;
@@ -87,10 +87,11 @@ var AUTH_NONE = 'NONE';
         return this.logoutCallback(true, 'no_org_or_app_name_specified');
       }
     }
+    var uri;
     if (mQuery) {
-      var uri = this.URI + '/' + endpoint;
+      uri = this.URI + '/' + endpoint;
     } else {
-      var uri = this.URI + '/' + orgName + '/' + appName + '/' + endpoint;
+      uri = this.URI + '/' + orgName + '/' + appName + '/' + endpoint;
     }
 
     if (this.authType === AUTH_CLIENT_ID) {
@@ -123,6 +124,7 @@ var AUTH_NONE = 'NONE';
         callback(err, data);
       } else {
         err = true;
+        data.statusCode = r.statusCode;
         if ((r.error === 'auth_expired_session_token') ||
           (r.error === 'auth_missing_credentials')   ||
           (r.error == 'auth_unverified_oath')       ||
@@ -153,7 +155,7 @@ var AUTH_NONE = 'NONE';
         }
       }
     });
-  }
+  };
   /*
    *  function for building asset urls
    *
