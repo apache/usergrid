@@ -1472,6 +1472,36 @@ var AUTH_NONE = 'NONE';
     });
   }
 
+/*
+ *  calls delete on the database w/ the passed query
+ *
+ *  @method delete
+ *  @param {opts} options containing query (include options.qs)
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ *
+ */
+Usergrid.client.prototype.delete = function(opts, callback) {
+  if (_.isFunction(opts)) { callback = opts; opts = undefined; }
+
+  if (!opts.qs.q) { opts.qs.q = '*'; }
+
+  var options = {
+    method: 'DELETE',
+    endpoint: opts.type,
+    qs: opts.qs
+  };
+  var self = this;
+  this.request(options, function (err, data) {
+    if (err && self.logging) {
+      console.log('entities could not be deleted');
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data);
+    }
+  });
+};
+
   /*
   *  The Collection class models Usergrid Collections.  It essentially
   *  acts as a container for holding Entity objects, while providing
