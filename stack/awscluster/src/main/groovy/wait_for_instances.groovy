@@ -24,7 +24,7 @@ println "Waiting..."
 def count = 0
 while (true) {
     try {
-        def selectResult = sdbClient.select(new SelectRequest((String)"select * from ${domain}"))
+        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
         for (item in selectResult.getItems()) {
             def att = item.getAttributes().get(0)
             if (att.getValue().equals(stackName)) {
