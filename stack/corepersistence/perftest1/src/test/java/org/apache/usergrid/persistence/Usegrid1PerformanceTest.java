@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.lang.NumberUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +36,8 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: make configurable, add CHOP markup.
  */
-public class Usegrid1PerformanceIT {
-    private static final Logger log = LoggerFactory.getLogger(Usegrid1PerformanceIT.class);
+public class Usegrid1PerformanceTest {
+    private static final Logger log = LoggerFactory.getLogger(Usegrid1PerformanceTest.class);
 
     // max entities we will write and read
     static int maxEntities = Integer.MAX_VALUE;
@@ -54,7 +53,7 @@ public class Usegrid1PerformanceIT {
     private final EntityManagerFactory emf;
 
 
-    public Usegrid1PerformanceIT() throws Throwable {
+    public Usegrid1PerformanceTest() throws Throwable {
         emf = UsergridBootstrap.newInstance().getBean( EntityManagerFactory.class );
     }
    
@@ -64,7 +63,6 @@ public class Usegrid1PerformanceIT {
     }
 
 
-    @Ignore
     @Test
     public void loadAndReadData() throws Exception {
 

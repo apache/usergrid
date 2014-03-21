@@ -21,8 +21,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -45,7 +43,6 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.Query;
 import org.apache.usergrid.persistence.query.Results;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +51,8 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: make configurable, add CHOP markup.
  */
-public class CorePerformanceIT {
-    private static final Logger log = LoggerFactory.getLogger(CorePerformanceIT.class);
+public class CorePerformanceTest {
+    private static final Logger log = LoggerFactory.getLogger(CorePerformanceTest.class);
 
     // max entities we will write and read
     static int maxEntities = Integer.MAX_VALUE;
@@ -71,13 +68,13 @@ public class CorePerformanceIT {
     private final EntityCollectionManagerFactory ecmf;
     private final EntityCollectionIndexFactory ecif;
 
-    public CorePerformanceIT() {
+    public CorePerformanceTest() {
         Injector injector = Guice.createInjector( new TestIndexModule() );
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         ecif = injector.getInstance( EntityCollectionIndexFactory.class );
     }
 
-    @Ignore
+
     @Test
     public void loadAndReadData() throws IOException, InterruptedException {
 
