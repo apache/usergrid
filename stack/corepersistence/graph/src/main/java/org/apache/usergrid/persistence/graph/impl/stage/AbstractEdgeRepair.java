@@ -44,6 +44,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -59,16 +60,14 @@ public abstract class AbstractEdgeRepair  {
     protected final EdgeSerialization edgeSerialization;
     protected final GraphFig graphFig;
     protected final Keyspace keyspace;
-    protected final Scheduler scheduler;
 
 
     @Inject
     public AbstractEdgeRepair( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
-                               final Keyspace keyspace, final Scheduler scheduler ) {
+                               final Keyspace keyspace) {
         this.edgeSerialization = edgeSerialization;
         this.graphFig = graphFig;
         this.keyspace = keyspace;
-        this.scheduler = scheduler;
     }
 
 
@@ -106,7 +105,7 @@ public abstract class AbstractEdgeRepair  {
                                      throw new RuntimeException( "Unable to issue write to cassandra", e );
                                  }
 
-                                 return Observable.from( markedEdges ).subscribeOn( scheduler );
+                                 return Observable.from( markedEdges ).subscribeOn( Schedulers.io() );
                              }
              } );
     }
@@ -133,7 +132,7 @@ public abstract class AbstractEdgeRepair  {
 
                 return edgeSerialization.getEdgeFromSource( scope, search );
             }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 
@@ -150,7 +149,7 @@ public abstract class AbstractEdgeRepair  {
 
                 return edgeSerialization.getEdgeToTarget( scope, search );
             }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 

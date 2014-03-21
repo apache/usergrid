@@ -40,9 +40,8 @@ public class WriteUniqueVerifyStageTest extends AbstractMvccEntityStageTest {
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class );
-        Scheduler scheduler = mock( Scheduler.class );
         SerializationFig fig = mock( SerializationFig.class );
-        new WriteUniqueVerify( uvstrat, scheduler, fig ).call( event );
+        new WriteUniqueVerify( uvstrat, fig ).call( event );
     }
 }
 

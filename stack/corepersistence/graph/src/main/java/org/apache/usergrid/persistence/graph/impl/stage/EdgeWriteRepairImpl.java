@@ -47,8 +47,8 @@ public class EdgeWriteRepairImpl extends AbstractEdgeRepair implements EdgeWrite
 
     @Inject
     public EdgeWriteRepairImpl( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
-                                final Keyspace keyspace, final Scheduler scheduler ) {
-        super( edgeSerialization, graphFig, keyspace, scheduler );
+                                final Keyspace keyspace) {
+        super( edgeSerialization, graphFig, keyspace );
     }
 
 

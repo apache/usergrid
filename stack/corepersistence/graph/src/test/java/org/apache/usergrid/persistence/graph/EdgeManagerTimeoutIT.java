@@ -20,10 +20,13 @@
 package org.apache.usergrid.persistence.graph;
 
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jukito.All;
 import org.jukito.JukitoRunner;
@@ -33,7 +36,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.safehaus.guicyfig.GuicyFig;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
@@ -41,14 +45,16 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 
 import rx.Observable;
-import rx.functions.Action1;
+import rx.Subscriber;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
@@ -57,13 +63,14 @@ import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.crea
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(JukitoRunner.class)
-@UseModules({ TestGraphModule.class })
+@RunWith( JukitoRunner.class )
+@UseModules( { TestGraphModule.class } )
 //@UseModules( { TestGraphModule.class, EdgeManagerIT.InvalidInput.class } )
 public class EdgeManagerTimeoutIT {
 
@@ -101,49 +108,116 @@ public class EdgeManagerTimeoutIT {
 
         when( scope.getOrganization() ).thenReturn( orgId );
 
-        if(graphFig.getReadTimeout() > TIMEOUT){
-            fail("Graph read timeout must be <= " + TIMEOUT + ".  Otherwise tests are invalid");
+        if ( graphFig.getReadTimeout() > TIMEOUT ) {
+            fail( "Graph read timeout must be <= " + TIMEOUT + ".  Otherwise tests are invalid" );
         }
     }
 
 
-    @Test(timeout = TIMEOUT, expected = TimeoutException.class)
-    public void testWriteReadEdgeTypeSource() throws InterruptedException {
+    //    @Test(timeout = TIMEOUT, expected = TimeoutException.class)
+    @Test
+    public void testWriteReadEdgeTypeSource( EdgeSerialization serialization ) throws InterruptedException {
 
-        EdgeManager em = emf.createEdgeManager( scope );
+
+        final EdgeManager em = emf.createEdgeManager( scope );
 
 
-        Edge edge = createEdge( "source", "test", "target" );
-
-        em.writeEdge( edge ).toBlockingObservable().last();
+        final MarkedEdge edge = createEdge( "source", "edge", "target" );
 
         //now test retrieving it
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
+
+        final MockingIterator<MarkedEdge> itr = new MockingIterator<>( Collections.singletonList( edge ) );
+
+
+        when( serialization.getEdgesFromSource( scope, search ) ).thenReturn( itr );
+
         Observable<Edge> edges = em.loadEdgesFromSource( search );
 
         //retrieve the edge, ensure that if we block indefinitely, it times out
 
-        final Semaphore blocker = new Semaphore(0);
+        final AtomicInteger onNextCounter = new AtomicInteger();
+        final CountDownLatch errorLatch = new CountDownLatch( 1 );
 
-        edges.subscribe( new Action1<Edge>() {
+        final Throwable[] thrown = new Throwable[1];
+
+
+
+        edges.subscribe( new Subscriber<Edge>() {
             @Override
-            public void call( final Edge edge ) {
-                //block indefinitely, we want to ensure we timeout
-                try {
-                    blocker.acquire();
-                }
-                catch ( InterruptedException e ) {
-                    throw new RuntimeException(e);
+            public void onCompleted() {
+
+            }
+
+
+            @Override
+            public void onError( final Throwable e ) {
+                thrown[0] = e;
+                errorLatch.countDown();
+            }
+
+
+            @Override
+            public void onNext( final Edge edge ) {
+                {
+                    onNextCounter.incrementAndGet();
                 }
             }
         } );
 
-        blocker.acquire();
+
+        errorLatch.await();
+
+
+        assertEquals( "One lement was produced", 1,onNextCounter.intValue() );
+        assertTrue(thrown[0] instanceof HystrixRuntimeException);
 
     }
 
+
+    private class MockingIterator<T> implements Iterator<T> {
+
+        private final Iterator<T> items;
+
+        private final Semaphore semaphore = new Semaphore( 0 );
+
+
+        private MockingIterator( final Collection<T> items ) {
+            this.items = items.iterator();
+        }
+
+
+        @Override
+        public boolean hasNext() {
+            return true;
+        }
+
+
+        @Override
+        public T next() {
+            if ( items.hasNext() ) {
+                return items.next();
+            }
+
+            //block indefinitely
+            try {
+                semaphore.acquire();
+            }
+            catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
+
+            return null;
+        }
+
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException( "Cannot remove" );
+        }
+    }
 
 
     @Test
@@ -1336,8 +1410,6 @@ public class EdgeManagerTimeoutIT {
     }
 
 
-
-
     @Test
     public void markTargetNode() {
 
@@ -1420,8 +1492,7 @@ public class EdgeManagerTimeoutIT {
     }
 
 
-
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void invalidEdgeTypesWrite( @All Edge edge ) {
         final EdgeManager em = emf.createEdgeManager( scope );
 
@@ -1429,7 +1500,7 @@ public class EdgeManagerTimeoutIT {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void invalidEdgeTypesDelete( @All Edge edge ) {
         final EdgeManager em = emf.createEdgeManager( scope );
 

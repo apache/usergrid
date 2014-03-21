@@ -36,7 +36,6 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
     protected final TimeoutQueue<T> queue;
-    protected final Scheduler scheduler;
     protected final GraphFig graphFig;
     protected final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
 
@@ -46,9 +45,8 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Inject
-    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final Scheduler scheduler, final GraphFig graphFig ) {
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final GraphFig graphFig ) {
         this.queue = queue;
-        this.scheduler = scheduler;
         this.graphFig = graphFig;
 
         //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
@@ -72,7 +70,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
         for ( MessageListener<T, T> listener : listeners ) {
-            observables.add( listener.receive( data ).subscribeOn( scheduler ) );
+            observables.add( listener.receive( data ).subscribeOn( Schedulers.io() ) );
         }
 
         //run everything in parallel and zip it up

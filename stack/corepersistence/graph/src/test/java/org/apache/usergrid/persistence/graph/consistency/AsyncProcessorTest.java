@@ -280,7 +280,7 @@ public class AsyncProcessorTest {
 
         when(fig.getScanPageSize()).thenReturn( 0 );
 
-        AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue, Schedulers.io(), fig );
+        AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue,  fig );
 
 
         return processor;

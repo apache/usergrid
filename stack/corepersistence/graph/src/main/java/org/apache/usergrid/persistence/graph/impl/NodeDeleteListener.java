@@ -32,6 +32,7 @@ import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -47,29 +48,23 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeDeleteRepair edgeDeleteRepair;
     private final EdgeMetaRepair edgeMetaRepair;
-    private final GraphFig graphFig;
-
-    private final Scheduler scheduler;
 
 
     /**
      * Wire the serialization dependencies
      */
     @Inject
-    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization,
-                               final Scheduler scheduler, @NodeDelete final AsyncProcessor nodeDelete,
+    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization, @NodeDelete final AsyncProcessor nodeDelete,
                                final EdgeMetadataSerialization edgeMetadataSerialization,
-                               final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair,
-                               final GraphFig graphFig ) {
+                               final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair
+                                ) {
 
 
         this.nodeSerialization = nodeSerialization;
         this.edgeSerialization = edgeSerialization;
-        this.scheduler = scheduler;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeDeleteRepair = edgeDeleteRepair;
         this.edgeMetaRepair = edgeMetaRepair;
-        this.graphFig = graphFig;
 
         nodeDelete.addListener( this );
     }
@@ -88,7 +83,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
         final UUID version = edgeEvent.getVersion();
 
 
-        return Observable.from( node ).subscribeOn( scheduler ).map( new Func1<Id, Optional<UUID>>() {
+        return Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Optional<UUID>>() {
             @Override
             public Optional<UUID> call( final Id id ) {
                 return nodeSerialization.getMaxVersion( scope, node );
@@ -215,7 +210,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
             }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 
@@ -229,7 +224,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
             }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 
@@ -243,7 +238,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
             }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 
@@ -257,7 +252,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSource( scope, search );
             }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 
