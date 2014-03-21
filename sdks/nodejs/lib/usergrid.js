@@ -1066,17 +1066,17 @@ var AUTH_NONE = 'NONE';
   Usergrid.Entity.prototype.destroy = function (callback) {
     var self = this;
     var type = this.get('type');
-    if (isUUID(this.get('uuid'))) {
-      type += '/' + this.get('uuid');
-    } else {
+    var id = this.getEntityId(this);
+    if (!id) {
       if (typeof(callback) === 'function') {
-        var error = 'Error trying to delete object - no uuid specified.';
+        var error = 'Error trying to delete object - no uuid or name specified.';
         if (self._client.logging) {
           console.log(error);
         }
         callback(true, error);
       }
     }
+    type += '/' + this.get('uuid');
     var options = {
       method:'DELETE',
       endpoint:type
