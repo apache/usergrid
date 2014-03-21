@@ -30,3 +30,9 @@ stack/corepersistence/nbactions.xml
 stack/corepersistence/queryindex/nbactions.xml
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
+/stack/corepersistence/perftest2/src/main/resources/finefoods.txt
+/stack/corepersistence/perftest1/src/main/resources/finefoods.txt
+/stack/corepersistence/perftest2/nbactions.xml
+/stack/corepersistence/perftest1/nbactions.xml
+/stack/corepersistence/perftest1/src/main/resources/usergrid.properties
+/stack/corepersistence/perftest2/src/main/resources/usergrid.properties
