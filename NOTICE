@@ -1,0 +1,11 @@
+Apache Usergrid_
+Copyright 2014 The Apache Software Foundation.
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+This product bundles SBJson, which is available under a "3-clause BSD" license.
+For details, see sdks/ios/UGAPI/SBJson/ .
+
+This product bundles SSKeychain, which is available under a "MIT/X11" license.
+For details, see sdks/ios/UGAPI/SSKeychain/.
