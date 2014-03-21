@@ -20,6 +20,7 @@
 *  @author rod simpson (rod@apigee.com)
 */
 
+var inflection = require('inflection');
 var request = require('request');
 var Usergrid = {};
 Usergrid.USERGRID_SDK_VERSION = '0.10.07';
@@ -1183,7 +1184,7 @@ var AUTH_NONE = 'NONE';
     var self = this;
 
     //connector info
-    var connectorType = this.get('type');
+    var connectorType = inflection.pluralize(this.get('type'));
     var connector = this.getEntityId(this);
     if (!connector) {
       if (typeof(callback) === 'function') {
