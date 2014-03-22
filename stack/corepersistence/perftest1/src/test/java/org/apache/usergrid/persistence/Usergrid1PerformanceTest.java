@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: make configurable, add CHOP markup.
  */
-public class Usegrid1PerformanceTest {
-    private static final Logger log = LoggerFactory.getLogger(Usegrid1PerformanceTest.class);
+public class Usergrid1PerformanceTest {
+    private static final Logger log = LoggerFactory.getLogger(Usergrid1PerformanceTest.class);
 
     // max entities we will write and read
     static int maxEntities = Integer.MAX_VALUE;
@@ -53,7 +53,7 @@ public class Usegrid1PerformanceTest {
     private final EntityManagerFactory emf;
 
 
-    public Usegrid1PerformanceTest() throws Throwable {
+    public Usergrid1PerformanceTest() throws Throwable {
         emf = UsergridBootstrap.newInstance().getBean( EntityManagerFactory.class );
     }
    
@@ -66,13 +66,13 @@ public class Usegrid1PerformanceTest {
     @Test
     public void loadAndReadData() throws Exception {
 
-        log.info("Start Data Load");
+        log("Start Data Load");
         List<UUID> apps = loadData();
-        log.info("Finish Data Load");
+        log("Finish Data Load");
 
-        log.info("Start Data Read");
+        log("Start Data Read");
         readData( apps );
-        log.info("Finish Data Read");
+        log("Finish Data Read");
 
         runSelectedQueries( apps );
 
@@ -167,13 +167,13 @@ public class Usegrid1PerformanceTest {
                     results = em.searchCollection( em.getApplicationRef(), "reviews", query );
                 } catch (Exception ex) {
                     log.error("Error on search, aborting", ex);
-                    log.info("Read {} reviews in {}", count, appId );
+                    log( String.format("Read %d reviews in %s", count, appId) );
                     return;
                 }
                 results.getEntities(); // cause retrieval from Cassanda;
                 count += results.size();
 
-                log.info("Read {} reviews in {}", count, appId );
+                log( String.format("Read %d reviews in %s", count, appId.toString()) );
             }
         }
     }
@@ -223,8 +223,8 @@ public class Usegrid1PerformanceTest {
                             Entity entity = em.create("review", currentEntityMap );
                             
                             if ( maxEntities < 20 ) {
-                                log.info("Index written for {}", entity.getUuid());
-                                log.info("---");
+                                log( String.format("Index written for %s", entity.getUuid().toString()));
+                                log("---");
                             }
                             
                             // create the next entity
@@ -232,7 +232,7 @@ public class Usegrid1PerformanceTest {
                             
                             count++;
                             if (count % 100000 == 0) {
-                                log.info("Indexed {} reviews in {}", count, appId );
+                                log( String.format("Indexed %d reviews in %s", count, appId.toString()) );
                             }
                             continue;
                         }
@@ -242,7 +242,7 @@ public class Usegrid1PerformanceTest {
                         String value = s.substring( s.indexOf(":") + 1 ).trim();
                         
                         if ( maxEntities < 20 ) {
-                            log.info("Indexing {} = {}", name, value);
+                            log( String.format("Indexing %s = %s", name, value));
                         }
                         
                         if ( NumberUtils.isNumber(value) && value.contains(".")) {
@@ -256,7 +256,7 @@ public class Usegrid1PerformanceTest {
                         } 
 
                     } catch ( Exception e ) {
-                        log.info("Error on line " + count);
+                        log("Error on line " + count);
                     }
                 }
 
@@ -293,10 +293,14 @@ public class Usegrid1PerformanceTest {
         }
     }
 
-    public static void query( EntityManager em, String query ) throws Exception {
+    public void query( EntityManager em, String query ) throws Exception {
         Query q = Query.fromQL(query) ;
         Results results = em.searchCollection( em.getApplicationRef(), "reviews", q );
-        log.info("size = {} returned from query {}",results.size(), q.getQl() );
+        log( String.format("size = %d returned from query %s", results.size(), q.getQl()) );
     }
 
+    private void log( String s ) {
+        //log.info(s);
+        System.out.println( System.currentTimeMillis() + ": " + s );
+    }
 }
