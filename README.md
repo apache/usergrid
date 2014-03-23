@@ -11,3 +11,7 @@ This repository contains all the code for Apache Usergrid, including the server 
 * SDKs for [iOS](sdks/ios), [Android](sdks/android), [HTML5/JavaScript](sdks/html5-javascript), [node.js](sdks/nodejs), [Ruby on Rails](ruby-on-rails), [pure Ruby](sdks/ruby), [PHP](sdks/php), (server-side) [Java](sdks/java) and [.Net / Windows](sdks/dotnet), located in their respective subdirectories under [`/sdks`](sdks).
 
 
+For more information
+===
+See the [Apache Usergrid web site](http://usergrid.incubator.apache.org/).
+
