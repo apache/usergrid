@@ -14,24 +14,26 @@ String stackName = (String)System.getenv().get("STACK_NAME")
 String domain    = stackName
 
 //def replicationFactor = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
-def cassNumServers = System.getenv().get("CASSANDRA_NUM_SERVERS")
+int cassNumServers = System.getenv().get("CASSANDRA_NUM_SERVERS").toInteger()
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
-println "Waiting..."
+println "Waiting for Cassandra nodes to register..."
     
 def count = 0
 while (true) {
     try {
-        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
+        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
         for (item in selectResult.getItems()) {
             def att = item.getAttributes().get(0)
             if (att.getValue().equals(stackName)) {
+                println("Found node with ip ${item.getName()}.  Incrementing count")
                 count++
             }
         }
-        if (count >= cassNumServers || count > 300) {
+        if (count >= cassNumServers) {
+            println("count = ${count}, total number of servers is ${cassNumServers}.  Breaking")
             break
         }
     } catch (Exception e) {

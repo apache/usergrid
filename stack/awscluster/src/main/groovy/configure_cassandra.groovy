@@ -124,8 +124,8 @@ write_request_timeout_in_ms: 10000
 truncate_request_timeout_in_ms: 60000
 request_timeout_in_ms: 10000
 cross_node_timeout: false
-endpoint_snitch: EC2Snitch
-dynamic_snitch_update_interval_in_ms: 100 
+endpoint_snitch: Ec2Snitch
+dynamic_snitch_update_interval_in_ms: 100
 dynamic_snitch_reset_interval_in_ms: 600000
 dynamic_snitch_badness_threshold: 0.1
 request_scheduler: org.apache.cassandra.scheduler.NoScheduler
