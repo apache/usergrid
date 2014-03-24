@@ -32,7 +32,7 @@ be named `jdk-7u45-linux-x64.gz`.
 * __Create an aws.properties file__ with your AWS credentials in the same directory as this 
 README file. The file is git-ignored so you don't have to worry about accidentally committing it.
 
-* __Deploy this the  AWS Cluster assembly__ by running the Maven command `mvn depoy` in the same
+* __Deploy this the  AWS Cluster assembly__ by running the Maven command `mvn deploy` in the same
 directory as this README file. 
 
 
