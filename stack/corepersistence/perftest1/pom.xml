@@ -31,11 +31,6 @@
         </dependency>
 
         <dependency>
-            <artifactId>groovy-all</artifactId>
-            <groupId>org.codehaus.groovy</groupId>
-            <version>2.2.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-tools</artifactId>
             <version>0.0.29-SNAPSHOT</version>
@@ -49,7 +44,7 @@
     <build>
         <plugins>
 
-            <plugin>
+<!--            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <dependencies>
@@ -69,7 +64,7 @@
                 <groupId>org.codehaus.groovy</groupId>
                 <version>2.6.0-01</version>
                 <extensions>true</extensions>
-            </plugin>
+            </plugin>-->
 
         </plugins>
     </build>
