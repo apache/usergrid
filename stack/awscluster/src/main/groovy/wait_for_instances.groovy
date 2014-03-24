@@ -36,7 +36,6 @@ while (true) {
         for (item in selectResult.getItems()) {
             def att = item.getAttributes().get(0)
             if (att.getValue().equals(stackName)) {
-                println("Found node with ip ${item.getName()}.  Incrementing count")
                 count++
             }
         }
@@ -44,11 +43,13 @@ while (true) {
             println("count = ${count}, total number of servers is ${cassNumServers}.  Breaking")
             break
         }
+
+        println("Found ${count} nodes but need at least ${cassNumServers}.  Waiting...")
     } catch (Exception e) {
         println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
         return
     }
-    Thread.sleep(1000)
+    Thread.sleep(2000)
 }
 
 println "Waiting done."
