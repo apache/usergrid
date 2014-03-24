@@ -22,9 +22,17 @@ def sdbClient = new AmazonSimpleDBClient(creds)
 println "Waiting for Cassandra nodes to register..."
     
 def count = 0
+
 while (true) {
     try {
+
+
+
         def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
+
+
+        count = 0
+
         for (item in selectResult.getItems()) {
             def att = item.getAttributes().get(0)
             if (att.getValue().equals(stackName)) {
