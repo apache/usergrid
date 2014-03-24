@@ -12,14 +12,16 @@ String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
 String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 String stackName = (String)System.getenv().get("STACK_NAME")
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
-def clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
+String clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
+int cassNumServers = ((String)System.getenv().get("CASSANDRA_NUM_SERVERS")).toInteger()
+
 String domain    = stackName
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from ${domain}"))
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null order by itemName()"))
 def seeds = ""
 def sep = ""
 for (item in selectResult.getItems()) {
@@ -30,7 +32,38 @@ for (item in selectResult.getItems()) {
     }
 }
 
+
+//calculate what our token should be
+selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
+
+int index = 0;
+int count = 0;
+
+for (item in selectResult.getItems()) {
+
+    def name = item.getName()
+
+    //get our index so that we know which token to get
+    if (name == hostName) {
+        index = count
+        break
+    }
+
+    count++
+}
+
+long[] tokens = new long[cassNumServers]
+
+for(int i =0; i < cassNumServers; i ++){
+    tokens[i] =  ((2**64 / cassNumServers) * i) - 2**63
+}
+
+String token = tokens[index]
+
+
 def cassandraConfig = """
+
+
 cluster_name: '${clusterName}'
 listen_address: ${hostName}
 seed_provider:
@@ -38,21 +71,21 @@ seed_provider:
       parameters:
           - seeds: "${seeds}"
 auto_bootstrap: false 
-initial_token:
+initial_token: ${token}
 hinted_handoff_enabled: true
 hinted_handoff_throttle_in_kb: 1024
 max_hints_delivery_threads: 2
 authenticator: org.apache.cassandra.auth.AllowAllAuthenticator
 authorizer: org.apache.cassandra.auth.AllowAllAuthorizer
-partitioner: org.apache.cassandra.dht.RandomPartitioner
+partitioner: org.apache.cassandra.dht.Murmur3Partitioner
 data_file_directories:
     - /mnt/data/cassandra/data
 commitlog_directory: /mnt/data/cassandra/commitlog
 disk_failure_policy: stop
-key_cache_size_in_mb:
+key_cache_size_in_mb: 2048
 key_cache_save_period: 14400
-row_cache_size_in_mb: 0
-row_cache_save_period: 0
+row_cache_size_in_mb: 2048
+row_cache_save_period: 14400
 row_cache_provider: SerializingCacheProvider
 saved_caches_directory: /mnt/data/cassandra/saved_caches
 commitlog_sync: periodic
@@ -91,7 +124,7 @@ write_request_timeout_in_ms: 10000
 truncate_request_timeout_in_ms: 60000
 request_timeout_in_ms: 10000
 cross_node_timeout: false
-endpoint_snitch: SimpleSnitch
+endpoint_snitch: EC2Snitch
 dynamic_snitch_update_interval_in_ms: 100 
 dynamic_snitch_reset_interval_in_ms: 600000
 dynamic_snitch_badness_threshold: 0.1
