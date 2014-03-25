@@ -75,6 +75,7 @@
                     <systemPropertyVariables>
                         <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                     </systemPropertyVariables>
+                    <argLine>-Xms2G -Xmx2G</argLine>
                 </configuration>
             </plugin>
 

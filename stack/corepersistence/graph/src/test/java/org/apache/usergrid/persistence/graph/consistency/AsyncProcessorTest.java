@@ -88,11 +88,10 @@ public class AsyncProcessorTest {
     }
 
 
-    @Test( timeout = 5000 )
+    @Test(timeout = 5000)
     public void verifyAsyncExecution() throws InterruptedException {
 
         final TestListener listener = new TestListener();
-
 
 
         final TestEvent event = new TestEvent();
@@ -121,7 +120,7 @@ public class AsyncProcessorTest {
 
         final CountDownLatch latch = new CountDownLatch( 2 );
 
-        final TestCompleteListener completeListener = new TestCompleteListener(latch);
+        final TestCompleteListener completeListener = new TestCompleteListener( latch );
 
         asyncProcessor.addCompleteListener( completeListener );
 
@@ -149,7 +148,7 @@ public class AsyncProcessorTest {
 
         final TestEvent completeEvent = completeListener.events.peek();
 
-        assertSame(event, completeEvent);
+        assertSame( event, completeEvent );
     }
 
 
@@ -252,23 +251,19 @@ public class AsyncProcessorTest {
         final TimeoutQueue queue = mock( TimeoutQueue.class );
 
 
-        when(queue.take( 1, 10000l )).thenReturn( Collections.singletonList(asynchronousMessage ));
+        when( queue.take( 1, 10000l ) ).thenReturn( Collections.singletonList( asynchronousMessage ) );
 
         AsyncProcessor<TestEvent> processor = constructProcessor( queue );
 
 
-        Collection<AsynchronousMessage<TestEvent>> timeouts =  processor.getTimeouts( 1, 10000l );
+        Collection<AsynchronousMessage<TestEvent>> timeouts = processor.getTimeouts( 1, 10000l );
 
-        assertEquals(1, timeouts.size());
+        assertEquals( 1, timeouts.size() );
 
         AsynchronousMessage<TestEvent> returned = timeouts.iterator().next();
 
-        assertSame(asynchronousMessage, returned);
-
-
-
+        assertSame( asynchronousMessage, returned );
     }
-
 
 
     /**
@@ -276,9 +271,9 @@ public class AsyncProcessorTest {
      */
     public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue ) {
 
-        GraphFig fig = mock(GraphFig.class);
+        GraphFig fig = mock( GraphFig.class );
 
-        when(fig.getScanPageSize()).thenReturn( 0 );
+        when( fig.getScanPageSize() ).thenReturn( 0 );
 
         AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue,  fig );
 

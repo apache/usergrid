@@ -24,11 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
@@ -69,8 +65,8 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(JukitoRunner.class)
+@UseModules({ TestGraphModule.class })
 public class EdgeWriteRepairTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeWriteRepairTest.class );
@@ -120,11 +116,9 @@ public class EdgeWriteRepairTest {
     }
 
 
-
     /**
-     * Test repairing with no edges
-     * TODO: TN.  There appears to be a race condition here with ordering.  Not sure if this is intentional as part of the impl
-     * or if it's an issue
+     * Test repairing with no edges TODO: TN.  There appears to be a race condition here with ordering.  Not sure if
+     * this is intentional as part of the impl or if it's an issue
      */
     @Test
     public void versionTest() throws ConnectionException {
@@ -149,11 +143,9 @@ public class EdgeWriteRepairTest {
 
             LOG.info( "Writing edge at index [{}] {}", i, edge );
 
-            if(i < deleteIndex){
+            if ( i < deleteIndex ) {
                 deletedEdges.add( edge );
             }
-
-
         }
 
 
@@ -165,38 +157,37 @@ public class EdgeWriteRepairTest {
 
         for ( MarkedEdge edge : edges ) {
 
-            LOG.info("Returned edge {} for repair", edge);
+            LOG.info( "Returned edge {} for repair", edge );
 
-           final boolean shouldBeDeleted = deletedEdges.contains( edge );
+            final boolean shouldBeDeleted = deletedEdges.contains( edge );
 
             assertTrue( "Removed matches saved index", shouldBeDeleted );
 
             deletedStream.add( edge );
-
         }
 
         deletedEdges.removeAll( deletedStream.elementSet() );
 
-        assertEquals(0, deletedEdges.size());
+        assertEquals( 0, deletedEdges.size() );
 
         //now verify we get all the versions we expect back
-        Iterator<MarkedEdge> iterator = edgeSerialization.getEdgeFromSource( scope,
+        Iterator<MarkedEdge> iterator = edgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
 
         int count = 0;
 
-        for(MarkedEdge edge: new IterableWrapper<MarkedEdge>( iterator )){
+        for ( MarkedEdge edge : new IterableWrapper<MarkedEdge>( iterator ) ) {
 
-            final Edge saved = versions.get( size - count -1 );
+            final Edge saved = versions.get( size - count - 1 );
 
-            assertEquals(saved, edge);
+            assertEquals( saved, edge );
 
             count++;
         }
 
-        final int keptCount = size-deleteIndex;
+        final int keptCount = size - deleteIndex;
 
-        assertEquals("Kept edge version was the minimum", keptCount, count);
+        assertEquals( "Kept edge version was the minimum", keptCount, count );
     }
 
 
@@ -214,7 +205,4 @@ public class EdgeWriteRepairTest {
             return this.sourceIterator;
         }
     }
-
-
-
 }

@@ -28,9 +28,10 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
@@ -61,10 +62,9 @@ import rx.schedulers.Schedulers;
 
 
 /**
- *
- *
+ * Implementation of graph edges
  */
-public class EdgeManagerImpl implements EdgeManager {
+public class GraphManagerImpl implements GraphManager {
 
 
     private final OrganizationScope scope;
@@ -84,7 +84,7 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     @Inject
-    public EdgeManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
+    public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                             final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
                             final GraphFig graphFig, @EdgeWrite final AsyncProcessor edgeWrite,
                             @EdgeDelete final AsyncProcessor edgeDelete, @NodeDelete final AsyncProcessor nodeDelete,
@@ -198,25 +198,26 @@ public class EdgeManagerImpl implements EdgeManager {
 
 
     @Override
+    public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return edgeSerialization.getEdgeVersions( scope, searchByEdge );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( searchByEdge.getMaxVersion() ) )
+                         .cast( Edge.class );
+    }
+
+
+    @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-
-
-        return
-
-                Observable.create( new ObservableIterator<MarkedEdge>() {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return edgeSerialization.getEdgesFromSource( scope, search );
-                    }
-                } )//we intentionally use distinct until changed.  This way we won't store all the keys since this
-                        //would hog far too much memory.
-                        .distinctUntilChanged( new Func1<Edge, Id>() {
-                            @Override
-                            public Id call( final Edge edge ) {
-                                return edge.getTargetNode();
-                            }
-                        } ).buffer( graphFig.getScanPageSize() )
-                        .flatMap( new EdgeBufferFilter( search.getMaxVersion() ) ).cast( Edge.class );
+        return Observable.create( new ObservableIterator<MarkedEdge>() {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return edgeSerialization.getEdgesFromSource( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                         .cast( Edge.class );
     }
 
 
@@ -227,16 +228,8 @@ public class EdgeManagerImpl implements EdgeManager {
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTarget( scope, search );
             }
-        } )
-                //we intentionally use distinct until changed.  This way we won't store all the keys since this
-                //would hog far too much memory.
-                .distinctUntilChanged( new Func1<Edge, Id>() {
-                    @Override
-                    public Id call( final Edge edge ) {
-                        return edge.getSourceNode();
-                    }
-                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                .cast( Edge.class );
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                         .cast( Edge.class );
     }
 
 
@@ -246,11 +239,6 @@ public class EdgeManagerImpl implements EdgeManager {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesFromSourceByTargetType( scope, search );
-            }
-        } ).distinctUntilChanged( new Func1<Edge, Id>() {
-            @Override
-            public Id call( final Edge edge ) {
-                return edge.getTargetNode();
             }
         } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
 
@@ -264,11 +252,6 @@ public class EdgeManagerImpl implements EdgeManager {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
                 return edgeSerialization.getEdgesToTargetBySourceType( scope, search );
-            }
-        } ).distinctUntilChanged( new Func1<Edge, Id>() {
-            @Override
-            public Id call( final Edge edge ) {
-                return edge.getSourceNode();
             }
         } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
                          .cast( Edge.class );
@@ -353,7 +336,7 @@ public class EdgeManagerImpl implements EdgeManager {
         public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
 
             final Map<Id, UUID> markedVersions = nodeSerialization.getMaxVersions( scope, markedEdges );
-            return Observable.from( markedEdges ).subscribeOn(  Schedulers.io() )
+            return Observable.from( markedEdges )
                              .filter( new EdgeFilter( this.maxVersion, markedVersions ) );
         }
     }

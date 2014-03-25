@@ -28,6 +28,7 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,13 +59,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith( JukitoRunner.class )
-@UseModules( TestGraphModule.class )
+@RunWith(JukitoRunner.class)
+@UseModules(TestGraphModule.class)
 public class EdgeManagerStressTest {
     private static final Logger log = LoggerFactory.getLogger( EdgeManagerStressTest.class );
 
     @Inject
-    private EdgeManagerFactory factory;
+    private GraphManagerFactory factory;
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
@@ -91,6 +92,7 @@ public class EdgeManagerStressTest {
 
 
     @Test
+    @Ignore
     public void writeThousands() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 
@@ -108,7 +110,7 @@ public class EdgeManagerStressTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final EdgeManager manager ) {
+            public Observable<Edge> doSearch( final GraphManager manager ) {
 
 
                 final UUID uuid = UUIDGenerator.newTimeUUID();
@@ -176,6 +178,8 @@ public class EdgeManagerStressTest {
         doTest( generator );
     }
 
+
+    @Ignore
     @Test
     public void writeThousandsSingleSource() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
@@ -193,7 +197,7 @@ public class EdgeManagerStressTest {
 
 
             @Override
-            public Observable<Edge> doSearch( final EdgeManager manager ) {
+            public Observable<Edge> doSearch( final GraphManager manager ) {
                 UUID uuid = UUIDGenerator.newTimeUUID();
 
                 return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", uuid, null ) );
@@ -203,41 +207,41 @@ public class EdgeManagerStressTest {
         doTest( generator );
     }
 
+
     @Test
-       public void writeThousandsSingleTarget() throws InterruptedException {
-           EdgeGenerator generator = new EdgeGenerator() {
+    @Ignore
+    public void writeThousandsSingleTarget() throws InterruptedException {
+        EdgeGenerator generator = new EdgeGenerator() {
 
-               private Id targetId = createId( "target" );
-
-
-               @Override
-               public Edge newEdge() {
-                   Edge edge = createEdge( createId( "source" ), "test", targetId );
+            private Id targetId = createId( "target" );
 
 
-                   return edge;
-               }
+            @Override
+            public Edge newEdge() {
+                Edge edge = createEdge( createId( "source" ), "test", targetId );
 
 
-               @Override
-               public Observable<Edge> doSearch( final EdgeManager manager ) {
-                   UUID uuid = UUIDGenerator.newTimeUUID();
+                return edge;
+            }
 
-                   return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", uuid, null ) );
-               }
-           };
 
-           doTest( generator );
-       }
+            @Override
+            public Observable<Edge> doSearch( final GraphManager manager ) {
+                UUID uuid = UUIDGenerator.newTimeUUID();
+
+                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", uuid, null ) );
+            }
+        };
+
+        doTest( generator );
+    }
 
 
     /**
      * Execute the test with the generator
-     * @param generator
-     * @throws InterruptedException
      */
     private void doTest( EdgeGenerator generator ) throws InterruptedException {
-        EdgeManager manager = factory.createEdgeManager( scope );
+        GraphManager manager = factory.createEdgeManager( scope );
 
         int limit = 10000;
 
@@ -308,6 +312,6 @@ public class EdgeManagerStressTest {
          */
         public Edge newEdge();
 
-        public Observable<Edge> doSearch( final EdgeManager manager );
+        public Observable<Edge> doSearch( final GraphManager manager );
     }
 }

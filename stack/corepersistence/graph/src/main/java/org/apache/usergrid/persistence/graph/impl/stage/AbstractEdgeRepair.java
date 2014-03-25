@@ -77,15 +77,13 @@ public abstract class AbstractEdgeRepair  {
         final UUID maxVersion = edge.getVersion();
 
         //get source edges
-        Observable<MarkedEdge> sourceEdges = getEdgeVersionsFromSource( scope, edge );
+        Observable<MarkedEdge> edgeVersions = getEdgeVersions( scope, edge );
 
-        //get target edges
-        Observable<MarkedEdge> targetEdges = getEdgeVersionsToTarget( scope, edge );
 
 
 
         //merge source and target then deal with the distinct values
-        return Observable.merge( sourceEdges, targetEdges ).filter( getFilter( maxVersion ) ).distinctUntilChanged().buffer( graphFig.getScanPageSize() )
+        return edgeVersions.filter( getFilter( maxVersion ) ).buffer( graphFig.getScanPageSize() )
                          .flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
                              @Override
                              public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
@@ -122,7 +120,7 @@ public abstract class AbstractEdgeRepair  {
     /**
      * Get all edge versions <= the specified max from the source
      */
-    private Observable<MarkedEdge> getEdgeVersionsFromSource( final OrganizationScope scope, final Edge edge ) {
+    private Observable<MarkedEdge> getEdgeVersions( final OrganizationScope scope, final Edge edge ) {
 
         return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
             @Override
@@ -130,24 +128,7 @@ public abstract class AbstractEdgeRepair  {
 
                 final SimpleSearchByEdge search = getSearchByEdge(edge);
 
-                return edgeSerialization.getEdgeFromSource( scope, search );
-            }
-        } ).subscribeOn( Schedulers.io() );
-    }
-
-
-    /**
-     * Get all edge versions <= the specified max from the source
-     */
-    private Observable<MarkedEdge> getEdgeVersionsToTarget( final OrganizationScope scope, final Edge edge ) {
-
-        return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-
-                final SimpleSearchByEdge search = getSearchByEdge(edge);
-
-                return edgeSerialization.getEdgeToTarget( scope, search );
+                return edgeSerialization.getEdgeVersions( scope, search );
             }
         } ).subscribeOn( Schedulers.io() );
     }

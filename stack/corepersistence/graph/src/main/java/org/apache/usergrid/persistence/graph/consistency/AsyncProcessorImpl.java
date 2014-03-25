@@ -45,7 +45,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Inject
-    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final GraphFig graphFig ) {
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue,  final GraphFig graphFig ) {
         this.queue = queue;
         this.graphFig = graphFig;
 

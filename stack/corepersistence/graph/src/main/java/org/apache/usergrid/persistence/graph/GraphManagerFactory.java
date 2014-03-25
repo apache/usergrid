@@ -28,7 +28,7 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
  * @author: tnine
  *
  */
-public interface EdgeManagerFactory
+public interface GraphManagerFactory
 {
 
     /**
@@ -36,5 +36,5 @@ public interface EdgeManagerFactory
      *
      * @param collectionScope The context to use when creating the graph manager
      */
-    public EdgeManager createEdgeManager( OrganizationScope collectionScope );
+    public GraphManager createEdgeManager( OrganizationScope collectionScope );
 }
