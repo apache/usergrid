@@ -43,41 +43,33 @@ Usergrid.Group.prototype.fetch = function(callback) {
     endpoint:memberEndpoint
   }
 
-  this._client.request(groupOptions, function(err, data){
+  this._client.request(groupOptions, function(err, response){
     if(err) {
       if(self._client.logging) {
         console.log('error getting group');
       }
-      doCallback(callback, [err, data], self);
+      doCallback(callback, [err, response], self);
     } else {
-      if(data.entities && data.entities.length) {
-        var groupData = data.entities[0];
-        self._data = groupData || {};
-        self._client.request(memberOptions, function(err, data) {
+      var entities = response.getEntities();
+      if(entities && entities.length) {
+        var groupresponse = entities.shift();
+        //self._response = groupresponse || {};
+        self._client.request(memberOptions, function(err, response) {
           if(err && self._client.logging) {
             console.log('error getting group users');
           } else {
-            if(data.entities) {
-              var count = data.entities.length;
-              self._list = [];
-              for (var i = 0; i < count; i++) {
-                var uuid = data.entities[i].uuid;
-                if(uuid) {
-                  var entityData = data.entities[i] || {};
-                  var entityOptions = {
-                    type: entityData.type,
+            self._list = response.getEntities();
+              .filter(function(entity){return isUUID(entity.uuid)})
+              .map(function(entity){
+                  return new Usergrid.Entity({
+                    type: entity.type,
                     client: self._client,
-                    uuid:uuid,
-                    data:entityData
-                  };
-                  var entity = new Usergrid.Entity(entityOptions);
-                  self._list.push(entity);
-                }
-
-              }
-            }
+                    uuid:entity.uuid,
+                    response:entity //TODO: deprecate this property
+                  });
+              })            
           }
-          doCallback(callback, [err, data, self._list], self);
+          doCallback(callback, [err, response, self], self);
         });
       }
     }
@@ -93,11 +85,12 @@ Usergrid.Group.prototype.fetch = function(callback) {
  *  @return {function} callback(err, data);
  */
 Usergrid.Group.prototype.members = function(callback) {
-  doCallback(callback, [null, this._list], this);
+  //doCallback(callback, [null, this._list, this], this);
+  return this._list;
 };
 
 /*
- *  Adds a user to the group, and refreshes the group object.
+ *  Adds an existing user to the group, and refreshes the group object.
  *
  *  Options object: {user: user_entity}
  *
@@ -109,18 +102,21 @@ Usergrid.Group.prototype.members = function(callback) {
  */
 Usergrid.Group.prototype.add = function(options, callback) {
   var self = this;
-  var options = {
-    method:"POST",
-    endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
-  }
-
-  this._client.request(options, function(error, data){
-    if(error) {
-      doCallback(callback, [error, data, data.entities], self);
-    } else {
-      self.fetch(callback);
+  if(options.user){
+    var options = {
+      method:"POST",
+      endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
     }
-  });
+    this._client.request(options, function(error, response){
+      if(error) {
+        doCallback(callback, [error, response, self], self);
+      } else {
+        self.fetch(callback);
+      }
+    });
+  }else{
+    doCallback(callback, ["no user specified"], this);
+  }
 }
 
 /*
@@ -136,19 +132,21 @@ Usergrid.Group.prototype.add = function(options, callback) {
  */
 Usergrid.Group.prototype.remove = function(options, callback) {
   var self = this;
-
-  var options = {
-    method:"DELETE",
-    endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
-  }
-
-  this._client.request(options, function(error, data){
-    if(error) {
-      doCallback(callback, [error, data], self);
-    } else {
-      self.fetch(callback);
+  if(options.user){
+    var options = {
+      method:"DELETE",
+      endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
     }
-  });
+    this._client.request(options, function(error, response){
+      if(error) {
+        doCallback(callback, [error, response, self], self);
+      } else {
+        self.fetch(callback);
+      }
+    });
+  }else{
+    doCallback(callback, ["no user specified"], this);
+  }
 }
 
 /*
@@ -161,19 +159,16 @@ Usergrid.Group.prototype.remove = function(options, callback) {
  */
 Usergrid.Group.prototype.feed = function(callback) {
   var self = this;
-
-  var endpoint = "groups/"+this._path+"/feed";
-
   var options = {
     method:"GET",
-    endpoint:endpoint
+    endpoint:"groups/"+this._path+"/feed"
   }
 
-  this._client.request(options, function(err, data){
+  this._client.request(options, function(err, response){
     if (err && self.logging) {
       console.log('error trying to log user in');
     }
-    doCallback(callback, [err, data, data.entities], self);
+    doCallback(callback, [err, response, self], self);
   });
 }
 
@@ -189,8 +184,9 @@ Usergrid.Group.prototype.feed = function(callback) {
  * @returns {callback} callback(err, entity)
  */
 Usergrid.Group.prototype.createGroupActivity = function(options, callback){
+  var self = this;
   var user = options.user;
-  options = {
+  var entity = new Usergrid.Entity({
     client: this._client,
     data: {
       actor: {
@@ -210,10 +206,8 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback){
       "content": options.content,
       "type": 'groups/' + this._path + '/activities'
     }
-  }
-
-  var entity = new Usergrid.Entity(options);
-  entity.save(function(err, data) {
-    doCallback(callback, [err, entity]);
+  });
+  entity.save(function(err, response, entity) {
+    doCallback(callback, [err, response, self]);
   });
 };
