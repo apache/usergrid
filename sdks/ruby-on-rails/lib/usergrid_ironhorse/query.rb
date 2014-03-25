@@ -333,6 +333,12 @@ module Usergrid
       def method_missing(method_name, *args)
 
         method = method_name.to_s
+
+        if method.end_with? '!'
+          method.chop!
+          error_on_empty = true
+        end
+
         if method.start_with? 'find_all_by_'
           attribs = method.gsub /^find_all_by_/, ''
         elsif method.start_with? 'find_by_'
@@ -348,11 +354,6 @@ module Usergrid
           attribs = method.gsub /^find_last_by_/, ''
         else
           super
-        end
-
-        if method.end_with? '!'
-          method.chop!
-          error_on_empty = true
         end
 
         attribs = attribs.split '_and_'
@@ -541,9 +542,9 @@ module Usergrid
           where(conditions).delete_all
         else
           pluck :uuid
-          response = run_query
-          response.entities.each {|entity| entity.delete} # todo: can this be optimized into one call?
-          response.entities.size
+          response = load
+          response.each {|entity| entity.delete} # todo: can this be optimized into one call?
+          response.size
         end
       end
 
@@ -892,7 +893,18 @@ module Usergrid
         return if loaded?
         begin
           @response = run_query
-          @records = @response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
+          if (!@options[:select] or @options[:select] == '*')
+            @records = @response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
+          else # handle list
+            selects = @options[:select].split ','
+            @records = @response.entities.collect do |r|
+              data = {}
+              (0..selects.size).each do |i|
+                data[selects[i]] = r[i]
+              end
+              @model_class.model_name.constantize.new(data)
+            end
+          end
         rescue RestClient::ResourceNotFound
           @records = []
         end

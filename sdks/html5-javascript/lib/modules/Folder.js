@@ -14,11 +14,11 @@ Usergrid.Folder = function(options, callback) {
 	self._data.type = "folders";
 	var missingData = ["name", "owner", "path"].some(function(required) { return !(required in self._data)});
 	if(missingData){
-		return doCallback(callback, [true, new Usergrid.Error("Invalid asset data: 'name', 'owner', and 'path' are required properties.")], self);
+		return doCallback(callback, [true, new UsergridError("Invalid asset data: 'name', 'owner', and 'path' are required properties.")], self);
 	}
 	self.save(function(err, data) {
 		if (err) {
-			doCallback(callback, [true, new Usergrid.Error(data)], self);
+			doCallback(callback, [true, new UsergridError(data)], self);
 		} else {
 			if (data && data.entities && data.entities.length){
 				self.set(data.entities[0]);
