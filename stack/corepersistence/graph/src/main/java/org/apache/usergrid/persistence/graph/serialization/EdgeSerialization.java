@@ -39,7 +39,7 @@ public interface EdgeSerialization {
 
 
     /**
-     * Write both the source--->Target edge and the target <----- source edge into the mutation
+     * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
      *
      * @param scope The org scope of the graph
      * @param edge The edge to write
@@ -56,7 +56,7 @@ public interface EdgeSerialization {
     MutationBatch markEdge( OrganizationScope scope, Edge edge);
 
     /**
-     * Write both the source -->target edge and the target<--- source edge into the mutation
+     * EdgeWrite both the source -->target edge and the target<--- source edge into the mutation
      *
      * @param scope The org scope of the graph
      * @param edge The edge to write

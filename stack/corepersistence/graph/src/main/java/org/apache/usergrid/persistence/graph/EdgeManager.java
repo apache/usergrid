@@ -66,7 +66,7 @@ public interface EdgeManager {
      * @param edge The edge to delete
      *
      *
-     * Delete the edge. Implementation should also delete the incoming (reversed) edge.
+     * EdgeDelete the edge. Implementation should also delete the incoming (reversed) edge.
      */
     Observable<Edge> deleteEdge( Edge edge );
 

@@ -193,7 +193,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
-     * Write the edges internally
+     * EdgeWrite the edges internally
      * @param scope  The scope to encapsulate
      * @param edge The edge to write
      * @param op The row operation to invoke
@@ -227,7 +227,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
         /**
-         * Write edges from target<-source
+         * EdgeWrite edges from target<-source
          */
 
 
@@ -491,13 +491,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                         .withColumnRange( rangeBuilder.build() );
 
 
-        try {
-            return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query.execute().getResult().iterator(), searcher,
+        return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query, searcher,
                     searcher.hasPage() );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+
     }
 
 

@@ -47,9 +47,9 @@ import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.util.functions.Func1;
-import rx.util.functions.Func2;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.Func2;
+import rx.functions.FuncN;
 
 
 /**

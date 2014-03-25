@@ -29,8 +29,16 @@ import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessorImpl;
+import org.apache.usergrid.persistence.graph.consistency.LocalTimeoutQueue;
+import org.apache.usergrid.persistence.graph.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepairImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -40,15 +48,9 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSeri
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.spi.InjectionListener;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 
 
 public class GraphModule extends AbstractModule {
@@ -89,23 +91,26 @@ public class GraphModule extends AbstractModule {
          * Graph event bus, will need to be refactored into it's own classes
          */
 
-        final EventBus eventBus = new EventBus("AsyncProcessorBus");
-        bind(EventBus.class).toInstance(eventBus);
+          // create a guice factor for getting our collection manager
 
-        //auto register every impl on the event bus
-        bindListener( Matchers.any(), new TypeListener() {
-           @Override
-           public <I> void hear(@SuppressWarnings("unused") final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
-               typeEncounter.register(new InjectionListener<I>() {
-                   @Override public void afterInjection(final I instance) {
-                       eventBus.register(instance);
-                   }
-               });
-           }
-        });
+        //local queue.  Need to
+        bind(TimeoutQueue.class).to( LocalTimeoutQueue.class );
 
-        bind(AsyncProcessor.class).to(AsyncProcessorImpl.class);
+        bind(AsyncProcessor.class).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
+        bind(AsyncProcessor.class).annotatedWith( EdgeWrite.class ).to( AsyncProcessorImpl.class );
+        bind(AsyncProcessor.class).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
 
+        //Repair/cleanup classes
+        bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
 
+        bind( EdgeWriteRepair.class).to( EdgeWriteRepairImpl.class );
+
+        bind( EdgeDeleteRepair.class).to( EdgeDeleteRepairImpl.class );
     }
+
+
+
 }
+
+
+

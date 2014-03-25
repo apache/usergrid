@@ -1,10 +1,15 @@
 package org.apache.usergrid.persistence.collection.rx;
 
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
@@ -18,6 +23,8 @@ import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import com.google.inject.Inject;
 
 import rx.Scheduler;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 import rx.util.functions.Action0;
 
 import static org.junit.Assert.assertTrue;
@@ -63,13 +70,11 @@ public class CassandraThreadSchedulerTest {
         //schedule and we should fail
 
         try {
-
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
-                    //no op
-                }
-            } );
+            rxScheduler.schedule( new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
+                            }
+                            });
 
             fail( "This should have thrown an exception" );
         }
@@ -127,9 +132,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -158,9 +163,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -215,9 +220,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -244,9 +249,9 @@ public class CassandraThreadSchedulerTest {
 
         try {
 
-            rxScheduler.schedule( new Action0() {
-                @Override
-                public void call() {
+            rxScheduler.schedule(  new Action1<Scheduler.Inner>() {
+                            @Override
+                            public void call( final Scheduler.Inner inner ) {
                     //no op
                 }
             } );
@@ -280,6 +285,82 @@ public class CassandraThreadSchedulerTest {
         assertTrue( "Completed executing actions", completed );
     }
 
+    @Test(expected = RejectedExecutionException.class)
+    public void schedulerPoc() throws InterruptedException {
+
+        final int size = 10;
+
+        //create our thread factory so we can label our threads in case we need to dump them
+        final ThreadFactory factory = new ThreadFactory() {
+
+            private final AtomicLong counter = new AtomicLong();
+
+            @Override
+            public Thread newThread( final Runnable r ) {
+
+               final String threadName = "RxCassandraIOThreadPool-" + counter.incrementAndGet();
+
+                LOG.debug( "Allocating new IO thread with name {}", threadName );
+
+                Thread t = new Thread( r, threadName );
+                t.setDaemon( true );
+                return t;
+            }
+        };
+
+
+        /**
+         * Create a threadpool that will reclaim unused threads after 60 seconds.
+         * It uses the max thread count set here. It intentionally uses the
+         * DynamicProperty, so that when it is updated, the listener updates the
+         * pool size. Additional allocation is trivial.  Shrinking the size
+         * will require all currently executing threads to run to completion,
+         * without allowing additional tasks to be queued.
+         */
+        final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(10, factory, new ThreadPoolExecutor.AbortPolicy());
+        //set the max thread size
+        pool.setMaximumPoolSize( 10 );
+        pool.setKeepAliveTime( 60, TimeUnit.SECONDS );
+
+        final CountDownLatch latch = new CountDownLatch( size );
+        final Semaphore semaphore = new Semaphore( 0 );
+
+        for(int i = 0; i < size; i ++){
+            pool.schedule( new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+
+                    latch.countDown();
+
+                    //block so this is still running in the scheduled execute
+                    semaphore.acquire();
+
+                    return null;  //To change body of implemented methods use File | Settings | File Templates.
+                }
+            }, 0, TimeUnit.MILLISECONDS );
+
+
+
+
+        }
+
+
+        //wait for all our threads to get to semaphore acquisition and block to ensure we're running at capacity
+        latch.await();
+
+        //now schedule 1 more, we should blow up
+
+        pool.schedule( new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+        }, 0, TimeUnit.MILLISECONDS );
+
+
+
+    }
+
 
     /**
      * Schedule actions into the semaphore.
@@ -295,9 +376,10 @@ public class CassandraThreadSchedulerTest {
         final CountDownLatch latch = new CountDownLatch( totalCount );
 
         for ( int i = 0; i < totalCount; i++ ) {
-            final Action0 action = new Action0() {
-                @Override
-                public void call() {
+
+            final Action1<Scheduler.Inner> action = new  Action1<Scheduler.Inner>() {
+                                       @Override
+                                       public void call( final Scheduler.Inner inner ) {
                     try {
                         final String threadName = Thread.currentThread().getName();
 
@@ -315,12 +397,16 @@ public class CassandraThreadSchedulerTest {
                     }
                 }
             };
+
             rxScheduler.schedule( action );
         }
 
 
         return latch;
     }
+
+
+
 }
 
 
