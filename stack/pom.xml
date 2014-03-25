@@ -27,7 +27,7 @@
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.29-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>Usergrid Parent</name>
   <description>Usergrid Project</description>
   <packaging>pom</packaging>
@@ -1769,6 +1769,7 @@
                     <exclude>**/README.md</exclude>
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
+                    <exclude>**/*.properties</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
@@ -1796,9 +1797,11 @@
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
-                    <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-                    <exclude>**/aws.properties</exclude>
+
+                    <exclude>**/src/test/resources/**</exclude>
+                    <exclude>**/src/main/dist/lib/**</exclude>
+                    <exclude>**/src/main/dist/webapps/**</exclude>
 
                     <!-- TODO: need to add headers to many files in corepersistence -->
                     <exclude>**/corepersistence/**</exclude>
