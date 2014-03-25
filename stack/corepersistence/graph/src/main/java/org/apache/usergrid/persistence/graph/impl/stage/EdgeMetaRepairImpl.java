@@ -48,10 +48,10 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.MathObservable;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -66,18 +66,16 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
     private final EdgeSerialization edgeSerialization;
     private final Keyspace keyspace;
     private final GraphFig graphFig;
-    private final Scheduler scheduler;
 
 
     @Inject
     public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeSerialization edgeSerialization, final Keyspace keyspace,
-                               final GraphFig graphFig, final Scheduler scheduler ) {
+                               final GraphFig graphFig ) {
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
         this.keyspace = keyspace;
         this.graphFig = graphFig;
-        this.scheduler = scheduler;
     }
 
 
@@ -252,26 +250,26 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>() {
+            return Observable.create( new ObservableIterator<String>( ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
                             .getIdTypesToTarget( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } ).subscribeOn( Schedulers.io() );
         }
 
 
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>() {
+            return Observable.create( new ObservableIterator<MarkedEdge>( ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesToTargetBySourceType( scope,
                             new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } ).subscribeOn( Schedulers.io() );
         }
 
 
@@ -297,26 +295,26 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>() {
+            return Observable.create( new ObservableIterator<String>( ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
                             .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } ).subscribeOn( Schedulers.io() );
         }
 
 
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>() {
+            return Observable.create( new ObservableIterator<MarkedEdge>( ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesFromSourceByTargetType( scope,
                             new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } ).subscribeOn( Schedulers.io() );
         }
 
 

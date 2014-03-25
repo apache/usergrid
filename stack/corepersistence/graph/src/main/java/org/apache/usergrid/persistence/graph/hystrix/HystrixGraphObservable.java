@@ -16,27 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.rx;
+
+package org.apache.usergrid.persistence.graph.hystrix;
 
 
-import org.safehaus.guicyfig.Default;
-import org.safehaus.guicyfig.FigSingleton;
-import org.safehaus.guicyfig.GuicyFig;
-import org.safehaus.guicyfig.Key;
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 
 /**
- * Configuration interface for RxJava classes.
+ *
+ *
  */
-@FigSingleton
-public interface RxFig extends GuicyFig {
-
-    public static final String PROP_THREAD = "rx.cassandra.io.threads";
+public class HystrixGraphObservable {
 
     /**
-     * Max number of threads a pool can allocate.  Can be dynamically changed after starting
+     * Wrap the observable in the timeout
+     * @param observable
+     * @param <T>
+     * @return
      */
-    @Key( PROP_THREAD )
-    @Default( "100" )
-    int getMaxThreadCount();
+    public static <T> Observable<T> wrap(final Observable<T> observable){
+            return new HystrixObservableCommand<T>( HystrixCommandGroupKey.Factory.asKey( "Graph" ) ){
+
+                @Override
+                protected Observable<T> run() {
+                    return observable;
+                }
+            }.toObservable( Schedulers.io() );
+        }
 }

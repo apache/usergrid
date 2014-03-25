@@ -203,5 +203,11 @@
             <version>${log4j.version}</version>
         </dependency>
 
+      <dependency>
+          <groupId>com.netflix.hystrix</groupId>
+          <artifactId>hystrix-core</artifactId>
+          <version>${hystrix.version}</version>
+      </dependency>
+
     </dependencies>
 </project>

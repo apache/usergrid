@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
@@ -50,7 +51,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ByteBufferRange;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
@@ -111,13 +111,16 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     protected final Keyspace keyspace;
-    private final CassandraConfig graphFig;
+    private final CassandraConfig cassandraConfig;
+    private final GraphFig graphFig;
 
 
 
     @Inject
-    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final CassandraConfig graphFig) {
+    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
+                                          final GraphFig graphFig ) {
         this.keyspace = keyspace;
+        this.cassandraConfig = cassandraConfig;
         this.graphFig = graphFig;
     }
 
@@ -329,14 +332,14 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         final RangeBuilder rangeBuilder =
-                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
+                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
 
         RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
         return new ColumnNameIterator<String, String>( query, PARSER,
-                    search.getLast().isPresent() );
+                    search.getLast().isPresent(), graphFig.getReadTimeout() );
 
     }
 
@@ -367,14 +370,14 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         //resume from the last if specified.  Also set the range
         final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) ).build();
+                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) ).build();
 
         RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
 
 
        return new ColumnNameIterator<String, String>( query, PARSER,
-                    search.getLast().isPresent() );
+                    search.getLast().isPresent(), graphFig.getReadTimeout() );
 
     }
 

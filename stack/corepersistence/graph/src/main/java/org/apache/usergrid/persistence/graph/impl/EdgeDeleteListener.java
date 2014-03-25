@@ -8,6 +8,7 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.EdgeManager;
 import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.MessageListener;
@@ -39,17 +40,20 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeManagerFactory edgeManagerFactory;
     private final Keyspace keyspace;
+    private final GraphFig graphFig;
 
 
     @Inject
     public EdgeDeleteListener( final EdgeSerialization edgeSerialization,
                                final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeManagerFactory edgeManagerFactory, final Keyspace keyspace,
+                               final GraphFig graphFig,
                                @EdgeDelete final AsyncProcessor edgeDelete ) {
         this.edgeSerialization = edgeSerialization;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeManagerFactory = edgeManagerFactory;
         this.keyspace = keyspace;
+        this.graphFig = graphFig;
 
         edgeDelete.addListener( this );
     }
@@ -72,7 +76,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
 
                 //go through every version of this edge <= the current version and remove it
-                Observable<MarkedEdge> edges = Observable.create( new ObservableIterator<MarkedEdge>() {
+                Observable<MarkedEdge> edges = Observable.create( new ObservableIterator<MarkedEdge>( ) {
                     @Override
                     protected Iterator<MarkedEdge> getIterator() {
                         return edgeSerialization.getEdgeToTarget( scope,
