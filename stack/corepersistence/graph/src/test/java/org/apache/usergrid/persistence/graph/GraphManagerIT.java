@@ -59,8 +59,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestGraphModule.class })
-//@UseModules( { TestGraphModule.class, EdgeManagerIT.InvalidInput.class } )
-public class EdgeManagerIT {
+public class GraphManagerIT {
 
 
     @ClassRule

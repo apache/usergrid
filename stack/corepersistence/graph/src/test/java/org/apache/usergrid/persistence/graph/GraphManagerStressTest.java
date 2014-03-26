@@ -61,8 +61,8 @@ import static org.mockito.Mockito.when;
 
 @RunWith(JukitoRunner.class)
 @UseModules(TestGraphModule.class)
-public class EdgeManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger( EdgeManagerStressTest.class );
+public class GraphManagerStressTest {
+    private static final Logger log = LoggerFactory.getLogger( GraphManagerStressTest.class );
 
     @Inject
     private GraphManagerFactory factory;

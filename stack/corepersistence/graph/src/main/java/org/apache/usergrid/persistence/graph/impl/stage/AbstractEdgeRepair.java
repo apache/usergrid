@@ -49,6 +49,8 @@ import rx.schedulers.Schedulers;
 /**
  * SimpleRepair operation
  *
+ * TODO T.N. this is still valid code, just not used ATM.  DO NOT REMOVE IT.  Needs to refactor it to read all
+ * versions of an edge and remove them.
  */
 @Singleton
 public abstract class AbstractEdgeRepair  {

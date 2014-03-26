@@ -10,14 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.hystrix.HystrixGraphObservable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.Scheduler;
-import rx.functions.Action0;
-import rx.functions.Action1;
+import rx.Subscriber;
 import rx.functions.FuncN;
 import rx.schedulers.Schedulers;
 
@@ -45,13 +44,14 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Inject
-    public AsyncProcessorImpl( final TimeoutQueue<T> queue,  final GraphFig graphFig ) {
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final GraphFig graphFig ) {
         this.queue = queue;
         this.graphFig = graphFig;
 
         //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
         //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
-        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>(this, graphFig), graphFig.getTaskLoopTime(),  graphFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
+        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>( this, graphFig ), graphFig.getTaskLoopTime(),
+                graphFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
     }
 
 
@@ -70,8 +70,10 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
         for ( MessageListener<T, T> listener : listeners ) {
-            observables.add( listener.receive( data ).subscribeOn( Schedulers.io() ) );
+            observables.add( HystrixGraphObservable.async( listener.receive( data ) ) );
         }
+
+        LOG.debug( "About to start {} observables for event {}", listeners.size(), event );
 
         //run everything in parallel and zip it up
         Observable.zip( observables, new FuncN<AsynchronousMessage<T>>() {
@@ -79,28 +81,32 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
             public AsynchronousMessage<T> call( final Object... args ) {
                 return event;
             }
-        } ).doOnError( new Action1<Throwable>() {
-            @Override
-            public void call( final Throwable throwable ) {
-                LOG.error( "Unable to process async event", throwable );
+        } ).subscribe( new Subscriber<AsynchronousMessage<T>>() {
 
-                for ( ErrorListener listener : errorListeners ) {
-                    listener.onError( event, throwable );
-                }
-            }
-        } ).doOnCompleted( new Action0() {
             @Override
-            public void call() {
+            public void onCompleted() {
+                LOG.debug( "Successfully completed processing for event {}", event );
                 queue.remove( event );
 
                 for ( CompleteListener<T> listener : completeListeners ) {
                     listener.onComplete( event );
                 }
             }
-        } ).subscribe( new Action1<AsynchronousMessage<T>>() {
+
+
             @Override
-            public void call( final AsynchronousMessage<T> asynchronousMessage ) {
-             //no op
+            public void onError( final Throwable throwable ) {
+                LOG.error( "Unable to process async event", throwable );
+
+                for ( ErrorListener listener : errorListeners ) {
+                    listener.onError( event, throwable );
+                }
+            }
+
+
+            @Override
+            public void onNext( final AsynchronousMessage<T> tAsynchronousMessage ) {
+                //no op
             }
         } );
     }
@@ -130,6 +136,4 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     public void addCompleteListener( final CompleteListener<T> listener ) {
         this.completeListeners.add( listener );
     }
-
-
 }

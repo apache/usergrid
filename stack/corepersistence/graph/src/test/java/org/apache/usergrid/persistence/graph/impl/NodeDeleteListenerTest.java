@@ -54,8 +54,8 @@ public class NodeDeleteListenerTest {
 
     private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
 
-//    @ClassRule
-//    public static CassandraRule rule = new CassandraRule();
+    @ClassRule
+    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
