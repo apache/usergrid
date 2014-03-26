@@ -156,8 +156,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         doWrite( scope, edge, new RowOp<RowKey>() {
             @Override
-            public <R extends RowKey> void doWrite(
-                    final MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> columnFamily, final R rowKey,
+            public  void doWrite(
+                    final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily, final RowKey rowKey,
                     final DirectedEdge edge ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, false );
             }
@@ -182,8 +182,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         doWrite( scope, edge, new RowOp<RowKey>() {
             @Override
-            public <R extends RowKey> void doWrite(
-                    final MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> columnFamily, final R rowKey,
+            public void doWrite(
+                    final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily, final RowKey rowKey,
                     final DirectedEdge edge ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, true );
             }
@@ -208,8 +208,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         doWrite( scope, edge, new RowOp<RowKey>() {
             @Override
-            public <R extends RowKey> void doWrite(
-                    final MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> columnFamily, final R rowKey,
+            public void doWrite(
+                    final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily, final RowKey rowKey,
                     final DirectedEdge edge ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).deleteColumn( edge );
             }
@@ -493,7 +493,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                         .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
 
-        return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query, searcher, searcher.hasPage() );
+        return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query, searcher, searcher.hasPage(), graphFig.getReadTimeout() );
     }
 
 
@@ -837,7 +837,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         /**
          * Write the edge with the given data
          */
-        <R extends RowKey> void doWrite(
+        void doWrite(
                 final MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> columnFamily, R rowKey,
                 DirectedEdge edge );
 

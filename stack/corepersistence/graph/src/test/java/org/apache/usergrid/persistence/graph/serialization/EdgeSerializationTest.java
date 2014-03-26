@@ -13,6 +13,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
@@ -27,6 +29,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
@@ -45,9 +49,11 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith(JukitoRunner.class)
-@UseModules({ TestGraphModule.class })
+@RunWith( JukitoRunner.class )
+@UseModules( { TestGraphModule.class } )
 public class EdgeSerializationTest {
+
+    private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
@@ -63,6 +69,9 @@ public class EdgeSerializationTest {
 
     @Inject
     protected GraphFig graphFig;
+
+    @Inject
+    protected Keyspace keyspace;
 
     protected OrganizationScope scope;
 
@@ -617,51 +626,83 @@ public class EdgeSerializationTest {
     }
 
 
-
     /**
      * Tests mixing 2 edge types between 2 nodes.  We should get results for the same source->destination with the 2
      * edge types
      */
     @Test
     public void testIteratorPaging() throws ConnectionException {
-        final Edge edgev1 = createEdge( "source", "edge1", "target" );
-
-        final Id sourceId = edgev1.getSourceNode();
-        final Id targetId = edgev1.getTargetNode();
 
 
-        final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
-
-        assertTrue( "Edge version 1 has lower time uuid",
-                UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
-
-        //create edge type 2 to ensure we don't get it in results
-        final Edge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
-
-        serialization.writeEdge( scope, edgev1 ).execute();
-        serialization.writeEdge( scope, edgev2 ).execute();
-        serialization.writeEdge( scope, edgeType2V1 ).execute();
-
-        final UUID now = UUIDGenerator.newTimeUUID();
+        final Id sourceId = createId( "source" );
+        final String edgeType = "edge";
+        final Id targetId = createId( "target" );
 
 
-        SearchByEdge search = createGetByEdge( sourceId, "edge1", targetId, now, null );
+        int writeCount = graphFig.getScanPageSize() * 3;
 
-        Iterator<MarkedEdge> results = serialization.getEdgeVersions( scope, search );
 
-        assertEquals( edgev2, results.next() );
-        assertEquals( edgev1, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
+        final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        //max version test
+        UUID lastMax = null;
 
-        //test max version
-        search = createGetByEdge( sourceId, "edge1", targetId, edgev1.getVersion(), null );
+        for ( int i = 0; i < writeCount; i++ ) {
 
-        results = serialization.getEdgeVersions( scope, search );
+            final Edge edge = createEdge( sourceId, edgeType, targetId );
 
-        assertEquals( edgev1, results.next() );
-        assertFalse( "Max version was honored", results.hasNext() );
+            lastMax = edge.getVersion();
+
+            batch.mergeShallow( serialization.writeEdge( scope, edge ) );
+        }
+
+        log.info( "Flushing edges" );
+        batch.execute();
+
+
+        Iterator<MarkedEdge> results =
+                serialization.getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, lastMax, null ) );
+
+        verify( results, writeCount );
+
+
+
+        //get them all from source
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, lastMax, null ) );
+
+        verify( results, writeCount );
+
+
+
+        results = serialization.getEdgesFromSourceByTargetType( scope,
+                createSearchByEdgeAndId( sourceId, edgeType, lastMax, targetId.getType(), null ) );
+
+        verify( results, writeCount );
+
+
+
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, lastMax, null ) );
+
+        verify( results, writeCount );
+
+
+
+        results = serialization.getEdgesToTargetBySourceType( scope,
+                createSearchByEdgeAndId( targetId, edgeType, lastMax, sourceId.getType(), null ) );
+
+        verify( results, writeCount );
+    }
+
+
+    private void verify( Iterator<MarkedEdge> results, int expectedCount ) {
+        int count = 0;
+
+        while ( results.hasNext() ) {
+            count++;
+            results.next();
+        }
+
+
+        assertEquals( "All versions returned", expectedCount, count );
     }
 
 

@@ -11,6 +11,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
@@ -49,6 +51,8 @@ import static org.mockito.Mockito.when;
 @RunWith( JukitoRunner.class )
 @UseModules( { TestGraphModule.class } )
 public class NodeDeleteListenerTest {
+
+    private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
@@ -309,8 +313,8 @@ public class NodeDeleteListenerTest {
 
 
     /**
-     * Simple test case that tests a single edge and removing the node.  The other target node should be removed as
-     * well since it has no other targets
+     * Simple test case that tests a single edge and removing the node.  The other target node should be removed as well
+     * since it has no other targets
      */
     @Test
     public void testMultiDelete() throws ConnectionException {
@@ -324,17 +328,21 @@ public class NodeDeleteListenerTest {
         final String edgeType = "test";
 
         int countSaved = 0;
+        int sourceCount = 0;
+        int targetCount = 0;
 
 
         for ( int i = 0; i < edgeCount; i++ ) {
-            Edge edge ;
+            Edge edge;
 
             //mix up source vs target, good for testing as well as create a lot of sub types to ensure they're removed
             if ( i % 2 == 0 ) {
-                edge = createEdge( toDelete, edgeType, createId( "target"+Math.random() ) );
+                edge = createEdge( toDelete, edgeType, createId( "target" + Math.random() ) );
+                sourceCount++;
             }
             else {
-                edge = createEdge( createId( "source"+Math.random() ), edgeType, toDelete );
+                edge = createEdge( createId( "source" + Math.random() ), edgeType, toDelete );
+                targetCount++;
             }
 
             //write the edge
@@ -346,13 +354,15 @@ public class NodeDeleteListenerTest {
             countSaved++;
         }
 
-        assertEquals(edgeCount, countSaved);
+        assertEquals( edgeCount, countSaved );
+
+        log.info( "Saved {} source edges", sourceCount );
+        log.info( "Saved {} target edges", targetCount );
 
 
         //mark the node so
-//        UUID deleteVersion = UUIDGenerator.newTimeUUID();
+        UUID deleteVersion = UUIDGenerator.newTimeUUID();
 
-        UUID deleteVersion = UUID.fromString( "ffffffff-ffff-1fff-bfff-ffffffffffff" );
 
         nodeSerialization.mark( scope, toDelete, deleteVersion ).execute();
 
@@ -368,19 +378,17 @@ public class NodeDeleteListenerTest {
         UUID now = UUIDGenerator.newTimeUUID();
 
 
-        Iterator<MarkedEdge> returned = edgeSerialization
-                .getEdgesFromSource( scope, createSearchByEdge( toDelete, edgeType, now, null ) );
+        Iterator<MarkedEdge> returned =
+                edgeSerialization.getEdgesFromSource( scope, createSearchByEdge( toDelete, edgeType, now, null ) );
 
         //no edge from source node should be returned
         assertFalse( "No source should be returned", returned.hasNext() );
 
         //validate it's not returned by the
 
-        returned = edgeSerialization
-                .getEdgesToTarget( scope, createSearchByEdge( toDelete, edgeType, now, null ) );
+        returned = edgeSerialization.getEdgesToTarget( scope, createSearchByEdge( toDelete, edgeType, now, null ) );
 
         assertFalse( "No target should be returned", returned.hasNext() );
-
 
 
         //no types from source
@@ -400,14 +408,13 @@ public class NodeDeleteListenerTest {
 
         //no target types from source
 
-        Iterator<String> idTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, createSearchIdType( toDelete, edgeType, null ) );
+        Iterator<String> idTypes =
+                edgeMetadataSerialization.getIdTypesFromSource( scope, createSearchIdType( toDelete, edgeType, null ) );
 
         assertFalse( idTypes.hasNext() );
 
         //no source types to target
-        idTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, createSearchIdType( toDelete, edgeType, null ) );
+        idTypes = edgeMetadataSerialization.getIdTypesToTarget( scope, createSearchIdType( toDelete, edgeType, null ) );
 
         assertFalse( idTypes.hasNext() );
     }

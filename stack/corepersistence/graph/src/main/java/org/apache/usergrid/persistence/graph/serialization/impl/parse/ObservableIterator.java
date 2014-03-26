@@ -3,6 +3,10 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
@@ -17,6 +21,8 @@ import rx.subscriptions.Subscriptions;
  */
 public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T> {
 
+    private static final Logger log = LoggerFactory.getLogger( ObservableIterator.class );
+
 
     @Override
     public void call( final Subscriber<? super T> subscriber ) {
@@ -29,7 +35,11 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
 
             //while we have items to emit and our subscriber is subscribed, we want to keep emitting items
             while ( itr.hasNext() && !subscriber.isUnsubscribed()) {
-                subscriber.onNext( itr.next() );
+                final T next = itr.next();
+
+                log.debug( "Emitting {}", next );
+
+                subscriber.onNext( next );
             }
 
             subscriber.onCompleted();

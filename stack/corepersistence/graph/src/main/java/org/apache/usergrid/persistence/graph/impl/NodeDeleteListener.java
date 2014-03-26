@@ -53,30 +53,20 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeDeleteRepair edgeDeleteRepair;
     private final EdgeMetaRepair edgeMetaRepair;
-<<<<<<< Updated upstream
-=======
     private final GraphFig graphFig;
     protected final Keyspace keyspace;
->>>>>>> Stashed changes
 
 
     /**
      * Wire the serialization dependencies
      */
     @Inject
-<<<<<<< Updated upstream
-    public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization, @NodeDelete final AsyncProcessor nodeDelete,
-                               final EdgeMetadataSerialization edgeMetadataSerialization,
-                               final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair
-                                ) {
-=======
     public NodeDeleteListener( final NodeSerialization nodeSerialization, final EdgeSerialization edgeSerialization,
 
                                final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair,
                                final GraphFig graphFig, @NodeDelete final AsyncProcessor nodeDelete,
                                final Keyspace keyspace ) {
->>>>>>> Stashed changes
 
 
         this.nodeSerialization = nodeSerialization;
@@ -163,11 +153,13 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                             @Override
                             public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
 
+                                LOG.debug( "Batching {} edges for deletion" , markedEdges.size());
+
                                 final MutationBatch batch = keyspace.prepareMutationBatch();
 
                                 for(MarkedEdge edge: markedEdges){
 
-                                //delete the newest edge <= the version on the node delete
+                                    //delete the newest edge <= the version on the node delete
                                     LOG.debug( "Deleting edge {}", edge );
                                     final MutationBatch delete = edgeSerialization.deleteEdge( scope,  edge );
 
@@ -184,12 +176,17 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                 return Observable.from(markedEdges);
                             }
                         } )
-        .flatMap( new Func1<MarkedEdge, Observable<MarkedEdge>>() {
-            @Override
-            public Observable<MarkedEdge> call( final MarkedEdge edge ) {
+                        //TODO Fix this
+//        .flatMap( new Func1<MarkedEdge, Observable<MarkedEdge>>() {
+//            @Override
+//            public Observable<MarkedEdge> call( final MarkedEdge edge ) {
+//
+//
+//                return Observable.just( edge );
 
 
-                return Observable.just( edge );
+
+
 //                //delete both the source and target meta data in parallel for the edge we deleted in the previous step
 //                //if nothing else is using them
 //                Observable<Integer> sourceMetaRepaired =
@@ -209,8 +206,12 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 //                                         return edge;
 //                                     }
 //                                 } );
-            }
-        } ).count()
+
+
+//            }
+//        })
+
+    .count()
                 //if nothing is ever emitted, emit 0 so that we know no operations took place. Finally remove the
                 // target node in the mark
                 .defaultIfEmpty( 0 ).doOnCompleted( new Action0() {
