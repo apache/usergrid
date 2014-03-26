@@ -38,6 +38,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import org.apache.usergrid.persistence.EntityManager;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
 import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -61,7 +62,7 @@ public class GeoIndexManager {
     public static final int MAX_RESOLUTION = 9;
 
 
-    EntityManagerImpl em;
+    EntityManager em;
     CassandraService cass;
 
 
@@ -69,7 +70,7 @@ public class GeoIndexManager {
     }
 
 
-    public GeoIndexManager init( EntityManagerImpl em ) {
+    public GeoIndexManager init( EntityManager em ) {
         this.em = em;
         this.cass = em.getCass();
         return this;

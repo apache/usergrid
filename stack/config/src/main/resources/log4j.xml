@@ -63,6 +63,10 @@
         <level value="warn"/>
         <appender-ref ref="stdout"/>
     </logger>
+    <logger name="org.apache.usergrid.persistence.cassandra.CpEntityManagerImpl">
+        <level value="info"/>
+        <appender-ref ref="stdout"/>
+    </logger>
     <logger name="org.apache.usergrid.rest.security.AllowAjaxFilter">
         <level value="warn"/>
         <appender-ref ref="stdout"/>

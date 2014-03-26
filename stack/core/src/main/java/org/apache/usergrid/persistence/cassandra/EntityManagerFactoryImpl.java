@@ -409,4 +409,5 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     public void setCounterUtils( CounterUtils counterUtils ) {
         this.counterUtils = counterUtils;
     }
+
 }

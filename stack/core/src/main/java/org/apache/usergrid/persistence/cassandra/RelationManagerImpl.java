@@ -94,6 +94,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import org.apache.usergrid.persistence.EntityManager;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -145,7 +146,7 @@ public class RelationManagerImpl implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( RelationManagerImpl.class );
 
-    private EntityManagerImpl em;
+    private EntityManager em;
     private CassandraService cass;
     private UUID applicationId;
     private EntityRef headEntity;
@@ -160,7 +161,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass, UUID applicationId,
+    public RelationManagerImpl init( EntityManager em, CassandraService cass, UUID applicationId,
                                      EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );

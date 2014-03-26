@@ -2,7 +2,7 @@ Usergrid Core Repository
 
 Requirements
 
-JDK 1.6 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+JDK 1.7 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 Maven (http://maven.apache.org/)
 
 Building

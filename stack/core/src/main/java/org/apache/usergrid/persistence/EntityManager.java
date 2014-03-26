@@ -17,13 +17,16 @@
 package org.apache.usergrid.persistence;
 
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.usergrid.persistence.Results.Level;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
@@ -618,4 +621,73 @@ public interface EntityManager {
     public void grantGroupPermission( UUID groupId, String permission ) throws Exception;
 
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception;
+
+
+    <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType, Class<A> entityClass, Map<String, Object> properties, UUID importId, UUID timestampUuid) throws Exception;
+
+    void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle, long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch dictionary property.
+     *
+     * @param batch The batch to set the property into
+     * @param entity The entity that owns the property
+     * @param propertyName the property name
+     * @param propertyValue the property value
+     * @param timestampUuid The update timestamp as a uuid
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, UUID timestampUuid) throws Exception;
+
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, boolean force, boolean noRead, UUID timestampUuid) throws Exception;
+
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, Object elementCoValue, boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch update set.
+     *
+     * @param batch the batch
+     * @param entity The owning entity
+     * @param dictionaryName the dictionary name
+     * @param elementValue the dictionary value
+     * @param removeFromDictionary True to delete from the dictionary
+     * @param timestampUuid the timestamp
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch update properties.
+     *
+     * @param batch the batch
+     * @param entity The owning entity reference
+     * @param properties the properties to set
+     * @param timestampUuid the timestamp of the update operation as a time uuid
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch, EntityRef entity, Map<String, Object> properties, UUID timestampUuid) throws Exception;
+
+    Set<String> getDictionaryNames(EntityRef entity) throws Exception;
+
+    void insertEntity(String type, UUID entityId) throws Exception;
+
+    void deleteEntity(UUID entityId) throws Exception;
+
+    /** @return the applicationId */
+    UUID getApplicationId();
+
+    /** @return the indexBucketLocator */
+    IndexBucketLocator getIndexBucketLocator();
+
+    /** @return the cass */
+    CassandraService getCass();
 }

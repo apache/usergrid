@@ -213,8 +213,10 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    public EntityManagerImpl init( EntityManagerFactoryImpl emf, CassandraService cass, CounterUtils counterUtils,
-                                   UUID applicationId, boolean skipAggregateCounters ) {
+    public EntityManager init( 
+            EntityManagerFactoryImpl emf, CassandraService cass, CounterUtils counterUtils,
+            UUID applicationId, boolean skipAggregateCounters ) {
+
         this.emf = emf;
         this.cass = cass;
         this.counterUtils = counterUtils;

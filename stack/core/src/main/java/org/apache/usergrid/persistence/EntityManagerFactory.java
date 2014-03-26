@@ -46,7 +46,7 @@ public interface EntityManagerFactory {
      *
      * @param applicationId the application id
      *
-     * @return EntityDao for the specfied parameters
+     * @return EntityDao for the specified parameters
      */
     public abstract EntityManager getEntityManager( UUID applicationId );
 
