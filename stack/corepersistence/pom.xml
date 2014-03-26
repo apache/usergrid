@@ -39,6 +39,8 @@
         <slf4j.version>1.7.2</slf4j.version>
         <surefire.version>2.16</surefire.version>
         <rx.version>0.17.1</rx.version>
+        <hystrix.version>1.4.0-RC1</hystrix.version>
+        <cassandra.version>1.2.15</cassandra.version>
 
     </properties>
 
@@ -74,6 +76,7 @@
                     <systemPropertyVariables>
                         <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                     </systemPropertyVariables>
+                    <argLine>-Xms2G -Xmx4G</argLine>
                 </configuration>
             </plugin>
 

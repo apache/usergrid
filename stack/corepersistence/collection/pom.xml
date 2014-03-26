@@ -101,6 +101,12 @@
         </dependency>
 
         <dependency>
+               <groupId>org.apache.cassandra</groupId>
+               <artifactId>cassandra-all</artifactId>
+               <version>${cassandra.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.safehaus.guicyfig</groupId>
             <artifactId>guicyfig</artifactId>
             <version>${guicyfig.version}</version>
@@ -176,6 +182,7 @@
              </dependency>
 
 
+
       <!-- Re-add once this is done
       https://github.com/Netflix/Hystrix/pull/209-->
 
@@ -202,6 +209,12 @@
             <artifactId>log4j</artifactId>
             <version>${log4j.version}</version>
         </dependency>
+
+      <dependency>
+          <groupId>com.netflix.hystrix</groupId>
+          <artifactId>hystrix-core</artifactId>
+          <version>${hystrix.version}</version>
+      </dependency>
 
     </dependencies>
 </project>

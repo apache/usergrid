@@ -20,10 +20,8 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,10 +34,7 @@ import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
-import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.uuid.UUIDComparator;
-import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -47,14 +42,15 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.Scheduler;
 import rx.functions.Func1;
-import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 
 /**
  * SimpleRepair operation
  *
+ * TODO T.N. this is still valid code, just not used ATM.  DO NOT REMOVE IT.  Needs to refactor it to read all
+ * versions of an edge and remove them.
  */
 @Singleton
 public abstract class AbstractEdgeRepair  {
@@ -65,16 +61,14 @@ public abstract class AbstractEdgeRepair  {
     protected final EdgeSerialization edgeSerialization;
     protected final GraphFig graphFig;
     protected final Keyspace keyspace;
-    protected final Scheduler scheduler;
 
 
     @Inject
     public AbstractEdgeRepair( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
-                               final Keyspace keyspace, final Scheduler scheduler ) {
+                               final Keyspace keyspace) {
         this.edgeSerialization = edgeSerialization;
         this.graphFig = graphFig;
         this.keyspace = keyspace;
-        this.scheduler = scheduler;
     }
 
 
@@ -84,15 +78,13 @@ public abstract class AbstractEdgeRepair  {
         final UUID maxVersion = edge.getVersion();
 
         //get source edges
-        Observable<MarkedEdge> sourceEdges = getEdgeVersionsFromSource( scope, edge );
+        Observable<MarkedEdge> edgeVersions = getEdgeVersions( scope, edge );
 
-        //get target edges
-        Observable<MarkedEdge> targetEdges = getEdgeVersionsToTarget( scope, edge );
 
 
 
         //merge source and target then deal with the distinct values
-        return Observable.merge( sourceEdges, targetEdges ).filter( getFilter( maxVersion ) ).distinctUntilChanged().buffer( graphFig.getScanPageSize() )
+        return edgeVersions.filter( getFilter( maxVersion ) ).buffer( graphFig.getScanPageSize() )
                          .flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
                              @Override
                              public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
@@ -112,7 +104,7 @@ public abstract class AbstractEdgeRepair  {
                                      throw new RuntimeException( "Unable to issue write to cassandra", e );
                                  }
 
-                                 return Observable.from( markedEdges ).subscribeOn( scheduler );
+                                 return Observable.from( markedEdges ).subscribeOn( Schedulers.io() );
                              }
              } );
     }
@@ -129,34 +121,17 @@ public abstract class AbstractEdgeRepair  {
     /**
      * Get all edge versions <= the specified max from the source
      */
-    private Observable<MarkedEdge> getEdgeVersionsFromSource( final OrganizationScope scope, final Edge edge ) {
+    private Observable<MarkedEdge> getEdgeVersions( final OrganizationScope scope, final Edge edge ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
+        return Observable.create( new ObservableIterator<MarkedEdge>( "edgeVersions" ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 
                 final SimpleSearchByEdge search = getSearchByEdge(edge);
 
-                return edgeSerialization.getEdgeFromSource( scope, search );
+                return edgeSerialization.getEdgeVersions( scope, search );
             }
-        } ).subscribeOn( scheduler );
-    }
-
-
-    /**
-     * Get all edge versions <= the specified max from the source
-     */
-    private Observable<MarkedEdge> getEdgeVersionsToTarget( final OrganizationScope scope, final Edge edge ) {
-
-        return Observable.create( new ObservableIterator<MarkedEdge>() {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-
-                final SimpleSearchByEdge search = getSearchByEdge(edge);
-
-                return edgeSerialization.getEdgeToTarget( scope, search );
-            }
-        } ).subscribeOn( scheduler );
+        } ).subscribeOn( Schedulers.io() );
     }
 
 

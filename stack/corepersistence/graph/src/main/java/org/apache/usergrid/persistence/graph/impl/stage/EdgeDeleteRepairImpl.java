@@ -47,8 +47,8 @@ public class EdgeDeleteRepairImpl extends AbstractEdgeRepair implements EdgeDele
 
     @Inject
     public EdgeDeleteRepairImpl( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
-                                 final Keyspace keyspace, final Scheduler scheduler ) {
-        super( edgeSerialization, graphFig, keyspace, scheduler );
+                                 final Keyspace keyspace) {
+        super( edgeSerialization, graphFig, keyspace );
     }
 
 

@@ -24,21 +24,19 @@ import org.safehaus.guicyfig.GuicyFigModule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
-import org.apache.usergrid.persistence.graph.EdgeManager;
-import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessorImpl;
 import org.apache.usergrid.persistence.graph.consistency.LocalTimeoutQueue;
 import org.apache.usergrid.persistence.graph.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
-import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.impl.GraphManagerImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepair;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepairImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -74,8 +72,8 @@ public class GraphModule extends AbstractModule {
         bind( CassandraConfig.class).to( CassandraConfigImpl.class );
 
         // create a guice factory for getting our collection manager
-        install( new FactoryModuleBuilder().implement( EdgeManager.class, EdgeManagerImpl.class )
-                                           .build( EdgeManagerFactory.class ) );
+        install( new FactoryModuleBuilder().implement( GraphManager.class, GraphManagerImpl.class )
+                                           .build( GraphManagerFactory.class ) );
 
 
 
@@ -97,13 +95,11 @@ public class GraphModule extends AbstractModule {
         bind(TimeoutQueue.class).to( LocalTimeoutQueue.class );
 
         bind(AsyncProcessor.class).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
-        bind(AsyncProcessor.class).annotatedWith( EdgeWrite.class ).to( AsyncProcessorImpl.class );
         bind(AsyncProcessor.class).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
 
         //Repair/cleanup classes
         bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
 
-        bind( EdgeWriteRepair.class).to( EdgeWriteRepairImpl.class );
 
         bind( EdgeDeleteRepair.class).to( EdgeDeleteRepairImpl.class );
     }

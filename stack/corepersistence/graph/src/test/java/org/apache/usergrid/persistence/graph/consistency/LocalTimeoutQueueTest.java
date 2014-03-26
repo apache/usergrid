@@ -135,7 +135,7 @@ public class LocalTimeoutQueueTest {
             //validate we get a new timeout event since the old one was re-scheduled
             Iterator<AsynchronousMessage<TestEvent>> eventIterator = results.iterator();
 
-            while(eventIterator.hasNext()){
+            while ( eventIterator.hasNext() ) {
 
                 AsynchronousMessage<TestEvent> message = eventIterator.next();
 

@@ -47,11 +47,10 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.Scheduler;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.MathObservable;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -66,18 +65,16 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
     private final EdgeSerialization edgeSerialization;
     private final Keyspace keyspace;
     private final GraphFig graphFig;
-    private final Scheduler scheduler;
 
 
     @Inject
     public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeSerialization edgeSerialization, final Keyspace keyspace,
-                               final GraphFig graphFig, final Scheduler scheduler ) {
+                               final GraphFig graphFig ) {
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
         this.keyspace = keyspace;
         this.graphFig = graphFig;
-        this.scheduler = scheduler;
     }
 
 
@@ -125,7 +122,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                             LOG.debug( "Checking for edges with nodeId {}, type {}, and subtype {}", node, edgeType, subType );
 
                             Observable<Integer> search =
-                                    serialization.loadEdges( scope, node, edgeType, subType, version ).take( 1 ).count()
+                                    //load each edge in it's own thread
+                                    serialization.loadEdges( scope, node, edgeType, subType, version ).subscribeOn( Schedulers.io() ).take( 1 ).count()
                                                  .doOnNext( new Action1<Integer>() {
 
                                                      @Override
@@ -147,7 +145,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
 
-                                                         LOG.debug( "No edges with nodeId {}, type {}, and subtype {}. Removing", node, edgeType, subType );
+                                                         LOG.debug( "No edges with nodeId {}, type {}, and subtype {}. Removing subtype.", node, edgeType, subType );
                                                          batch.mergeShallow( serialization
                                                                  .removeEdgeSubType( scope, node, edgeType, subType,
                                                                          version ) );
@@ -168,7 +166,10 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                  public void call( final Integer count ) {
 
 
-                                                     LOG.debug( "Executing batch for subtype deletion with type {}.  Mutation has {} rows to mutate ", edgeType, batch.getRowCount() );
+                                                     LOG.debug(
+                                                             "Executing batch for subtype deletion with type {}.  " +
+                                                                     "Mutation has {} rows to mutate ",
+                                                             edgeType, batch.getRowCount() );
 
                                                      try {
                                                          batch.execute();
@@ -252,26 +253,26 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>() {
+            return Observable.create( new ObservableIterator<String>( "edgeTargetIdTypes" ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
                             .getIdTypesToTarget( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } );
         }
 
 
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>() {
+            return Observable.create( new ObservableIterator<MarkedEdge>( "edgeTargetSubTypes" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesToTargetBySourceType( scope,
                             new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } );
         }
 
 
@@ -297,26 +298,26 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
-            return Observable.create( new ObservableIterator<String>() {
+            return Observable.create( new ObservableIterator<String>( "edgeSourceIdTypes" ) {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
                             .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } );
         }
 
 
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>() {
+            return Observable.create( new ObservableIterator<MarkedEdge>( "edgeSourceSubTypes" ) {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return edgeSerialization.getEdgesFromSourceByTargetType( scope,
                             new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
                 }
-            } ).subscribeOn( scheduler );
+            } );
         }
 
 
