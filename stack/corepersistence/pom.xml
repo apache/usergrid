@@ -40,6 +40,7 @@
         <surefire.version>2.16</surefire.version>
         <rx.version>0.17.1</rx.version>
         <hystrix.version>1.4.0-RC1</hystrix.version>
+        <cassandra.version>1.2.15</cassandra.version>
 
     </properties>
 

@@ -101,6 +101,12 @@
         </dependency>
 
         <dependency>
+               <groupId>org.apache.cassandra</groupId>
+               <artifactId>cassandra-all</artifactId>
+               <version>${cassandra.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.safehaus.guicyfig</groupId>
             <artifactId>guicyfig</artifactId>
             <version>${guicyfig.version}</version>
@@ -174,6 +180,7 @@
                  <artifactId>rxjava-math</artifactId>
                  <version>${rx.version}</version>
              </dependency>
+
 
 
       <!-- Re-add once this is done

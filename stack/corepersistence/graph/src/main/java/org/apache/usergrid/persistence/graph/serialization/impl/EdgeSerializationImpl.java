@@ -299,7 +299,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String type = search.getType();
         final UUID maxVersion = search.getMaxVersion();
 
-        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, search.last() ) {
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, maxVersion, search.last() ) {
 
 
             @Override
@@ -345,8 +345,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id sourceId = edgeType.getNode();
         final String type = edgeType.getType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, maxVersion, edgeType.last() ) {
             @Override
             protected RowKey generateRowKey() {
                 return new RowKey( sourceId, type );
@@ -377,8 +378,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id targetId = edgeType.getNode();
         final String type = edgeType.getType();
         final String targetType = edgeType.getIdType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>( scope, maxVersion, edgeType.last() ) {
             @Override
             protected RowKeyType generateRowKey() {
                 return new RowKeyType( targetId, type, targetType );
@@ -407,8 +409,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id targetId = edgeType.getNode();
         final String type = edgeType.getType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, maxVersion, edgeType.last() ) {
 
 
             @Override
@@ -441,8 +444,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id targetId = edgeType.getNode();
         final String sourceType = edgeType.getIdType();
         final String type = edgeType.getType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>( scope, maxVersion, edgeType.last()) {
             @Override
             protected RowKeyType generateRowKey() {
                 return new RowKeyType( targetId, type, sourceType );
@@ -672,11 +676,13 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     private static abstract class EdgeSearcher<R> implements ColumnParser<DirectedEdge, MarkedEdge> {
 
         protected final Optional<Edge> last;
+        protected final UUID maxVersion;
         protected final OrganizationScope scope;
 
 
-        protected EdgeSearcher( final OrganizationScope scope, final Optional<Edge> last ) {
+        protected EdgeSearcher( final OrganizationScope scope, final UUID maxVersion , final Optional<Edge> last) {
             this.scope = scope;
+            this.maxVersion = maxVersion;
             this.last = last;
         }
 
@@ -692,7 +698,11 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
                 builder.setStart( sourceEdge, EDGE_SERIALIZER );
+            }else{
+
+
             }
+
         }
 
 

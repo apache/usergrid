@@ -132,7 +132,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         EdgeUtils.validateEdge( edge );
 
 
-        MutationBatch batch = keyspace.prepareMutationBatch();
+        MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();

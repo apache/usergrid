@@ -3,15 +3,11 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import rx.Observable;
-import rx.Observer;
 import rx.Subscriber;
-import rx.Subscription;
-import rx.subscriptions.Subscriptions;
 
 
 /**
@@ -22,6 +18,14 @@ import rx.subscriptions.Subscriptions;
 public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T> {
 
     private static final Logger log = LoggerFactory.getLogger( ObservableIterator.class );
+
+    private final String name;
+
+
+    /**
+     * @param name  The simple name of the iterator, used for debugging
+     */
+    protected ObservableIterator( final String name ) {this.name = name;}
 
 
     @Override
@@ -37,10 +41,14 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
             while ( itr.hasNext() && !subscriber.isUnsubscribed()) {
                 final T next = itr.next();
 
-                log.debug( "Emitting {}", next );
+                log.trace( "Iterator '{}' emitting item '{}'",  name, next );
+
+                assert next != null;
 
                 subscriber.onNext( next );
             }
+
+
 
             subscriber.onCompleted();
         }

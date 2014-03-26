@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -21,14 +23,27 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestCount {
 
+    private static final Logger log = LoggerFactory.getLogger(TestCount.class);
 
     @Test
     public void mergeTest(){
 
         final int sizePerObservable = 2000;
 
-        Observable<Integer> input1 = getObservables( sizePerObservable );
-        Observable<Integer> input2 = getObservables( sizePerObservable );
+        Observable<Integer> input1 = getObservables( sizePerObservable ).flatMap( new Func1<Integer, Observable<?
+                extends Integer>>() {
+            @Override
+            public Observable<? extends Integer> call( final Integer integer ) {
+                return getObservables( 100 );
+            }
+        } );
+        Observable<Integer> input2 = getObservables( sizePerObservable ).flatMap( new Func1<Integer, Observable<?
+                extends Integer>>() {
+            @Override
+            public Observable<? extends Integer> call( final Integer integer ) {
+                return getObservables( 100 );
+            }
+        } );
 
        int returned =  Observable.merge(input1, input2).buffer( 1000 ).flatMap(
                new Func1<List<Integer>, Observable<Integer>>() {
@@ -50,7 +65,7 @@ public class TestCount {
                } ).count().defaultIfEmpty( 0 ).toBlockingObservable().last();
 
 
-        assertEquals("Count was correct", sizePerObservable*2, returned);
+        assertEquals("Count was correct", sizePerObservable*2*100, returned);
     }
 
 
@@ -92,19 +107,12 @@ public class TestCount {
                         }
                     }
 
-                    //Sleep for a very long time before emitting the last value
-                    if(i == size -1){
-                        try {
-                            Thread.sleep(5000);
-                        }
-                        catch ( InterruptedException e ) {
-                            subscriber.onError( e );
-                            return;
-                        }
-                    }
+                    final Integer value = values.get( i );
+
+                    log.info( "Emitting {}", value  );
 
 
-                    subscriber.onNext( values.get( i ) );
+                    subscriber.onNext( value );
                 }
 
                 subscriber.onCompleted();

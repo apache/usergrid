@@ -42,7 +42,6 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.Scheduler;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -122,7 +121,7 @@ public abstract class AbstractEdgeRepair  {
      */
     private Observable<MarkedEdge> getEdgeVersions( final OrganizationScope scope, final Edge edge ) {
 
-        return Observable.create( new ObservableIterator<MarkedEdge>(  ) {
+        return Observable.create( new ObservableIterator<MarkedEdge>( "edgeVersions" ) {
             @Override
             protected Iterator<MarkedEdge> getIterator() {
 

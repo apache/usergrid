@@ -20,33 +20,52 @@
 package org.apache.usergrid.persistence.graph.hystrix;
 
 
-import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 
 /**
- *
- *
+ * A utility class that creates graph observables wrapped in Hystrix for timeouts and circuit breakers.
  */
 public class HystrixGraphObservable {
 
     /**
-     * Wrap the observable in the timeout
-     * @param observable
-     * @param <T>
-     * @return
+     * Command group used for realtime user commands
      */
-    public static <T> Observable<T> wrap(final Observable<T> observable){
-            return new HystrixObservableCommand<T>( HystrixCommandGroupKey.Factory.asKey( "Graph" ) ){
+    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "Graph-User" );
 
-                @Override
-                protected Observable<T> run() {
-                    return observable;
-                }
-            }.toObservable( Schedulers.io() );
-        }
+    /**
+     * Command group for asynchronous operations
+     */
+    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "Graph-Async" );
+
+
+    /**
+     * Wrap the observable in the timeout for user facing operation.  This is for user reads and deletes.
+     */
+    public static <T> Observable<T> user( final Observable<T> observable ) {
+        return new HystrixObservableCommand<T>( USER_GROUP ) {
+
+            @Override
+            protected Observable<T> run() {
+                return observable;
+            }
+        }.observe();
+    }
+
+
+    /**
+      * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
+      */
+     public static <T> Observable<T> async( final Observable<T> observable ) {
+         return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
+
+             @Override
+             protected Observable<T> run() {
+                 return observable;
+             }
+         }.observe();
+     }
 }

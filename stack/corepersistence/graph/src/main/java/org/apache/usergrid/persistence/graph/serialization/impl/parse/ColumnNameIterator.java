@@ -4,6 +4,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.hystrix.HystrixCommand;
@@ -87,17 +88,11 @@ public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
     private void advanceIterator() {
 
         //run producing the values within a hystrix command.  This way we'll time out if the read takes too long
-        sourceIterator = new HystrixCommand<Iterator<Column<C>>>( HystrixCommand.Setter.withGroupKey( GROUP_KEY )
-                                                                                .andCommandPropertiesDefaults(
-                                                                                        HystrixCommandProperties
-                                                                                                .Setter()
-                                                                                                .withExecutionIsolationThreadTimeoutInMilliseconds(
-                                                                                                        executionTimeout ) ) ) {
-
-            @Override
-            protected Iterator<Column<C>> run() throws Exception {
-                return rowQuery.execute().getResult().iterator();
-            }
-        }.execute();
+        try {
+            sourceIterator = rowQuery.execute().getResult().iterator();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to get next page", e );
+        }
     }
 }

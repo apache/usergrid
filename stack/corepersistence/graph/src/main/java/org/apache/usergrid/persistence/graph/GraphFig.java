@@ -19,7 +19,6 @@ public interface GraphFig extends GuicyFig {
 
     public static final String REPAIR_TIMEOUT = "usergrid.graph.repair.timeout";
 
-
     public static final String TIMEOUT_SIZE = "usergrid.graph.timeout.page.size";
 
     public static final String TIMEOUT_TASK_TIME = "usergrid.graph.timeout.task.time";
@@ -32,11 +31,11 @@ public interface GraphFig extends GuicyFig {
 
     public static final String READ_TIMEOUT = "usergrid.graph.read.timeout";
 
-    @Default("1000")
+    @Default( "1000" )
     @Key(SCAN_PAGE_SIZE)
     int getScanPageSize();
 
-    @Default("CL_ONE")
+    @Default("CL_QUORUM")
     @Key(READ_CL)
     String getReadCL();
 
@@ -44,31 +43,31 @@ public interface GraphFig extends GuicyFig {
     @Key(WRITE_CL)
     String getWriteCL();
 
-//    @Default("10000")
-//    @Key(WRITE_TIMEOUT)
-//    int getWriteTimeout();
+    @Default( "10000" )
+    @Key( WRITE_TIMEOUT )
+    int getWriteTimeout();
 
     /**
      * Get the read timeout (in milliseconds) that we should allow when reading from the data source
      */
-    @Default( "10000" )
-    @Key( READ_TIMEOUT )
+    @Default("10000")
+    @Key(READ_TIMEOUT)
     int getReadTimeout();
 
-    @Default( "100" )
-    @Key( TIMEOUT_SIZE )
+    @Default("100")
+    @Key(TIMEOUT_SIZE)
     int getTimeoutReadSize();
 
-    @Default( "500" )
-    @Key( TIMEOUT_TASK_TIME )
+    @Default("500")
+    @Key(TIMEOUT_TASK_TIME)
     long getTaskLoopTime();
 
-    @Default( "10" )
-    @Key( REPAIR_CONCURRENT_SIZE )
+    @Default("5")
+    @Key(REPAIR_CONCURRENT_SIZE)
     int getRepairConcurrentSize();
 
     @Default("10000")
-      @Key(WRITE_TIMEOUT)
-      int getRepairTimeout();
+    @Key(REPAIR_TIMEOUT)
+    int getRepairTimeout();
 }
 
