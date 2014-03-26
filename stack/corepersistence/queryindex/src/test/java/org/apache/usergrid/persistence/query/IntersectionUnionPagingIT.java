@@ -16,6 +16,8 @@
 package org.apache.usergrid.persistence.query;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
