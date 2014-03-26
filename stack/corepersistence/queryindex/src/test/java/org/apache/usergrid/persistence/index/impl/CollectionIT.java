@@ -41,11 +41,11 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.utils.JsonUtils;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-import org.apache.usergrid.utils.UUIDUtils;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.utils.JsonUtils;
+import static org.apache.usergrid.persistence.index.utils.MapUtils.hashMap;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 
