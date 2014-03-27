@@ -35,9 +35,12 @@ console.warn('to run e2e tests you need to have a running instance of webdriver,
 module.exports = function (grunt) {
 
   var distPath = 'dist/'+packageJson.packageName,
+      coveragePath = 'dist-cov/'+packageJson.packageName,
       libsFile = 'js/libs/usergrid-libs.min.js',
       devFile = 'js/usergrid-dev.min.js',
       devFileIncludes= ['js/**/*.js','!js/libs/**/*.js', '!js/**/*.min.js'],
+      coverageDir = 'test/coverage/instrument/',
+      coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
       mainFile = 'js/usergrid.min.js',
       templateFile = 'js/templates.js',
       distName = packageJson.packageName
@@ -68,9 +71,13 @@ module.exports = function (grunt) {
             'js/libs/angular-1.2.5/angular-sanitize.min.js',
             'js/libs/usergrid.sdk.js',
             'js/libs/MD5.min.js',
+            'bower_components/angularitics/dist/angulartics.min.js',
+            'bower_components/angularitics/dist/angulartics-google-analytics.min.js',
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
-            'js/libs/jqueryui/date.min.js'
+            'js/libs/jqueryui/date.min.js',
+            'bower_components/angular-intro.js/angular-intro.js',
+            'bower_components/intro.js/minified/intro.min.js'
           ]
         }
       },
@@ -89,6 +96,37 @@ module.exports = function (grunt) {
             '!js/libs/**/*.js',
             '!'+mainFile,
             '!'+devFile
+          ]
+        }
+      },
+      'usergrid-coverage': {
+        options: {
+          mangle: false,
+          compress: false,
+          beautify: false,
+          wrap: false
+        },
+        files: {
+          'test/coverage/instrument/js/usergrid-coverage.min.js': [
+            coverageDir+'js/app.js',
+            coverageDir+'js/**/*.js',
+            'js/templates.js',
+            '!'+coverageDir+'js/config.js',
+            '!'+coverageDir+'js/libs/**/*.js',
+            '!'+coverageDir+''+mainFile,
+            '!'+coverageDir+'js/usergrid-coverage.min.js'
+          ]
+        }
+      },
+      'usergrid-coverage-min': {
+        options: {
+          mangle: false,
+          compress: {warnings:false},
+          beautify: false
+        },
+        files: {
+          'test/coverage/instrument/js/usergrid.min.js': [
+            coverageFile
           ]
         }
       },
@@ -151,6 +189,12 @@ module.exports = function (grunt) {
           base: ''
         }
       },
+      'e2e-coverage-chrome': {
+        options: {
+          port: 3006,
+          base: coveragePath
+        }
+      },
       'e2e-phantom': {
         options: {
           port: 3005,
@@ -176,6 +220,12 @@ module.exports = function (grunt) {
         runnerPort: 9999,
         singleRun: true,
         browsers: ['PhantomJS']
+      },
+      coverage: {
+        configFile: 'tests/karma-coverage.conf.js',
+        runnerPort: 9999,
+        singleRun: true,
+        browsers: ['PhantomJS']
       }
     },
     protractor: {
@@ -184,13 +234,13 @@ module.exports = function (grunt) {
         keepAlive: true, // If false, the grunt process stops when the test fails.
         noColor: false, // If true, protractor will not use colors in its output.
         args: {
-          baseUrl:'http://localhost:3005'
+          baseUrl:'http://localhost:3005/'
         }
       },
       phantom: {
         options: {
           args: {
-            baseUrl:'http://localhost:3005',
+            baseUrl:'http://localhost:3005/',
             // Arguments passed to the command
             'browser': 'phantomjs'
           }
@@ -199,7 +249,7 @@ module.exports = function (grunt) {
       chrome: {
         options: {
           args: {
-            baseUrl:'http://localhost:3006',
+            baseUrl:'http://localhost:3006/?noHelp=true',
             // Arguments passed to the command
             'browser': 'chrome'
           }
@@ -208,7 +258,7 @@ module.exports = function (grunt) {
       prod: {
         options: {
           args: {
-            baseUrl:'http://apigee.com/usergrid',
+            baseUrl:'http://apigee.com/usergrid/',
             // Arguments passed to the command
             browser: 'chrome',
             params:{
@@ -232,7 +282,7 @@ module.exports = function (grunt) {
       firefox: {
         options: {
           args: {
-            baseUrl:'http://localhost:3007',
+            baseUrl:'http://localhost:3007/',
             // Arguments passed to the command
             'browser': 'firefox'
           }
@@ -243,6 +293,21 @@ module.exports = function (grunt) {
       versioned:{
         files:[
           {src:['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'],dest:versionPath,expand:true}
+        ]
+      },
+      coverage:{
+        files:[
+          {
+            src:[versionPath+'/**','sdk/**','archive/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
+            dest:coveragePath,
+            expand:true
+          },
+          {
+            src:['js/*.min.js'],
+            dest:coveragePath,
+            cwd: coverageDir,
+            expand:true
+          }
         ]
       },
       main:{
@@ -266,7 +331,8 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-        build: ['dist/','js/*.min.js',templateFile,versionPath+'/']//'bower_components/',
+        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,versionPath+'/'],//'bower_components/',
+        coverage: ['reports/']
     },
     dom_munger: {
       main: {
@@ -287,6 +353,14 @@ module.exports = function (grunt) {
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
         dest: 'index-debug.html'  //update the dist/index.html (the src index.html is copied there)
       },
+      coverage: {
+        options: {
+          append:{selector:'body',html:devRefs},
+          update: {selector:'#main-script',attribute:'src',value:'js/usergrid-coverage.min.js'}
+        },
+        src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
+        dest: coveragePath+'/index.html'  //update the dist/index.html (the src index.html is copied there)
+      },
       menu: {
         options: {
           callback:function($){
@@ -306,7 +380,7 @@ module.exports = function (grunt) {
             };
           }
         },
-        src: ['index.html','index-debug.html']  //update the dist/index.html (the src index.html is copied there)
+        src: ['index.html','index-debug.html',coverageDir+'index.html']  //update the dist/index.html (the src index.html is copied there)
       }
 
     },
@@ -316,6 +390,48 @@ module.exports = function (grunt) {
           cleanup:false,
           copy:false
         }
+      }
+    },
+    s3: {
+      options: {
+        key: process.env.AWS_KEY || 'noidea',
+        secret: process.env.AWS_SECRET || 'noidea',
+        bucket: 'appservices-deployments',
+        access: 'public-read',
+        headers: {
+          // Two Year cache policy (1000 * 60 * 60 * 24 * 730)
+          "Cache-Control": "max-age=630720000, public",
+          "Expires": new Date(Date.now() + 63072000000).toUTCString()
+        }
+      },
+      dev: {
+        // These options override the defaults
+        options: {
+          encodePaths: false,
+          maxOperations: 20
+        },
+        // Files to be uploaded.
+        upload: [
+          {
+            src: 'dist/appsvc-ui.'+packageJson.version+'.zip',
+            dest: '/production-releases/dist/appsvc-ui.'+packageJson.version+'.zip'
+          }
+        ]
+      }
+    },
+    instrument: {
+      files: 'js/**/*.js',
+      options: {
+        lazy: true,
+        basePath: coverageDir
+      }
+    },
+    makeReport: {
+      src: 'reports/**/*.json',
+      options: {
+        type: 'lcov',
+        dir: 'reports',
+        print: 'detail'
       }
     }
   });
@@ -333,18 +449,24 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-protractor-runner');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-dom-munger');
+  grunt.loadNpmTasks('grunt-s3');
+  grunt.loadNpmTasks('grunt-istanbul');
 
   // Default task(s).
   grunt.registerTask('dev', ['connect:server', 'watch']);
 
   grunt.registerTask('validate', ['jshint', 'complexity']);
+  grunt.registerTask('report', ['build', 'coverage']);
 
   grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','copy:versioned','karma:unit']);
+  grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
   grunt.registerTask('default', ['build','karma:unit']);
 
   grunt.registerTask('e2e', ['connect:e2e-phantom','protractor:phantom']);
   grunt.registerTask('e2e-chrome', ['connect:e2e-chrome','protractor:chrome']);
+  grunt.registerTask('e2e-coverage', ['clean:coverage', 'connect:e2e-coverage','protractor:coverage']);
+  grunt.registerTask('e2e-coverage-chrome', ['clean:coverage', 'connect:e2e-coverage-chrome','protractor:chrome', 'makeReport']);
   grunt.registerTask('e2e-firefox', ['connect:e2e-firefox','protractor:firefox']);
   grunt.registerTask('e2e-prod', ['protractor:prod']);
   grunt.registerTask('e2e-mars', ['protractor:mars']);

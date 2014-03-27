@@ -1,13 +1,14 @@
 {
   "name": "usergrid-portal",
-  "version": "2.0.12",
+  "version": "2.0.1",
   "ignore": [],
   "dependencies": {
-    "apigee-sdk": "~2.0.8"
+    "angularitics": "~0.8.7",
+    "apigee-sdk": "~2.0.8",
+    "angular-intro.js": "*"
   },
   "devDependencies": {},
   "keywords": [
-    "apigee",
     "usergrid"
   ]
 }

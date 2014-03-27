@@ -8,7 +8,7 @@ AppServices.Controllers.controller('ShellCtrl', ['ug', '$scope', '$log','$sce',
         return ;
       }
       handleShellCommand($scope.shell.input);
-      $scope.shell.input ="";
+     // $scope.shell.input ="";
     };
 
     var handleShellCommand = function (s) {
@@ -80,10 +80,11 @@ AppServices.Controllers.controller('ShellCtrl', ['ug', '$scope', '$log','$sce',
 
     var  printLnToShell =  function (s) {
       if (!s) s = "&nbsp;";
+      $scope.shell.outputhidden = s;
       var html = '<div class="shell-output-line"><div class="shell-output-line-content">' + s + '</div></div>';
       html += ' ';
       var trustedHtml = $sce.trustAsHtml( html);
-      $scope.shell.output += trustedHtml.toString()
+      $scope.shell.output += trustedHtml.toString();
     }
 
     $scope.$on('shell-success',function(evt,data){
