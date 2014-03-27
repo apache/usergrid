@@ -268,7 +268,7 @@ public class ExportServiceImpl implements ExportService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         ApplicationInfo application = managementService.getApplicationInfo( applicationId );
-        String appFileName = prepareOutputFileName( "application", application.getName(), "" );
+        String appFileName = prepareOutputFileName( "application", application.getName(), null );
 
         JsonGenerator jg = getJsonGenerator( baos );
 
@@ -542,7 +542,7 @@ public class ExportServiceImpl implements ExportService {
         StringBuilder str = new StringBuilder();
         str.append( name );
         str.append( "." );
-        if ( !CollectionName.equals( "" ) ) {
+        if ( CollectionName != null ) {
             str.append( CollectionName );
             str.append( "." );
         }
