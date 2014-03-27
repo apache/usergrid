@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.persistence.cassandra;
+package org.apache.usergrid.corepersistence;
 
-import com.google.inject.AbstractModule;
-import org.apache.usergrid.persistence.index.guice.IndexModule;
+import org.apache.usergrid.persistence.graph.consistency.TimeService;
 
 /**
- * Guice Module that encapsulates Core Persistence.
+ * TODO: this should be in the Graph module. 
  */
-public class CpModule  extends AbstractModule {
+public class TimeServiceImpl implements TimeService {
 
     @Override
-    protected void configure() {
-        install(new IndexModule());
-    }    
+    public long getCurrentTime() {
+        return System.currentTimeMillis();
+    }
 }

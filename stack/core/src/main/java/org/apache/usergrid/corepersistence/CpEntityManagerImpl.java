@@ -14,15 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.cassandra;
+package org.apache.usergrid.corepersistence;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.netflix.config.ConfigurationManager;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -32,10 +35,16 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.cassandra.CounterUtils;
+import org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
+import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.migration.MigrationException;
+import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
@@ -55,7 +64,30 @@ public class CpEntityManagerImpl extends EntityManagerImpl {
     private static EntityCollectionManagerFactory ecmf;
     private static EntityCollectionIndexFactory ecif ;
     static {
+
+        try {
+            ConfigurationManager.loadCascadedPropertiesFromResources("core-persistence");
+
+            // TODO: make CpEntityManager work in non-test environment
+            Properties testProps = new Properties() {{
+                put("cassandra.hosts", "localhost:" + System.getProperty("cassandra.rpc_port"));
+            }};
+
+            ConfigurationManager.loadProperties( testProps );
+
+        } catch (IOException ex) {
+            throw new RuntimeException("Error loading Core Persistence proprties", ex);
+        }
+
         Injector injector = Guice.createInjector( new CpModule() );
+
+        MigrationManager m = injector.getInstance( MigrationManager.class );
+        try {
+            m.migrate();
+        } catch (MigrationException ex) {
+            throw new RuntimeException("Error migrating Core Persistence", ex);
+        }
+
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         ecif = injector.getInstance( EntityCollectionIndexFactory.class );
     }
@@ -94,7 +126,51 @@ public class CpEntityManagerImpl extends EntityManagerImpl {
         }
     }
 
+    private static final String SYSTEM_ORG_TYPE = "zzz_defaultorg_zzz";
+    private static final String SYSTEM_APP_TYPE = "zzz_defaultapp_zzz";
+    private static final String SYSTEM_SCOPE_TYPE = "zzz_default_zzz";
+
+    private static final Id defaultOrgId = new SimpleId( SYSTEM_ORG_TYPE );
+    private static final Id defaultAppId = new SimpleId( SYSTEM_APP_TYPE );
+    private static final CollectionScope systemScope = new CollectionScopeImpl(
+        defaultOrgId, defaultAppId, SYSTEM_SCOPE_TYPE );
+
     private Id getOrganizationId( Application app ) {
+
+
+
+        EntityCollectionManager ecm = getManager( systemScope );
+        EntityCollectionIndex eci = getIndex( systemScope );
+
+        String orgName = (app == null) ? SYSTEM_ORG_TYPE : app.getOrganizationName();
+
+        org.apache.usergrid.persistence.index.query.Query q = 
+            org.apache.usergrid.persistence.index.query.Query.fromQL(
+                "name = '" + orgName + "'");
+
+        org.apache.usergrid.persistence.index.query.Results execute = eci.execute(q);
+
+        if ( execute.isEmpty() ) { // create if does not exist 
+
+            org.apache.usergrid.persistence.model.entity.Entity entity =
+                new org.apache.usergrid.persistence.model.entity.Entity(
+                    new SimpleId(UUIDGenerator.newTimeUUID(), "organization" ));
+
+            entity.setField( new StringField( "name", orgName ));
+            entity = ecm.write( entity ).toBlockingObservable().last();
+
+            Id orgId = entity.getId();
+            return orgId;
+        } 
+
+        org.apache.usergrid.persistence.model.entity.Entity entity =
+            execute.getEntities().get(0);
+
+        Id orgId = entity.getId();
+        return orgId;
+    }
+
+    private Id getApplicationId( Application app ) {
 
         Id defaultOrgId = new SimpleId("zzz_default_zzz");
         Id defaultAppId = new SimpleId("zzz_default_zzz");
@@ -104,11 +180,13 @@ public class CpEntityManagerImpl extends EntityManagerImpl {
         EntityCollectionManager ecm = getManager( defaultScope );
         EntityCollectionIndex eci = getIndex( defaultScope );
 
-        org.apache.usergrid.persistence.query.Query q = 
-            org.apache.usergrid.persistence.query.Query.fromQL(
-                "name = '" + app.getOrganizationName() + "'");
+        String orgName = (app == null) ? "zzz_default_zzz" : app.getOrganizationName();
 
-        org.apache.usergrid.persistence.query.Results execute = eci.execute(q);
+        org.apache.usergrid.persistence.index.query.Query q = 
+            org.apache.usergrid.persistence.index.query.Query.fromQL(
+                "name = '" + orgName + "'");
+
+        org.apache.usergrid.persistence.index.query.Results execute = eci.execute(q);
 
         if ( execute.isEmpty() ) { // create if does not exist 
 
@@ -116,7 +194,7 @@ public class CpEntityManagerImpl extends EntityManagerImpl {
                 new org.apache.usergrid.persistence.model.entity.Entity(
                     new SimpleId(UUIDGenerator.newTimeUUID(), "organization" ));
 
-            entity.setField(new StringField("name", app.getOrganizationName()));
+            entity.setField( new StringField( "name", orgName ));
             entity = ecm.write( entity ).toBlockingObservable().last();
 
             Id orgId = entity.getId();
