@@ -74,7 +74,7 @@ var AUTH_NONE = 'NONE';
   *  @param {function} callback
   *  @return {callback} callback(err, data)
   */
-  Usergrid.client.prototype.request = function (options, callback) {
+  Usergrid.Client.prototype.request = function (options, callback) {
     var self = this;
     var method = options.method || 'GET';
     var endpoint = options.endpoint;
@@ -1179,7 +1179,7 @@ var AUTH_NONE = 'NONE';
   */
   Usergrid.Entity.prototype.getConnections = function (connection, opts, callback) {
 
-    if (_.isFunction(opts)) { callback = opts; opts = undefined; }
+    if (typeof(opts) == "function") { callback = opts; opts = undefined; }
 
     var self = this;
 
@@ -1481,8 +1481,8 @@ var AUTH_NONE = 'NONE';
  *  @return {callback} callback(err, data)
  *
  */
-Usergrid.client.prototype.delete = function(opts, callback) {
-  if (_.isFunction(opts)) { callback = opts; opts = undefined; }
+Usergrid.Client.prototype.delete = function(opts, callback) {
+  if (typeof(opts) == "function") { callback = opts; opts = undefined; }
 
   if (!opts.qs.q) { opts.qs.q = '*'; }
 
