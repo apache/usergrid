@@ -22,25 +22,22 @@ import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
-import org.apache.usergrid.persistence.graph.EdgeManager;
-import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessorImpl;
 import org.apache.usergrid.persistence.graph.consistency.LocalTimeoutQueue;
 import org.apache.usergrid.persistence.graph.consistency.TimeService;
 import org.apache.usergrid.persistence.graph.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
-import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
-import org.apache.usergrid.persistence.graph.impl.EdgeManagerImpl;
+import org.apache.usergrid.persistence.graph.impl.GraphManagerImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepair;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteRepairImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -54,6 +51,8 @@ import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex;
 import org.safehaus.guicyfig.GuicyFigModule;
+
+
 
 /**
  * Guice Module that encapsulates Core Persistence.
@@ -84,8 +83,9 @@ public class CpModule  extends AbstractModule {
         // GRAPH 
         //
 
+        //install our configuration
         install (new GuicyFigModule( GraphFig.class ));
-        
+
         bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
 
         bind( EdgeMetadataSerialization.class).to( EdgeMetadataSerializationImpl.class);
@@ -94,31 +94,29 @@ public class CpModule  extends AbstractModule {
 
         bind( CassandraConfig.class).to( CassandraConfigImpl.class );
 
-         // create a guice factory for getting our collection manager
-        install( new FactoryModuleBuilder()
-                .implement( EdgeManager.class, EdgeManagerImpl.class )
-                .build( EdgeManagerFactory.class ) );
-        
-        Multibinder<Migration> migrationBinding = 
-            Multibinder.newSetBinder( binder(), Migration.class );
+        // create a guice factory for getting our collection manager
+        install( new FactoryModuleBuilder().implement( GraphManager.class, GraphManagerImpl.class )
+                                           .build( GraphManagerFactory.class ) );
 
+        //do multibindings for migrations
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
         migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
         migrationBinding.addBinding().to( EdgeSerializationImpl.class );
         migrationBinding.addBinding().to( NodeSerializationImpl.class );
 
-        // local queue
+        // Graph event bus, will need to be refactored into it's own classes
+
+        // create a guice factor for getting our collection manager
+
+        //local queue.  Need to
         bind(TimeoutQueue.class).to( LocalTimeoutQueue.class );
 
+        bind(AsyncProcessor.class).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
+        bind(AsyncProcessor.class).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
 
-        bind( AsyncProcessor.class).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
-        bind( AsyncProcessor.class).annotatedWith( EdgeWrite.class ).to( AsyncProcessorImpl.class );
-        bind( AsyncProcessor.class).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
-
-        // Repair/cleanup classes
+        //Repair/cleanup classes
         bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
-        bind( EdgeWriteRepair.class).to( EdgeWriteRepairImpl.class );
         bind( EdgeDeleteRepair.class).to( EdgeDeleteRepairImpl.class );
-
         bind( TimeService.class).to( TimeServiceImpl.class );
     }    
 }

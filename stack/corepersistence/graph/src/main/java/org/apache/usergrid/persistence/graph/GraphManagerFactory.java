@@ -16,27 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.rx;
+
+package org.apache.usergrid.persistence.graph;
 
 
-import org.safehaus.guicyfig.Default;
-import org.safehaus.guicyfig.FigSingleton;
-import org.safehaus.guicyfig.GuicyFig;
-import org.safehaus.guicyfig.Key;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 
 
 /**
- * Configuration interface for RxJava classes.
+ *
+ * @author: tnine
+ *
  */
-@FigSingleton
-public interface RxFig extends GuicyFig {
-
-    public static final String PROP_THREAD = "rx.cassandra.io.threads";
+public interface GraphManagerFactory
+{
 
     /**
-     * Max number of threads a pool can allocate.  Can be dynamically changed after starting
+     * Create an graph manager for the collection context
+     *
+     * @param collectionScope The context to use when creating the graph manager
      */
-    @Key( PROP_THREAD )
-    @Default( "100" )
-    int getMaxThreadCount();
+    public GraphManager createEdgeManager( OrganizationScope collectionScope );
 }

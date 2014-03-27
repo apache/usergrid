@@ -79,7 +79,7 @@ public class ParallelTest {
         //        final Scheduler scheduler = Schedulers.threadPoolForComputation();
 
         //use the I/O scheduler to allow enough thread, otherwise our pool will be the same size as the # of cores
-        final Scheduler scheduler = Schedulers.io();
+
 
         //set our size equal
 //        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, size );
@@ -102,7 +102,7 @@ public class ParallelTest {
          *  non blocking?
          */
 
-        final Observable<String> observable = Observable.from( input ).observeOn( scheduler );
+        final Observable<String> observable = Observable.from( input ).observeOn( Schedulers.io() );
 
 
         Observable<Integer> thing = observable.mapMany( new Func1<String, Observable<Integer>>() {
@@ -124,7 +124,7 @@ public class ParallelTest {
                     /**
                      * QUESTION: Should this again be the process thread, not the I/O
                      */
-                    Observable<String> newObservable = Observable.from( input ).subscribeOn( scheduler );
+                    Observable<String> newObservable = Observable.from( input ).subscribeOn( Schedulers.io() );
 
                     Observable<Integer> transformed = newObservable.map( new Func1<String, Integer>() {
 

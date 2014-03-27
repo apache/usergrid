@@ -50,7 +50,7 @@ import rx.Observable;
  * @author tnine
  * @see Edge
  */
-public interface EdgeManager {
+public interface GraphManager {
 
 
     /**
@@ -66,12 +66,11 @@ public interface EdgeManager {
      * @param edge The edge to delete
      *
      *
-     * EdgeDelete the edge. Implementation should also delete the incoming (reversed) edge.
+     * EdgeDelete the edge. Implementation should also delete the incoming (reversed) edge. Only deletes the specific version
      */
     Observable<Edge> deleteEdge( Edge edge );
 
     /**
-     * TODO: This needs to mark a node as deleted while consistency processing occurs, our reads would need to check this filter on read
      *
      * Remove the node from the graph.
      *
@@ -79,6 +78,13 @@ public interface EdgeManager {
      * @return
      */
     Observable<Id> deleteNode(Id node);
+
+    /**
+     * Get all versions of this edge where versions <= max version
+     * @param edge
+     * @return
+     */
+    Observable<Edge> loadEdgeVersions( SearchByEdge edge );
 
     /**
      * Returns an observable that emits all edges where the specified node is the source node. The edges will match the

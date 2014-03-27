@@ -65,8 +65,8 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(JukitoRunner.class)
+@UseModules({ TestGraphModule.class })
 public class EdgeDeleteRepairTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeDeleteRepairTest.class );
@@ -174,7 +174,7 @@ public class EdgeDeleteRepairTest {
 
 
         //now verify we get all the versions we expect back
-        Iterator<MarkedEdge> iterator = edgeSerialization.getEdgeFromSource( scope,
+        Iterator<MarkedEdge> iterator = edgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
 
         int count = 0;
