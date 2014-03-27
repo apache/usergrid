@@ -860,36 +860,20 @@ function createExistingEntity(step, marty) {
 			}
 			client.createEntity(options, function (err, newdog) {
 				if (err) {
-					error('Create new entity to use for existing entity failed');
+					success('Create new entity to use for existing entity failed');
 				} else {
-					success('Create new entity to use for existing entity succeeded');
-
-					var newuuid = newdog.get('uuid');
-					if (newuuid === uuid) {
-						success('UUIDs of new and old entities match');
-					} else {
-						error('UUIDs of new and old entities do not match');
-					}
-
-					var breed = newdog.get('breed');
-					if (breed === 'mutt') {
-						success('attribute sucesfully set on new entity');
-					} else {
-						error('attribute not sucesfully set on new entity');
-					}
-
-					newdog.destroy(function(err){
-						if (err){
-							error('existing entity not deleted from database');
-						} else {
-							success('existing entity deleted from database');
-							dog = null; //blow away the local object
-							newdog = null; //blow away the local object
-							runner(step);
-						}
-					});
-
+					error('Create new entity to use for existing entity succeeded');
 				}
+				dog.destroy(function(err){
+					if (err){
+						error('existing entity not deleted from database');
+					} else {
+						success('existing entity deleted from database');
+						dog = null; //blow away the local object
+						newdog = null; //blow away the local object
+						runner(step);
+					}
+				});
 			});
 		}
 	});

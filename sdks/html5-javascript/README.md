@@ -53,7 +53,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 ##Version
 
-Current Version: **0.10.8**
+Current Version: **0.11.0**
 
 See change log:
 
@@ -231,81 +231,6 @@ You can also refresh the object from the database if needed (in case the data ha
 			}
 			*/
 
-		}
-	});
-
-**Wait!** But what if my entity already exists on the server?
-
-During a `client.createEntity` call, there are two ways that you can choose to handle this situation.  The question is, what should the client do if an entity with the same name, username, or UUID already exists on the server?
-
-	1. Give you back an error.
-	2. Give you back the pre-existing entity.
-
-If you want to get back an error when the entity already exists, then simply call the `client.createEntity` function as already described above. If there is a collision, you will get back a 400 error.
-
-However, if you want the existing entity to be returned, then set the `getOnExist` flag to `true`, as follows:
-
-	// Start by getting the UUID of our existing dog named einstein
-	var uuid = dog.get('uuid');
-
-	// Now create new entity, but use same entity name of einstein.  This means that
-	// the original einstein entity now exists.  Thus, the new einstein entity should
-	// be the same as the original, plus any data differences from the options var:
-	options = {
-		type:'dogs',
-		name:'einstein',
-		hair:'long',
-		getOnExist:true
-	}
-	client.createEntity(options, function (err, newdog) {
-		if (err) {
-			// Error - could not get duplicate dog
-		} else {
-			// Success - got duplicate dog
-
-			// Get the id of the new dog
-			var newuuid = newdog.get('uuid');
-			if (newuuid === uuid) {
-				// Success - UUIDs of new and old entities match
-			} else {
-				// Error - UUIDs of new and old entities do not match
-			}
-
-			// Verify that our new attribute was added to the existing entity
-			var hair = newdog.get('hair');
-			if (hair === 'long') {
-				// Success - attribute successfully set on new entity
-			} else {
-				// Error - attribute not successfully set on new entity
-			}
-		}
-	});
-
-Alternatively, if you know that an entity exists on the server already, and you just want to retrieve it, use the `getEntity` method. It will only retrieve the entity if there is a match:
-
-	// Again, get the UUID of our existing dog
-	var uuid = dog.get('uuid');
-
-	// Now make a new call to get the existing dog from the database
-	var options = {
-		type:'dogs',
-		name:'einstein' // Could also use UUID if you know it, or username, if this is a user
-	}
-	client.getEntity(options, function(err, existingDog){
-		if (err){
-			// Existing dog not retrieved
-		} else {
-			// Existing dog was retrieved
-
-			// Get the UUID of the dog we just got from the database
-			var newuuid = existingDog.get('uuid');
-
-			// Make sure the UUIDs match
-			if (uuid === newuuid){
-				// UUIDs match - got the same entity
-			} else {
-				// UUIDs do not match - not the same entity
-			}
 		}
 	});
 

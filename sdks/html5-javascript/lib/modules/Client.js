@@ -127,8 +127,6 @@
    *  @return {callback} callback(err, data)
    */
   Usergrid.Client.prototype.createGroup = function(options, callback) {
-    var getOnExist = options.getOnExist || false;
-
     options = {
       path: options.path,
       client: this,
@@ -136,15 +134,8 @@
     };
 
     var group = new Usergrid.Group(options);
-    group.fetch(function(err, data){
-      var okToSave = (err && ['service_resource_not_found','no_name_specified','null_pointer'].indexOf(err.name)!==-1) || (!err && getOnExist);
-      if (okToSave) {
-        group.save(function(err, data){
-            doCallback(callback, [err, group, data]);
-        });
-      } else {
-        doCallback(callback, [null, group, data]);
-      }
+    group.save(function(err, data){
+        doCallback(callback, [err, group, data]);
     });
   };
 
@@ -160,31 +151,15 @@
    *  @return {callback} callback(err, data)
    */
     Usergrid.Client.prototype.createEntity = function (options, callback) {
-        // todo: replace the check for new / save on not found code with simple save
-        // when users PUT on no user fix is in place.
-        var getOnExist = options['getOnExist'] || false; //if true, will return entity if one already exists
-        delete options['getOnExist']; //so it doesn't become part of our data model
         var entity_data = {
             client: this,
             data: options
         };
         var entity = new Usergrid.Entity(entity_data);
         var self = this;
-        entity.fetch(function (err, data) {
-            //if the fetch doesn't find what we are looking for, or there is no error, do a save
-            var common_errors = ['service_resource_not_found', 'no_name_specified', 'null_pointer'];
-            var okToSave = (!err && getOnExist)||(err && err.name && common_errors.indexOf(err.name) !== -1);
-
-            if (okToSave) {
-                entity.set(entity_data.data); //add the data again just in case
-                entity.save(function (err, data) {
-                    doCallback(callback, [err, entity, data]);
-                });
-            } else {
-                doCallback(callback, [null, entity, data]);
-            }
+        entity.save(function (err, data) {
+            doCallback(callback, [err, entity, data]);
         });
-
     };
   /*
    *  Main function for getting existing entities - should be called directly.

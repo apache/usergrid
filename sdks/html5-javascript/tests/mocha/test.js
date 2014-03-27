@@ -311,29 +311,31 @@ describe('Usergrid', function(){
                 })
             })
             it('createEntity - existing entity',function(done){
-                client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
-                    assert(!err, "createEntity returned an error")
-                    assert(dog, "createEntity did not return a dog")
-                    assert(dog.get("name")==='createEntityTestDog', "The dog's name is not 'createEntityTestDog'")
-                    done();
-                })
-            })
-            it('createEntity - get on Exist',function(done){
-                client.createEntity({type:'dog',name:'createEntityTestDog', getOnExist:true}, function(err, dog){
-                    assert(!err, "createEntity returned an error")
-                    assert(dog, "createEntity did not return a dog")
-                    assert(dog.get("uuid")!==null, "The dog's UUID was not returned")
-                    done();
-                })
+                    client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                        try{
+                            assert(err, "createEntity should return an error")
+                        }catch(e){
+                            assert(true, "trying to create an entity that already exists throws an error");
+                        }finally{
+                            done();
+                        }
+                    });
             })
             var testGroup;
             it('createGroup',function(done){
                 client.createGroup({path:'dogLovers'},function(err, group){
-                    assert(!err, "createGroup returned an error: "+err);
+                        try{
+                            assert(!err, "createGroup returned an error")
+                        }catch(e){
+                            assert(true, "trying to create a group that already exists throws an error");
+                        }finally{
+                            done();
+                        }
+                    /*assert(!err, "createGroup returned an error: "+err);
                     assert(group, "createGroup did not return a group");
                     assert(group instanceof Usergrid.Group, "createGroup did not return a Usergrid.Group");
                     testGroup=group;
-                    done();
+                    done();*/
                 })
                 done();
             })

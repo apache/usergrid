@@ -1,4 +1,4 @@
-/*! usergrid@0.10.8 2014-03-13 */
+/*! usergrid@0.11.0 2014-03-21 */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
 };
@@ -308,10 +308,6 @@ function propCopy(from, to) {
 
 function NOOP() {}
 
-//Usergrid namespace encapsulates this SDK
-/*window.Usergrid = window.Usergrid || {};
-Usergrid = Usergrid || {};
-Usergrid.USERGRID_SDK_VERSION = '0.10.07';*/
 function isValidUrl(url) {
     if (!url) return false;
     var doc, base, anchor, isValid = false;
@@ -553,7 +549,7 @@ function doCallback(callback, params, context) {
         var entities = this.getEntities();
         return entities[0];
     };
-    Usergrid.VERSION = Usergrid.USERGRID_SDK_VERSION = "0.10.08";
+    Usergrid.VERSION = Usergrid.USERGRID_SDK_VERSION = "0.11.0";
     global[name] = Usergrid;
     global[name].noConflict = function() {
         if (overwrittenName) {
@@ -674,22 +670,14 @@ function doCallback(callback, params, context) {
    *  @return {callback} callback(err, data)
    */
     Usergrid.Client.prototype.createGroup = function(options, callback) {
-        var getOnExist = options.getOnExist || false;
         options = {
             path: options.path,
             client: this,
             data: options
         };
         var group = new Usergrid.Group(options);
-        group.fetch(function(err, data) {
-            var okToSave = err && [ "service_resource_not_found", "no_name_specified", "null_pointer" ].indexOf(err.name) !== -1 || !err && getOnExist;
-            if (okToSave) {
-                group.save(function(err, data) {
-                    doCallback(callback, [ err, group, data ]);
-                });
-            } else {
-                doCallback(callback, [ null, group, data ]);
-            }
+        group.save(function(err, data) {
+            doCallback(callback, [ err, group, data ]);
         });
     };
     /*
@@ -704,31 +692,14 @@ function doCallback(callback, params, context) {
    *  @return {callback} callback(err, data)
    */
     Usergrid.Client.prototype.createEntity = function(options, callback) {
-        // todo: replace the check for new / save on not found code with simple save
-        // when users PUT on no user fix is in place.
-        var getOnExist = options["getOnExist"] || false;
-        //if true, will return entity if one already exists
-        delete options["getOnExist"];
-        //so it doesn't become part of our data model
         var entity_data = {
             client: this,
             data: options
         };
         var entity = new Usergrid.Entity(entity_data);
         var self = this;
-        entity.fetch(function(err, data) {
-            //if the fetch doesn't find what we are looking for, or there is no error, do a save
-            var common_errors = [ "service_resource_not_found", "no_name_specified", "null_pointer" ];
-            var okToSave = !err && getOnExist || err && err.name && common_errors.indexOf(err.name) !== -1;
-            if (okToSave) {
-                entity.set(entity_data.data);
-                //add the data again just in case
-                entity.save(function(err, data) {
-                    doCallback(callback, [ err, entity, data ]);
-                });
-            } else {
-                doCallback(callback, [ null, entity, data ]);
-            }
+        entity.save(function(err, data) {
+            doCallback(callback, [ err, entity, data ]);
         });
     };
     /*
@@ -1195,6 +1166,67 @@ function doCallback(callback, params, context) {
    */
     Usergrid.Client.prototype.logout = function() {
         this.setToken();
+    };
+    /*
+    *  A public method to destroy access tokens on the server
+    *
+    *  @method logout
+    *  @public    
+    *	 @param {string} username	the user associated with the token to revoke
+    *	 @param {string} token set to 'null' to revoke the token of the currently logged in user 
+    *  	 or set to token value to revoke a specific token
+    *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user            
+    *  @return none
+    */
+    Usergrid.Client.prototype.destroyToken = function(username, token, revokeAll, callback) {
+        var options = {
+            client: self,
+            method: "PUT"
+        };
+        if (revokeAll == true) {
+            options.endpoint = "users/" + username + "/revoketokens";
+        } else if (token == null) {
+            options.endpoint = "users/" + username + "/revoketoken?token=" + this.getToken();
+        } else {
+            options.endpoint = "users/" + username + "/revoketoken?token=" + token;
+        }
+        this.request(options, function(err, data) {
+            if (err) {
+                if (self.logging) {
+                    console.log("error destroying access token");
+                }
+                doCallback(callback, [ err, data, null ], self);
+            } else {
+                if (revokeAll == true) {
+                    console.log("all user tokens invalidated");
+                } else {
+                    console.log("token invalidated");
+                }
+                doCallback(callback, [ err, data, null ], self);
+            }
+        });
+    };
+    /*
+    *  A public method to log out an app user - clears all user fields from client
+    *  and destroys the access token on the server.
+    *
+    *  @method logout
+    *  @public
+    *	 @param {string} username the user associated with the token to revoke
+    *	 @param {string} token set to 'null' to revoke the token of the currently logged in user 
+    *  	 or set to token value to revoke a specific token
+    *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user        
+    *  @return none
+    */
+    Usergrid.Client.prototype.logoutAndDestroyToken = function(username, token, revokeAll, callback) {
+        if (username == null) {
+            console.log("username required to revoke tokens");
+        } else {
+            this.destroyToken(username, token, revokeAll, callback);
+            if (revokeAll == true || token == this.getToken() || token == null) {
+                this.setToken(null);
+            }
+        }
     };
     /*
    *  A private method to build the curl call to display on the command line

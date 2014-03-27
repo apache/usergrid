@@ -54,12 +54,6 @@ function propCopy(from, to){
 }
 function NOOP(){}
 
-//Usergrid namespace encapsulates this SDK
-/*window.Usergrid = window.Usergrid || {};
-Usergrid = Usergrid || {};
-Usergrid.USERGRID_SDK_VERSION = '0.10.07';*/
-
-
 function isValidUrl(url) {
     if (!url) return false;
     var doc, base, anchor, isValid=false;
@@ -290,7 +284,7 @@ function doCallback(callback, params, context) {
         var entities=this.getEntities();
         return entities[0];
     }
-    Usergrid.VERSION = Usergrid.USERGRID_SDK_VERSION = '0.10.08';
+    Usergrid.VERSION = Usergrid.USERGRID_SDK_VERSION = '0.11.0';
 
 	global[name] =  Usergrid;
 	global[name].noConflict = function() {
